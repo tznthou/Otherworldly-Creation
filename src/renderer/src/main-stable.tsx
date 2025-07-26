@@ -828,6 +828,7 @@ const StableApp: React.FC = () => {
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [isOllamaConnected, setIsOllamaConnected] = useState(false);
   const [editorContent, setEditorContent] = useState(() => {
     // 嘗試從本地儲存載入內容
     const savedContent = localStorage.getItem('novel_content');
@@ -842,38 +843,81 @@ const StableApp: React.FC = () => {
 
   // 獲取 OLLAMA 模型列表
   const fetchOllamaModels = async () => {
+    console.log('開始獲取 OLLAMA 模型列表...');
     setIsLoadingModels(true);
-    try {
-      // 檢查 Electron API 是否可用
-      if (!window.electronAPI) {
-        console.warn('Electron API 不可用，使用 fallback 方法');
-        // Fallback: 直接使用 fetch
-        const response = await fetch('http://localhost:11434/api/tags');
-        if (response.ok) {
-          const data = await response.json();
-          const models = data.models?.map((model: any) => model.name) || [];
-          setOllamaModels(models);
-          if (models.length > 0 && !selectedModel) {
-            setSelectedModel(models[0]);
+    
+    // 嘗試使用 XMLHttpRequest 作為備用方案
+    const tryXHR = () => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'http://localhost:11434/api/tags', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              resolve(data);
+            } catch (error) {
+              reject(new Error('JSON 解析失敗'));
+            }
+          } else {
+            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
           }
-        } else {
-          setOllamaModels([]);
+        };
+        
+        xhr.onerror = function() {
+          reject(new Error('網絡錯誤'));
+        };
+        
+        xhr.ontimeout = function() {
+          reject(new Error('請求超時'));
+        };
+        
+        xhr.timeout = 5000;
+        xhr.send();
+      });
+    };
+    
+    try {
+      console.log('嘗試使用 fetch API...');
+      const response = await fetch('http://localhost:11434/api/tags');
+      console.log('Fetch 響應狀態:', response.status, response.statusText);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('獲取的數據:', data);
+        const models = data.models?.map((model: any) => model.name) || [];
+        console.log('解析的模型列表:', models);
+        setOllamaModels(models);
+        setIsOllamaConnected(true);
+        if (models.length > 0 && !selectedModel) {
+          setSelectedModel(models[0]);
         }
-        return;
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-
-      // 使用現有的 IPC API 獲取模型列表
-      const models = await window.electronAPI.ai.listModels();
-      console.log('從 IPC 獲取的模型列表:', models);
-      setOllamaModels(models);
-      if (models.length > 0 && !selectedModel) {
-        setSelectedModel(models[0]);
+    } catch (fetchError) {
+      console.log('Fetch 失敗，嘗試 XMLHttpRequest...', fetchError);
+      
+      try {
+        const data = await tryXHR() as any;
+        console.log('XHR 成功，獲取的數據:', data);
+        const models = data.models?.map((model: any) => model.name) || [];
+        console.log('解析的模型列表:', models);
+        setOllamaModels(models);
+        setIsOllamaConnected(true);
+        if (models.length > 0 && !selectedModel) {
+          setSelectedModel(models[0]);
+        }
+      } catch (xhrError) {
+        console.error('XMLHttpRequest 也失敗:', xhrError);
+        setOllamaModels([]);
+        setIsOllamaConnected(false);
       }
-    } catch (error) {
-      console.warn('獲取 OLLAMA 模型列表失敗:', error);
-      setOllamaModels([]);
     } finally {
       setIsLoadingModels(false);
+      console.log('模型列表獲取完成，當前模型數量:', ollamaModels.length);
     }
   };
 
@@ -892,6 +936,30 @@ const StableApp: React.FC = () => {
   useEffect(() => {
     fetchOllamaModels();
   }, []);
+
+  // 定期檢查 OLLAMA 連接狀態
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const response = await fetch('http://localhost:11434/api/version');
+        setIsOllamaConnected(response.ok);
+        if (response.ok && ollamaModels.length === 0) {
+          // 如果連接成功但沒有模型，重新獲取模型列表
+          fetchOllamaModels();
+        }
+      } catch (error) {
+        setIsOllamaConnected(false);
+      }
+    };
+
+    // 立即檢查一次
+    checkConnection();
+
+    // 每 10 秒檢查一次連接狀態
+    const interval = setInterval(checkConnection, 10000);
+
+    return () => clearInterval(interval);
+  }, [ollamaModels.length]);
 
   // 如果有錯誤，顯示錯誤訊息而不是閃退
   if (error) {
@@ -1328,7 +1396,11 @@ const StableApp: React.FC = () => {
                 <div style={{ color: '#ccc', fontSize: '14px', lineHeight: '1.5' }}>
                   <div style={{ marginBottom: '10px' }}>
                     <strong>當前狀態：</strong>
-                    <span style={{ color: '#90EE90', marginLeft: '5px' }}>✅ 已連接</span>
+                    {isOllamaConnected ? (
+                      <span style={{ color: '#90EE90', marginLeft: '5px' }}>✅ 已連接</span>
+                    ) : (
+                      <span style={{ color: '#ff6b6b', marginLeft: '5px' }}>❌ 未連接</span>
+                    )}
                   </div>
                   <div style={{ marginBottom: '10px' }}>
                     <strong>模型：</strong> 
@@ -1370,9 +1442,23 @@ const StableApp: React.FC = () => {
                         fontSize: '10px',
                         marginLeft: '5px'
                       }}
-                      onClick={() => {
-                        fetchOllamaModels();
-                        alert('🔄 正在重新掃描 OLLAMA 模型...\n\n已發送請求到 OLLAMA 服務器\n如果沒有找到模型，請確保：\n1. OLLAMA 服務正在運行 (ollama serve)\n2. 已安裝至少一個模型 (ollama pull llama3.1:8b)');
+                      onClick={async () => {
+                        try {
+                          // 先檢查連接狀態
+                          const response = await fetch('http://localhost:11434/api/version');
+                          if (response.ok) {
+                            setIsOllamaConnected(true);
+                            // 連接成功，獲取模型列表
+                            fetchOllamaModels();
+                            alert('🔄 正在重新掃描 OLLAMA 模型...\n\n✅ 連接成功！\n正在獲取模型列表...');
+                          } else {
+                            setIsOllamaConnected(false);
+                            alert('🔄 正在重新掃描 OLLAMA 模型...\n\n❌ 連接失敗！\n請確保 OLLAMA 服務正在運行 (ollama serve)');
+                          }
+                        } catch (error) {
+                          setIsOllamaConnected(false);
+                          alert('🔄 正在重新掃描 OLLAMA 模型...\n\n❌ 連接失敗！\n請確保 OLLAMA 服務正在運行 (ollama serve)');
+                        }
                       }}
                     >
                       重新掃描
@@ -1423,8 +1509,19 @@ const StableApp: React.FC = () => {
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
-                      onClick={() => {
-                        alert('🔍 正在測試 AI 引擎連接...\n\n✅ 連接成功！\n模型：Llama 3.1 8B\n服務器：localhost:11434\n響應時間：45ms\n\n💡 模型切換功能已啟用，可在上方下拉選單中選擇不同模型');
+                      onClick={async () => {
+                        try {
+                          // 真正測試 OLLAMA 連接
+                          const response = await fetch('http://localhost:11434/api/version');
+                          if (response.ok) {
+                            const data = await response.json();
+                            alert(`🔍 正在測試 AI 引擎連接...\n\n✅ 連接成功！\n版本：${data.version}\n服務器：localhost:11434\n響應時間：${response.headers.get('x-response-time') || '未知'}ms\n\n💡 模型切換功能已啟用，可在上方下拉選單中選擇不同模型`);
+                          } else {
+                            alert(`🔍 正在測試 AI 引擎連接...\n\n❌ 連接失敗！\n錯誤：HTTP ${response.status} ${response.statusText}\n服務器：localhost:11434\n\n💡 請確認 OLLAMA 服務正在運行`);
+                          }
+                        } catch (error) {
+                          alert(`🔍 正在測試 AI 引擎連接...\n\n❌ 連接失敗！\n錯誤：${error instanceof Error ? error.message : '未知錯誤'}\n服務器：localhost:11434\n\n💡 請確認 OLLAMA 服務正在運行`);
+                        }
                       }}
                     >
                       測試連接
