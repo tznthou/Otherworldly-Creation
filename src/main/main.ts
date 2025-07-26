@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { initDatabase } from './database/database';
+import { setupIpcHandlers } from './ipc/ipcHandlers';
 import './ipc/basicHandlers';
 
 // 全域錯誤處理 - 防止閃退
@@ -115,6 +116,11 @@ app.whenReady().then(async () => {
     console.log('開始初始化資料庫...');
     await initDatabase();
     console.log('資料庫初始化成功');
+    
+    // 設置 IPC 處理器
+    console.log('開始設置 IPC 處理器...');
+    setupIpcHandlers();
+    console.log('IPC 處理器設置成功');
     
     // 然後創建窗口
     createWindow();
