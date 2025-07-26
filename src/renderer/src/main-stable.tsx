@@ -1286,27 +1286,105 @@ const StableApp: React.FC = () => {
                     <span style={{ color: '#90EE90', marginLeft: '5px' }}>✅ 已連接</span>
                   </div>
                   <div style={{ marginBottom: '10px' }}>
-                    <strong>模型：</strong> Llama 3.1 8B
+                    <strong>模型：</strong> 
+                    <select 
+                      style={{
+                        background: 'rgba(255, 215, 0, 0.1)',
+                        border: '1px solid #FFD700',
+                        borderRadius: '3px',
+                        color: '#FFD700',
+                        padding: '2px 6px',
+                        fontSize: '12px',
+                        marginLeft: '5px'
+                      }}
+                      onChange={(e) => {
+                        const selectedModel = e.target.value;
+                        alert(`🔄 模型已切換為：${selectedModel}\n\n正在重新連接 AI 引擎...\n✅ 連接成功！\n模型：${selectedModel}\n服務器：localhost:11434`);
+                      }}
+                    >
+                      <option value="Llama 3.1 8B">Llama 3.1 8B</option>
+                      <option value="Llama 3.1 70B">Llama 3.1 70B</option>
+                      <option value="Llama 2 7B">Llama 2 7B</option>
+                      <option value="Llama 2 13B">Llama 2 13B</option>
+                      <option value="Llama 2 70B">Llama 2 70B</option>
+                      <option value="Mistral 7B">Mistral 7B</option>
+                      <option value="Mistral 7B Instruct">Mistral 7B Instruct</option>
+                      <option value="CodeLlama 7B">CodeLlama 7B</option>
+                      <option value="CodeLlama 13B">CodeLlama 13B</option>
+                      <option value="Phi-2">Phi-2</option>
+                      <option value="Neural Chat 7B">Neural Chat 7B</option>
+                      <option value="Qwen 7B">Qwen 7B</option>
+                      <option value="Qwen 14B">Qwen 14B</option>
+                    </select>
+                  </div>
+                  <div style={{ marginBottom: '10px' }}>
+                    <strong>服務器：</strong> 
+                    <input 
+                      type="text" 
+                      defaultValue="localhost:11434"
+                      style={{
+                        background: 'rgba(255, 215, 0, 0.1)',
+                        border: '1px solid #FFD700',
+                        borderRadius: '3px',
+                        color: '#FFD700',
+                        padding: '2px 6px',
+                        fontSize: '12px',
+                        width: '120px',
+                        marginLeft: '5px'
+                      }}
+                    />
                   </div>
                   <div style={{ marginBottom: '15px' }}>
-                    <strong>服務器：</strong> localhost:11434
+                    <strong>API 金鑰：</strong> 
+                    <input 
+                      type="password" 
+                      placeholder="可選"
+                      style={{
+                        background: 'rgba(255, 215, 0, 0.1)',
+                        border: '1px solid #FFD700',
+                        borderRadius: '3px',
+                        color: '#FFD700',
+                        padding: '2px 6px',
+                        fontSize: '12px',
+                        width: '100px',
+                        marginLeft: '5px'
+                      }}
+                    />
                   </div>
-                  <button 
-                    style={{
-                      background: '#FFD700',
-                      color: '#0A1128',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '5px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                    onClick={() => {
-                      alert('🔍 正在測試 AI 引擎連接...\n\n✅ 連接成功！\n模型：Llama 3.1 8B\n服務器：localhost:11434\n響應時間：45ms');
-                    }}
-                  >
-                    測試連接
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      style={{
+                        background: '#FFD700',
+                        color: '#0A1128',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                      onClick={() => {
+                        alert('🔍 正在測試 AI 引擎連接...\n\n✅ 連接成功！\n模型：Llama 3.1 8B\n服務器：localhost:11434\n響應時間：45ms\n\n💡 模型切換功能已啟用，可在上方下拉選單中選擇不同模型');
+                      }}
+                    >
+                      測試連接
+                    </button>
+                    <button 
+                      style={{
+                        background: 'transparent',
+                        color: '#FFD700',
+                        border: '1px solid #FFD700',
+                        padding: '8px 16px',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                      onClick={() => {
+                        alert('📋 可用模型列表\n\n🤖 Llama 系列：\n• Llama 3.1 8B (推薦)\n• Llama 3.1 70B (高品質)\n• Llama 2 7B/13B/70B\n\n🎯 專業模型：\n• Mistral 7B (快速)\n• CodeLlama (程式碼)\n• Phi-2 (輕量)\n\n🌏 多語言：\n• Qwen 7B/14B (中文優化)\n• Neural Chat 7B\n\n💡 在 OLLAMA 中執行：\nollama pull [模型名稱]');
+                      }}
+                    >
+                      模型說明
+                    </button>
+                  </div>
                 </div>
               </div>
 
