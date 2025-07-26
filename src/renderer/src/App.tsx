@@ -22,6 +22,7 @@ import { ErrorHandler, withErrorBoundary } from './utils/errorUtils';
 import { NotificationService } from './components/UI/NotificationSystem';
 import { useSettingsApplication, useShortcuts } from './hooks/useSettings';
 import AutoBackupService from './services/autoBackupService';
+import UpdateManager from './components/Update/UpdateManager';
 
 const AppContent: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -189,6 +190,9 @@ const AppContent: React.FC = () => {
       {/* 全域通知和錯誤提示 */}
       <ErrorToastContainer />
       <NotificationContainer />
+      
+      {/* 自動更新管理器 */}
+      <UpdateManager />
     </div>
   );
 };

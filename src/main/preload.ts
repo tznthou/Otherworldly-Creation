@@ -72,6 +72,21 @@ export interface ElectronAPI {
     vacuum: () => Promise<any>;
     analyze: () => Promise<any>;
   };
+  
+  // 自動更新
+  update: {
+    checkForUpdates: () => Promise<any>;
+    downloadUpdate: (updateInfo: any) => Promise<string>;
+    installUpdate: (updateFilePath: string) => Promise<void>;
+    checkPendingUpdate: () => Promise<string | null>;
+    getVersion: () => Promise<string>;
+    getStatus: () => Promise<any>;
+    autoCheck: () => Promise<any>;
+    onUpdateAvailable: (callback: (updateInfo: any) => void) => void;
+    onDownloadProgress: (callback: (progress: any) => void) => void;
+    onPendingInstall: (callback: (updatePath: string) => void) => void;
+    removeAllListeners: () => void;
+  };
 }
 
 // 暴露保護的方法給渲染進程
@@ -142,6 +157,30 @@ const electronAPI: ElectronAPI = {
     checkIntegrity: () => ipcRenderer.invoke('database:checkIntegrity'),
     vacuum: () => ipcRenderer.invoke('database:vacuum'),
     analyze: () => ipcRenderer.invoke('database:analyze'),
+  },
+  
+  update: {
+    checkForUpdates: () => ipcRenderer.invoke('update:check'),
+    downloadUpdate: (updateInfo: any) => ipcRenderer.invoke('update:download', updateInfo),
+    installUpdate: (updateFilePath: string) => ipcRenderer.invoke('update:install', updateFilePath),
+    checkPendingUpdate: () => ipcRenderer.invoke('update:check-pending'),
+    getVersion: () => ipcRenderer.invoke('update:get-version'),
+    getStatus: () => ipcRenderer.invoke('update:get-status'),
+    autoCheck: () => ipcRenderer.invoke('update:auto-check'),
+    onUpdateAvailable: (callback: (updateInfo: any) => void) => {
+      ipcRenderer.on('update:available', (_, updateInfo) => callback(updateInfo));
+    },
+    onDownloadProgress: (callback: (progress: any) => void) => {
+      ipcRenderer.on('update:download-progress', (_, progress) => callback(progress));
+    },
+    onPendingInstall: (callback: (updatePath: string) => void) => {
+      ipcRenderer.on('update:pending-install', (_, updatePath) => callback(updatePath));
+    },
+    removeAllListeners: () => {
+      ipcRenderer.removeAllListeners('update:available');
+      ipcRenderer.removeAllListeners('update:download-progress');
+      ipcRenderer.removeAllListeners('update:pending-install');
+    },
   },
 };
 

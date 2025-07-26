@@ -20,8 +20,9 @@ import { addNotification } from '../../store/slices/uiSlice';
 import BackupManager from '../../components/Backup/BackupManager';
 import AutoBackupIndicator from '../../components/UI/AutoBackupIndicator';
 import DatabaseMaintenance from '../DatabaseMaintenance/DatabaseMaintenance';
+import UpdateSettings from '../../components/Update/UpdateSettings';
 
-type SettingsTab = 'general' | 'ai' | 'editor' | 'ui' | 'backup' | 'database' | 'privacy' | 'shortcuts';
+type SettingsTab = 'general' | 'ai' | 'editor' | 'ui' | 'backup' | 'database' | 'update' | 'privacy' | 'shortcuts';
 
 const Settings: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -168,6 +169,7 @@ const Settings: React.FC = () => {
     { id: 'ui', name: '界面', icon: '🎨' },
     { id: 'backup', name: '備份', icon: '💾' },
     { id: 'database', name: '資料庫維護', icon: '🗄️' },
+    { id: 'update', name: '自動更新', icon: '🔄' },
     { id: 'privacy', name: '隱私', icon: '🔒' },
     { id: 'shortcuts', name: '快捷鍵', icon: '⌨️' },
   ];
@@ -253,6 +255,7 @@ const Settings: React.FC = () => {
           {activeTab === 'ui' && <UISettings settings={settings} dispatch={dispatch} />}
           {activeTab === 'backup' && <BackupSettings settings={settings} dispatch={dispatch} />}
           {activeTab === 'database' && <DatabaseMaintenanceSettings />}
+          {activeTab === 'update' && <UpdateSettings />}
           {activeTab === 'privacy' && <PrivacySettings settings={settings} dispatch={dispatch} />}
           {activeTab === 'shortcuts' && <ShortcutsSettings settings={settings} dispatch={dispatch} />}
         </div>

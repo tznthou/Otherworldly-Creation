@@ -7,31 +7,36 @@ module.exports = {
   extends: [
     'eslint:recommended',
     '@typescript-eslint/recommended',
-    'plugin:react/recommended',
-    'plugin:react-hooks/recommended',
   ],
   parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint', 'react', 'react-hooks'],
   parserOptions: {
     ecmaFeatures: {
       jsx: true,
     },
-    ecmaVersion: 12,
+    ecmaVersion: 2021,
     sourceType: 'module',
+    project: ['./tsconfig.json', './tsconfig.main.json'],
   },
-  plugins: [
-    'react',
-    '@typescript-eslint',
-  ],
   rules: {
-    'react/react-in-jsx-scope': 'off',
+    'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    'no-console': 'off',
+    'no-undef': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
+    'react/react-in-jsx-scope': 'off',
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
   },
-  settings: {
-    react: {
-      version: 'detect',
-    },
-  },
+  ignorePatterns: [
+    'dist/',
+    'out/',
+    'coverage/',
+    'node_modules/',
+    '*.test.ts',
+    '*.test.tsx',
+    '*.spec.ts',
+    '*.spec.tsx',
+    'test-*.js',
+  ],
 };

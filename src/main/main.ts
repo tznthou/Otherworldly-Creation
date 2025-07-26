@@ -2,9 +2,11 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import { initDatabase } from './database/database';
 import { setupIpcHandlers } from './ipc/ipcHandlers';
+import UpdateHandlers from './ipc/updateHandlers';
 
 // 保持對窗口對象的全局引用，如果不這樣做，當 JavaScript 對象被垃圾回收時，窗口會自動關閉
 let mainWindow: BrowserWindow | null = null;
+let updateHandlers: UpdateHandlers | null = null;
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -66,8 +68,22 @@ app.whenReady().then(async () => {
     // 設置 IPC 處理器
     setupIpcHandlers();
     
+    // 初始化更新處理器
+    updateHandlers = new UpdateHandlers();
+    
     // 創建主窗口
     createWindow();
+    
+    // 設置更新處理器的主窗口引用
+    if (updateHandlers && mainWindow) {
+      updateHandlers.setMainWindow(mainWindow);
+      
+      // 檢查待安裝的更新
+      await updateHandlers.checkPendingUpdateOnStartup();
+      
+      // 啟動定期更新檢查（每24小時）
+      updateHandlers.startPeriodicUpdateCheck(24);
+    }
     
     console.log('Genesis Chronicle 應用程式啟動成功');
   } catch (error) {
