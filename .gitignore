@@ -123,6 +123,9 @@ run-*.js
 # Kiro AI assistant files (optional - remove if you want to version control them)
 .kiro/
 
+# SpecStory files
+.specstory/
+
 # TypeScript build info
 *.tsbuildinfo
 

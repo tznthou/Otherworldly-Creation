@@ -1,11 +1,11 @@
 {
   "name": "genesis-chronicle",
   "displayName": "Genesis Chronicle",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "創世紀元：異世界創作神器 - 基於 AI 的輕小說創作工具",
   "author": "Genesis Chronicle Team",
   "license": "MIT",
-  "buildDate": "2025-07-26T04:00:05.003Z",
+  "buildDate": "2025-07-26T09:14:05.755Z",
   "nodeVersion": "v22.16.0",
   "electronVersion": "^27.1.2"
 }
