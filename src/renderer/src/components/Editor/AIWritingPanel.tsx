@@ -1,0 +1,626 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSlate } from 'slate-react';
+import { Transforms, Range } from 'slate';
+import { useAppDispatch } from '../../hooks/redux';
+import { addNotification } from '../../store/slices/uiSlice';
+
+interface AIWritingPanelProps {
+  projectId: string;
+  chapterId: string;
+}
+
+interface GenerationOption {
+  id: string;
+  text: string;
+  temperature: number;
+  timestamp: Date;
+  selected?: boolean;
+}
+
+interface GenerationProgress {
+  current: number;
+  total: number;
+  stage: 'preparing' | 'generating' | 'processing' | 'complete';
+  message: string;
+}
+
+const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId }) => {
+  const dispatch = useAppDispatch();
+  const editor = useSlate();
+  const abortControllerRef = useRef<AbortController | null>(null);
+  
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
+  const [progress, setProgress] = useState<GenerationProgress>({
+    current: 0,
+    total: 100,
+    stage: 'preparing',
+    message: '準備中...'
+  });
+  const [temperature, setTemperature] = useState(0.7);
+  const [maxTokens, setMaxTokens] = useState(200);
+  const [selectedModel, setSelectedModel] = useState('');
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [generationCount, setGenerationCount] = useState(3);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [topP, setTopP] = useState(0.9);
+  const [presencePenalty, setPresencePenalty] = useState(0);
+  const [frequencyPenalty, setFrequencyPenalty] = useState(0);
+  
+  // 獲取可用的 AI 模型
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const models = await window.electronAPI.ai.listModels();
+        setAvailableModels(models);
+        if (models.length > 0) {
+          setSelectedModel(models[0]);
+        }
+      } catch (error) {
+        console.error('獲取 AI 模型失敗:', error);
+        dispatch(addNotification({
+          type: 'error',
+          title: '無法獲取 AI 模型',
+          message: '請確保 Ollama 服務正在運行',
+          duration: 5000,
+        }));
+      }
+    };
+    
+    fetchModels();
+  }, [dispatch]);
+
+  // 清理效果：組件卸載時取消正在進行的請求
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+  
+  // 更新進度的輔助函數
+  const updateProgress = useCallback((stage: GenerationProgress['stage'], current: number, message: string) => {
+    setProgress({
+      current,
+      total: 100,
+      stage,
+      message
+    });
+  }, []);
+
+  // 生成文本
+  const handleGenerate = async () => {
+    if (!selectedModel) {
+      dispatch(addNotification({
+        type: 'warning',
+        title: '未選擇模型',
+        message: '請先選擇一個 AI 模型',
+        duration: 3000,
+      }));
+      return;
+    }
+    
+    // 檢查是否有選擇位置
+    const { selection } = editor;
+    if (!selection || !Range.isCollapsed(selection)) {
+      dispatch(addNotification({
+        type: 'warning',
+        title: '請選擇續寫位置',
+        message: '請將游標放在您希望 AI 續寫的位置',
+        duration: 3000,
+      }));
+      return;
+    }
+    
+    setIsGenerating(true);
+    setGenerationOptions([]);
+    
+    // 創建 AbortController 用於取消請求
+    abortControllerRef.current = new AbortController();
+    
+    try {
+      updateProgress('preparing', 10, '準備生成上下文...');
+      
+      // 生成多個選項的參數配置
+      const baseParams = {
+        temperature,
+        maxTokens,
+        topP,
+        presencePenalty,
+        frequencyPenalty,
+        maxContextTokens: 2000,
+      };
+      
+      // 根據生成數量創建不同的參數組合
+      const paramVariations = [];
+      for (let i = 0; i < generationCount; i++) {
+        const tempVariation = temperature + (i - Math.floor(generationCount / 2)) * 0.1;
+        paramVariations.push({
+          ...baseParams,
+          temperature: Math.max(0.1, Math.min(1.5, tempVariation))
+        });
+      }
+      
+      updateProgress('generating', 20, `開始生成 ${generationCount} 個版本...`);
+      
+      // 並行生成多個選項
+      const generationPromises = paramVariations.map(async (params, index) => {
+        try {
+          updateProgress('generating', 20 + (index * 60 / generationCount), `生成第 ${index + 1} 個版本...`);
+          
+          const result = await window.electronAPI.ai.generateWithContext(
+            projectId, 
+            chapterId, 
+            selection.anchor.offset, 
+            selectedModel, 
+            params
+          );
+          
+          return {
+            id: `${Date.now()}-${index}`,
+            text: result,
+            temperature: params.temperature,
+            timestamp: new Date()
+          };
+        } catch (error) {
+          console.error(`生成第 ${index + 1} 個版本失敗:`, error);
+          return null;
+        }
+      });
+      
+      // 等待所有生成完成
+      const results = await Promise.all(generationPromises);
+      
+      updateProgress('processing', 90, '處理生成結果...');
+      
+      // 過濾掉失敗的結果
+      const validResults = results.filter((result): result is GenerationOption => result !== null);
+      
+      if (validResults.length === 0) {
+        throw new Error('所有生成嘗試都失敗了');
+      }
+      
+      updateProgress('complete', 100, `成功生成 ${validResults.length} 個版本`);
+      setGenerationOptions(validResults);
+      
+      dispatch(addNotification({
+        type: 'success',
+        title: 'AI 續寫完成',
+        message: `成功生成 ${validResults.length} 個版本，請選擇您喜歡的版本`,
+        duration: 3000,
+      }));
+      
+    } catch (error) {
+      console.error('AI 續寫失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: 'AI 續寫失敗',
+        message: error instanceof Error ? error.message : '生成文本時發生錯誤',
+        duration: 5000,
+      }));
+      updateProgress('preparing', 0, '生成失敗');
+    } finally {
+      setIsGenerating(false);
+      abortControllerRef.current = null;
+    }
+  };
+  
+  // 應用生成的文本
+  const handleApplyOption = useCallback((option: GenerationOption) => {
+    try {
+      // 獲取當前選擇位置
+      const { selection } = editor;
+      if (selection) {
+        // 在當前位置插入文本
+        Transforms.insertText(editor, option.text);
+        
+        // 標記選項為已選擇
+        setGenerationOptions(prev => 
+          prev.map(opt => ({
+            ...opt,
+            selected: opt.id === option.id
+          }))
+        );
+        
+        dispatch(addNotification({
+          type: 'success',
+          title: '已插入文本',
+          message: `已成功插入 AI 生成的文本（溫度: ${option.temperature.toFixed(1)}）`,
+          duration: 3000,
+        }));
+        
+        // 3秒後清除選項
+        setTimeout(() => {
+          setGenerationOptions([]);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('插入文本失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '插入失敗',
+        message: '無法插入生成的文本',
+        duration: 3000,
+      }));
+    }
+  }, [editor, dispatch]);
+  
+  // 取消生成
+  const handleCancel = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setGenerationOptions([]);
+    setIsGenerating(false);
+    updateProgress('preparing', 0, '已取消');
+  }, [updateProgress]);
+
+  // 重新生成特定選項
+  const handleRegenerateOption = useCallback(async (optionId: string) => {
+    const option = generationOptions.find(opt => opt.id === optionId);
+    if (!option || !selectedModel) return;
+
+    try {
+      const { selection } = editor;
+      if (!selection) return;
+
+      const params = {
+        temperature: option.temperature,
+        maxTokens,
+        topP,
+        presencePenalty,
+        frequencyPenalty,
+        maxContextTokens: 2000,
+      };
+
+      const result = await window.electronAPI.ai.generateWithContext(
+        projectId, 
+        chapterId, 
+        selection.anchor.offset, 
+        selectedModel, 
+        params
+      );
+
+      // 更新該選項
+      setGenerationOptions(prev => 
+        prev.map(opt => 
+          opt.id === optionId 
+            ? { ...opt, text: result, timestamp: new Date() }
+            : opt
+        )
+      );
+
+      dispatch(addNotification({
+        type: 'success',
+        title: '重新生成完成',
+        message: '已更新該版本的內容',
+        duration: 2000,
+      }));
+
+    } catch (error) {
+      console.error('重新生成失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '重新生成失敗',
+        message: error instanceof Error ? error.message : '重新生成時發生錯誤',
+        duration: 3000,
+      }));
+    }
+  }, [generationOptions, selectedModel, editor, projectId, chapterId, maxTokens, topP, presencePenalty, frequencyPenalty, dispatch]);
+
+  // 清除所有選項
+  const handleClearOptions = useCallback(() => {
+    setGenerationOptions([]);
+    updateProgress('preparing', 0, '準備中...');
+  }, [updateProgress]);
+  
+  return (
+    <div className="bg-cosmic-900 border-t border-cosmic-700 p-4">
+      <div className="mb-4">
+        <h3 className="text-lg font-medium text-gold-400 mb-2">AI 續寫</h3>
+        <p className="text-sm text-gray-400">
+          使用 AI 協助您繼續寫作。請先將游標放在您希望 AI 續寫的位置。
+        </p>
+      </div>
+      
+      {/* 模型選擇和基本參數設置 */}
+      <div className="space-y-4 mb-4">
+        <div>
+          <label className="block text-sm text-gray-300 mb-1">AI 模型</label>
+          <select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+            disabled={isGenerating || availableModels.length === 0}
+          >
+            {availableModels.length === 0 ? (
+              <option value="">無可用模型</option>
+            ) : (
+              availableModels.map(model => (
+                <option key={model} value={model}>{model}</option>
+              ))
+            )}
+          </select>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-gray-300 mb-1">生成數量 ({generationCount})</label>
+            <input
+              type="range"
+              min="1"
+              max="5"
+              step="1"
+              value={generationCount}
+              onChange={(e) => setGenerationCount(parseInt(e.target.value))}
+              className="w-full"
+              disabled={isGenerating}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm text-gray-300 mb-1">生成長度 ({maxTokens})</label>
+            <input
+              type="range"
+              min="50"
+              max="500"
+              step="10"
+              value={maxTokens}
+              onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+              className="w-full"
+              disabled={isGenerating}
+            />
+          </div>
+        </div>
+        
+        <div>
+          <label className="block text-sm text-gray-300 mb-1">創意度 ({temperature.toFixed(1)})</label>
+          <input
+            type="range"
+            min="0.1"
+            max="1.5"
+            step="0.1"
+            value={temperature}
+            onChange={(e) => setTemperature(parseFloat(e.target.value))}
+            className="w-full"
+            disabled={isGenerating}
+          />
+          <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <span>保守</span>
+            <span>平衡</span>
+            <span>創意</span>
+          </div>
+        </div>
+        
+        {/* 進階設定 */}
+        <div>
+          <button
+            onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+            className="text-sm text-gold-400 hover:text-gold-300 transition-colors"
+            disabled={isGenerating}
+          >
+            {showAdvancedSettings ? '隱藏' : '顯示'}進階設定
+          </button>
+          
+          {showAdvancedSettings && (
+            <div className="mt-3 space-y-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
+              <div>
+                <label className="block text-sm text-gray-300 mb-1">Top-P ({topP.toFixed(1)})</label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1.0"
+                  step="0.1"
+                  value={topP}
+                  onChange={(e) => setTopP(parseFloat(e.target.value))}
+                  className="w-full"
+                  disabled={isGenerating}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">存在懲罰 ({presencePenalty.toFixed(1)})</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value={presencePenalty}
+                    onChange={(e) => setPresencePenalty(parseFloat(e.target.value))}
+                    className="w-full"
+                    disabled={isGenerating}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">頻率懲罰 ({frequencyPenalty.toFixed(1)})</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value={frequencyPenalty}
+                    onChange={(e) => setFrequencyPenalty(parseFloat(e.target.value))}
+                    className="w-full"
+                    disabled={isGenerating}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* 生成按鈕 */}
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={handleGenerate}
+          disabled={isGenerating || !selectedModel}
+          className="btn-primary px-6 py-2"
+        >
+          {isGenerating ? '生成中...' : '開始 AI 續寫'}
+        </button>
+        
+        {isGenerating && (
+          <button
+            onClick={handleCancel}
+            className="btn-secondary ml-2"
+          >
+            取消
+          </button>
+        )}
+      </div>
+      
+      {/* 進度指示器 */}
+      {isGenerating && (
+        <div className="mb-4 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-300">{progress.message}</span>
+            <span className="text-sm text-gold-400">{progress.current}%</span>
+          </div>
+          
+          <div className="h-2 bg-cosmic-900 rounded-full overflow-hidden mb-2">
+            <div 
+              className={`h-full transition-all duration-500 ${
+                progress.stage === 'complete' ? 'bg-green-500' : 
+                progress.stage === 'generating' ? 'bg-gold-500' : 
+                'bg-blue-500'
+              }`}
+              style={{ width: `${progress.current}%` }}
+            ></div>
+          </div>
+          
+          <div className="flex items-center justify-between text-xs text-gray-400">
+            <div className="flex items-center space-x-4">
+              <span className={`flex items-center ${progress.stage === 'preparing' ? 'text-blue-400' : 'text-gray-500'}`}>
+                <div className={`w-2 h-2 rounded-full mr-1 ${progress.stage === 'preparing' ? 'bg-blue-400 animate-pulse' : 'bg-gray-500'}`}></div>
+                準備
+              </span>
+              <span className={`flex items-center ${progress.stage === 'generating' ? 'text-gold-400' : 'text-gray-500'}`}>
+                <div className={`w-2 h-2 rounded-full mr-1 ${progress.stage === 'generating' ? 'bg-gold-400 animate-pulse' : 'bg-gray-500'}`}></div>
+                生成
+              </span>
+              <span className={`flex items-center ${progress.stage === 'processing' ? 'text-purple-400' : 'text-gray-500'}`}>
+                <div className={`w-2 h-2 rounded-full mr-1 ${progress.stage === 'processing' ? 'bg-purple-400 animate-pulse' : 'bg-gray-500'}`}></div>
+                處理
+              </span>
+              <span className={`flex items-center ${progress.stage === 'complete' ? 'text-green-400' : 'text-gray-500'}`}>
+                <div className={`w-2 h-2 rounded-full mr-1 ${progress.stage === 'complete' ? 'bg-green-400' : 'bg-gray-500'}`}></div>
+                完成
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 生成結果 */}
+      {generationOptions.length > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium text-gold-400">
+              生成結果 ({generationOptions.length} 個版本)
+            </h4>
+            <button
+              onClick={handleClearOptions}
+              className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
+            >
+              清除全部
+            </button>
+          </div>
+          
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {generationOptions.map((option, index) => (
+              <div 
+                key={option.id}
+                className={`bg-cosmic-800 border rounded-lg p-4 transition-all duration-200 ${
+                  option.selected 
+                    ? 'border-green-500 bg-green-900/20' 
+                    : 'border-cosmic-700 hover:border-gold-500'
+                }`}
+              >
+                {/* 選項標題 */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-medium text-gold-400">版本 {index + 1}</span>
+                    <span className="text-xs text-gray-400">
+                      溫度: {option.temperature.toFixed(1)}
+                    </span>
+                    {option.selected && (
+                      <span className="text-xs text-green-400 flex items-center">
+                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        已使用
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => handleRegenerateOption(option.id)}
+                      className="text-xs text-blue-400 hover:text-blue-300 transition-colors p-1"
+                      title="重新生成此版本"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                    
+                    <span className="text-xs text-gray-500">
+                      {option.timestamp.toLocaleTimeString()}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* 生成的文本 */}
+                <div className="mb-3 text-white text-sm leading-relaxed whitespace-pre-wrap max-h-32 overflow-y-auto">
+                  {option.text}
+                </div>
+                
+                {/* 操作按鈕 */}
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => navigator.clipboard.writeText(option.text)}
+                    className="text-xs text-gray-400 hover:text-gray-300 transition-colors px-2 py-1"
+                  >
+                    複製
+                  </button>
+                  
+                  <button
+                    onClick={() => handleApplyOption(option)}
+                    className={`text-xs px-3 py-1 rounded transition-colors ${
+                      option.selected
+                        ? 'bg-green-600 text-white cursor-not-allowed'
+                        : 'bg-gold-600 hover:bg-gold-500 text-white'
+                    }`}
+                    disabled={option.selected}
+                  >
+                    {option.selected ? '已使用' : '使用此版本'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* 批量操作 */}
+          <div className="mt-3 pt-3 border-t border-cosmic-700">
+            <div className="flex justify-between items-center text-xs text-gray-400">
+              <span>提示：您可以重新生成任何版本或複製文本</span>
+              <button
+                onClick={handleGenerate}
+                className="text-gold-400 hover:text-gold-300 transition-colors"
+                disabled={isGenerating}
+              >
+                重新生成全部
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AIWritingPanel;

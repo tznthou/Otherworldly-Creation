@@ -1,0 +1,278 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS 變數 */
+:root {
+  /* 編輯器設定變數 */
+  --editor-font-family: 'Noto Sans TC', sans-serif;
+  --editor-font-size: 16px;
+  --editor-line-height: 1.6;
+  
+  /* UI 設定變數 */
+  --sidebar-width: 280px;
+  --animation-duration: 0.2s;
+  
+  /* 主題變數 */
+  --theme-background: #0A1128;
+  --theme-text: #FFFFFF;
+  --theme-accent: #FFD700;
+}
+
+/* 主題支援 */
+[data-theme="cosmic"] {
+  --theme-background: #0A1128;
+  --theme-text: #FFFFFF;
+  --theme-accent: #FFD700;
+}
+
+[data-theme="light"] {
+  --theme-background: #FFFFFF;
+  --theme-text: #1F2937;
+  --theme-accent: #3B82F6;
+}
+
+[data-theme="dark"] {
+  --theme-background: #1F2937;
+  --theme-text: #F9FAFB;
+  --theme-accent: #10B981;
+}
+
+[data-theme="sepia"] {
+  --theme-background: #F7F3E9;
+  --theme-text: #5D4E37;
+  --theme-accent: #8B4513;
+}
+
+/* 全局樣式 */
+@layer base {
+  html {
+    font-family: var(--editor-font-family);
+  }
+  
+  body {
+    @apply bg-cosmic-950 text-white;
+    background-image: 
+      radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(106, 13, 173, 0.2) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+  
+  /* 自定義滾動條 */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-cosmic-900;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gold-600 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gold-500;
+  }
+}
+
+/* 組件樣式 */
+@layer components {
+  /* 按鈕樣式 */
+  .btn-primary {
+    @apply bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 
+           text-cosmic-950 font-medium px-6 py-2 rounded-lg transition-all duration-200
+           shadow-lg hover:shadow-gold-500/25 active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply bg-cosmic-800 hover:bg-cosmic-700 text-white border border-cosmic-600
+           px-6 py-2 rounded-lg transition-all duration-200 active:scale-95;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white
+           px-6 py-2 rounded-lg transition-all duration-200 active:scale-95;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg 
+           transition-all duration-200 active:scale-95;
+  }
+  
+  /* 輸入框樣式 */
+  .input-primary {
+    @apply bg-cosmic-800 border border-cosmic-600 text-white placeholder-gray-400
+           px-4 py-2 rounded-lg focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500
+           transition-all duration-200;
+  }
+  
+  .textarea-primary {
+    @apply bg-cosmic-800 border border-cosmic-600 text-white placeholder-gray-400
+           px-4 py-2 rounded-lg focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500
+           transition-all duration-200 resize-none;
+  }
+  
+  /* 卡片樣式 */
+  .card {
+    @apply bg-cosmic-900/50 backdrop-blur-sm border border-cosmic-700 rounded-xl p-6
+           shadow-xl hover:shadow-2xl transition-all duration-300;
+  }
+  
+  .card-hover {
+    @apply hover:border-gold-500/50 hover:shadow-gold-500/10;
+  }
+  
+  /* 魔法陣動畫 */
+  .magic-circle {
+    @apply absolute opacity-10 pointer-events-none;
+    animation: magic-circle 20s linear infinite;
+  }
+  
+  /* 浮動動畫 */
+  .float-animation {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  /* 發光效果 */
+  .glow-effect {
+    @apply shadow-lg;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+  
+  .glow-effect:hover {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+  }
+  
+  /* 脈衝發光效果 */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+  
+  /* 閃爍效果 */
+  .twinkle {
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  
+  /* 漸現效果 */
+  .fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+  
+  /* 滑入效果 */
+  .slide-in-left {
+    animation: slide-in-left 0.3s ease-out;
+  }
+  
+  .slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+  
+  .slide-in-up {
+    animation: slide-in-up 0.3s ease-out;
+  }
+  
+  /* 縮放效果 */
+  .scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+  
+  /* 旋轉發光效果 */
+  .rotate-glow {
+    animation: rotate-glow 4s linear infinite;
+  }
+  
+  /* 呼吸效果 */
+  .breathe {
+    animation: breathe 4s ease-in-out infinite;
+  }
+  
+  /* 進度條收縮動畫 */
+  @keyframes shrink {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+  
+  /* 標題樣式 */
+  .title-cosmic {
+    @apply font-cosmic text-gold-500 tracking-wider;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+  
+  /* 導航樣式 */
+  .nav-item {
+    @apply flex items-center px-4 py-3 rounded-lg transition-all duration-200
+           hover:bg-cosmic-800 hover:text-gold-400 cursor-pointer;
+  }
+  
+  .nav-item.active {
+    @apply bg-gold-500/20 text-gold-400 border-r-2 border-gold-500;
+  }
+  
+  /* 編輯器樣式 */
+  .editor-container {
+    @apply bg-cosmic-900/30 border border-cosmic-700 rounded-lg p-4
+           focus-within:border-gold-500 transition-all duration-200;
+  }
+  
+  /* 載入動畫 */
+  .loading-dots {
+    @apply inline-flex space-x-1;
+  }
+  
+  .loading-dots span {
+    @apply w-2 h-2 bg-gold-500 rounded-full animate-pulse;
+    animation-delay: calc(var(--i) * 0.2s);
+  }
+  
+  /* 工具提示 */
+  .tooltip {
+    @apply absolute z-50 px-2 py-1 text-xs bg-cosmic-800 text-white rounded
+           border border-cosmic-600 shadow-lg pointer-events-none;
+  }
+  
+  /* 模態框 */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center;
+  }
+  
+  .modal-content {
+    @apply bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-2xl
+           max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto;
+  }
+}
+
+/* 工具類 */
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+  
+  .backdrop-cosmic {
+    backdrop-filter: blur(10px);
+    background: rgba(10, 17, 40, 0.8);
+  }
+  
+  /* 隱藏滾動條但保持功能 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* 選擇文字樣式 */
+  .selectable {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+}
