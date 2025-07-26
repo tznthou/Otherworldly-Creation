@@ -844,20 +844,33 @@ const StableApp: React.FC = () => {
   const fetchOllamaModels = async () => {
     setIsLoadingModels(true);
     try {
-      const response = await fetch('http://localhost:11434/api/tags');
-      if (response.ok) {
-        const data = await response.json();
-        const models = data.models?.map((model: any) => model.name) || [];
-        setOllamaModels(models);
-        if (models.length > 0 && !selectedModel) {
-          setSelectedModel(models[0]);
+      // 檢查 Electron API 是否可用
+      if (!window.electronAPI) {
+        console.warn('Electron API 不可用，使用 fallback 方法');
+        // Fallback: 直接使用 fetch
+        const response = await fetch('http://localhost:11434/api/tags');
+        if (response.ok) {
+          const data = await response.json();
+          const models = data.models?.map((model: any) => model.name) || [];
+          setOllamaModels(models);
+          if (models.length > 0 && !selectedModel) {
+            setSelectedModel(models[0]);
+          }
+        } else {
+          setOllamaModels([]);
         }
-      } else {
-        console.warn('無法連接到 OLLAMA 服務器');
-        setOllamaModels([]);
+        return;
+      }
+
+      // 使用現有的 IPC API 獲取模型列表
+      const models = await window.electronAPI.ai.listModels();
+      console.log('從 IPC 獲取的模型列表:', models);
+      setOllamaModels(models);
+      if (models.length > 0 && !selectedModel) {
+        setSelectedModel(models[0]);
       }
     } catch (error) {
-      console.warn('OLLAMA 服務器連接失敗:', error);
+      console.warn('獲取 OLLAMA 模型列表失敗:', error);
       setOllamaModels([]);
     } finally {
       setIsLoadingModels(false);
