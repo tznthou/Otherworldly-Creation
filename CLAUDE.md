@@ -24,6 +24,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `node run-integration-tests.js` - Alternative integration test runner
 - `node run-performance-tests.js` - Alternative performance test runner
 
+### Running Single Tests
+- To run a specific test file: `npm test -- path/to/test.spec.ts`
+- To run tests matching a pattern: `npm test -- --testNamePattern="test description"`
+- To run tests in watch mode: `npm test -- --watch`
+
 ### Build & Package Commands
 - `npm run build:main` - Build main process only
 - `npm run build:renderer` - Build renderer process only
@@ -31,6 +36,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run make:mac` - Build for macOS
 - `npm run make:win` - Build for Windows
 - `npm run make:linux` - Build for Linux
+
+### Utility Commands
+- `npm run optimize` - Optimize resources before packaging
+- `npm run diagnostic` - Run system diagnostic checks
+- `npm run setup` - One-click installation script
+- `npm run release` - Full release workflow (lint, test, build, package)
+- `npm run package:simple` - Simple packaging without Electron Forge
+- `npm run package:manual` - Manual packaging process
 
 ## Architecture Overview
 
@@ -124,3 +137,19 @@ The application uses SQLite with the following main entities:
 - Automatic backup and restore functionality
 - Database maintenance tools for health checking and optimization
 - Auto-save functionality for editor content
+
+## ESLint Configuration
+- Uses TypeScript ESLint parser with React hooks support
+- Ignores test files and build directories
+- Key rules:
+  - `@typescript-eslint/no-unused-vars`: Error (ignores args starting with `_`)
+  - `@typescript-eslint/no-explicit-any`: Warning
+  - `react-hooks/rules-of-hooks`: Error
+  - `react-hooks/exhaustive-deps`: Warning
+
+## Current Version
+- v0.4.3 - Enhanced OLLAMA connection stability with XMLHttpRequest fallback
+
+## Known Issues & Workarounds
+- **OLLAMA Connection**: If AI features fail, ensure Ollama service is running locally (`ollama serve`)
+- **Electron Network Requests**: Main process uses custom fetch implementation with XMLHttpRequest fallback for compatibility

@@ -1,15 +1,32 @@
 import React from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
-import { checkOllamaService, fetchServiceStatus, fetchModelsInfo } from '../../store/slices/aiSlice';
+import { checkOllamaService, fetchServiceStatus, fetchModelsInfo, fetchAvailableModels } from '../../store/slices/aiSlice';
 
 const AIStatus: React.FC = () => {
   const dispatch = useAppDispatch();
   const { isOllamaConnected, availableModels, currentModel } = useAppSelector(state => state.ai);
 
   const handleRefreshConnection = async () => {
-    await dispatch(checkOllamaService());
-    if (isOllamaConnected) {
-      dispatch(fetchAvailableModels());
+    console.log('重新檢測 AI 服務...');
+    try {
+      // 檢查服務狀態
+      const serviceResult = await dispatch(checkOllamaService());
+      console.log('服務檢查結果:', serviceResult);
+      
+      // 獲取詳細狀態
+      await dispatch(fetchServiceStatus());
+      
+      // 如果連接成功，獲取模型信息
+      const checkResult = serviceResult.payload;
+      if (checkResult) {
+        console.log('服務已連接，獲取模型信息...');
+        await dispatch(fetchModelsInfo());
+        await dispatch(fetchAvailableModels());
+      } else {
+        console.log('服務未連接');
+      }
+    } catch (error) {
+      console.error('重新檢測失敗:', error);
     }
   };
 

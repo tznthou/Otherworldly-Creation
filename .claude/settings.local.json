@@ -20,7 +20,10 @@
       "Bash(export:*)",
       "Bash(npm run build:*)",
       "Bash(NODE_ENV=development npm run dev)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pkill:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

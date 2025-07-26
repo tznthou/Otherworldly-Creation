@@ -1,6 +1,7 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import Footer from './Footer';
 import NotificationContainer from '../UI/NotificationContainer';
 import CosmicBackground from '../UI/CosmicBackground';
 import { useAppSelector } from '../../hooks/redux';
@@ -31,6 +32,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <main className="flex-1 overflow-hidden relative">
           {children}
         </main>
+        
+        {/* 底部狀態欄 */}
+        <Footer />
       </div>
       
       {/* 通知容器 */}

@@ -9,7 +9,9 @@ export function setupAIHandlers(): void {
   // 檢查 Ollama 服務
   ipcMain.handle('ai:checkOllamaService', async () => {
     try {
+      console.log('開始檢查 Ollama 服務...');
       const result = await ollamaService.checkServiceAvailability();
+      console.log('Ollama 服務檢查結果:', result);
       return result.available;
     } catch (error) {
       console.error('檢查 Ollama 服務失敗:', error);
@@ -20,7 +22,10 @@ export function setupAIHandlers(): void {
   // 獲取詳細的服務狀態
   ipcMain.handle('ai:getServiceStatus', async () => {
     try {
-      return await ollamaService.getServiceStatus();
+      console.log('開始獲取服務狀態...');
+      const status = await ollamaService.getServiceStatus();
+      console.log('服務狀態:', status);
+      return status;
     } catch (error) {
       console.error('獲取服務狀態失敗:', error);
       return {
@@ -34,10 +39,14 @@ export function setupAIHandlers(): void {
   // 獲取模型列表
   ipcMain.handle('ai:listModels', async () => {
     try {
+      console.log('開始獲取模型列表...');
       const result = await ollamaService.listModels();
+      console.log('模型列表結果:', result);
       
       if (result.success) {
-        return result.models.map(model => model.name);
+        const modelNames = result.models.map(model => model.name);
+        console.log('可用模型:', modelNames);
+        return modelNames;
       } else {
         console.error('獲取模型列表失敗:', result.error);
         return [];

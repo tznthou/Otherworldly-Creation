@@ -15,11 +15,11 @@ const Dashboard: React.FC = () => {
     // 載入專案列表
     dispatch(fetchProjects());
     
-    // 如果 Ollama 已連接，載入可用模型
-    if (isOllamaConnected) {
-      dispatch(fetchAvailableModels());
-    }
-  }, [dispatch, isOllamaConnected]);
+    // 暫時禁用 AI 模型檢查
+    // if (isOllamaConnected) {
+    //   dispatch(fetchAvailableModels());
+    // }
+  }, [dispatch]);
 
   if (loading) {
     return (
@@ -74,8 +74,14 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* AI 狀態卡片 */}
-        <AIStatus />
+        {/* AI 狀態卡片 - 暫時禁用 */}
+        <div className="card">
+          <h2 className="text-xl font-cosmic text-gold-500 mb-4">AI 引擎狀態</h2>
+          <div className="text-center py-8">
+            <p className="text-yellow-400 mb-2">🔧 AI 功能暫時禁用</p>
+            <p className="text-sm text-gray-400">正在修復 Ollama 連接問題</p>
+          </div>
+        </div>
 
         {/* 快速操作 */}
         <QuickActions />

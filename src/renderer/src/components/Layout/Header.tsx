@@ -3,7 +3,7 @@ import { useAppSelector } from '../../hooks/redux';
 
 const Header: React.FC = () => {
   const { currentProject } = useAppSelector(state => state.projects);
-  const { autoSaving } = useAppSelector(state => state.chapters);
+  const { autoSaving } = useAppSelector(state => state.chapters || { autoSaving: false });
 
   const getPageTitle = () => {
     const path = window.location.pathname;

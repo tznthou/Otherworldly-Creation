@@ -1,4 +1,4 @@
-import { ContextManagerImpl, setContextManager, getContextManager } from '../../services/contextManager';
+import { ContextManager, setContextManager, getContextManager } from '../../services/contextManager';
 import { initDatabase, getDatabase, closeDatabase } from '../../database/database';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -12,7 +12,7 @@ jest.mock('electron', () => ({
 }));
 
 describe('ContextManager', () => {
-  let contextManager: ContextManagerImpl;
+  let contextManager: ContextManager;
   const testDbPath = path.join(os.tmpdir(), 'test-genesis-chronicle', 'genesis-chronicle.db');
 
   beforeEach(async () => {
@@ -32,7 +32,7 @@ describe('ContextManager', () => {
     const db = getDatabase();
     
     // 創建上下文管理器實例
-    contextManager = new ContextManagerImpl(db);
+    contextManager = new ContextManager(db);
     setContextManager(db);
   });
 
