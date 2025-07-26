@@ -2,7 +2,6 @@ import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { initDatabase } from './database/database';
 import { setupIpcHandlers } from './ipc/ipcHandlers';
-import './ipc/basicHandlers';
 
 // 全域錯誤處理 - 防止閃退
 process.on('uncaughtException', (error) => {
