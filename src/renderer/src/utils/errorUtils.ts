@@ -240,7 +240,7 @@ export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
   fallback?: React.ComponentType<{ error: Error; resetError: () => void }>
 ) {
-  const React = require('react');
+  // React 已在頂部導入，不需要 require
   
   return class ErrorBoundary extends React.Component<
     P,

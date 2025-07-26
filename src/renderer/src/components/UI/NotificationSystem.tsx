@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store/store';
-import { removeNotification } from '../../store/slices/notificationSlice';
+import { RootState, store } from '../../store/store';
+import { removeNotification, addNotification, clearNotifications } from '../../store/slices/notificationSlice';
 
 export interface Notification {
   id: string;
@@ -251,9 +251,6 @@ export class NotificationService {
   }
 
   static show(notification: Omit<Notification, 'id' | 'timestamp'>) {
-    const { store } = require('../../store/store');
-    const { addNotification } = require('../../store/slices/notificationSlice');
-    
     const fullNotification: Notification = {
       ...notification,
       id: `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -265,16 +262,10 @@ export class NotificationService {
   }
 
   static remove(id: string) {
-    const { store } = require('../../store/store');
-    const { removeNotification } = require('../../store/slices/notificationSlice');
-    
     store.dispatch(removeNotification(id));
   }
 
   static clear() {
-    const { store } = require('../../store/store');
-    const { clearNotifications } = require('../../store/slices/notificationSlice');
-    
     store.dispatch(clearNotifications());
   }
 }

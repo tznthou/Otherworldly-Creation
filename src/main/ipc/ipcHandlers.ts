@@ -327,16 +327,7 @@ function setupCharacterHandlers(db: any): void {
     }
   });
   
-  // 刪除角色
-  ipcMain.handle('characters:delete', async (_, id) => {
-    try {
-      const stmt = db.prepare('DELETE FROM characters WHERE id = ?');
-      stmt.run(id);
-    } catch (error) {
-      console.error('刪除角色失敗:', error);
-      throw error;
-    }
-  });
+  // 刪除角色的簡單版本已移除，使用帶引用檢查的版本
   
   // 根據 ID 獲取角色（包含關係）
   ipcMain.handle('characters:getById', async (_, id) => {

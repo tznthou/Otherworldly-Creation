@@ -31,7 +31,9 @@ class UpdateService {
 
   constructor() {
     // 從 package.json 讀取當前版本
-    this.currentVersion = require('../../../package.json').version;
+    const path = require('path');
+    const packageJsonPath = path.join(__dirname, '../../package.json');
+    this.currentVersion = require(packageJsonPath).version;
     // 更新服務器 URL（可以配置）
     this.updateServerUrl = process.env.UPDATE_SERVER_URL || 'https://api.github.com/repos/genesis-chronicle/genesis-chronicle';
   }
@@ -311,13 +313,13 @@ class UpdateService {
               
               resolve(updateInfo);
             } catch (error) {
-              reject(new Error('解析更新信息失敗: ' + error.message));
+              reject(new Error('解析更新信息失敗: ' + (error instanceof Error ? error.message : String(error))));
             }
           });
         });
         
         req.on('error', (error: any) => {
-          reject(new Error('獲取更新信息失敗: ' + error.message));
+          reject(new Error('獲取更新信息失敗: ' + (error instanceof Error ? error.message : String(error))));
         });
         
         req.setTimeout(15000, () => {
@@ -328,7 +330,7 @@ class UpdateService {
         req.end();
       });
     } catch (error) {
-      throw new Error('獲取更新信息失敗: ' + error.message);
+      throw new Error('獲取更新信息失敗: ' + (error instanceof Error ? error.message : String(error)));
     }
   }
 
@@ -493,11 +495,11 @@ class UpdateService {
         });
         
         stream.on('error', (error: any) => {
-          reject(new Error('文件校驗失敗: ' + error.message));
+          reject(new Error('文件校驗失敗: ' + (error instanceof Error ? error.message : String(error))));
         });
 
       } catch (error) {
-        reject(new Error('文件校驗失敗: ' + error.message));
+        reject(new Error('文件校驗失敗: ' + (error instanceof Error ? error.message : String(error))));
       }
     });
   }
@@ -559,7 +561,7 @@ class UpdateService {
         console.error('從備份恢復失敗:', restoreError);
       }
       
-      throw new Error('安裝失敗: ' + error.message);
+      throw new Error('安裝失敗: ' + (error instanceof Error ? error.message : String(error)));
     }
   }
 
@@ -606,7 +608,6 @@ class UpdateService {
   isDownloadingUpdate(): boolean {
     return this.isDownloading;
   }
-}
 
   /**
    * 解析變更日誌
@@ -675,7 +676,7 @@ class UpdateService {
         }, 1500);
         
       } catch (error) {
-        reject(new Error('解壓更新文件失敗: ' + error.message));
+        reject(new Error('解壓更新文件失敗: ' + (error instanceof Error ? error.message : String(error))));
       }
     });
   }
@@ -695,7 +696,7 @@ class UpdateService {
         }, 500);
         
       } catch (error) {
-        reject(new Error('更新驗證失敗: ' + error.message));
+        reject(new Error('更新驗證失敗: ' + (error instanceof Error ? error.message : String(error))));
       }
     });
   }
@@ -744,4 +745,4 @@ class UpdateService {
 }
 
 export default UpdateService;
-export { UpdateInfo, UpdateCheckResult, UpdateProgress };
+export type { UpdateInfo, UpdateCheckResult, UpdateProgress };

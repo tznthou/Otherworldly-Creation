@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;" />
     <title>創世紀元：異世界創作神器</title>
     
     <!-- 載入字體 -->
@@ -81,6 +82,23 @@
     <!-- React 應用程式根節點 -->
     <div id="root"></div>
     
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- 調試信息 -->
+    <script>
+      console.log('HTML 檔案已載入');
+      console.log('document.readyState:', document.readyState);
+      
+      // 檢查 root 元素
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded 事件觸發');
+        const root = document.getElementById('root');
+        console.log('root 元素:', root);
+      });
+      
+      // 立即檢查
+      const root = document.getElementById('root');
+      console.log('立即檢查 root 元素:', root);
+    </script>
+    
+    <script type="module" src="/src/main-final.tsx"></script>
   </body>
 </html>

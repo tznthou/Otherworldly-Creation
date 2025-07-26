@@ -305,3 +305,89 @@ export function closeDatabase(): void {
     db.close();
   }
 }
+
+// 專案管理函數
+export function getAllProjects() {
+  if (!db) throw new Error('資料庫未初始化');
+  return db.prepare('SELECT * FROM projects ORDER BY updated_at DESC').all();
+}
+
+export function createProject(project: any) {
+  if (!db) throw new Error('資料庫未初始化');
+  const id = require('uuid').v4();
+  const stmt = db.prepare(`
+    INSERT INTO projects (id, name, type, description, settings)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  const settings = JSON.stringify({
+    genre: project.genre || '奇幻',
+    status: 'active',
+    word_count: 0
+  });
+  stmt.run(id, project.title, project.type || 'novel', project.description || '', settings);
+  return id;
+}
+
+export function getProjectById(id: string) {
+  if (!db) throw new Error('資料庫未初始化');
+  return db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
+}
+
+export function updateProject(project: any) {
+  if (!db) throw new Error('資料庫未初始化');
+  const stmt = db.prepare(`
+    UPDATE projects 
+    SET name = ?, type = ?, description = ?, settings = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `);
+  const settings = JSON.stringify({
+    genre: project.genre || '奇幻',
+    status: project.status || 'active',
+    word_count: project.word_count || 0
+  });
+  stmt.run(project.title, project.type || 'novel', project.description, settings, project.id);
+}
+
+export function deleteProject(id: string) {
+  if (!db) throw new Error('資料庫未初始化');
+  const stmt = db.prepare('DELETE FROM projects WHERE id = ?');
+  stmt.run(id);
+}
+
+// 章節管理函數
+export function getChaptersByProjectId(projectId: string) {
+  if (!db) throw new Error('資料庫未初始化');
+  return db.prepare('SELECT * FROM chapters WHERE project_id = ? ORDER BY order_num').all(projectId);
+}
+
+export function createChapter(chapter: any) {
+  if (!db) throw new Error('資料庫未初始化');
+  const id = require('uuid').v4();
+  const stmt = db.prepare(`
+    INSERT INTO chapters (id, project_id, title, content, order_num)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  stmt.run(id, chapter.project_id, chapter.title, chapter.content || '', chapter.order_num || 1);
+  return id;
+}
+
+export function getChapterById(id: string) {
+  if (!db) throw new Error('資料庫未初始化');
+  return db.prepare('SELECT * FROM chapters WHERE id = ?').get(id);
+}
+
+export function updateChapter(chapter: any) {
+  if (!db) throw new Error('資料庫未初始化');
+  const stmt = db.prepare(`
+    UPDATE chapters 
+    SET title = ?, content = ?, order_num = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `);
+  stmt.run(chapter.title, chapter.content, chapter.order_num, chapter.id);
+}
+
+export function deleteChapter(id: string) {
+  if (!db) throw new Error('資料庫未初始化');
+  const stmt = db.prepare('DELETE FROM chapters WHERE id = ?');
+  stmt.run(id);
+}
