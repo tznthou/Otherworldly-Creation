@@ -59,33 +59,61 @@ const initialState: AIState = {
 // 異步 thunks
 export const checkOllamaService = createAsyncThunk(
   'ai/checkOllamaService',
-  async () => {
-    const isConnected = await window.electronAPI.ai.checkOllamaService();
-    return isConnected;
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('Redux: 檢查 Ollama 服務...');
+      const isConnected = await window.electronAPI.ai.checkOllamaService();
+      console.log('Redux: Ollama 服務結果:', isConnected);
+      return isConnected;
+    } catch (error) {
+      console.error('Redux: 檢查 Ollama 服務失敗:', error);
+      return rejectWithValue(false);
+    }
   }
 );
 
 export const fetchServiceStatus = createAsyncThunk(
   'ai/fetchServiceStatus',
-  async () => {
-    const status = await window.electronAPI.ai.getServiceStatus();
-    return status;
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('Redux: 獲取服務狀態...');
+      const status = await window.electronAPI.ai.getServiceStatus();
+      console.log('Redux: 服務狀態結果:', status);
+      return status;
+    } catch (error) {
+      console.error('Redux: 獲取服務狀態失敗:', error);
+      return rejectWithValue(null);
+    }
   }
 );
 
 export const fetchAvailableModels = createAsyncThunk(
   'ai/fetchAvailableModels',
-  async () => {
-    const models = await window.electronAPI.ai.listModels();
-    return models;
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('Redux: 獲取可用模型...');
+      const models = await window.electronAPI.ai.listModels();
+      console.log('Redux: 可用模型結果:', models);
+      return models;
+    } catch (error) {
+      console.error('Redux: 獲取可用模型失敗:', error);
+      return rejectWithValue([]);
+    }
   }
 );
 
 export const fetchModelsInfo = createAsyncThunk(
   'ai/fetchModelsInfo',
-  async () => {
-    const modelsInfo = await window.electronAPI.ai.getModelsInfo();
-    return modelsInfo;
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('Redux: 獲取模型詳細資訊...');
+      const modelsInfo = await window.electronAPI.ai.getModelsInfo();
+      console.log('Redux: 模型詳細資訊結果:', modelsInfo);
+      return modelsInfo;
+    } catch (error) {
+      console.error('Redux: 獲取模型詳細資訊失敗:', error);
+      return rejectWithValue(null);
+    }
   }
 );
 

@@ -23,7 +23,8 @@
       "Bash(mv:*)",
       "Bash(npx tsc:*)",
       "Bash(pkill:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

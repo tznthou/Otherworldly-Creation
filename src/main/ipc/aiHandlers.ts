@@ -9,9 +9,10 @@ export function setupAIHandlers(): void {
   // 檢查 Ollama 服務
   ipcMain.handle('ai:checkOllamaService', async () => {
     try {
-      console.log('開始檢查 Ollama 服務...');
+      console.log('=== 開始檢查 Ollama 服務 ===');
       const result = await ollamaService.checkServiceAvailability();
-      console.log('Ollama 服務檢查結果:', result);
+      console.log('Ollama 服務檢查結果:', JSON.stringify(result, null, 2));
+      console.log('服務可用性:', result.available);
       return result.available;
     } catch (error) {
       console.error('檢查 Ollama 服務失敗:', error);
@@ -22,9 +23,9 @@ export function setupAIHandlers(): void {
   // 獲取詳細的服務狀態
   ipcMain.handle('ai:getServiceStatus', async () => {
     try {
-      console.log('開始獲取服務狀態...');
+      console.log('=== 開始獲取服務狀態 ===');
       const status = await ollamaService.getServiceStatus();
-      console.log('服務狀態:', status);
+      console.log('服務狀態:', JSON.stringify(status, null, 2));
       return status;
     } catch (error) {
       console.error('獲取服務狀態失敗:', error);
@@ -39,13 +40,14 @@ export function setupAIHandlers(): void {
   // 獲取模型列表
   ipcMain.handle('ai:listModels', async () => {
     try {
-      console.log('開始獲取模型列表...');
+      console.log('=== 開始獲取模型列表 ===');
       const result = await ollamaService.listModels();
-      console.log('模型列表結果:', result);
+      console.log('模型列表結果:', JSON.stringify(result, null, 2));
       
       if (result.success) {
         const modelNames = result.models.map(model => model.name);
         console.log('可用模型:', modelNames);
+        console.log('模型數量:', modelNames.length);
         return modelNames;
       } else {
         console.error('獲取模型列表失敗:', result.error);
@@ -60,7 +62,10 @@ export function setupAIHandlers(): void {
   // 獲取詳細的模型資訊
   ipcMain.handle('ai:getModelsInfo', async () => {
     try {
-      return await ollamaService.listModels();
+      console.log('=== 開始獲取詳細模型資訊 ===');
+      const result = await ollamaService.listModels();
+      console.log('詳細模型資訊:', JSON.stringify(result, null, 2));
+      return result;
     } catch (error) {
       console.error('獲取模型資訊失敗:', error);
       return {

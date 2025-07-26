@@ -126,7 +126,9 @@ const Sidebar: React.FC = () => {
 
 // AI 狀態指示組件
 const AIStatusIndicator: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
-  const { isOllamaConnected, currentModel } = useAppSelector(state => state.ai);
+  // const { isOllamaConnected, currentModel } = useAppSelector(state => state.ai); // 暫時禁用 AI state
+  const isOllamaConnected = false; // 臨時值
+  const currentModel = null; // 臨時值
 
   return (
     <div className={`flex items-center ${collapsed ? 'justify-center' : 'space-x-3'}`}>

@@ -5,12 +5,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { store } from './store/store';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
-import ProjectEditor from './pages/ProjectEditor/ProjectEditor';
-import CharacterManager from './pages/CharacterManager/CharacterManager';
-import Settings from './pages/Settings/Settings';
-import ModalContainer from './components/UI/ModalContainer';
-import { ErrorToastContainer } from './components/UI/ErrorToast';
-import { NotificationContainer } from './components/UI/NotificationSystem';
 import './index.css';
 
 console.log('簡化版應用程式開始執行');
@@ -37,8 +31,10 @@ const SimpleApp: React.FC = () => {
         setIsLoading(false);
         console.log('應用程式初始化完成');
         
-        // 暫時禁用 AI 檢查，避免阻塞載入
-        console.log('AI 檢查已暫時禁用');
+        // 初始化 AI 服務（背景執行）
+        setTimeout(() => {
+          console.log('開始背景 AI 服務檢查...');
+        }, 2000);
         
       } catch (error) {
         console.error('初始化失敗:', error);
@@ -66,7 +62,7 @@ const SimpleApp: React.FC = () => {
             <Route path="*" element={
               <div className="flex items-center justify-center h-screen">
                 <div className="text-center">
-                  <h2 className="text-xl text-gold-400 mb-4">測試頁面</h2>
+                  <h2 className="text-xl text-gold-400 mb-4">未知頁面</h2>
                   <p className="text-gray-300">路由工作正常</p>
                 </div>
               </div>

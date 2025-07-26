@@ -3,7 +3,8 @@ import { useAppSelector } from '../../hooks/redux';
 
 const Footer: React.FC = () => {
   const { currentProject } = useAppSelector(state => state.projects);
-  const { isOllamaConnected } = useAppSelector(state => state.ai);
+  // const { isOllamaConnected } = useAppSelector(state => state.ai); // 暫時禁用 AI state
+  const isOllamaConnected = false; // 臨時值
   
   return (
     <footer className="h-8 bg-cosmic-900/30 backdrop-blur-sm border-t border-cosmic-700 flex items-center justify-between px-6 text-xs text-gray-400">

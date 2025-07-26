@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { checkOllamaService, fetchServiceStatus, fetchModelsInfo, fetchAvailableModels } from '../../store/slices/aiSlice';
 
 const AIStatus: React.FC = () => {
   const dispatch = useAppDispatch();
   const { isOllamaConnected, availableModels, currentModel } = useAppSelector(state => state.ai);
+
 
   const handleRefreshConnection = async () => {
     console.log('重新檢測 AI 服務...');
@@ -20,8 +21,16 @@ const AIStatus: React.FC = () => {
       const checkResult = serviceResult.payload;
       if (checkResult) {
         console.log('服務已連接，獲取模型信息...');
-        await dispatch(fetchModelsInfo());
-        await dispatch(fetchAvailableModels());
+        
+        // 延遲獲取模型，避免並發問題
+        setTimeout(async () => {
+          try {
+            await dispatch(fetchModelsInfo());
+            await dispatch(fetchAvailableModels());
+          } catch (modelError) {
+            console.error('獲取模型信息失敗:', modelError);
+          }
+        }, 500);
       } else {
         console.log('服務未連接');
       }
@@ -29,6 +38,23 @@ const AIStatus: React.FC = () => {
       console.error('重新檢測失敗:', error);
     }
   };
+
+  // 初始化 AI 狀態檢查
+  useEffect(() => {
+    const initAIStatus = async () => {
+      try {
+        console.log('AIStatus 組件初始化...');
+        // 延遲執行防止競狀態
+        setTimeout(() => {
+          handleRefreshConnection();
+        }, 1000);
+      } catch (error) {
+        console.error('AIStatus 初始化失敗:', error);
+      }
+    };
+    
+    initAIStatus();
+  }, []);
 
   return (
     <div className="card">
