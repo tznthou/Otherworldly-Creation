@@ -1,127 +1,30 @@
 import React, { useState } from 'react';
 import { tutorialIndex, TutorialId } from '../../data/tutorialSteps';
+import { faqData, categoryNames, searchFAQ, getRelatedQuestions } from '../../data/faqData';
 import { useTutorial } from '../Tutorial/TutorialOverlay';
 import CosmicButton from '../UI/CosmicButton';
 import { useNotification } from '../UI/NotificationSystem';
+import UserManual from './UserManual';
+import QuickStartGuide from './QuickStartGuide';
 
 interface HelpCenterProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface FAQItem {
-  id: string;
-  question: string;
-  answer: string;
-  category: 'general' | 'writing' | 'ai' | 'technical';
-}
-
-const faqData: FAQItem[] = [
-  // 一般問題
-  {
-    id: 'what-is-genesis',
-    question: '什麼是創世紀元？',
-    answer: '創世紀元是一個專為輕小說創作者設計的 AI 輔助寫作工具。它提供了專案管理、章節編輯、角色管理和 AI 續寫等功能，幫助作者更高效地創作出精彩的輕小說作品。',
-    category: 'general'
-  },
-  {
-    id: 'how-to-start',
-    question: '如何開始使用？',
-    answer: '首先創建一個新專案，選擇適合的小說類型（異世界、校園、科幻或奇幻）。然後添加角色、設定世界觀，就可以開始寫作了。建議先完成新手教學來熟悉各項功能。',
-    category: 'general'
-  },
-  {
-    id: 'project-types',
-    question: '支援哪些小說類型？',
-    answer: '目前支援四種主要類型：異世界轉生、校園戀愛、科幻冒險和奇幻冒險。每種類型都有對應的模板和角色原型，幫助您快速開始創作。',
-    category: 'general'
-  },
-  
-  // 寫作相關
-  {
-    id: 'auto-save',
-    question: '作品會自動儲存嗎？',
-    answer: '是的，系統會每 3 秒自動儲存您的寫作進度。您也可以隨時手動儲存。所有資料都儲存在本地，確保您的創作安全。',
-    category: 'writing'
-  },
-  {
-    id: 'chapter-management',
-    question: '如何管理章節？',
-    answer: '在編輯器左側的章節列表中，您可以創建新章節、重新排序、編輯章節標題和添加章節筆記。支援拖拽排序，讓章節管理更加直觀。',
-    category: 'writing'
-  },
-  {
-    id: 'character-creation',
-    question: '如何創建角色？',
-    answer: '在角色管理頁面點擊「創建新角色」，填寫角色的基本資訊、外貌描述、性格特點和背景故事。您也可以使用角色原型模板快速創建。',
-    category: 'writing'
-  },
-  
-  // AI 相關
-  {
-    id: 'ai-how-works',
-    question: 'AI 續寫是如何工作的？',
-    answer: 'AI 會分析您的專案設定、角色資訊和已寫內容，理解故事的背景和風格，然後提供符合上下文的續寫建議。您可以選擇採用、修改或重新生成。',
-    category: 'ai'
-  },
-  {
-    id: 'ai-quality',
-    question: 'AI 生成的內容品質如何？',
-    answer: 'AI 生成的內容僅供參考和靈感啟發。建議您根據自己的創作意圖進行修改和完善。AI 是您的創作助手，但您才是故事的真正創作者。',
-    category: 'ai'
-  },
-  {
-    id: 'ai-settings',
-    question: '可以調整 AI 的寫作風格嗎？',
-    answer: '是的，您可以在 AI 設定中調整創作風格、內容長度和創意程度。不同的設定會影響 AI 生成內容的特點，找到最適合您的設定。',
-    category: 'ai'
-  },
-  
-  // 技術問題
-  {
-    id: 'system-requirements',
-    question: '系統需求是什麼？',
-    answer: '創世紀元是一個桌面應用程式，支援 Windows、macOS 和 Linux。建議至少 4GB RAM 和 2GB 可用磁碟空間。AI 功能需要安裝 Ollama 服務。',
-    category: 'technical'
-  },
-  {
-    id: 'data-backup',
-    question: '如何備份我的作品？',
-    answer: '在專案設定中可以匯出專案為 JSON 格式進行備份。建議定期備份重要作品。您也可以複製整個應用程式資料夾進行完整備份。',
-    category: 'technical'
-  },
-  {
-    id: 'troubleshooting',
-    question: '遇到問題怎麼辦？',
-    answer: '首先檢查系統狀態面板確認各服務是否正常。如果問題持續，可以重新啟動應用程式或查看錯誤日誌。嚴重問題請聯繫技術支援。',
-    category: 'technical'
-  }
-];
-
-const categoryNames = {
-  general: '一般問題',
-  writing: '寫作相關',
-  ai: 'AI 功能',
-  technical: '技術支援'
-};
-
 export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'tutorials' | 'faq' | 'shortcuts'>('tutorials');
+  const [activeTab, setActiveTab] = useState<'tutorials' | 'faq' | 'shortcuts' | 'manual' | 'quickstart'>('tutorials');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
+  const [showUserManual, setShowUserManual] = useState(false);
+  const [showQuickStart, setShowQuickStart] = useState(false);
   
   const { startTutorial, isTutorialCompleted, resetTutorials } = useTutorial();
   const notification = useNotification();
 
-  // 過濾 FAQ
-  const filteredFAQ = faqData.filter(item => {
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    const matchesSearch = searchQuery === '' || 
-      item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.answer.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // 使用新的搜索函數
+  const filteredFAQ = searchFAQ(searchQuery, selectedCategory === 'all' ? undefined : selectedCategory);
 
   // 鍵盤快捷鍵資料
   const shortcuts = [
@@ -172,9 +75,11 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* 標籤頁 */}
-        <div className="flex border-b border-cosmic-700">
+        <div className="flex border-b border-cosmic-700 overflow-x-auto">
           {[
             { id: 'tutorials', label: '教學指南', icon: '🎓' },
+            { id: 'quickstart', label: '快速入門', icon: '🚀' },
+            { id: 'manual', label: '使用手冊', icon: '📖' },
             { id: 'faq', label: '常見問題', icon: '❓' },
             { id: 'shortcuts', label: '快捷鍵', icon: '⌨️' }
           ].map(tab => (
@@ -195,6 +100,140 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
 
         {/* 內容區域 */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          {/* 快速入門 */}
+          {activeTab === 'quickstart' && (
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h3 className="text-xl font-semibold text-white mb-2">快速入門指南</h3>
+                <p className="text-gray-400">5 分鐘快速了解創世紀元的核心功能</p>
+              </div>
+
+              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-2">互動式快速入門</h4>
+                    <p className="text-gray-400">
+                      跟隨步驟式指南，快速掌握專案創建、編輯器使用、角色管理和 AI 輔助功能。
+                    </p>
+                  </div>
+                  <CosmicButton
+                    onClick={() => setShowQuickStart(true)}
+                    className="ml-4"
+                  >
+                    開始入門
+                  </CosmicButton>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+                  <h4 className="text-white font-semibold mb-2">🚀 第一次使用</h4>
+                  <p className="text-gray-400 text-sm mb-3">了解基本功能和界面佈局</p>
+                  <CosmicButton
+                    size="small"
+                    variant="secondary"
+                    onClick={() => handleStartTutorial('first-time')}
+                  >
+                    開始教學
+                  </CosmicButton>
+                </div>
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+                  <h4 className="text-white font-semibold mb-2">✍️ 編輯器使用</h4>
+                  <p className="text-gray-400 text-sm mb-3">學習寫作編輯器的各項功能</p>
+                  <CosmicButton
+                    size="small"
+                    variant="secondary"
+                    onClick={() => handleStartTutorial('editor')}
+                  >
+                    開始教學
+                  </CosmicButton>
+                </div>
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+                  <h4 className="text-white font-semibold mb-2">👥 角色管理</h4>
+                  <p className="text-gray-400 text-sm mb-3">掌握角色創建和關係設定</p>
+                  <CosmicButton
+                    size="small"
+                    variant="secondary"
+                    onClick={() => handleStartTutorial('character')}
+                  >
+                    開始教學
+                  </CosmicButton>
+                </div>
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+                  <h4 className="text-white font-semibold mb-2">🤖 AI 輔助</h4>
+                  <p className="text-gray-400 text-sm mb-3">學習 AI 續寫和輔助功能</p>
+                  <CosmicButton
+                    size="small"
+                    variant="secondary"
+                    onClick={() => handleStartTutorial('ai')}
+                  >
+                    開始教學
+                  </CosmicButton>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 使用手冊 */}
+          {activeTab === 'manual' && (
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h3 className="text-xl font-semibold text-white mb-2">詳細使用手冊</h3>
+                <p className="text-gray-400">完整的功能說明和使用指南</p>
+              </div>
+
+              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-2">完整使用手冊</h4>
+                    <p className="text-gray-400">
+                      詳細的功能說明、操作步驟和最佳實踐，幫助您充分利用創世紀元的所有功能。
+                    </p>
+                  </div>
+                  <CosmicButton
+                    onClick={() => setShowUserManual(true)}
+                    className="ml-4"
+                  >
+                    查看手冊
+                  </CosmicButton>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                  <div className="text-3xl mb-3">📝</div>
+                  <h4 className="text-white font-semibold mb-2">專案管理</h4>
+                  <p className="text-gray-400 text-sm">創建、管理和組織您的創作專案</p>
+                </div>
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                  <div className="text-3xl mb-3">✍️</div>
+                  <h4 className="text-white font-semibold mb-2">寫作編輯</h4>
+                  <p className="text-gray-400 text-sm">使用編輯器進行創作和文字處理</p>
+                </div>
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                  <div className="text-3xl mb-3">🤖</div>
+                  <h4 className="text-white font-semibold mb-2">AI 輔助</h4>
+                  <p className="text-gray-400 text-sm">有效使用 AI 功能提升創作效率</p>
+                </div>
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                  <div className="text-3xl mb-3">👥</div>
+                  <h4 className="text-white font-semibold mb-2">角色管理</h4>
+                  <p className="text-gray-400 text-sm">創建和管理故事中的角色</p>
+                </div>
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                  <div className="text-3xl mb-3">⚙️</div>
+                  <h4 className="text-white font-semibold mb-2">設定配置</h4>
+                  <p className="text-gray-400 text-sm">個人化設定和系統配置</p>
+                </div>
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                  <div className="text-3xl mb-3">🔧</div>
+                  <h4 className="text-white font-semibold mb-2">故障排除</h4>
+                  <p className="text-gray-400 text-sm">解決常見問題和技術支援</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 教學指南 */}
           {activeTab === 'tutorials' && (
             <div className="space-y-6">
@@ -348,6 +387,22 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
           )}
         </div>
       </div>
+
+      {/* 用戶手冊模態框 */}
+      <UserManual 
+        isOpen={showUserManual}
+        onClose={() => setShowUserManual(false)}
+      />
+
+      {/* 快速入門指南模態框 */}
+      <QuickStartGuide
+        isOpen={showQuickStart}
+        onClose={() => setShowQuickStart(false)}
+        onStartTutorial={(tutorialId) => {
+          setShowQuickStart(false);
+          handleStartTutorial(tutorialId as TutorialId);
+        }}
+      />
     </div>
   );
 };

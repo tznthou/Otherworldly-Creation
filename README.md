@@ -4,8 +4,8 @@
 
 ## 🚀 開發狀態
 
-**當前版本：MVP v0.1.0**  
-**開發進度：核心功能已完成 85%**
+**當前版本：v0.2.0**  
+**開發進度：核心功能已完成 95%**
 
 ### ✅ 已完成功能
 
@@ -18,11 +18,17 @@
 - 🎨 **星空主題**：深藍色星空背景配金色魔法陣的動漫風格界面
 - 🧪 **完整測試**：單元測試、整合測試、性能測試全覆蓋
 
+### 🔄 最新完成功能
+
+- 🔄 **自動更新系統**：完整的應用程式更新機制，支援版本檢查和自動下載
+- 📖 **完整用戶文檔**：使用手冊、快速入門指南、常見問題解答系統
+- 📋 **診斷工具**：系統環境檢查和問題排查工具
+- 🚀 **一鍵安裝**：自動化安裝腳本，簡化環境配置流程
+
 ### 🔄 開發中功能
 
 - 🎨 **幻想具現**：AI 插畫生成功能（規劃中）
 - 📚 **傳說編纂**：一鍵生成專業電子書（規劃中）
-- 🔧 **應用程式打包**：Electron 應用程式打包和分發
 
 ## 功能特色
 
@@ -41,50 +47,65 @@
 - npm 或 yarn
 - Ollama (用於 AI 功能)
 
-## 安裝與運行
+## 🚀 快速安裝
 
-### 1. 安裝依賴
+### 🌟 一鍵安裝（推薦）
 
 ```bash
+# 克隆專案
+git clone <repository-url>
+cd genesis-chronicle
+
+# 執行自動安裝腳本
+node scripts/quick-install.js
+
+# 啟動應用程式
+./start-dev.sh    # macOS/Linux
+# 或
+start-dev.bat     # Windows
+```
+
+### 📝 手動安裝
+
+```bash
+# 1. 安裝依賴
 npm install
-```
 
-### 2. 安裝 Ollama
+# 2. 重建原生模組（重要！）
+npm rebuild better-sqlite3
 
-前往 [ollama.ai](https://ollama.ai) 下載並安裝 Ollama。
+# 3. 測試編譯
+npm run build
 
-安裝完成後，啟動 Ollama 服務：
-
-```bash
-ollama serve
-```
-
-下載中文模型：
-
-```bash
-ollama pull llama3.2
-```
-
-### 3. 開發模式運行
-
-```bash
+# 4. 啟動開發環境
 npm run dev
 ```
 
-這會同時啟動：
+### 🤖 AI 功能設置（可選）
 
-- Electron 主程序
-- Vite 開發伺服器（前端）
+1. 前往 [ollama.ai](https://ollama.ai) 下載並安裝 Ollama
+2. 啟動 Ollama 服務：
+   ```bash
+   ollama serve
+   ```
+3. 下載中文模型：
+   ```bash
+   ollama pull llama3.2
+   ```
 
-### 4. 建置應用程式
+### 🔧 其他可用命令
 
 ```bash
+# 系統診斷
+npm run diagnostic
+
+# 運行測試
+npm test
+
+# 建置應用程式
 npm run build
-```
 
-### 5. 打包應用程式
-
-```bash
+# 打包應用程式
 npm run package
 ```
 
@@ -100,10 +121,12 @@ npm run package
 │   │   ├── services/                 # 核心服務
 │   │   │   ├── ollamaService.ts      # Ollama AI 服務
 │   │   │   ├── contextManager.ts     # 上下文管理器
+│   │   │   ├── updateService.ts      # 自動更新服務
 │   │   │   └── databaseMaintenance.ts # 資料庫維護
 │   │   ├── ipc/                      # IPC 處理器
 │   │   │   ├── ipcHandlers.ts        # 主要 IPC 處理
-│   │   │   └── aiHandlers.ts         # AI 相關處理
+│   │   │   ├── aiHandlers.ts         # AI 相關處理
+│   │   │   └── updateHandlers.ts     # 更新相關處理
 │   │   └── __tests__/                # 測試文件
 │   │       ├── database/             # 資料庫測試
 │   │       ├── services/             # 服務測試
@@ -114,7 +137,9 @@ npm run package
 │       │   ├── components/           # React 組件
 │       │   │   ├── Characters/       # 角色管理組件
 │       │   │   ├── Editor/           # 編輯器組件
+│       │   │   ├── Help/             # 幫助系統組件
 │       │   │   ├── Modals/           # 對話框組件
+│       │   │   ├── Update/           # 更新系統組件
 │       │   │   └── UI/               # UI 組件
 │       │   ├── pages/                # 頁面組件
 │       │   │   ├── Dashboard/        # 儀表板
@@ -130,8 +155,14 @@ npm run package
 │   ├── steering/                     # 全局規則
 │   └── specs/                        # 專案規格
 ├── dist/                             # 建置輸出
+├── scripts/                          # 安裝和診斷腳本
+│   ├── quick-install.js              # 一鍵安裝腳本
+│   └── diagnostic.js                 # 系統診斷腳本
 ├── coverage/                         # 測試覆蓋率報告
 ├── run-*.js                          # 測試執行腳本
+├── INSTALLATION_GUIDE.md             # 詳細安裝指南
+├── README_INSTALL.md                 # 快速安裝說明
+├── start-dev.sh / start-dev.bat      # 快速啟動腳本
 ├── package.json
 └── README.md
 ```
@@ -216,11 +247,16 @@ AI 功能通過 Ollama API 實現：
 - [x] 使用者界面 - 星空主題、動畫效果、響應式設計
 - [x] 測試框架 - 單元測試、整合測試、性能測試
 
-### 開發中 (v0.2.0)
+### 已完成 (v0.2.0)
+
+- [x] 自動更新機制 - 版本檢查、更新下載、安裝流程
+- [x] 使用者文檔 - 使用手冊、快速入門、常見問題
+- [x] 診斷工具 - 系統環境檢查、問題排查、報告生成
+- [x] 一鍵安裝 - 自動化安裝腳本、環境配置
+
+### 開發中 (v0.3.0)
 
 - [ ] 應用程式打包 - Electron Forge 配置、安裝程式生成
-- [ ] 自動更新機制 - 版本檢查、更新下載、安裝流程
-- [ ] 使用者文檔 - 使用手冊、快速入門、常見問題
 
 ### 規劃中 (v1.0.0)
 
