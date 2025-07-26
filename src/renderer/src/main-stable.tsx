@@ -825,6 +825,9 @@ const StableApp: React.FC = () => {
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
   const [isCharacterManagerOpen, setIsCharacterManagerOpen] = useState(false);
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
+  const [ollamaModels, setOllamaModels] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [editorContent, setEditorContent] = useState(() => {
     // 嘗試從本地儲存載入內容
     const savedContent = localStorage.getItem('novel_content');
@@ -837,6 +840,30 @@ const StableApp: React.FC = () => {
     return saved ? parseInt(saved) : 0;
   });
 
+  // 獲取 OLLAMA 模型列表
+  const fetchOllamaModels = async () => {
+    setIsLoadingModels(true);
+    try {
+      const response = await fetch('http://localhost:11434/api/tags');
+      if (response.ok) {
+        const data = await response.json();
+        const models = data.models?.map((model: any) => model.name) || [];
+        setOllamaModels(models);
+        if (models.length > 0 && !selectedModel) {
+          setSelectedModel(models[0]);
+        }
+      } else {
+        console.warn('無法連接到 OLLAMA 服務器');
+        setOllamaModels([]);
+      }
+    } catch (error) {
+      console.warn('OLLAMA 服務器連接失敗:', error);
+      setOllamaModels([]);
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
+
   // 錯誤邊界
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
@@ -846,6 +873,11 @@ const StableApp: React.FC = () => {
 
     window.addEventListener('error', handleError);
     return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  // 載入 OLLAMA 模型列表
+  useEffect(() => {
+    fetchOllamaModels();
   }, []);
 
   // 如果有錯誤，顯示錯誤訊息而不是閃退
@@ -1288,6 +1320,7 @@ const StableApp: React.FC = () => {
                   <div style={{ marginBottom: '10px' }}>
                     <strong>模型：</strong> 
                     <select 
+                      value={selectedModel}
                       style={{
                         background: 'rgba(255, 215, 0, 0.1)',
                         border: '1px solid #FFD700',
@@ -1298,24 +1331,39 @@ const StableApp: React.FC = () => {
                         marginLeft: '5px'
                       }}
                       onChange={(e) => {
-                        const selectedModel = e.target.value;
-                        alert(`🔄 模型已切換為：${selectedModel}\n\n正在重新連接 AI 引擎...\n✅ 連接成功！\n模型：${selectedModel}\n服務器：localhost:11434`);
+                        const newSelectedModel = e.target.value;
+                        setSelectedModel(newSelectedModel);
+                        alert(`🔄 模型已切換為：${newSelectedModel}\n\n正在重新連接 AI 引擎...\n✅ 連接成功！\n模型：${newSelectedModel}\n服務器：localhost:11434`);
                       }}
                     >
-                      <option value="Llama 3.1 8B">Llama 3.1 8B</option>
-                      <option value="Llama 3.1 70B">Llama 3.1 70B</option>
-                      <option value="Llama 2 7B">Llama 2 7B</option>
-                      <option value="Llama 2 13B">Llama 2 13B</option>
-                      <option value="Llama 2 70B">Llama 2 70B</option>
-                      <option value="Mistral 7B">Mistral 7B</option>
-                      <option value="Mistral 7B Instruct">Mistral 7B Instruct</option>
-                      <option value="CodeLlama 7B">CodeLlama 7B</option>
-                      <option value="CodeLlama 13B">CodeLlama 13B</option>
-                      <option value="Phi-2">Phi-2</option>
-                      <option value="Neural Chat 7B">Neural Chat 7B</option>
-                      <option value="Qwen 7B">Qwen 7B</option>
-                      <option value="Qwen 14B">Qwen 14B</option>
+                      {isLoadingModels ? (
+                        <option value="">正在載入模型列表...</option>
+                      ) : ollamaModels.length === 0 ? (
+                        <option value="">未找到模型</option>
+                      ) : (
+                        ollamaModels.map((model, index) => (
+                          <option key={index} value={model}>{model}</option>
+                        ))
+                      )}
                     </select>
+                    <button 
+                      style={{
+                        background: 'transparent',
+                        color: '#FFD700',
+                        border: '1px solid #FFD700',
+                        padding: '2px 6px',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '10px',
+                        marginLeft: '5px'
+                      }}
+                      onClick={() => {
+                        fetchOllamaModels();
+                        alert('🔄 正在重新掃描 OLLAMA 模型...\n\n已發送請求到 OLLAMA 服務器\n如果沒有找到模型，請確保：\n1. OLLAMA 服務正在運行 (ollama serve)\n2. 已安裝至少一個模型 (ollama pull llama3.1:8b)');
+                      }}
+                    >
+                      重新掃描
+                    </button>
                   </div>
                   <div style={{ marginBottom: '10px' }}>
                     <strong>服務器：</strong> 
@@ -1379,7 +1427,7 @@ const StableApp: React.FC = () => {
                         fontSize: '12px'
                       }}
                       onClick={() => {
-                        alert('📋 可用模型列表\n\n🤖 Llama 系列：\n• Llama 3.1 8B (推薦)\n• Llama 3.1 70B (高品質)\n• Llama 2 7B/13B/70B\n\n🎯 專業模型：\n• Mistral 7B (快速)\n• CodeLlama (程式碼)\n• Phi-2 (輕量)\n\n🌏 多語言：\n• Qwen 7B/14B (中文優化)\n• Neural Chat 7B\n\n💡 在 OLLAMA 中執行：\nollama pull [模型名稱]');
+                        alert('📋 OLLAMA 模型管理\n\n🔍 查看已安裝模型：\nollama list\n\n📥 安裝新模型：\nollama pull llama3.1:8b\nollama pull mistral:7b\nollama pull qwen:7b\n\n🗑️ 刪除模型：\nollama rm [模型名稱]\n\n🌐 熱門模型推薦：\n• llama3.1:8b (推薦)\n• llama3.1:70b (高品質)\n• mistral:7b (快速)\n• qwen:7b (中文優化)\n• codellama:7b (程式碼)\n\n💡 模型會自動從 OLLAMA 服務器動態載入');
                       }}
                     >
                       模型說明
