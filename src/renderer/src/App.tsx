@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import ProjectEditor from './pages/ProjectEditor/ProjectEditor';
 import CharacterManager from './pages/CharacterManager/CharacterManager';
 import Settings from './pages/Settings/Settings';
+import DatabaseMaintenance from './pages/DatabaseMaintenance/DatabaseMaintenance';
 import ModalContainer from './components/UI/ModalContainer';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import CosmicBackground from './components/UI/CosmicBackground';
@@ -128,6 +129,7 @@ const AppContent: React.FC = () => {
             <Route path="/project/:id" element={<ProjectEditor />} />
             <Route path="/characters/:projectId" element={<CharacterManager />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/database-maintenance" element={<DatabaseMaintenance />} />
           </Routes>
         </Layout>
         <ModalContainer />

@@ -14,10 +14,70 @@ window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault(); // 防止閃退
 });
 
+// 功能卡片組件
+interface FeatureCardProps {
+  title: string;
+  description: string;
+  onClick: () => void;
+  highlight?: boolean;
+}
+
+const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, onClick, highlight = false }) => {
+  return (
+    <button
+      style={{
+        background: highlight ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 215, 0, 0.1)',
+        border: `2px solid ${highlight ? '#FFD700' : 'rgba(255, 215, 0, 0.5)'}`,
+        color: '#FFD700',
+        padding: '20px',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        fontSize: '14px',
+        textAlign: 'left',
+        transition: 'all 0.3s ease',
+        width: '100%',
+        minHeight: '120px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between'
+      }}
+      onClick={onClick}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = highlight ? 'rgba(255, 215, 0, 0.4)' : 'rgba(255, 215, 0, 0.2)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 215, 0, 0.3)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = highlight ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 215, 0, 0.1)';
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
+    >
+      <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '8px' }}>
+        {title}
+      </div>
+      <div style={{ fontSize: '13px', opacity: 0.9, lineHeight: '1.4' }}>
+        {description}
+      </div>
+    </button>
+  );
+};
+
 // 超級簡單穩定的應用程式
 const StableApp: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [error, setError] = useState<string | null>(null);
+  const [editorContent, setEditorContent] = useState(() => {
+    // 嘗試從本地儲存載入內容
+    const savedContent = localStorage.getItem('novel_content');
+    return savedContent || "第一章：穿越的開始\n\n我叫李明，原本是一個普通的大學生。直到那個雷雨交加的夜晚，一道奇異的光芒將我包圍...\n\n（繼續你的創作吧！）";
+  });
+  const [isSaved, setIsSaved] = useState(true);
+  const [writingStartTime, setWritingStartTime] = useState<Date | null>(null);
+  const [totalWritingTime, setTotalWritingTime] = useState(() => {
+    const saved = localStorage.getItem('total_writing_time');
+    return saved ? parseInt(saved) : 0;
+  });
 
   // 錯誤邊界
   useEffect(() => {
@@ -110,47 +170,68 @@ const StableApp: React.FC = () => {
       case 'dashboard':
         return safePage(() => (
           <div style={{ padding: '40px', textAlign: 'center' }}>
-            <h2>🏠 專案儀表板</h2>
-            <p>歡迎使用創世紀元：異世界創作神器</p>
-            <div style={{ marginTop: '30px' }}>
-              <button
-                style={{
-                  background: 'rgba(255, 215, 0, 0.2)',
-                  border: '2px solid #FFD700',
-                  color: '#FFD700',
-                  padding: '15px 30px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  margin: '10px',
-                  display: 'block',
-                  width: '200px',
-                  marginLeft: 'auto',
-                  marginRight: 'auto'
-                }}
+            <h2>🏠 歡迎來到創世紀元</h2>
+            <p style={{ fontSize: '18px', marginBottom: '40px' }}>用 AI 之力編織你的異世界傳說</p>
+            
+            {/* 功能卡片網格 */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '20px',
+              maxWidth: '1200px',
+              margin: '0 auto'
+            }}>
+              <FeatureCard
+                title="🌟 創世神模式"
+                description="創建新的異世界創作專案"
+                onClick={() => alert('專案創建功能開發中！')}
+              />
+              <FeatureCard
+                title="⚔️ 英靈召喚"
+                description="AI 輔助角色創造與管理"
+                onClick={() => alert('角色管理功能開發中！')}
+              />
+              <FeatureCard
+                title="🎭 輕小說模板"
+                description="異世界、校園、科幻、奇幻模板"
+                onClick={() => alert('模板系統開發中！')}
+              />
+              <FeatureCard
+                title="🔮 預言書寫"
+                description="智能續寫與劇情建議"
+                onClick={() => alert('AI 寫作功能開發中！')}
+              />
+              <FeatureCard
+                title="📝 開始創作"
+                description="進入編輯器開始寫作"
                 onClick={() => setCurrentPage('editor')}
-              >
-                📝 開始創作
-              </button>
-              <button
-                style={{
-                  background: 'rgba(255, 215, 0, 0.2)',
-                  border: '2px solid #FFD700',
-                  color: '#FFD700',
-                  padding: '15px 30px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  margin: '10px',
-                  display: 'block',
-                  width: '200px',
-                  marginLeft: 'auto',
-                  marginRight: 'auto'
-                }}
-                onClick={() => setCurrentPage('test')}
-              >
-                🧪 測試功能
-              </button>
+                highlight={true}
+              />
+              <FeatureCard
+                title="💾 資料管理"
+                description="資料庫維護、備份還原"
+                onClick={() => alert('資料庫維護功能開發中！')}
+              />
+              <FeatureCard
+                title="📥 匯入專案"
+                description="從備份檔案匯入現有專案"
+                onClick={() => alert('專案匯入功能開發中！')}
+              />
+              <FeatureCard
+                title="⚙️ 系統設定"
+                description="配置 AI 引擎和應用程式設定"
+                onClick={() => alert('系統設定功能開發中！')}
+              />
+              <FeatureCard
+                title="📊 創作統計"
+                description="字數統計、寫作時間和進度追蹤"
+                onClick={() => setCurrentPage('stats')}
+              />
+              <FeatureCard
+                title="❓ 使用說明"
+                description="查看使用教學和常見問題"
+                onClick={() => alert('使用說明功能開發中！')}
+              />
             </div>
           </div>
         ));
@@ -179,27 +260,61 @@ const StableApp: React.FC = () => {
                   fontFamily: 'monospace'
                 }}
                 placeholder="在這裡開始你的異世界冒險故事..."
-                defaultValue="第一章：穿越的開始
-
-我叫李明，原本是一個普通的大學生。直到那個雷雨交加的夜晚，一道奇異的光芒將我包圍...
-
-（繼續你的創作吧！）"
+                value={editorContent}
+                onChange={(e) => {
+                  setEditorContent(e.target.value);
+                  setIsSaved(false);
+                  // 開始寫作計時
+                  if (!writingStartTime) {
+                    setWritingStartTime(new Date());
+                  }
+                }}
+                onFocus={() => {
+                  // 進入編輯器時開始計時
+                  if (!writingStartTime) {
+                    setWritingStartTime(new Date());
+                  }
+                }}
+                onBlur={() => {
+                  // 離開編輯器時停止計時並累計
+                  if (writingStartTime) {
+                    const sessionTime = Math.floor((new Date().getTime() - writingStartTime.getTime()) / 1000 / 60);
+                    if (sessionTime > 0) {
+                      const newTotal = totalWritingTime + sessionTime;
+                      setTotalWritingTime(newTotal);
+                      localStorage.setItem('total_writing_time', newTotal.toString());
+                    }
+                    setWritingStartTime(null);
+                  }
+                }}
               />
             </div>
             <div style={{ marginTop: '20px', textAlign: 'center' }}>
               <button
                 style={{
-                  background: '#FFD700',
+                  background: isSaved ? '#28a745' : '#FFD700',
                   color: '#0A1128',
                   border: 'none',
                   padding: '10px 20px',
                   borderRadius: '5px',
                   cursor: 'pointer',
-                  margin: '0 10px'
+                  margin: '0 10px',
+                  opacity: isSaved ? 0.7 : 1
                 }}
-                onClick={() => alert('儲存功能還在開發中！')}
+                onClick={() => {
+                  try {
+                    // 模擬儲存到本地儲存
+                    localStorage.setItem('novel_content', editorContent);
+                    localStorage.setItem('novel_saved_time', new Date().toLocaleString());
+                    setIsSaved(true);
+                    alert(`✅ 儲存成功！\n\n內容已保存到本地儲存\n時間：${new Date().toLocaleString()}\n字數：${editorContent.length} 字`);
+                  } catch (error) {
+                    alert('❌ 儲存失敗：' + (error as Error).message);
+                  }
+                }}
+                disabled={isSaved}
               >
-                💾 儲存
+                {isSaved ? '✅ 已儲存' : '💾 儲存'}
               </button>
               <button
                 style={{
@@ -219,33 +334,170 @@ const StableApp: React.FC = () => {
           </div>
         ));
 
-      case 'test':
-        return safePage(() => (
-          <div style={{ padding: '20px' }}>
-            <h2>🧪 測試功能</h2>
-            <div style={{
-              background: 'rgba(255, 215, 0, 0.1)',
-              border: '1px solid #FFD700',
-              borderRadius: '10px',
-              padding: '20px',
-              marginTop: '20px'
-            }}>
-              <h3>系統狀態</h3>
-              <ul style={{ textAlign: 'left' }}>
-                <li>✅ React 正常運行</li>
-                <li>✅ 頁面切換正常</li>
-                <li>✅ 錯誤處理已啟用</li>
-                <li>✅ 應用程式穩定</li>
-              </ul>
+      case 'stats':
+        return safePage(() => {
+          const wordCount = editorContent.length;
+          const paragraphCount = editorContent.split('\n\n').filter(p => p.trim().length > 0).length;
+          const currentSessionTime = writingStartTime ? 
+            Math.floor((new Date().getTime() - writingStartTime.getTime()) / 1000 / 60) : 0;
+          const dailyGoal = 1000; // 每日目標字數
+          const progress = Math.min((wordCount / dailyGoal) * 100, 100);
+          
+          return (
+            <div style={{ padding: '20px' }}>
+              <h2>📊 創作統計</h2>
               
-              <h3>計數器測試</h3>
-              <CounterTest />
-              
-              <h3>時間顯示</h3>
-              <TimeDisplay />
+              {/* 統計卡片網格 */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '20px',
+                marginTop: '20px'
+              }}>
+                {/* 字數統計 */}
+                <div style={{
+                  background: 'rgba(255, 215, 0, 0.1)',
+                  border: '1px solid #FFD700',
+                  borderRadius: '10px',
+                  padding: '20px',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{ margin: '0 0 15px 0', color: '#FFD700' }}>📝 字數統計</h3>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#FFD700', marginBottom: '10px' }}>
+                    {wordCount}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#ccc' }}>總字數</div>
+                  <div style={{ marginTop: '15px', fontSize: '14px', color: '#ccc' }}>
+                    段落數：{paragraphCount}
+                  </div>
+                </div>
+
+                {/* 寫作時間 */}
+                <div style={{
+                  background: 'rgba(255, 215, 0, 0.1)',
+                  border: '1px solid #FFD700',
+                  borderRadius: '10px',
+                  padding: '20px',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{ margin: '0 0 15px 0', color: '#FFD700' }}>⏰ 寫作時間</h3>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#FFD700', marginBottom: '10px' }}>
+                    {totalWritingTime}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#ccc' }}>總計時間（分鐘）</div>
+                  {currentSessionTime > 0 && (
+                    <div style={{ marginTop: '15px', fontSize: '14px', color: '#90EE90' }}>
+                      本次寫作：{currentSessionTime} 分鐘
+                    </div>
+                  )}
+                </div>
+
+                {/* 每日進度 */}
+                <div style={{
+                  background: 'rgba(255, 215, 0, 0.1)',
+                  border: '1px solid #FFD700',
+                  borderRadius: '10px',
+                  padding: '20px',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{ margin: '0 0 15px 0', color: '#FFD700' }}>🎯 每日目標</h3>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#FFD700', marginBottom: '10px' }}>
+                    {progress.toFixed(0)}%
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#ccc' }}>完成度</div>
+                  <div style={{
+                    marginTop: '15px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    height: '8px',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      width: `${progress}%`,
+                      height: '100%',
+                      background: progress >= 100 ? '#90EE90' : '#FFD700',
+                      transition: 'width 0.3s ease'
+                    }}></div>
+                  </div>
+                  <div style={{ marginTop: '10px', fontSize: '12px', color: '#ccc' }}>
+                    目標：{dailyGoal} 字
+                  </div>
+                </div>
+
+                {/* 寫作效率 */}
+                <div style={{
+                  background: 'rgba(255, 215, 0, 0.1)',
+                  border: '1px solid #FFD700',
+                  borderRadius: '10px',
+                  padding: '20px',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{ margin: '0 0 15px 0', color: '#FFD700' }}>⚡ 寫作效率</h3>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#FFD700', marginBottom: '10px' }}>
+                    {totalWritingTime > 0 ? Math.round(wordCount / totalWritingTime) : 0}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#ccc' }}>字/分鐘</div>
+                  <div style={{ marginTop: '15px', fontSize: '14px', color: '#ccc' }}>
+                    平均效率
+                  </div>
+                </div>
+              </div>
+
+                             {/* 操作按鈕 */}
+               <div style={{ marginTop: '30px', textAlign: 'center' }}>
+                 <button
+                   style={{
+                     background: 'transparent',
+                     color: '#FFD700',
+                     border: '1px solid #FFD700',
+                     padding: '10px 20px',
+                     borderRadius: '5px',
+                     cursor: 'pointer',
+                     margin: '0 10px'
+                   }}
+                   onClick={() => setCurrentPage('dashboard')}
+                 >
+                   🏠 返回儀表板
+                 </button>
+                 <button
+                   style={{
+                     background: '#FFD700',
+                     color: '#0A1128',
+                     border: 'none',
+                     padding: '10px 20px',
+                     borderRadius: '5px',
+                     cursor: 'pointer',
+                     margin: '0 10px'
+                   }}
+                   onClick={() => setCurrentPage('editor')}
+                 >
+                   ✍️ 繼續寫作
+                 </button>
+                 <button
+                   style={{
+                     background: 'transparent',
+                     color: '#FF6B6B',
+                     border: '1px solid #FF6B6B',
+                     padding: '10px 20px',
+                     borderRadius: '5px',
+                     cursor: 'pointer',
+                     margin: '0 10px'
+                   }}
+                   onClick={() => {
+                     if (confirm('確定要重置所有統計數據嗎？此操作無法復原。')) {
+                       localStorage.removeItem('total_writing_time');
+                       setTotalWritingTime(0);
+                       setWritingStartTime(null);
+                       alert('統計數據已重置！');
+                     }
+                   }}
+                 >
+                   🔄 重置統計
+                 </button>
+               </div>
             </div>
-          </div>
-        ));
+          );
+        });
 
       default:
         return safePage(() => (
@@ -280,7 +532,7 @@ const StableApp: React.FC = () => {
       }}>
         <h1 style={{ margin: 0, fontSize: '24px' }}>創世紀元：異世界創作神器</h1>
         <nav style={{ display: 'flex', gap: '10px' }}>
-          {['dashboard', 'editor', 'test'].map(page => (
+          {['dashboard', 'editor', 'stats'].map(page => (
             <button 
               key={page}
               style={{
@@ -294,7 +546,7 @@ const StableApp: React.FC = () => {
               }}
               onClick={() => setCurrentPage(page)}
             >
-              {page === 'dashboard' ? '儀表板' : page === 'editor' ? '編輯器' : '測試'}
+              {page === 'dashboard' ? '儀表板' : page === 'editor' ? '編輯器' : '統計'}
             </button>
           ))}
         </nav>
@@ -322,58 +574,7 @@ const StableApp: React.FC = () => {
   );
 };
 
-// 計數器測試組件
-const CounterTest: React.FC = () => {
-  const [count, setCount] = useState(0);
-  
-  return (
-    <div style={{ margin: '10px 0' }}>
-      <span>計數器: {count} </span>
-      <button 
-        onClick={() => setCount(c => c + 1)}
-        style={{
-          background: '#FFD700',
-          color: '#0A1128',
-          border: 'none',
-          padding: '5px 10px',
-          borderRadius: '3px',
-          cursor: 'pointer',
-          margin: '0 5px'
-        }}
-      >
-        +1
-      </button>
-      <button 
-        onClick={() => setCount(0)}
-        style={{
-          background: 'transparent',
-          color: '#FFD700',
-          border: '1px solid #FFD700',
-          padding: '5px 10px',
-          borderRadius: '3px',
-          cursor: 'pointer'
-        }}
-      >
-        重置
-      </button>
-    </div>
-  );
-};
-
-// 時間顯示組件
-const TimeDisplay: React.FC = () => {
-  const [time, setTime] = useState(new Date().toLocaleString());
-  
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date().toLocaleString());
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, []);
-  
-  return <div>當前時間: {time}</div>;
-};
+// 移除了測試組件，改為創作統計功能
 
 // 隱藏載入畫面
 const hideLoadingScreen = () => {
