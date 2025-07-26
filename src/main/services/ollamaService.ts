@@ -1,3 +1,7 @@
+import * as http from 'http';
+import * as https from 'https';
+import { URL } from 'url';
+
 interface OllamaModel {
   name: string;
   size: number;
@@ -57,6 +61,54 @@ export class OllamaService {
   }
 
   /**
+   * 使用 Node.js http/https 模組發送請求
+   */
+  private async makeRequest<T>(endpoint: string): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const url = new URL(`${this.baseUrl}${endpoint}`);
+      const client = url.protocol === 'https:' ? https : http;
+      
+      const req = client.request(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: this.timeout,
+      }, (res) => {
+        let data = '';
+        
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        
+        res.on('end', () => {
+          try {
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              const result = JSON.parse(data);
+              resolve(result);
+            } else {
+              reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
+            }
+          } catch (error) {
+            reject(new Error(`解析響應失敗: ${error}`));
+          }
+        });
+      });
+      
+      req.on('error', (error) => {
+        reject(error);
+      });
+      
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('請求超時'));
+      });
+      
+      req.end();
+    });
+  }
+
+  /**
    * 檢查 Ollama 服務是否可用
    */
   async checkServiceAvailability(): Promise<{
@@ -65,26 +117,7 @@ export class OllamaService {
     error?: string;
   }> {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-      const response = await fetch(`${this.baseUrl}/api/version`, {
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        return {
-          available: false,
-          error: `HTTP ${response.status}: ${response.statusText}`,
-        };
-      }
-
-      const data: OllamaVersionResponse = await response.json();
+      const data: OllamaVersionResponse = await this.makeRequest<OllamaVersionResponse>('/api/version');
       return {
         available: true,
         version: data.version,
@@ -92,20 +125,20 @@ export class OllamaService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知錯誤';
       
-      if (errorMessage.includes('AbortError')) {
-        return {
-          available: false,
-          error: '連接超時',
-        };
-      }
-      
       if (errorMessage.includes('ECONNREFUSED')) {
         return {
           available: false,
-          error: 'Ollama 服務未運行',
+          error: '無法連接到 Ollama 服務',
         };
       }
-
+      
+      if (errorMessage.includes('ENOTFOUND')) {
+        return {
+          available: false,
+          error: '找不到 Ollama 服務主機',
+        };
+      }
+      
       return {
         available: false,
         error: errorMessage,
@@ -135,27 +168,7 @@ export class OllamaService {
         };
       }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-      const response = await fetch(`${this.baseUrl}/api/tags`, {
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        return {
-          success: false,
-          models: [],
-          error: `無法獲取模型列表: HTTP ${response.status}`,
-        };
-      }
-
-      const data: OllamaResponse = await response.json();
+      const data: OllamaResponse = await this.makeRequest<OllamaResponse>('/api/tags');
       const models = data.models?.map(model => ({
         name: model.name,
         size: model.size,
@@ -211,9 +224,6 @@ export class OllamaService {
           };
         }
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
         const requestBody: OllamaGenerateRequest = {
           model,
           prompt,
@@ -227,67 +237,83 @@ export class OllamaService {
           },
         };
 
-        const response = await fetch(`${this.baseUrl}/api/generate`, {
-          method: 'POST',
-          signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        });
+        // 使用 Node.js http 發送 POST 請求
+        const response = await this.makePostRequest<OllamaGenerateResponse>('/api/generate', requestBody);
 
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          lastError = `HTTP ${response.status}: ${response.statusText}`;
-          
-          // 如果是 4xx 錯誤，不重試
-          if (response.status >= 400 && response.status < 500) {
-            return {
-              success: false,
-              error: lastError,
-            };
-          }
-          
-          // 5xx 錯誤或其他錯誤，繼續重試
-          if (attempt < this.retryAttempts) {
-            console.log(`生成文本失敗，第 ${attempt} 次重試: ${lastError}`);
-            await this.delay(this.retryDelay * attempt);
-            continue;
-          }
-        }
-
-        const data: OllamaGenerateResponse = await response.json();
-        
         return {
           success: true,
-          response: data.response,
+          response: response.response,
           metadata: {
-            total_duration: data.total_duration,
-            eval_count: data.eval_count,
-            eval_duration: data.eval_duration,
+            total_duration: response.total_duration,
+            eval_count: response.eval_count,
+            eval_duration: response.eval_duration,
           },
         };
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-        lastError = errorMessage;
-
-        if (errorMessage.includes('AbortError')) {
-          lastError = '請求超時';
-        }
-
+        lastError = error instanceof Error ? error.message : '未知錯誤';
+        console.warn(`生成文本嘗試 ${attempt}/${this.retryAttempts} 失敗:`, lastError);
+        
         if (attempt < this.retryAttempts) {
-          console.log(`生成文本失敗，第 ${attempt} 次重試: ${lastError}`);
-          await this.delay(this.retryDelay * attempt);
-          continue;
+          await this.delay(this.retryDelay);
         }
       }
     }
 
     return {
       success: false,
-      error: `生成文本失敗（已重試 ${this.retryAttempts} 次）: ${lastError}`,
+      error: `生成文本失敗 (${this.retryAttempts} 次嘗試): ${lastError}`,
     };
+  }
+
+  /**
+   * 使用 Node.js http/https 模組發送 POST 請求
+   */
+  private async makePostRequest<T>(endpoint: string, data: any): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const url = new URL(`${this.baseUrl}${endpoint}`);
+      const client = url.protocol === 'https:' ? https : http;
+      const postData = JSON.stringify(data);
+      
+      const req = client.request(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData),
+        },
+        timeout: this.timeout,
+      }, (res) => {
+        let responseData = '';
+        
+        res.on('data', (chunk) => {
+          responseData += chunk;
+        });
+        
+        res.on('end', () => {
+          try {
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              const result = JSON.parse(responseData);
+              resolve(result);
+            } else {
+              reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
+            }
+          } catch (error) {
+            reject(new Error(`解析響應失敗: ${error}`));
+          }
+        });
+      });
+      
+      req.on('error', (error) => {
+        reject(error);
+      });
+      
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('請求超時'));
+      });
+      
+      req.write(postData);
+      req.end();
+    });
   }
 
   /**
@@ -306,25 +332,24 @@ export class OllamaService {
           error: modelsResult.error,
         };
       }
-
-      const modelExists = modelsResult.models.some(model => 
-        model.name === modelName || model.name.startsWith(modelName)
-      );
-
+      
+      const modelExists = modelsResult.models.some(model => model.name === modelName);
+      
       return {
         available: modelExists,
-        error: modelExists ? undefined : `模型 "${modelName}" 不存在`,
+        error: modelExists ? undefined : `模型 ${modelName} 不存在`,
       };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
       return {
         available: false,
-        error: error instanceof Error ? error.message : '檢查模型失敗',
+        error: `檢查模型失敗: ${errorMessage}`,
       };
     }
   }
 
   /**
-   * 獲取服務狀態摘要
+   * 獲取完整的服務狀態
    */
   async getServiceStatus(): Promise<{
     service: {
@@ -340,19 +365,19 @@ export class OllamaService {
   }> {
     const serviceCheck = await this.checkServiceAvailability();
     const modelsResult = await this.listModels();
-
+    
     return {
       service: serviceCheck,
       models: {
-        count: modelsResult.models.length,
-        list: modelsResult.models.map(m => m.name),
+        count: modelsResult.success ? modelsResult.models.length : 0,
+        list: modelsResult.success ? modelsResult.models.map(m => m.name) : [],
       },
       lastChecked: new Date(),
     };
   }
 
   /**
-   * 延遲函數
+   * 延遲執行
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -374,5 +399,5 @@ export class OllamaService {
   }
 }
 
-// 單例實例
+// 創建單例實例
 export const ollamaService = new OllamaService();

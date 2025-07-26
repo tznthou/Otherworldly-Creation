@@ -4,8 +4,8 @@
 
 ## 🚀 開發狀態
 
-**當前版本：v0.3.8**  
-**開發進度：IPC 處理器衝突問題修復完成 100%，AI 處理器正確註冊，OLLAMA 模型列表功能完全正常**
+**當前版本：v0.3.9**  
+**開發進度：Electron 網絡請求問題修復完成 100%，OLLAMA 模型獲取功能完全正常，所有三個模型都能正確顯示**
 
 ### ✅ 已完成功能
 
@@ -329,6 +329,7 @@ AI 功能通過 Ollama API 實現：
 
 ## 版本變更紀錄
 
+- 0.3.9 (2025-07-26)：修復 Electron 主進程網絡請求問題，將 ollamaService 從 fetch API 改為 Node.js http 模組，解決「fetch failed」錯誤，確保 OLLAMA 模型列表能正確獲取和顯示
 - 0.3.8 (2025-07-26)：修復 IPC 處理器重複註冊衝突，移除 basicHandlers 導入，解決「Attempted to register a second handler」錯誤，確保 AI 處理器正確註冊和模型列表正常顯示
 - 0.3.7 (2025-07-26)：修復 IPC 處理器註冊問題，在 main.ts 中添加 setupIpcHandlers() 調用，解決「No handler registered for ai:listModels」錯誤，確保所有 IPC 功能正常工作
 - 0.3.6 (2025-07-26)：修復 OLLAMA 模型獲取問題，整合現有 IPC API 系統，添加 fallback 機制確保兼容性，解決模型列表顯示「未找到模型」的問題
