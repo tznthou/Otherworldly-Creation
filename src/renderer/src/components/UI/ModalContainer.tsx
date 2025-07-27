@@ -9,6 +9,7 @@ import ChapterManageModal from '../Modals/ChapterManageModal';
 import CreateChapterModal from '../Modals/CreateChapterModal';
 import AISettingsModal from '../Modals/AISettingsModal';
 import TemplateManagerModal from '../Modals/TemplateManagerModal';
+import TemplateApplicationModal from '../Modals/TemplateApplicationModal';
 import SelectProjectForCharactersModal from '../Modals/SelectProjectForCharactersModal';
 import BackupManagerModal from '../Modals/BackupManagerModal';
 import HelpCenterModal from '../Modals/HelpCenterModal';
@@ -16,7 +17,7 @@ import UpdateManagerModal from '../Modals/UpdateManagerModal';
 
 const ModalContainer: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { modals } = useAppSelector(state => state.ui);
+  const { modals, selectedTemplate } = useAppSelector(state => state.ui);
   
 
   const { currentProject } = useAppSelector(state => state.projects);
@@ -60,6 +61,7 @@ const ModalContainer: React.FC = () => {
       )}
       {modals.aiSettings && <AISettingsModal />}
       {modals.templateManager && <TemplateManagerModal />}
+      {modals.templateApplication && selectedTemplate && <TemplateApplicationModal template={selectedTemplate} />}
       {modals.selectProjectForCharacters && <SelectProjectForCharactersModal />}
       {modals.backupManager && <BackupManagerModal />}
       {modals.helpCenter && <HelpCenterModal />}

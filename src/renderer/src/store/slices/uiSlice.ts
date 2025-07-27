@@ -5,6 +5,7 @@ interface UIState {
   currentView: 'dashboard' | 'editor' | 'characters' | 'settings';
   theme: 'cosmic' | 'light' | 'dark';
   notifications: Notification[];
+  selectedTemplate: any | null; // 儲存選中的模板
   modals: {
     createProject: boolean;
     projectManage: boolean;
@@ -16,6 +17,7 @@ interface UIState {
     settings: boolean;
     characterForm: boolean;
     templateManager: boolean;
+    templateApplication: boolean;
     selectProjectForCharacters: boolean;
     backupManager: boolean;
     helpCenter: boolean;
@@ -45,6 +47,7 @@ const initialState: UIState = {
   currentView: 'dashboard',
   theme: 'cosmic',
   notifications: [],
+  selectedTemplate: null,
   modals: {
     createProject: false,
     projectManage: false,
@@ -56,6 +59,7 @@ const initialState: UIState = {
     settings: false,
     characterForm: false,
     templateManager: false,
+    templateApplication: false,
     selectProjectForCharacters: false,
     backupManager: false,
     helpCenter: false,
@@ -125,6 +129,11 @@ const uiSlice = createSlice({
     setGlobalLoading: (state, action: PayloadAction<boolean>) => {
       state.loading.global = action.payload;
     },
+    
+    // 模板管理
+    setSelectedTemplate: (state, action: PayloadAction<any>) => {
+      state.selectedTemplate = action.payload;
+    },
   },
 });
 
@@ -141,6 +150,7 @@ export const {
   closeAllModals,
   setLoading,
   setGlobalLoading,
+  setSelectedTemplate,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
