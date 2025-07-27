@@ -18,7 +18,7 @@ import HelpButton from './components/Help/HelpButton';
 import QuickHelp from './components/Help/QuickHelp';
 import { firstTimeTutorial } from './data/tutorialSteps';
 import { useAppDispatch } from './hooks/redux';
-import { checkOllamaService } from './store/slices/aiSlice';
+import { checkOllamaService, fetchModelsInfo } from './store/slices/aiSlice';
 import { ErrorHandler, withErrorBoundary } from './utils/errorUtils';
 import { NotificationService } from './components/UI/NotificationSystem';
 import { useSettingsApplication, useShortcuts } from './hooks/useSettings';
@@ -49,14 +49,47 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // 檢查 electronAPI 可用性
+        console.log('=== App 初始化調試信息 ===');
+        console.log('window.electronAPI 是否存在:', !!window.electronAPI);
+        console.log('window.electronAPI:', window.electronAPI);
+        console.log('window.electronAPI.ai 是否存在:', !!window.electronAPI?.ai);
+        
+        if (window.electronAPI?.ai) {
+          console.log('electronAPI.ai 方法:', Object.keys(window.electronAPI.ai));
+        }
+        
         // 顯示初始化通知
         NotificationService.info('正在初始化', '創世紀元正在啟動中...');
         
-        // 檢查 Ollama 服務狀態
-        await dispatch(checkOllamaService());
-        
         // 初始化自動備份服務
         await AutoBackupService.initialize();
+        
+        // 將 Ollama 服務檢查移到背景執行（不阻塞初始化）
+        setTimeout(async () => {
+          console.log('App: 背景檢查 Ollama 服務...');
+          console.log('App: 檢查 electronAPI 可用性...');
+          console.log('App: window.electronAPI 存在:', !!window.electronAPI);
+          console.log('App: window.electronAPI.ai 存在:', !!window.electronAPI?.ai);
+          
+          if (window.electronAPI?.ai) {
+            try {
+              console.log('App: 開始調用 checkOllamaService...');
+              const result = await dispatch(checkOllamaService()).unwrap();
+              console.log('App: checkOllamaService 結果:', result);
+              
+              console.log('App: 開始載入模型列表...');
+              const models = await dispatch(fetchModelsInfo()).unwrap();
+              console.log('App: fetchModelsInfo 結果:', models);
+              
+              console.log('App: AI 服務初始化完成');
+            } catch (error) {
+              console.error('App: AI 服務初始化失敗:', error);
+            }
+          } else {
+            console.error('App: electronAPI.ai 不可用，跳過 AI 初始化');
+          }
+        }, 500); // 0.5 秒後開始背景檢查
         
         // 模擬初始化時間，讓用戶看到載入動畫
         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -122,7 +155,12 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="relative">
-      <Router>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />} />

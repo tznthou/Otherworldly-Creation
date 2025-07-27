@@ -3,7 +3,7 @@ import projectsReducer from './slices/projectsSlice';
 import chaptersReducer from './slices/chaptersSlice';
 import charactersReducer from './slices/charactersSlice';
 import templatesReducer from './slices/templatesSlice';
-// import aiReducer from './slices/aiSlice'; // 暫時禁用 AI slice
+import aiReducer from './slices/aiSlice'; // 重新啟用 AI slice
 import uiReducer from './slices/uiSlice';
 import editorReducer from './slices/editorSlice';
 import { errorReducer, progressReducer } from './slices/errorSlice';
@@ -16,7 +16,7 @@ export const store = configureStore({
     chapters: chaptersReducer,
     characters: charactersReducer,
     templates: templatesReducer,
-    // ai: aiReducer, // 暫時禁用 AI slice
+    ai: aiReducer, // 重新啟用 AI slice
     ui: uiReducer,
     editor: editorReducer,
     error: errorReducer,

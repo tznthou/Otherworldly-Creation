@@ -49,10 +49,10 @@ export class OllamaService {
   private retryDelay: number;
 
   constructor(
-    baseUrl: string = 'http://localhost:11434',
-    timeout: number = 30000,
-    retryAttempts: number = 3,
-    retryDelay: number = 1000
+    baseUrl: string = 'http://127.0.0.1:11434', // 使用 IPv4 地址避免 IPv6 解析問題
+    timeout: number = 5000, // 增加超時時間到 5 秒
+    retryAttempts: number = 2, // 增加重試次數到 2
+    retryDelay: number = 500 // 增加重試延遲到 0.5 秒
   ) {
     this.baseUrl = baseUrl;
     this.timeout = timeout;
@@ -65,7 +65,10 @@ export class OllamaService {
    */
   private async makeRequest<T>(endpoint: string): Promise<T> {
     return new Promise((resolve, reject) => {
-      const url = new URL(`${this.baseUrl}${endpoint}`);
+      const fullUrl = `${this.baseUrl}${endpoint}`;
+      console.log(`[OllamaService] 發送請求到: ${fullUrl}`);
+      
+      const url = new URL(fullUrl);
       const client = url.protocol === 'https:' ? https : http;
       
       const req = client.request(url, {
@@ -75,6 +78,7 @@ export class OllamaService {
         },
         timeout: this.timeout,
       }, (res) => {
+        console.log(`[OllamaService] 收到響應: ${res.statusCode} ${res.statusMessage}`);
         let data = '';
         
         res.on('data', (chunk) => {
@@ -85,21 +89,28 @@ export class OllamaService {
           try {
             if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
               const result = JSON.parse(data);
+              console.log(`[OllamaService] 請求成功: ${endpoint}`);
               resolve(result);
             } else {
-              reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
+              const errorMsg = `HTTP ${res.statusCode}: ${res.statusMessage}`;
+              console.error(`[OllamaService] HTTP 錯誤: ${errorMsg}`);
+              reject(new Error(errorMsg));
             }
           } catch (error) {
-            reject(new Error(`解析響應失敗: ${error}`));
+            const errorMsg = `解析響應失敗: ${error}`;
+            console.error(`[OllamaService] 解析錯誤: ${errorMsg}`);
+            reject(new Error(errorMsg));
           }
         });
       });
       
       req.on('error', (error) => {
+        console.error(`[OllamaService] 網絡錯誤: ${error.message}`);
         reject(error);
       });
       
       req.on('timeout', () => {
+        console.error(`[OllamaService] 請求超時: ${fullUrl}`);
         req.destroy();
         reject(new Error('請求超時'));
       });
@@ -109,7 +120,7 @@ export class OllamaService {
   }
 
   /**
-   * 檢查 Ollama 服務是否可用
+   * 檢查 Ollama 服務是否可用（非阻塞版本）
    */
   async checkServiceAvailability(): Promise<{
     available: boolean;
@@ -117,18 +128,24 @@ export class OllamaService {
     error?: string;
   }> {
     try {
+      console.log('[OllamaService] 開始檢查服務可用性...');
+      const startTime = Date.now();
+      
       const data: OllamaVersionResponse = await this.makeRequest<OllamaVersionResponse>('/api/version');
+      
+      console.log(`[OllamaService] 服務檢查成功，耗時: ${Date.now() - startTime}ms`);
       return {
         available: true,
         version: data.version,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      console.log(`[OllamaService] 服務檢查失敗: ${errorMessage}`);
       
       if (errorMessage.includes('ECONNREFUSED')) {
         return {
           available: false,
-          error: '無法連接到 Ollama 服務',
+          error: 'Ollama 服務未啟動，請執行 ollama serve',
         };
       }
       
@@ -136,6 +153,13 @@ export class OllamaService {
         return {
           available: false,
           error: '找不到 Ollama 服務主機',
+        };
+      }
+      
+      if (errorMessage.includes('請求超時')) {
+        return {
+          available: false,
+          error: 'Ollama 服務響應超時',
         };
       }
       
@@ -147,7 +171,7 @@ export class OllamaService {
   }
 
   /**
-   * 獲取可用模型列表
+   * 獲取可用模型列表（優化版本，不再先檢查服務）
    */
   async listModels(): Promise<{
     success: boolean;
@@ -159,15 +183,10 @@ export class OllamaService {
     error?: string;
   }> {
     try {
-      const serviceCheck = await this.checkServiceAvailability();
-      if (!serviceCheck.available) {
-        return {
-          success: false,
-          models: [],
-          error: serviceCheck.error,
-        };
-      }
-
+      console.log('[OllamaService] 獲取模型列表...');
+      const startTime = Date.now();
+      
+      // 直接請求模型列表，不先檢查服務
       const data: OllamaResponse = await this.makeRequest<OllamaResponse>('/api/tags');
       const models = data.models?.map(model => ({
         name: model.name,
@@ -175,12 +194,23 @@ export class OllamaService {
         modified_at: model.modified_at,
       })) || [];
 
+      console.log(`[OllamaService] 獲取到 ${models.length} 個模型，耗時: ${Date.now() - startTime}ms`);
       return {
         success: true,
         models,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      console.log(`[OllamaService] 獲取模型失敗: ${errorMessage}`);
+      
+      if (errorMessage.includes('ECONNREFUSED')) {
+        return {
+          success: false,
+          models: [],
+          error: 'Ollama 服務未啟動',
+        };
+      }
+      
       return {
         success: false,
         models: [],

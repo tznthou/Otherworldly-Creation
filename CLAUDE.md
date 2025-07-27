@@ -44,6 +44,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run release` - Full release workflow (lint, test, build, package)
 - `npm run package:simple` - Simple packaging without Electron Forge
 - `npm run package:manual` - Manual packaging process
+- `npm run test:docs` - Test user documentation
+- `npm run test:update` - Test update system
 
 ## Architecture Overview
 
@@ -51,10 +53,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is an Electron application with a React frontend using TypeScript throughout:
 
 - **Main Process** (`src/main/`): Handles system integration, database operations, and IPC
-- **Renderer Process** (`src/renderer/`): React application with Redux state management
+- **Renderer Process** (`src/renderer/`): React application with Redux state management  
 - **Database**: SQLite with better-sqlite3, includes migration system and foreign key constraints
 - **AI Integration**: Ollama service integration for local AI text generation
 - **Testing**: Comprehensive test suite with unit, integration, and performance tests
+
+### IPC Architecture
+The application uses a structured IPC (Inter-Process Communication) system:
+- Main handlers in `src/main/ipc/ipcHandlers.ts`
+- Specialized handlers in subdirectories:
+  - `aiHandlers.ts` - AI/Ollama related operations
+  - `basicHandlers.ts` - Basic app operations
+  - `updateHandlers.ts` - Auto-update functionality
+  - `handlers/` - Project and chapter management
 
 ### Key Services & Components
 
@@ -148,8 +159,11 @@ The application uses SQLite with the following main entities:
   - `react-hooks/exhaustive-deps`: Warning
 
 ## Current Version
-- v0.4.3 - Enhanced OLLAMA connection stability with XMLHttpRequest fallback
+- v0.4.5 - Fixed loading stability issues and established stable architecture
+- Previous versions fixed OLLAMA connection, IPC handler conflicts, and UI loading problems
 
 ## Known Issues & Workarounds
 - **OLLAMA Connection**: If AI features fail, ensure Ollama service is running locally (`ollama serve`)
 - **Electron Network Requests**: Main process uses custom fetch implementation with XMLHttpRequest fallback for compatibility
+- **TypeScript Build**: If encountering type errors, ensure both `tsconfig.json` and `tsconfig.main.json` are properly configured
+- **Native Module Rebuild**: After installing, run `npm rebuild better-sqlite3` to ensure the SQLite module works with your Electron version

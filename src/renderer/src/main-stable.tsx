@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { store } from './store/store';
+import { useAppDispatch } from './hooks/redux';
+import { checkOllamaService, fetchModelsInfo } from './store/slices/aiSlice';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import './index.css';
@@ -12,6 +14,7 @@ console.log('簡化版應用程式開始執行');
 // 簡化的應用程式組件
 const SimpleApp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const initApp = async () => {
@@ -32,8 +35,29 @@ const SimpleApp: React.FC = () => {
         console.log('應用程式初始化完成');
         
         // 初始化 AI 服務（背景執行）
-        setTimeout(() => {
+        setTimeout(async () => {
           console.log('開始背景 AI 服務檢查...');
+          console.log('檢查 electronAPI 可用性...');
+          console.log('window.electronAPI 存在:', !!window.electronAPI);
+          console.log('window.electronAPI.ai 存在:', !!window.electronAPI?.ai);
+          
+          if (window.electronAPI?.ai) {
+            try {
+              console.log('開始調用 checkOllamaService...');
+              const result = await dispatch(checkOllamaService()).unwrap();
+              console.log('checkOllamaService 結果:', result);
+              
+              console.log('開始載入模型列表...');
+              const models = await dispatch(fetchModelsInfo()).unwrap();
+              console.log('fetchModelsInfo 結果:', models);
+              
+              console.log('AI 服務初始化完成');
+            } catch (error) {
+              console.error('AI 服務初始化失敗:', error);
+            }
+          } else {
+            console.error('electronAPI.ai 不可用，跳過 AI 初始化');
+          }
         }, 2000);
         
       } catch (error) {
@@ -43,7 +67,7 @@ const SimpleApp: React.FC = () => {
     };
 
     initApp();
-  }, []);
+  }, [dispatch]);
 
   if (isLoading) {
     return null; // 讓 HTML 載入畫面繼續顯示
@@ -51,7 +75,12 @@ const SimpleApp: React.FC = () => {
 
   return (
     <div className="relative">
-      <Router>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <div className="min-h-screen bg-cosmic-950 text-white">
           <Routes>
             <Route path="/" element={

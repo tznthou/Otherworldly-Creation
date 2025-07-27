@@ -148,6 +148,8 @@ const electronAPI: ElectronAPI = {
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
 
 console.log('完整 Preload 腳本載入完成，包含 AI 功能');
+console.log('electronAPI 物件:', electronAPI);
+console.log('electronAPI.ai 方法:', Object.keys(electronAPI.ai));
 
 // 擴展全域類型定義
 declare global {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAppDispatch } from '../../hooks/redux';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { openModal } from '../../store/slices/uiSlice';
 
 interface AIStatusIndicatorProps {
@@ -8,50 +8,23 @@ interface AIStatusIndicatorProps {
 
 const AIStatusIndicator: React.FC<AIStatusIndicatorProps> = ({ className = '' }) => {
   const dispatch = useAppDispatch();
-  const [status, setStatus] = useState<{
-    available: boolean;
-    modelCount: number;
-    loading: boolean;
-  }>({
-    available: false,
-    modelCount: 0,
-    loading: true,
-  });
-
+  const { isOllamaConnected, availableModels } = useAppSelector(state => state.ai);
+  
+  // 初始載入狀態：如果 Redux 中沒有檢查過，顯示載入狀態
+  const [hasInitialized, setHasInitialized] = useState(false);
+  
   useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        setStatus(prev => ({ ...prev, loading: true }));
-        
-        const [serviceAvailable, models] = await Promise.all([
-          window.electronAPI.ai.checkOllamaService(),
-          window.electronAPI.ai.listModels(),
-        ]);
-
-        setStatus({
-          available: serviceAvailable,
-          modelCount: models.length,
-          loading: false,
-        });
-      } catch (error) {
-        console.error('檢查 AI 狀態失敗:', error);
-        setStatus({
-          available: false,
-          modelCount: 0,
-          loading: false,
-        });
-      }
-    };
-
-    checkStatus();
+    // 簡單的初始化標記，避免永遠顯示載入中
+    const timer = setTimeout(() => {
+      setHasInitialized(true);
+    }, 3000); // 3 秒後認為已初始化
     
-    // 每 30 秒檢查一次狀態
-    const interval = setInterval(checkStatus, 30000);
-    
-    return () => clearInterval(interval);
+    return () => clearTimeout(timer);
   }, []);
 
-  if (status.loading) {
+  const isLoading = !hasInitialized && !isOllamaConnected && availableModels.length === 0;
+
+  if (isLoading) {
     return (
       <div className={`flex items-center ${className}`}>
         <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse mr-2"></div>
@@ -72,12 +45,12 @@ const AIStatusIndicator: React.FC<AIStatusIndicatorProps> = ({ className = '' })
     >
       <div 
         className={`w-2 h-2 rounded-full mr-2 ${
-          status.available ? 'bg-green-500' : 'bg-red-500'
+          isOllamaConnected ? 'bg-green-500' : 'bg-red-500'
         }`}
       ></div>
       <span className="text-xs text-gray-400">
-        {status.available 
-          ? `AI 可用 (${status.modelCount} 個模型)`
+        {isOllamaConnected 
+          ? `AI 可用 (${availableModels.length} 個模型)`
           : 'AI 不可用'
         }
       </span>

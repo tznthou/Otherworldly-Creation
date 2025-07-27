@@ -5,8 +5,8 @@ export interface Project {
   name: string;
   type: 'isekai' | 'school' | 'scifi' | 'fantasy';
   description: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // 改為字符串以符合 Redux 序列化要求
+  updatedAt: string; // 改為字符串以符合 Redux 序列化要求
   settings: {
     aiModel?: string;
     aiParams?: {
@@ -36,7 +36,12 @@ export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
   async () => {
     const projects = await window.electronAPI.projects.getAll();
-    return projects;
+    // 確保日期是字符串格式
+    return projects.map((project: any) => ({
+      ...project,
+      createdAt: project.createdAt instanceof Date ? project.createdAt.toISOString() : project.createdAt,
+      updatedAt: project.updatedAt instanceof Date ? project.updatedAt.toISOString() : project.updatedAt,
+    }));
   }
 );
 
@@ -45,7 +50,12 @@ export const createProject = createAsyncThunk(
   async (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
     const projectId = await window.electronAPI.projects.create(projectData);
     const project = await window.electronAPI.projects.getById(projectId);
-    return project;
+    // 確保日期是字符串格式
+    return {
+      ...project,
+      createdAt: project.createdAt instanceof Date ? project.createdAt.toISOString() : project.createdAt,
+      updatedAt: project.updatedAt instanceof Date ? project.updatedAt.toISOString() : project.updatedAt,
+    };
   }
 );
 

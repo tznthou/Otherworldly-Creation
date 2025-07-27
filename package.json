@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
-    "dev:main": "tsc -p tsconfig.main.json && NODE_ENV=development electron dist/main.js",
+    "dev:main": "tsc -p tsconfig.main.json && cross-env NODE_ENV=development electron dist/main.js",
     "dev:renderer": "vite",
     "build": "npm run clean && npm run build:main && npm run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",
@@ -65,6 +65,7 @@
     "@typescript-eslint/parser": "^6.11.0",
     "@vitejs/plugin-react": "^4.1.1",
     "concurrently": "^8.2.2",
+    "cross-env": "^10.0.0",
     "electron": "^27.1.2",
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.54.0",

@@ -9,6 +9,7 @@ import { getDatabaseMaintenanceService } from '../services/databaseMaintenance';
 // TODO: 其他處理器將逐步從原檔案遷移到獨立模組
 
 export function setupIpcHandlers(): void {
+  console.log('=== 開始設置 IPC 處理器 ===');
   const db = getDatabase();
   
   // 已模組化的處理器
@@ -23,7 +24,9 @@ export function setupIpcHandlers(): void {
   setupDatabaseMaintenanceHandlers();
   
   // AI 引擎 IPC 處理器（已獨立）
+  console.log('設置 AI 處理器...');
   setupAIHandlers();
+  console.log('IPC 處理器設置完成');
 }
 
 // 資料完整性檢查函數

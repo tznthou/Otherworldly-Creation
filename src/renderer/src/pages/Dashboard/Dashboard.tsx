@@ -1,29 +1,21 @@
 import React, { useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { fetchProjects } from '../../store/slices/projectsSlice';
-// import { checkOllamaService } from '../../store/slices/aiSlice'; // 暫時禁用
+import { fetchModelsInfo } from '../../store/slices/aiSlice'; // 只更新模型列表
 import ProjectGrid from './ProjectGrid';
 import QuickActions from './QuickActions';
-// import AIStatus from './AIStatus'; // 暫時禁用 AIStatus 組件
 
 const Dashboard: React.FC = () => {
   const dispatch = useAppDispatch();
   const { projects, loading } = useAppSelector(state => state.projects);
-  // const { isOllamaConnected, availableModels } = useAppSelector(state => state.ai); // 暫時禁用 AI state
-  const isOllamaConnected = false; // 臨時值
-  const availableModels: string[] = []; // 臨時值
+  const { isOllamaConnected, availableModels } = useAppSelector(state => state.ai); // 重新啟用 AI state
 
   useEffect(() => {
     // 載入專案列表
     dispatch(fetchProjects());
     
-    // 暫時完全禁用 AI 檢查
-    // setTimeout(() => {
-    //   console.log('背景檢查 AI 服務...');
-    //   dispatch(checkOllamaService()).catch(error => {
-    //     console.error('AI 服務檢查失敗:', error);
-    //   });
-    // }, 3000);
+    // AI 服務狀態完全由 App.tsx 處理，這裡不再重複調用
+    console.log('Dashboard: AI 服務由 App.tsx 統一管理');
   }, [dispatch]);
 
   if (loading) {
@@ -79,29 +71,41 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* AI 狀態卡片 - 簡化版 */}
+        {/* AI 狀態卡片 */}
         <div className="card">
           <h2 className="text-xl font-cosmic text-gold-500 mb-4">AI 引擎狀態</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* 連接狀態 */}
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl bg-gray-500/20 text-gray-400">
-                🔧
+              <div className={`w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl ${
+                isOllamaConnected 
+                  ? 'bg-green-500/20 text-green-400' 
+                  : 'bg-gray-500/20 text-gray-400'
+              }`}>
+                {isOllamaConnected ? '✅' : '🔧'}
               </div>
               <h3 className="font-medium mb-1">Ollama 服務</h3>
-              <p className="text-sm text-gray-400">
-                待檢查
+              <p className={`text-sm ${
+                isOllamaConnected ? 'text-green-400' : 'text-gray-400'
+              }`}>
+                {isOllamaConnected ? '已連接' : '檢查中...'}
               </p>
             </div>
 
             {/* 可用模型 */}
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-blue-500/20 text-blue-400 mx-auto mb-3 flex items-center justify-center text-2xl">
+              <div className={`w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl ${
+                availableModels.length > 0 
+                  ? 'bg-blue-500/20 text-blue-400' 
+                  : 'bg-gray-500/20 text-gray-400'
+              }`}>
                 🤖
               </div>
               <h3 className="font-medium mb-1">可用模型</h3>
-              <p className="text-sm text-gray-400">
-                等待檢查
+              <p className={`text-sm ${
+                availableModels.length > 0 ? 'text-blue-400' : 'text-gray-400'
+              }`}>
+                {availableModels.length > 0 ? `${availableModels.length} 個模型` : '檢查中...'}
               </p>
             </div>
 
@@ -119,15 +123,27 @@ const Dashboard: React.FC = () => {
           
           {/* AI 功能說明 */}
           <div className="mt-6 pt-6 border-t border-cosmic-700">
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-              <h4 className="text-blue-400 font-medium mb-2">🤖 AI 創作助手</h4>
-              <p className="text-sm text-gray-300 mb-2">
-                創世紀元整合 Ollama 本地 AI 引擎，為您的創作提供智能輔助。
-              </p>
-              <p className="text-sm text-gray-400">
-                AI 功能將在後續版本中啟用，敬請期待！
-              </p>
-            </div>
+            {isOllamaConnected && availableModels.length > 0 ? (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                <h4 className="text-green-400 font-medium mb-2">🤖 AI 創作助手已就緒</h4>
+                <p className="text-sm text-gray-300 mb-2">
+                  檢測到 {availableModels.length} 個可用模型，AI 創作功能已可使用。
+                </p>
+                <p className="text-sm text-green-400">
+                  可用模型：{availableModels.slice(0, 3).join(', ')}{availableModels.length > 3 ? '...' : ''}
+                </p>
+              </div>
+            ) : (
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <h4 className="text-blue-400 font-medium mb-2">🤖 AI 創作助手</h4>
+                <p className="text-sm text-gray-300 mb-2">
+                  創世紀元整合 Ollama 本地 AI 引擎，為您的創作提供智能輔助。
+                </p>
+                <p className="text-sm text-gray-400">
+                  {isOllamaConnected === false ? '請啟動 Ollama 服務以使用 AI 功能' : '正在檢查 AI 服務狀態...'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

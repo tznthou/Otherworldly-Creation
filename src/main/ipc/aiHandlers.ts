@@ -6,19 +6,22 @@ import { ollamaService } from '../services/ollamaService';
  * 設置 AI 引擎相關的 IPC 處理程序
  */
 export function setupAIHandlers(): void {
+  console.log('=== 註冊 AI IPC 處理器 ===');
+  
   // 檢查 Ollama 服務
   ipcMain.handle('ai:checkOllamaService', async () => {
     try {
-      console.log('=== 開始檢查 Ollama 服務 ===');
+      console.log('=== IPC: 檢查 Ollama 服務 ===');
       const result = await ollamaService.checkServiceAvailability();
-      console.log('Ollama 服務檢查結果:', JSON.stringify(result, null, 2));
-      console.log('服務可用性:', result.available);
+      console.log('IPC: Ollama 服務檢查結果:', JSON.stringify(result, null, 2));
+      console.log('IPC: 服務可用性:', result.available);
       return result.available;
     } catch (error) {
-      console.error('檢查 Ollama 服務失敗:', error);
+      console.error('IPC: 檢查 Ollama 服務失敗:', error);
       return false;
     }
   });
+  console.log('已註冊: ai:checkOllamaService');
 
   // 獲取詳細的服務狀態
   ipcMain.handle('ai:getServiceStatus', async () => {

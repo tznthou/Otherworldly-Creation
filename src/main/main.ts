@@ -17,7 +17,8 @@ process.on('unhandledRejection', (reason, promise) => {
 // 保持對窗口對象的全局引用
 let mainWindow: BrowserWindow | null = null;
 
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+console.log('環境檢測:', { NODE_ENV: process.env.NODE_ENV, isPackaged: app.isPackaged, isDev });
 
 function createWindow(): void {
   console.log('開始創建窗口');
@@ -45,13 +46,19 @@ function createWindow(): void {
     // 載入應用程式
     if (isDev) {
       console.log('開發模式：載入 Vite 開發服務器');
-      mainWindow.loadURL('http://localhost:3000').catch(error => {
-        console.error('無法載入開發服務器:', error);
-        // 如果開發服務器失敗，使用本地檔案
+      // 增加延遲確保 Vite 服務器啟動
+      setTimeout(() => {
         if (mainWindow) {
-          mainWindow.loadFile(path.join(__dirname, './renderer/index.html'));
+          mainWindow.loadURL('http://localhost:3000').catch(error => {
+            console.error('無法載入開發服務器:', error);
+            // 如果開發服務器失敗，使用本地檔案
+            if (mainWindow) {
+              console.log('降級到本地檔案模式');
+              mainWindow.loadFile(path.join(__dirname, './renderer/index.html'));
+            }
+          });
         }
-      });
+      }, 2000); // 等待 2 秒讓 Vite 啟動
     } else {
       console.log('生產模式：載入本地檔案');
       mainWindow.loadFile(path.join(__dirname, './renderer/index.html'));
@@ -126,13 +133,34 @@ app.whenReady().then(async () => {
     console.log('Genesis Chronicle 應用程式啟動成功');
   } catch (error) {
     console.error('應用程式啟動失敗:', error);
+    console.error('錯誤堆疊:', error instanceof Error ? error.stack : String(error));
     
     // 如果資料庫初始化失敗，仍然嘗試創建窗口（但功能會受限）
     console.warn('資料庫初始化失敗，以基本模式啟動應用程式');
     try {
+      // 設置基本的 IPC 處理器（跳過需要數據庫的部分）
+      setupIpcHandlers();
       createWindow();
     } catch (windowError) {
       console.error('窗口創建也失敗:', windowError);
+      console.error('窗口錯誤堆疊:', windowError instanceof Error ? windowError.stack : String(windowError));
+      
+      // 最後的嘗試：創建最小化窗口
+      try {
+        const { BrowserWindow } = require('electron');
+        const fallbackWindow = new BrowserWindow({
+          width: 800,
+          height: 600,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+          },
+        });
+        fallbackWindow.loadURL('data:text/html,<html><body><h1>應用程式啟動失敗</h1><p>請檢查控制台輸出</p></body></html>');
+      } catch (fallbackError) {
+        console.error('連降級窗口都失敗:', fallbackError);
+        app.quit();
+      }
     }
   }
 });

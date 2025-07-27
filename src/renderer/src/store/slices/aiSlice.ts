@@ -62,12 +62,42 @@ export const checkOllamaService = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log('Redux: 檢查 Ollama 服務...');
+      
+      if (!window.electronAPI?.ai) {
+        throw new Error('electronAPI.ai 不可用');
+      }
+      
       const isConnected = await window.electronAPI.ai.checkOllamaService();
       console.log('Redux: Ollama 服務結果:', isConnected);
       return isConnected;
     } catch (error) {
       console.error('Redux: 檢查 Ollama 服務失敗:', error);
       return rejectWithValue(false);
+    }
+  }
+);
+
+// 延遲初始化 AI 服務（背景執行，不阻塞 UI）
+export const initializeAIServiceLazy = createAsyncThunk(
+  'ai/initializeAIServiceLazy',
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      console.log('Redux: 開始延遲 AI 服務初始化...');
+      
+      // 先快速檢查 Ollama 服務
+      const isConnected = await dispatch(checkOllamaService()).unwrap();
+      
+      if (isConnected) {
+        // 如果連接成功，背景載入模型列表
+        console.log('Redux: Ollama 已連接，載入模型列表...');
+        await dispatch(fetchModelsInfo());
+      }
+      
+      return isConnected;
+    } catch (error) {
+      console.warn('Redux: 延遲 AI 初始化失敗:', error);
+      // 不返回錯誤，允許應用程式繼續運行
+      return false;
     }
   }
 );
@@ -182,6 +212,19 @@ const aiSlice = createSlice({
         state.isOllamaConnected = false;
         state.availableModels = [];
         state.currentModel = null;
+      })
+
+      // initializeAIServiceLazy
+      .addCase(initializeAIServiceLazy.fulfilled, (state, action) => {
+        state.isOllamaConnected = action.payload;
+        if (!action.payload) {
+          state.availableModels = [];
+          state.currentModel = null;
+        }
+      })
+      .addCase(initializeAIServiceLazy.rejected, (state) => {
+        // 延遲初始化失敗不影響應用程式運行
+        state.isOllamaConnected = false;
       })
 
       // fetchServiceStatus
