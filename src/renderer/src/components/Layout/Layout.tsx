@@ -2,8 +2,8 @@ import React from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
-import NotificationContainer from '../UI/NotificationContainer';
 import CosmicBackground from '../UI/CosmicBackground';
+import ModalContainer from '../UI/ModalContainer';
 import { useAppSelector } from '../../hooks/redux';
 
 interface LayoutProps {
@@ -14,7 +14,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { sidebarCollapsed } = useAppSelector(state => state.ui);
 
   return (
-    <div className="flex h-screen bg-cosmic-950 overflow-hidden relative">
+    <div className="flex h-screen bg-cosmic-950 relative">
       {/* 宇宙背景 */}
       <CosmicBackground intensity="medium" />
       
@@ -37,8 +37,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Footer />
       </div>
       
-      {/* 通知容器 */}
-      <NotificationContainer />
     </div>
   );
 };

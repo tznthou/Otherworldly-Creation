@@ -1,11 +1,12 @@
 import React from 'react';
-import { useAppDispatch } from '../../hooks/redux';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { openModal } from '../../store/slices/uiSlice';
 import { useNavigate } from 'react-router-dom';
 
 const QuickActions: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { modals } = useAppSelector(state => state.ui);
 
   const actions = [
     {
@@ -14,7 +15,9 @@ const QuickActions: React.FC = () => {
       description: '創建新的異世界創作專案',
       icon: '📝',
       color: 'from-gold-500 to-gold-600',
-      action: () => dispatch(openModal('createProject')),
+      action: () => {
+        dispatch(openModal('createProject'));
+      },
     },
     {
       id: 'character-manager',
@@ -23,7 +26,6 @@ const QuickActions: React.FC = () => {
       icon: '👥',
       color: 'from-purple-500 to-purple-600',
       action: () => {
-        // 需要先選擇專案才能進入角色管理
         dispatch(openModal('selectProjectForCharacters'));
       },
     },
@@ -33,7 +35,9 @@ const QuickActions: React.FC = () => {
       description: '異世界、校園、科幻、奇幻模板',
       icon: '📚',
       color: 'from-mystic-500 to-mystic-600',
-      action: () => dispatch(openModal('templateManager')),
+      action: () => {
+        dispatch(openModal('templateManager'));
+      },
     },
     {
       id: 'ai-writing',
@@ -41,7 +45,9 @@ const QuickActions: React.FC = () => {
       description: '智能續寫與劇情建議',
       icon: '🤖',
       color: 'from-cyan-500 to-cyan-600',
-      action: () => dispatch(openModal('aiSettings')),
+      action: () => {
+        dispatch(openModal('aiSettings'));
+      },
     },
     {
       id: 'database-maintenance',
@@ -49,7 +55,9 @@ const QuickActions: React.FC = () => {
       description: '資料庫維護、備份還原',
       icon: '🛠️',
       color: 'from-green-500 to-green-600',
-      action: () => navigate('/database-maintenance'),
+      action: () => {
+        navigate('/database-maintenance');
+      },
     },
     {
       id: 'import-project',
@@ -57,7 +65,9 @@ const QuickActions: React.FC = () => {
       description: '從備份檔案匯入現有專案',
       icon: '📥',
       color: 'from-blue-500 to-blue-600',
-      action: () => dispatch(openModal('importProject')),
+      action: () => {
+        dispatch(openModal('importProject'));
+      },
     },
     {
       id: 'backup-restore',
@@ -65,7 +75,9 @@ const QuickActions: React.FC = () => {
       description: '專案資料備份與還原管理',
       icon: '💿',
       color: 'from-orange-500 to-orange-600',
-      action: () => dispatch(openModal('backupManager')),
+      action: () => {
+        dispatch(openModal('backupManager'));
+      },
     },
     {
       id: 'settings',
@@ -73,7 +85,9 @@ const QuickActions: React.FC = () => {
       description: '配置 AI 引擎和應用程式設定',
       icon: '⚙️',
       color: 'from-gray-500 to-gray-600',
-      action: () => navigate('/settings'),
+      action: () => {
+        navigate('/settings');
+      },
     },
     {
       id: 'help',
@@ -81,7 +95,9 @@ const QuickActions: React.FC = () => {
       description: '查看使用教學和常見問題',
       icon: '❓',
       color: 'from-indigo-500 to-indigo-600',
-      action: () => dispatch(openModal('helpCenter')),
+      action: () => {
+        dispatch(openModal('helpCenter'));
+      },
     },
     {
       id: 'update-check',
@@ -89,7 +105,9 @@ const QuickActions: React.FC = () => {
       description: '檢查並安裝應用程式更新',
       icon: '🔄',
       color: 'from-teal-500 to-teal-600',
-      action: () => dispatch(openModal('updateManager')),
+      action: () => {
+        dispatch(openModal('updateManager'));
+      },
     },
   ];
 
@@ -128,6 +146,7 @@ const QuickActions: React.FC = () => {
         ))}
       </div>
       
+
       {/* 底部說明文字 */}
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-500 italic">

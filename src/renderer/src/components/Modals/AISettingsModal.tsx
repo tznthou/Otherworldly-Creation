@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useAppDispatch } from '../../hooks/redux';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
+import { setCurrentModel } from '../../store/slices/aiSlice';
 
 const AISettingsModal: React.FC = () => {
   const dispatch = useAppDispatch();
+  const currentModel = useAppSelector(state => state.ai.currentModel);
   
   const [settings, setSettings] = useState({
     baseUrl: 'http://localhost:11434',
     timeout: 30000,
     retryAttempts: 3,
     retryDelay: 1000,
+    selectedModel: currentModel || '',
   });
   
   const [serviceStatus, setServiceStatus] = useState<{
@@ -28,6 +31,11 @@ const AISettingsModal: React.FC = () => {
   useEffect(() => {
     checkServiceStatus();
   }, []);
+
+  // 當 currentModel 從 Redux 變更時，更新本地設定
+  useEffect(() => {
+    setSettings(prev => ({ ...prev, selectedModel: currentModel || '' }));
+  }, [currentModel]);
 
   const checkServiceStatus = async () => {
     try {
@@ -58,6 +66,11 @@ const AISettingsModal: React.FC = () => {
     dispatch(closeModal('aiSettings'));
   };
 
+  const handleModelChange = (modelName: string) => {
+    setSettings(prev => ({ ...prev, selectedModel: modelName }));
+    dispatch(setCurrentModel(modelName));
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
@@ -65,6 +78,11 @@ const AISettingsModal: React.FC = () => {
       const result = await window.electronAPI.ai.updateOllamaConfig(settings);
       
       if (result.success) {
+        // 更新選擇的模型
+        if (settings.selectedModel && settings.selectedModel !== currentModel) {
+          dispatch(setCurrentModel(settings.selectedModel));
+        }
+        
         dispatch(addNotification({
           type: 'success',
           title: '設定已更新',
@@ -170,12 +188,23 @@ const AISettingsModal: React.FC = () => {
                         {serviceStatus.models.map(model => (
                           <span 
                             key={model}
-                            className="bg-cosmic-700 text-gray-300 px-2 py-1 rounded text-xs"
+                            className={`px-2 py-1 rounded text-xs cursor-pointer transition-colors ${
+                              settings.selectedModel === model 
+                                ? 'bg-gold-500 text-cosmic-900' 
+                                : 'bg-cosmic-700 text-gray-300 hover:bg-cosmic-600'
+                            }`}
+                            onClick={() => handleModelChange(model)}
                           >
                             {model}
                           </span>
                         ))}
                       </div>
+                      
+                      {settings.selectedModel && (
+                        <div className="mt-2 text-sm text-gold-400">
+                          已選擇模型: {settings.selectedModel}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -191,6 +220,34 @@ const AISettingsModal: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* 模型選擇 */}
+          {serviceStatus.models.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gold-400 mb-4">模型選擇</h3>
+              <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+                <label className="block text-gray-300 mb-2">選擇 AI 模型</label>
+                <select
+                  value={settings.selectedModel}
+                  onChange={(e) => handleModelChange(e.target.value)}
+                  className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                >
+                  <option value="">請選擇模型...</option>
+                  {serviceStatus.models.map(model => (
+                    <option key={model} value={model}>
+                      {model}
+                    </option>
+                  ))}
+                </select>
+                
+                {settings.selectedModel && (
+                  <div className="mt-2 text-sm text-gray-400">
+                    這個模型將用於 AI 續寫功能
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* 連接設定 */}
           <div className="mb-6">

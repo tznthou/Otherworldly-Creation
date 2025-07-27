@@ -7,9 +7,10 @@ import { useAppDispatch } from './hooks/redux';
 import { checkOllamaService, fetchModelsInfo } from './store/slices/aiSlice';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
+import SettingsSimple from './pages/Settings/SettingsSimple';
+import DatabaseMaintenanceSimple from './pages/DatabaseMaintenance/DatabaseMaintenanceSimple';
 import './index.css';
 
-console.log('簡化版應用程式開始執行');
 
 // 簡化的應用程式組件
 const SimpleApp: React.FC = () => {
@@ -19,8 +20,6 @@ const SimpleApp: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
-        console.log('開始初始化應用程式...');
-        
         // 最小延遲後直接隱藏載入畫面
         await new Promise(resolve => setTimeout(resolve, 500));
         
@@ -28,35 +27,19 @@ const SimpleApp: React.FC = () => {
         const loadingElement = document.getElementById('loading');
         if (loadingElement) {
           loadingElement.style.display = 'none';
-          console.log('載入畫面已隱藏');
         }
         
         setIsLoading(false);
-        console.log('應用程式初始化完成');
         
         // 初始化 AI 服務（背景執行）
         setTimeout(async () => {
-          console.log('開始背景 AI 服務檢查...');
-          console.log('檢查 electronAPI 可用性...');
-          console.log('window.electronAPI 存在:', !!window.electronAPI);
-          console.log('window.electronAPI.ai 存在:', !!window.electronAPI?.ai);
-          
           if (window.electronAPI?.ai) {
             try {
-              console.log('開始調用 checkOllamaService...');
-              const result = await dispatch(checkOllamaService()).unwrap();
-              console.log('checkOllamaService 結果:', result);
-              
-              console.log('開始載入模型列表...');
-              const models = await dispatch(fetchModelsInfo()).unwrap();
-              console.log('fetchModelsInfo 結果:', models);
-              
-              console.log('AI 服務初始化完成');
+              await dispatch(checkOllamaService()).unwrap();
+              await dispatch(fetchModelsInfo()).unwrap();
             } catch (error) {
               console.error('AI 服務初始化失敗:', error);
             }
-          } else {
-            console.error('electronAPI.ai 不可用，跳過 AI 初始化');
           }
         }, 2000);
         
@@ -88,11 +71,27 @@ const SimpleApp: React.FC = () => {
                 <Dashboard />
               </Layout>
             } />
+            <Route path="/settings" element={
+              <Layout>
+                <SettingsSimple />
+              </Layout>
+            } />
+            <Route path="/database-maintenance" element={
+              <Layout>
+                <DatabaseMaintenanceSimple />
+              </Layout>
+            } />
             <Route path="*" element={
               <div className="flex items-center justify-center h-screen">
                 <div className="text-center">
-                  <h2 className="text-xl text-gold-400 mb-4">未知頁面</h2>
-                  <p className="text-gray-300">路由工作正常</p>
+                  <h2 className="text-xl text-gold-400 mb-4">頁面不存在</h2>
+                  <p className="text-gray-300">路徑：{window.location.pathname}</p>
+                  <button 
+                    onClick={() => window.history.back()} 
+                    className="mt-4 px-4 py-2 bg-gold-500 text-black rounded hover:bg-gold-600"
+                  >
+                    返回
+                  </button>
                 </div>
               </div>
             } />

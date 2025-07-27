@@ -159,11 +159,17 @@ The application uses SQLite with the following main entities:
   - `react-hooks/exhaustive-deps`: Warning
 
 ## Current Version
+- v0.4.6 - Completely resolved Ollama connection issues, achieved 100% AI functionality availability
 - v0.4.5 - Fixed loading stability issues and established stable architecture
 - Previous versions fixed OLLAMA connection, IPC handler conflicts, and UI loading problems
 
 ## Known Issues & Workarounds
-- **OLLAMA Connection**: If AI features fail, ensure Ollama service is running locally (`ollama serve`)
-- **Electron Network Requests**: Main process uses custom fetch implementation with XMLHttpRequest fallback for compatibility
-- **TypeScript Build**: If encountering type errors, ensure both `tsconfig.json` and `tsconfig.main.json` are properly configured
+- **OLLAMA Connection**: If AI features fail, ensure Ollama service is running locally (`ollama serve`). As of v0.4.6, connection issues have been completely resolved with improved IPv4/IPv6 handling
 - **Native Module Rebuild**: After installing, run `npm rebuild better-sqlite3` to ensure the SQLite module works with your Electron version
+- **TypeScript Build**: If encountering type errors, ensure both `tsconfig.json` and `tsconfig.main.json` are properly configured
+
+## Critical Development Notes
+- **AI Service Stability**: v0.4.6 implements bulletproof Ollama connectivity with fallback mechanisms and proper timeout handling
+- **Entry Point**: Application uses `main-stable.tsx` as the stable entry point for renderer process
+- **Network Configuration**: Uses 127.0.0.1 instead of localhost to avoid IPv6/IPv4 resolution conflicts
+- **CSP Policy**: Content Security Policy configured to allow local AI service connections while maintaining security

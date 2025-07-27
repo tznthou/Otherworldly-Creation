@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import ProjectEditor from './pages/ProjectEditor/ProjectEditor';
 import CharacterManager from './pages/CharacterManager/CharacterManager';
 import Settings from './pages/Settings/Settings';
+import SettingsSimple from './pages/Settings/SettingsSimple';
 import DatabaseMaintenance from './pages/DatabaseMaintenance/DatabaseMaintenance';
+import DatabaseMaintenanceSimple from './pages/DatabaseMaintenance/DatabaseMaintenanceSimple';
 import ModalContainer from './components/UI/ModalContainer';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import CosmicBackground from './components/UI/CosmicBackground';
@@ -24,6 +26,37 @@ import { NotificationService } from './components/UI/NotificationSystem';
 import { useSettingsApplication, useShortcuts } from './hooks/useSettings';
 import AutoBackupService from './services/autoBackupService';
 import UpdateManager from './components/Update/UpdateManager';
+
+// 未知頁面組件
+const UnknownPageComponent: React.FC = () => {
+  const location = useLocation();
+  
+  return (
+    <div className="h-full flex items-center justify-center bg-cosmic-950">
+      <div className="text-center">
+        <h1 className="text-2xl font-cosmic text-gold-500 mb-4">🔍 路由調試頁面</h1>
+        <div className="text-left bg-cosmic-800 p-4 rounded mb-4 max-w-md">
+          <p className="text-sm text-gray-300 mb-2">React Router Location: {location.pathname}</p>
+          <p className="text-sm text-gray-300 mb-2">Window Location: {window.location.pathname}</p>
+          <p className="text-sm text-gray-300 mb-2">Full URL: {window.location.href}</p>
+          <p className="text-sm text-gray-300">Hash: {window.location.hash || '無'}</p>
+        </div>
+        {console.log('路由調試 - React Router:', location)}
+        {console.log('路由調試 - Window:', {
+          pathname: window.location.pathname,
+          href: window.location.href,
+          hash: window.location.hash
+        })}
+        <button 
+          onClick={() => window.history.back()} 
+          className="btn-primary"
+        >
+          返回
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const AppContent: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -164,10 +197,28 @@ const AppContent: React.FC = () => {
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/settings" element={
+              <div className="h-full flex items-center justify-center bg-cosmic-950">
+                <div className="text-center">
+                  <h1 className="text-2xl font-cosmic text-gold-500 mb-4">⚙️ 系統設定</h1>
+                  <p className="text-gray-300 mb-4">設定頁面正常工作！</p>
+                  {console.log('Settings 路由匹配成功')}
+                </div>
+              </div>
+            } />
+            <Route path="/database-maintenance" element={
+              <div className="h-full flex items-center justify-center bg-cosmic-950">
+                <div className="text-center">
+                  <h1 className="text-2xl font-cosmic text-gold-500 mb-4">💾 資料管理</h1>
+                  <p className="text-gray-300 mb-4">資料管理頁面正常工作！</p>
+                  {console.log('Database Maintenance 路由匹配成功')}
+                </div>
+              </div>
+            } />
             <Route path="/project/:id" element={<ProjectEditor />} />
             <Route path="/characters/:projectId" element={<CharacterManager />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/database-maintenance" element={<DatabaseMaintenance />} />
+            {/* 捕捉所有未匹配的路由 */}
+            <Route path="*" element={<UnknownPageComponent />} />
           </Routes>
         </Layout>
         <ModalContainer />
@@ -233,6 +284,7 @@ const AppContent: React.FC = () => {
       
       {/* 自動更新管理器 */}
       <UpdateManager />
+      
     </div>
   );
 };

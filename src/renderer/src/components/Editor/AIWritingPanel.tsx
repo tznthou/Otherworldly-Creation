@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSlate } from 'slate-react';
 import { Transforms, Range } from 'slate';
-import { useAppDispatch } from '../../hooks/redux';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
+import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
 
 interface AIWritingPanelProps {
   projectId: string;
@@ -29,6 +30,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
   const editor = useSlate();
   const abortControllerRef = useRef<AbortController | null>(null);
   
+  // 從 Redux store 獲取 AI 相關狀態
+  const { currentModel, availableModels, isOllamaConnected } = useAppSelector(state => state.ai);
+  
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
   const [progress, setProgress] = useState<GenerationProgress>({
@@ -39,36 +43,18 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
   });
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(200);
-  const [selectedModel, setSelectedModel] = useState('');
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [generationCount, setGenerationCount] = useState(3);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [topP, setTopP] = useState(0.9);
   const [presencePenalty, setPresencePenalty] = useState(0);
   const [frequencyPenalty, setFrequencyPenalty] = useState(0);
   
-  // 獲取可用的 AI 模型
+  // 獲取可用的 AI 模型（如果尚未載入）
   useEffect(() => {
-    const fetchModels = async () => {
-      try {
-        const models = await window.electronAPI.ai.listModels();
-        setAvailableModels(models);
-        if (models.length > 0) {
-          setSelectedModel(models[0]);
-        }
-      } catch (error) {
-        console.error('獲取 AI 模型失敗:', error);
-        dispatch(addNotification({
-          type: 'error',
-          title: '無法獲取 AI 模型',
-          message: '請確保 Ollama 服務正在運行',
-          duration: 5000,
-        }));
-      }
-    };
-    
-    fetchModels();
-  }, [dispatch]);
+    if (isOllamaConnected && availableModels.length === 0) {
+      dispatch(fetchAvailableModels());
+    }
+  }, [dispatch, isOllamaConnected, availableModels.length]);
 
   // 清理效果：組件卸載時取消正在進行的請求
   useEffect(() => {
@@ -91,11 +77,11 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
 
   // 生成文本
   const handleGenerate = async () => {
-    if (!selectedModel) {
+    if (!currentModel) {
       dispatch(addNotification({
         type: 'warning',
         title: '未選擇模型',
-        message: '請先選擇一個 AI 模型',
+        message: '請先在 AI 設定中選擇一個模型',
         duration: 3000,
       }));
       return;
@@ -153,7 +139,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
             projectId, 
             chapterId, 
             selection.anchor.offset, 
-            selectedModel, 
+            currentModel, 
             params
           );
           
@@ -259,7 +245,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
   // 重新生成特定選項
   const handleRegenerateOption = useCallback(async (optionId: string) => {
     const option = generationOptions.find(opt => opt.id === optionId);
-    if (!option || !selectedModel) return;
+    if (!option || !currentModel) return;
 
     try {
       const { selection } = editor;
@@ -278,7 +264,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
         projectId, 
         chapterId, 
         selection.anchor.offset, 
-        selectedModel, 
+        currentModel, 
         params
       );
 
@@ -307,7 +293,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
         duration: 3000,
       }));
     }
-  }, [generationOptions, selectedModel, editor, projectId, chapterId, maxTokens, topP, presencePenalty, frequencyPenalty, dispatch]);
+  }, [generationOptions, currentModel, editor, projectId, chapterId, maxTokens, topP, presencePenalty, frequencyPenalty, dispatch]);
 
   // 清除所有選項
   const handleClearOptions = useCallback(() => {
@@ -329,19 +315,21 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
         <div>
           <label className="block text-sm text-gray-300 mb-1">AI 模型</label>
           <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
+            value={currentModel || ''}
+            onChange={(e) => dispatch(setCurrentModel(e.target.value))}
             className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
             disabled={isGenerating || availableModels.length === 0}
           >
-            {availableModels.length === 0 ? (
-              <option value="">無可用模型</option>
-            ) : (
-              availableModels.map(model => (
-                <option key={model} value={model}>{model}</option>
-              ))
-            )}
+            <option value="">請選擇模型...</option>
+            {availableModels.map(model => (
+              <option key={model} value={model}>{model}</option>
+            ))}
           </select>
+          {!isOllamaConnected && (
+            <p className="text-xs text-red-400 mt-1">
+              Ollama 服務未連接，請在 AI 設定中檢查連接狀態
+            </p>
+          )}
         </div>
         
         <div className="grid grid-cols-2 gap-4">
@@ -457,7 +445,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
       <div className="flex justify-center mb-4">
         <button
           onClick={handleGenerate}
-          disabled={isGenerating || !selectedModel}
+          disabled={isGenerating || !currentModel || !isOllamaConnected}
           className="btn-primary px-6 py-2"
         >
           {isGenerating ? '生成中...' : '開始 AI 續寫'}

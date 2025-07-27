@@ -15,6 +15,11 @@ interface UIState {
     aiSettings: boolean;
     settings: boolean;
     characterForm: boolean;
+    templateManager: boolean;
+    selectProjectForCharacters: boolean;
+    backupManager: boolean;
+    helpCenter: boolean;
+    updateManager: boolean;
   };
   loading: {
     global: boolean;
@@ -50,6 +55,11 @@ const initialState: UIState = {
     aiSettings: false,
     settings: false,
     characterForm: false,
+    templateManager: false,
+    selectProjectForCharacters: false,
+    backupManager: false,
+    helpCenter: false,
+    updateManager: false,
   },
   loading: {
     global: false,
