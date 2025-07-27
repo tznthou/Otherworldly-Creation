@@ -12,6 +12,7 @@ import CharacterManager from './pages/CharacterManager/CharacterManager';
 import SettingsSimple from './pages/Settings/SettingsSimple';
 import DatabaseMaintenanceSimple from './pages/DatabaseMaintenance/DatabaseMaintenanceSimple';
 import SimpleProjectEditor from './pages/ProjectEditor/SimpleProjectEditor';
+import Statistics from './pages/Statistics/Statistics';
 import ModalContainer from './components/UI/ModalContainer';
 import { NotificationContainer } from './components/UI/NotificationSystem';
 import './index.css';
@@ -101,6 +102,11 @@ const SimpleApp: React.FC = () => {
             <Route path="/project/:id" element={
               <Layout>
                 <SimpleProjectEditor />
+              </Layout>
+            } />
+            <Route path="/statistics" element={
+              <Layout>
+                <Statistics />
               </Layout>
             } />
             <Route path="*" element={

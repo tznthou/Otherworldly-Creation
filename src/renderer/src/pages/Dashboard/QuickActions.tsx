@@ -109,6 +109,16 @@ const QuickActions: React.FC = () => {
         dispatch(openModal('updateManager'));
       },
     },
+    {
+      id: 'writing-stats',
+      title: '📊 創作統計',
+      description: '查看寫作進度和統計數據',
+      icon: '📊',
+      color: 'from-violet-500 to-violet-600',
+      action: () => {
+        navigate('/statistics');
+      },
+    },
   ];
 
   return (

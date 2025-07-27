@@ -32,6 +32,12 @@ const Sidebar: React.FC = () => {
       disabled: !currentProject,
     },
     {
+      id: 'statistics',
+      label: '創作統計',
+      icon: '📊',
+      path: '/statistics',
+    },
+    {
       id: 'settings',
       label: '設定',
       icon: '⚙️',
