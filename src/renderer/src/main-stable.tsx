@@ -5,10 +5,15 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { store } from './store/store';
 import { useAppDispatch } from './hooks/redux';
 import { checkOllamaService, fetchModelsInfo } from './store/slices/aiSlice';
+import { fetchProjects } from './store/slices/projectsSlice';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
+import CharacterManager from './pages/CharacterManager/CharacterManager';
 import SettingsSimple from './pages/Settings/SettingsSimple';
 import DatabaseMaintenanceSimple from './pages/DatabaseMaintenance/DatabaseMaintenanceSimple';
+import SimpleProjectEditor from './pages/ProjectEditor/SimpleProjectEditor';
+import ModalContainer from './components/UI/ModalContainer';
+import { NotificationContainer } from './components/UI/NotificationSystem';
 import './index.css';
 
 
@@ -30,6 +35,13 @@ const SimpleApp: React.FC = () => {
         }
         
         setIsLoading(false);
+        
+        // 載入專案資料
+        try {
+          await dispatch(fetchProjects()).unwrap();
+        } catch (error) {
+          console.error('載入專案資料失敗:', error);
+        }
         
         // 初始化 AI 服務（背景執行）
         setTimeout(async () => {
@@ -81,6 +93,16 @@ const SimpleApp: React.FC = () => {
                 <DatabaseMaintenanceSimple />
               </Layout>
             } />
+            <Route path="/characters/:projectId" element={
+              <Layout>
+                <CharacterManager />
+              </Layout>
+            } />
+            <Route path="/project/:id" element={
+              <Layout>
+                <SimpleProjectEditor />
+              </Layout>
+            } />
             <Route path="*" element={
               <div className="flex items-center justify-center h-screen">
                 <div className="text-center">
@@ -97,6 +119,12 @@ const SimpleApp: React.FC = () => {
             } />
           </Routes>
         </div>
+        
+        {/* 模態框容器 */}
+        <ModalContainer />
+        
+        {/* 通知系統 */}
+        <NotificationContainer />
       </Router>
     </div>
   );

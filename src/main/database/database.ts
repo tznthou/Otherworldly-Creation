@@ -5,7 +5,7 @@ import { setContextManager } from '../services/contextManager';
 
 let db: any;
 
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export async function initDatabase(): Promise<void> {
   try {
@@ -65,8 +65,14 @@ async function runMigrations(): Promise<void> {
         console.log('遷移到版本 1 完成');
       }
 
-      // 未來的遷移可以在這裡添加
-      // if (currentVersion < 2) { ... }
+      if (currentVersion < 2) {
+        // 版本 2: 添加 characters 表的 description 欄位
+        addCharacterDescriptionColumn();
+        
+        // 記錄版本
+        db.prepare('INSERT INTO db_version (version) VALUES (?)').run(2);
+        console.log('遷移到版本 2 完成');
+      }
     });
 
     transaction();
@@ -110,6 +116,7 @@ function createTables(): void {
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL,
       name TEXT NOT NULL,
+      description TEXT,
       archetype TEXT,
       age INTEGER,
       gender TEXT,
@@ -159,6 +166,25 @@ function createTables(): void {
 
   // 插入預設模板（如果不存在）
   insertDefaultTemplates();
+}
+
+function addCharacterDescriptionColumn(): void {
+  // 檢查 description 欄位是否已存在
+  try {
+    const columns = db.pragma("table_info('characters')");
+    const hasDescription = columns.some((col: any) => col.name === 'description');
+    
+    if (!hasDescription) {
+      console.log('添加 characters.description 欄位...');
+      db.exec('ALTER TABLE characters ADD COLUMN description TEXT');
+      console.log('characters.description 欄位添加完成');
+    } else {
+      console.log('characters.description 欄位已存在');
+    }
+  } catch (error) {
+    console.error('添加 description 欄位失敗:', error);
+    throw error;
+  }
 }
 
 function insertDefaultTemplates(): void {

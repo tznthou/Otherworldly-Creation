@@ -164,15 +164,15 @@ export const CharacterList: React.FC<CharacterListProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">載入中...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-500"></div>
+        <span className="ml-2 text-gray-300">載入中...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+      <div className="card border-red-500">
         <div className="flex">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,11 +180,11 @@ export const CharacterList: React.FC<CharacterListProps> = ({
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">載入錯誤</h3>
-            <p className="mt-1 text-sm text-red-700">{error}</p>
+            <h3 className="text-sm font-medium text-red-400">載入錯誤</h3>
+            <p className="mt-1 text-sm text-red-300">{error}</p>
             <button
               onClick={loadCharacters}
-              className="mt-2 text-sm font-medium text-red-800 hover:text-red-900"
+              className="mt-2 text-sm font-medium text-red-400 hover:text-red-300"
             >
               重新載入
             </button>
@@ -199,14 +199,14 @@ export const CharacterList: React.FC<CharacterListProps> = ({
       {/* 頁面標題和操作 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">角色管理</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className="text-2xl font-cosmic text-gold-400">角色管理</h1>
+          <p className="mt-1 text-sm text-gray-300">
             管理專案中的角色，包括主角、配角和反派等
           </p>
         </div>
         <button
           onClick={onCreateCharacter}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="btn-primary"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -224,13 +224,13 @@ export const CharacterList: React.FC<CharacterListProps> = ({
 
       {/* 排序選項 */}
       <div className="flex items-center space-x-4 text-sm">
-        <span className="text-gray-600">排序方式:</span>
+        <span className="text-gray-300">排序方式:</span>
         <button
           onClick={() => handleSortChange('name')}
-          className={`px-3 py-1 rounded-md transition-colors ${
+          className={`px-3 py-1 rounded-lg transition-colors ${
             sortOptions.field === 'name'
-              ? 'bg-blue-100 text-blue-800'
-              : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-gold-500 text-cosmic-950'
+              : 'text-gray-300 hover:bg-cosmic-800'
           }`}
         >
           名稱
@@ -242,10 +242,10 @@ export const CharacterList: React.FC<CharacterListProps> = ({
         </button>
         <button
           onClick={() => handleSortChange('archetype')}
-          className={`px-3 py-1 rounded-md transition-colors ${
+          className={`px-3 py-1 rounded-lg transition-colors ${
             sortOptions.field === 'archetype'
-              ? 'bg-blue-100 text-blue-800'
-              : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-gold-500 text-cosmic-950'
+              : 'text-gray-300 hover:bg-cosmic-800'
           }`}
         >
           原型
@@ -257,10 +257,10 @@ export const CharacterList: React.FC<CharacterListProps> = ({
         </button>
         <button
           onClick={() => handleSortChange('createdAt')}
-          className={`px-3 py-1 rounded-md transition-colors ${
+          className={`px-3 py-1 rounded-lg transition-colors ${
             sortOptions.field === 'createdAt'
-              ? 'bg-blue-100 text-blue-800'
-              : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-gold-500 text-cosmic-950'
+              : 'text-gray-300 hover:bg-cosmic-800'
           }`}
         >
           創建時間
@@ -278,7 +278,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">
+          <h3 className="mt-2 text-sm font-medium text-gray-300">
             {characters.length === 0 ? '尚無角色' : '沒有符合條件的角色'}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
@@ -291,7 +291,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
             <div className="mt-6">
               <button
                 onClick={onCreateCharacter}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="btn-primary"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -317,7 +317,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
 
       {/* 統計資訊 */}
       {characters.length > 0 && (
-        <div className="text-sm text-gray-500 text-center">
+        <div className="text-sm text-gray-400 text-center">
           顯示 {filteredAndSortedCharacters.length} / {characters.length} 個角色
         </div>
       )}

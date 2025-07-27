@@ -26,6 +26,9 @@
       "Bash(true)",
       "Bash(find:*)",
       "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(sqlite3:*)",
+      "Bash(cd:*)",
       "Bash(cd:*)"
     ],
     "deny": []

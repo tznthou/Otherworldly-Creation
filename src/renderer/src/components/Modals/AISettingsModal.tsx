@@ -8,7 +8,7 @@ const AISettingsModal: React.FC = () => {
   const currentModel = useAppSelector(state => state.ai.currentModel);
   
   const [settings, setSettings] = useState({
-    baseUrl: 'http://localhost:11434',
+    baseUrl: 'http://127.0.0.1:11434',
     timeout: 30000,
     retryAttempts: 3,
     retryDelay: 1000,
@@ -259,7 +259,7 @@ const AISettingsModal: React.FC = () => {
                   type="text"
                   value={settings.baseUrl}
                   onChange={(e) => setSettings(prev => ({ ...prev, baseUrl: e.target.value }))}
-                  placeholder="http://localhost:11434"
+                  placeholder="http://127.0.0.1:11434"
                   className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                 />
               </div>

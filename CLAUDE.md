@@ -28,11 +28,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - To run a specific test file: `npm test -- path/to/test.spec.ts`
 - To run tests matching a pattern: `npm test -- --testNamePattern="test description"`
 - To run tests in watch mode: `npm test -- --watch`
+- To update snapshots: `npm test -- --updateSnapshot`
+- To see coverage: `npm test -- --coverage`
 
 ### Build & Package Commands
 - `npm run build:main` - Build main process only
 - `npm run build:renderer` - Build renderer process only
 - `npm run make` - Build and create distribution packages
+- `npm run make:all` - Build for all platforms
 - `npm run make:mac` - Build for macOS
 - `npm run make:win` - Build for Windows
 - `npm run make:linux` - Build for Linux
@@ -112,10 +115,10 @@ The application uses SQLite with the following main entities:
 - Transaction support for complex operations
 
 ### Testing Strategy
-- **Unit Tests**: Core services and database operations
-- **Integration Tests**: Component interactions and workflows
-- **Performance Tests**: Large data handling and AI request performance
-- **E2E Tests**: Complete user workflows from project creation to export
+- **Unit Tests**: Core services and database operations (`src/main/__tests__/unit/`, `src/__tests__/unit/`)
+- **Integration Tests**: Component interactions and workflows (`src/__tests__/integration/`)
+- **Performance Tests**: Large data handling and AI request performance (`src/__tests__/performance/`)
+- **Test Setup**: Uses Jest with jsdom environment, tests run from `<rootDir>/src`
 
 ## Configuration Files
 
@@ -170,6 +173,8 @@ The application uses SQLite with the following main entities:
 
 ## Critical Development Notes
 - **AI Service Stability**: v0.4.6 implements bulletproof Ollama connectivity with fallback mechanisms and proper timeout handling
-- **Entry Point**: Application uses `main-stable.tsx` as the stable entry point for renderer process
+- **Entry Point**: Application uses `main-stable.tsx` as the stable entry point for renderer process (NOT App.tsx)
 - **Network Configuration**: Uses 127.0.0.1 instead of localhost to avoid IPv6/IPv4 resolution conflicts
 - **CSP Policy**: Content Security Policy configured to allow local AI service connections while maintaining security
+- **Module Resolution**: Uses `@/` alias for renderer imports, mapped to `src/renderer/`
+- **Test Environment**: Requires proper jsdom setup, see `src/__tests__/integration/setup.ts`

@@ -76,8 +76,8 @@ function setupCharacterHandlers(db: any): void {
       
       const characterId = uuidv4();
       const stmt = db.prepare(`
-        INSERT INTO characters (id, project_id, name, age, gender, description, personality, background, appearance, relationships, tags)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO characters (id, project_id, name, age, gender, description, personality, background, appearance)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       
       stmt.run(
@@ -89,9 +89,7 @@ function setupCharacterHandlers(db: any): void {
         character.description || '',
         character.personality || '',
         character.background || '',
-        character.appearance || '',
-        JSON.stringify(character.relationships || []),
-        JSON.stringify(character.tags || [])
+        character.appearance || ''
       );
       
       return characterId;
@@ -106,7 +104,7 @@ function setupCharacterHandlers(db: any): void {
     try {
       const stmt = db.prepare(`
         UPDATE characters
-        SET name = ?, age = ?, gender = ?, description = ?, personality = ?, background = ?, appearance = ?, relationships = ?, tags = ?, updated_at = CURRENT_TIMESTAMP
+        SET name = ?, age = ?, gender = ?, description = ?, personality = ?, background = ?, appearance = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `);
       
@@ -118,8 +116,6 @@ function setupCharacterHandlers(db: any): void {
         character.personality || '',
         character.background || '',
         character.appearance || '',
-        JSON.stringify(character.relationships || []),
-        JSON.stringify(character.tags || []),
         character.id
       );
     } catch (error) {

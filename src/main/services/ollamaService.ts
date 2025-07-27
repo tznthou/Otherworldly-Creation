@@ -54,7 +54,8 @@ export class OllamaService {
     retryAttempts: number = 2, // 增加重試次數到 2
     retryDelay: number = 500 // 增加重試延遲到 0.5 秒
   ) {
-    this.baseUrl = baseUrl;
+    // 自動將 localhost 轉換為 127.0.0.1 以避免 IPv6 解析問題
+    this.baseUrl = baseUrl.replace('localhost', '127.0.0.1');
     this.timeout = timeout;
     this.retryAttempts = retryAttempts;
     this.retryDelay = retryDelay;
@@ -422,7 +423,10 @@ export class OllamaService {
     retryAttempts?: number;
     retryDelay?: number;
   }): void {
-    if (config.baseUrl) this.baseUrl = config.baseUrl;
+    if (config.baseUrl) {
+      // 自動將 localhost 轉換為 127.0.0.1 以避免 IPv6 解析問題
+      this.baseUrl = config.baseUrl.replace('localhost', '127.0.0.1');
+    }
     if (config.timeout) this.timeout = config.timeout;
     if (config.retryAttempts) this.retryAttempts = config.retryAttempts;
     if (config.retryDelay) this.retryDelay = config.retryDelay;

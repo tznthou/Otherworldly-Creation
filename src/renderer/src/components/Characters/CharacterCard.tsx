@@ -30,18 +30,18 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
 
   return (
     <div
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer border border-gray-200"
+      className="bg-cosmic-800 border border-cosmic-700 rounded-lg hover:border-gold-400 transition-all duration-200 cursor-pointer"
       onClick={handleView}
     >
       <div className="p-4">
         {/* 角色頭部資訊 */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            <h3 className="text-lg font-semibold text-white mb-1">
               {character.name}
             </h3>
             {character.archetype && (
-              <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+              <span className="inline-block px-2 py-1 text-xs font-medium bg-gold-500 text-cosmic-950 rounded-full">
                 {character.archetype}
               </span>
             )}
@@ -51,7 +51,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
           <div className="flex space-x-1 ml-2">
             <button
               onClick={handleEdit}
-              className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+              className="p-1 text-gray-400 hover:text-gold-400 transition-colors"
               title="編輯角色"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +60,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
             </button>
             <button
               onClick={handleDelete}
-              className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+              className="p-1 text-gray-400 hover:text-red-400 transition-colors"
               title="刪除角色"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,25 +71,25 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
         </div>
 
         {/* 角色基本資訊 */}
-        <div className="space-y-2 text-sm text-gray-600">
+        <div className="space-y-2 text-sm text-gray-300">
           {character.age && (
             <div className="flex items-center">
-              <span className="font-medium w-12">年齡:</span>
+              <span className="font-medium w-12 text-gold-400">年齡:</span>
               <span>{character.age}歲</span>
             </div>
           )}
           
           {character.gender && (
             <div className="flex items-center">
-              <span className="font-medium w-12">性別:</span>
+              <span className="font-medium w-12 text-gold-400">性別:</span>
               <span>{character.gender}</span>
             </div>
           )}
           
           {character.personality && (
             <div>
-              <span className="font-medium">性格:</span>
-              <p className="text-gray-700 mt-1 line-clamp-2">
+              <span className="font-medium text-gold-400">性格:</span>
+              <p className="text-gray-300 mt-1 line-clamp-2">
                 {character.personality}
               </p>
             </div>
@@ -98,16 +98,16 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
 
         {/* 角色外觀描述 */}
         {character.appearance && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <span className="font-medium text-sm text-gray-600">外觀:</span>
-            <p className="text-sm text-gray-700 mt-1 line-clamp-2">
+          <div className="mt-3 pt-3 border-t border-cosmic-700">
+            <span className="font-medium text-sm text-gold-400">外觀:</span>
+            <p className="text-sm text-gray-300 mt-1 line-clamp-2">
               {character.appearance}
             </p>
           </div>
         )}
 
         {/* 創建時間 */}
-        <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+        <div className="mt-3 pt-3 border-t border-cosmic-700 text-xs text-gray-500">
           創建於 {character.createdAt.toLocaleDateString('zh-TW')}
         </div>
       </div>

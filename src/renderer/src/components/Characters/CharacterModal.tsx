@@ -206,17 +206,17 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           {/* 標題列 */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
+          <div className="flex items-center justify-between p-6 border-b border-cosmic-700">
+            <h2 className="text-xl font-semibold text-white">
               {isEditing ? '編輯角色' : '新增角色'}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gold-400 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -225,15 +225,15 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
           </div>
 
           {/* 標籤導航 */}
-          <div className="border-b border-gray-200">
+          <div className="border-b border-cosmic-700">
             <nav className="flex space-x-8 px-6">
               <button
                 type="button"
                 onClick={() => setActiveTab('basic')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'basic'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-gold-500 text-gold-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-cosmic-600'
                 }`}
               >
                 基本資料
@@ -243,13 +243,13 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 onClick={() => setActiveTab('relationships')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'relationships'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-gold-500 text-gold-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-cosmic-600'
                 }`}
               >
                 角色關係
                 {formData.relationships && formData.relationships.length > 0 && (
-                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gold-500 text-cosmic-950">
                     {formData.relationships.length}
                   </span>
                 )}
@@ -266,27 +266,27 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 角色名稱 */}
               <div className="md:col-span-2">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  角色名稱 <span className="text-red-500">*</span>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+                  角色名稱 <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.name ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
+                    errors.name ? 'border-red-400' : 'border-cosmic-600'
                   }`}
                   placeholder="輸入角色名稱"
                 />
                 {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                  <p className="mt-1 text-sm text-red-400">{errors.name}</p>
                 )}
               </div>
 
               {/* 角色原型 */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   角色原型
                 </label>
                 <ArchetypeSelector
@@ -298,7 +298,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
 
               {/* 年齡 */}
               <div>
-                <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="age" className="block text-sm font-medium text-gray-300 mb-1">
                   年齡
                 </label>
                 <input
@@ -306,28 +306,28 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                   id="age"
                   value={formData.age || ''}
                   onChange={(e) => handleInputChange('age', e.target.value ? parseInt(e.target.value) : undefined)}
-                  className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.age ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
+                    errors.age ? 'border-red-400' : 'border-cosmic-600'
                   }`}
                   placeholder="輸入年齡"
                   min="0"
                   max="1000"
                 />
                 {errors.age && (
-                  <p className="mt-1 text-sm text-red-600">{errors.age}</p>
+                  <p className="mt-1 text-sm text-red-400">{errors.age}</p>
                 )}
               </div>
 
               {/* 性別 */}
               <div>
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="gender" className="block text-sm font-medium text-gray-300 mb-1">
                   性別
                 </label>
                 <select
                   id="gender"
                   value={formData.gender}
                   onChange={(e) => handleInputChange('gender', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-cosmic-900 border border-cosmic-600 rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
                 >
                   <option value="">選擇性別</option>
                   {GENDER_OPTIONS.map((gender) => (
@@ -342,10 +342,10 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
             {/* 外觀描述 */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor="appearance" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="appearance" className="block text-sm font-medium text-gray-300">
                   外觀描述
                 </label>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-400">
                   {formData.appearance?.length || 0}/500
                 </span>
               </div>
@@ -355,23 +355,23 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 onChange={(e) => handleInputChange('appearance', e.target.value)}
                 rows={3}
                 maxLength={500}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.appearance ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
+                  errors.appearance ? 'border-red-400' : 'border-cosmic-600'
                 }`}
                 placeholder="描述角色的外觀特徵..."
               />
               {errors.appearance && (
-                <p className="mt-1 text-sm text-red-600">{errors.appearance}</p>
+                <p className="mt-1 text-sm text-red-400">{errors.appearance}</p>
               )}
             </div>
 
             {/* 性格特點 */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor="personality" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="personality" className="block text-sm font-medium text-gray-300">
                   性格特點
                 </label>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-400">
                   {formData.personality?.length || 0}/500
                 </span>
               </div>
@@ -381,23 +381,23 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 onChange={(e) => handleInputChange('personality', e.target.value)}
                 rows={3}
                 maxLength={500}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.personality ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
+                  errors.personality ? 'border-red-400' : 'border-cosmic-600'
                 }`}
                 placeholder="描述角色的性格特點..."
               />
               {errors.personality && (
-                <p className="mt-1 text-sm text-red-600">{errors.personality}</p>
+                <p className="mt-1 text-sm text-red-400">{errors.personality}</p>
               )}
             </div>
 
             {/* 背景故事 */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor="background" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="background" className="block text-sm font-medium text-gray-300">
                   背景故事
                 </label>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-400">
                   {formData.background?.length || 0}/1000
                 </span>
               </div>
@@ -407,13 +407,13 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 onChange={(e) => handleInputChange('background', e.target.value)}
                 rows={4}
                 maxLength={1000}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.background ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
+                  errors.background ? 'border-red-400' : 'border-cosmic-600'
                 }`}
                 placeholder="描述角色的背景故事..."
               />
               {errors.background && (
-                <p className="mt-1 text-sm text-red-600">{errors.background}</p>
+                <p className="mt-1 text-sm text-red-400">{errors.background}</p>
               )}
             </div>
 
@@ -512,7 +512,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 {/* 提交錯誤 */}
                 {errors.submit && (
                   <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                    <p className="text-sm text-red-600">{errors.submit}</p>
+                    <p className="text-sm text-red-400">{errors.submit}</p>
                   </div>
                 )}
               </>
@@ -537,11 +537,11 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 ) : (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900">角色關係</h3>
+                      <h3 className="text-lg font-medium text-white">角色關係</h3>
                       <button
                         type="button"
                         onClick={() => setShowRelationshipEditor(true)}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="px-4 py-2 text-sm font-medium text-cosmic-950 bg-gold-500 rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
                       >
                         管理關係
                       </button>
@@ -552,16 +552,16 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                         {formData.relationships.map((relationship, index) => {
                           const targetCharacter = allCharacters.find(c => c.id === relationship.targetId);
                           return (
-                            <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div key={index} className="bg-cosmic-900 rounded-lg p-4 border border-cosmic-700">
                               <div className="flex items-center space-x-2 mb-2">
-                                <span className="font-medium text-gray-900">
+                                <span className="font-medium text-white">
                                   {targetCharacter?.name || '未知角色'}
                                 </span>
-                                <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                <span className="px-2 py-1 text-xs font-medium bg-gold-500 text-cosmic-950 rounded-full">
                                   {relationship.type}
                                 </span>
                               </div>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm text-gray-300">
                                 {relationship.description}
                               </p>
                             </div>
@@ -569,7 +569,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                         })}
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="text-center py-8 text-gray-400">
                         <div className="text-4xl mb-2">👥</div>
                         <p>尚未建立任何角色關係</p>
                         <p className="text-sm">點擊「管理關係」開始添加關係</p>
@@ -582,18 +582,18 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
           </div>
 
           {/* 按鈕列 */}
-          <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
+          <div className="flex items-center justify-end space-x-3 p-6 border-t border-cosmic-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm font-medium text-gray-300 bg-cosmic-800 border border-cosmic-600 rounded-md hover:bg-cosmic-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-cosmic-950 bg-gold-500 border border-transparent rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? '儲存中...' : (isEditing ? '更新' : '創建')}
             </button>
