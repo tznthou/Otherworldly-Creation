@@ -203,7 +203,8 @@
   /* 導航樣式 */
   .nav-item {
     @apply flex items-center px-4 py-3 rounded-lg transition-all duration-200
-           hover:bg-cosmic-800 hover:text-gold-400 cursor-pointer;
+           hover:bg-cosmic-800 hover:text-gold-400 cursor-pointer
+           min-w-0 overflow-hidden;
   }
   
   .nav-item.active {

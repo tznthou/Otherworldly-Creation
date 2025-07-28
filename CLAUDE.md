@@ -83,17 +83,19 @@ The application uses a structured IPC (Inter-Process Communication) system:
 - **State Management**: Redux Toolkit with structured slices
 - **Routing**: React Router for page navigation
 - **UI Components**: Custom component library with cosmic/magical theme
-- **Editor**: Slate.js rich text editor for chapter writing
+- **Editor**: Slate.js rich text editor for chapter writing with SQLite persistence
 - **Character Management**: Full character creation and relationship system
-- **Template System**: Pre-built story templates for different genres
+- **Template System**: Complete template browser and application system for different light novel genres
+- **Statistics System**: Comprehensive writing statistics with project, overall, and trend analytics
 
 ### Database Schema
 The application uses SQLite with the following main entities:
-- Projects (novels/stories)
-- Chapters (individual story chapters)
+- Projects (novels/stories with template metadata)
+- Chapters (individual story chapters with rich content storage)
 - Characters (character profiles and relationships)
-- Templates (story templates and character archetypes)
+- Templates (story templates and character archetypes - read from JSON files)
 - Settings (user preferences and configurations)
+- Statistics are calculated dynamically from existing data
 
 ### External Dependencies
 - **Ollama**: Required for AI functionality - must be installed and running locally
@@ -162,9 +164,10 @@ The application uses SQLite with the following main entities:
   - `react-hooks/exhaustive-deps`: Warning
 
 ## Current Version
+- v0.4.7 - Editor refactoring and database storage implementation completed
 - v0.4.6 - Completely resolved Ollama connection issues, achieved 100% AI functionality availability
+- Recent major features: Light novel template system and writing statistics fully implemented
 - v0.4.5 - Fixed loading stability issues and established stable architecture
-- Previous versions fixed OLLAMA connection, IPC handler conflicts, and UI loading problems
 
 ## Known Issues & Workarounds
 - **OLLAMA Connection**: If AI features fail, ensure Ollama service is running locally (`ollama serve`). As of v0.4.6, connection issues have been completely resolved with improved IPv4/IPv6 handling

@@ -102,12 +102,14 @@ const CharacterManager: React.FC = () => {
         });
         
         // 如果有關係資料，創建關係
-        if (formData.relationships && formData.relationships.length > 0) {
-          await window.electronAPI.characters.updateRelationships(
-            characterId,
-            formData.relationships
-          );
-        }
+        // 注意：updateRelationships API 不存在，這裡暫時註解掉
+        // TODO: 實作 updateRelationships API 或使用其他方式處理關係
+        // if (formData.relationships && formData.relationships.length > 0) {
+        //   await window.electronAPI.characters.updateRelationships(
+        //     characterId,
+        //     formData.relationships
+        //   );
+        // }
       }
       
       // 重新載入角色列表
@@ -115,8 +117,11 @@ const CharacterManager: React.FC = () => {
       setAllCharacters(updatedCharacters);
       
       // 重新檢查關係一致性
-      const issues = await window.electronAPI.characters.checkRelationshipConsistency(projectId);
-      setConsistencyIssues(issues);
+      // 注意：checkRelationshipConsistency API 不存在，這裡暫時註解掉
+      // TODO: 實作 checkRelationshipConsistency API
+      // const issues = await window.electronAPI.characters.checkRelationshipConsistency(projectId);
+      // setConsistencyIssues(issues);
+      setConsistencyIssues([]);
       
       // 關閉模態框
       setIsCreateModalOpen(false);

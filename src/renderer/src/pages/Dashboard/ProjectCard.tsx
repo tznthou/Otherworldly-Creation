@@ -130,21 +130,22 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
 
         {/* 操作選單 */}
-        <Menu
-          trigger={
-            <button
-              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-cosmic-800 hover:bg-cosmic-700 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <span className="text-gray-400">⋮</span>
-            </button>
-          }
-          position="bottom-right"
-        >
+        <div className="absolute top-2 right-2 z-10">
+          <Menu
+            trigger={
+              <button
+                className="w-8 h-8 rounded-full bg-cosmic-800 hover:bg-cosmic-700 flex items-center justify-center transition-colors"
+              >
+                <span className="text-gray-400 hover:text-gold-400">⋮</span>
+              </button>
+            }
+            position="bottom-right"
+          >
           <MenuItem icon="✏️" onClick={handleEditProject}>編輯專案</MenuItem>
           <MenuItem icon="📤" onClick={handleExportProject}>匯出專案</MenuItem>
           <MenuItem icon="🗑️" onClick={handleDeleteProject} className="text-red-400">刪除專案</MenuItem>
         </Menu>
+        </div>
       </div>
 
       {/* 刪除確認對話框 */}

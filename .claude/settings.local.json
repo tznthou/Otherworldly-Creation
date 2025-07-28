@@ -29,7 +29,8 @@
       "Bash(cd:*)",
       "Bash(sqlite3:*)",
       "Bash(cd:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "mcp__sequential-thinking__sequentialthinking"
     ],
     "deny": []
   }

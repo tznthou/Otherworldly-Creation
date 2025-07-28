@@ -108,12 +108,12 @@ const Sidebar: React.FC = () => {
                   disabled={item.disabled}
                   className={`w-full nav-item ${isActive ? 'active' : ''} ${
                     item.disabled ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  } ${sidebarCollapsed ? 'justify-center px-2' : ''}`}
                   title={sidebarCollapsed ? item.label : undefined}
                 >
-                  <span className="text-xl mr-3">{item.icon}</span>
+                  <span className={`text-xl flex-shrink-0 ${!sidebarCollapsed ? 'mr-3' : ''}`}>{item.icon}</span>
                   {!sidebarCollapsed && (
-                    <span className="font-medium">{item.label}</span>
+                    <span className="font-medium truncate">{item.label}</span>
                   )}
                 </button>
               </li>
