@@ -164,16 +164,34 @@ The application uses SQLite with the following main entities:
   - `react-hooks/exhaustive-deps`: Warning
 
 ## Current Version
-- v0.4.10 - Help system architecture refactoring, complete user manual and quick start guide implementation, character relationship design philosophy documentation, tutorial system fixes and optimization
+- v0.4.11 - Tutorial system architecture fix, template manager functionality restoration, UI interaction improvements
+- v0.4.10 - Help system architecture refactoring, complete user manual and quick start guide implementation, character relationship design philosophy documentation
 - v0.4.9 - Project management system enhancement, UI interaction improvements, and character management interface optimization
 - v0.4.8 - Light novel template system and writing statistics fully implemented
 - v0.4.7 - Editor refactoring and database storage implementation completed
-- v0.4.6 - Completely resolved Ollama connection issues, achieved 100% AI functionality availability
 
 ## Known Issues & Workarounds
 - **OLLAMA Connection**: If AI features fail, ensure Ollama service is running locally (`ollama serve`). As of v0.4.6, connection issues have been completely resolved with improved IPv4/IPv6 handling
 - **Native Module Rebuild**: After installing, run `npm rebuild better-sqlite3` to ensure the SQLite module works with your Electron version
 - **TypeScript Build**: If encountering type errors, ensure both `tsconfig.json` and `tsconfig.main.json` are properly configured
+
+## Debugging Approaches
+
+### Modal Display Issues
+- Check Redux state in `store.ts` for modal visibility
+- Verify modal name consistency between `openModal()` calls and `ModalContainer` cases
+- Use Redux DevTools to track modal state changes
+
+### Tutorial System
+- Tutorial functionality uses `useTutorial` hook with `currentTutorialId` state
+- Each page component should check if `currentTutorialId` matches its specific tutorial
+- Tutorial buttons in help pages should display instructions rather than trigger tutorials
+
+### Template Application Flow
+1. User clicks template button → `openModal('templateManager')`
+2. Select template → `setLocalSelectedTemplate` (local state)
+3. Apply template → `setSelectedTemplate` (Redux) + `openModal('templateApplication')`
+4. Create project with proper `type` field matching template type
 
 ## Critical Development Notes
 - **AI Service Stability**: v0.4.6 implements bulletproof Ollama connectivity with fallback mechanisms and proper timeout handling
@@ -189,3 +207,5 @@ The application uses SQLite with the following main entities:
 - **Character Relationships**: The system uses single-directional relationships by design to support complex emotional dynamics and unequal relationships
 - **Tutorial System**: Tutorial steps require proper target element existence; use center positioning for steps without valid targets
 - **API Fallbacks**: Character relationship APIs may require fallback strategies if clearRelationships is not available without app restart
+- **Template Application**: When applying templates, ensure `localSelectedTemplate` is used for local state to avoid Redux naming conflicts
+- **Modal Scrolling**: Use fixed height with proper flex structure (`h-[90vh]` and `min-h-0`) to ensure content scrollability

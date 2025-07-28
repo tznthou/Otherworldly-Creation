@@ -50,31 +50,11 @@ const QuickActions: React.FC = () => {
       },
     },
     {
-      id: 'database-maintenance',
+      id: 'data-management',
       title: '💾 資料管理',
-      description: '資料庫維護、備份還原',
+      description: '備份、還原、匯入專案與資料庫維護',
       icon: '🛠️',
       color: 'from-green-500 to-green-600',
-      action: () => {
-        navigate('/database-maintenance');
-      },
-    },
-    {
-      id: 'import-project',
-      title: '📥 匯入專案',
-      description: '從備份檔案匯入現有專案',
-      icon: '📥',
-      color: 'from-blue-500 to-blue-600',
-      action: () => {
-        dispatch(openModal('importProject'));
-      },
-    },
-    {
-      id: 'backup-restore',
-      title: '💿 備份還原',
-      description: '專案資料備份與還原管理',
-      icon: '💿',
-      color: 'from-orange-500 to-orange-600',
       action: () => {
         dispatch(openModal('backupManager'));
       },

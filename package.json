@@ -1,6 +1,6 @@
 {
   "name": "genesis-chronicle",
-  "version": "0.2.1",
+  "version": "0.4.12",
   "description": "創世紀元：異世界創作神器 - 基於 AI 的輕小說創作工具",
   "main": "dist/main.js",
   "scripts": {

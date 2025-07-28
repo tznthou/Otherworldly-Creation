@@ -34,6 +34,21 @@ const SettingsMain: React.FC = () => {
     loadUserSettings();
   }, []);
 
+  // 鍵盤快捷鍵支持
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (hasUnsavedChanges && !isSaving) {
+          handleSaveSettings();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasUnsavedChanges, isSaving]);
+
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {

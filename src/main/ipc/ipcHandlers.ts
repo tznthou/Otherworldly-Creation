@@ -294,6 +294,47 @@ function setupSystemHandlers(): void {
       return '未知版本';
     }
   });
+
+  // 顯示儲存對話框
+  ipcMain.handle('system:showSaveDialog', async (_, options) => {
+    try {
+      return await dialog.showSaveDialog(options);
+    } catch (error) {
+      console.error('顯示儲存對話框失敗:', error);
+      throw error;
+    }
+  });
+
+  // 顯示開啟對話框
+  ipcMain.handle('system:showOpenDialog', async (_, options) => {
+    try {
+      return await dialog.showOpenDialog(options);
+    } catch (error) {
+      console.error('顯示開啟對話框失敗:', error);
+      throw error;
+    }
+  });
+
+  // 獲取應用版本（別名）
+  ipcMain.handle('system:getAppVersion', async () => {
+    try {
+      const packageJson = require('../../../package.json');
+      return packageJson.version;
+    } catch (error) {
+      return '未知版本';
+    }
+  });
+
+  // 開啟外部連結
+  ipcMain.handle('system:openExternal', async (_, url) => {
+    try {
+      const { shell } = require('electron');
+      await shell.openExternal(url);
+    } catch (error) {
+      console.error('開啟外部連結失敗:', error);
+      throw error;
+    }
+  });
 }
 
 function setupContextHandlers(): void {
@@ -554,12 +595,29 @@ function setupDatabaseMaintenanceHandlers(): void {
   });
   
   // 資料庫備份
-  ipcMain.handle('database:backup', async () => {
+  ipcMain.handle('database:backup', async (_, backupPath) => {
     try {
       const maintenanceService = getDatabaseMaintenanceService();
-      return await maintenanceService.createBackup();
+      if (backupPath) {
+        // 如果提供了備份路徑，使用自定義路徑備份
+        return await maintenanceService.createBackup(backupPath);
+      } else {
+        // 如果沒有提供路徑，使用預設路徑備份
+        return await maintenanceService.createBackup();
+      }
     } catch (error) {
       console.error('資料庫備份失敗:', error);
+      throw error;
+    }
+  });
+
+  // 資料庫還原
+  ipcMain.handle('database:restore', async (_, restorePath) => {
+    try {
+      const maintenanceService = getDatabaseMaintenanceService();
+      return await maintenanceService.restoreFromBackup(restorePath);
+    } catch (error) {
+      console.error('資料庫還原失敗:', error);
       throw error;
     }
   });

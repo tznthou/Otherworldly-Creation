@@ -185,7 +185,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col space-y-6">
       {/* 頁面標題和操作 */}
       <div className="flex items-center justify-between">
         <div>
@@ -262,48 +262,50 @@ export const CharacterList: React.FC<CharacterListProps> = ({
         </button>
       </div>
 
-      {/* 角色列表 */}
-      {filteredAndSortedCharacters.length === 0 ? (
-        <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-300">
-            {characters.length === 0 ? '尚無角色' : '沒有符合條件的角色'}
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {characters.length === 0 
-              ? '開始創建您的第一個角色吧！' 
-              : '嘗試調整搜索條件或清除過濾器'
-            }
-          </p>
-          {characters.length === 0 && (
-            <div className="mt-6">
-              <button
-                onClick={onCreateCharacter}
-                className="btn-primary"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                新增角色
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAndSortedCharacters.map((character) => (
-            <CharacterCard
-              key={character.id}
-              character={character}
-              onEdit={onEditCharacter}
-              onDelete={handleDeleteCharacter}
-              onView={onViewCharacter}
-            />
-          ))}
-        </div>
-      )}
+      {/* 角色列表容器 */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {filteredAndSortedCharacters.length === 0 ? (
+          <div className="text-center py-12">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-300">
+              {characters.length === 0 ? '尚無角色' : '沒有符合條件的角色'}
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {characters.length === 0 
+                ? '開始創建您的第一個角色吧！' 
+                : '嘗試調整搜索條件或清除過濾器'
+              }
+            </p>
+            {characters.length === 0 && (
+              <div className="mt-6">
+                <button
+                  onClick={onCreateCharacter}
+                  className="btn-primary"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  新增角色
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-1 pb-8">
+            {filteredAndSortedCharacters.map((character) => (
+              <CharacterCard
+                key={character.id}
+                character={character}
+                onEdit={onEditCharacter}
+                onDelete={handleDeleteCharacter}
+                onView={onViewCharacter}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* 統計資訊 */}
       {characters.length > 0 && (

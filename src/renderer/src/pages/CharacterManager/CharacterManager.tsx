@@ -229,8 +229,8 @@ const CharacterManager: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-cosmic-950 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="h-full bg-cosmic-950 text-white flex flex-col">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col min-h-0">
         {/* 視圖切換按鈕 */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -321,7 +321,7 @@ const CharacterManager: React.FC = () => {
             )}
           </div>
         ) : (
-          <div data-tutorial="create-character-btn">
+          <div data-tutorial="create-character-btn" className="flex-1 min-h-0">
             <CharacterList
               projectId={projectId}
               characters={allCharacters}

@@ -29,8 +29,8 @@ const Footer: React.FC = () => {
 
       {/* 右側：版本資訊 */}
       <div className="flex items-center space-x-4">
-        <span>v0.4.3</span>
-        <span>© 2024 創世紀元</span>
+        <span>v0.4.11</span>
+        <span>© 2025 創世紀元</span>
       </div>
     </footer>
   );

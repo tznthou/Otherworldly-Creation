@@ -31,10 +31,19 @@ export class SettingsService {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
       
+      // 儲存設定變更歷史
+      this.saveSettingsHistory(settings);
+      
       // 同時通知主程序更新設定
       if (window.electronAPI?.settings) {
-        await window.electronAPI.settings.updateSettings(settings);
+        // 將設定逐一儲存到 Electron 的設定系統
+        for (const [key, value] of Object.entries(settings)) {
+          await window.electronAPI.settings.set(key, value);
+        }
       }
+      
+      // 通知監聽器
+      SettingsWatcher.notifyListeners(settings);
     } catch (error) {
       console.error('儲存設定失敗:', error);
       throw error;
@@ -50,7 +59,7 @@ export class SettingsService {
       
       // 通知主程序重置設定
       if (window.electronAPI?.settings) {
-        await window.electronAPI.settings.resetSettings();
+        await window.electronAPI.settings.reset();
       }
     } catch (error) {
       console.error('重置設定失敗:', error);

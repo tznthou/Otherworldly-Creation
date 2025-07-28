@@ -334,24 +334,30 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">資料備份</h4>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">資料管理</h4>
+            <p className="text-gray-300 mb-4">
+              在主頁面的功能選單中，點擊「💾 資料管理」可以存取完整的資料備份、還原與維護功能。
+            </p>
             <div className="space-y-3">
               <div className="bg-cosmic-800/50 p-3 rounded-lg">
-                <h5 className="text-white font-semibold">匯出專案</h5>
+                <h5 className="text-white font-semibold">資料庫備份</h5>
                 <p className="text-gray-300 text-sm">
-                  在專案設定中可以將整個專案匯出為 JSON 格式，包含所有章節、角色和設定資訊。
+                  點擊「立即備份」可以將整個資料庫（包含所有專案、章節、角色）備份到您指定的位置。
+                  備份檔案為 SQLite 格式（.db），包含完整的創作內容。
                 </p>
               </div>
               <div className="bg-cosmic-800/50 p-3 rounded-lg">
-                <h5 className="text-white font-semibold">匯入專案</h5>
+                <h5 className="text-white font-semibold">資料庫還原</h5>
                 <p className="text-gray-300 text-sm">
-                  可以匯入之前匯出的專案檔案，或從其他相容格式匯入創作內容。
+                  點擊「選擇備份檔案」可以從之前建立的備份檔案中還原所有資料。
+                  還原後系統會自動重新載入以反映還原的內容。
                 </p>
               </div>
               <div className="bg-cosmic-800/50 p-3 rounded-lg">
-                <h5 className="text-white font-semibold">自動備份</h5>
+                <h5 className="text-white font-semibold">專案匯入匯出</h5>
                 <p className="text-gray-300 text-sm">
-                  系統會自動建立專案備份，您可以在設定中調整備份頻率和保留數量。
+                  資料管理功能整合了專案匯入與匯出，提供完整的資料備份解決方案。
+                  建議定期建立資料庫備份以確保創作內容安全。
                 </p>
               </div>
             </div>

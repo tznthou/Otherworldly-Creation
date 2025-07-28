@@ -9,7 +9,7 @@ import { fetchProjects } from './store/slices/projectsSlice';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import CharacterManager from './pages/CharacterManager/CharacterManager';
-import SettingsSimple from './pages/Settings/SettingsSimple';
+import Settings from './pages/Settings/Settings';
 import DatabaseMaintenanceSimple from './pages/DatabaseMaintenance/DatabaseMaintenanceSimple';
 import SimpleProjectEditor from './pages/ProjectEditor/SimpleProjectEditor';
 import Statistics from './pages/Statistics/Statistics';
@@ -86,7 +86,7 @@ const SimpleApp: React.FC = () => {
             } />
             <Route path="/settings" element={
               <Layout>
-                <SettingsSimple />
+                <Settings />
               </Layout>
             } />
             <Route path="/database-maintenance" element={

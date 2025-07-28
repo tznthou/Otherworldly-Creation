@@ -3,7 +3,8 @@ import { SettingsService } from '../../../services/settingsService';
 import { 
   loadSettings, 
   markSettingsSaved, 
-  resetSettings 
+  resetSettings,
+  setLoading
 } from '../../../store/slices/settingsSlice';
 import { addNotification } from '../../../store/slices/uiSlice';
 import { AppSettings } from '../../../store/slices/settingsSlice';
@@ -13,6 +14,7 @@ export const useSettingsActions = () => {
 
   const loadUserSettings = async () => {
     try {
+      dispatch(setLoading(true));
       const userSettings = await SettingsService.loadSettings();
       dispatch(loadSettings(userSettings));
     } catch (error) {
@@ -23,6 +25,8 @@ export const useSettingsActions = () => {
         message: '無法載入使用者設定，將使用預設設定',
         duration: 5000,
       }));
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 

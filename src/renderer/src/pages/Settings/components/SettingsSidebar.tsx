@@ -22,13 +22,14 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   onImport,
   onReset,
 }) => {
+  
   return (
-    <div className="w-64 bg-cosmic-800 border-r border-cosmic-700 flex flex-col">
+    <div className="w-64 min-w-64 bg-cosmic-800 border-r border-cosmic-700 flex flex-col h-full">
       <div className="p-6 border-b border-cosmic-700">
         <h1 className="text-xl font-cosmic text-gold-500">系統設定</h1>
       </div>
       
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-y-auto">
         {SETTINGS_TABS.map(tab => (
           <button
             key={tab.id}
@@ -45,15 +46,36 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         ))}
       </nav>
       
-      <div className="p-4 border-t border-cosmic-700 space-y-2">
+      <div className="p-4 border-t border-cosmic-700 space-y-2 flex-shrink-0">
+        {/* 儲存狀態指示器 */}
+        {hasUnsavedChanges && (
+          <div className="flex items-center text-sm text-gold-400 mb-2">
+            <div className="w-2 h-2 bg-gold-400 rounded-full mr-2 animate-pulse"></div>
+            有未儲存的變更
+          </div>
+        )}
+        
+        {/* 儲存按鈕 */}
         <button
           onClick={onSave}
-          disabled={!hasUnsavedChanges || isSaving}
+          disabled={isSaving}
           className={`w-full btn-primary ${
-            !hasUnsavedChanges ? 'opacity-50 cursor-not-allowed' : ''
+            !hasUnsavedChanges ? 'opacity-75' : ''
           }`}
+          title="儲存設定 (Ctrl+S)"
         >
-          {isSaving ? '儲存中...' : '儲存設定'}
+          {isSaving ? (
+            <span className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              儲存中...
+            </span>
+          ) : (
+            <span className="flex items-center justify-center">
+              儲存設定
+              {hasUnsavedChanges && <span className="ml-1 text-xs">●</span>}
+              <kbd className="ml-2 text-xs bg-cosmic-950/50 px-1 py-0.5 rounded">Ctrl+S</kbd>
+            </span>
+          )}
         </button>
         
         <div className="flex space-x-2">

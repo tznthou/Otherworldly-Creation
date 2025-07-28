@@ -115,7 +115,7 @@ const SettingsSimple: React.FC = () => {
     <div className="h-full flex bg-cosmic-900">
       {/* 側邊欄 */}
       <div className="w-64 bg-cosmic-950 border-r border-cosmic-700 p-4">
-        <h1 className="text-xl font-cosmic text-gold-500 mb-6">系統設定</h1>
+        <h1 className="text-xl font-cosmic text-gold-500 mb-6">系統設定 [SIMPLE DEBUG]</h1>
         <nav className="space-y-2">
           {tabs.map(tab => (
             <button

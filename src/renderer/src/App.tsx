@@ -191,15 +191,7 @@ const AppContent: React.FC = () => {
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/settings" element={
-              <div className="h-full flex items-center justify-center bg-cosmic-950">
-                <div className="text-center">
-                  <h1 className="text-2xl font-cosmic text-gold-500 mb-4">⚙️ 系統設定</h1>
-                  <p className="text-gray-300 mb-4">設定頁面正常工作！</p>
-                  {console.log('Settings 路由匹配成功')}
-                </div>
-              </div>
-            } />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/database-maintenance" element={
               <div className="h-full flex items-center justify-center bg-cosmic-950">
                 <div className="text-center">

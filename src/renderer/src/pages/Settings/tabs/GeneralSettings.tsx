@@ -1,10 +1,7 @@
 import React from 'react';
 import { useAppDispatch } from '../../../hooks/redux';
-import { updateAISettings, updateEditorSettings, updateUISettings } from '../../../store/slices/settingsSlice';
+import { updateSettings } from '../../../store/slices/settingsSlice';
 import { SettingsComponentProps } from '../types';
-
-// 注意：這裡暫時使用通用的 updateSettings action，實際應該根據設定類型使用對應的 action
-const updateSettings = (data: any) => updateAISettings(data);
 
 const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) => (
   <div className="space-y-6">
