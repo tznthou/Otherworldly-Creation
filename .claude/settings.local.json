@@ -30,7 +30,8 @@
       "Bash(sqlite3:*)",
       "Bash(cd:*)",
       "Bash(cd:*)",
-      "mcp__sequential-thinking__sequentialthinking"
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(npm test:*)"
     ],
     "deny": []
   }

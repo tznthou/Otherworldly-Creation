@@ -191,10 +191,12 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
   };
 
   const handleRelationshipSave = async (relationships: Relationship[]) => {
+    console.log('CharacterModal - handleRelationshipSave called with:', relationships);
     setFormData(prev => ({
       ...prev,
       relationships,
     }));
+    console.log('CharacterModal - formData updated with relationships');
     setShowRelationshipEditor(false);
   };
 

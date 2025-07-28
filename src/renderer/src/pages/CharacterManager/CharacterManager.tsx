@@ -18,6 +18,30 @@ const CharacterManager: React.FC = () => {
   const [allCharacters, setAllCharacters] = useState<Character[]>([]);
   const [showRelationshipView, setShowRelationshipView] = useState(false);
   const [consistencyIssues, setConsistencyIssues] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 載入角色列表
+  const loadCharacters = async () => {
+    if (!projectId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      const characters = await window.electronAPI.characters.getByProjectId(projectId);
+      setAllCharacters(characters);
+      
+      // 檢查關係一致性
+      // 注意：checkRelationshipConsistency API 不存在，暫時跳過
+      // const issues = await window.electronAPI.characters.checkRelationshipConsistency(projectId);
+      // setConsistencyIssues(issues);
+    } catch (error) {
+      console.error('載入角色列表失敗:', error);
+      setError('載入角色列表失敗，請稍後再試');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 載入專案資訊和角色列表
   useEffect(() => {
@@ -31,14 +55,10 @@ const CharacterManager: React.FC = () => {
           }
           
           // 載入角色列表
-          const characters = await window.electronAPI.characters.getByProjectId(projectId);
-          setAllCharacters(characters);
-          
-          // 檢查關係一致性
-          const issues = await window.electronAPI.characters.checkRelationshipConsistency(projectId);
-          setConsistencyIssues(issues);
+          await loadCharacters();
         } catch (error) {
           console.error('載入專案資料失敗:', error);
+          setError('載入專案資料失敗，請稍後再試');
         }
       }
     };
@@ -65,6 +85,10 @@ const CharacterManager: React.FC = () => {
 
   const handleEditCharacter = (character: Character) => {
     setSelectedCharacter(character);
+    // 如果是從詳情模態框打開編輯，先關閉詳情模態框
+    if (isDetailModalOpen) {
+      setIsDetailModalOpen(false);
+    }
     setIsEditModalOpen(true);
   };
 
@@ -80,6 +104,9 @@ const CharacterManager: React.FC = () => {
 
   const handleSaveCharacter = async (formData: CharacterFormData) => {
     try {
+      console.log('handleSaveCharacter called with formData:', formData);
+      console.log('formData.relationships:', formData.relationships);
+      
       if (selectedCharacter) {
         // 更新現有角色
         await window.electronAPI.characters.update({
@@ -87,12 +114,53 @@ const CharacterManager: React.FC = () => {
           ...formData,
         });
         
-        // 如果有關係資料，更新關係
-        if (formData.relationships) {
-          await window.electronAPI.characters.updateRelationships(
-            selectedCharacter.id,
-            formData.relationships
-          );
+        // 更新關係 - 始終清除現有關係，然後保存新關係
+        if (formData.relationships !== undefined) {
+          console.log('Updating relationships for character:', selectedCharacter.id);
+          console.log('Relationships to save:', formData.relationships);
+          
+          // 先清除現有關係 - 臨時使用直接 SQL 查詢的方式
+          try {
+            if (typeof window.electronAPI.characters.clearRelationships === 'function') {
+              await window.electronAPI.characters.clearRelationships(selectedCharacter.id);
+            } else {
+              console.log('clearRelationships API not available, using alternative method');
+              // 如果 clearRelationships API 不可用，先獲取現有關係然後逐一刪除
+              const currentCharacter = await window.electronAPI.characters.getById(selectedCharacter.id);
+              if (currentCharacter && currentCharacter.relationships) {
+                for (const rel of currentCharacter.relationships) {
+                  if (rel.id && typeof window.electronAPI.characters.deleteRelationship === 'function') {
+                    await window.electronAPI.characters.deleteRelationship(rel.id);
+                  }
+                }
+              }
+            }
+            console.log('Cleared existing relationships');
+          } catch (error) {
+            console.warn('Failed to clear existing relationships:', error);
+          }
+          
+          // 保存新關係（如果有的話）
+          if (formData.relationships.length > 0) {
+            for (const relationship of formData.relationships) {
+              console.log('Creating relationship:', relationship);
+              try {
+                await window.electronAPI.characters.createRelationship({
+                  sourceId: selectedCharacter.id,
+                  targetId: relationship.targetId,
+                  type: relationship.type,
+                  description: relationship.description,
+                });
+              } catch (error) {
+                console.error('Failed to create relationship:', relationship, error);
+              }
+            }
+            console.log('Finished saving relationships');
+          } else {
+            console.log('No relationships to save (empty array)');
+          }
+        } else {
+          console.log('Relationships field is undefined - skipping relationship update');
         }
       } else {
         // 創建新角色
@@ -102,19 +170,20 @@ const CharacterManager: React.FC = () => {
         });
         
         // 如果有關係資料，創建關係
-        // 注意：updateRelationships API 不存在，這裡暫時註解掉
-        // TODO: 實作 updateRelationships API 或使用其他方式處理關係
-        // if (formData.relationships && formData.relationships.length > 0) {
-        //   await window.electronAPI.characters.updateRelationships(
-        //     characterId,
-        //     formData.relationships
-        //   );
-        // }
+        if (formData.relationships && formData.relationships.length > 0) {
+          for (const relationship of formData.relationships) {
+            await window.electronAPI.characters.createRelationship({
+              sourceId: characterId,
+              targetId: relationship.targetId,
+              type: relationship.type,
+              description: relationship.description,
+            });
+          }
+        }
       }
       
       // 重新載入角色列表
-      const updatedCharacters = await window.electronAPI.characters.getByProjectId(projectId);
-      setAllCharacters(updatedCharacters);
+      await loadCharacters();
       
       // 重新檢查關係一致性
       // 注意：checkRelationshipConsistency API 不存在，這裡暫時註解掉
@@ -238,10 +307,14 @@ const CharacterManager: React.FC = () => {
         ) : (
           <CharacterList
             projectId={projectId}
+            characters={allCharacters}
+            loading={loading}
+            error={error}
             onCreateCharacter={handleCreateCharacter}
             onEditCharacter={handleEditCharacter}
             onDeleteCharacter={handleDeleteCharacter}
             onViewCharacter={handleViewCharacter}
+            onReload={loadCharacters}
           />
         )}
       </div>

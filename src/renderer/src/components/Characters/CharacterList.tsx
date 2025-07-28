@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Character, CharacterFilters, CharacterSortOptions } from '../../types/character';
 import { CharacterCard } from './CharacterCard';
 import { CharacterFiltersComponent } from './CharacterFilters';
@@ -6,22 +6,27 @@ import { CharacterDeleteModal } from './CharacterDeleteModal';
 
 interface CharacterListProps {
   projectId: string;
+  characters: Character[];
+  loading?: boolean;
+  error?: string | null;
   onCreateCharacter: () => void;
   onEditCharacter: (character: Character) => void;
   onDeleteCharacter: (character: Character) => void;
   onViewCharacter: (character: Character) => void;
+  onReload?: () => void;
 }
 
 export const CharacterList: React.FC<CharacterListProps> = ({
   projectId,
+  characters,
+  loading = false,
+  error = null,
   onCreateCharacter,
   onEditCharacter,
   onDeleteCharacter,
   onViewCharacter,
+  onReload,
 }) => {
-  const [characters, setCharacters] = useState<Character[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<CharacterFilters>({});
   const [sortOptions, setSortOptions] = useState<CharacterSortOptions>({
     field: 'createdAt',
@@ -29,27 +34,6 @@ export const CharacterList: React.FC<CharacterListProps> = ({
   });
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [characterToDelete, setCharacterToDelete] = useState<Character | null>(null);
-
-  // 載入角色列表
-  const loadCharacters = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await window.electronAPI.characters.getByProjectId(projectId);
-      setCharacters(result);
-    } catch (err) {
-      console.error('載入角色列表失敗:', err);
-      setError('載入角色列表失敗，請稍後再試');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (projectId) {
-      loadCharacters();
-    }
-  }, [projectId]);
 
   // 過濾和排序角色
   const filteredAndSortedCharacters = useMemo(() => {
@@ -139,7 +123,10 @@ export const CharacterList: React.FC<CharacterListProps> = ({
 
     try {
       await window.electronAPI.characters.delete(characterToDelete.id, forceDelete);
-      await loadCharacters(); // 重新載入列表
+      // 呼叫父組件的重載函數
+      if (onReload) {
+        onReload();
+      }
       setDeleteModalOpen(false);
       setCharacterToDelete(null);
     } catch (err: any) {
@@ -149,9 +136,10 @@ export const CharacterList: React.FC<CharacterListProps> = ({
         // 這個錯誤應該由 CharacterDeleteModal 處理
         throw err;
       } else {
-        setError('刪除角色失敗，請稍後再試');
+        // 錯誤處理由父組件負責
         setDeleteModalOpen(false);
         setCharacterToDelete(null);
+        throw err;
       }
     }
   };
@@ -182,12 +170,14 @@ export const CharacterList: React.FC<CharacterListProps> = ({
           <div className="ml-3">
             <h3 className="text-sm font-medium text-red-400">載入錯誤</h3>
             <p className="mt-1 text-sm text-red-300">{error}</p>
-            <button
-              onClick={loadCharacters}
-              className="mt-2 text-sm font-medium text-red-400 hover:text-red-300"
-            >
-              重新載入
-            </button>
+            {onReload && (
+              <button
+                onClick={onReload}
+                className="mt-2 text-sm font-medium text-red-400 hover:text-red-300"
+              >
+                重新載入
+              </button>
+            )}
           </div>
         </div>
       </div>

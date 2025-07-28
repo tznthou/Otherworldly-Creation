@@ -325,13 +325,21 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
             <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
               <h4 className="text-lg font-semibold text-gold-400 mb-3">角色關係</h4>
               <p className="text-gray-300 text-sm mb-3">設定角色間的關係有助於故事發展：</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-4">
                 <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">家人</span>
                 <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">朋友</span>
                 <span className="px-3 py-1 bg-pink-500/20 text-pink-400 rounded-full text-sm">戀人</span>
                 <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm">敵人</span>
                 <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm">師徒</span>
                 <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">同事</span>
+              </div>
+              
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+                <h5 className="text-blue-400 font-semibold text-sm mb-2">💡 關係設計巧思</h5>
+                <p className="text-gray-300 text-xs leading-relaxed">
+                  系統採用<strong>單向關係</strong>設計：為角色A設定對角色B的關係時，不會自動為B創建對A的反向關係。
+                  這樣可以表達不對等的複雜關係（如單戀、敵視等），讓故事更具現實感和戲劇張力。
+                </p>
               </div>
             </div>
           </div>

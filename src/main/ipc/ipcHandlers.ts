@@ -52,9 +52,12 @@ function setupCharacterHandlers(db: any): void {
         return {
           ...character,
           relationships: relationships.map((rel: any) => ({
-            ...rel,
-            createdAt: new Date(rel.created_at),
-            updatedAt: new Date(rel.updated_at),
+            id: rel.id,
+            targetId: rel.target_id,
+            type: rel.type,
+            description: rel.description || '',
+            createdAt: new Date(rel.created_at || Date.now()),
+            updatedAt: new Date(rel.updated_at || Date.now()),
           })),
           createdAt: new Date(character.created_at),
           updatedAt: new Date(character.updated_at),
@@ -76,7 +79,7 @@ function setupCharacterHandlers(db: any): void {
       
       const characterId = uuidv4();
       const stmt = db.prepare(`
-        INSERT INTO characters (id, project_id, name, age, gender, description, personality, background, appearance)
+        INSERT INTO characters (id, project_id, name, age, gender, personality, background, appearance, archetype)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       
@@ -86,10 +89,10 @@ function setupCharacterHandlers(db: any): void {
         character.name,
         character.age || null,
         character.gender || null,
-        character.description || '',
         character.personality || '',
         character.background || '',
-        character.appearance || ''
+        character.appearance || '',
+        character.archetype || ''
       );
       
       return characterId;
@@ -104,20 +107,39 @@ function setupCharacterHandlers(db: any): void {
     try {
       const stmt = db.prepare(`
         UPDATE characters
-        SET name = ?, age = ?, gender = ?, description = ?, personality = ?, background = ?, appearance = ?, updated_at = CURRENT_TIMESTAMP
+        SET name = ?, age = ?, gender = ?, personality = ?, background = ?, appearance = ?, archetype = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `);
       
-      stmt.run(
+      const result = stmt.run(
         character.name,
         character.age || null,
         character.gender || null,
-        character.description || '',
         character.personality || '',
         character.background || '',
         character.appearance || '',
+        character.archetype || '',
         character.id
       );
+
+      if (result.changes === 0) {
+        throw new Error('找不到要更新的角色');
+      }
+
+      // 返回更新後的角色數據
+      const getStmt = db.prepare('SELECT * FROM characters WHERE id = ?');
+      const updatedCharacter = getStmt.get(character.id);
+      
+      if (!updatedCharacter) {
+        throw new Error('更新後無法找到角色');
+      }
+
+      // 格式化日期並返回
+      return {
+        ...updatedCharacter,
+        createdAt: new Date(updatedCharacter.created_at),
+        updatedAt: new Date(updatedCharacter.updated_at),
+      };
     } catch (error) {
       console.error('更新角色失敗:', error);
       throw error;
@@ -161,19 +183,26 @@ function setupCharacterHandlers(db: any): void {
   // 建立角色關係
   ipcMain.handle('characters:createRelationship', async (_, relationship) => {
     try {
+      console.log('Creating relationship:', relationship);
       const relationshipId = uuidv4();
       const stmt = db.prepare(`
-        INSERT INTO character_relationships (id, source_id, target_id, relationship_type, description)
+        INSERT INTO character_relationships (id, source_id, target_id, type, description)
         VALUES (?, ?, ?, ?, ?)
       `);
       
-      stmt.run(
+      const result = stmt.run(
         relationshipId,
         relationship.sourceId,
         relationship.targetId,
         relationship.type,
         relationship.description || ''
       );
+      
+      console.log('Relationship created successfully:', {
+        id: relationshipId,
+        changes: result.changes,
+        lastInsertRowid: result.lastInsertRowid
+      });
       
       return relationshipId;
     } catch (error) {
@@ -187,7 +216,7 @@ function setupCharacterHandlers(db: any): void {
     try {
       const stmt = db.prepare(`
         UPDATE character_relationships
-        SET relationship_type = ?, description = ?, updated_at = CURRENT_TIMESTAMP
+        SET type = ?, description = ?
         WHERE id = ?
       `);
       
@@ -209,6 +238,17 @@ function setupCharacterHandlers(db: any): void {
       stmt.run(id);
     } catch (error) {
       console.error('刪除角色關係失敗:', error);
+      throw error;
+    }
+  });
+
+  // 清除角色的所有關係
+  ipcMain.handle('characters:clearRelationships', async (_, characterId) => {
+    try {
+      const stmt = db.prepare('DELETE FROM character_relationships WHERE source_id = ?');
+      stmt.run(characterId);
+    } catch (error) {
+      console.error('清除角色關係失敗:', error);
       throw error;
     }
   });

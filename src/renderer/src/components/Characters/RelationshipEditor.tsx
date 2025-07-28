@@ -23,6 +23,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
   });
   const [errors, setErrors] = useState<RelationshipValidationError[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   // 過濾掉當前角色，避免自己與自己建立關係
   const availableCharacters = allCharacters.filter(c => c.id !== character.id);
@@ -72,6 +73,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
       description: '',
     });
     setErrors([]);
+    setShowAddForm(true);
   };
 
   const handleEditRelationship = (index: number) => {
@@ -83,6 +85,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
       description: relationship.description,
     });
     setErrors([]);
+    setShowAddForm(true);
   };
 
   const handleSaveRelationship = () => {
@@ -114,6 +117,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
       description: '',
     });
     setErrors([]);
+    setShowAddForm(false);
   };
 
   const handleDeleteRelationship = (index: number) => {
@@ -129,14 +133,17 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
       description: '',
     });
     setErrors([]);
+    setShowAddForm(false);
   };
 
   const handleSaveAll = async () => {
     try {
       setLoading(true);
+      console.log('RelationshipEditor - handleSaveAll called with relationships:', relationships);
       await onSave(relationships);
+      console.log('RelationshipEditor - onSave completed successfully');
     } catch (error) {
-      console.error('儲存關係失敗:', error);
+      console.error('RelationshipEditor - 儲存關係失敗:', error);
     } finally {
       setLoading(false);
     }
@@ -157,10 +164,10 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
     <div className="space-y-6">
       {/* 標題 */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium text-gray-900">
+        <h3 className="text-lg font-medium text-white">
           {character.name} 的角色關係
         </h3>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-gray-400">
           {relationships.length} 個關係
         </div>
       </div>
@@ -170,30 +177,32 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
         {relationships.map((relationship, index) => (
           <div
             key={index}
-            className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+            className="bg-cosmic-800 rounded-lg p-4 border border-cosmic-700"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-2">
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-white">
                     {getCharacterName(relationship.targetId)}
                   </span>
-                  <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                  <span className="px-2 py-1 text-xs font-medium bg-gold-500 text-cosmic-950 rounded-full">
                     {relationship.type}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-300">
                   {relationship.description}
                 </p>
               </div>
               <div className="flex items-center space-x-2 ml-4">
                 <button
+                  type="button"
                   onClick={() => handleEditRelationship(index)}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
+                  className="text-gold-400 hover:text-gold-300 text-sm"
                 >
                   編輯
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleDeleteRelationship(index)}
                   className="text-red-600 hover:text-red-800 text-sm"
                 >
@@ -205,7 +214,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
         ))}
 
         {relationships.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-400">
             <div className="text-4xl mb-2">👥</div>
             <p>尚未建立任何角色關係</p>
             <p className="text-sm">點擊下方按鈕開始添加關係</p>
@@ -214,23 +223,23 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
       </div>
 
       {/* 關係編輯表單 */}
-      {(editingIndex !== null || formData.targetId || formData.type || formData.description) && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="text-md font-medium text-blue-900 mb-4">
+      {showAddForm && (
+        <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+          <h4 className="text-md font-medium text-gold-400 mb-4">
             {isEditing ? '編輯關係' : '添加新關係'}
           </h4>
           
           <div className="space-y-4">
             {/* 目標角色選擇 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 目標角色 <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.targetId}
                 onChange={(e) => setFormData(prev => ({ ...prev, targetId: e.target.value }))}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  getFieldError('targetId') ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
+                  getFieldError('targetId') ? 'border-red-400' : 'border-cosmic-600'
                 }`}
               >
                 <option value="">選擇角色</option>
@@ -247,14 +256,14 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
 
             {/* 關係類型選擇 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 關係類型 <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.type}
                 onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  getFieldError('type') ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
+                  getFieldError('type') ? 'border-red-400' : 'border-cosmic-600'
                 }`}
               >
                 <option value="">選擇關係類型</option>
@@ -275,7 +284,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
                 <label className="block text-sm font-medium text-gray-700">
                   關係描述 <span className="text-red-500">*</span>
                 </label>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-400">
                   {formData.description.length}/200
                 </span>
               </div>
@@ -284,8 +293,8 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 rows={3}
                 maxLength={200}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  getFieldError('description') ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
+                  getFieldError('description') ? 'border-red-400' : 'border-cosmic-600'
                 }`}
                 placeholder="描述兩個角色之間的關係..."
               />
@@ -299,14 +308,14 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                className="px-3 py-1 text-sm text-gray-400 hover:text-gray-300"
               >
                 取消
               </button>
               <button
                 type="button"
                 onClick={handleSaveRelationship}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 text-sm font-medium text-cosmic-950 bg-gold-500 rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
               >
                 {isEditing ? '更新關係' : '添加關係'}
               </button>
@@ -316,10 +325,11 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
       )}
 
       {/* 添加關係按鈕 */}
-      {editingIndex === null && !formData.targetId && !formData.type && !formData.description && (
+      {!showAddForm && (
         <button
+          type="button"
           onClick={handleAddRelationship}
-          className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+          className="w-full py-3 border-2 border-dashed border-cosmic-600 rounded-lg text-gray-400 hover:border-gold-400 hover:text-gold-400 transition-colors"
         >
           <div className="flex items-center justify-center space-x-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -331,11 +341,11 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
       )}
 
       {/* 底部按鈕 */}
-      <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+      <div className="flex items-center justify-end space-x-3 pt-4 border-t border-cosmic-700">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="px-4 py-2 text-sm font-medium text-gray-300 bg-cosmic-800 border border-cosmic-600 rounded-md hover:bg-cosmic-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
         >
           取消
         </button>
@@ -343,7 +353,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
           type="button"
           onClick={handleSaveAll}
           disabled={loading}
-          className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm font-medium text-cosmic-950 bg-gold-500 border border-transparent rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? '儲存中...' : '儲存所有關係'}
         </button>

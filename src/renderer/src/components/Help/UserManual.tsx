@@ -205,11 +205,29 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
             <h4 className="text-lg font-semibold text-gold-400 mb-3">角色關係管理</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>關係類型</strong>：家人、朋友、戀人、敵人、師徒等</li>
-              <li>• <strong>關係強度</strong>：親密程度的量化表示</li>
               <li>• <strong>關係描述</strong>：詳細說明角色間的關係背景</li>
-              <li>• <strong>關係變化</strong>：記錄關係在故事中的發展變化</li>
-              <li>• <strong>雙向同步</strong>：修改關係時自動更新相關角色</li>
+              <li>• <strong>單向關係設計</strong>：支援不對等關係的靈活設定</li>
+              <li>• <strong>關係圖視覺化</strong>：圖形化顯示角色關係網絡</li>
             </ul>
+            
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mt-4">
+              <h5 className="text-blue-400 font-semibold mb-2">💡 關係設計理念</h5>
+              <p className="text-gray-300 text-sm mb-2">
+                系統採用<strong>單向關係</strong>設計，這表示當您為角色 A 設定對角色 B 的關係時，系統不會自動為角色 B 創建對角色 A 的反向關係。
+              </p>
+              <p className="text-gray-300 text-sm mb-2">
+                <strong>為什麼這樣設計？</strong>
+              </p>
+              <ul className="text-gray-300 text-sm space-y-1 ml-4">
+                <li>• <strong>現實性</strong>：真實世界的人際關係往往不對等（如單戀、敵視等）</li>
+                <li>• <strong>創作靈活性</strong>：能表達複雜的心理關係和情感衝突</li>
+                <li>• <strong>故事張力</strong>：不對等關係往往能創造更多戲劇效果</li>
+                <li>• <strong>控制權</strong>：作者可以精確控制每個角色的關係認知</li>
+              </ul>
+              <p className="text-gray-300 text-sm mt-2">
+                如需建立雙向關係，您可以分別為兩個角色設定彼此的關係。
+              </p>
+            </div>
           </div>
         </div>
       )

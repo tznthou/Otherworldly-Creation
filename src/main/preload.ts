@@ -27,6 +27,9 @@ export interface ElectronAPI {
     update: (character: any) => Promise<void>;
     delete: (id: string) => Promise<void>;
     getById: (id: string) => Promise<any>;
+    createRelationship: (relationship: any) => Promise<string>;
+    deleteRelationship: (id: string) => Promise<void>;
+    clearRelationships: (characterId: string) => Promise<void>;
   };
 
   // AI 功能
@@ -103,6 +106,9 @@ const electronAPI: ElectronAPI = {
     update: (character) => ipcRenderer.invoke('characters:update', character),
     delete: (id) => ipcRenderer.invoke('characters:delete', id),
     getById: (id) => ipcRenderer.invoke('characters:getById', id),
+    createRelationship: (relationship) => ipcRenderer.invoke('characters:createRelationship', relationship),
+    deleteRelationship: (id) => ipcRenderer.invoke('characters:deleteRelationship', id),
+    clearRelationships: (characterId) => ipcRenderer.invoke('characters:clearRelationships', characterId),
   },
   ai: {
     checkOllamaService: () => ipcRenderer.invoke('ai:checkOllamaService'),

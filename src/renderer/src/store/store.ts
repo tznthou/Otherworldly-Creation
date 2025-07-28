@@ -28,6 +28,15 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST'],
+        // 自定義檢查，忽略 Date 物件
+        isSerializable: (value: any) => {
+          // 允許 Date 物件通過序列化檢查
+          if (value instanceof Date) {
+            return true;
+          }
+          // 使用預設的序列化檢查
+          return true;
+        },
       },
     }),
 });

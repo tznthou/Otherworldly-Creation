@@ -25,7 +25,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
 
   const handleEdit = () => {
     onEdit(character);
-    onClose();
+    // 不要在這裡關閉模態框，讓父組件處理
   };
 
   const handleDeleteClick = () => {

@@ -164,10 +164,10 @@ The application uses SQLite with the following main entities:
   - `react-hooks/exhaustive-deps`: Warning
 
 ## Current Version
+- v0.4.9 - Project management system enhancement, UI interaction improvements, and character management interface optimization
+- v0.4.8 - Light novel template system and writing statistics fully implemented
 - v0.4.7 - Editor refactoring and database storage implementation completed
 - v0.4.6 - Completely resolved Ollama connection issues, achieved 100% AI functionality availability
-- Recent major features: Light novel template system and writing statistics fully implemented
-- v0.4.5 - Fixed loading stability issues and established stable architecture
 
 ## Known Issues & Workarounds
 - **OLLAMA Connection**: If AI features fail, ensure Ollama service is running locally (`ollama serve`). As of v0.4.6, connection issues have been completely resolved with improved IPv4/IPv6 handling
@@ -181,3 +181,6 @@ The application uses SQLite with the following main entities:
 - **CSP Policy**: Content Security Policy configured to allow local AI service connections while maintaining security
 - **Module Resolution**: Uses `@/` alias for renderer imports, mapped to `src/renderer/`
 - **Test Environment**: Requires proper jsdom setup, see `src/__tests__/integration/setup.ts`
+- **Project Deletion**: Complete project deletion functionality includes confirmation dialogs and cascading deletes of related data
+- **Character Management**: Character storage uses SQLite database; avoid calling non-existent APIs like `updateRelationships` or `checkRelationshipConsistency`
+- **UI Theme Consistency**: All modals and components should use the cosmic theme with dark backgrounds (`bg-cosmic-900`) and gold accents (`text-gold-400`)

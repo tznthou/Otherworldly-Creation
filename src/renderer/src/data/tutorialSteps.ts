@@ -14,9 +14,8 @@ export const firstTimeTutorial: TutorialStep[] = [
     id: 'dashboard',
     title: '專案儀表板',
     content: '這裡是您的專案儀表板，您可以在這裡查看所有創作專案、創建新專案，以及管理現有的作品。',
-    target: '[data-tutorial="dashboard"]',
-    position: 'bottom',
-    highlight: true
+    position: 'center',
+    highlight: false
   },
   {
     id: 'create-project',
@@ -30,17 +29,15 @@ export const firstTimeTutorial: TutorialStep[] = [
     id: 'project-templates',
     title: '專案模板',
     content: '創世紀元提供了多種專案模板，每個模板都包含了該類型小說的世界觀設定、角色原型和劇情框架，幫助您快速開始創作。',
-    target: '[data-tutorial="project-templates"]',
-    position: 'right',
-    highlight: true
+    position: 'center',
+    highlight: false
   },
   {
     id: 'ai-features',
     title: 'AI 輔助功能',
     content: '我們的 AI 助手可以幫助您續寫故事、生成角色對話、提供劇情建議等。AI 會根據您的專案設定和已有內容提供個性化的建議。',
-    target: '[data-tutorial="ai-status"]',
-    position: 'top',
-    highlight: true
+    position: 'center',
+    highlight: false
   }
 ];
 
