@@ -7,7 +7,7 @@ import { NovelTemplate, TEMPLATE_TYPES } from '../../types/template';
 const TemplateManagerModal: React.FC = () => {
   const dispatch = useAppDispatch();
   const { templates, loading } = useAppSelector(state => state.templates);
-  const [selectedTemplate, setSelectedTemplate] = useState<NovelTemplate | null>(null);
+  const [localSelectedTemplate, setLocalSelectedTemplate] = useState<NovelTemplate | null>(null);
   const [view, setView] = useState<'list' | 'detail'>('list');
 
   useEffect(() => {
@@ -19,11 +19,11 @@ const TemplateManagerModal: React.FC = () => {
   };
 
   const handleTemplateSelect = (template: NovelTemplate) => {
-    setSelectedTemplate(template);
+    setLocalSelectedTemplate(template);
     setView('detail');
   };
 
-  const handleApplyTemplate = async (template: NovelTemplate) => {
+  const handleApplyTemplate = (template: NovelTemplate) => {
     // 儲存選中的模板並打開應用模態框
     dispatch(setSelectedTemplate(template));
     dispatch(closeModal('templateManager'));
@@ -78,7 +78,7 @@ const TemplateManagerModal: React.FC = () => {
               </button>
             )}
             <h2 className="text-xl font-cosmic text-gold-500">
-              🎭 {view === 'detail' ? selectedTemplate?.name : '輕小說模板'}
+              🎭 {view === 'detail' ? localSelectedTemplate?.name : '輕小說模板'}
             </h2>
           </div>
           <button
@@ -160,21 +160,21 @@ const TemplateManagerModal: React.FC = () => {
         )}
 
         {/* 模板詳情視圖 */}
-        {view === 'detail' && selectedTemplate && (
+        {view === 'detail' && localSelectedTemplate && (
           <div className="p-6 space-y-6">
             {/* 模板概述 */}
             <div className="card">
               <div className="flex items-start space-x-4">
-                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${getTemplateColor(selectedTemplate.type)} flex items-center justify-center text-3xl`}>
-                  {getTemplateIcon(selectedTemplate.type)}
+                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${getTemplateColor(localSelectedTemplate.type)} flex items-center justify-center text-3xl`}>
+                  {getTemplateIcon(localSelectedTemplate.type)}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-cosmic text-white mb-2">{selectedTemplate.name}</h3>
-                  <p className="text-gray-300 mb-3">{selectedTemplate.description}</p>
+                  <h3 className="text-xl font-cosmic text-white mb-2">{localSelectedTemplate.name}</h3>
+                  <p className="text-gray-300 mb-3">{localSelectedTemplate.description}</p>
                   <div className="flex items-center space-x-4 text-sm text-gray-400">
-                    <span>類型：{TEMPLATE_TYPES[selectedTemplate.type]}</span>
-                    <span>版本：v{selectedTemplate.version}</span>
-                    <span>角色原型：{selectedTemplate.characterArchetypes.length}個</span>
+                    <span>類型：{TEMPLATE_TYPES[localSelectedTemplate.type]}</span>
+                    <span>版本：v{localSelectedTemplate.version}</span>
+                    <span>角色原型：{localSelectedTemplate.characterArchetypes.length}個</span>
                   </div>
                 </div>
               </div>
@@ -186,20 +186,20 @@ const TemplateManagerModal: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h5 className="text-white font-medium mb-2">時代背景</h5>
-                  <p className="text-gray-300 text-sm">{selectedTemplate.worldSetting.era}</p>
+                  <p className="text-gray-300 text-sm">{localSelectedTemplate.worldSetting.era}</p>
                 </div>
                 <div>
                   <h5 className="text-white font-medium mb-2">科技水平</h5>
-                  <p className="text-gray-300 text-sm">{selectedTemplate.worldSetting.technology}</p>
+                  <p className="text-gray-300 text-sm">{localSelectedTemplate.worldSetting.technology}</p>
                 </div>
                 <div>
                   <h5 className="text-white font-medium mb-2">社會結構</h5>
-                  <p className="text-gray-300 text-sm">{selectedTemplate.worldSetting.society}</p>
+                  <p className="text-gray-300 text-sm">{localSelectedTemplate.worldSetting.society}</p>
                 </div>
                 <div>
                   <h5 className="text-white font-medium mb-2">特殊元素</h5>
                   <div className="flex flex-wrap gap-1">
-                    {selectedTemplate.worldSetting.specialElements.map((element, index) => (
+                    {localSelectedTemplate.worldSetting.specialElements.map((element, index) => (
                       <span key={index} className="px-2 py-1 bg-cosmic-800 text-xs text-gray-300 rounded">
                         {element}
                       </span>
@@ -213,7 +213,7 @@ const TemplateManagerModal: React.FC = () => {
             <div className="card">
               <h4 className="text-lg font-cosmic text-gold-400 mb-4">👥 角色原型</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {selectedTemplate.characterArchetypes.slice(0, 4).map((archetype, index) => (
+                {localSelectedTemplate.characterArchetypes.slice(0, 4).map((archetype, index) => (
                   <div key={index} className="bg-cosmic-800 rounded-lg p-4">
                     <h5 className="text-white font-medium mb-2">{archetype.name}</h5>
                     <p className="text-gray-300 text-sm mb-2">{archetype.description}</p>
@@ -227,9 +227,9 @@ const TemplateManagerModal: React.FC = () => {
                   </div>
                 ))}
               </div>
-              {selectedTemplate.characterArchetypes.length > 4 && (
+              {localSelectedTemplate.characterArchetypes.length > 4 && (
                 <p className="text-center text-gray-400 text-sm mt-4">
-                  還有 {selectedTemplate.characterArchetypes.length - 4} 個角色原型...
+                  還有 {localSelectedTemplate.characterArchetypes.length - 4} 個角色原型...
                 </p>
               )}
             </div>
@@ -240,11 +240,11 @@ const TemplateManagerModal: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h5 className="text-white font-medium mb-2">寫作風格</h5>
-                  <p className="text-gray-300 text-sm mb-4">{selectedTemplate.writingGuidelines.style}</p>
+                  <p className="text-gray-300 text-sm mb-4">{localSelectedTemplate.writingGuidelines.style}</p>
                   
                   <h5 className="text-white font-medium mb-2">主要主題</h5>
                   <div className="flex flex-wrap gap-1">
-                    {selectedTemplate.writingGuidelines.themes.map((theme, index) => (
+                    {localSelectedTemplate.writingGuidelines.themes.map((theme, index) => (
                       <span key={index} className="px-2 py-1 bg-cosmic-800 text-xs text-gray-300 rounded">
                         {theme}
                       </span>
@@ -253,10 +253,10 @@ const TemplateManagerModal: React.FC = () => {
                 </div>
                 <div>
                   <h5 className="text-white font-medium mb-2">語調</h5>
-                  <p className="text-gray-300 text-sm mb-4">{selectedTemplate.writingGuidelines.tone}</p>
+                  <p className="text-gray-300 text-sm mb-4">{localSelectedTemplate.writingGuidelines.tone}</p>
                   
                   <h5 className="text-white font-medium mb-2">節奏控制</h5>
-                  <p className="text-gray-300 text-sm">{selectedTemplate.writingGuidelines.pacing}</p>
+                  <p className="text-gray-300 text-sm">{localSelectedTemplate.writingGuidelines.pacing}</p>
                 </div>
               </div>
             </div>
@@ -272,9 +272,9 @@ const TemplateManagerModal: React.FC = () => {
             關閉
           </button>
           
-          {view === 'detail' && selectedTemplate && (
+          {view === 'detail' && localSelectedTemplate && (
             <button
-              onClick={() => handleApplyTemplate(selectedTemplate)}
+              onClick={() => handleApplyTemplate(localSelectedTemplate)}
               className="btn-primary"
             >
               🌟 使用此模板創建專案

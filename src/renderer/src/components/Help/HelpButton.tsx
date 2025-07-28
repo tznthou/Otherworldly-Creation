@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import HelpCenter from './HelpCenter';
 import FeatureShowcase from './FeatureShowcase';
 import { useTutorial } from '../Tutorial/TutorialOverlay';
@@ -22,11 +23,29 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
   
   const { startTutorial } = useTutorial();
   const notification = useNotification();
+  const location = useLocation();
 
   const sizeClasses = {
     small: 'w-10 h-10 text-sm',
     medium: 'w-12 h-12 text-base',
     large: 'w-14 h-14 text-lg'
+  };
+
+  // 根據當前頁面決定可用的教學
+  const getAvailableTutorials = () => {
+    const allTutorials = Object.entries(tutorialIndex);
+    
+    // 根據路由過濾可用的教學
+    if (location.pathname.includes('/project/')) {
+      // 在專案編輯器頁面，顯示編輯器教學
+      return allTutorials.filter(([id]) => id === 'editor' || id === 'ai');
+    } else if (location.pathname.includes('/characters/')) {
+      // 在角色管理頁面，顯示角色管理教學
+      return allTutorials.filter(([id]) => id === 'character');
+    } else {
+      // 在首頁顯示所有教學
+      return allTutorials;
+    }
   };
 
   const handleQuickStart = () => {
@@ -68,13 +87,13 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
       label: '互動教學',
       icon: '🎓',
       description: '分步驟學習指南',
-      submenu: Object.entries(tutorialIndex).map(([id, tutorial]) => ({
+      submenu: getAvailableTutorials().map(([id, tutorial]) => ({
         id,
         label: tutorial.title,
         action: () => {
-          startTutorial(id as any);
+          startTutorial(id);
           setShowMenu(false);
-          notification.info('教學開始', `正在開始「${tutorial.title}」`);
+          notification.info('教學開始', `正在開始「${tutorial.title}」教學`);
         }
       }))
     }

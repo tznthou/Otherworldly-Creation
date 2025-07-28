@@ -164,6 +164,7 @@ The application uses SQLite with the following main entities:
   - `react-hooks/exhaustive-deps`: Warning
 
 ## Current Version
+- v0.4.10 - Help system architecture refactoring, complete user manual and quick start guide implementation, character relationship design philosophy documentation, tutorial system fixes and optimization
 - v0.4.9 - Project management system enhancement, UI interaction improvements, and character management interface optimization
 - v0.4.8 - Light novel template system and writing statistics fully implemented
 - v0.4.7 - Editor refactoring and database storage implementation completed
@@ -184,3 +185,7 @@ The application uses SQLite with the following main entities:
 - **Project Deletion**: Complete project deletion functionality includes confirmation dialogs and cascading deletes of related data
 - **Character Management**: Character storage uses SQLite database; avoid calling non-existent APIs like `updateRelationships` or `checkRelationshipConsistency`
 - **UI Theme Consistency**: All modals and components should use the cosmic theme with dark backgrounds (`bg-cosmic-900`) and gold accents (`text-gold-400`)
+- **Help System**: The HelpCenterModal in Dashboard redirects to the full HelpCenter component for complete help functionality
+- **Character Relationships**: The system uses single-directional relationships by design to support complex emotional dynamics and unequal relationships
+- **Tutorial System**: Tutorial steps require proper target element existence; use center positioning for steps without valid targets
+- **API Fallbacks**: Character relationship APIs may require fallback strategies if clearRelationships is not available without app restart

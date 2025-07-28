@@ -24,14 +24,15 @@ export const useTemplateApplication = () => {
     setError(null);
 
     try {
-      // 準備專案數據
+      // 準備專案數據 - 符合 Project 接口
       const projectData = {
         name: options.projectName,
+        type: template.type as 'isekai' | 'school' | 'scifi' | 'fantasy', // 添加 type 字段
         description: options.projectDescription || template.description,
-        template: {
+        settings: {
+          // 保存模板相關信息到 settings 中
           templateId: template.id,
           templateName: template.name,
-          templateType: template.type,
           worldSetting: options.applyWorldSetting ? template.worldSetting : undefined,
           writingGuidelines: template.writingGuidelines,
           aiPromptTemplate: template.aiPromptTemplate
@@ -40,7 +41,7 @@ export const useTemplateApplication = () => {
 
       // 創建專案
       const result = await dispatch(createProject(projectData)).unwrap();
-      const projectId = result;
+      const projectId = result.id; // 從返回的 project 對象中獲取 id
 
       // 如果選擇創建角色，則創建選中的角色原型
       if (options.createCharacters && options.selectedArchetypes.length > 0) {
@@ -88,7 +89,16 @@ export const useTemplateApplication = () => {
       };
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '應用模板失敗';
+      let errorMessage = '應用模板失敗';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err && typeof err === 'object' && 'message' in err) {
+        errorMessage = (err as any).message;
+      }
+      
       setError(errorMessage);
       return {
         success: false,

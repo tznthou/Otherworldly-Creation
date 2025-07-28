@@ -7,6 +7,8 @@ import {
   CharacterDetailModal,
   RelationshipVisualization
 } from '../../components/Characters';
+import TutorialOverlay, { useTutorial } from '../../components/Tutorial/TutorialOverlay';
+import { characterTutorial } from '../../data/tutorialSteps';
 
 const CharacterManager: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -20,6 +22,18 @@ const CharacterManager: React.FC = () => {
   const [consistencyIssues, setConsistencyIssues] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // 教學系統
+  const {
+    isActive: isTutorialActive,
+    currentStep,
+    currentTutorialId,
+    setCurrentStep,
+    startTutorial,
+    completeTutorial,
+    skipTutorial,
+    isTutorialCompleted
+  } = useTutorial();
 
   // 載入角色列表
   const loadCharacters = async () => {
@@ -227,6 +241,7 @@ const CharacterManager: React.FC = () => {
                   ? 'bg-gold-500 text-cosmic-950'
                   : 'bg-cosmic-800 text-gray-300 border border-cosmic-700 hover:bg-cosmic-700'
               }`}
+              data-tutorial="character-list"
             >
               角色列表
             </button>
@@ -237,6 +252,7 @@ const CharacterManager: React.FC = () => {
                   ? 'bg-gold-500 text-cosmic-950'
                   : 'bg-cosmic-800 text-gray-300 border border-cosmic-700 hover:bg-cosmic-700'
               }`}
+              data-tutorial="character-relationships"
             >
               關係圖
             </button>
@@ -305,29 +321,33 @@ const CharacterManager: React.FC = () => {
             )}
           </div>
         ) : (
-          <CharacterList
-            projectId={projectId}
-            characters={allCharacters}
-            loading={loading}
-            error={error}
-            onCreateCharacter={handleCreateCharacter}
-            onEditCharacter={handleEditCharacter}
-            onDeleteCharacter={handleDeleteCharacter}
-            onViewCharacter={handleViewCharacter}
-            onReload={loadCharacters}
-          />
+          <div data-tutorial="create-character-btn">
+            <CharacterList
+              projectId={projectId}
+              characters={allCharacters}
+              loading={loading}
+              error={error}
+              onCreateCharacter={handleCreateCharacter}
+              onEditCharacter={handleEditCharacter}
+              onDeleteCharacter={handleDeleteCharacter}
+              onViewCharacter={handleViewCharacter}
+              onReload={loadCharacters}
+            />
+          </div>
         )}
       </div>
 
       {/* 創建角色模態框 */}
-      <CharacterModal
-        isOpen={isCreateModalOpen}
-        onClose={handleCloseModals}
-        onSave={handleSaveCharacter}
-        projectId={projectId}
-        projectType={projectType}
-        allCharacters={allCharacters}
-      />
+      <div data-tutorial="character-details">
+        <CharacterModal
+          isOpen={isCreateModalOpen}
+          onClose={handleCloseModals}
+          onSave={handleSaveCharacter}
+          projectId={projectId}
+          projectType={projectType}
+          allCharacters={allCharacters}
+        />
+      </div>
 
       {/* 編輯角色模態框 */}
       <CharacterModal
@@ -348,6 +368,16 @@ const CharacterManager: React.FC = () => {
         onEdit={handleEditCharacter}
         onDelete={handleDeleteCharacter}
         allCharacters={allCharacters}
+      />
+
+      {/* 角色管理教學覆蓋層 */}
+      <TutorialOverlay
+        steps={characterTutorial}
+        isActive={isTutorialActive && currentTutorialId === 'character'}
+        currentStepIndex={currentStep}
+        onStepChange={setCurrentStep}
+        onComplete={() => completeTutorial('character')}
+        onSkip={() => skipTutorial('character')}
       />
     </div>
   );

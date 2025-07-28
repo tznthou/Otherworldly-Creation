@@ -36,26 +36,34 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
       return;
     }
 
-    const result = await applyTemplateToProject(template, options);
-    
-    if (result.success) {
-      dispatch(addNotification({
-        type: 'success',
-        title: '模板應用成功',
-        message: result.message
-      }));
+    try {
+      const result = await applyTemplateToProject(template, options);
       
-      handleClose();
-      
-      // 導航到新創建的專案
-      if (result.projectId) {
-        navigate(`/project/${result.projectId}`);
+      if (result.success) {
+        dispatch(addNotification({
+          type: 'success',
+          title: '模板應用成功',
+          message: result.message
+        }));
+        
+        handleClose();
+        
+        // 導航到新創建的專案
+        if (result.projectId) {
+          navigate(`/project/${result.projectId}`);
+        }
+      } else {
+        dispatch(addNotification({
+          type: 'error',
+          title: '模板應用失敗',
+          message: result.message
+        }));
       }
-    } else {
+    } catch (error) {
       dispatch(addNotification({
         type: 'error',
-        title: '模板應用失敗',
-        message: result.message
+        title: '創建失敗',
+        message: '創建專案時發生未知錯誤'
       }));
     }
   };

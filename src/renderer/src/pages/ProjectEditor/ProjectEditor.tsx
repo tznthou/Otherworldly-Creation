@@ -30,6 +30,8 @@ import { OperationStatus } from '../../components/UI/StatusIndicator';
 import { SimpleProgressBar } from '../../components/UI/ProgressIndicator';
 import { MiniErrorFallback } from '../../components/UI/ErrorFallback';
 import SaveManager from '../../services/saveManager';
+import TutorialOverlay, { useTutorial } from '../../components/Tutorial/TutorialOverlay';
+import { editorTutorial, aiTutorial } from '../../data/tutorialSteps';
 
 const ProjectEditorContent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,6 +47,18 @@ const ProjectEditorContent: React.FC = () => {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showSavePanel, setShowSavePanel] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  
+  // 教學系統
+  const {
+    isActive: isTutorialActive,
+    currentStep,
+    currentTutorialId,
+    setCurrentStep,
+    startTutorial,
+    completeTutorial,
+    skipTutorial,
+    isTutorialCompleted
+  } = useTutorial();
   
   // 自動儲存
   const { 
@@ -200,7 +214,7 @@ const ProjectEditorContent: React.FC = () => {
         </div>
 
         {/* 章節列表 */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" data-tutorial="chapter-list">
           <ChapterList
             chapters={chapters}
             selectedChapterId={selectedChapterId}
@@ -239,16 +253,18 @@ const ProjectEditorContent: React.FC = () => {
           {currentChapter ? (
             <>
               {/* 工具欄 */}
-              <EditorToolbar
-                onSave={saveNow}
-                onAIWrite={handleAIWrite}
-                isSaving={isSaving}
-                isGenerating={false}
-              />
+              <div data-tutorial="editor-toolbar">
+                <EditorToolbar
+                  onSave={saveNow}
+                  onAIWrite={handleAIWrite}
+                  isSaving={isSaving}
+                  isGenerating={false}
+                />
+              </div>
 
               {/* 編輯器 */}
               <div className="flex-1 flex flex-col">
-                <div className="flex-1">
+                <div className="flex-1" data-tutorial="writing-area">
                   <SlateEditor
                     value={currentChapter.content}
                     onChange={handleEditorChange}
@@ -259,7 +275,7 @@ const ProjectEditorContent: React.FC = () => {
                 </div>
                 
                 {/* 章節筆記 (可折疊) */}
-                <div className="p-4 border-t border-cosmic-700">
+                <div className="p-4 border-t border-cosmic-700" data-tutorial="chapter-notes">
                   <ChapterNotes chapter={currentChapter} />
                 </div>
               </div>
@@ -287,7 +303,7 @@ const ProjectEditorContent: React.FC = () => {
 
         {/* AI 續寫面板 */}
         {showAIPanel && currentChapter && id && (
-          <div className="w-96 border-l border-cosmic-700">
+          <div className="w-96 border-l border-cosmic-700" data-tutorial="ai-panel-btn">
             <AIWritingPanel 
               projectId={id}
               chapterId={currentChapter.id}
@@ -316,6 +332,26 @@ const ProjectEditorContent: React.FC = () => {
       <SaveStatusPanel 
         isOpen={showSavePanel}
         onClose={() => setShowSavePanel(false)}
+      />
+
+      {/* 編輯器教學覆蓋層 */}
+      <TutorialOverlay
+        steps={editorTutorial}
+        isActive={isTutorialActive && currentTutorialId === 'editor'}
+        currentStepIndex={currentStep}
+        onStepChange={setCurrentStep}
+        onComplete={() => completeTutorial('editor')}
+        onSkip={() => skipTutorial('editor')}
+      />
+
+      {/* AI 輔助教學覆蓋層 */}
+      <TutorialOverlay
+        steps={aiTutorial}
+        isActive={isTutorialActive && currentTutorialId === 'ai'}
+        currentStepIndex={currentStep}
+        onStepChange={setCurrentStep}
+        onComplete={() => completeTutorial('ai')}
+        onSkip={() => skipTutorial('ai')}
       />
 
       {/* 章節管理模態框已移至 ModalContainer 中統一管理 */}

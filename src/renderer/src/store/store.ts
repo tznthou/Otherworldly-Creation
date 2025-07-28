@@ -28,16 +28,19 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST'],
-        // 自定義檢查，忽略 Date 物件
+        ignoredPaths: ['payload.timestamp', 'meta.arg', 'meta.baseQueryMeta'],
+        // 自定義檢查，允許 Date 物件和函數
         isSerializable: (value: any) => {
-          // 允許 Date 物件通過序列化檢查
           if (value instanceof Date) {
             return true;
           }
-          // 使用預設的序列化檢查
+          if (typeof value === 'function') {
+            return false; // 函數不應該被序列化
+          }
           return true;
         },
       },
+      thunk: true, // 確保 thunk 中間件被啟用
     }),
 });
 

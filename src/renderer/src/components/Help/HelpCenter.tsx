@@ -13,7 +13,7 @@ interface HelpCenterProps {
 }
 
 export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'tutorials' | 'faq' | 'shortcuts' | 'manual' | 'quickstart'>('tutorials');
+  const [activeTab, setActiveTab] = useState<'faq' | 'shortcuts' | 'manual' | 'quickstart'>('quickstart');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
@@ -77,7 +77,6 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
         {/* 標籤頁 */}
         <div className="flex border-b border-cosmic-700 overflow-x-auto">
           {[
-            { id: 'tutorials', label: '教學指南', icon: '🎓' },
             { id: 'quickstart', label: '快速入門', icon: '🚀' },
             { id: 'manual', label: '使用手冊', icon: '📖' },
             { id: 'faq', label: '常見問題', icon: '❓' },
@@ -125,50 +124,13 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-                  <h4 className="text-white font-semibold mb-2">🚀 第一次使用</h4>
-                  <p className="text-gray-400 text-sm mb-3">了解基本功能和界面佈局</p>
-                  <CosmicButton
-                    size="small"
-                    variant="secondary"
-                    onClick={() => handleStartTutorial('first-time')}
-                  >
-                    開始教學
-                  </CosmicButton>
-                </div>
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-                  <h4 className="text-white font-semibold mb-2">✍️ 編輯器使用</h4>
-                  <p className="text-gray-400 text-sm mb-3">學習寫作編輯器的各項功能</p>
-                  <CosmicButton
-                    size="small"
-                    variant="secondary"
-                    onClick={() => handleStartTutorial('editor')}
-                  >
-                    開始教學
-                  </CosmicButton>
-                </div>
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-                  <h4 className="text-white font-semibold mb-2">👥 角色管理</h4>
-                  <p className="text-gray-400 text-sm mb-3">掌握角色創建和關係設定</p>
-                  <CosmicButton
-                    size="small"
-                    variant="secondary"
-                    onClick={() => handleStartTutorial('character')}
-                  >
-                    開始教學
-                  </CosmicButton>
-                </div>
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-                  <h4 className="text-white font-semibold mb-2">🤖 AI 輔助</h4>
-                  <p className="text-gray-400 text-sm mb-3">學習 AI 續寫和輔助功能</p>
-                  <CosmicButton
-                    size="small"
-                    variant="secondary"
-                    onClick={() => handleStartTutorial('ai')}
-                  >
-                    開始教學
-                  </CosmicButton>
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-6">
+                <h4 className="text-blue-400 font-semibold mb-4">💡 如何開始教學</h4>
+                <div className="space-y-3 text-gray-300 text-sm">
+                  <p>• <strong>首次使用教學</strong>：點擊右下角的 ❓ 幫助按鈕 → 互動教學 → 首次使用教學</p>
+                  <p>• <strong>編輯器教學</strong>：在專案編輯器頁面，點擊 ❓ 幫助按鈕 → 互動教學 → 編輯器使用教學</p>
+                  <p>• <strong>角色管理教學</strong>：在角色管理頁面，點擊 ❓ 幫助按鈕 → 互動教學 → 角色管理教學</p>
+                  <p>• <strong>AI 輔助教學</strong>：在專案編輯器頁面，點擊 ❓ 幫助按鈕 → 互動教學 → AI 輔助教學</p>
                 </div>
               </div>
             </div>
@@ -234,53 +196,6 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* 教學指南 */}
-          {activeTab === 'tutorials' && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
-                <h3 className="text-xl font-semibold text-white mb-2">互動式教學指南</h3>
-                <p className="text-gray-400">跟隨步驟式教學，快速掌握創世紀元的各項功能</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(tutorialIndex).map(([id, tutorial]) => (
-                  <div
-                    key={id}
-                    className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 hover:border-gold-500/50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="text-lg font-semibold text-white">{tutorial.title}</h4>
-                      {isTutorialCompleted(id) && (
-                        <span className="text-green-400 text-sm">✓ 已完成</span>
-                      )}
-                    </div>
-                    
-                    <p className="text-gray-400 text-sm mb-4">{tutorial.description}</p>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">預計時間: {tutorial.estimatedTime}</span>
-                      <CosmicButton
-                        size="small"
-                        variant={isTutorialCompleted(id) ? 'secondary' : 'primary'}
-                        onClick={() => handleStartTutorial(id as TutorialId)}
-                      >
-                        {isTutorialCompleted(id) ? '重新學習' : '開始教學'}
-                      </CosmicButton>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="text-center pt-6 border-t border-cosmic-700">
-                <CosmicButton
-                  variant="secondary"
-                  onClick={handleResetTutorials}
-                >
-                  重置所有教學狀態
-                </CosmicButton>
-              </div>
-            </div>
-          )}
 
           {/* 常見問題 */}
           {activeTab === 'faq' && (

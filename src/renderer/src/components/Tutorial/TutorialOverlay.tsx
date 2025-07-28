@@ -252,6 +252,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 export const useTutorial = () => {
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [currentTutorialId, setCurrentTutorialId] = useState<string | null>(null);
   const [completedTutorials, setCompletedTutorials] = useState<string[]>([]);
 
   useEffect(() => {
@@ -262,7 +263,8 @@ export const useTutorial = () => {
     }
   }, []);
 
-  const startTutorial = (tutorialId?: string) => {
+  const startTutorial = (tutorialId: string) => {
+    setCurrentTutorialId(tutorialId);
     setCurrentStep(0);
     setIsActive(true);
   };
@@ -272,6 +274,7 @@ export const useTutorial = () => {
     setCompletedTutorials(updated);
     localStorage.setItem('completed-tutorials', JSON.stringify(updated));
     setIsActive(false);
+    setCurrentTutorialId(null);
   };
 
   const skipTutorial = (tutorialId: string) => {
@@ -279,6 +282,7 @@ export const useTutorial = () => {
     setCompletedTutorials(updated);
     localStorage.setItem('completed-tutorials', JSON.stringify(updated));
     setIsActive(false);
+    setCurrentTutorialId(null);
   };
 
   const resetTutorials = () => {
@@ -293,6 +297,7 @@ export const useTutorial = () => {
   return {
     isActive,
     currentStep,
+    currentTutorialId,
     setCurrentStep,
     startTutorial,
     completeTutorial,

@@ -556,7 +556,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+      <div className="bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
         {/* 標題欄 */}
         <div className="flex items-center justify-between p-6 border-b border-cosmic-700">
           <div className="flex items-center space-x-3">
@@ -573,9 +573,9 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
           </button>
         </div>
 
-        <div className="flex">
+        <div className="flex flex-1 min-h-0">
           {/* 步驟導航 */}
-          <div className="w-80 bg-cosmic-800/50 border-r border-cosmic-700 p-4">
+          <div className="w-80 bg-cosmic-800/50 border-r border-cosmic-700 p-4 overflow-y-auto">
             <div className="space-y-2">
               {steps.map((step, index) => (
                 <button
@@ -606,13 +606,13 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
           </div>
 
           {/* 主要內容 */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             <div className="p-8 overflow-y-auto flex-1">
               {currentStepData.content}
             </div>
 
             {/* 底部操作欄 */}
-            <div className="p-6 border-t border-cosmic-700 flex items-center justify-between">
+            <div className="p-6 border-t border-cosmic-700 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center space-x-4">
                 <div className="text-sm text-gray-400">
                   步驟 {currentStep + 1} / {steps.length}
