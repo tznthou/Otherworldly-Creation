@@ -19,6 +19,9 @@ const ModalContainer: React.FC = () => {
   const dispatch = useAppDispatch();
   const { modals, selectedTemplate } = useAppSelector(state => state.ui);
   
+  // 調試：監控 modal 狀態變化
+  console.log('ModalContainer render - modals state:', modals);
+  
 
   const { currentProject } = useAppSelector(state => state.projects);
   const { currentChapter, chapters } = useAppSelector(state => state.chapters);

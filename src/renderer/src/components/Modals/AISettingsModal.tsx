@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel } from '../../store/slices/aiSlice';
@@ -7,6 +7,8 @@ import { api } from '../../api';
 const AISettingsModal: React.FC = () => {
   const dispatch = useAppDispatch();
   const currentModel = useAppSelector(state => state.ai.currentModel);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [forceUpdate, setForceUpdate] = useState(0);
   
   const [settings, setSettings] = useState({
     baseUrl: 'http://127.0.0.1:11434',
@@ -31,6 +33,15 @@ const AISettingsModal: React.FC = () => {
 
   useEffect(() => {
     checkServiceStatus();
+    
+    // 強制觸發重新渲染以修復初始顯示問題
+    const timer = setTimeout(() => {
+      setForceUpdate(prev => prev + 1);
+      // 觸發 resize 事件以強制瀏覽器重新計算佈局
+      window.dispatchEvent(new Event('resize'));
+    }, 50);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // 當 currentModel 從 Redux 變更時，更新本地設定
@@ -136,21 +147,22 @@ const AISettingsModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
-          <h2 className="text-xl font-cosmic text-gold-500">AI 引擎設定</h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-white"
-          >
-            ✕
-          </button>
-        </div>
+    <div className="fixed inset-0 bg-black/70 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div ref={modalRef} className="relative bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl">
+          {/* 標題 */}
+          <div className="sticky top-0 bg-cosmic-900 p-6 border-b border-cosmic-700 flex items-center justify-between rounded-t-xl z-10">
+            <h2 className="text-xl font-cosmic text-gold-500">AI 引擎設定</h2>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-white text-2xl"
+            >
+              ×
+            </button>
+          </div>
 
-        {/* 內容 */}
-        <div className="p-6">
+          {/* 內容 */}
+          <div className="p-6">
           {/* 服務狀態 */}
           <div className="mb-6">
             <h3 className="text-lg font-medium text-gold-400 mb-4">服務狀態</h3>
@@ -317,22 +329,23 @@ const AISettingsModal: React.FC = () => {
           </div>
         </div>
 
-        {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-end space-x-4">
-          <button
-            onClick={handleClose}
-            className="btn-secondary"
-            disabled={isSubmitting}
-          >
-            取消
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="btn-primary"
-          >
-            {isSubmitting ? '儲存中...' : '儲存設定'}
-          </button>
+          {/* 底部按鈕 */}
+          <div className="sticky bottom-0 bg-cosmic-900 p-6 border-t border-cosmic-700 flex justify-end space-x-4 rounded-b-xl">
+            <button
+              onClick={handleClose}
+              className="btn-secondary"
+              disabled={isSubmitting}
+            >
+              取消
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="btn-primary"
+            >
+              {isSubmitting ? '儲存中...' : '儲存設定'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

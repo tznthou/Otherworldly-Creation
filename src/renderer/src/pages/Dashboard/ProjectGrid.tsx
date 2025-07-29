@@ -13,7 +13,9 @@ const ProjectGrid: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const handleCreateProject = () => {
+    console.log('創建專案按鈕被點擊');
     dispatch(openModal('createProject'));
+    console.log('已 dispatch openModal action');
   };
 
   // 過濾和排序專案

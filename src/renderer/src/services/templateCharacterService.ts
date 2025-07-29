@@ -2,6 +2,7 @@
 import { CharacterArchetypeTemplate, NovelTemplate } from '../types/template';
 import { Character, CharacterFormData } from '../types/character';
 import { v4 as uuidv4 } from 'uuid';
+import { api } from '../api';
 
 export interface TemplateCharacterCreationResult {
   success: boolean;
@@ -77,13 +78,13 @@ export class TemplateCharacterService {
     this.validateCharacterData(characterData);
 
     // 調用角色創建 API
-    const characterId = await window.electronAPI.characters.create({
+    const characterId = await api.characters.create({
       ...characterData,
       projectId
     });
 
     // 獲取創建的角色
-    const character = await window.electronAPI.characters.getById(characterId);
+    const character = await api.characters.getById(characterId);
     if (!character) {
       throw new Error('創建角色後無法獲取角色資料');
     }
@@ -248,7 +249,19 @@ export class TemplateCharacterService {
             }
           ];
 
-          await window.electronAPI.characters.updateRelationships(sourceChar.id, relationships);
+          // 創建角色關係 - 由於 API 不支援批量關係更新，需要逐一創建
+          for (const relationship of relationships) {
+            try {
+              await api.characters.createRelationship({
+                fromCharacterId: sourceChar.id,
+                toCharacterId: relationship.targetId,
+                relationshipType: relationship.type,
+                description: relationship.description
+              });
+            } catch (error) {
+              console.warn(`建立角色關係失敗: ${sourceChar.name} -> ${relationship.targetId}`, error);
+            }
+          }
         }
       }
     } catch (error) {

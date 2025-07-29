@@ -16,8 +16,27 @@ const safeInvoke = async (command: string, args?: any) => {
 export const tauriAPI: API = {
   projects: {
     getAll: () => safeInvoke('get_all_projects'),
-    create: (project) => safeInvoke('create_project', { project }),
-    update: (project) => safeInvoke('update_project', { project }),
+    create: (project) => {
+      // 轉換前端 Project 格式為後端 CreateProjectRequest 格式
+      const createRequest = {
+        name: project.name,
+        description: project.description || null,
+        type: project.type || null,
+        settings: project.settings ? JSON.stringify(project.settings) : null,
+      };
+      return safeInvoke('create_project', { project: createRequest });
+    },
+    update: (project) => {
+      // 轉換前端 Project 格式為後端 UpdateProjectRequest 格式
+      const updateRequest = {
+        id: project.id,
+        name: project.name,
+        description: project.description || null,
+        type: project.type || null,
+        settings: project.settings ? JSON.stringify(project.settings) : null,
+      };
+      return safeInvoke('update_project', { project: updateRequest });
+    },
     delete: (id) => safeInvoke('delete_project', { id }),
     getById: (id) => safeInvoke('get_project_by_id', { id }),
   },
@@ -36,9 +55,14 @@ export const tauriAPI: API = {
     update: (character) => safeInvoke('update_character', { character }),
     delete: (id) => safeInvoke('delete_character', { id }),
     getById: (id) => safeInvoke('get_character_by_id', { id }),
-    createRelationship: (relationship) => safeInvoke('create_character_relationship', { relationship }),
+    createRelationship: (relationship) => safeInvoke('create_character_relationship', {
+      from_character_id: relationship.fromCharacterId,
+      to_character_id: relationship.toCharacterId,
+      relationship_type: relationship.relationshipType,
+      description: relationship.description || null,
+    }),
     deleteRelationship: (id) => safeInvoke('delete_character_relationship', { id }),
-    clearRelationships: (characterId) => safeInvoke('clear_character_relationships', { characterId }),
+    clearRelationships: (characterId) => safeInvoke('clear_character_relationships', { character_id: characterId }),
   },
 
   ai: {

@@ -5,7 +5,7 @@ use rusqlite::params;
 use uuid::Uuid;
 
 #[tauri::command]
-pub async fn get_chapters_by_project_id(project_id: String) -> Result<Vec<Chapter>, String> {
+pub async fn get_chapters_by_project_id(projectId: String) -> Result<Vec<Chapter>, String> {
     let db = get_db().map_err(|e| e.to_string())?;
     let conn = db.lock().unwrap();
     
@@ -15,7 +15,7 @@ pub async fn get_chapters_by_project_id(project_id: String) -> Result<Vec<Chapte
         .map_err(|e| e.to_string())?;
     
     let chapter_iter = stmt
-        .query_map([project_id], |row| {
+        .query_map([projectId], |row| {
             Ok(Chapter {
                 id: row.get(0)?,
                 project_id: row.get(1)?,

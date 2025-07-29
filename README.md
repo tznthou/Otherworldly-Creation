@@ -7,12 +7,14 @@
 **當前版本：v0.4.12 + Tauri 移植分支** - 2025年7月29日更新  
 **開發進度：Tauri 版本架構完善 ✅，CSP 配置修復 ✅，API 統一化完成 ✅，漸進式遷移策略執行中 🔄**
 
-### 📊 系統狀態 (2025-07-29 13:01 CST)
-- **當前分支**：`feature/tauri-migration` (領先 main 分支 2 個提交)
+### 📊 系統狀態 (2025-07-29 22:30 CST)
+- **當前分支**：`feature/tauri-migration` (領先 main 分支 3 個提交)
 - **Tauri 版本**：v2.0.0-alpha.1 
 - **系統環境**：macOS Darwin 24.5.0 (arm64), Node.js v22.16.0, Rust toolchain 已配置
 - **AI 引擎**：Ollama v0.9.6 運行中 ✅
 - **資料庫狀態**：SQLite 雙版本架構 (Electron: better-sqlite3, Tauri: rusqlite) ✅
+- **CSP 配置**：已修復並重新構建 ✅
+- **API 統一化**：前端 API 完全統一，移除所有 `window.electronAPI` 直接調用 ✅
 
 ### ✅ 已完成功能
 
@@ -73,9 +75,11 @@
 - 📊 **專案管理 CRUD**：專案、章節、角色的完整 CRUD 操作，與 Electron 版本功能對等
 - 🔌 **IPC 通訊系統**：統一的 API 適配器，支援 Electron/Tauri 雙版本無縫切換
 - 🎯 **前端 API 適配**：智能環境偵測與動態 API 切換，`isElectron()` / `isTauri()` 功能
-- 🔧 **CSP 配置修復**：解決 Content Security Policy 阻擋 IPC 通訊問題
+- 🔧 **CSP 配置修復**：解決 Content Security Policy 阻擋 IPC 通訊問題，完全禁用 CSP
 - 🛠️ **API 統一化**：移除所有 `window.electronAPI` 直接調用，統一使用 `api.*` 介面
 - ⚙️ **設定管理系統**：Rust 端設定儲存與讀取功能完成
+- 🏗️ **資料庫 Schema 修復**：修正 order_index 和 description 欄位問題，重新初始化資料庫
+- 🔄 **模板服務整合**：templateService.ts 和 templateCharacterService.ts 完全使用統一 API
 
 #### 🔄 進行中功能
 - 🤖 **AI 引擎整合**：Ollama 服務整合到 Tauri 版本 (Rust 端 HTTP 客戶端實現中)
@@ -449,6 +453,7 @@ AI 功能通過 Ollama API 實現：
 ## 版本變更紀錄
 
 ### Tauri 遷移分支 (feature/tauri-migration)
+- 0.4.12+tauri (2025-07-29 22:30)：🛠️ **重大修復：CSP 與資料庫 Schema 問題完全解決**，完全禁用 CSP 解決 IPC 連接問題，刪除舊資料庫檔案重新初始化修復 `order_index` 和 `description` 欄位缺失問題，修復 templateService.ts 和 templateCharacterService.ts 使用統一 API，重新構建 Tauri 應用程式，創建專案和進入專案編輯器功能完全正常，Tauri 版本達到穩定可用狀態
 - 0.4.12+tauri (2025-07-29 13:01)：🔧 **CSP 配置修復與 API 統一化完成**，解決 Content Security Policy 阻擋 IPC 通訊問題，移除所有 `window.electronAPI` 直接調用統一為 `api.*` 介面，修復 CharacterList.tsx、SimpleProjectEditor.tsx、CharacterManager.tsx 等檔案 API 調用，Tauri 版本資料載入速度大幅提升，前端 API 適配層完全統一
 - 0.4.12+tauri (2025-07-29)：🦀 **Tauri 版本 SQLite 資料庫連接完成**，Rust 後端架構建立，雙版本並行開發架構實現，專案/章節/角色 CRUD 操作完整實現，前端 API 適配層完成，PRAGMA 語句修復，資料庫 migrations 系統建立
 

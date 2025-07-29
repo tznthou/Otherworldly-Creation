@@ -59,6 +59,7 @@ pub struct Setting {
 pub struct CreateProjectRequest {
     pub name: String,
     pub description: Option<String>,
+    #[serde(rename = "type")]
     pub r#type: Option<String>,
     pub settings: Option<String>,
 }
@@ -69,6 +70,7 @@ pub struct UpdateProjectRequest {
     pub id: String,
     pub name: String,
     pub description: Option<String>,
+    #[serde(rename = "type")]
     pub r#type: Option<String>,
     pub settings: Option<String>,
 }

@@ -72,6 +72,7 @@ interface AISettings {
 }
 
 const CreateProjectModal: React.FC = () => {
+  console.log('CreateProjectModal 被渲染');
   const dispatch = useAppDispatch();
   const { availableModels, isOllamaConnected } = useAppSelector(state => state.ai);
   

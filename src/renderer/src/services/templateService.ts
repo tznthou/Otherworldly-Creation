@@ -1,6 +1,7 @@
 // 模板管理服務
 import { NovelTemplate, TemplateType, TemplateApplicationResult, TemplateValidationError } from '../types/template';
 import { defaultTemplates } from '../data/defaultTemplates';
+import { api } from '../api';
 
 export class TemplateService {
   private templates: Map<string, NovelTemplate> = new Map();
@@ -326,7 +327,7 @@ export class TemplateService {
 
         try {
           // 更新專案設定
-          await window.electronAPI.projects.update({
+          await api.projects.update({
             id: projectId,
             settings: {
               ...projectSettings,

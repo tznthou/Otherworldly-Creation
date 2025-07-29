@@ -8,6 +8,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Current Status**: The project is undergoing progressive migration from Electron to Tauri while maintaining both versions in parallel. The Electron version (v0.4.12) is stable and feature-complete, while the Tauri version (v2.0.0-alpha.1) is actively developed on the `feature/tauri-migration` branch.
 
+## Quick Start
+
+### 快速開始開發
+```bash
+# Electron 版本開發（穩定版）
+npm install && npm run dev:electron
+
+# Tauri 版本開發（開發中）
+npm install && cargo install tauri-cli && npm run dev:tauri
+
+# 診斷系統環境
+npm run diagnostic
+```
+
 ## Development Commands
 
 ### Dual Version Commands
@@ -57,7 +71,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Tauri-Specific Commands
 - `cargo tauri dev` - Direct Tauri development command
 - `cargo tauri build` - Direct Tauri build command
+- `cargo tauri build --debug` - Build debug version with console output
 - Access DatabaseTest page at `http://localhost:3000/#/database-test` when running Tauri version
+- Database file location: `~/.config/com.genesis-chronicle.app/genesis.db`
 
 ### Utility Commands
 - `npm run optimize` - Optimize resources before packaging
@@ -235,9 +251,12 @@ The application uses SQLite with the following main entities:
 ## Special Considerations
 
 ### AI Service Integration
-- Ollama must be running locally for AI features to work
+- Ollama must be running locally for AI features to work (`ollama serve`)
+- Default model: `llama3.2` (download with `ollama pull llama3.2`)
+- Service endpoint: `http://127.0.0.1:11434` (避免 IPv6 問題)
 - Service health checking is implemented with automatic retry mechanisms
 - Context management optimizes AI requests by intelligently building context from project data
+- Tauri 版本需實現 Rust HTTP 客戶端來調用 Ollama API
 
 ### Internationalization
 - Primary language is Traditional Chinese (繁體中文)
@@ -340,6 +359,15 @@ The application uses SQLite with the following main entities:
 - **Frontend Testing**: Access different test pages based on environment:
   - Tauri: `/#/database-test` for database functionality testing
   - Both: Standard application routes work in both environments
+- **API Testing**: Use browser console to test API calls:
+  ```javascript
+  // 測試 API 是否正確載入
+  console.log(window.__TAURI__ ? 'Tauri' : 'Electron');
+  
+  // 測試專案載入
+  const projects = await api.projects.getAll();
+  console.log(projects);
+  ```
 
 ### Code Organization
 - **Backend Code**: Platform-specific in `electron/main/` and `src-tauri/src/`
@@ -348,6 +376,19 @@ The application uses SQLite with the following main entities:
 - **Testing**: Environment detection ensures proper functionality testing
 
 ### Migration Progress
-- **Completed**: Basic architecture, database layer, project/chapter/character CRUD
-- **In Progress**: AI service integration, settings management, data migration tools
+- **Completed**: Basic architecture, database layer, project/chapter/character CRUD, CSP configuration fix, API unification
+- **In Progress**: AI service integration (Rust HTTP client), settings management, data migration tools
 - **Planned**: Feature parity, performance optimization, comprehensive testing
+
+## Common Troubleshooting
+
+### Tauri 版本常見問題
+- **CSP 錯誤**: 確保 `tauri.conf.json` 中 CSP 包含 `ipc: ipc://localhost`
+- **資料庫載入慢**: 檢查是否有 `window.electronAPI` 直接調用，應使用 `api.*`
+- **PRAGMA 錯誤**: Rust 中使用 `conn.pragma_update()` 而非 `conn.execute()` 執行 PRAGMA
+- **API 未定義**: 檢查 `src/renderer/src/api/types.ts` 是否定義了對應介面
+
+### Electron 版本常見問題
+- **Ollama 連接失敗**: 確保 Ollama 服務運行中 (`ollama serve`)
+- **原生模組錯誤**: 執行 `npm rebuild better-sqlite3`
+- **TypeScript 錯誤**: 檢查 `tsconfig.json` 和 `tsconfig.electron.json` 配置
