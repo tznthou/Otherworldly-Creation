@@ -39,7 +39,11 @@
       "Bash(rustc:*)",
       "Bash(cargo install:*)",
       "Bash(cargo tauri init:*)",
-      "Bash(cargo check:*)"
+      "Bash(cargo check:*)",
+      "Bash(ls:*)",
+      "Bash(RUST_BACKTRACE=1 cargo tauri dev)",
+      "Bash(cargo tauri:*)",
+      "mcp__puppeteer__puppeteer_navigate"
     ],
     "deny": []
   }

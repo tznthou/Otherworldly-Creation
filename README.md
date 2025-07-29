@@ -4,8 +4,8 @@
 
 ## 🚀 開發狀態
 
-**當前版本：v0.4.12** - 2025年7月28日更新  
-**開發進度：資料管理功能整合 ✅，系統設定儲存功能修復 ✅，版權年份更新 ✅**
+**當前版本：v0.4.12 + Tauri 移植分支** - 2025年7月29日更新  
+**開發進度：Tauri 版本 SQLite 資料庫連接完成 ✅，雙版本架構建立 ✅，漸進式遷移策略執行中 🔄**
 
 ### ✅ 已完成功能
 
@@ -58,28 +58,59 @@
 - 📐 **佈局問題修復**：使用正確的 flexbox 結構解決內容顯示問題
 - 🧹 **除錯代碼清理**：移除所有調試用 console.log 語句
 
-### 🔄 開發中功能
+### 🔄 開發中功能 - Tauri 版本遷移
 
-- 🎨 **幻想具現**：AI 插畫生成功能（規劃中）
-- 📚 **傳說編纂**：一鍵生成專業電子書（規劃中）
-- 🧠 **進階 AI 功能**：劇情分析、角色一致性檢查（規劃中）
+#### ✅ Tauri 版本已完成功能
+- 🦀 **Rust 後端架構**：Tauri + Rust 主程序架構建立
+- 💾 **SQLite 資料庫整合**：rusqlite 連接與 migrations 系統實現
+- 📊 **專案管理 CRUD**：專案、章節、角色的完整 CRUD 操作
+- 🔌 **IPC 通訊**：統一的 API 適配器，支援 Electron/Tauri 雙版本
+- 🎯 **前端 API 適配**：環境偵測與動態 API 切換
+
+#### 🔄 進行中功能
+- 🤖 **AI 引擎整合**：Ollama 服務整合到 Tauri 版本
+- ⚙️ **系統設定管理**：設定儲存與載入功能
+- 📋 **資料遷移工具**：Electron 版本資料遷移到 Tauri
+- 🧪 **功能測試驗證**：所有功能在 Tauri 環境下的測試
+
+#### 📋 規劃中功能
+- 🎨 **幻想具現**：AI 插畫生成功能
+- 📚 **傳說編纂**：一鍵生成專業電子書
+- 🧠 **進階 AI 功能**：劇情分析、角色一致性檢查
 
 ## 功能特色
 
 ## 技術架構
 
+### Electron 版本 (穩定版)
 - **前端**: React 18 + TypeScript + Tailwind CSS
 - **後端**: Electron + Node.js
-- **資料庫**: SQLite
+- **資料庫**: SQLite (better-sqlite3)
 - **AI 引擎**: Ollama (本地)
 - **狀態管理**: Redux Toolkit
 - **編輯器**: Slate.js
 
+### Tauri 版本 (開發中)
+- **前端**: React 18 + TypeScript + Tailwind CSS
+- **後端**: Tauri + Rust
+- **資料庫**: SQLite (rusqlite)
+- **AI 引擎**: Ollama (本地) - 整合中
+- **狀態管理**: Redux Toolkit
+- **編輯器**: Slate.js
+- **依賴**: rusqlite, chrono, uuid, anyhow, tokio, dirs
+
 ## 開發環境需求
 
+### Electron 版本
 - Node.js 18+
 - npm 或 yarn
 - Ollama (用於 AI 功能)
+
+### Tauri 版本 (額外需求)
+- Rust 1.75+
+- Cargo
+- Tauri CLI (`cargo install tauri-cli`)
+- 系統開發工具 (Visual Studio Build Tools/Xcode/build-essential)
 
 ## 🚀 快速安裝
 
@@ -127,310 +158,122 @@ npm run dev
    ollama pull llama3.2
    ```
 
-### 🔧 其他可用命令
+### 🔧 開發命令
 
+#### Electron 版本命令
 ```bash
+# 啟動 Electron 開發環境
+npm run dev:electron
+
+# 建置 Electron 應用程式
+npm run build:electron
+
+# 打包 Electron 應用程式
+npm run package:electron
+
 # 系統診斷
 npm run diagnostic
 
 # 運行測試
 npm test
+```
 
-# 建置應用程式
+#### Tauri 版本命令
+```bash
+# 啟動 Tauri 開發環境
+npm run dev:tauri
+
+# 建置 Tauri 應用程式
+npm run build:tauri
+
+# 打包 Tauri 應用程式
+npm run package:tauri
+
+# 直接使用 Tauri CLI
+cargo tauri dev
+cargo tauri build
+```
+
+#### 通用命令
+```bash
+# 預設啟動 (Electron 版本)
+npm run dev
 npm run build
-
-# 打包應用程式
 npm run package
 ```
 
 ## 專案結構
 
 ```
-├── src/                              # 主要源碼目錄
-│   ├── main/                         # Electron 主程序
-│   │   ├── main.ts                   # 主程序入口
-│   │   ├── preload.ts                # 預載腳本
-│   │   ├── database/                 # 資料庫相關
-│   │   │   └── database.ts           # SQLite 資料庫管理
-│   │   ├── services/                 # 核心服務
-│   │   │   ├── ollamaService.ts      # Ollama AI 服務
-│   │   │   ├── contextManager.ts     # 上下文管理器
-│   │   │   ├── updateService.ts      # 自動更新服務
-│   │   │   └── databaseMaintenance.ts # 資料庫維護
-│   │   ├── ipc/                      # IPC 處理器
-│   │   │   ├── ipcHandlers.ts        # 主要 IPC 處理
-│   │   │   ├── aiHandlers.ts         # AI 相關處理
-│   │   │   ├── basicHandlers.ts      # 基礎處理器
-│   │   │   └── updateHandlers.ts     # 更新相關處理
-│   │   ├── __tests__/                # 測試文件
-│   │   │   ├── database/             # 資料庫測試
-│   │   │   ├── services/             # 服務測試
-│   │   │   ├── integration/          # 整合測試
-│   │   │   └── performance/          # 性能測試
-│   │   └── tests/                    # 額外測試文件
-│   ├── renderer/                     # React 前端
-│   │   ├── index.html                # HTML 入口
-│   │   └── src/
-│   │       ├── main.tsx              # React 入口
-│   │       ├── main-stable.tsx       # 穩定版本入口
-│   │       ├── main-final.tsx        # 最終版本入口
-│   │       ├── main-mvp.tsx          # MVP 版本入口
-│   │       ├── main-simple.tsx       # 簡化版本入口
-│   │       ├── main-test.tsx         # 測試版本入口
-│   │       ├── App.tsx               # 主應用組件
-│   │       ├── index.css             # 全局樣式
-│   │       ├── build-info.json       # 建置信息
-│   │       ├── components/           # React 組件
-│   │       │   ├── Characters/       # 角色管理組件
-│   │       │   │   ├── __tests__/    # 角色組件測試
-│   │       │   │   ├── ArchetypeSelector.tsx
-│   │       │   │   ├── CharacterCard.tsx
-│   │       │   │   ├── CharacterDeleteModal.tsx
-│   │       │   │   ├── CharacterDetailModal.tsx
-│   │       │   │   ├── CharacterFilters.tsx
-│   │       │   │   ├── CharacterList.tsx
-│   │       │   │   ├── CharacterModal.tsx
-│   │       │   │   ├── RelationshipEditor.tsx
-│   │       │   │   ├── RelationshipVisualization.tsx
-│   │       │   │   └── index.ts
-│   │       │   ├── Editor/           # 編輯器組件
-│   │       │   │   ├── AIWritingPanel.tsx
-│   │       │   │   ├── ChapterBatchActions.tsx
-│   │       │   │   ├── ChapterList.tsx
-│   │       │   │   ├── ChapterNotes.tsx
-│   │       │   │   ├── EditorSettingsPanel.tsx
-│   │       │   │   ├── EditorToolbar.tsx
-│   │       │   │   ├── ReadingModeOverlay.tsx
-│   │       │   │   └── SlateEditor.tsx
-│   │       │   ├── Help/             # 幫助系統組件
-│   │       │   │   ├── FeatureShowcase.tsx
-│   │       │   │   ├── HelpButton.tsx
-│   │       │   │   ├── HelpCenter.tsx
-│   │       │   │   ├── HelpSystem.tsx
-│   │       │   │   ├── QuickHelp.tsx
-│   │       │   │   ├── QuickStartGuide.tsx
-│   │       │   │   └── UserManual.tsx
-│   │       │   ├── Layout/           # 佈局組件
-│   │       │   │   ├── Header.tsx
-│   │       │   │   ├── Layout.tsx
-│   │       │   │   └── Sidebar.tsx
-│   │       │   ├── Modals/           # 對話框組件
-│   │       │   │   ├── AISettingsModal.tsx
-│   │       │   │   ├── BackupManagerModal.tsx
-│   │       │   │   ├── ChapterManageModal.tsx
-│   │       │   │   ├── CreateChapterModal.tsx
-│   │       │   │   ├── CreateProjectModal.tsx
-│   │       │   │   ├── DeleteProjectModal.tsx
-│   │       │   │   ├── HelpCenterModal.tsx
-│   │       │   │   ├── ImportProjectModal.tsx
-│   │       │   │   ├── ProjectManageModal.tsx
-│   │       │   │   ├── SelectProjectForCharactersModal.tsx
-│   │       │   │   ├── TemplateApplicationModal.tsx
-│   │       │   │   ├── TemplateManagerModal.tsx
-│   │       │   │   └── UpdateManagerModal.tsx
-│   │       │   ├── Progress/         # 進度組件
-│   │       │   │   ├── ProgressIndicator.tsx
-│   │       │   │   └── ProgressManager.tsx
-│   │       │   ├── Templates/        # 模板組件
-│   │       │   │   ├── index.ts
-│   │       │   │   ├── TemplateApplicationWizard.tsx
-│   │       │   │   ├── TemplateManager.tsx
-│   │       │   │   └── TemplateSelector.tsx
-│   │       │   ├── Tutorial/         # 教程組件
-│   │       │   │   └── TutorialOverlay.tsx
-│   │       │   ├── UI/               # UI 組件
-│   │       │   │   ├── AIStatusIndicator.tsx
-│   │       │   │   ├── Alert.tsx
-│   │       │   │   ├── AutoBackupIndicator.tsx
-│   │       │   │   ├── Badge.tsx
-│   │       │   │   ├── Button.tsx
-│   │       │   │   ├── Card.tsx
-│   │       │   │   ├── ConfirmDialog.tsx
-│   │       │   │   ├── CosmicBackground.tsx
-│   │       │   │   ├── CosmicButton.tsx
-│   │       │   │   ├── CosmicInput.tsx
-│   │       │   │   ├── CosmicNotification.tsx
-│   │       │   │   ├── ErrorFallback.tsx
-│   │       │   │   ├── ErrorToast.tsx
-│   │       │   │   ├── LoadingSpinner.tsx
-│   │       │   │   ├── MagicCircle.tsx
-│   │       │   │   ├── Menu.tsx
-│   │       │   │   ├── ModalContainer.tsx
-│   │       │   │   ├── NotificationContainer.tsx
-│   │       │   │   ├── NotificationSystem.tsx
-│   │       │   │   ├── ParticleEffect.tsx
-│   │       │   │   ├── Progress.tsx
-│   │       │   │   ├── ProgressIndicator.tsx
-│   │       │   │   ├── SaveStatusIndicator.tsx
-│   │       │   │   ├── SaveStatusPanel.tsx
-│   │       │   │   ├── StarField.tsx
-│   │       │   │   └── StatusIndicator.tsx
-│   │       │   ├── Update/           # 更新系統組件
-│   │       │   │   ├── UpdateManager.tsx
-│   │       │   │   └── UpdateSettings.tsx
-│   │       │   ├── Backup/           # 備份組件
-│   │       │   │   └── BackupManager.tsx
-│   │       │   └── Error/            # 錯誤處理組件
-│   │       │       ├── ErrorDisplay.tsx
-│   │       │       └── GlobalErrorHandler.tsx
-│   │       ├── pages/                # 頁面組件
-│   │       │   ├── Dashboard/        # 儀表板
-│   │       │   │   ├── Dashboard.tsx
-│   │       │   │   ├── AIStatus.tsx
-│   │       │   │   ├── ProjectCard.tsx
-│   │       │   │   ├── ProjectGrid.tsx
-│   │       │   │   └── QuickActions.tsx
-│   │       │   ├── ProjectEditor/    # 專案編輯器
-│   │       │   │   └── ProjectEditor.tsx
-│   │       │   ├── CharacterManager/ # 角色管理
-│   │       │   │   └── CharacterManager.tsx
-│   │       │   ├── Settings/         # 設定頁面
-│   │       │   │   ├── Settings.tsx
-│   │       │   │   ├── SettingsDebug.tsx
-│   │       │   │   ├── SettingsMain.tsx
-│   │       │   │   ├── SettingsSimple.tsx
-│   │       │   │   ├── components/
-│   │       │   │   │   ├── SettingsLoadingView.tsx
-│   │       │   │   │   └── SettingsSidebar.tsx
-│   │       │   │   ├── hooks/
-│   │       │   │   │   └── useSettingsActions.ts
-│   │       │   │   ├── tabs/
-│   │       │   │   │   ├── AISettings.tsx
-│   │       │   │   │   ├── BackupSettings.tsx
-│   │       │   │   │   ├── DatabaseMaintenanceSettings.tsx
-│   │       │   │   │   ├── EditorSettings.tsx
-│   │       │   │   │   ├── GeneralSettings.tsx
-│   │       │   │   │   ├── PrivacySettings.tsx
-│   │       │   │   │   ├── ShortcutsSettings.tsx
-│   │       │   │   │   ├── UISettings.tsx
-│   │       │   │   │   └── index.ts
-│   │       │   │   └── types.ts
-│   │       │   ├── DatabaseMaintenance/ # 資料庫維護
-│   │       │   │   ├── DatabaseMaintenance.tsx
-│   │       │   │   └── DatabaseMaintenanceSimple.tsx
-│   │       │   └── Statistics/       # 創作統計頁面
-│   │       │       └── Statistics.tsx
-│   │       ├── store/                # Redux store
-│   │       │   ├── store.ts          # Store 配置
-│   │       │   └── slices/           # Redux slices
-│   │       │       ├── aiSlice.ts
-│   │       │       ├── chaptersSlice.ts
-│   │       │       ├── charactersSlice.ts
-│   │       │       ├── editorSlice.ts
-│   │       │       ├── errorSlice.ts
-│   │       │       ├── notificationSlice.ts
-│   │       │       ├── projectsSlice.ts
-│   │       │       ├── settingsSlice.ts
-│   │       │       ├── templatesSlice.ts
-│   │       │       └── uiSlice.ts
-│   │       ├── services/             # 前端服務
-│   │       │   ├── autoBackupService.ts
-│   │       │   ├── backupService.ts
-│   │       │   ├── saveManager.ts
-│   │       │   ├── settingsService.ts
-│   │       │   ├── statisticsService.ts
-│   │       │   ├── templateCharacterService.ts
-│   │       │   └── templateService.ts
-│   │       ├── hooks/                # 自定義 hooks
-│   │       │   ├── redux.ts
-│   │       │   ├── useAutoSave.ts
-│   │       │   ├── useErrorHandler.ts
-│   │       │   ├── useSettings.ts
-│   │       │   └── useTemplateApplication.ts
-│   │       ├── types/                # TypeScript 類型定義
-│   │       │   ├── character.ts
-│   │       │   ├── editor.ts
-│   │       │   ├── error.ts
-│   │       │   ├── global.d.ts
-│   │       │   └── template.ts
-│   │       ├── data/                 # 資料定義
-│   │       │   ├── characterArchetypes.ts
-│   │       │   ├── defaultTemplates.ts
-│   │       │   ├── faqData.ts
-│   │       │   ├── isekaiWorldElements.ts
-│   │       │   ├── tutorialSteps.ts
-│   │       │   └── templates/           # 模板資料檔案
-│   │       │       ├── fantasyTemplate.ts
-│   │       │       ├── isekaiTemplate.ts
-│   │       │       ├── schoolTemplate.ts
-│   │       │       └── scifiTemplate.ts
-│   │       └── utils/                # 工具函數
-│   │           └── errorUtils.ts
-│   ├── __tests__/                    # 整合測試
-│   │   ├── integration/              # 整合測試
-│   │   │   ├── components/           # 組件整合測試
-│   │   │   │   └── componentInteractions.test.tsx
-│   │   │   ├── e2e/                  # 端到端測試
-│   │   │   │   └── completeWorkflow.test.tsx
-│   │   │   ├── workflows/            # 工作流程測試
-│   │   │   │   ├── characterManagement.test.tsx
-│   │   │   │   ├── editorWorkflow.test.tsx
-│   │   │   │   └── projectManagement.test.tsx
-│   │   │   ├── utils/                # 測試工具
-│   │   │   │   └── testUtils.tsx
-│   │   │   └── setup.ts              # 測試設置
-│   ├── assets/                       # 靜態資源
-│   └── test-data/                    # 測試資料
-├── scripts/                          # 腳本目錄
-│   ├── quick-install.js              # 一鍵安裝腳本
-│   ├── diagnostic.js                 # 系統診斷腳本
-│   ├── fix-eslint.sh                 # ESLint 修復腳本
-│   ├── manual-package.js             # 手動打包腳本
-│   ├── simple-package.js             # 簡化打包腳本
-│   ├── release.js                    # 發布腳本
-│   └── optimize-resources.js         # 資源優化腳本
-├── docs/                             # 文檔目錄
-│   ├── README.md                     # 文檔說明
-│   ├── ESLINT_QUICK_REFERENCE.md     # ESLint 快速參考
-│   └── ESLINT_CONFIGURATION_GUIDE.md # ESLint 配置指南
-├── assets/                           # 應用資源
-│   ├── app-info.json                 # 應用信息
-│   ├── icon.ico                      # 應用圖標 (ICO)
-│   └── icon.svg                      # 應用圖標 (SVG)
-├── .kiro/                            # Kiro AI 助手設定
-│   ├── steering/                     # 全局規則
-│   └── specs/                        # 專案規格
-├── .claude/                          # Claude AI 設定
-├── .specstory/                       # 規格故事設定
-├── .vscode/                          # VS Code 設定
-├── dist/                             # 建置輸出
-├── out/                              # Electron 打包輸出
-├── coverage/                         # 測試覆蓋率報告
-├── node_modules/                     # Node.js 依賴
-├── .git/                             # Git 版本控制
-├── .DS_Store                         # macOS 系統文件
-├── .gitignore                        # Git 忽略文件
-├── .eslintrc.js                      # ESLint 配置
-├── .eslintrc.reference.js            # ESLint 參考配置
-├── .cursorindexingignore             # Cursor 索引忽略
-├── package.json                      # 專案配置
-├── package-lock.json                 # 依賴鎖定文件
+├── electron/                         # Electron 版本源碼
+│   └── main/                         # Electron 主程序
+│       ├── main.ts                   # 主程序入口
+│       ├── preload.ts                # 預載腳本
+│       ├── database/                 # 資料庫相關
+│       │   └── database.ts           # SQLite 資料庫管理
+│       ├── services/                 # 核心服務
+│       │   ├── ollamaService.ts      # Ollama AI 服務
+│       │   ├── contextManager.ts     # 上下文管理器
+│       │   ├── updateService.ts      # 自動更新服務
+│       │   └── databaseMaintenance.ts # 資料庫維護
+│       ├── ipc/                      # IPC 處理器
+│       │   ├── ipcHandlers.ts        # 主要 IPC 處理
+│       │   ├── aiHandlers.ts         # AI 相關處理
+│       │   ├── basicHandlers.ts      # 基礎處理器
+│       │   └── updateHandlers.ts     # 更新相關處理
+│       └── __tests__/                # 測試文件
+│           ├── database/             # 資料庫測試
+│           ├── services/             # 服務測試
+│           ├── integration/          # 整合測試
+│           └── performance/          # 性能測試
+├── src-tauri/                        # Tauri 版本源碼
+│   ├── src/                          # Rust 源碼
+│   │   ├── main.rs                   # Rust 主程序入口
+│   │   ├── lib.rs                    # 程式庫入口
+│   │   ├── commands/                 # Tauri 命令模組
+│   │   │   ├── mod.rs                # 模組定義
+│   │   │   ├── system.rs             # 系統命令
+│   │   │   ├── project.rs            # 專案管理命令
+│   │   │   ├── chapter.rs            # 章節管理命令
+│   │   │   └── character.rs          # 角色管理命令
+│   │   └── database/                 # 資料庫模組
+│   │       ├── mod.rs                # 模組定義
+│   │       ├── connection.rs         # 資料庫連接
+│   │       ├── models.rs             # 資料模型
+│   │       └── migrations.rs         # 資料庫遷移
+│   ├── Cargo.toml                    # Rust 依賴配置
+│   ├── tauri.conf.json               # Tauri 配置
+│   └── capabilities/                 # 權限配置
+├── src/                              # 共用前端源碼
+│   └── renderer/                     # React 前端
+│       ├── index.html                # HTML 入口
+│       └── src/
+│           ├── main-stable.tsx       # 穩定版本入口
+│           ├── App.tsx               # 主應用組件
+│           ├── index.css             # 全局樣式
+│           ├── api/                  # API 適配層
+│           │   ├── index.ts          # 統一 API 入口
+│           │   ├── types.ts          # API 介面定義
+│           │   ├── electron.ts       # Electron API 實現
+│           │   └── tauri.ts          # Tauri API 實現
+│           ├── pages/
+│           │   ├── DatabaseTest.tsx  # Tauri 資料庫測試頁面
+│           │   └── TauriTest.tsx     # Tauri 功能測試頁面
+│           ├── components/           # React 組件 (詳細結構略)
+│           ├── store/                # Redux 狀態管理
+│           ├── services/             # 前端服務
+│           ├── hooks/                # 自定義 hooks
+│           ├── types/                # TypeScript 類型定義
+│           ├── data/                 # 資料定義
+│           └── utils/                # 工具函數
+├── package.json                      # 專案配置 (雙版本支援)
 ├── tsconfig.json                     # TypeScript 配置
-├── tsconfig.main.json                # 主程序 TypeScript 配置
+├── tsconfig.electron.json            # Electron TypeScript 配置
 ├── vite.config.ts                    # Vite 配置
 ├── tailwind.config.js                # Tailwind CSS 配置
-├── postcss.config.js                 # PostCSS 配置
 ├── jest.config.js                    # Jest 測試配置
 ├── forge.config.js                   # Electron Forge 配置
-├── forge.config.js.backup            # Forge 配置備份
-├── forge.config.js.temp              # Forge 配置臨時文件
-├── build.js                          # 建置腳本
-├── start-dev.sh                      # 開發環境啟動腳本
-├── install-test-deps.js              # 測試依賴安裝腳本
-├── run-tests.js                      # 測試執行腳本
-├── run-unit-tests.js                 # 單元測試執行腳本
-├── run-integration-tests.js          # 整合測試執行腳本
-├── run-performance-tests.js          # 性能測試執行腳本
-├── test-*.js                         # 各種功能測試腳本
-├── INTEGRATION-TEST-REPORT.json      # 整合測試報告
-├── INTEGRATION-TEST-REPORT.md        # 整合測試報告 (Markdown)
-├── TASK-*.md                         # 任務完成摘要文件
-├── README.md                         # 專案說明文件
-├── README_INSTALL.md                 # 快速安裝說明
-├── INSTALLATION_GUIDE.md             # 詳細安裝指南
-├── MANUAL_TESTING_GUIDE.md           # 手動測試指南
-├── CLAUDE.md                         # Claude AI 說明
-└── readmd.md                         # 額外說明文件
+└── TAURI-MIGRATION.md                # Tauri 遷移進度文檔
 ```
 
 ## 🧪 測試
@@ -590,6 +433,11 @@ AI 功能通過 Ollama API 實現：
 ---
 
 ## 版本變更紀錄
+
+### Tauri 遷移分支 (feature/tauri-migration)
+- 0.4.12+tauri (2025-07-29)：🦀 **Tauri 版本 SQLite 資料庫連接完成**，Rust 後端架構建立，雙版本並行開發架構實現，專案/章節/角色 CRUD 操作完整實現，前端 API 適配層完成，PRAGMA 語句修復，資料庫 migrations 系統建立
+
+### Electron 穩定版本
 - 0.4.12 (2025-07-28)：資料管理功能整合為單一入口，系統設定儲存功能修復，修復 main-stable.tsx 路由問題，新增系統對話框 IPC 處理器，更新版權年份至 2025
 - 0.4.11 (2025-07-28)：教學系統架構修復，移除無用自動彈出通知，模板管理功能完善，修復 Redux 命名衝突和專案創建問題，UI 互動優化和滾動問題解決
 - 0.4.10 (2025-07-28)：幫助系統架構重構，修復儀表板「使用說明」無法開啟問題，完整使用手冊和快速入門指南，角色關係設計理念說明，教學系統修復和優化，統一界面主題和提升用戶體驗
