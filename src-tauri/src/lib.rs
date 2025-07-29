@@ -1,5 +1,6 @@
 mod commands;
 mod database;
+mod services;
 
 use commands::system::{get_app_version, quit_app, reload_app};
 use commands::project::{get_all_projects, get_project_by_id, create_project, update_project, delete_project};
@@ -8,6 +9,11 @@ use commands::character::{
     get_characters_by_project_id, get_character_by_id, create_character, update_character, delete_character,
     create_character_relationship, delete_character_relationship, clear_character_relationships,
 };
+use commands::ai::{
+    check_ollama_service, get_service_status, list_models, get_models_info, check_model_availability,
+    generate_text, generate_with_context, update_ollama_config,
+};
+use commands::settings::{get_setting, set_setting, get_all_settings, reset_settings};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -55,6 +61,20 @@ pub fn run() {
       create_character_relationship,
       delete_character_relationship,
       clear_character_relationships,
+      // AI commands
+      check_ollama_service,
+      get_service_status,
+      list_models,
+      get_models_info,
+      check_model_availability,
+      generate_text,
+      generate_with_context,
+      update_ollama_config,
+      // Settings commands
+      get_setting,
+      set_setting,
+      get_all_settings,
+      reset_settings,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

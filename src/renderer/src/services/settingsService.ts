@@ -1,4 +1,5 @@
 import { AppSettings, DEFAULT_SETTINGS } from '../store/slices/settingsSlice';
+import { api } from '../api';
 
 const SETTINGS_KEY = 'genesis-chronicle-settings';
 
@@ -35,11 +36,13 @@ export class SettingsService {
       this.saveSettingsHistory(settings);
       
       // 同時通知主程序更新設定
-      if (window.electronAPI?.settings) {
-        // 將設定逐一儲存到 Electron 的設定系統
+      try {
+        // 將設定逐一儲存到統一的設定系統
         for (const [key, value] of Object.entries(settings)) {
-          await window.electronAPI.settings.set(key, value);
+          await api.settings.set(key, value);
         }
+      } catch (error) {
+        console.warn('同步設定到後端失敗:', error);
       }
       
       // 通知監聽器
@@ -58,8 +61,10 @@ export class SettingsService {
       localStorage.removeItem(SETTINGS_KEY);
       
       // 通知主程序重置設定
-      if (window.electronAPI?.settings) {
-        await window.electronAPI.settings.reset();
+      try {
+        await api.settings.reset();
+      } catch (error) {
+        console.warn('重置後端設定失敗:', error);
       }
     } catch (error) {
       console.error('重置設定失敗:', error);

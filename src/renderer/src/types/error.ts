@@ -153,7 +153,12 @@ export const ERROR_MESSAGES: Record<string, {
           type: 'button',
           label: '重新啟動',
           handler: async () => {
-            window.electronAPI?.app?.restart();
+            try {
+              const { api } = await import('../api');
+              await api.system.reloadApp();
+            } catch (error) {
+              window.location.reload();
+            }
           }
         },
         priority: 1

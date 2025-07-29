@@ -4,7 +4,7 @@
   "version": "2.0.0-alpha.1",
   "identifier": "com.genesis-chronicle.app",
   "build": {
-    "frontendDist": "../dist",
+    "frontendDist": "../dist/renderer",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "npm run dev:renderer",
     "beforeBuildCommand": "npm run build:renderer"
@@ -22,7 +22,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com http://127.0.0.1:11434 http://localhost:11434; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' http://127.0.0.1:11434 http://localhost:11434 ipc: ipc://localhost tauri: https://tauri.localhost ws://localhost:*; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com data:;"
     }
   },
   "bundle": {

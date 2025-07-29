@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { api } from '../../api';
 
 interface AIState {
   isOllamaConnected: boolean;
@@ -63,11 +64,7 @@ export const checkOllamaService = createAsyncThunk(
     try {
       console.log('Redux: 檢查 Ollama 服務...');
       
-      if (!window.electronAPI?.ai) {
-        throw new Error('electronAPI.ai 不可用');
-      }
-      
-      const isConnected = await window.electronAPI.ai.checkOllamaService();
+      const isConnected = await api.ai.checkOllamaService();
       console.log('Redux: Ollama 服務結果:', isConnected);
       return isConnected;
     } catch (error) {
@@ -107,7 +104,7 @@ export const fetchServiceStatus = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log('Redux: 獲取服務狀態...');
-      const status = await window.electronAPI.ai.getServiceStatus();
+      const status = await api.ai.getServiceStatus();
       console.log('Redux: 服務狀態結果:', status);
       return status;
     } catch (error) {
@@ -122,7 +119,7 @@ export const fetchAvailableModels = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log('Redux: 獲取可用模型...');
-      const models = await window.electronAPI.ai.listModels();
+      const models = await api.ai.listModels();
       console.log('Redux: 可用模型結果:', models);
       return models;
     } catch (error) {
@@ -137,7 +134,7 @@ export const fetchModelsInfo = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log('Redux: 獲取模型詳細資訊...');
-      const modelsInfo = await window.electronAPI.ai.getModelsInfo();
+      const modelsInfo = await api.ai.getModelsInfo();
       console.log('Redux: 模型詳細資訊結果:', modelsInfo);
       return modelsInfo;
     } catch (error) {
@@ -150,7 +147,7 @@ export const fetchModelsInfo = createAsyncThunk(
 export const checkModelAvailability = createAsyncThunk(
   'ai/checkModelAvailability',
   async (modelName: string) => {
-    const result = await window.electronAPI.ai.checkModelAvailability(modelName);
+    const result = await api.ai.checkModelAvailability(modelName);
     return { modelName, ...result };
   }
 );
@@ -162,7 +159,7 @@ export const generateText = createAsyncThunk(
     model: string;
     aiParams: AIParameters;
   }) => {
-    const result = await window.electronAPI.ai.generateText(
+    const result = await api.ai.generateText(
       params.prompt,
       params.model,
       params.aiParams

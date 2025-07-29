@@ -1,91 +1,102 @@
-import { invoke } from '@tauri-apps/api/core';
 import type { API } from './types';
+
+// 安全的 invoke 函數
+const safeInvoke = async (command: string, args?: any) => {
+  try {
+    // 動態載入 Tauri API
+    const { invoke } = await import('@tauri-apps/api/core');
+    return await invoke(command, args);
+  } catch (error) {
+    console.error(`Tauri command ${command} failed:`, error);
+    throw error;
+  }
+};
 
 // Tauri API 實現
 export const tauriAPI: API = {
   projects: {
-    getAll: () => invoke('get_all_projects'),
-    create: (project) => invoke('create_project', { project }),
-    update: (project) => invoke('update_project', { project }),
-    delete: (id) => invoke('delete_project', { id }),
-    getById: (id) => invoke('get_project_by_id', { id }),
+    getAll: () => safeInvoke('get_all_projects'),
+    create: (project) => safeInvoke('create_project', { project }),
+    update: (project) => safeInvoke('update_project', { project }),
+    delete: (id) => safeInvoke('delete_project', { id }),
+    getById: (id) => safeInvoke('get_project_by_id', { id }),
   },
   
   chapters: {
-    getByProjectId: (projectId) => invoke('get_chapters_by_project_id', { projectId }),
-    create: (chapter) => invoke('create_chapter', { chapter }),
-    update: (chapter) => invoke('update_chapter', { chapter }),
-    delete: (id) => invoke('delete_chapter', { id }),
-    getById: (id) => invoke('get_chapter_by_id', { id }),
+    getByProjectId: (projectId) => safeInvoke('get_chapters_by_project_id', { projectId }),
+    create: (chapter) => safeInvoke('create_chapter', { chapter }),
+    update: (chapter) => safeInvoke('update_chapter', { chapter }),
+    delete: (id) => safeInvoke('delete_chapter', { id }),
+    getById: (id) => safeInvoke('get_chapter_by_id', { id }),
   },
 
   characters: {
-    getByProjectId: (projectId) => invoke('get_characters_by_project_id', { projectId }),
-    create: (character) => invoke('create_character', { character }),
-    update: (character) => invoke('update_character', { character }),
-    delete: (id) => invoke('delete_character', { id }),
-    getById: (id) => invoke('get_character_by_id', { id }),
-    createRelationship: (relationship) => invoke('create_character_relationship', { relationship }),
-    deleteRelationship: (id) => invoke('delete_character_relationship', { id }),
-    clearRelationships: (characterId) => invoke('clear_character_relationships', { characterId }),
+    getByProjectId: (projectId) => safeInvoke('get_characters_by_project_id', { projectId }),
+    create: (character) => safeInvoke('create_character', { character }),
+    update: (character) => safeInvoke('update_character', { character }),
+    delete: (id) => safeInvoke('delete_character', { id }),
+    getById: (id) => safeInvoke('get_character_by_id', { id }),
+    createRelationship: (relationship) => safeInvoke('create_character_relationship', { relationship }),
+    deleteRelationship: (id) => safeInvoke('delete_character_relationship', { id }),
+    clearRelationships: (characterId) => safeInvoke('clear_character_relationships', { characterId }),
   },
 
   ai: {
-    checkOllamaService: () => invoke('check_ollama_service'),
-    getServiceStatus: () => invoke('get_ai_service_status'),
-    listModels: () => invoke('list_ai_models'),
-    getModelsInfo: () => invoke('get_models_info'),
-    checkModelAvailability: (modelName) => invoke('check_model_availability', { modelName }),
-    generateText: (prompt, model, params) => invoke('generate_text', { prompt, model, params }),
+    checkOllamaService: () => safeInvoke('check_ollama_service'),
+    getServiceStatus: () => safeInvoke('get_service_status'),
+    listModels: () => safeInvoke('list_models'),
+    getModelsInfo: () => safeInvoke('get_models_info'),
+    checkModelAvailability: (modelName) => safeInvoke('check_model_availability', { modelName }),
+    generateText: (prompt, model, params) => safeInvoke('generate_text', { prompt, model, params }),
     generateWithContext: (projectId, chapterId, position, model, params) => 
-      invoke('generate_with_context', { projectId, chapterId, position, model, params }),
-    updateOllamaConfig: (config) => invoke('update_ollama_config', { config }),
+      safeInvoke('generate_with_context', { projectId: parseInt(projectId), chapterId: parseInt(chapterId), position, model, params }),
+    updateOllamaConfig: (config) => safeInvoke('update_ollama_config', { config }),
   },
 
   context: {
     buildContext: (projectId, chapterId, position) => 
-      invoke('build_context', { projectId, chapterId, position }),
+      safeInvoke('build_context', { projectId, chapterId, position }),
     compressContext: (context, maxTokens) => 
-      invoke('compress_context', { context, maxTokens }),
-    getContextStats: (projectId) => invoke('get_context_stats', { projectId }),
+      safeInvoke('compress_context', { context, maxTokens }),
+    getContextStats: (projectId) => safeInvoke('get_context_stats', { projectId }),
   },
 
   settings: {
-    get: (key) => invoke('get_setting', { key }),
-    set: (key, value) => invoke('set_setting', { key, value }),
-    getAll: () => invoke('get_all_settings'),
-    reset: () => invoke('reset_settings'),
+    get: (key) => safeInvoke('get_setting', { key }),
+    set: (key, value) => safeInvoke('set_setting', { key, value }),
+    getAll: () => safeInvoke('get_all_settings'),
+    reset: () => safeInvoke('reset_settings'),
   },
 
   database: {
-    backup: (path) => invoke('backup_database', { path }),
-    restore: (path) => invoke('restore_database', { path }),
-    runMaintenance: () => invoke('run_database_maintenance'),
-    getStats: () => invoke('get_database_stats'),
+    backup: (path) => safeInvoke('backup_database', { path }),
+    restore: (path) => safeInvoke('restore_database', { path }),
+    runMaintenance: () => safeInvoke('run_database_maintenance'),
+    getStats: () => safeInvoke('get_database_stats'),
   },
 
   system: {
-    getAppVersion: () => invoke('get_app_version'),
+    getAppVersion: () => safeInvoke('get_app_version'),
     openExternal: async (url) => {
       // 在 Tauri v2 中，shell 功能需要通過 invoke 調用後端
-      await invoke('open_external', { url });
+      await safeInvoke('open_external', { url });
     },
     showSaveDialog: async (options) => {
       // 在 Tauri v2 中，對話框功能需要通過 invoke 調用後端
-      return await invoke('show_save_dialog', { options });
+      return await safeInvoke('show_save_dialog', { options });
     },
     showOpenDialog: async (options) => {
       // 在 Tauri v2 中，對話框功能需要通過 invoke 調用後端
-      return await invoke('show_open_dialog', { options });
+      return await safeInvoke('show_open_dialog', { options });
     },
-    quitApp: () => invoke('quit_app'),
-    reloadApp: () => invoke('reload_app'),
+    quitApp: () => safeInvoke('quit_app'),
+    reloadApp: () => safeInvoke('reload_app'),
   },
 
   updates: {
-    checkForUpdates: () => invoke('check_for_updates'),
-    downloadUpdate: () => invoke('download_update'),
-    installUpdate: () => invoke('install_update'),
-    setAutoUpdate: (enabled) => invoke('set_auto_update', { enabled }),
+    checkForUpdates: () => safeInvoke('check_for_updates'),
+    downloadUpdate: () => safeInvoke('download_update'),
+    installUpdate: () => safeInvoke('install_update'),
+    setAutoUpdate: (enabled) => safeInvoke('set_auto_update', { enabled }),
   },
 };

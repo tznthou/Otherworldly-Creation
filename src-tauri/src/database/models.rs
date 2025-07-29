@@ -7,7 +7,7 @@ pub struct Project {
     pub name: String,
     pub description: Option<String>,
     pub r#type: Option<String>, // 使用 r#type 因為 type 是 Rust 關鍵字
-    pub template_data: Option<String>, // JSON 字串
+    pub settings: Option<String>, // JSON 字串
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -60,7 +60,7 @@ pub struct CreateProjectRequest {
     pub name: String,
     pub description: Option<String>,
     pub r#type: Option<String>,
-    pub template_data: Option<String>,
+    pub settings: Option<String>,
 }
 
 // 更新專案的請求結構
@@ -70,7 +70,7 @@ pub struct UpdateProjectRequest {
     pub name: String,
     pub description: Option<String>,
     pub r#type: Option<String>,
-    pub template_data: Option<String>,
+    pub settings: Option<String>,
 }
 
 // 新增章節的請求結構

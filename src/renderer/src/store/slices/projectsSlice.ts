@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { api } from '../../api';
 
 export interface Project {
   id: string;
@@ -35,7 +36,7 @@ const initialState: ProjectsState = {
 export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
   async () => {
-    const projects = await window.electronAPI.projects.getAll();
+    const projects = await api.projects.getAll();
     // 確保日期是字符串格式
     return projects.map((project: any) => ({
       ...project,
@@ -48,8 +49,8 @@ export const fetchProjects = createAsyncThunk(
 export const createProject = createAsyncThunk(
   'projects/createProject',
   async (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const projectId = await window.electronAPI.projects.create(projectData);
-    const project = await window.electronAPI.projects.getById(projectId);
+    const projectId = await api.projects.create(projectData);
+    const project = await api.projects.getById(projectId);
     // 確保日期是字符串格式
     return {
       ...project,
@@ -62,7 +63,7 @@ export const createProject = createAsyncThunk(
 export const updateProject = createAsyncThunk(
   'projects/updateProject',
   async (project: Project) => {
-    await window.electronAPI.projects.update(project);
+    await api.projects.update(project);
     return project;
   }
 );
@@ -70,7 +71,7 @@ export const updateProject = createAsyncThunk(
 export const deleteProject = createAsyncThunk(
   'projects/deleteProject',
   async (projectId: string) => {
-    await window.electronAPI.projects.delete(projectId);
+    await api.projects.delete(projectId);
     return projectId;
   }
 );
@@ -78,7 +79,7 @@ export const deleteProject = createAsyncThunk(
 export const fetchProjectById = createAsyncThunk(
   'projects/fetchProjectById',
   async (projectId: string) => {
-    const project = await window.electronAPI.projects.getById(projectId);
+    const project = await api.projects.getById(projectId);
     return project;
   }
 );

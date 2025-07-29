@@ -10,7 +10,7 @@ pub async fn get_all_projects() -> Result<Vec<Project>, String> {
     let conn = db.lock().unwrap();
     
     let mut stmt = conn
-        .prepare("SELECT id, name, description, type, template_data, created_at, updated_at FROM projects ORDER BY updated_at DESC")
+        .prepare("SELECT id, name, description, type, settings, created_at, updated_at FROM projects ORDER BY updated_at DESC")
         .map_err(|e| e.to_string())?;
     
     let project_iter = stmt
@@ -20,7 +20,7 @@ pub async fn get_all_projects() -> Result<Vec<Project>, String> {
                 name: row.get(1)?,
                 description: row.get(2)?,
                 r#type: row.get(3)?,
-                template_data: row.get(4)?,
+                settings: row.get(4)?,
                 created_at: row.get(5)?,
                 updated_at: row.get(6)?,
             })
@@ -41,7 +41,7 @@ pub async fn get_project_by_id(id: String) -> Result<Project, String> {
     let conn = db.lock().unwrap();
     
     let mut stmt = conn
-        .prepare("SELECT id, name, description, type, template_data, created_at, updated_at FROM projects WHERE id = ?1")
+        .prepare("SELECT id, name, description, type, settings, created_at, updated_at FROM projects WHERE id = ?1")
         .map_err(|e| e.to_string())?;
     
     let project = stmt
@@ -51,7 +51,7 @@ pub async fn get_project_by_id(id: String) -> Result<Project, String> {
                 name: row.get(1)?,
                 description: row.get(2)?,
                 r#type: row.get(3)?,
-                template_data: row.get(4)?,
+                settings: row.get(4)?,
                 created_at: row.get(5)?,
                 updated_at: row.get(6)?,
             })
@@ -70,14 +70,14 @@ pub async fn create_project(project: CreateProjectRequest) -> Result<String, Str
     let now = Utc::now();
     
     conn.execute(
-        "INSERT INTO projects (id, name, description, type, template_data, created_at, updated_at) 
+        "INSERT INTO projects (id, name, description, type, settings, created_at, updated_at) 
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         params![
             project_id,
             project.name,
             project.description,
             project.r#type,
-            project.template_data,
+            project.settings,
             now,
             now
         ],
@@ -97,12 +97,12 @@ pub async fn update_project(project: UpdateProjectRequest) -> Result<(), String>
     
     let rows_affected = conn
         .execute(
-            "UPDATE projects SET name = ?1, description = ?2, type = ?3, template_data = ?4, updated_at = ?5 WHERE id = ?6",
+            "UPDATE projects SET name = ?1, description = ?2, type = ?3, settings = ?4, updated_at = ?5 WHERE id = ?6",
             params![
                 project.name,
                 project.description,
                 project.r#type,
-                project.template_data,
+                project.settings,
                 now,
                 project.id
             ],

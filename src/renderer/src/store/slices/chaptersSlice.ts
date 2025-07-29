@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Descendant } from 'slate';
+import { api } from '../../api';
 
 export interface Chapter {
   id: string;
@@ -39,7 +40,7 @@ const initialState: ChaptersState = {
 export const fetchChaptersByProjectId = createAsyncThunk(
   'chapters/fetchByProjectId',
   async (projectId: string) => {
-    const chapters = await window.electronAPI.chapters.getByProjectId(projectId);
+    const chapters = await api.chapters.getByProjectId(projectId);
     return chapters.map((chapter: any) => ({
       ...chapter,
       content: chapter.content ? JSON.parse(chapter.content) : [{ type: 'paragraph', children: [{ text: '' }] }],
@@ -57,11 +58,11 @@ export const createChapter = createAsyncThunk(
     content?: Descendant[];
     order?: number;
   }) => {
-    const chapterId = await window.electronAPI.chapters.create({
+    const chapterId = await api.chapters.create({
       ...chapterData,
       content: JSON.stringify(chapterData.content || [{ type: 'paragraph', children: [{ text: '' }] }]),
     });
-    const chapter = await window.electronAPI.chapters.getById(chapterId);
+    const chapter = await api.chapters.getById(chapterId);
     return {
       ...chapter,
       content: chapter.content ? JSON.parse(chapter.content) : [{ type: 'paragraph', children: [{ text: '' }] }],
@@ -74,7 +75,7 @@ export const createChapter = createAsyncThunk(
 export const updateChapter = createAsyncThunk(
   'chapters/update',
   async (chapter: Chapter) => {
-    await window.electronAPI.chapters.update({
+    await api.chapters.update({
       ...chapter,
       content: JSON.stringify(chapter.content),
     });
@@ -85,7 +86,7 @@ export const updateChapter = createAsyncThunk(
 export const deleteChapter = createAsyncThunk(
   'chapters/delete',
   async (chapterId: string) => {
-    await window.electronAPI.chapters.delete(chapterId);
+    await api.chapters.delete(chapterId);
     return chapterId;
   }
 );
@@ -93,7 +94,7 @@ export const deleteChapter = createAsyncThunk(
 export const fetchChapterById = createAsyncThunk(
   'chapters/fetchById',
   async (chapterId: string) => {
-    const chapter = await window.electronAPI.chapters.getById(chapterId);
+    const chapter = await api.chapters.getById(chapterId);
     return {
       ...chapter,
       content: chapter.content ? JSON.parse(chapter.content) : [{ type: 'paragraph', children: [{ text: '' }] }],

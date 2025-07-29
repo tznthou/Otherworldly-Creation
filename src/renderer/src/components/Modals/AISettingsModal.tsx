@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel } from '../../store/slices/aiSlice';
+import { api } from '../../api';
 
 const AISettingsModal: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -42,8 +43,8 @@ const AISettingsModal: React.FC = () => {
       setServiceStatus(prev => ({ ...prev, loading: true }));
       
       const [status, models] = await Promise.all([
-        window.electronAPI.ai.getServiceStatus(),
-        window.electronAPI.ai.listModels(),
+        api.ai.getServiceStatus(),
+        api.ai.listModels(),
       ]);
 
       setServiceStatus({
@@ -75,7 +76,7 @@ const AISettingsModal: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const result = await window.electronAPI.ai.updateOllamaConfig(settings);
+      const result = await api.ai.updateOllamaConfig(settings);
       
       if (result.success) {
         // 更新選擇的模型
@@ -112,7 +113,7 @@ const AISettingsModal: React.FC = () => {
 
   const handleTestConnection = async () => {
     try {
-      const available = await window.electronAPI.ai.checkOllamaService();
+      const available = await api.ai.checkOllamaService();
       
       dispatch(addNotification({
         type: available ? 'success' : 'warning',

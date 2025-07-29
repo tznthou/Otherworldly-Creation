@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { api } from '../../api';
 
 export interface Relationship {
   id?: string;
@@ -46,7 +47,7 @@ const initialState: CharactersState = {
 export const fetchCharactersByProjectId = createAsyncThunk(
   'characters/fetchCharactersByProjectId',
   async (projectId: string) => {
-    const characters = await window.electronAPI.characters.getByProjectId(projectId);
+    const characters = await api.characters.getByProjectId(projectId);
     return characters;
   }
 );
@@ -54,17 +55,17 @@ export const fetchCharactersByProjectId = createAsyncThunk(
 export const createCharacter = createAsyncThunk(
   'characters/createCharacter',
   async (characterData: Omit<Character, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const characterId = await window.electronAPI.characters.create(characterData);
+    const characterId = await api.characters.create(characterData);
     
     // 如果有關係資料，創建關係
     if (characterData.relationships && characterData.relationships.length > 0) {
-      await window.electronAPI.characters.updateRelationships(
+      await api.characters.updateRelationships(
         characterId,
         characterData.relationships
       );
     }
     
-    const character = await window.electronAPI.characters.getById(characterId);
+    const character = await api.characters.getById(characterId);
     return character;
   }
 );
@@ -72,11 +73,11 @@ export const createCharacter = createAsyncThunk(
 export const updateCharacter = createAsyncThunk(
   'characters/updateCharacter',
   async (character: Character) => {
-    await window.electronAPI.characters.update(character);
+    await api.characters.update(character);
     
     // 如果有關係資料，更新關係
     if (character.relationships) {
-      await window.electronAPI.characters.updateRelationships(
+      await api.characters.updateRelationships(
         character.id,
         character.relationships
       );
@@ -89,7 +90,7 @@ export const updateCharacter = createAsyncThunk(
 export const deleteCharacter = createAsyncThunk(
   'characters/deleteCharacter',
   async (characterId: string) => {
-    await window.electronAPI.characters.delete(characterId);
+    await api.characters.delete(characterId);
     return characterId;
   }
 );
@@ -97,7 +98,7 @@ export const deleteCharacter = createAsyncThunk(
 export const fetchCharacterById = createAsyncThunk(
   'characters/fetchCharacterById',
   async (characterId: string) => {
-    const character = await window.electronAPI.characters.getById(characterId);
+    const character = await api.characters.getById(characterId);
     return character;
   }
 );
@@ -105,8 +106,8 @@ export const fetchCharacterById = createAsyncThunk(
 export const updateCharacterRelationships = createAsyncThunk(
   'characters/updateCharacterRelationships',
   async ({ characterId, relationships }: { characterId: string; relationships: Relationship[] }) => {
-    await window.electronAPI.characters.updateRelationships(characterId, relationships);
-    const character = await window.electronAPI.characters.getById(characterId);
+    await api.characters.updateRelationships(characterId, relationships);
+    const character = await api.characters.getById(characterId);
     return character;
   }
 );
@@ -114,7 +115,7 @@ export const updateCharacterRelationships = createAsyncThunk(
 export const checkRelationshipConsistency = createAsyncThunk(
   'characters/checkRelationshipConsistency',
   async (projectId: string) => {
-    const issues = await window.electronAPI.characters.checkRelationshipConsistency(projectId);
+    const issues = await api.characters.checkRelationshipConsistency(projectId);
     return issues;
   }
 );

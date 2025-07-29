@@ -8,7 +8,7 @@ import QuickActions from './QuickActions';
 const Dashboard: React.FC = () => {
   const dispatch = useAppDispatch();
   const { projects, loading } = useAppSelector(state => state.projects);
-  const { isOllamaConnected, availableModels } = useAppSelector(state => state.ai); // 重新啟用 AI state
+  const { isOllamaConnected, availableModels, modelsInfo } = useAppSelector(state => state.ai); // 重新啟用 AI state
 
   useEffect(() => {
     // 載入專案列表
@@ -16,7 +16,12 @@ const Dashboard: React.FC = () => {
     
     // AI 服務狀態完全由 App.tsx 處理，這裡不再重複調用
     console.log('Dashboard: AI 服務由 App.tsx 統一管理');
-  }, [dispatch]);
+    console.log('Dashboard: AI 狀態 -', {
+      isOllamaConnected,
+      availableModels: availableModels.length,
+      modelsInfo: modelsInfo?.success
+    });
+  }, [dispatch, isOllamaConnected, availableModels, modelsInfo]);
 
   if (loading) {
     return (
@@ -133,14 +138,24 @@ const Dashboard: React.FC = () => {
                   可用模型：{availableModels.slice(0, 3).join(', ')}{availableModels.length > 3 ? '...' : ''}
                 </p>
               </div>
+            ) : isOllamaConnected === false ? (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                <h4 className="text-red-400 font-medium mb-2">⚠️ AI 服務未連接</h4>
+                <p className="text-sm text-gray-300 mb-2">
+                  Ollama 服務未啟動或無法連接。
+                </p>
+                <p className="text-sm text-red-400">
+                  請啟動 Ollama 服務以使用 AI 功能
+                </p>
+              </div>
             ) : (
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                <h4 className="text-blue-400 font-medium mb-2">🤖 AI 創作助手</h4>
+                <h4 className="text-blue-400 font-medium mb-2">🔄 正在檢查 AI 服務</h4>
                 <p className="text-sm text-gray-300 mb-2">
                   創世紀元整合 Ollama 本地 AI 引擎，為您的創作提供智能輔助。
                 </p>
                 <p className="text-sm text-gray-400">
-                  {isOllamaConnected === false ? '請啟動 Ollama 服務以使用 AI 功能' : '正在檢查 AI 服務狀態...'}
+                  正在檢查 AI 服務狀態和可用模型...
                 </p>
               </div>
             )}

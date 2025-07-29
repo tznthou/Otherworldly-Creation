@@ -45,16 +45,22 @@ const SimpleApp: React.FC = () => {
         }
         
         // 初始化 AI 服務（背景執行）
+        // 立即檢查一次，但不阻塞初始化
+        dispatch(checkOllamaService()).then(() => {
+          dispatch(fetchModelsInfo());
+        }).catch(error => {
+          console.error('AI 服務初始化失敗:', error);
+        });
+        
+        // 延遲再檢查一次以確保狀態更新
         setTimeout(async () => {
-          if (window.electronAPI?.ai) {
-            try {
-              await dispatch(checkOllamaService()).unwrap();
-              await dispatch(fetchModelsInfo()).unwrap();
-            } catch (error) {
-              console.error('AI 服務初始化失敗:', error);
-            }
+          try {
+            await dispatch(checkOllamaService()).unwrap();
+            await dispatch(fetchModelsInfo()).unwrap();
+          } catch (error) {
+            console.error('AI 服務延遲初始化失敗:', error);
           }
-        }, 2000);
+        }, 3000);
         
       } catch (error) {
         console.error('初始化失敗:', error);

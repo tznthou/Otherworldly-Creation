@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { fetchProjectById } from '../../store/slices/projectsSlice';
+import { api } from '../../api';
 
 interface Chapter {
   id: string;
@@ -32,7 +33,7 @@ const SimpleProjectEditor: React.FC = () => {
         await dispatch(fetchProjectById(id));
         
         // 載入章節列表
-        const chapterList = await window.electronAPI.chapters.getByProjectId(id);
+        const chapterList = await api.chapters.getByProjectId(id);
         setChapters(chapterList);
         
         // 如果有章節，載入第一個章節
@@ -42,7 +43,7 @@ const SimpleProjectEditor: React.FC = () => {
           setContent(firstChapter.content || '');
         } else {
           // 如果沒有章節，創建第一個章節
-          const newChapter = await window.electronAPI.chapters.create({
+          const newChapter = await api.chapters.create({
             projectId: id,
             title: '第一章',
             content: `開始你的創作...
@@ -56,7 +57,7 @@ const SimpleProjectEditor: React.FC = () => {
           });
           
           // 重新載入章節列表
-          const updatedChapters = await window.electronAPI.chapters.getByProjectId(id);
+          const updatedChapters = await api.chapters.getByProjectId(id);
           setChapters(updatedChapters);
           
           if (updatedChapters.length > 0) {
@@ -81,7 +82,7 @@ const SimpleProjectEditor: React.FC = () => {
     
     const timer = setTimeout(async () => {
       try {
-        await window.electronAPI.chapters.update({
+        await api.chapters.update({
           id: currentChapter.id,
           title: currentChapter.title,
           content: content,
@@ -106,7 +107,7 @@ const SimpleProjectEditor: React.FC = () => {
     if (!currentChapter) return;
     
     try {
-      await window.electronAPI.chapters.update({
+      await api.chapters.update({
         id: currentChapter.id,
         title: currentChapter.title,
         content: content,

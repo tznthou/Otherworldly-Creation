@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::Connection;
 
-const DB_VERSION: i32 = 2;
+const DB_VERSION: i32 = 3;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -32,6 +32,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v2(conn)?;
             update_version(conn, 2)?;
             log::info!("遷移到版本 2 完成");
+        }
+        
+        if current_version < 3 {
+            apply_migration_v3(conn)?;
+            update_version(conn, 3)?;
+            log::info!("遷移到版本 3 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -78,7 +84,7 @@ fn apply_migration_v1(conn: &Connection) -> Result<()> {
             name TEXT NOT NULL,
             description TEXT,
             type TEXT,
-            template_data TEXT,
+            settings TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )",
@@ -178,5 +184,64 @@ fn apply_migration_v2(_conn: &Connection) -> Result<()> {
     // 目前暫時空白，為未來的遷移預留
     
     log::info!("版本 2 遷移：暫無變更");
+    Ok(())
+}
+
+/// 版本 3: 將 template_data 欄位重命名為 settings 以匹配 Electron 版本
+fn apply_migration_v3(conn: &Connection) -> Result<()> {
+    // 檢查是否有 template_data 欄位
+    let has_template_data = conn.prepare("PRAGMA table_info(projects)")
+        .and_then(|mut stmt| {
+            let rows = stmt.query_map([], |row| {
+                let col_name: String = row.get(1)?;
+                Ok(col_name)
+            })?;
+            
+            for row in rows {
+                if let Ok(col_name) = row {
+                    if col_name == "template_data" {
+                        return Ok(true);
+                    }
+                }
+            }
+            Ok(false)
+        })
+        .unwrap_or(false);
+    
+    if has_template_data {
+        log::info!("發現 template_data 欄位，開始遷移...");
+        
+        // 1. 創建新的專案表
+        conn.execute(
+            "CREATE TABLE projects_new (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                type TEXT,
+                settings TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )",
+            [],
+        )?;
+        
+        // 2. 複製資料，將 template_data 重命名為 settings
+        conn.execute(
+            "INSERT INTO projects_new (id, name, description, type, settings, created_at, updated_at)
+             SELECT id, name, description, type, template_data, created_at, updated_at FROM projects",
+            [],
+        )?;
+        
+        // 3. 刪除舊表
+        conn.execute("DROP TABLE projects", [])?;
+        
+        // 4. 重命名新表
+        conn.execute("ALTER TABLE projects_new RENAME TO projects", [])?;
+        
+        log::info!("template_data 欄位已成功重命名為 settings");
+    } else {
+        log::info!("版本 3 遷移：projects 表結構已是正確的");
+    }
+    
     Ok(())
 }

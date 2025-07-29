@@ -9,6 +9,7 @@ import {
 } from '../../components/Characters';
 import TutorialOverlay, { useTutorial } from '../../components/Tutorial/TutorialOverlay';
 import { characterTutorial } from '../../data/tutorialSteps';
+import { api } from '../../api';
 
 const CharacterManager: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -42,12 +43,12 @@ const CharacterManager: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const characters = await window.electronAPI.characters.getByProjectId(projectId);
+      const characters = await api.characters.getByProjectId(projectId);
       setAllCharacters(characters);
       
       // 檢查關係一致性
       // 注意：checkRelationshipConsistency API 不存在，暫時跳過
-      // const issues = await window.electronAPI.characters.checkRelationshipConsistency(projectId);
+      // const issues = await api.characters.checkRelationshipConsistency(projectId);
       // setConsistencyIssues(issues);
     } catch (error) {
       console.error('載入角色列表失敗:', error);
@@ -63,7 +64,7 @@ const CharacterManager: React.FC = () => {
       if (projectId) {
         try {
           // 載入專案資訊
-          const project = await window.electronAPI.projects.getById(projectId);
+          const project = await api.projects.getById(projectId);
           if (project) {
             setProjectType(project.type);
           }
@@ -123,7 +124,7 @@ const CharacterManager: React.FC = () => {
       
       if (selectedCharacter) {
         // 更新現有角色
-        await window.electronAPI.characters.update({
+        await api.characters.update({
           ...selectedCharacter,
           ...formData,
         });
@@ -135,16 +136,16 @@ const CharacterManager: React.FC = () => {
           
           // 先清除現有關係 - 臨時使用直接 SQL 查詢的方式
           try {
-            if (typeof window.electronAPI.characters.clearRelationships === 'function') {
-              await window.electronAPI.characters.clearRelationships(selectedCharacter.id);
+            if (typeof api.characters.clearRelationships === 'function') {
+              await api.characters.clearRelationships(selectedCharacter.id);
             } else {
               console.log('clearRelationships API not available, using alternative method');
               // 如果 clearRelationships API 不可用，先獲取現有關係然後逐一刪除
-              const currentCharacter = await window.electronAPI.characters.getById(selectedCharacter.id);
+              const currentCharacter = await api.characters.getById(selectedCharacter.id);
               if (currentCharacter && currentCharacter.relationships) {
                 for (const rel of currentCharacter.relationships) {
-                  if (rel.id && typeof window.electronAPI.characters.deleteRelationship === 'function') {
-                    await window.electronAPI.characters.deleteRelationship(rel.id);
+                  if (rel.id && typeof api.characters.deleteRelationship === 'function') {
+                    await api.characters.deleteRelationship(rel.id);
                   }
                 }
               }
@@ -159,7 +160,7 @@ const CharacterManager: React.FC = () => {
             for (const relationship of formData.relationships) {
               console.log('Creating relationship:', relationship);
               try {
-                await window.electronAPI.characters.createRelationship({
+                await api.characters.createRelationship({
                   sourceId: selectedCharacter.id,
                   targetId: relationship.targetId,
                   type: relationship.type,
@@ -178,7 +179,7 @@ const CharacterManager: React.FC = () => {
         }
       } else {
         // 創建新角色
-        const characterId = await window.electronAPI.characters.create({
+        const characterId = await api.characters.create({
           ...formData,
           projectId,
         });
@@ -186,7 +187,7 @@ const CharacterManager: React.FC = () => {
         // 如果有關係資料，創建關係
         if (formData.relationships && formData.relationships.length > 0) {
           for (const relationship of formData.relationships) {
-            await window.electronAPI.characters.createRelationship({
+            await api.characters.createRelationship({
               sourceId: characterId,
               targetId: relationship.targetId,
               type: relationship.type,
@@ -202,7 +203,7 @@ const CharacterManager: React.FC = () => {
       // 重新檢查關係一致性
       // 注意：checkRelationshipConsistency API 不存在，這裡暫時註解掉
       // TODO: 實作 checkRelationshipConsistency API
-      // const issues = await window.electronAPI.characters.checkRelationshipConsistency(projectId);
+      // const issues = await api.characters.checkRelationshipConsistency(projectId);
       // setConsistencyIssues(issues);
       setConsistencyIssues([]);
       
