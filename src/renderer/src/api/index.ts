@@ -41,6 +41,7 @@ const getAPI = (): API => {
 
 // 統一的 API 接口
 export const api: API = getAPI();
+export default api;
 
 // 導出類型
 export * from './types';

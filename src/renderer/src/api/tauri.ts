@@ -43,26 +43,156 @@ export const tauriAPI: API = {
   
   chapters: {
     getByProjectId: (projectId) => safeInvoke('get_chapters_by_project_id', { projectId }),
-    create: (chapter) => safeInvoke('create_chapter', { chapter }),
-    update: (chapter) => safeInvoke('update_chapter', { chapter }),
+    create: (chapter) => safeInvoke('create_chapter', {
+      chapter: {
+        project_id: chapter.projectId,
+        title: chapter.title,
+        content: chapter.content,
+        order_index: chapter.orderIndex
+      }
+    }),
+    update: (chapter) => safeInvoke('update_chapter', {
+      chapter: {
+        id: chapter.id,
+        title: chapter.title,
+        content: chapter.content,
+        order_index: chapter.orderIndex
+      }
+    }),
     delete: (id) => safeInvoke('delete_chapter', { id }),
     getById: (id) => safeInvoke('get_chapter_by_id', { id }),
   },
 
   characters: {
-    getByProjectId: (projectId) => safeInvoke('get_characters_by_project_id', { projectId }),
-    create: (character) => safeInvoke('create_character', { character }),
-    update: (character) => safeInvoke('update_character', { character }),
+    getByProjectId: async (projectId) => {
+      const characters = await safeInvoke('get_characters_by_project_id', { projectId });
+      
+      // 轉換 Tauri 格式到前端格式，並載入關係資料
+      const charactersWithRelationships = await Promise.all(
+        characters.map(async (char: any) => {
+          let attributes = {};
+          try {
+            attributes = char.attributes ? JSON.parse(char.attributes) : {};
+          } catch (e) {
+            console.warn('Failed to parse character attributes:', char.attributes);
+          }
+          
+          // 載入該角色的關係資料
+          let relationships = [];
+          try {
+            const rawRelationships = await safeInvoke('get_character_relationships', { characterId: char.id });
+            relationships = rawRelationships.map((rel: any) => ({
+              id: rel.id,
+              targetId: rel.to_character_id,
+              type: rel.relationship_type,
+              description: rel.description,
+            }));
+          } catch (e) {
+            console.warn('Failed to load relationships for character:', char.id, e);
+          }
+          
+          return {
+            id: char.id,
+            projectId: char.project_id,
+            name: char.name,
+            description: char.description,
+            avatarUrl: char.avatar_url,
+            createdAt: new Date(char.created_at),
+            updatedAt: new Date(char.updated_at),
+            // 展開 attributes 到個別欄位
+            archetype: attributes.archetype || '',
+            age: attributes.age,
+            gender: attributes.gender || '',
+            appearance: attributes.appearance || '',
+            personality: attributes.personality || '',
+            background: attributes.background || char.description || '',
+            relationships,
+          };
+        })
+      );
+      
+      return charactersWithRelationships;
+    },
+    create: async (character) => {
+      console.log('Tauri API: create character called with:', character);
+      const payload = {
+        character: {
+          project_id: character.projectId,
+          name: character.name,
+          description: character.description,
+          attributes: character.attributes,
+          avatar_url: character.avatarUrl
+        }
+      };
+      console.log('Tauri API: sending payload:', payload);
+      try {
+        const result = await safeInvoke('create_character', payload);
+        console.log('Tauri API: create character result:', result);
+        return result;
+      } catch (error) {
+        console.error('Tauri API: create character failed:', error);
+        throw error;
+      }
+    },
+    update: (character) => safeInvoke('update_character', {
+      character: {
+        id: character.id,
+        name: character.name,
+        description: character.description,
+        attributes: character.attributes,
+        avatar_url: character.avatarUrl
+      }
+    }),
     delete: (id) => safeInvoke('delete_character', { id }),
-    getById: (id) => safeInvoke('get_character_by_id', { id }),
+    getById: async (id) => {
+      const char = await safeInvoke('get_character_by_id', { id });
+      let attributes = {};
+      try {
+        attributes = char.attributes ? JSON.parse(char.attributes) : {};
+      } catch (e) {
+        console.warn('Failed to parse character attributes:', char.attributes);
+      }
+      
+      // 載入該角色的關係資料
+      let relationships = [];
+      try {
+        const rawRelationships = await safeInvoke('get_character_relationships', { characterId: char.id });
+        relationships = rawRelationships.map((rel: any) => ({
+          id: rel.id,
+          targetId: rel.to_character_id,
+          type: rel.relationship_type,
+          description: rel.description,
+        }));
+      } catch (e) {
+        console.warn('Failed to load relationships for character:', char.id, e);
+      }
+      
+      return {
+        id: char.id,
+        projectId: char.project_id,
+        name: char.name,
+        description: char.description,
+        avatarUrl: char.avatar_url,
+        createdAt: new Date(char.created_at),
+        updatedAt: new Date(char.updated_at),
+        // 展開 attributes 到個別欄位
+        archetype: attributes.archetype || '',
+        age: attributes.age,
+        gender: attributes.gender || '',
+        appearance: attributes.appearance || '',
+        personality: attributes.personality || '',
+        background: attributes.background || char.description || '',
+        relationships,
+      };
+    },
     createRelationship: (relationship) => safeInvoke('create_character_relationship', {
-      from_character_id: relationship.fromCharacterId,
-      to_character_id: relationship.toCharacterId,
-      relationship_type: relationship.relationshipType,
+      fromCharacterId: relationship.fromCharacterId,
+      toCharacterId: relationship.toCharacterId,
+      relationshipType: relationship.relationshipType,
       description: relationship.description || null,
     }),
     deleteRelationship: (id) => safeInvoke('delete_character_relationship', { id }),
-    clearRelationships: (characterId) => safeInvoke('clear_character_relationships', { character_id: characterId }),
+    clearRelationships: (characterId) => safeInvoke('clear_character_relationships', { characterId }),
   },
 
   ai: {

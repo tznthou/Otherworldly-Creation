@@ -1,7 +1,7 @@
 use anyhow::Result;
-use rusqlite::Connection;
+use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 3;
+const DB_VERSION: i32 = 5;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -38,6 +38,18 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v3(conn)?;
             update_version(conn, 3)?;
             log::info!("遷移到版本 3 完成");
+        }
+        
+        if current_version < 4 {
+            apply_migration_v4(conn)?;
+            update_version(conn, 4)?;
+            log::info!("遷移到版本 4 完成");
+        }
+        
+        if current_version < 5 {
+            apply_migration_v5(conn)?;
+            update_version(conn, 5)?;
+            log::info!("遷移到版本 5 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -242,6 +254,200 @@ fn apply_migration_v3(conn: &Connection) -> Result<()> {
     } else {
         log::info!("版本 3 遷移：projects 表結構已是正確的");
     }
+    
+    Ok(())
+}
+
+/// 版本 4: 修復章節表的欄位名稱不匹配問題 (order_num -> order_index)
+fn apply_migration_v4(conn: &Connection) -> Result<()> {
+    // 檢查是否有 order_num 欄位
+    let has_order_num = conn.prepare("PRAGMA table_info(chapters)")
+        .and_then(|mut stmt| {
+            let rows = stmt.query_map([], |row| {
+                let col_name: String = row.get(1)?;
+                Ok(col_name)
+            })?;
+            
+            for row in rows {
+                if let Ok(col_name) = row {
+                    if col_name == "order_num" {
+                        return Ok(true);
+                    }
+                }
+            }
+            Ok(false)
+        })
+        .unwrap_or(false);
+    
+    if has_order_num {
+        log::info!("發現 order_num 欄位，開始修復章節表結構...");
+        
+        // 1. 創建新的章節表
+        conn.execute(
+            "CREATE TABLE chapters_new (
+                id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT,
+                order_index INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+            )",
+            [],
+        )?;
+        
+        // 2. 複製資料，將 order_num 重命名為 order_index
+        conn.execute(
+            "INSERT INTO chapters_new (id, project_id, title, content, order_index, created_at, updated_at)
+             SELECT id, project_id, title, content, order_num, created_at, updated_at FROM chapters",
+            [],
+        )?;
+        
+        // 3. 刪除舊表
+        conn.execute("DROP TABLE chapters", [])?;
+        
+        // 4. 重命名新表
+        conn.execute("ALTER TABLE chapters_new RENAME TO chapters", [])?;
+        
+        // 5. 重建索引
+        conn.execute(
+            "CREATE INDEX idx_chapters_project_id ON chapters (project_id)",
+            [],
+        )?;
+        
+        conn.execute(
+            "CREATE INDEX idx_chapters_order ON chapters (project_id, order_index)",
+            [],
+        )?;
+        
+        log::info!("chapters 表欄位已成功從 order_num 重命名為 order_index");
+    } else {
+        log::info!("版本 4 遷移：chapters 表結構已是正確的");
+    }
+    
+    Ok(())
+}
+
+/// 版本 5: 修復 characters 和 character_relationships 表結構以匹配 Tauri 模型
+fn apply_migration_v5(conn: &Connection) -> Result<()> {
+    log::info!("版本 5 遷移：修復 characters 和 character_relationships 表結構");
+    
+    // 1. 修復 characters 表
+    log::info!("開始修復 characters 表結構...");
+    
+    // 備份現有資料
+    let existing_characters: Vec<(String, String, String)> = conn
+        .prepare("SELECT id, project_id, name FROM characters")?
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            ))
+        })?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| anyhow::anyhow!("查詢現有角色失敗: {}", e))?;
+    
+    // 刪除舊表
+    conn.execute("DROP TABLE IF EXISTS characters", [])?;
+    
+    // 創建新表（匹配 Tauri 模型）
+    conn.execute(
+        "CREATE TABLE characters (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            attributes TEXT,
+            avatar_url TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    
+    // 重建索引
+    conn.execute(
+        "CREATE INDEX idx_characters_project_id ON characters (project_id)",
+        [],
+    )?;
+    
+    // 恢復資料
+    for (id, project_id, name) in existing_characters {
+        conn.execute(
+            "INSERT INTO characters (id, project_id, name) VALUES (?1, ?2, ?3)",
+            params![id, project_id, name],
+        )?;
+    }
+    
+    log::info!("characters 表結構修復完成");
+    
+    // 2. 修復 character_relationships 表
+    log::info!("開始修復 character_relationships 表結構...");
+    
+    // 備份現有關係資料
+    let existing_relationships: Vec<(String, String, String, String, Option<String>)> = conn
+        .prepare("SELECT id, source_id, target_id, type, description FROM character_relationships")?
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, Option<String>>(4)?,
+            ))
+        })?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| anyhow::anyhow!("查詢現有角色關係失敗: {}", e))?;
+    
+    // 刪除舊表
+    conn.execute("DROP TABLE IF EXISTS character_relationships", [])?;
+    
+    // 創建新表（匹配 Tauri 模型）
+    conn.execute(
+        "CREATE TABLE character_relationships (
+            id TEXT PRIMARY KEY,
+            from_character_id TEXT NOT NULL,
+            to_character_id TEXT NOT NULL,
+            relationship_type TEXT NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (from_character_id) REFERENCES characters (id) ON DELETE CASCADE,
+            FOREIGN KEY (to_character_id) REFERENCES characters (id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    
+    // 重建索引
+    conn.execute(
+        "CREATE INDEX idx_character_relationships_from ON character_relationships (from_character_id)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX idx_character_relationships_to ON character_relationships (to_character_id)",
+        [],
+    )?;
+    
+    // 恢復資料（將 source_id/target_id 轉換為 from_character_id/to_character_id）
+    for (id, source_id, target_id, rel_type, description) in existing_relationships {
+        conn.execute(
+            "INSERT INTO character_relationships (id, from_character_id, to_character_id, relationship_type, description) 
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![id, source_id, target_id, rel_type, description],
+        )?;
+    }
+    
+    log::info!("character_relationships 表結構修復完成");
+    
+    // 3. 刪除不需要的表
+    conn.execute("DROP TABLE IF EXISTS character_abilities", [])?;
+    conn.execute("DROP TABLE IF EXISTS templates", [])?;
+    
+    log::info!("版本 5 遷移完成：所有表結構已與 Tauri 模型同步");
     
     Ok(())
 }

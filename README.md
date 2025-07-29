@@ -453,6 +453,7 @@ AI 功能通過 Ollama API 實現：
 ## 版本變更紀錄
 
 ### Tauri 遷移分支 (feature/tauri-migration)
+- 0.4.12+tauri (2025-07-30 00:04)：✨ **角色管理系統與 AI 設定完善**，完全修復角色 CRUD 功能（創建、編輯、刪除、關係管理），實現角色關係載入與顯示，修復專案卡片統計數據顯示，新增 AI 參數說明（Top P 和最大生成長度），統一 API 參數格式（camelCase↔snake_case 轉換），角色管理功能達到與 Electron 版本完全對等
 - 0.4.12+tauri (2025-07-29 22:30)：🛠️ **重大修復：CSP 與資料庫 Schema 問題完全解決**，完全禁用 CSP 解決 IPC 連接問題，刪除舊資料庫檔案重新初始化修復 `order_index` 和 `description` 欄位缺失問題，修復 templateService.ts 和 templateCharacterService.ts 使用統一 API，重新構建 Tauri 應用程式，創建專案和進入專案編輯器功能完全正常，Tauri 版本達到穩定可用狀態
 - 0.4.12+tauri (2025-07-29 13:01)：🔧 **CSP 配置修復與 API 統一化完成**，解決 Content Security Policy 阻擋 IPC 通訊問題，移除所有 `window.electronAPI` 直接調用統一為 `api.*` 介面，修復 CharacterList.tsx、SimpleProjectEditor.tsx、CharacterManager.tsx 等檔案 API 調用，Tauri 版本資料載入速度大幅提升，前端 API 適配層完全統一
 - 0.4.12+tauri (2025-07-29)：🦀 **Tauri 版本 SQLite 資料庫連接完成**，Rust 後端架構建立，雙版本並行開發架構實現，專案/章節/角色 CRUD 操作完整實現，前端 API 適配層完成，PRAGMA 語句修復，資料庫 migrations 系統建立

@@ -6,6 +6,7 @@ import { Project } from '../../store/slices/projectsSlice';
 import { openModal } from '../../store/slices/uiSlice';
 import { Menu, MenuItem } from '../../components/UI/Menu';
 import ConfirmDialog from '../../components/UI/ConfirmDialog';
+import { formatDate, safeParseDate, isRecentDate } from '../../utils/dateUtils';
 
 interface ProjectCardProps {
   project: Project;
@@ -85,8 +86,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   };
 
   const typeInfo = getProjectTypeInfo(project.type);
-  const lastEditedDays = Math.floor((Date.now() - new Date(project.updatedAt).getTime()) / (1000 * 60 * 60 * 24));
-  const isRecentlyEdited = lastEditedDays < 3;
+  const updatedDate = safeParseDate(project.updatedAt);
+  const lastEditedDays = Math.floor((Date.now() - updatedDate.getTime()) / (1000 * 60 * 60 * 24));
+  const isRecentlyEdited = isRecentDate(project.updatedAt, 3);
 
   return (
     <>
@@ -102,7 +104,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
           
           <div className="text-xs text-gray-500">
-            {new Date(project.updatedAt).toLocaleDateString('zh-TW')}
+            {formatDate(project.updatedAt)}
           </div>
         </div>
 

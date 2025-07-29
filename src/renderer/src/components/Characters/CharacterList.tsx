@@ -3,6 +3,7 @@ import { Character, CharacterFilters, CharacterSortOptions } from '../../types/c
 import { CharacterCard } from './CharacterCard';
 import { CharacterFiltersComponent } from './CharacterFilters';
 import { CharacterDeleteModal } from './CharacterDeleteModal';
+import { api } from '../../api';
 
 interface CharacterListProps {
   projectId: string;
@@ -122,7 +123,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
     if (!characterToDelete) return;
 
     try {
-      await window.electronAPI.characters.delete(characterToDelete.id, forceDelete);
+      await api.characters.delete(characterToDelete.id);
       // 呼叫父組件的重載函數
       if (onReload) {
         onReload();

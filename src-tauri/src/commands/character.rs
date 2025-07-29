@@ -193,6 +193,38 @@ pub async fn delete_character_relationship(id: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn get_character_relationships(character_id: String) -> Result<Vec<CharacterRelationship>, String> {
+    let db = get_db().map_err(|e| e.to_string())?;
+    let conn = db.lock().unwrap();
+    
+    let mut stmt = conn
+        .prepare("SELECT id, from_character_id, to_character_id, relationship_type, description, created_at, updated_at 
+                  FROM character_relationships WHERE from_character_id = ?1 ORDER BY created_at ASC")
+        .map_err(|e| e.to_string())?;
+    
+    let relationship_iter = stmt
+        .query_map([character_id], |row| {
+            Ok(CharacterRelationship {
+                id: row.get(0)?,
+                from_character_id: row.get(1)?,
+                to_character_id: row.get(2)?,
+                relationship_type: row.get(3)?,
+                description: row.get(4)?,
+                created_at: row.get(5)?,
+                updated_at: row.get(6)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+    
+    let mut relationships = Vec::new();
+    for relationship in relationship_iter {
+        relationships.push(relationship.map_err(|e| e.to_string())?);
+    }
+    
+    Ok(relationships)
+}
+
+#[tauri::command]
 pub async fn clear_character_relationships(character_id: String) -> Result<(), String> {
     let db = get_db().map_err(|e| e.to_string())?;
     let conn = db.lock().unwrap();

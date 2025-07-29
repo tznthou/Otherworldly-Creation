@@ -580,6 +580,13 @@ const CreateProjectModal: React.FC = () => {
                       onChange={(e) => handleAISettingChange('topP', parseFloat(e.target.value))}
                       className="w-full"
                     />
+                    <div className="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>詞彙選擇較固定</span>
+                      <span>詞彙選擇較多樣</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      控制 AI 在生成文字時的詞彙多樣性。較低值讓輸出更穩定集中，較高值讓輸出更富變化。
+                    </p>
                   </div>
                   
                   <div>
@@ -595,6 +602,13 @@ const CreateProjectModal: React.FC = () => {
                       onChange={(e) => handleAISettingChange('maxTokens', parseInt(e.target.value))}
                       className="w-full"
                     />
+                    <div className="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>較短回應</span>
+                      <span>較長回應</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      限制 AI 單次生成文字的最大長度。1 token 約等於 0.75 個中文字，400 tokens 約為 300 字。
+                    </p>
                   </div>
                 </div>
               </div>

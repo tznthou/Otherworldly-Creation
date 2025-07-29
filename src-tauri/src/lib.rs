@@ -7,7 +7,7 @@ use commands::project::{get_all_projects, get_project_by_id, create_project, upd
 use commands::chapter::{get_chapters_by_project_id, get_chapter_by_id, create_chapter, update_chapter, delete_chapter};
 use commands::character::{
     get_characters_by_project_id, get_character_by_id, create_character, update_character, delete_character,
-    create_character_relationship, delete_character_relationship, clear_character_relationships,
+    create_character_relationship, delete_character_relationship, get_character_relationships, clear_character_relationships,
 };
 use commands::ai::{
     check_ollama_service, get_service_status, list_models, get_models_info, check_model_availability,
@@ -60,6 +60,7 @@ pub fn run() {
       delete_character,
       create_character_relationship,
       delete_character_relationship,
+      get_character_relationships,
       clear_character_relationships,
       // AI commands
       check_ollama_service,

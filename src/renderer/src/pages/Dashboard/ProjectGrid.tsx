@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { openModal } from '../../store/slices/uiSlice';
 import ProjectCard from './ProjectCard';
 import { Project } from '../../store/slices/projectsSlice';
+import { api } from '../../api';
 
 const ProjectGrid: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -11,6 +12,42 @@ const ProjectGrid: React.FC = () => {
   const [filterType, setFilterType] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'updatedAt' | 'createdAt'>('updatedAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [projectStats, setProjectStats] = useState<Record<string, { chapterCount: number; characterCount: number }>>({});
+
+  // 載入專案統計數據
+  useEffect(() => {
+    const loadProjectStats = async () => {
+      const stats: Record<string, { chapterCount: number; characterCount: number }> = {};
+      
+      await Promise.all(
+        projects.map(async (project) => {
+          try {
+            const [chapters, characters] = await Promise.all([
+              api.chapters.getByProjectId(project.id),
+              api.characters.getByProjectId(project.id),
+            ]);
+            
+            stats[project.id] = {
+              chapterCount: chapters.length,
+              characterCount: characters.length,
+            };
+          } catch (error) {
+            console.error(`Failed to load stats for project ${project.id}:`, error);
+            stats[project.id] = {
+              chapterCount: 0,
+              characterCount: 0,
+            };
+          }
+        })
+      );
+      
+      setProjectStats(stats);
+    };
+
+    if (projects.length > 0) {
+      loadProjectStats();
+    }
+  }, [projects]);
 
   const handleCreateProject = () => {
     console.log('創建專案按鈕被點擊');
@@ -190,14 +227,17 @@ const ProjectGrid: React.FC = () => {
         </div>
 
         {/* 專案卡片 */}
-        {filteredAndSortedProjects.map((project) => (
-          <ProjectCard 
-            key={project.id} 
-            project={project} 
-            chapterCount={0} // TODO: 從實際數據獲取
-            characterCount={0} // TODO: 從實際數據獲取
-          />
-        ))}
+        {filteredAndSortedProjects.map((project) => {
+          const stats = projectStats[project.id] || { chapterCount: 0, characterCount: 0 };
+          return (
+            <ProjectCard 
+              key={project.id} 
+              project={project} 
+              chapterCount={stats.chapterCount}
+              characterCount={stats.characterCount}
+            />
+          );
+        })}
       </div>
 
       {/* 無結果提示 */}

@@ -46,7 +46,9 @@
       "mcp__puppeteer__puppeteer_navigate",
       "Bash(timeout 5 npm run dev:tauri:*)",
       "Bash(kill:*)",
-      "Bash(npm run diagnostic:*)"
+      "Bash(npm run diagnostic:*)",
+      "Bash(npm run:*)",
+      "Bash(./src-tauri/target/release/genesis-chronicle)"
     ],
     "deny": []
   }

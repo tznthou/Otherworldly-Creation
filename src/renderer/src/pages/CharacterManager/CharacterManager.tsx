@@ -124,10 +124,22 @@ const CharacterManager: React.FC = () => {
       
       if (selectedCharacter) {
         // 更新現有角色
-        await api.characters.update({
-          ...selectedCharacter,
-          ...formData,
-        });
+        const updateData = {
+          id: selectedCharacter.id,
+          name: formData.name,
+          description: formData.background || '', // 使用 background 作為 description
+          attributes: JSON.stringify({
+            archetype: formData.archetype,
+            age: formData.age,
+            gender: formData.gender,
+            appearance: formData.appearance,
+            personality: formData.personality,
+            background: formData.background,
+          }),
+          avatarUrl: selectedCharacter.avatarUrl || '', // 保持原有的 avatarUrl
+        };
+        
+        await api.characters.update(updateData);
         
         // 更新關係 - 始終清除現有關係，然後保存新關係
         if (formData.relationships !== undefined) {
@@ -161,9 +173,9 @@ const CharacterManager: React.FC = () => {
               console.log('Creating relationship:', relationship);
               try {
                 await api.characters.createRelationship({
-                  sourceId: selectedCharacter.id,
-                  targetId: relationship.targetId,
-                  type: relationship.type,
+                  fromCharacterId: selectedCharacter.id,
+                  toCharacterId: relationship.targetId,
+                  relationshipType: relationship.type,
                   description: relationship.description,
                 });
               } catch (error) {
@@ -179,18 +191,34 @@ const CharacterManager: React.FC = () => {
         }
       } else {
         // 創建新角色
-        const characterId = await api.characters.create({
-          ...formData,
+        const characterData = {
           projectId,
-        });
+          name: formData.name,
+          description: formData.background || '', // 使用 background 作為 description
+          attributes: JSON.stringify({
+            archetype: formData.archetype,
+            age: formData.age,
+            gender: formData.gender,
+            appearance: formData.appearance,
+            personality: formData.personality,
+            background: formData.background,
+          }),
+          avatarUrl: '', // 預設為空
+        };
+        
+        console.log('Creating character with data:', characterData);
+        console.log('ProjectId:', projectId);
+        
+        const characterId = await api.characters.create(characterData);
+        console.log('Character created with ID:', characterId);
         
         // 如果有關係資料，創建關係
         if (formData.relationships && formData.relationships.length > 0) {
           for (const relationship of formData.relationships) {
             await api.characters.createRelationship({
-              sourceId: characterId,
-              targetId: relationship.targetId,
-              type: relationship.type,
+              fromCharacterId: characterId,
+              toCharacterId: relationship.targetId,
+              relationshipType: relationship.type,
               description: relationship.description,
             });
           }

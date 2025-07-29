@@ -293,7 +293,7 @@ The application uses SQLite with the following main entities:
 - v0.4.7 - Editor refactoring and database storage implementation completed
 
 ### Tauri Version (Development - feature/tauri-migration branch)
-- v2.0.0-alpha.1 (0.4.12+tauri) - SQLite database connection complete, Rust backend architecture established, dual-version parallel development, project/chapter/character CRUD operations implemented, frontend API adapter layer complete, PRAGMA statement fixes, database migrations system established
+- v2.0.0-alpha.1 (0.4.12+tauri) - CSP configuration fix and database schema problem completely resolved, SQLite database connection complete, Rust backend architecture established, dual-version parallel development, project/chapter/character CRUD operations implemented, frontend API adapter layer complete, PRAGMA statement fixes, database migrations system established
 
 ## Known Issues & Workarounds
 
@@ -376,17 +376,19 @@ The application uses SQLite with the following main entities:
 - **Testing**: Environment detection ensures proper functionality testing
 
 ### Migration Progress
-- **Completed**: Basic architecture, database layer, project/chapter/character CRUD, CSP configuration fix, API unification
+- **Completed**: Basic architecture, database layer, project/chapter/character CRUD, CSP configuration fix (completely disabled), database schema fixes, API unification, parameter naming standardization (camelCase)
 - **In Progress**: AI service integration (Rust HTTP client), settings management, data migration tools
 - **Planned**: Feature parity, performance optimization, comprehensive testing
 
 ## Common Troubleshooting
 
 ### Tauri 版本常見問題
-- **CSP 錯誤**: 確保 `tauri.conf.json` 中 CSP 包含 `ipc: ipc://localhost`
+- **CSP 錯誤**: CSP 已完全禁用 (`"csp": null` in tauri.conf.json) 以解決 IPC 連接問題
+- **資料庫 Schema 錯誤**: 如遇到缺少欄位錯誤，刪除資料庫檔案 `~/.config/com.genesis-chronicle.app/genesis.db` 強制重新初始化
 - **資料庫載入慢**: 檢查是否有 `window.electronAPI` 直接調用，應使用 `api.*`
 - **PRAGMA 錯誤**: Rust 中使用 `conn.pragma_update()` 而非 `conn.execute()` 執行 PRAGMA
 - **API 未定義**: 檢查 `src/renderer/src/api/types.ts` 是否定義了對應介面
+- **參數格式錯誤**: 確保 Tauri 命令參數使用 camelCase 命名以匹配前端期望
 
 ### Electron 版本常見問題
 - **Ollama 連接失敗**: 確保 Ollama 服務運行中 (`ollama serve`)

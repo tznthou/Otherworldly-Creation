@@ -14,6 +14,7 @@
     "build:electron:main": "tsc -p tsconfig.electron.json",
     "build:tauri": "cargo tauri build",
     "build:renderer": "vite build",
+    "package:tauri": "npm run build:tauri",
     "clean": "rm -rf dist out src-tauri/target",
     "package": "npm run build && electron-forge package",
     "make": "npm run build && electron-forge make",

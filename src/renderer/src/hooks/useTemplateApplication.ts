@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAppDispatch } from './redux';
 import { createProject } from '../store/slices/projectsSlice';
 import { NovelTemplate } from '../types/template';
+import api from '../api';
 
 export interface TemplateApplicationOptions {
   projectName: string;
@@ -49,17 +50,19 @@ export const useTemplateApplication = () => {
           const archetype = template.characterArchetypes[parseInt(archetypeIndex)];
           if (archetype) {
             try {
-              await window.electronAPI.characters.create({
+              await api.characters.create({
                 projectId: projectId,
                 name: archetype.name,
                 description: archetype.description,
-                personality: archetype.personality,
-                appearance: archetype.appearance || '',
-                background: archetype.background || '',
-                age: archetype.suggestedAge ? Math.round((archetype.suggestedAge.min + archetype.suggestedAge.max) / 2) : undefined,
-                gender: archetype.suggestedGender?.[0] || '未設定',
-                archetype: archetype.name,
-                // tags: archetype.tags
+                attributes: JSON.stringify({
+                  personality: archetype.personality,
+                  appearance: archetype.appearance || '',
+                  background: archetype.background || '',
+                  age: archetype.suggestedAge ? Math.round((archetype.suggestedAge.min + archetype.suggestedAge.max) / 2) : undefined,
+                  gender: archetype.suggestedGender?.[0] || '未設定',
+                  archetype: archetype.name
+                }),
+                avatarUrl: ''
               });
             } catch (charError) {
               console.warn('創建角色失敗:', charError);
@@ -71,11 +74,11 @@ export const useTemplateApplication = () => {
       // 如果有範例內容，創建第一章
       if (template.sampleContent?.opening) {
         try {
-          await window.electronAPI.chapters.create({
+          await api.chapters.create({
             projectId: projectId,
             title: '第一章：開始的故事',
             content: template.sampleContent.opening,
-            order: 1
+            orderIndex: 1
           });
         } catch (chapterError) {
           console.warn('創建範例章節失敗:', chapterError);
