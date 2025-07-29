@@ -1,0 +1,7 @@
+{
+  "theme": "dark",
+  "language": "zh-TW",
+  "autoSave": true,
+  "aiModel": "llama3.2",
+  "fontSize": 16
+}

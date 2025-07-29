@@ -33,7 +33,13 @@
       "mcp__sequential-thinking__sequentialthinking",
       "Bash(npm test:*)",
       "Bash(open:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(git checkout:*)",
+      "Bash(git tag:*)",
+      "Bash(rustc:*)",
+      "Bash(cargo install:*)",
+      "Bash(cargo tauri init:*)",
+      "Bash(cargo check:*)"
     ],
     "deny": []
   }

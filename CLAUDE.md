@@ -31,6 +31,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - To update snapshots: `npm test -- --updateSnapshot`
 - To see coverage: `npm test -- --coverage`
 
+### Linting Commands
+- `npm run lint` - Run ESLint on all TypeScript files
+- `npm run lint -- --fix` - Auto-fix ESLint errors where possible
+- `npm run lint -- src/main` - Lint only main process files
+- `npm run lint -- src/renderer` - Lint only renderer process files
+
 ### Build & Package Commands
 - `npm run build:main` - Build main process only
 - `npm run build:renderer` - Build renderer process only
@@ -66,9 +72,16 @@ The application uses a structured IPC (Inter-Process Communication) system:
 - Main handlers in `src/main/ipc/ipcHandlers.ts`
 - Specialized handlers in subdirectories:
   - `aiHandlers.ts` - AI/Ollama related operations
-  - `basicHandlers.ts` - Basic app operations
+  - `basicHandlers.ts` - Basic app operations (app quit, reload, etc.)
   - `updateHandlers.ts` - Auto-update functionality
   - `handlers/` - Project and chapter management
+
+Key IPC channels:
+- `system:showSaveDialog`, `system:showOpenDialog` - File dialog operations
+- `database:backup`, `database:restore` - Database backup/restore
+- `ai:checkService`, `ai:generate` - AI service operations
+- `project:create`, `project:update`, `project:delete` - Project CRUD
+- `chapter:create`, `chapter:update`, `chapter:delete` - Chapter CRUD
 
 ### Key Services & Components
 
@@ -90,11 +103,16 @@ The application uses a structured IPC (Inter-Process Communication) system:
 
 ### Database Schema
 The application uses SQLite with the following main entities:
-- Projects (novels/stories with template metadata)
-- Chapters (individual story chapters with rich content storage)
-- Characters (character profiles and relationships)
-- Templates (story templates and character archetypes - read from JSON files)
-- Settings (user preferences and configurations)
+- **Projects**: novels/stories with template metadata
+  - Fields: id, name, description, type, templateData, created_at, updated_at
+- **Chapters**: individual story chapters with rich content storage  
+  - Fields: id, projectId, title, content, orderIndex, created_at, updated_at
+- **Characters**: character profiles and relationships
+  - Fields: id, projectId, name, description, attributes, avatarUrl, created_at, updated_at
+- **Character_relationships**: unidirectional relationship tracking
+  - Fields: id, fromCharacterId, toCharacterId, relationshipType, description
+- **Settings**: user preferences and configurations
+  - Stored as key-value pairs
 - Statistics are calculated dynamically from existing data
 
 ### External Dependencies
@@ -105,10 +123,11 @@ The application uses SQLite with the following main entities:
 
 ### Adding New Features
 1. Add IPC handlers in `src/main/ipc/ipcHandlers.ts`
-2. Expose APIs in `src/main/preload.ts`  
+2. Expose APIs in `src/main/preload.ts` (ensure types match)
 3. Create Redux slice in `src/renderer/src/store/slices/`
 4. Build React components in `src/renderer/src/components/`
 5. Add corresponding tests in `src/main/__tests__/` or `src/__tests__/`
+6. Update route in `src/renderer/src/main-stable.tsx` if adding new pages
 
 ### Database Changes
 - Database operations are centralized in `src/main/database/database.ts`
@@ -164,6 +183,7 @@ The application uses SQLite with the following main entities:
   - `react-hooks/exhaustive-deps`: Warning
 
 ## Current Version
+- v0.4.12 - Data management consolidation, settings page save button fix, copyright year update
 - v0.4.11 - Tutorial system architecture fix, template manager functionality restoration, UI interaction improvements
 - v0.4.10 - Help system architecture refactoring, complete user manual and quick start guide implementation, character relationship design philosophy documentation
 - v0.4.9 - Project management system enhancement, UI interaction improvements, and character management interface optimization
@@ -181,6 +201,7 @@ The application uses SQLite with the following main entities:
 - Check Redux state in `store.ts` for modal visibility
 - Verify modal name consistency between `openModal()` calls and `ModalContainer` cases
 - Use Redux DevTools to track modal state changes
+- Common modal names: 'createProject', 'backupManager', 'templateManager', 'aiSettings'
 
 ### Tutorial System
 - Tutorial functionality uses `useTutorial` hook with `currentTutorialId` state
@@ -209,3 +230,5 @@ The application uses SQLite with the following main entities:
 - **API Fallbacks**: Character relationship APIs may require fallback strategies if clearRelationships is not available without app restart
 - **Template Application**: When applying templates, ensure `localSelectedTemplate` is used for local state to avoid Redux naming conflicts
 - **Modal Scrolling**: Use fixed height with proper flex structure (`h-[90vh]` and `min-h-0`) to ensure content scrollability
+- **Data Management Consolidation**: As of v0.4.12, data management functions are consolidated into a single 'backupManager' modal entry point
+- **Settings Page Route**: Settings page must use the full Settings component, not SettingsSimple, loaded via main-stable.tsx routes
