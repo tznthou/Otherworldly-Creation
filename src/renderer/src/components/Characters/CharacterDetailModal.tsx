@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Character } from '../../types/character';
 import { CharacterDeleteModal } from './CharacterDeleteModal';
+import api from '../../api';
 
 interface CharacterDetailModalProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
 
   const handleConfirmDelete = async (forceDelete: boolean) => {
     try {
-      await window.electronAPI.characters.delete(character.id, forceDelete);
+      await api.characters.delete(character.id);
       setDeleteModalOpen(false);
       onClose();
       // 通知父組件重新載入列表

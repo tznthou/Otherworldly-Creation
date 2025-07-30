@@ -1,5 +1,6 @@
 import BackupService from './backupService';
 import { SettingsService } from './settingsService';
+import api from '../api';
 
 interface AutoBackupStatus {
   enabled: boolean;
@@ -111,12 +112,8 @@ class AutoBackupServiceClass {
       console.log(`自動備份完成: ${filename}`);
       
       // 通知用戶（可選）
-      if (window.electronAPI?.system?.showNotification) {
-        window.electronAPI.system.showNotification({
-          title: '自動備份完成',
-          body: `備份檔案 ${filename} 已創建`,
-        });
-      }
+      // TODO: 實現跨平台通知系統
+      console.log('自動備份完成:', filename);
 
     } catch (error) {
       console.error('自動備份失敗:', error);
@@ -126,12 +123,8 @@ class AutoBackupServiceClass {
       });
 
       // 通知用戶備份失敗
-      if (window.electronAPI?.system?.showNotification) {
-        window.electronAPI.system.showNotification({
-          title: '自動備份失敗',
-          body: '請檢查應用程式狀態或手動創建備份',
-        });
-      }
+      // TODO: 實現跨平台通知系統
+      console.error('自動備份失敗 - 請檢查應用程式狀態或手動創建備份');
     }
   }
 

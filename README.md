@@ -4,10 +4,10 @@
 
 ## 🚀 開發狀態
 
-**當前版本：v0.4.12 + Tauri 移植分支** - 2025年7月29日更新  
-**開發進度：Tauri 版本架構完善 ✅，CSP 配置修復 ✅，API 統一化完成 ✅，漸進式遷移策略執行中 🔄**
+**當前版本：v0.4.12 + Tauri 移植分支** - 2025年7月30日更新  
+**開發進度：Tauri 版本架構完善 ✅，CSP 配置修復 ✅，API 統一化完成 ✅，Electron API 依賴完全移除 ✅**
 
-### 📊 系統狀態 (2025-07-29 22:30 CST)
+### 📊 系統狀態 (2025-07-30 17:20 CST)
 - **當前分支**：`feature/tauri-migration` (領先 main 分支 3 個提交)
 - **Tauri 版本**：v2.0.0-alpha.1 
 - **系統環境**：macOS Darwin 24.5.0 (arm64), Node.js v22.16.0, Rust toolchain 已配置
@@ -15,6 +15,7 @@
 - **資料庫狀態**：SQLite 雙版本架構 (Electron: better-sqlite3, Tauri: rusqlite) ✅
 - **CSP 配置**：已修復並重新構建 ✅
 - **API 統一化**：前端 API 完全統一，移除所有 `window.electronAPI` 直接調用 ✅
+- **跨平台兼容性**：Tauri 版本完全獨立，無 Electron API 依賴 ✅
 
 ### ✅ 已完成功能
 
@@ -80,6 +81,7 @@
 - ⚙️ **設定管理系統**：Rust 端設定儲存與讀取功能完成
 - 🏗️ **資料庫 Schema 修復**：修正 order_index 和 description 欄位問題，重新初始化資料庫
 - 🔄 **模板服務整合**：templateService.ts 和 templateCharacterService.ts 完全使用統一 API
+- 🧹 **Electron API 清理**：徹底移除所有 window.electronAPI 直接調用，確保 Tauri 版本完全獨立
 
 #### 🔄 進行中功能
 - 🤖 **AI 引擎整合**：Ollama 服務整合到 Tauri 版本 (Rust 端 HTTP 客戶端實現中)
@@ -453,6 +455,7 @@ AI 功能通過 Ollama API 實現：
 ## 版本變更紀錄
 
 ### Tauri 遷移分支 (feature/tauri-migration)
+- 0.4.12+tauri (2025-07-30 17:20)：🧹 **Electron API 依賴完全清理**，徹底檢查並移除所有 Tauri 版本中的 window.electronAPI 直接調用，修復 14 個檔案的 API 呼叫方式，更新服務檔案使用統一 API 介面，添加環境檢測邏輯確保跨平台兼容性，Tauri 版本現已完全獨立於 Electron API，實現真正的雙架構並行開發
 - 0.4.12+tauri (2025-07-30 00:04)：✨ **角色管理系統與 AI 設定完善**，完全修復角色 CRUD 功能（創建、編輯、刪除、關係管理），實現角色關係載入與顯示，修復專案卡片統計數據顯示，新增 AI 參數說明（Top P 和最大生成長度），統一 API 參數格式（camelCase↔snake_case 轉換），角色管理功能達到與 Electron 版本完全對等
 - 0.4.12+tauri (2025-07-29 22:30)：🛠️ **重大修復：CSP 與資料庫 Schema 問題完全解決**，完全禁用 CSP 解決 IPC 連接問題，刪除舊資料庫檔案重新初始化修復 `order_index` 和 `description` 欄位缺失問題，修復 templateService.ts 和 templateCharacterService.ts 使用統一 API，重新構建 Tauri 應用程式，創建專案和進入專案編輯器功能完全正常，Tauri 版本達到穩定可用狀態
 - 0.4.12+tauri (2025-07-29 13:01)：🔧 **CSP 配置修復與 API 統一化完成**，解決 Content Security Policy 阻擋 IPC 通訊問題，移除所有 `window.electronAPI` 直接調用統一為 `api.*` 介面，修復 CharacterList.tsx、SimpleProjectEditor.tsx、CharacterManager.tsx 等檔案 API 調用，Tauri 版本資料載入速度大幅提升，前端 API 適配層完全統一

@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addError, selectActiveErrors, selectCriticalErrors, cleanupOldErrors } from '../../store/slices/errorSlice';
 import { ERROR_CODES } from '../../types/error';
 import ErrorDisplay from './ErrorDisplay';
+import { isElectron } from '../../api';
 
 interface GlobalErrorHandlerProps {
   children: React.ReactNode;
@@ -100,8 +101,8 @@ const GlobalErrorHandler: React.FC<GlobalErrorHandlerProps> = ({ children }) => 
       }));
     };
 
-    // 如果有 electronAPI，監聽主進程錯誤
-    if (window.electronAPI?.onError) {
+    // 如果是 Electron 環境，監聽主進程錯誤
+    if (isElectron() && window.electronAPI?.onError) {
       window.electronAPI.onError(handleMainProcessError);
     }
   }, [dispatch]);

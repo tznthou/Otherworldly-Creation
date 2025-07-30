@@ -2,6 +2,7 @@ import { Project } from '../store/slices/projectsSlice';
 import { Chapter } from '../store/slices/chaptersSlice';
 import { Character } from '../store/slices/charactersSlice';
 import { AppSettings } from '../store/slices/settingsSlice';
+import api from '../api';
 
 // 備份資料結構
 export interface BackupData {
@@ -65,10 +66,10 @@ class BackupServiceClass {
     try {
       // 獲取所有資料
       const [projects, allChapters, allCharacters, settings] = await Promise.all([
-        window.electronAPI.projects.getAll(),
+        api.projects.getAll(),
         this.getAllChapters(),
         this.getAllCharacters(),
-        window.electronAPI.settings.loadSettings()
+        api.settings.getAll()
       ]);
 
       // 構建備份資料
@@ -76,7 +77,7 @@ class BackupServiceClass {
         version: this.BACKUP_VERSION,
         timestamp: new Date(),
         metadata: {
-          appVersion: await window.electronAPI.system.getVersion(),
+          appVersion: await api.system.getAppVersion(),
           platform: navigator.platform,
           totalProjects: projects.length,
           totalChapters: allChapters.length,
@@ -111,10 +112,10 @@ class BackupServiceClass {
     try {
       // 獲取專案相關資料
       const [project, chapters, characters, settings] = await Promise.all([
-        window.electronAPI.projects.getById(projectId),
-        window.electronAPI.chapters.getByProjectId(projectId),
-        window.electronAPI.characters.getByProjectId(projectId),
-        window.electronAPI.settings.loadSettings()
+        api.projects.getById(projectId),
+        api.chapters.getByProjectId(projectId),
+        api.characters.getByProjectId(projectId),
+        api.settings.getAll()
       ]);
 
       if (!project) {
@@ -126,7 +127,7 @@ class BackupServiceClass {
         version: this.BACKUP_VERSION,
         timestamp: new Date(),
         metadata: {
-          appVersion: await window.electronAPI.system.getVersion(),
+          appVersion: await api.system.getAppVersion(),
           platform: navigator.platform,
           totalProjects: 1,
           totalChapters: chapters.length,
@@ -289,9 +290,11 @@ class BackupServiceClass {
 
     // 還原設定
     if (options.includeSettings && backupData.data.settings) {
-      operations.push(
-        window.electronAPI.settings.saveSettings(backupData.data.settings)
-      );
+      // 將設定物件轉換為多個 set 操作
+      const settings = backupData.data.settings;
+      for (const [key, value] of Object.entries(settings)) {
+        operations.push(api.settings.set(key, value));
+      }
     }
 
     // 還原專案
@@ -303,15 +306,15 @@ class BackupServiceClass {
       for (const project of projectsToRestore) {
         if (options.overwriteExisting) {
           operations.push(
-            window.electronAPI.projects.update(project).catch(() =>
-              window.electronAPI.projects.create(project)
+            api.projects.update(project).catch(() =>
+              api.projects.create(project)
             )
           );
         } else {
           // 檢查專案是否已存在
-          const existing = await window.electronAPI.projects.getById(project.id);
+          const existing = await api.projects.getById(project.id);
           if (!existing) {
-            operations.push(window.electronAPI.projects.create(project));
+            operations.push(api.projects.create(project));
           }
         }
       }
@@ -329,14 +332,14 @@ class BackupServiceClass {
       for (const chapter of chaptersToRestore) {
         if (options.overwriteExisting) {
           operations.push(
-            window.electronAPI.chapters.update(chapter).catch(() =>
-              window.electronAPI.chapters.create(chapter)
+            api.chapters.update(chapter).catch(() =>
+              api.chapters.create(chapter)
             )
           );
         } else {
-          const existing = await window.electronAPI.chapters.getById(chapter.id);
+          const existing = await api.chapters.getById(chapter.id);
           if (!existing) {
-            operations.push(window.electronAPI.chapters.create(chapter));
+            operations.push(api.chapters.create(chapter));
           }
         }
       }
@@ -354,14 +357,14 @@ class BackupServiceClass {
       for (const character of charactersToRestore) {
         if (options.overwriteExisting) {
           operations.push(
-            window.electronAPI.characters.update(character).catch(() =>
-              window.electronAPI.characters.create(character)
+            api.characters.update(character).catch(() =>
+              api.characters.create(character)
             )
           );
         } else {
-          const existing = await window.electronAPI.characters.getById(character.id);
+          const existing = await api.characters.getById(character.id);
           if (!existing) {
-            operations.push(window.electronAPI.characters.create(character));
+            operations.push(api.characters.create(character));
           }
         }
       }
@@ -375,11 +378,11 @@ class BackupServiceClass {
    * 獲取所有章節
    */
   private async getAllChapters(): Promise<Chapter[]> {
-    const projects = await window.electronAPI.projects.getAll();
+    const projects = await api.projects.getAll();
     const allChapters: Chapter[] = [];
 
     for (const project of projects) {
-      const chapters = await window.electronAPI.chapters.getByProjectId(project.id);
+      const chapters = await api.chapters.getByProjectId(project.id);
       allChapters.push(...chapters);
     }
 
@@ -390,11 +393,11 @@ class BackupServiceClass {
    * 獲取所有角色
    */
   private async getAllCharacters(): Promise<Character[]> {
-    const projects = await window.electronAPI.projects.getAll();
+    const projects = await api.projects.getAll();
     const allCharacters: Character[] = [];
 
     for (const project of projects) {
-      const characters = await window.electronAPI.characters.getByProjectId(project.id);
+      const characters = await api.characters.getByProjectId(project.id);
       allCharacters.push(...characters);
     }
 

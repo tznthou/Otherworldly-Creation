@@ -4,6 +4,8 @@ import { Button } from '../../components/UI/Button';
 import { Badge } from '../../components/UI/Badge';
 import { Progress } from '../../components/UI/Progress';
 import { Alert, AlertDescription } from '../../components/UI/Alert';
+import api from '../../api';
+import { isTauri } from '../../api';
 import { 
   Database, 
   CheckCircle, 
@@ -61,7 +63,7 @@ const DatabaseMaintenance: React.FC = () => {
   const performHealthCheck = async () => {
     setIsChecking(true);
     try {
-      const result = await window.electronAPI.database.healthCheck();
+      const result = await api.database.healthCheck();
       setCheckResult(result);
       setRepairResult(null);
     } catch (error) {
@@ -76,7 +78,7 @@ const DatabaseMaintenance: React.FC = () => {
 
     setIsRepairing(true);
     try {
-      const result = await window.electronAPI.database.autoRepair(checkResult.issues);
+      const result = await api.database.autoRepair(checkResult.issues);
       setRepairResult(result);
       
       // 修復後重新檢查
@@ -93,7 +95,7 @@ const DatabaseMaintenance: React.FC = () => {
   const optimizeDatabase = async () => {
     setIsOptimizing(true);
     try {
-      const result = await window.electronAPI.database.optimize();
+      const result = await api.database.optimize();
       if (result.success) {
         // 優化後重新檢查
         await performHealthCheck();
@@ -108,7 +110,7 @@ const DatabaseMaintenance: React.FC = () => {
   const exportDatabase = async () => {
     setIsExporting(true);
     try {
-      const result = await window.electronAPI.database.export();
+      const result = await api.database.export();
       if (result.success) {
         // 顯示成功訊息
       }
@@ -122,7 +124,7 @@ const DatabaseMaintenance: React.FC = () => {
   const importDatabase = async () => {
     setIsImporting(true);
     try {
-      const result = await window.electronAPI.database.import();
+      const result = await api.database.import();
       if (result.success) {
         // 匯入後重新檢查
         await performHealthCheck();
@@ -138,7 +140,7 @@ const DatabaseMaintenance: React.FC = () => {
     if (!checkResult) return;
 
     try {
-      const report = await window.electronAPI.database.generateReport(checkResult);
+      const report = await api.database.generateReport(checkResult);
       setErrorReport(report);
     } catch (error) {
       console.error('生成報告失敗:', error);
@@ -368,7 +370,7 @@ const DatabaseMaintenance: React.FC = () => {
         </Button>
         
         <Button
-          onClick={() => window.electronAPI.database.vacuum()}
+          onClick={() => api.database.vacuum()}
           className="bg-green-600 hover:bg-green-700 h-16"
         >
           <div className="text-center">

@@ -2,7 +2,7 @@ mod commands;
 mod database;
 mod services;
 
-use commands::system::{get_app_version, quit_app, reload_app};
+use commands::system::{get_app_version, quit_app, reload_app, show_save_dialog, show_open_dialog, open_external};
 use commands::project::{get_all_projects, get_project_by_id, create_project, update_project, delete_project};
 use commands::chapter::{get_chapters_by_project_id, get_chapter_by_id, create_chapter, update_chapter, delete_chapter};
 use commands::character::{
@@ -14,10 +14,14 @@ use commands::ai::{
     generate_text, generate_with_context, update_ollama_config,
 };
 use commands::settings::{get_setting, set_setting, get_all_settings, reset_settings};
+use commands::database::{backup_database, restore_database, run_database_maintenance, get_database_stats};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .plugin(tauri_plugin_dialog::init())
+    .plugin(tauri_plugin_shell::init())
+    .plugin(tauri_plugin_opener::init())
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(
@@ -40,6 +44,9 @@ pub fn run() {
       get_app_version,
       quit_app,
       reload_app,
+      show_save_dialog,
+      show_open_dialog,
+      open_external,
       // Project commands
       get_all_projects,
       get_project_by_id,
@@ -76,6 +83,11 @@ pub fn run() {
       set_setting,
       get_all_settings,
       reset_settings,
+      // Database commands
+      backup_database,
+      restore_database,
+      run_database_maintenance,
+      get_database_stats,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
+import api from '../../api';
 
 const BackupManagerModal: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -18,7 +19,7 @@ const BackupManagerModal: React.FC = () => {
       setMessage({ type: 'info', text: '正在選擇備份位置...' });
       
       // 顯示儲存對話框
-      const saveResult = await window.electronAPI.system.showSaveDialog({
+      const saveResult = await api.system.showSaveDialog({
         title: '選擇備份檔案位置',
         defaultPath: `創世紀元備份_${new Date().toISOString().split('T')[0]}.db`,
         filters: [
@@ -34,10 +35,10 @@ const BackupManagerModal: React.FC = () => {
       
       setMessage({ type: 'info', text: '正在建立備份...' });
       
-      // 調用 Electron API 進行備份
-      await window.electronAPI.database.backup(saveResult.filePath);
+      // 調用統一 API 進行備份
+      await api.database.backup(saveResult.filePath || saveResult.file_path);
       
-      setMessage({ type: 'success', text: `備份已成功建立至：${saveResult.filePath}` });
+      setMessage({ type: 'success', text: `備份已成功建立至：${saveResult.filePath || saveResult.file_path}` });
     } catch (error: any) {
       console.error('備份失敗:', error);
       setMessage({ type: 'error', text: error.message || '備份建立失敗，請稍後再試' });
@@ -52,7 +53,7 @@ const BackupManagerModal: React.FC = () => {
       setMessage({ type: 'info', text: '正在選擇備份檔案...' });
       
       // 顯示開啟對話框
-      const openResult = await window.electronAPI.system.showOpenDialog({
+      const openResult = await api.system.showOpenDialog({
         title: '選擇要還原的備份檔案',
         filters: [
           { name: '資料庫檔案', extensions: ['db'] },
@@ -61,16 +62,17 @@ const BackupManagerModal: React.FC = () => {
         properties: ['openFile']
       });
       
-      if (openResult.canceled || !openResult.filePaths || openResult.filePaths.length === 0) {
+      const filePaths = openResult.filePaths || openResult.file_paths;
+      if (openResult.canceled || !filePaths || filePaths.length === 0) {
         setMessage(null);
         return;
       }
       
-      const backupPath = openResult.filePaths[0];
+      const backupPath = filePaths[0];
       setMessage({ type: 'info', text: '正在還原備份...' });
       
-      // 調用 Electron API 進行還原
-      await window.electronAPI.database.restore(backupPath);
+      // 調用統一 API 進行還原
+      await api.database.restore(backupPath);
       
       setMessage({ type: 'success', text: '專案已成功從備份還原！頁面將在2秒後重新載入...' });
       

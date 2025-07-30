@@ -82,15 +82,10 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // 檢查 electronAPI 可用性
+        // 檢查運行環境
         console.log('=== App 初始化調試信息 ===');
-        console.log('window.electronAPI 是否存在:', !!window.electronAPI);
-        console.log('window.electronAPI:', window.electronAPI);
-        console.log('window.electronAPI.ai 是否存在:', !!window.electronAPI?.ai);
-        
-        if (window.electronAPI?.ai) {
-          console.log('electronAPI.ai 方法:', Object.keys(window.electronAPI.ai));
-        }
+        console.log('運行環境:', window.electronAPI ? 'Electron' : (window.__TAURI__ ? 'Tauri' : 'Unknown'));
+        console.log('API 層已載入:', typeof api !== 'undefined');
         
         // 顯示初始化通知
         NotificationService.info('正在初始化', '創世紀元正在啟動中...');
@@ -101,11 +96,9 @@ const AppContent: React.FC = () => {
         // 將 Ollama 服務檢查移到背景執行（不阻塞初始化）
         setTimeout(async () => {
           console.log('App: 背景檢查 Ollama 服務...');
-          console.log('App: 檢查 electronAPI 可用性...');
-          console.log('App: window.electronAPI 存在:', !!window.electronAPI);
-          console.log('App: window.electronAPI.ai 存在:', !!window.electronAPI?.ai);
+          console.log('App: 當前環境:', window.electronAPI ? 'Electron' : (window.__TAURI__ ? 'Tauri' : 'Unknown'));
           
-          if (window.electronAPI?.ai) {
+          try {
             try {
               console.log('App: 開始調用 checkOllamaService...');
               const result = await dispatch(checkOllamaService()).unwrap();

@@ -1,4 +1,5 @@
 import { useAppSelector } from '../hooks/redux';
+import api from '../api';
 
 export interface ProjectStatistics {
   id: string;
@@ -46,12 +47,12 @@ class StatisticsService {
   // 計算專案統計
   static async getProjectStatistics(): Promise<ProjectStatistics[]> {
     try {
-      const projects = await window.electronAPI.projects.getAll();
+      const projects = await api.projects.getAll();
       const statistics: ProjectStatistics[] = [];
 
       for (const project of projects) {
-        const chapters = await window.electronAPI.chapters.getByProjectId(project.id);
-        const characters = await window.electronAPI.characters.getByProjectId(project.id);
+        const chapters = await api.chapters.getByProjectId(project.id);
+        const characters = await api.characters.getByProjectId(project.id);
         
         const totalWords = chapters.reduce((sum, chapter) => {
           // 更精確的字數計算：去除空白字符後計算
@@ -205,11 +206,11 @@ class StatisticsService {
   // 找出最長的章節
   private static async findLongestChapter(): Promise<{ title: string; projectName: string; wordCount: number }> {
     try {
-      const projects = await window.electronAPI.projects.getAll();
+      const projects = await api.projects.getAll();
       let longestChapter = { title: '', projectName: '', wordCount: 0 };
       
       for (const project of projects) {
-        const chapters = await window.electronAPI.chapters.getByProjectId(project.id);
+        const chapters = await api.chapters.getByProjectId(project.id);
         
         for (const chapter of chapters) {
           const content = chapter.content || '';

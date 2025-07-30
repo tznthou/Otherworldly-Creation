@@ -1,6 +1,7 @@
 import { Chapter } from '../store/slices/chaptersSlice';
 import { Character } from '../store/slices/charactersSlice';
 import { Project } from '../store/slices/projectsSlice';
+import api from '../api';
 
 export interface SaveOperation {
   id: string;
@@ -162,7 +163,7 @@ class SaveManagerClass {
    * 儲存章節
    */
   private async saveChapter(chapter: Chapter): Promise<void> {
-    await window.electronAPI.chapters.update({
+    await api.chapters.update({
       ...chapter,
       content: JSON.stringify(chapter.content)
     });
@@ -172,21 +173,24 @@ class SaveManagerClass {
    * 儲存角色
    */
   private async saveCharacter(character: Character): Promise<void> {
-    await window.electronAPI.characters.update(character);
+    await api.characters.update(character);
   }
 
   /**
    * 儲存專案
    */
   private async saveProject(project: Project): Promise<void> {
-    await window.electronAPI.projects.update(project);
+    await api.projects.update(project);
   }
 
   /**
    * 儲存設定
    */
   private async saveSettings(settings: any): Promise<void> {
-    await window.electronAPI.settings.saveSettings(settings);
+    // 將設定物件轉換為多個 set 操作
+    for (const [key, value] of Object.entries(settings)) {
+      await api.settings.set(key, value);
+    }
   }
 
   /**

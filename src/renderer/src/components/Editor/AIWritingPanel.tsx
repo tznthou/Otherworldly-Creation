@@ -4,6 +4,7 @@ import { Transforms, Range } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
+import api from '../../api';
 
 interface AIWritingPanelProps {
   projectId: string;
@@ -135,7 +136,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
         try {
           updateProgress('generating', 20 + (index * 60 / generationCount), `生成第 ${index + 1} 個版本...`);
           
-          const result = await window.electronAPI.ai.generateWithContext(
+          const result = await api.ai.generateWithContext(
             projectId, 
             chapterId, 
             selection.anchor.offset, 
@@ -260,7 +261,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
         maxContextTokens: 2000,
       };
 
-      const result = await window.electronAPI.ai.generateWithContext(
+      const result = await api.ai.generateWithContext(
         projectId, 
         chapterId, 
         selection.anchor.offset, 

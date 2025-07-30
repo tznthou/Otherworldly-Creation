@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, RefreshCw, AlertCircle, CheckCircle, X } from 'lucide-react';
+import api from '../../api';
+import { isTauri } from '../../api';
 
 interface UpdateInfo {
   version: string;
@@ -36,32 +38,46 @@ const UpdateManager: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 監聽更新事件
-    window.electronAPI.update.onUpdateAvailable((updateInfo: UpdateCheckResult) => {
-      setUpdateResult(updateInfo);
-      setIsVisible(true);
-    });
+    // 在 Tauri 環境中，更新功能暫不支援
+    if (isTauri()) {
+      console.log('Tauri 環境中更新功能暫不支援');
+      return;
+    }
 
-    window.electronAPI.update.onDownloadProgress((progress: UpdateProgress) => {
-      setDownloadProgress(progress);
-    });
+    // Electron 環境的更新事件監聽
+    if (window.electronAPI?.update) {
+      // 監聽更新事件
+      window.electronAPI.update.onUpdateAvailable((updateInfo: UpdateCheckResult) => {
+        setUpdateResult(updateInfo);
+        setIsVisible(true);
+      });
 
-    window.electronAPI.update.onPendingInstall((updatePath: string) => {
-      setDownloadedFilePath(updatePath);
-      setIsVisible(true);
-    });
+      window.electronAPI.update.onDownloadProgress((progress: UpdateProgress) => {
+        setDownloadProgress(progress);
+      });
 
-    // 檢查待安裝的更新
-    checkPendingUpdate();
+      window.electronAPI.update.onPendingInstall((updatePath: string) => {
+        setDownloadedFilePath(updatePath);
+        setIsVisible(true);
+      });
 
-    return () => {
-      window.electronAPI.update.removeAllListeners();
-    };
+      // 檢查待安裝的更新
+      checkPendingUpdate();
+
+      return () => {
+        window.electronAPI.update.removeAllListeners();
+      };
+    }
   }, []);
 
   const checkPendingUpdate = async () => {
+    // Tauri 版本暫不支援檢查待安裝更新
+    if (isTauri()) {
+      return;
+    }
+    
     try {
-      const pendingPath = await window.electronAPI.update.checkPendingUpdate();
+      const pendingPath = await window.electronAPI?.update?.checkPendingUpdate?.();
       if (pendingPath) {
         setDownloadedFilePath(pendingPath);
         setIsVisible(true);
@@ -76,7 +92,7 @@ const UpdateManager: React.FC = () => {
     setError(null);
 
     try {
-      const result = await window.electronAPI.update.checkForUpdates();
+      const result = await api.updates.checkForUpdates();
       setUpdateResult(result);
       
       if (result.hasUpdate) {
@@ -98,7 +114,8 @@ const UpdateManager: React.FC = () => {
     setError(null);
 
     try {
-      const filePath = await window.electronAPI.update.downloadUpdate(updateResult.updateInfo);
+      await api.updates.downloadUpdate();
+      const filePath = 'update-downloaded'; // TODO: 實現正確的文件路徑返回
       setDownloadedFilePath(filePath);
       setDownloadProgress(null);
     } catch (error) {
@@ -112,7 +129,7 @@ const UpdateManager: React.FC = () => {
     if (!downloadedFilePath) return;
 
     try {
-      await window.electronAPI.update.installUpdate(downloadedFilePath);
+      await api.updates.installUpdate();
       // 安裝後應用程式會重新啟動，所以這裡不會執行到
     } catch (error) {
       setError(error instanceof Error ? error.message : '安裝更新失敗');

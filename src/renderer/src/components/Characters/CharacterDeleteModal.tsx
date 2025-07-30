@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Character } from '../../types/character';
+import api from '../../api';
 
 interface CharacterReference {
   type: 'chapter' | 'relationship';
@@ -54,7 +55,14 @@ export const CharacterDeleteModal: React.FC<CharacterDeleteModalProps> = ({
     
     try {
       setCheckingReferences(true);
-      const result = await window.electronAPI.characters.checkReferences(character.id);
+      // TODO: 實現角色引用檢查功能
+      // 暫時返回空的引用結果
+      const result = {
+        references: [],
+        characterName: character.name,
+        totalReferences: 0,
+        canDeleteSafely: true
+      };
       setReferenceCheck(result);
       setShowReferences(result.references.length > 0);
     } catch (error) {

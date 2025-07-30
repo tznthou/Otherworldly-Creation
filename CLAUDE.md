@@ -130,7 +130,7 @@ Key Electron IPC channels:
 - Project commands: `get_all_projects`, `create_project`, `update_project`, `delete_project`
 - Chapter commands: `get_chapters_by_project_id`, `create_chapter`, `update_chapter`, `delete_chapter`
 - Character commands: `get_characters_by_project_id`, `create_character`, `update_character`, `delete_character`
-- Character relationship commands: `create_character_relationship`, `delete_character_relationship`
+- Character relationship commands: `create_character_relationship`, `delete_character_relationship`, `get_character_relationships`, `clear_character_relationships`
 
 **Unified API Interface**:
 - `src/renderer/src/api/index.ts` - Environment detection and API routing
@@ -272,6 +272,9 @@ The application uses SQLite with the following main entities:
 - Automatic backup and restore functionality
 - Database maintenance tools for health checking and optimization
 - Auto-save functionality for editor content
+- **Date Handling**: Use `safeParseDate()` from `src/renderer/src/utils/dateUtils.ts` for consistent date parsing across both Electron (Date objects) and Tauri (ISO strings)
+- **Statistics Loading**: Project statistics (chapter count, character count) are loaded dynamically in `ProjectGrid.tsx` using parallel API calls
+- **Parameter Conversion**: Frontend uses camelCase, Tauri backend expects camelCase (auto-converts to snake_case), Electron uses mixed formats
 
 ## ESLint Configuration
 - Uses TypeScript ESLint parser with React hooks support
@@ -293,6 +296,7 @@ The application uses SQLite with the following main entities:
 - v0.4.7 - Editor refactoring and database storage implementation completed
 
 ### Tauri Version (Development - feature/tauri-migration branch)
+- v0.4.12+tauri (2025-07-30) - Character management system and AI settings perfected, complete character CRUD functionality, character relationships loading and display, project card statistics display fix, AI parameter explanations added, unified API parameter format (camelCase↔snake_case conversion), character management functionality on par with Electron version
 - v2.0.0-alpha.1 (0.4.12+tauri) - CSP configuration fix and database schema problem completely resolved, SQLite database connection complete, Rust backend architecture established, dual-version parallel development, project/chapter/character CRUD operations implemented, frontend API adapter layer complete, PRAGMA statement fixes, database migrations system established
 
 ## Known Issues & Workarounds
@@ -345,6 +349,9 @@ The application uses SQLite with the following main entities:
 - **Modal Scrolling**: Use fixed height with proper flex structure (`h-[90vh]` and `min-h-0`) to ensure content scrollability
 - **Data Management Consolidation**: As of v0.4.12, data management functions are consolidated into a single 'backupManager' modal entry point
 - **Settings Page Route**: Settings page must use the full Settings component, not SettingsSimple, loaded via main-stable.tsx routes
+- **Date Utilities**: Always use `safeParseDate()` from `dateUtils.ts` when working with dates from APIs to handle both Electron and Tauri formats
+- **API Parameter Format**: When adding new Tauri commands, use camelCase in frontend API calls - Tauri automatically converts to snake_case for Rust functions
+- **Character Relationship Loading**: Character relationships are loaded automatically in `getByProjectId()` and `getById()` methods using the `get_character_relationships` command
 
 ## Dual-Version Development Workflow
 
@@ -376,7 +383,7 @@ The application uses SQLite with the following main entities:
 - **Testing**: Environment detection ensures proper functionality testing
 
 ### Migration Progress
-- **Completed**: Basic architecture, database layer, project/chapter/character CRUD, CSP configuration fix (completely disabled), database schema fixes, API unification, parameter naming standardization (camelCase)
+- **Completed**: Basic architecture, database layer, project/chapter/character CRUD (including relationships), CSP configuration fix (completely disabled), database schema fixes, API unification, parameter naming standardization (camelCase↔snake_case), character relationship system, project statistics display, date handling utilities
 - **In Progress**: AI service integration (Rust HTTP client), settings management, data migration tools
 - **Planned**: Feature parity, performance optimization, comprehensive testing
 
@@ -388,7 +395,9 @@ The application uses SQLite with the following main entities:
 - **資料庫載入慢**: 檢查是否有 `window.electronAPI` 直接調用，應使用 `api.*`
 - **PRAGMA 錯誤**: Rust 中使用 `conn.pragma_update()` 而非 `conn.execute()` 執行 PRAGMA
 - **API 未定義**: 檢查 `src/renderer/src/api/types.ts` 是否定義了對應介面
-- **參數格式錯誤**: 確保 Tauri 命令參數使用 camelCase 命名以匹配前端期望
+- **參數格式錯誤**: 確保 Tauri 命令參數使用 camelCase 命名，Tauri 會自動轉換為 snake_case
+- **日期格式問題**: 使用 `src/renderer/src/utils/dateUtils.ts` 中的 `safeParseDate()` 處理 Rust 返回的日期字符串
+- **角色關係載入失敗**: 確保新增的 `get_character_relationships` 命令已在 `src-tauri/src/lib.rs` 中註冊
 
 ### Electron 版本常見問題
 - **Ollama 連接失敗**: 確保 Ollama 服務運行中 (`ollama serve`)

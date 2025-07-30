@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Settings, Bell, Download, Shield } from 'lucide-react';
+import api from '../../api';
 
 interface UpdateSettings {
   autoCheck: boolean;
@@ -28,7 +29,7 @@ const UpdateSettings: React.FC = () => {
 
   const loadSettings = async () => {
     try {
-      const appSettings = await window.electronAPI.settings.loadSettings();
+      const appSettings = await api.settings.getAll();
       if (appSettings.update) {
         setSettings({ ...settings, ...appSettings.update });
       }
@@ -44,7 +45,7 @@ const UpdateSettings: React.FC = () => {
 
   const getCurrentVersion = async () => {
     try {
-      const version = await window.electronAPI.update.getVersion();
+      const version = await api.system.getAppVersion();
       setCurrentVersion(version);
     } catch (error) {
       console.error('獲取版本失敗:', error);
@@ -53,11 +54,10 @@ const UpdateSettings: React.FC = () => {
 
   const saveSettings = async (newSettings: UpdateSettings) => {
     try {
-      const appSettings = await window.electronAPI.settings.loadSettings();
-      appSettings.update = newSettings;
-      appSettings.lastUpdateCheck = Date.now();
+      // 保存更新設定
+      await api.settings.set('update', newSettings);
+      await api.settings.set('lastUpdateCheck', Date.now());
       
-      await window.electronAPI.settings.saveSettings(appSettings);
       setSettings(newSettings);
       setLastCheckTime(new Date().toLocaleString('zh-TW'));
     } catch (error) {
@@ -73,7 +73,7 @@ const UpdateSettings: React.FC = () => {
   const handleManualCheck = async () => {
     setIsChecking(true);
     try {
-      await window.electronAPI.update.checkForUpdates();
+      await api.updates.checkForUpdates();
       setLastCheckTime(new Date().toLocaleString('zh-TW'));
     } catch (error) {
       console.error('手動檢查更新失敗:', error);

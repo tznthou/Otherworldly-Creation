@@ -48,7 +48,8 @@
       "Bash(kill:*)",
       "Bash(npm run diagnostic:*)",
       "Bash(npm run:*)",
-      "Bash(./src-tauri/target/release/genesis-chronicle)"
+      "Bash(./src-tauri/target/release/genesis-chronicle)",
+      "Bash(timeout 30 npm run dev:tauri)"
     ],
     "deny": []
   }
