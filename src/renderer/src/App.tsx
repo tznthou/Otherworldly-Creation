@@ -24,6 +24,7 @@ import { checkOllamaService, fetchModelsInfo } from './store/slices/aiSlice';
 import { ErrorHandler, withErrorBoundary } from './utils/errorUtils';
 import { NotificationService } from './components/UI/NotificationSystem';
 import { useSettingsApplication, useShortcuts } from './hooks/useSettings';
+import { useI18n } from './hooks/useI18n';
 import AutoBackupService from './services/autoBackupService';
 import UpdateManager from './components/Update/UpdateManager';
 
@@ -68,6 +69,9 @@ const AppContent: React.FC = () => {
   // 全域快捷鍵
   useShortcuts();
   
+  // 國際化系統
+  const { t } = useI18n();
+  
   const {
     isActive: isTutorialActive,
     currentStep,
@@ -84,11 +88,11 @@ const AppContent: React.FC = () => {
       try {
         // 檢查運行環境
         console.log('=== App 初始化調試信息 ===');
-        console.log('運行環境:', window.electronAPI ? 'Electron' : (window.__TAURI__ ? 'Tauri' : 'Unknown'));
+        console.log('運行環境:', (typeof window !== 'undefined' && window.electronAPI) ? 'Electron' : (typeof window !== 'undefined' && window.__TAURI__) ? 'Tauri' : 'Unknown');
         console.log('API 層已載入:', typeof api !== 'undefined');
         
         // 顯示初始化通知
-        NotificationService.info('正在初始化', '創世紀元正在啟動中...');
+        NotificationService.info(t('common.info'), t('app.initializing'));
         
         // 初始化自動備份服務
         await AutoBackupService.initialize();
@@ -96,24 +100,20 @@ const AppContent: React.FC = () => {
         // 將 Ollama 服務檢查移到背景執行（不阻塞初始化）
         setTimeout(async () => {
           console.log('App: 背景檢查 Ollama 服務...');
-          console.log('App: 當前環境:', window.electronAPI ? 'Electron' : (window.__TAURI__ ? 'Tauri' : 'Unknown'));
+          console.log('App: 當前環境:', (typeof window !== 'undefined' && window.electronAPI) ? 'Electron' : (typeof window !== 'undefined' && window.__TAURI__) ? 'Tauri' : 'Unknown');
           
           try {
-            try {
-              console.log('App: 開始調用 checkOllamaService...');
-              const result = await dispatch(checkOllamaService()).unwrap();
-              console.log('App: checkOllamaService 結果:', result);
-              
-              console.log('App: 開始載入模型列表...');
-              const models = await dispatch(fetchModelsInfo()).unwrap();
-              console.log('App: fetchModelsInfo 結果:', models);
-              
-              console.log('App: AI 服務初始化完成');
-            } catch (error) {
-              console.error('App: AI 服務初始化失敗:', error);
-            }
-          } else {
-            console.error('App: electronAPI.ai 不可用，跳過 AI 初始化');
+            console.log('App: 開始調用 checkOllamaService...');
+            const result = await dispatch(checkOllamaService()).unwrap();
+            console.log('App: checkOllamaService 結果:', result);
+            
+            console.log('App: 開始載入模型列表...');
+            const models = await dispatch(fetchModelsInfo()).unwrap();
+            console.log('App: fetchModelsInfo 結果:', models);
+            
+            console.log('App: AI 服務初始化完成');
+          } catch (error) {
+            console.error('App: AI 服務初始化失敗:', error);
           }
         }, 500); // 0.5 秒後開始背景檢查
         
@@ -123,7 +123,7 @@ const AppContent: React.FC = () => {
         setIsInitialized(true);
         
         // 顯示成功通知
-        NotificationService.success('初始化完成', '創世紀元已準備就緒！');
+        NotificationService.success(t('common.success'), t('app.initSuccess'));
         
         // 移除自動顯示的首次教學提示，用戶可以透過幫助中心主動選擇教學
       } catch (error) {
@@ -141,8 +141,8 @@ const AppContent: React.FC = () => {
         );
         
         NotificationService.error(
-          '初始化失敗', 
-          '應用程式初始化時遇到問題，某些功能可能無法正常使用'
+          t('common.error'), 
+          t('app.initFailed')
         );
         
         setIsInitialized(true); // 即使失敗也要顯示界面
@@ -159,14 +159,14 @@ const AppContent: React.FC = () => {
         <div className="relative z-10 text-center">
           <div className="mb-8">
             <h1 className="font-cosmic text-4xl font-bold text-gold-500 mb-2 animate-pulse-glow">
-              創世紀元
+              {t('app.title')}
             </h1>
-            <p className="text-lg text-gray-300 font-chinese">異世界創作神器</p>
+            <p className="text-lg text-gray-300 font-chinese">{t('app.subtitle')}</p>
           </div>
           <LoadingSpinner 
             size="large" 
             color="gold" 
-            text="正在初始化創世紀元..."
+            text={t('app.initializing')}
           />
         </div>
       </div>

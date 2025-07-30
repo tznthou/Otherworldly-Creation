@@ -1,5 +1,6 @@
 import React from 'react';
 import { SettingsTab, SETTINGS_TABS } from '../types';
+import { useI18n } from '../../../hooks/useI18n';
 
 interface SettingsSidebarProps {
   activeTab: SettingsTab;
@@ -22,11 +23,12 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   onImport,
   onReset,
 }) => {
+  const { t } = useI18n();
   
   return (
     <div className="w-64 min-w-64 bg-cosmic-800 border-r border-cosmic-700 flex flex-col h-full">
       <div className="p-6 border-b border-cosmic-700">
-        <h1 className="text-xl font-cosmic text-gold-500">系統設定</h1>
+        <h1 className="text-xl font-cosmic text-gold-500">{t('settings.title')}</h1>
       </div>
       
       <nav className="flex-1 p-4 overflow-y-auto">
@@ -41,7 +43,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
             }`}
           >
             <span className="mr-3 text-lg">{tab.icon}</span>
-            {tab.name}
+            {t(`settings.tabs.${tab.id}`)}
           </button>
         ))}
       </nav>
@@ -51,7 +53,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         {hasUnsavedChanges && (
           <div className="flex items-center text-sm text-gold-400 mb-2">
             <div className="w-2 h-2 bg-gold-400 rounded-full mr-2 animate-pulse"></div>
-            有未儲存的變更
+            {t('settings.messages.unsavedChanges')}
           </div>
         )}
         
@@ -62,16 +64,16 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
           className={`w-full btn-primary ${
             !hasUnsavedChanges ? 'opacity-75' : ''
           }`}
-          title="儲存設定 (Ctrl+S)"
+          title={`${t('settings.actions.save')} (Ctrl+S)`}
         >
           {isSaving ? (
             <span className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              儲存中...
+              {t('common.loading')}
             </span>
           ) : (
             <span className="flex items-center justify-center">
-              儲存設定
+              {t('settings.actions.save')}
               {hasUnsavedChanges && <span className="ml-1 text-xs">●</span>}
               <kbd className="ml-2 text-xs bg-cosmic-950/50 px-1 py-0.5 rounded">Ctrl+S</kbd>
             </span>
@@ -83,13 +85,13 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
             onClick={onExport}
             className="flex-1 btn-secondary text-sm"
           >
-            匯出
+            {t('settings.actions.export')}
           </button>
           <button
             onClick={onImport}
             className="flex-1 btn-secondary text-sm"
           >
-            匯入
+            {t('settings.actions.import')}
           </button>
         </div>
         
@@ -97,7 +99,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
           onClick={onReset}
           className="w-full btn-danger text-sm"
         >
-          重置設定
+          {t('settings.actions.reset')}
         </button>
       </div>
     </div>

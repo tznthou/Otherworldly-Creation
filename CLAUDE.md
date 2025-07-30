@@ -10,7 +10,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Quick Start
 
-### 快速開始開發
 ```bash
 # Electron 版本開發（穩定版）
 npm install && npm run dev:electron
@@ -22,384 +21,169 @@ npm install && cargo install tauri-cli && npm run dev:tauri
 npm run diagnostic
 ```
 
-## Development Commands
+## Essential Commands
 
-### Dual Version Commands
-- `npm run dev` - Start default development environment (Electron version)
-- `npm run dev:electron` - Start Electron development environment explicitly
-- `npm run dev:tauri` - Start Tauri development environment
-- `npm run build` - Build Electron version (default)
-- `npm run build:electron` - Build Electron version explicitly  
+### Development
+- `npm run dev` - Start Electron development (default)
+- `npm run dev:electron` - Explicitly start Electron development
+- `npm run dev:tauri` - Start Tauri development
+- `npm run lint` - Run ESLint on TypeScript files
+- `npm run lint -- --fix` - Auto-fix linting errors
+
+### Testing
+- `npm test` - Run all tests
+- `npm test -- path/to/test.spec.ts` - Run specific test file
+- `npm test -- --testNamePattern="pattern"` - Run tests matching pattern
+- `npm test -- --watch` - Run tests in watch mode
+- `npm test -- --coverage` - Generate coverage report
+
+### Building & Packaging
+- `npm run build` - Build Electron version
 - `npm run build:tauri` - Build Tauri version
-- `npm run clean` - Clean all build artifacts (dist, out, src-tauri/target)
+- `npm run package` - Package Electron app with Electron Forge
+- `npm run make` - Build and create distribution packages
+- `npm run clean` - Clean all build artifacts
 
-### Essential Commands
-- `npm run lint` - Run ESLint code linting
-- `npm test` - Run Jest test suite
-- `npm run package` - Package the Electron application using Electron Forge
-
-### Testing Commands
-- `npm run test:unit` - Run unit tests only
-- `npm run test:integration` - Run integration tests only  
-- `npm run test:performance` - Run performance tests only
-- `node run-unit-tests.js` - Alternative unit test runner
-- `node run-integration-tests.js` - Alternative integration test runner
-- `node run-performance-tests.js` - Alternative performance test runner
-
-### Running Single Tests
-- To run a specific test file: `npm test -- path/to/test.spec.ts`
-- To run tests matching a pattern: `npm test -- --testNamePattern="test description"`
-- To run tests in watch mode: `npm test -- --watch`
-- To update snapshots: `npm test -- --updateSnapshot`
-- To see coverage: `npm test -- --coverage`
-
-### Linting Commands
-- `npm run lint` - Run ESLint on all TypeScript files
-- `npm run lint -- --fix` - Auto-fix ESLint errors where possible
-- `npm run lint -- src/main` - Lint only main process files
-- `npm run lint -- src/renderer` - Lint only renderer process files
-
-### Build & Package Commands
-- `npm run build:electron:main` - Build Electron main process only
-- `npm run build:renderer` - Build renderer process only
-- `npm run make` - Build and create Electron distribution packages
-- `npm run make:all` - Build Electron for all platforms
-- `npm run make:mac` - Build Electron for macOS
-- `npm run make:win` - Build Electron for Windows
-- `npm run make:linux` - Build Electron for Linux
-
-### Tauri-Specific Commands
-- `cargo tauri dev` - Direct Tauri development command
-- `cargo tauri build` - Direct Tauri build command
-- `cargo tauri build --debug` - Build debug version with console output
-- Access DatabaseTest page at `http://localhost:3000/#/database-test` when running Tauri version
-- Database file location: `~/.config/com.genesis-chronicle.app/genesis.db`
-
-### Utility Commands
-- `npm run optimize` - Optimize resources before packaging
-- `npm run diagnostic` - Run system diagnostic checks
-- `npm run setup` - One-click installation script
-- `npm run release` - Full release workflow (lint, test, build, package)
-- `npm run package:simple` - Simple packaging without Electron Forge
-- `npm run package:manual` - Manual packaging process
-- `npm run test:docs` - Test user documentation
-- `npm run test:update` - Test update system
+### Tauri-Specific
+- `cargo tauri dev` - Direct Tauri development
+- `cargo tauri build` - Direct Tauri build
+- `cargo tauri build --debug` - Debug build with console
+- Database location: `~/.config/com.genesis-chronicle.app/genesis.db`
+- Test page: `http://localhost:3000/#/database-test`
 
 ## Architecture Overview
 
 ### Dual Architecture Structure
-This project supports both Electron and Tauri backends with a shared React frontend:
 
 **Electron Version (Stable)**:
-- **Main Process** (`electron/main/`): Node.js-based system integration, better-sqlite3 database operations, and IPC
-- **Renderer Process** (`src/renderer/`): React application with Redux state management
-- **Database**: SQLite with better-sqlite3, includes migration system and foreign key constraints
-- **AI Integration**: Ollama service integration for local AI text generation
+- **Main Process** (`electron/main/`): Node.js backend with better-sqlite3
+- **Renderer Process** (`src/renderer/`): React + Redux frontend
+- **IPC Handlers** (`electron/main/ipc/`): Communication layer
+- **Database**: SQLite with migrations and foreign keys
 
 **Tauri Version (Development)**:
-- **Backend** (`src-tauri/src/`): Rust-based system integration with rusqlite database operations
-- **Commands** (`src-tauri/src/commands/`): Tauri commands for system, project, chapter, and character operations
-- **Database** (`src-tauri/src/database/`): SQLite with rusqlite, includes migration system (connection.rs, models.rs, migrations.rs)
-- **Frontend**: Shared React application using unified API adapter
+- **Backend** (`src-tauri/src/`): Rust backend with rusqlite
+- **Commands** (`src-tauri/src/commands/`): Tauri command handlers
+- **Database** (`src-tauri/src/database/`): SQLite with Rust models
+- **Frontend**: Shared React application
 
-**Shared Frontend** (`src/renderer/`):
-- **API Adapter** (`src/renderer/src/api/`): Unified API interface that detects runtime environment and switches between Electron and Tauri APIs
-- **Environment Detection**: `isElectron()` and `isTauri()` functions for runtime adaptation
-- **Testing**: Comprehensive test suite with unit, integration, and performance tests
+**Unified Frontend** (`src/renderer/`):
+- **API Adapter** (`src/renderer/src/api/`): Environment-aware API layer
+- **State Management**: Redux Toolkit
+- **UI Framework**: React + Tailwind CSS + Custom cosmic theme
+- **Editor**: Slate.js for rich text editing
 
 ### IPC/API Architecture
 
-**Electron IPC System**:
-- Main handlers in `electron/main/ipc/ipcHandlers.ts`
-- Specialized handlers in subdirectories:
-  - `aiHandlers.ts` - AI/Ollama related operations
-  - `basicHandlers.ts` - Basic app operations (app quit, reload, etc.)
-  - `updateHandlers.ts` - Auto-update functionality
-  - `handlers/` - Project and chapter management
+**Electron IPC Channels**:
+- `system:*` - System operations (dialogs, app control)
+- `database:*` - Database backup/restore operations
+- `ai:*` - AI/Ollama service operations
+- `project:*` - Project CRUD operations
+- `chapter:*` - Chapter CRUD operations
+- `character:*` - Character CRUD operations
 
-Key Electron IPC channels:
-- `system:showSaveDialog`, `system:showOpenDialog` - File dialog operations
-- `database:backup`, `database:restore` - Database backup/restore
-- `ai:checkService`, `ai:generate` - AI service operations
-- `project:create`, `project:update`, `project:delete` - Project CRUD
-- `chapter:create`, `chapter:update`, `chapter:delete` - Chapter CRUD
+**Tauri Commands**:
+- System: `get_app_version`, `quit_app`, `reload_app`, `show_save_dialog`, `show_open_dialog`
+- Projects: `get_all_projects`, `create_project`, `update_project`, `delete_project`
+- Chapters: `get_chapters_by_project_id`, `create_chapter`, `update_chapter`, `delete_chapter`
+- Characters: `get_characters_by_project_id`, `create_character`, `update_character`, `delete_character`
+- Relationships: `create_character_relationship`, `delete_character_relationship`, `get_character_relationships`
+- Database: `backup_database`, `restore_database`, `run_maintenance`, `get_database_stats`
 
-**Tauri Commands System**:
-- All commands registered in `src-tauri/src/lib.rs` using `tauri::generate_handler!`
-- System commands: `get_app_version`, `quit_app`, `reload_app`
-- Project commands: `get_all_projects`, `create_project`, `update_project`, `delete_project`
-- Chapter commands: `get_chapters_by_project_id`, `create_chapter`, `update_chapter`, `delete_chapter`
-- Character commands: `get_characters_by_project_id`, `create_character`, `update_character`, `delete_character`
-- Character relationship commands: `create_character_relationship`, `delete_character_relationship`, `get_character_relationships`, `clear_character_relationships`
-
-**Unified API Interface**:
-- `src/renderer/src/api/index.ts` - Environment detection and API routing
-- `src/renderer/src/api/electron.ts` - Electron API implementation
-- `src/renderer/src/api/tauri.ts` - Tauri API implementation using `@tauri-apps/api`
-- Frontend code uses `api.system.getAppVersion()` etc. regardless of backend
-
-### Key Services & Components
-
-#### Backend Services
-
-**Electron Services** (`electron/main/`):
-- **Database Service** (`database/database.ts`): SQLite operations with better-sqlite3, migration support
-- **Ollama Service** (`services/ollamaService.ts`): AI integration and service detection
-- **Context Manager** (`services/contextManager.ts`): Intelligent context management for AI requests
-- **Update Service** (`services/updateService.ts`): Application update handling
-- **IPC Handlers** (`ipc/`): Communication between main and renderer processes
-
-**Tauri Services** (`src-tauri/src/`):
-- **Database Module** (`database/mod.rs`): SQLite operations with rusqlite, centralized connection management
-- **Database Connection** (`database/connection.rs`): SQLite connection with PRAGMA settings using `pragma_update`
-- **Database Models** (`database/models.rs`): Rust structs for Project, Chapter, Character entities
-- **Database Migrations** (`database/migrations.rs`): Version-controlled schema migrations
-- **Commands** (`commands/`): Modular Tauri command handlers for different feature areas
-
-#### Frontend Architecture
-- **State Management**: Redux Toolkit with structured slices
-- **Routing**: React Router for page navigation
-- **UI Components**: Custom component library with cosmic/magical theme
-- **Editor**: Slate.js rich text editor for chapter writing with SQLite persistence
-- **Character Management**: Full character creation and relationship system
-- **Template System**: Complete template browser and application system for different light novel genres
-- **Statistics System**: Comprehensive writing statistics with project, overall, and trend analytics
+**Unified API Usage**:
+```javascript
+// Frontend code uses unified API regardless of backend
+const projects = await api.projects.getAll();
+const version = await api.system.getAppVersion();
+```
 
 ### Database Schema
-The application uses SQLite with the following main entities:
-- **Projects**: novels/stories with template metadata
-  - Fields: id, name, description, type, templateData, created_at, updated_at
-- **Chapters**: individual story chapters with rich content storage  
-  - Fields: id, projectId, title, content, orderIndex, created_at, updated_at
-- **Characters**: character profiles and relationships
-  - Fields: id, projectId, name, description, attributes, avatarUrl, created_at, updated_at
-- **Character_relationships**: unidirectional relationship tracking
-  - Fields: id, fromCharacterId, toCharacterId, relationshipType, description
-- **Settings**: user preferences and configurations
-  - Stored as key-value pairs
-- Statistics are calculated dynamically from existing data
 
-### External Dependencies
-- **Ollama**: Required for AI functionality - must be installed and running locally
-- **Models**: Supports various Ollama models, defaulting to llama3.2 for Chinese text
+**Projects Table**:
+- id, name, description, type, templateData, created_at, updated_at
+
+**Chapters Table**:
+- id, projectId, title, content, orderIndex, created_at, updated_at
+
+**Characters Table**:
+- id, projectId, name, description, attributes, avatarUrl, created_at, updated_at
+
+**Character_relationships Table**:
+- id, fromCharacterId, toCharacterId, relationshipType, description
+
+**Settings Table**:
+- key-value pairs for user preferences
 
 ## Development Workflow
 
 ### Adding New Features
 
-**For Electron Version**:
-1. Add IPC handlers in `electron/main/ipc/ipcHandlers.ts`
-2. Expose APIs in `electron/main/preload.ts` (ensure types match)
-3. Update `src/renderer/src/api/electron.ts` to call new IPC channels
-4. Create Redux slice in `src/renderer/src/store/slices/`
-5. Build React components in `src/renderer/src/components/`
-6. Add corresponding tests in `electron/main/__tests__/` or `src/__tests__/`
-7. Update route in `src/renderer/src/main-stable.tsx` if adding new pages
-
-**For Tauri Version**:
-1. Add Tauri commands in appropriate `src-tauri/src/commands/*.rs` files
-2. Register commands in `src-tauri/src/lib.rs` invoke_handler
-3. Update `src/renderer/src/api/tauri.ts` to call new commands using `invoke()`
-4. Update `src/renderer/src/api/types.ts` to include new API interface definitions
-5. Frontend components and Redux slices are shared between versions
-6. Test Tauri-specific functionality using DatabaseTest page
-
 **For Both Versions**:
-- Ensure API interface consistency in `src/renderer/src/api/types.ts`
-- Frontend code should use unified `api.*` calls, not platform-specific implementations
+1. Define API interface in `src/renderer/src/api/types.ts`
+2. Implement frontend components in `src/renderer/src/components/`
+3. Add Redux slices if needed in `src/renderer/src/store/slices/`
+4. Write tests in `src/__tests__/`
 
-### Database Changes
+**For Electron**:
+1. Add IPC handler in `electron/main/ipc/ipcHandlers.ts`
+2. Expose API in `electron/main/preload.ts`
+3. Update `src/renderer/src/api/electron.ts`
 
-**Electron Database** (`electron/main/database/database.ts`):
-- Uses better-sqlite3 with Node.js
-- Migration system with version tracking
-- Supports foreign key constraints and cascading deletes
-- Transaction support for complex operations
+**For Tauri**:
+1. Add command in `src-tauri/src/commands/*.rs`
+2. Register in `src-tauri/src/lib.rs`
+3. Update `src/renderer/src/api/tauri.ts`
 
-**Tauri Database** (`src-tauri/src/database/`):
-- Uses rusqlite with Rust
-- Migration system in `migrations.rs` with version tracking
-- Database models in `models.rs` using Rust structs with serde
-- Connection management in `connection.rs` using `pragma_update()` for PRAGMA statements
-- **Critical**: Use `pragma_update()` instead of `execute()` for PRAGMA statements to avoid "Execute returned results" errors
-- All database operations are async and return `Result<T, String>` for error handling
+### Database Operations
 
-### Testing Strategy
-- **Unit Tests**: Core services and database operations (`src/main/__tests__/unit/`, `src/__tests__/unit/`)
-- **Integration Tests**: Component interactions and workflows (`src/__tests__/integration/`)
-- **Performance Tests**: Large data handling and AI request performance (`src/__tests__/performance/`)
-- **Test Setup**: Uses Jest with jsdom environment, tests run from `<rootDir>/src`
-
-## Configuration Files
-
-**Shared Configuration**:
-- `jest.config.js` - Jest testing configuration with jsdom environment
-- `tsconfig.json` - TypeScript configuration for renderer process
-- `vite.config.ts` - Vite build configuration for frontend
-- `.eslintrc.js` - ESLint configuration
-- `tailwind.config.js` - Tailwind CSS configuration
-
-**Electron-Specific**:
-- `tsconfig.electron.json` - TypeScript configuration for Electron main process
-- `forge.config.js` - Electron Forge packaging configuration
-
-**Tauri-Specific**:
-- `src-tauri/Cargo.toml` - Rust dependencies and project configuration
-- `src-tauri/tauri.conf.json` - Tauri application configuration
-- `src-tauri/capabilities/` - Tauri security capabilities and permissions
-
-## Special Considerations
-
-### AI Service Integration
-- Ollama must be running locally for AI features to work (`ollama serve`)
-- Default model: `llama3.2` (download with `ollama pull llama3.2`)
-- Service endpoint: `http://127.0.0.1:11434` (避免 IPv6 問題)
-- Service health checking is implemented with automatic retry mechanisms
-- Context management optimizes AI requests by intelligently building context from project data
-- Tauri 版本需實現 Rust HTTP 客戶端來調用 Ollama API
-
-### Internationalization
-- Primary language is Traditional Chinese (繁體中文)
-- All UI text and comments are in Chinese
-- English is used only for technical identifiers and code
-
-### Theme & UI
-- Custom "cosmic" theme with dark blue backgrounds and golden accents
-- Animated magical elements and particle effects
-- Responsive design optimized for desktop writing workflows
-
-### Data Management
-- Automatic backup and restore functionality
-- Database maintenance tools for health checking and optimization
-- Auto-save functionality for editor content
-- **Date Handling**: Use `safeParseDate()` from `src/renderer/src/utils/dateUtils.ts` for consistent date parsing across both Electron (Date objects) and Tauri (ISO strings)
-- **Statistics Loading**: Project statistics (chapter count, character count) are loaded dynamically in `ProjectGrid.tsx` using parallel API calls
-- **Parameter Conversion**: Frontend uses camelCase, Tauri backend expects camelCase (auto-converts to snake_case), Electron uses mixed formats
-
-## ESLint Configuration
-- Uses TypeScript ESLint parser with React hooks support
-- Ignores test files and build directories
-- Key rules:
-  - `@typescript-eslint/no-unused-vars`: Error (ignores args starting with `_`)
-  - `@typescript-eslint/no-explicit-any`: Warning
-  - `react-hooks/rules-of-hooks`: Error
-  - `react-hooks/exhaustive-deps`: Warning
-
-## Current Version
-
-### Electron Version (Stable)
-- v0.4.12 - Data management consolidation, settings page save button fix, copyright year update
-- v0.4.11 - Tutorial system architecture fix, template manager functionality restoration, UI interaction improvements
-- v0.4.10 - Help system architecture refactoring, complete user manual and quick start guide implementation, character relationship design philosophy documentation
-- v0.4.9 - Project management system enhancement, UI interaction improvements, and character management interface optimization
-- v0.4.8 - Light novel template system and writing statistics fully implemented
-- v0.4.7 - Editor refactoring and database storage implementation completed
-
-### Tauri Version (Development - feature/tauri-migration branch)
-- v0.4.12+tauri (2025-07-30) - Character management system and AI settings perfected, complete character CRUD functionality, character relationships loading and display, project card statistics display fix, AI parameter explanations added, unified API parameter format (camelCase↔snake_case conversion), character management functionality on par with Electron version
-- v2.0.0-alpha.1 (0.4.12+tauri) - CSP configuration fix and database schema problem completely resolved, SQLite database connection complete, Rust backend architecture established, dual-version parallel development, project/chapter/character CRUD operations implemented, frontend API adapter layer complete, PRAGMA statement fixes, database migrations system established
-
-## Known Issues & Workarounds
-
-### Electron Version
-- **OLLAMA Connection**: If AI features fail, ensure Ollama service is running locally (`ollama serve`). As of v0.4.6, connection issues have been completely resolved with improved IPv4/IPv6 handling
-- **Native Module Rebuild**: After installing, run `npm rebuild better-sqlite3` to ensure the SQLite module works with your Electron version
-- **TypeScript Build**: If encountering type errors, ensure both `tsconfig.json` and `tsconfig.electron.json` are properly configured
-
-### Tauri Version
-- **Rust Dependencies**: Ensure Rust toolchain is installed and up to date
-- **PRAGMA Statements**: Always use `conn.pragma_update()` instead of `conn.execute()` for PRAGMA statements to avoid "Execute returned results" errors
-- **Database Initialization**: Database is automatically initialized on first startup with proper error handling and logging
-- **Frontend Testing**: Use DatabaseTest page (`/#/database-test`) to verify Tauri database functionality
-
-## Debugging Approaches
-
-### Modal Display Issues
-- Check Redux state in `store.ts` for modal visibility
-- Verify modal name consistency between `openModal()` calls and `ModalContainer` cases
-- Use Redux DevTools to track modal state changes
-- Common modal names: 'createProject', 'backupManager', 'templateManager', 'aiSettings'
-
-### Tutorial System
-- Tutorial functionality uses `useTutorial` hook with `currentTutorialId` state
-- Each page component should check if `currentTutorialId` matches its specific tutorial
-- Tutorial buttons in help pages should display instructions rather than trigger tutorials
-
-### Template Application Flow
-1. User clicks template button → `openModal('templateManager')`
-2. Select template → `setLocalSelectedTemplate` (local state)
-3. Apply template → `setSelectedTemplate` (Redux) + `openModal('templateApplication')`
-4. Create project with proper `type` field matching template type
+**Electron**: Use better-sqlite3 in `electron/main/database/database.ts`
+**Tauri**: Use rusqlite in `src-tauri/src/database/`
+- **Critical**: Use `pragma_update()` for PRAGMA statements in Rust
+- All operations return `Result<T, String>` for error handling
 
 ## Critical Development Notes
-- **AI Service Stability**: v0.4.6 implements bulletproof Ollama connectivity with fallback mechanisms and proper timeout handling
-- **Entry Point**: Application uses `main-stable.tsx` as the stable entry point for renderer process (NOT App.tsx)
-- **Network Configuration**: Uses 127.0.0.1 instead of localhost to avoid IPv6/IPv4 resolution conflicts
-- **CSP Policy**: Content Security Policy configured to allow local AI service connections while maintaining security
-- **Module Resolution**: Uses `@/` alias for renderer imports, mapped to `src/renderer/`
-- **Test Environment**: Requires proper jsdom setup, see `src/__tests__/integration/setup.ts`
-- **Project Deletion**: Complete project deletion functionality includes confirmation dialogs and cascading deletes of related data
-- **Character Management**: Character storage uses SQLite database; avoid calling non-existent APIs like `updateRelationships` or `checkRelationshipConsistency`
-- **UI Theme Consistency**: All modals and components should use the cosmic theme with dark backgrounds (`bg-cosmic-900`) and gold accents (`text-gold-400`)
-- **Help System**: The HelpCenterModal in Dashboard redirects to the full HelpCenter component for complete help functionality
-- **Character Relationships**: The system uses single-directional relationships by design to support complex emotional dynamics and unequal relationships
-- **Tutorial System**: Tutorial steps require proper target element existence; use center positioning for steps without valid targets
-- **API Fallbacks**: Character relationship APIs may require fallback strategies if clearRelationships is not available without app restart
-- **Template Application**: When applying templates, ensure `localSelectedTemplate` is used for local state to avoid Redux naming conflicts
-- **Modal Scrolling**: Use fixed height with proper flex structure (`h-[90vh]` and `min-h-0`) to ensure content scrollability
-- **Data Management Consolidation**: As of v0.4.12, data management functions are consolidated into a single 'backupManager' modal entry point
-- **Settings Page Route**: Settings page must use the full Settings component, not SettingsSimple, loaded via main-stable.tsx routes
-- **Date Utilities**: Always use `safeParseDate()` from `dateUtils.ts` when working with dates from APIs to handle both Electron and Tauri formats
-- **API Parameter Format**: When adding new Tauri commands, use camelCase in frontend API calls - Tauri automatically converts to snake_case for Rust functions
-- **Character Relationship Loading**: Character relationships are loaded automatically in `getByProjectId()` and `getById()` methods using the `get_character_relationships` command
 
-## Dual-Version Development Workflow
+### API Compatibility
+- **Frontend**: Always use camelCase for API calls
+- **Tauri**: Automatically converts camelCase to snake_case
+- **Date Handling**: Use `safeParseDate()` from `dateUtils.ts`
+- **Environment Detection**: Use `isElectron()` and `isTauri()` functions
 
-### Branch Strategy
-- `main` branch: Stable Electron version (v0.4.12)
-- `feature/tauri-migration` branch: Tauri development version with dual architecture
-- Both versions share the same React frontend codebase under `src/renderer/`
+### Common Issues & Solutions
 
-### Environment Setup
-- **Electron Development**: `npm run dev:electron` - Uses Node.js backend with better-sqlite3
-- **Tauri Development**: `npm run dev:tauri` - Uses Rust backend with rusqlite
-- **Frontend Testing**: Access different test pages based on environment:
-  - Tauri: `/#/database-test` for database functionality testing
-  - Both: Standard application routes work in both environments
-- **API Testing**: Use browser console to test API calls:
-  ```javascript
-  // 測試 API 是否正確載入
-  console.log(window.__TAURI__ ? 'Tauri' : 'Electron');
-  
-  // 測試專案載入
-  const projects = await api.projects.getAll();
-  console.log(projects);
-  ```
+**Tauri Version**:
+- **CSP Errors**: CSP is disabled (`"csp": null`)
+- **Database Schema**: Delete DB file to reinitialize
+- **Slow Loading**: Check for `window.electronAPI` usage
+- **PRAGMA Errors**: Use `conn.pragma_update()` not `conn.execute()`
 
-### Code Organization
-- **Backend Code**: Platform-specific in `electron/main/` and `src-tauri/src/`
-- **Frontend Code**: Shared in `src/renderer/` with environment-aware API adapter
-- **API Layer**: `src/renderer/src/api/` provides unified interface for both backends
-- **Testing**: Environment detection ensures proper functionality testing
+**Electron Version**:
+- **Ollama Connection**: Ensure service is running
+- **Native Modules**: Run `npm rebuild better-sqlite3`
+- **TypeScript**: Check both tsconfig files
 
-### Migration Progress
-- **Completed**: Basic architecture, database layer, project/chapter/character CRUD (including relationships), CSP configuration fix (completely disabled), database schema fixes, API unification, parameter naming standardization (camelCase↔snake_case), character relationship system, project statistics display, date handling utilities
-- **In Progress**: AI service integration (Rust HTTP client), settings management, data migration tools
-- **Planned**: Feature parity, performance optimization, comprehensive testing
+### UI/UX Guidelines
+- **Theme**: Cosmic theme with dark backgrounds and gold accents
+- **Language**: Traditional Chinese (繁體中文) for all UI text
+- **Modals**: Use Redux modal system with consistent naming
+- **Entry Point**: `main-stable.tsx` (NOT App.tsx)
 
-## Common Troubleshooting
+### External Dependencies
+- **Ollama**: Required for AI features (`ollama serve`)
+- **Default Model**: llama3.2 for Chinese text
+- **Endpoint**: `http://127.0.0.1:11434`
 
-### Tauri 版本常見問題
-- **CSP 錯誤**: CSP 已完全禁用 (`"csp": null` in tauri.conf.json) 以解決 IPC 連接問題
-- **資料庫 Schema 錯誤**: 如遇到缺少欄位錯誤，刪除資料庫檔案 `~/.config/com.genesis-chronicle.app/genesis.db` 強制重新初始化
-- **資料庫載入慢**: 檢查是否有 `window.electronAPI` 直接調用，應使用 `api.*`
-- **PRAGMA 錯誤**: Rust 中使用 `conn.pragma_update()` 而非 `conn.execute()` 執行 PRAGMA
-- **API 未定義**: 檢查 `src/renderer/src/api/types.ts` 是否定義了對應介面
-- **參數格式錯誤**: 確保 Tauri 命令參數使用 camelCase 命名，Tauri 會自動轉換為 snake_case
-- **日期格式問題**: 使用 `src/renderer/src/utils/dateUtils.ts` 中的 `safeParseDate()` 處理 Rust 返回的日期字符串
-- **角色關係載入失敗**: 確保新增的 `get_character_relationships` 命令已在 `src-tauri/src/lib.rs` 中註冊
+## Testing Strategy
+- **Unit Tests**: Core services and utilities
+- **Integration Tests**: Component interactions
+- **Performance Tests**: Large data handling
+- **Environment**: Jest with jsdom
 
-### Electron 版本常見問題
-- **Ollama 連接失敗**: 確保 Ollama 服務運行中 (`ollama serve`)
-- **原生模組錯誤**: 執行 `npm rebuild better-sqlite3`
-- **TypeScript 錯誤**: 檢查 `tsconfig.json` 和 `tsconfig.electron.json` 配置
+## Version Information
+
+**Electron**: v0.4.12 (Stable)
+**Tauri**: v2.0.0-alpha.1 (Development)
+**Branch Structure**:
+- `main`: Stable Electron version
+- `feature/tauri-migration`: Tauri development

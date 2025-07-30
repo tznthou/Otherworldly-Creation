@@ -45,7 +45,7 @@ const UpdateManager: React.FC = () => {
     }
 
     // Electron 環境的更新事件監聽
-    if (window.electronAPI?.update) {
+    if (typeof window !== 'undefined' && window.electronAPI?.update) {
       // 監聽更新事件
       window.electronAPI.update.onUpdateAvailable((updateInfo: UpdateCheckResult) => {
         setUpdateResult(updateInfo);
@@ -65,7 +65,9 @@ const UpdateManager: React.FC = () => {
       checkPendingUpdate();
 
       return () => {
-        window.electronAPI.update.removeAllListeners();
+        if (typeof window !== 'undefined' && window.electronAPI?.update) {
+          window.electronAPI.update.removeAllListeners();
+        }
       };
     }
   }, []);
@@ -77,7 +79,9 @@ const UpdateManager: React.FC = () => {
     }
     
     try {
-      const pendingPath = await window.electronAPI?.update?.checkPendingUpdate?.();
+      const pendingPath = (typeof window !== 'undefined' && window.electronAPI?.update?.checkPendingUpdate) 
+        ? await window.electronAPI.update.checkPendingUpdate() 
+        : null;
       if (pendingPath) {
         setDownloadedFilePath(pendingPath);
         setIsVisible(true);

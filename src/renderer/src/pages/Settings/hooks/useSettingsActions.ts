@@ -8,6 +8,7 @@ import {
 } from '../../../store/slices/settingsSlice';
 import { addNotification } from '../../../store/slices/uiSlice';
 import { AppSettings } from '../../../store/slices/settingsSlice';
+import { tSync } from '../../../i18n';
 
 export const useSettingsActions = () => {
   const dispatch = useAppDispatch();
@@ -21,8 +22,8 @@ export const useSettingsActions = () => {
       console.error('載入設定失敗:', error);
       dispatch(addNotification({
         type: 'error',
-        title: '載入設定失敗',
-        message: '無法載入使用者設定，將使用預設設定',
+        title: tSync('common.error'),
+        message: tSync('settings.messages.loadFailed'),
         duration: 5000,
       }));
     } finally {
@@ -36,8 +37,8 @@ export const useSettingsActions = () => {
       dispatch(markSettingsSaved());
       dispatch(addNotification({
         type: 'success',
-        title: '設定已儲存',
-        message: '所有設定已成功儲存',
+        title: tSync('settings.messages.saved'),
+        message: tSync('settings.messages.saveSuccess'),
         duration: 3000,
       }));
       return true;
@@ -45,8 +46,8 @@ export const useSettingsActions = () => {
       console.error('儲存設定失敗:', error);
       dispatch(addNotification({
         type: 'error',
-        title: '儲存失敗',
-        message: '儲存設定時發生錯誤',
+        title: tSync('common.error'),
+        message: tSync('settings.messages.saveFailed'),
         duration: 5000,
       }));
       return false;
@@ -54,14 +55,14 @@ export const useSettingsActions = () => {
   };
 
   const resetAllSettings = async () => {
-    if (confirm('確定要重置所有設定嗎？此操作無法復原。')) {
+    if (confirm(tSync('settings.messages.resetConfirm'))) {
       try {
         await SettingsService.resetSettings();
         dispatch(resetSettings());
         dispatch(addNotification({
           type: 'success',
-          title: '設定已重置',
-          message: '所有設定已重置為預設值',
+          title: tSync('common.success'),
+          message: tSync('settings.messages.resetSuccess'),
           duration: 3000,
         }));
         return true;
@@ -69,8 +70,8 @@ export const useSettingsActions = () => {
         console.error('重置設定失敗:', error);
         dispatch(addNotification({
           type: 'error',
-          title: '重置失敗',
-          message: '重置設定時發生錯誤',
+          title: tSync('common.error'),
+          message: tSync('settings.messages.resetFailed'),
           duration: 5000,
         }));
         return false;
@@ -94,8 +95,8 @@ export const useSettingsActions = () => {
       
       dispatch(addNotification({
         type: 'success',
-        title: '設定已匯出',
-        message: '設定檔案已下載',
+        title: tSync('common.success'),
+        message: tSync('settings.messages.exportSuccess'),
         duration: 3000,
       }));
       return true;
@@ -103,8 +104,8 @@ export const useSettingsActions = () => {
       console.error('匯出設定失敗:', error);
       dispatch(addNotification({
         type: 'error',
-        title: '匯出失敗',
-        message: '匯出設定時發生錯誤',
+        title: tSync('common.error'),
+        message: tSync('settings.messages.exportFailed'),
         duration: 5000,
       }));
       return false;
@@ -125,8 +126,8 @@ export const useSettingsActions = () => {
             dispatch(loadSettings(importedSettings));
             dispatch(addNotification({
               type: 'success',
-              title: '設定已匯入',
-              message: '設定已成功匯入並套用',
+              title: tSync('common.success'),
+              message: tSync('settings.messages.importSuccess'),
               duration: 3000,
             }));
             resolve(true);
@@ -134,8 +135,8 @@ export const useSettingsActions = () => {
             console.error('匯入設定失敗:', error);
             dispatch(addNotification({
               type: 'error',
-              title: '匯入失敗',
-              message: '設定檔案格式錯誤或損壞',
+              title: tSync('common.error'),
+              message: tSync('settings.messages.importFailed'),
               duration: 5000,
             }));
             resolve(false);

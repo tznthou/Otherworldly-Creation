@@ -214,50 +214,60 @@ const DatabaseMaintenance: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">
-                  {checkResult.statistics.totalProjects}
+            {checkResult.statistics ? (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-400">
+                      {checkResult.statistics.totalProjects || 0}
+                    </div>
+                    <div className="text-sm text-gray-400">專案</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-400">
+                      {checkResult.statistics.totalChapters || 0}
+                    </div>
+                    <div className="text-sm text-gray-400">章節</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-400">
+                      {checkResult.statistics.totalCharacters || 0}
+                    </div>
+                    <div className="text-sm text-gray-400">角色</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-400">
+                      {formatBytes(checkResult.statistics.databaseSize || 0)}
+                    </div>
+                    <div className="text-sm text-gray-400">資料庫大小</div>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-400">專案</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-400">
-                  {checkResult.statistics.totalChapters}
+                
+                <div className="mt-4">
+                  <div className="flex justify-between text-sm text-gray-400 mb-1">
+                    <span>碎片化程度</span>
+                    <span>{(checkResult.statistics.fragmentationLevel || 0).toFixed(1)}%</span>
+                  </div>
+                  <Progress 
+                    value={checkResult.statistics.fragmentationLevel || 0} 
+                    className="h-2"
+                  />
                 </div>
-                <div className="text-sm text-gray-400">章節</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-400">
-                  {checkResult.statistics.totalCharacters}
+                
+                <div className="mt-2 text-sm text-gray-400">
+                  上次整理: {checkResult.statistics.lastVacuum ? 
+                    new Date(checkResult.statistics.lastVacuum).toLocaleString('zh-TW') : 
+                    '未知'
+                  }
                 </div>
-                <div className="text-sm text-gray-400">角色</div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>無法載入資料庫統計資訊</p>
+                <p className="text-sm mt-2">請檢查資料庫連接狀態</p>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-400">
-                  {formatBytes(checkResult.statistics.databaseSize)}
-                </div>
-                <div className="text-sm text-gray-400">資料庫大小</div>
-              </div>
-            </div>
-            
-            <div className="mt-4">
-              <div className="flex justify-between text-sm text-gray-400 mb-1">
-                <span>碎片化程度</span>
-                <span>{checkResult.statistics.fragmentationLevel.toFixed(1)}%</span>
-              </div>
-              <Progress 
-                value={checkResult.statistics.fragmentationLevel} 
-                className="h-2"
-              />
-            </div>
-            
-            <div className="mt-2 text-sm text-gray-400">
-              上次整理: {checkResult.statistics.lastVacuum ? 
-                new Date(checkResult.statistics.lastVacuum).toLocaleString('zh-TW') : 
-                '未知'
-              }
-            </div>
+            )}
           </CardContent>
         </Card>
       )}

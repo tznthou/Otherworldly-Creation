@@ -1,87 +1,95 @@
 import type { API } from './types';
 
+// 安全的 electronAPI 訪問函數
+const getElectronAPI = () => {
+  if (typeof window === 'undefined' || !window.electronAPI) {
+    throw new Error('Electron API 不可用');
+  }
+  return window.electronAPI;
+};
+
 // Electron API 實現（直接轉發到 window.electronAPI）
 export const electronAPI: API = {
   projects: {
-    getAll: () => window.electronAPI.projects.getAll(),
-    create: (project) => window.electronAPI.projects.create(project),
-    update: (project) => window.electronAPI.projects.update(project),
-    delete: (id) => window.electronAPI.projects.delete(id),
-    getById: (id) => window.electronAPI.projects.getById(id),
+    getAll: () => getElectronAPI().projects.getAll(),
+    create: (project) => getElectronAPI().projects.create(project),
+    update: (project) => getElectronAPI().projects.update(project),
+    delete: (id) => getElectronAPI().projects.delete(id),
+    getById: (id) => getElectronAPI().projects.getById(id),
   },
   
   chapters: {
-    getByProjectId: (projectId) => window.electronAPI.chapters.getByProjectId(projectId),
-    create: (chapter) => window.electronAPI.chapters.create(chapter),
-    update: (chapter) => window.electronAPI.chapters.update(chapter),
-    delete: (id) => window.electronAPI.chapters.delete(id),
-    getById: (id) => window.electronAPI.chapters.getById(id),
+    getByProjectId: (projectId) => getElectronAPI().chapters.getByProjectId(projectId),
+    create: (chapter) => getElectronAPI().chapters.create(chapter),
+    update: (chapter) => getElectronAPI().chapters.update(chapter),
+    delete: (id) => getElectronAPI().chapters.delete(id),
+    getById: (id) => getElectronAPI().chapters.getById(id),
   },
 
   characters: {
-    getByProjectId: (projectId) => window.electronAPI.characters.getByProjectId(projectId),
-    create: (character) => window.electronAPI.characters.create(character),
-    update: (character) => window.electronAPI.characters.update(character),
-    delete: (id) => window.electronAPI.characters.delete(id),
-    getById: (id) => window.electronAPI.characters.getById(id),
-    createRelationship: (relationship) => window.electronAPI.characters.createRelationship(relationship),
-    deleteRelationship: (id) => window.electronAPI.characters.deleteRelationship(id),
-    clearRelationships: (characterId) => window.electronAPI.characters.clearRelationships(characterId),
+    getByProjectId: (projectId) => getElectronAPI().characters.getByProjectId(projectId),
+    create: (character) => getElectronAPI().characters.create(character),
+    update: (character) => getElectronAPI().characters.update(character),
+    delete: (id) => getElectronAPI().characters.delete(id),
+    getById: (id) => getElectronAPI().characters.getById(id),
+    createRelationship: (relationship) => getElectronAPI().characters.createRelationship(relationship),
+    deleteRelationship: (id) => getElectronAPI().characters.deleteRelationship(id),
+    clearRelationships: (characterId) => getElectronAPI().characters.clearRelationships(characterId),
   },
 
   ai: {
-    checkOllamaService: () => window.electronAPI.ai.checkOllamaService(),
-    getServiceStatus: () => window.electronAPI.ai.getServiceStatus(),
-    listModels: () => window.electronAPI.ai.listModels(),
-    getModelsInfo: () => window.electronAPI.ai.getModelsInfo(),
-    checkModelAvailability: (modelName) => window.electronAPI.ai.checkModelAvailability(modelName),
-    generateText: (prompt, model, params) => window.electronAPI.ai.generateText(prompt, model, params),
+    checkOllamaService: () => getElectronAPI().ai.checkOllamaService(),
+    getServiceStatus: () => getElectronAPI().ai.getServiceStatus(),
+    listModels: () => getElectronAPI().ai.listModels(),
+    getModelsInfo: () => getElectronAPI().ai.getModelsInfo(),
+    checkModelAvailability: (modelName) => getElectronAPI().ai.checkModelAvailability(modelName),
+    generateText: (prompt, model, params) => getElectronAPI().ai.generateText(prompt, model, params),
     generateWithContext: (projectId, chapterId, position, model, params) => 
-      window.electronAPI.ai.generateWithContext(projectId, chapterId, position, model, params),
-    updateOllamaConfig: (config) => window.electronAPI.ai.updateOllamaConfig(config),
+      getElectronAPI().ai.generateWithContext(projectId, chapterId, position, model, params),
+    updateOllamaConfig: (config) => getElectronAPI().ai.updateOllamaConfig(config),
   },
 
   context: {
     buildContext: (projectId, chapterId, position) => 
-      window.electronAPI.context.buildContext(projectId, chapterId, position),
+      getElectronAPI().context.buildContext(projectId, chapterId, position),
     compressContext: (context, maxTokens) => 
-      window.electronAPI.context.compressContext(context, maxTokens),
-    getContextStats: (projectId) => window.electronAPI.context.getContextStats(projectId),
+      getElectronAPI().context.compressContext(context, maxTokens),
+    getContextStats: (projectId) => getElectronAPI().context.getContextStats(projectId),
   },
 
   settings: {
-    get: (key) => window.electronAPI.settings.get(key),
-    set: (key, value) => window.electronAPI.settings.set(key, value),
-    getAll: () => window.electronAPI.settings.getAll(),
-    reset: () => window.electronAPI.settings.reset(),
+    get: (key) => getElectronAPI().settings.get(key),
+    set: (key, value) => getElectronAPI().settings.set(key, value),
+    getAll: () => getElectronAPI().settings.getAll(),
+    reset: () => getElectronAPI().settings.reset(),
   },
 
   database: {
-    backup: (path) => window.electronAPI.database.backup(path),
-    restore: (path) => window.electronAPI.database.restore(path),
-    runMaintenance: () => window.electronAPI.database.runMaintenance(),
-    getStats: () => window.electronAPI.database.getStats(),
+    backup: (path) => getElectronAPI().database.backup(path),
+    restore: (path) => getElectronAPI().database.restore(path),
+    runMaintenance: () => getElectronAPI().database.runMaintenance(),
+    getStats: () => getElectronAPI().database.getStats(),
   },
 
   system: {
-    getAppVersion: () => window.electronAPI.system.getAppVersion(),
-    openExternal: (url) => window.electronAPI.system.openExternal(url),
-    showSaveDialog: (options) => window.electronAPI.system.showSaveDialog(options),
-    showOpenDialog: (options) => window.electronAPI.system.showOpenDialog(options),
+    getAppVersion: () => getElectronAPI().system.getAppVersion(),
+    openExternal: (url) => getElectronAPI().system.openExternal(url),
+    showSaveDialog: (options) => getElectronAPI().system.showSaveDialog(options),
+    showOpenDialog: (options) => getElectronAPI().system.showOpenDialog(options),
     quitApp: async () => {
       // Electron 版本使用 ipcRenderer
-      await window.electronAPI.system.quit();
+      await getElectronAPI().system.quit();
     },
     reloadApp: async () => {
       // Electron 版本使用 ipcRenderer  
-      await window.electronAPI.system.reload();
+      await getElectronAPI().system.reload();
     },
   },
 
   updates: {
-    checkForUpdates: () => window.electronAPI.updates.checkForUpdates(),
-    downloadUpdate: () => window.electronAPI.updates.downloadUpdate(),
-    installUpdate: () => window.electronAPI.updates.installUpdate(),
-    setAutoUpdate: (enabled) => window.electronAPI.updates.setAutoUpdate(enabled),
+    checkForUpdates: () => getElectronAPI().updates.checkForUpdates(),
+    downloadUpdate: () => getElectronAPI().updates.downloadUpdate(),
+    installUpdate: () => getElectronAPI().updates.installUpdate(),
+    setAutoUpdate: (enabled) => getElectronAPI().updates.setAutoUpdate(enabled),
   },
 };

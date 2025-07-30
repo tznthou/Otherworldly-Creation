@@ -226,6 +226,18 @@ class UpdateService {
           });
           
           res.on('end', () => {
+            if (res.statusCode === 404) {
+              console.warn('GitHub repository 不存在或尚未發佈版本，使用當前版本');
+              resolve(this.currentVersion);
+              return;
+            }
+            
+            if (res.statusCode !== 200) {
+              console.warn(`GitHub API 請求失敗: ${res.statusCode}，使用當前版本`);
+              resolve(this.currentVersion);
+              return;
+            }
+            
             try {
               const releaseInfo = JSON.parse(data);
               const latestVersion = releaseInfo.tag_name?.replace(/^v/, '') || this.currentVersion;

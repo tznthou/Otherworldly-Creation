@@ -9,15 +9,52 @@ export class SettingsService {
    */
   static async loadSettings(): Promise<AppSettings> {
     try {
-      // 嘗試從 localStorage 載入
+      // 首先嘗試從後端 API 載入（統一設定來源）
+      try {
+        const backendSettings = await api.settings.getAll();
+        if (backendSettings && Object.keys(backendSettings).length > 0) {
+          console.log('從後端載入設定:', backendSettings);
+          const mergedSettings = this.mergeWithDefaults(backendSettings);
+          
+          // 同時更新 localStorage 作為快取
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(mergedSettings));
+          
+          return mergedSettings;
+        }
+      } catch (error) {
+        console.warn('從後端載入設定失敗，回退到 localStorage:', error);
+      }
+
+      // 回退到 localStorage
       const stored = localStorage.getItem(SETTINGS_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         // 合併預設設定以確保新增的設定項目有預設值
-        return this.mergeWithDefaults(parsed);
+        const mergedSettings = this.mergeWithDefaults(parsed);
+        
+        // 嘗試將 localStorage 設定同步到後端
+        try {
+          for (const [key, value] of Object.entries(mergedSettings)) {
+            await api.settings.set(key, value);
+          }
+          console.log('成功將 localStorage 設定同步到後端');
+        } catch (error) {
+          console.warn('同步設定到後端失敗:', error);
+        }
+        
+        return mergedSettings;
       }
       
-      // 如果沒有儲存的設定，返回預設設定
+      // 如果都沒有設定，初始化預設設定到後端
+      try {
+        for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
+          await api.settings.set(key, value);
+        }
+        console.log('初始化預設設定到後端');
+      } catch (error) {
+        console.warn('初始化預設設定到後端失敗:', error);
+      }
+      
       return DEFAULT_SETTINGS;
     } catch (error) {
       console.error('載入設定失敗:', error);
@@ -38,6 +75,7 @@ export class SettingsService {
       // 同時通知主程序更新設定
       try {
         // 將設定逐一儲存到統一的設定系統
+        // 對於複雜物件，需要序列化儲存
         for (const [key, value] of Object.entries(settings)) {
           await api.settings.set(key, value);
         }

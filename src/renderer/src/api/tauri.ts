@@ -216,9 +216,36 @@ export const tauriAPI: API = {
   },
 
   settings: {
-    get: (key) => safeInvoke('get_setting', { key }),
-    set: (key, value) => safeInvoke('set_setting', { key, value }),
-    getAll: () => safeInvoke('get_all_settings'),
+    get: async (key) => {
+      const value = await safeInvoke('get_setting', { key });
+      // Tauri 後端返回字串，需要嘗試解析 JSON
+      if (value && typeof value === 'string') {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value; // 如果不是 JSON，返回原始字串
+        }
+      }
+      return value;
+    },
+    set: (key, value) => {
+      // 將值轉換為 JSON 字串（與 Tauri 後端一致）
+      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      return safeInvoke('set_setting', { key, value: stringValue });
+    },
+    getAll: async () => {
+      const settingsArray = await safeInvoke('get_all_settings');
+      // 將 SettingEntry[] 轉換為物件格式
+      const settings = {};
+      for (const entry of settingsArray || []) {
+        try {
+          settings[entry.key] = JSON.parse(entry.value);
+        } catch {
+          settings[entry.key] = entry.value;
+        }
+      }
+      return settings;
+    },
     reset: () => safeInvoke('reset_settings'),
   },
 
@@ -227,6 +254,7 @@ export const tauriAPI: API = {
     restore: (path) => safeInvoke('restore_database', { path }),
     runMaintenance: () => safeInvoke('run_database_maintenance'),
     getStats: () => safeInvoke('get_database_stats'),
+    healthCheck: () => safeInvoke('health_check'),
   },
 
   system: {

@@ -6,6 +6,7 @@ import { getDatabase } from '../database/database';
 import { setupAIHandlers } from './aiHandlers';
 import { setupProjectHandlers, setupChapterHandlers } from './handlers';
 import { getDatabaseMaintenanceService } from '../services/databaseMaintenance';
+import UpdateService from '../services/updateService';
 // TODO: 其他處理器將逐步從原檔案遷移到獨立模組
 
 export function setupIpcHandlers(): void {
@@ -285,6 +286,8 @@ function setupCharacterHandlers(db: any): void {
 }
 
 function setupSystemHandlers(): void {
+  const updateService = new UpdateService();
+  
   // 獲取應用版本資訊
   ipcMain.handle('system:getVersion', async () => {
     try {
@@ -292,6 +295,40 @@ function setupSystemHandlers(): void {
       return packageJson.version;
     } catch (error) {
       return '未知版本';
+    }
+  });
+  
+  // 檢查更新
+  ipcMain.handle('system:checkForUpdates', async () => {
+    try {
+      return await updateService.checkForUpdates();
+    } catch (error) {
+      console.error('檢查更新失敗:', error);
+      return {
+        hasUpdate: false,
+        currentVersion: updateService.getCurrentVersion(),
+        error: error instanceof Error ? error.message : '檢查更新失敗'
+      };
+    }
+  });
+  
+  // 下載更新
+  ipcMain.handle('system:downloadUpdate', async (_, updateInfo) => {
+    try {
+      return await updateService.downloadUpdate(updateInfo);
+    } catch (error) {
+      console.error('下載更新失敗:', error);
+      throw error;
+    }
+  });
+  
+  // 安裝更新
+  ipcMain.handle('system:installUpdate', async (_, updateFilePath) => {
+    try {
+      return await updateService.installUpdate(updateFilePath);
+    } catch (error) {
+      console.error('安裝更新失敗:', error);
+      throw error;
     }
   });
 
@@ -419,7 +456,33 @@ function setupContextHandlers(): void {
 
 function setupSettingsHandlers(): void {
   // 獲取設定
-  ipcMain.handle('settings:get', async () => {
+  ipcMain.handle('settings:get', async (_, key) => {
+    try {
+      const settingsPath = path.join(__dirname, '../../settings.json');
+      
+      if (fs.existsSync(settingsPath)) {
+        const settingsData = fs.readFileSync(settingsPath, 'utf-8');
+        const settings = JSON.parse(settingsData);
+        return settings[key];
+      }
+      
+      // 返回預設設定值
+      const defaultSettings = {
+        theme: 'dark',
+        language: 'zh-TW',  
+        autoSave: true,
+        aiModel: 'llama3.2',
+        fontSize: 16
+      };
+      return defaultSettings[key];
+    } catch (error) {
+      console.error('獲取設定失敗:', error);
+      throw error;
+    }
+  });
+
+  // 獲取所有設定
+  ipcMain.handle('settings:getAll', async () => {
     try {
       const settingsPath = path.join(__dirname, '../../settings.json');
       
@@ -437,12 +500,38 @@ function setupSettingsHandlers(): void {
         fontSize: 16
       };
     } catch (error) {
-      console.error('獲取設定失敗:', error);
+      console.error('獲取所有設定失敗:', error);
+      throw error;
+    }
+  });
+
+  // 設定單個設定值
+  ipcMain.handle('settings:set', async (_, key, value) => {
+    try {
+      const settingsPath = path.join(__dirname, '../../settings.json');
+      const settingsDir = path.dirname(settingsPath);
+      
+      if (!fs.existsSync(settingsDir)) {
+        fs.mkdirSync(settingsDir, { recursive: true });
+      }
+
+      let settings = {};
+      if (fs.existsSync(settingsPath)) {
+        const settingsData = fs.readFileSync(settingsPath, 'utf-8');
+        settings = JSON.parse(settingsData);
+      }
+
+      // 直接設定值，無需額外轉換
+      settings[key] = value;
+      
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    } catch (error) {
+      console.error('設定單個設定失敗:', error);
       throw error;
     }
   });
   
-  // 儲存設定
+  // 儲存整個設定物件 (保持向後相容)
   ipcMain.handle('settings:save', async (_, settings) => {
     try {
       const settingsPath = path.join(__dirname, '../../settings.json');

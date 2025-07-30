@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 5;
+const DB_VERSION: i32 = 6;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -50,6 +50,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v5(conn)?;
             update_version(conn, 5)?;
             log::info!("遷移到版本 5 完成");
+        }
+        
+        if current_version < 6 {
+            apply_migration_v6(conn)?;
+            update_version(conn, 6)?;
+            log::info!("遷移到版本 6 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -448,6 +454,38 @@ fn apply_migration_v5(conn: &Connection) -> Result<()> {
     conn.execute("DROP TABLE IF EXISTS templates", [])?;
     
     log::info!("版本 5 遷移完成：所有表結構已與 Tauri 模型同步");
+    
+    Ok(())
+}
+
+/// 版本 6: 確保 settings 表存在
+fn apply_migration_v6(conn: &Connection) -> Result<()> {
+    log::info!("版本 6 遷移：確保 settings 表存在");
+    
+    // 檢查 settings 表是否存在
+    let table_exists = conn
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'")?
+        .query_row([], |_| Ok(()))
+        .is_ok();
+    
+    if !table_exists {
+        log::info!("settings 表不存在，開始創建...");
+        
+        // 創建 settings 表
+        conn.execute(
+            "CREATE TABLE settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )",
+            [],
+        )?;
+        
+        log::info!("settings 表創建成功");
+    } else {
+        log::info!("settings 表已存在，跳過創建");
+    }
     
     Ok(())
 }

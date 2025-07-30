@@ -106,7 +106,8 @@ const CreateProjectModal: React.FC = () => {
     }
   }, [dispatch, isOllamaConnected]);
 
-  const handleClose = () => {
+  const handleClose = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     dispatch(closeModal('createProject'));
   };
 
@@ -276,21 +277,25 @@ const CreateProjectModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div 
+        className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl relative my-8 flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
+        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between relative z-10 flex-shrink-0">
           <h2 className="text-xl font-cosmic text-gold-500">創建新專案</h2>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-400 hover:text-white hover:bg-cosmic-700 text-2xl p-2 rounded-lg transition-colors"
+            aria-label="關閉"
           >
             ✕
           </button>
         </div>
 
         {/* 內容 */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           {/* 步驟指示器 */}
           <div className="flex items-center mb-8">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -652,7 +657,7 @@ const CreateProjectModal: React.FC = () => {
         </div>
 
         {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-between">
+        <div className="p-6 border-t border-cosmic-700 flex justify-between relative z-10 bg-cosmic-900 rounded-b-xl flex-shrink-0">
           {step === 1 ? (
             <button
               onClick={handleClose}

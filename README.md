@@ -4,10 +4,10 @@
 
 ## 🚀 開發狀態
 
-**當前版本：v0.4.12 + Tauri 移植分支** - 2025年7月30日更新  
-**開發進度：Tauri 版本架構完善 ✅，CSP 配置修復 ✅，API 統一化完成 ✅，Electron API 依賴完全移除 ✅**
+**當前版本：v0.4.13 + Tauri 移植分支** - 2025年7月30日更新  
+**開發進度：國際化系統重構 ✅，設定系統修復 ✅，資料庫健康檢查 API 完善 ✅，翻譯系統 JSON 化 ✅**
 
-### 📊 系統狀態 (2025-07-30 17:20 CST)
+### 📊 系統狀態 (2025-07-30 20:59 CST)
 - **當前分支**：`feature/tauri-migration` (領先 main 分支 3 個提交)
 - **Tauri 版本**：v2.0.0-alpha.1 
 - **系統環境**：macOS Darwin 24.5.0 (arm64), Node.js v22.16.0, Rust toolchain 已配置
@@ -28,6 +28,29 @@
 - 💾 **資料管理**：SQLite 資料庫，支援備份還原和資料庫維護
 - 🎨 **星空主題**：深藍色星空背景配金色魔法陣的動漫風格界面
 - 🧪 **完整測試**：單元測試、整合測試、性能測試全覆蓋
+
+### 🔄 最新完成功能 (v0.4.13) - 🌐 國際化系統重構與設定功能完善
+
+#### 🌐 國際化系統重構（架構升級）
+- 🔧 **i18n 系統重構**：從靜態 TypeScript 翻譯改為動態 JSON 翻譯檔案載入
+- 📁 **翻譯檔案分離**：建立獨立的 zh-TW.json、zh-CN.json、en.json、ja.json 翻譯檔案
+- ⚡ **動態載入機制**：實現 TranslationLoader 類別，支援預載入和按需載入翻譯
+- 🔄 **同步/非同步 API**：提供 t() 非同步和 tSync() 同步翻譯函數，適應不同使用場景
+- 🎯 **組件國際化**：完成設定頁面所有組件的翻譯鍵轉換，支援完整多語言切換
+
+#### ⚙️ 設定系統功能修復（重要修復）
+- 🐛 **翻譯鍵修復**：修正 useSettingsActions.ts 中翻譯路徑錯誤（settings.saved → settings.messages.saved）
+- 🔧 **硬編碼文字修復**：SettingsSidebar 和 GeneralSettings 組件移除所有硬編碼中文字串
+- 💾 **儲存通知修復**：解決設定儲存後顯示「找不到翻譯」警告的問題
+- 🌍 **多語言支援**：設定頁面現在支援繁體中文、簡體中文、英文、日文完整切換
+- 🎨 **界面一致性**：統一所有設定相關的按鈕、標題、提示文字的翻譯
+
+#### 🗄️ 資料庫健康檢查 API 完善（Tauri 後端）
+- 🦀 **Rust 後端修復**：重寫 health_check 命令，返回前端期望的 DatabaseCheckResult 格式
+- 📊 **完整統計資訊**：提供 totalProjects、totalChapters、totalCharacters、databaseSize 等詳細統計
+- 🔍 **問題檢測機制**：實現資料庫完整性檢查、缺失表格檢測、自動修復建議
+- ⚠️ **錯誤處理改善**：前端添加 null 檢查，後端提供有意義的錯誤訊息和修復建議
+- 🔧 **API 格式統一**：確保 Tauri 和 Electron 版本的資料庫檢查 API 完全一致
 
 ### 🔄 最新完成功能 (v0.4.12) - 💾 資料管理整合與系統設定修復
 
@@ -276,6 +299,14 @@ npm run package
 │           │   ├── types.ts          # API 介面定義
 │           │   ├── electron.ts       # Electron API 實現
 │           │   └── tauri.ts          # Tauri API 實現
+│           ├── i18n/                 # 國際化系統
+│           │   ├── index.ts          # i18n 服務主入口
+│           │   ├── translations.ts   # 翻譯載入器與快取管理
+│           │   └── locales/          # 翻譯檔案目錄
+│           │       ├── zh-TW.json    # 繁體中文翻譯
+│           │       ├── zh-CN.json    # 簡體中文翻譯
+│           │       ├── en.json       # 英文翻譯
+│           │       └── ja.json       # 日文翻譯
 │           ├── pages/
 │           │   ├── DatabaseTest.tsx  # Tauri 資料庫測試頁面
 │           │   └── TauriTest.tsx     # Tauri 功能測試頁面
@@ -283,6 +314,7 @@ npm run package
 │           ├── store/                # Redux 狀態管理
 │           ├── services/             # 前端服務
 │           ├── hooks/                # 自定義 hooks
+│           │   └── useI18n.ts        # 國際化 hook
 │           ├── types/                # TypeScript 類型定義
 │           ├── data/                 # 資料定義
 │           └── utils/                # 工具函數
@@ -455,6 +487,7 @@ AI 功能通過 Ollama API 實現：
 ## 版本變更紀錄
 
 ### Tauri 遷移分支 (feature/tauri-migration)
+- 0.4.13+tauri (2025-07-30 20:59)：🌐 **國際化系統重構與設定功能完善**，完整重構 i18n 系統從 TypeScript 靜態翻譯改為 JSON 動態載入，建立 zh-TW/zh-CN/en/ja 四語言翻譯檔案，實現 TranslationLoader 動態載入機制，修復設定頁面所有翻譯鍵錯誤和硬編碼文字，重寫 Tauri 後端 health_check 命令返回正確 API 格式，修復 DatabaseMaintenance 組件 JavaScript 錯誤，完成設定系統多語言支援，解決儲存後 UI 凍結問題
 - 0.4.12+tauri (2025-07-30 17:20)：🧹 **Electron API 依賴完全清理**，徹底檢查並移除所有 Tauri 版本中的 window.electronAPI 直接調用，修復 14 個檔案的 API 呼叫方式，更新服務檔案使用統一 API 介面，添加環境檢測邏輯確保跨平台兼容性，Tauri 版本現已完全獨立於 Electron API，實現真正的雙架構並行開發
 - 0.4.12+tauri (2025-07-30 00:04)：✨ **角色管理系統與 AI 設定完善**，完全修復角色 CRUD 功能（創建、編輯、刪除、關係管理），實現角色關係載入與顯示，修復專案卡片統計數據顯示，新增 AI 參數說明（Top P 和最大生成長度），統一 API 參數格式（camelCase↔snake_case 轉換），角色管理功能達到與 Electron 版本完全對等
 - 0.4.12+tauri (2025-07-29 22:30)：🛠️ **重大修復：CSP 與資料庫 Schema 問題完全解決**，完全禁用 CSP 解決 IPC 連接問題，刪除舊資料庫檔案重新初始化修復 `order_index` 和 `description` 欄位缺失問題，修復 templateService.ts 和 templateCharacterService.ts 使用統一 API，重新構建 Tauri 應用程式，創建專案和進入專案編輯器功能完全正常，Tauri 版本達到穩定可用狀態

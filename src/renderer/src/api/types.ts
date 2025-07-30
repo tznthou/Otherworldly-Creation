@@ -63,6 +63,7 @@ export interface API {
     restore: (path: string) => Promise<void>;
     runMaintenance: () => Promise<any>;
     getStats: () => Promise<any>;
+    healthCheck: () => Promise<any>;
   };
 
   // 系統功能

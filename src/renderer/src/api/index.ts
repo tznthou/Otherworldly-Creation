@@ -4,19 +4,32 @@ import type { API } from './types';
 
 // 檢測運行環境
 export const isElectron = () => {
-  return typeof window !== 'undefined' && window.electronAPI !== undefined;
+  try {
+    return typeof window !== 'undefined' && 
+           typeof window.electronAPI !== 'undefined' && 
+           window.electronAPI !== null &&
+           typeof window.electronAPI === 'object';
+  } catch (error) {
+    console.warn('isElectron 檢測錯誤:', error);
+    return false;
+  }
 };
 
 export const isTauri = () => {
-  // 檢查多個 Tauri 相關的標識
-  return typeof window !== 'undefined' && (
-    window.__TAURI__ !== undefined ||
-    window.__TAURI_INTERNALS__ !== undefined ||
-    // 檢查是否在 Tauri webview 中運行
-    navigator.userAgent.includes('Tauri') ||
-    // 檢查是否存在 Tauri API
-    typeof window.__TAURI_INVOKE__ === 'function'
-  );
+  try {
+    // 檢查多個 Tauri 相關的標識
+    return typeof window !== 'undefined' && (
+      (typeof window.__TAURI__ !== 'undefined' && window.__TAURI__ !== null) ||
+      (typeof window.__TAURI_INTERNALS__ !== 'undefined' && window.__TAURI_INTERNALS__ !== null) ||
+      // 檢查是否在 Tauri webview 中運行
+      (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.includes('Tauri')) ||
+      // 檢查是否存在 Tauri API
+      typeof window.__TAURI_INVOKE__ === 'function'
+    );
+  } catch (error) {
+    console.warn('isTauri 檢測錯誤:', error);
+    return false;
+  }
 };
 
 // 動態檢測和載入 API

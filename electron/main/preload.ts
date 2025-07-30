@@ -144,10 +144,10 @@ const electronAPI: ElectronAPI = {
     showOpenDialog: (options) => ipcRenderer.invoke('system:showOpenDialog', options),
   },
   updates: {
-    checkForUpdates: () => ipcRenderer.invoke('updates:checkForUpdates'),
-    downloadUpdate: () => ipcRenderer.invoke('updates:downloadUpdate'),
-    installUpdate: () => ipcRenderer.invoke('updates:installUpdate'),
-    getUpdateStatus: () => ipcRenderer.invoke('updates:getUpdateStatus'),
+    checkForUpdates: () => ipcRenderer.invoke('system:checkForUpdates'),
+    downloadUpdate: (updateInfo) => ipcRenderer.invoke('system:downloadUpdate', updateInfo),
+    installUpdate: (updateFilePath) => ipcRenderer.invoke('system:installUpdate', updateFilePath),
+    getUpdateStatus: () => ipcRenderer.invoke('system:getUpdateStatus'),
   },
 };
 

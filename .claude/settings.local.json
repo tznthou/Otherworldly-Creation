@@ -49,7 +49,8 @@
       "Bash(npm run diagnostic:*)",
       "Bash(npm run:*)",
       "Bash(./src-tauri/target/release/genesis-chronicle)",
-      "Bash(timeout 30 npm run dev:tauri)"
+      "Bash(timeout 30 npm run dev:tauri)",
+      "Bash(cargo build:*)"
     ],
     "deny": []
   }
