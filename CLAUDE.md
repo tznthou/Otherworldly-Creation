@@ -150,6 +150,8 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Entry Point**: `main-stable.tsx` (NOT App.tsx) - this is the actual application entry
 - **Translation Keys**: Always use translation keys, never hardcoded text
 - **Modal System**: Use Redux modal system with consistent naming patterns
+- **Error Filtering**: `main-stable.tsx` implements early error interception for Tauri-specific console errors
+- **Scrollbar Design**: 16px gold-themed scrollbars with `!important` CSS to override Tailwind reset
 
 ## Common Development Tasks
 
@@ -227,6 +229,12 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Issue**: Users couldn't see generated results without manual scrolling
 - **Solution**: Implement auto-scroll to results container after content generation
 - **Implementation**: Use `data-results-container` attribute and `scrollIntoView` with smooth behavior
+
+**Smart Scrollbar System** (`src/renderer/src/index.css` + `src/renderer/src/pages/ProjectEditor/ProjectEditor.tsx`):
+- **Implementation**: 16px gold-themed scrollbars with gradient effects and cosmic theme integration
+- **Critical**: Use `!important` CSS declarations to override Tailwind's base reset styles
+- **Container Fix**: Ensure outer container in ProjectEditor has `overflow: 'auto'` and proper height constraints
+- **Browser Compatibility**: Uses both webkit scrollbar properties and CSS scrollbar-width/color for cross-browser support
 
 **Database Pragma Statements** (`src-tauri/src/database/migrations.rs`):
 - **Critical**: Use `conn.pragma_update()` for PRAGMA statements, NOT `conn.execute()`
@@ -326,8 +334,10 @@ npm run test:performance   # Performance tests
 
 ## Version Information
 
-**Current Version**: v1.0.0 (Pure Tauri Architecture)
+**Current Version**: v1.0.0+ (Pure Tauri Architecture with UI Enhancements)
+**Latest Update**: Smart scrollbar system implementation (2025-07-31)
 **Tauri Version**: v2.0.0-alpha.1
 **Architecture**: Single unified Tauri + Rust + React stack
 **Database**: SQLite with rusqlite v0.29+
 **Build Target**: Cross-platform desktop application
+**Recent Additions**: 16px gold-themed scrollbars, enhanced editor container scrolling

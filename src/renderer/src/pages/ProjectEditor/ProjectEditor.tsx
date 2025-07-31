@@ -197,7 +197,7 @@ const ProjectEditorContent: React.FC = () => {
   }
 
   const editorContent = (
-    <div className="h-full flex overflow-hidden">
+    <div className="min-h-full flex">
       {/* 章節列表側邊欄 */}
       <div className="w-80 bg-cosmic-900 border-r border-cosmic-700 flex flex-col">
         {/* 專案標題 */}
@@ -247,13 +247,13 @@ const ProjectEditorContent: React.FC = () => {
       </div>
 
       {/* 編輯器區域 */}
-      <div className="flex-1 flex relative" style={{ height: '100vh', overflow: 'auto' }}>
+      <div className="flex-1 flex relative">
         {/* 主編輯區 */}
         <div className="flex-1 flex flex-col">
           {currentChapter ? (
             <>
               {/* 工具欄 */}
-              <div data-tutorial="editor-toolbar">
+              <div data-tutorial="editor-toolbar" className="flex-shrink-0">
                 <EditorToolbar
                   onSave={saveNow}
                   onAIWrite={handleAIWrite}
@@ -263,16 +263,14 @@ const ProjectEditorContent: React.FC = () => {
               </div>
 
               {/* 編輯器 */}
-              <div className="flex-1 flex flex-col">
-                <div className="flex-1" data-tutorial="writing-area">
-                  <SlateEditor
-                    value={currentChapter.content}
-                    onChange={handleEditorChange}
-                    placeholder="開始寫作..."
-                    autoFocus={true}
-                    onSave={saveNow}
-                  />
-                </div>
+              <div className="flex-1 overflow-auto" style={{ maxHeight: '60vh' }} data-tutorial="writing-area">
+                <SlateEditor
+                  value={currentChapter.content}
+                  onChange={handleEditorChange}
+                  placeholder="開始寫作..."
+                  autoFocus={true}
+                  onSave={saveNow}
+                />
                 
                 {/* 章節筆記 (可折疊) */}
                 <div className="p-4 border-t border-cosmic-700" data-tutorial="chapter-notes">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
@@ -12,6 +13,11 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { sidebarCollapsed } = useAppSelector(state => state.ui);
+  const location = useLocation();
+  
+  // 檢測是否為編輯器頁面，允許外層滾動
+  const isEditorPage = location.pathname.includes('/project/');
+  const mainOverflowClass = isEditorPage ? 'overflow-auto' : 'overflow-hidden';
 
   return (
     <div className="flex h-screen bg-cosmic-950 relative">
@@ -29,7 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Header />
         
         {/* 主要內容 */}
-        <main className="flex-1 overflow-hidden relative">
+        <main className={`flex-1 ${mainOverflowClass} relative`}>
           {children}
         </main>
         
