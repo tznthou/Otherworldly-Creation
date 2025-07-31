@@ -26,7 +26,7 @@ pub async fn build_context(
     // 1. 獲取專案資訊
     let project: Project = conn
         .query_row(
-            "SELECT * FROM projects WHERE id = ?",
+            "SELECT id, name, description, type, settings, created_at, updated_at FROM projects WHERE id = ?",
             [&project_id],
             |row| Ok(Project {
                 id: row.get(0)?,
@@ -43,7 +43,7 @@ pub async fn build_context(
     // 2. 獲取當前章節內容
     let chapter: Chapter = conn
         .query_row(
-            "SELECT * FROM chapters WHERE id = ?",
+            "SELECT id, project_id, title, content, order_index, created_at, updated_at FROM chapters WHERE id = ?",
             [&chapter_id],
             |row| Ok(Chapter {
                 id: row.get(0)?,
@@ -59,7 +59,7 @@ pub async fn build_context(
     
     // 3. 獲取專案的所有角色
     let mut stmt = conn
-        .prepare("SELECT * FROM characters WHERE project_id = ?")
+        .prepare("SELECT id, project_id, name, description, attributes, avatar_url, created_at, updated_at FROM characters WHERE project_id = ?")
         .map_err(|e| e.to_string())?;
     
     let characters: Vec<Character> = stmt
@@ -106,14 +106,29 @@ pub async fn build_context(
     // 5. 構建上下文
     let mut context = String::new();
     
+    // 字符清理函數
+    fn clean_text(text: &str) -> String {
+        text.chars()
+            .filter(|c| {
+                // 保留所有合法的文字字符，包括中文
+                c.is_alphanumeric() || // 包括中文字符
+                c.is_whitespace() ||   // 空白字符
+                ".,!?;:\"'()[]{}「」『』，。！？；：（）【】《》〈〉".contains(*c) || 
+                *c == '-' || *c == '_' || *c == '/' || *c == '\\' || 
+                *c == '=' || *c == '+' || *c == '*' || *c == '&' ||
+                *c == '%' || *c == '$' || *c == '#' || *c == '@'
+            })
+            .collect()
+    }
+    
     // 添加專案背景
-    context.push_str("【故事背景】\n");
-    context.push_str(&format!("小說名稱：{}\n", project.name));
+    context.push_str("[Story Background]\n");
+    context.push_str(&format!("Title: {}\n", clean_text(&project.name)));
     if let Some(desc) = &project.description {
-        context.push_str(&format!("故事簡介：{}\n", desc));
+        context.push_str(&format!("Description: {}\n", clean_text(desc)));
     }
     if let Some(project_type) = &project.r#type {
-        context.push_str(&format!("類型：{}\n", project_type));
+        context.push_str(&format!("Genre: {}\n", clean_text(project_type)));
     }
     context.push_str("\n");
     
@@ -156,9 +171,9 @@ pub async fn build_context(
     }
     
     // 添加當前章節內容（到指定位置為止）
-    context.push_str("【當前章節】\n");
-    context.push_str(&format!("章節標題：{}\n", chapter.title));
-    context.push_str("內容：\n");
+    context.push_str("[Current Chapter]\n");
+    context.push_str(&format!("Chapter Title: {}\n", clean_text(&chapter.title)));
+    context.push_str("Content:\n");
     
     if let Some(content) = &chapter.content {
         // 只取到指定位置的內容
@@ -168,32 +183,33 @@ pub async fn build_context(
             content
         };
         
-        // 如果內容太長，只保留最後的部分（約 1000 字）
+        // 清理內容並如果內容太長，只保留最後的部分（約 1000 字）
+        let cleaned_content = clean_text(truncated_content);
         const MAX_CONTEXT_CHARS: usize = 1000;
-        if truncated_content.len() > MAX_CONTEXT_CHARS {
-            let start_pos = truncated_content.len().saturating_sub(MAX_CONTEXT_CHARS);
+        if cleaned_content.len() > MAX_CONTEXT_CHARS {
+            let start_pos = cleaned_content.len().saturating_sub(MAX_CONTEXT_CHARS);
             // 找到最近的句號或換行符，避免從句子中間開始
-            let adjusted_start = truncated_content[start_pos..]
-                .find(|c| c == '。' || c == '！' || c == '？' || c == '\n')
+            let adjusted_start = cleaned_content[start_pos..]
+                .find(|c| c == '.' || c == '!' || c == '?' || c == '\n')
                 .map(|i| start_pos + i + 1)
                 .unwrap_or(start_pos);
             
-            context.push_str("...(前文省略)...\n\n");
-            context.push_str(&truncated_content[adjusted_start..]);
+            context.push_str("...(previous content omitted)...\n\n");
+            context.push_str(&cleaned_content[adjusted_start..]);
         } else {
-            context.push_str(truncated_content);
+            context.push_str(&cleaned_content);
         }
     }
     
     // 添加續寫指示
-    context.push_str("\n\n【續寫要求】\n");
-    context.push_str("請根據以上的故事背景、角色設定和已有內容，繼續創作這個故事。\n");
-    context.push_str("要求：\n");
-    context.push_str("1. 保持角色性格和說話方式的一致性\n");
-    context.push_str("2. 延續當前的情節發展，不要突兀轉折\n");
-    context.push_str("3. 保持相同的文風和敘事視角\n");
-    context.push_str("4. 注意細節的連貫性（時間、地點、人物狀態等）\n");
-    context.push_str("5. 直接續寫內容，不要加任何額外說明\n");
+    context.push_str("\n\n[Writing Instructions]\n");
+    context.push_str("Please continue writing this story based on the background, characters, and existing content above.\n");
+    context.push_str("Requirements:\n");
+    context.push_str("1. Maintain character consistency and dialogue style\n");
+    context.push_str("2. Continue the current plot development smoothly\n");
+    context.push_str("3. Keep the same writing style and narrative perspective\n");
+    context.push_str("4. Ensure detail consistency (time, place, character states)\n");
+    context.push_str("5. Continue the story directly without any additional explanations\n");
     
     // 如果是輕小說類型，添加特定提示
     if let Some(project_type) = &project.r#type {

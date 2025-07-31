@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
+import { startProgress, updateProgress, completeProgress, failProgress } from '../../store/slices/errorSlice';
+import { store } from '../../store/store';
 import { api } from '../../api';
 
 interface SimpleAIWritingPanelProps {
@@ -32,20 +34,30 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   currentPosition,
   onInsertText 
 }) => {
+  console.log('SimpleAIWritingPanel 渲染了', { projectId, chapterId, currentPosition });
+  
   const dispatch = useAppDispatch();
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // 狀態宣告
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
+  const [progressId, setProgressId] = useState<string | null>(null);
   
   // 從 Redux store 獲取 AI 相關狀態
   const { currentModel, availableModels, isOllamaConnected } = useAppSelector(state => state.ai);
   
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
-  const [progress, setProgress] = useState<GenerationProgress>({
-    current: 0,
-    total: 100,
-    stage: 'preparing',
-    message: '準備中...'
-  });
+  useEffect(() => {
+    console.log('AI 狀態更新:', { currentModel, availableModels, isOllamaConnected });
+    console.log('按鈕禁用狀態:', isGenerating || !currentModel || !isOllamaConnected);
+    console.log('isGenerating:', isGenerating);
+  }, [currentModel, availableModels, isOllamaConnected, isGenerating]);
+  
+  // 監聽 generationOptions 變化
+  useEffect(() => {
+    console.log('generationOptions 狀態變化:', generationOptions);
+    console.log('generationOptions 數量:', generationOptions.length);
+  }, [generationOptions]);
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(200);
   const [generationCount, setGenerationCount] = useState(3);
@@ -67,37 +79,76 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   }, []);
   
   // 更新進度的輔助函數
-  const updateProgress = useCallback((stage: GenerationProgress['stage'], current: number, message: string) => {
-    setProgress({
-      current,
-      total: 100,
-      stage,
-      message
-    });
-  }, []);
+  const updateGenerationProgress = useCallback((current: number, message: string, completedSteps?: number) => {
+    if (progressId) {
+      dispatch(updateProgress({
+        id: progressId,
+        progress: current,
+        currentStep: message,
+        completedSteps
+      }));
+    }
+  }, [dispatch, progressId]);
 
   // 生成文本
   const handleGenerate = async () => {
-    if (!currentModel) {
-      dispatch(addNotification({
-        type: 'warning',
-        title: '未選擇模型',
-        message: '請先選擇一個 AI 模型',
-        duration: 3000,
-      }));
-      return;
-    }
-    
-    console.log('開始 AI 生成 - 專案ID:', projectId, '章節ID:', chapterId, '位置:', currentPosition);
+    try {
+      console.log('handleGenerate 被調用了');
+      
+      if (!currentModel) {
+        console.log('沒有選擇模型');
+        dispatch(addNotification({
+          type: 'warning',
+          title: '未選擇模型',
+          message: '請先選擇一個 AI 模型',
+          duration: 3000,
+        }));
+        return;
+      }
+      
+      console.log('開始 AI 生成 - 專案ID:', projectId, '章節ID:', chapterId, '位置:', currentPosition);
     
     setIsGenerating(true);
-    setGenerationOptions([]);
+    // 不要在生成過程中清空選項，讓用戶可以看到之前的結果
+    // setGenerationOptions([]);
     
     // 創建 AbortController 用於取消請求
     abortControllerRef.current = new AbortController();
     
+    // 開始進度追蹤
+    console.log('開始創建進度指示器...');
+    console.log('當前模型:', currentModel);
+    console.log('生成數量:', generationCount);
+    
+    const progressAction = startProgress({
+      title: 'AI 續寫',
+      description: `正在使用 ${currentModel} 模型生成文本`,
+      totalSteps: generationCount,
+      completedSteps: 0
+    });
+    
+    console.log('進度 Action:', progressAction);
+    dispatch(progressAction);
+    
+    // 等待一小段時間以確保進度已創建
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    // 從 store 獲取最新的進度 ID
+    const progressState = store.getState().progress;
+    console.log('當前進度狀態:', progressState);
+    const latestProgress = progressState.indicators[progressState.indicators.length - 1];
+    const newProgressId = latestProgress?.id;
+    
+    if (!newProgressId) {
+      console.error('無法創建進度指示器');
+      return;
+    }
+    
+    console.log('進度指示器 ID:', newProgressId);
+    setProgressId(newProgressId);
+    
     try {
-      updateProgress('preparing', 10, '準備生成上下文...');
+      updateGenerationProgress(10, '準備生成上下文...');
       
       // 生成多個選項的參數配置
       const baseParams = {
@@ -119,12 +170,12 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         });
       }
       
-      updateProgress('generating', 20, `開始生成 ${generationCount} 個版本...`);
+      updateGenerationProgress(20, `開始生成 ${generationCount} 個版本...`);
       
       // 並行生成多個選項
       const generationPromises = paramVariations.map(async (params, index) => {
         try {
-          updateProgress('generating', 20 + (index * 60 / generationCount), `生成第 ${index + 1} 個版本...`);
+          updateGenerationProgress(20 + (index * 60 / generationCount), `生成第 ${index + 1} 個版本...`, index);
           
           console.log('調用 API - 參數:', { projectId, chapterId, currentPosition, currentModel, params });
           
@@ -139,7 +190,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
           console.log('API 回應結果:', result);
           
           return {
-            id: `${Date.now()}-${index}`,
+            id: `${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
             text: result,
             temperature: params.temperature,
             timestamp: new Date()
@@ -153,7 +204,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       // 等待所有生成完成
       const results = await Promise.all(generationPromises);
       
-      updateProgress('processing', 90, '處理生成結果...');
+      updateGenerationProgress(90, '處理生成結果...', generationCount);
       
       // 過濾掉失敗的結果
       const validResults = results.filter((result): result is GenerationOption => result !== null);
@@ -162,8 +213,29 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         throw new Error('所有生成嘗試都失敗了');
       }
       
-      updateProgress('complete', 100, `成功生成 ${validResults.length} 個版本`);
-      setGenerationOptions(validResults);
+      // 完成進度
+      dispatch(completeProgress(newProgressId));
+      
+      console.log('設置生成選項:', validResults);
+      console.log('validResults 數量:', validResults.length);
+      
+      // 使用 functional update 確保狀態正確更新
+      setGenerationOptions(() => {
+        console.log('正在設置新的 generationOptions:', validResults);
+        
+        // 自動滾動到結果區域
+        setTimeout(() => {
+          const resultsElement = document.querySelector('[data-results-container]');
+          if (resultsElement) {
+            resultsElement.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' 
+            });
+          }
+        }, 100);
+        
+        return validResults;
+      });
       
       dispatch(addNotification({
         type: 'success',
@@ -174,16 +246,41 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       
     } catch (error) {
       console.error('AI 續寫失敗:', error);
+      
+      // 標記進度失敗
+      if (newProgressId) {
+        dispatch(failProgress({
+          id: newProgressId,
+          error: {
+            code: 'AI_GENERATION_ERROR',
+            message: error instanceof Error ? error.message : '生成文本時發生錯誤',
+            severity: 'error',
+            category: 'ai',
+            stack: error instanceof Error ? error.stack : undefined
+          }
+        }));
+      }
+      
       dispatch(addNotification({
         type: 'error',
         title: 'AI 續寫失敗',
         message: error instanceof Error ? error.message : '生成文本時發生錯誤',
         duration: 5000,
       }));
-      updateProgress('preparing', 0, '生成失敗');
     } finally {
       setIsGenerating(false);
+      setProgressId(null);
       abortControllerRef.current = null;
+    }
+    } catch (outerError) {
+      console.error('handleGenerate 外層錯誤:', outerError);
+      setIsGenerating(false);
+      dispatch(addNotification({
+        type: 'error',
+        title: '發生未預期的錯誤',
+        message: outerError instanceof Error ? outerError.message : '未知錯誤',
+        duration: 5000,
+      }));
     }
   };
   
@@ -220,9 +317,10 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     }
     setGenerationOptions([]);
     setIsGenerating(false);
-    updateProgress('preparing', 0, '已取消');
-  }, [updateProgress]);
+  }, []);
 
+  console.log('SimpleAIWritingPanel 開始渲染 UI');
+  
   return (
     <div className="relative bg-cosmic-900 border-t border-cosmic-700 p-4 rounded-lg">
       {/* 生成中的覆蓋層 */}
@@ -237,16 +335,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
               <span className="text-lg font-medium text-gold-400">AI 正在創作中...</span>
             </div>
             <div className="text-sm text-gray-300 max-w-md">
-              {progress.message}
-            </div>
-            <div className="w-48 mx-auto">
-              <div className="h-2 bg-cosmic-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-gold-600 to-gold-400 transition-all duration-500 animate-pulse"
-                  style={{ width: `${progress.current}%` }}
-                ></div>
-              </div>
-              <div className="text-xs text-gold-400 mt-1 text-center">{progress.current}%</div>
+              AI 正在生成文本...
             </div>
           </div>
         </div>
@@ -326,10 +415,26 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         </div>
       </div>
       
+      {/* 測試按鈕 */}
+      <div className="flex justify-center mb-2">
+        <button
+          onClick={() => console.log('測試按鈕點擊成功！')}
+          className="px-4 py-1 bg-blue-500 text-white rounded text-sm"
+        >
+          測試按鈕（點我試試）
+        </button>
+      </div>
+
       {/* 生成按鈕 */}
       <div className="flex justify-center mb-4">
         <button
-          onClick={handleGenerate}
+          onClick={() => {
+            console.log('按鈕被點擊了！');
+            console.log('isGenerating:', isGenerating);
+            console.log('currentModel:', currentModel);
+            console.log('isOllamaConnected:', isOllamaConnected);
+            handleGenerate();
+          }}
           disabled={isGenerating || !currentModel || !isOllamaConnected}
           className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center min-w-[140px] ${
             isGenerating 
@@ -360,48 +465,19 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         )}
       </div>
       
-      {/* 進度指示器 */}
-      {isGenerating && (
-        <div className="mb-4 p-4 bg-cosmic-800 rounded-lg border border-gold-500/30 shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-gold-400 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-gray-200">{progress.message}</span>
-            </div>
-            <span className="text-sm font-bold text-gold-400">{progress.current}%</span>
-          </div>
-          
-          <div className="relative h-3 bg-cosmic-900 rounded-full overflow-hidden shadow-inner">
-            <div 
-              className={`h-full transition-all duration-700 ease-out relative ${
-                progress.stage === 'complete' ? 'bg-gradient-to-r from-green-500 to-green-400' : 
-                progress.stage === 'generating' ? 'bg-gradient-to-r from-gold-600 to-gold-400' : 
-                'bg-gradient-to-r from-blue-600 to-blue-400'
-              }`}
-              style={{ width: `${progress.current}%` }}
-            >
-              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-              {progress.current > 0 && (
-                <div className="absolute right-0 top-0 w-4 h-full bg-white/30 blur-sm animate-pulse"></div>
-              )}
-            </div>
-          </div>
-          
-          {/* 階段指示器 */}
-          <div className="flex justify-between mt-2 text-xs text-gray-400">
-            <span className={progress.stage === 'preparing' ? 'text-blue-400 font-medium' : ''}>準備中</span>
-            <span className={progress.stage === 'generating' ? 'text-gold-400 font-medium' : ''}>生成中</span>
-            <span className={progress.stage === 'processing' ? 'text-purple-400 font-medium' : ''}>處理中</span>
-            <span className={progress.stage === 'complete' ? 'text-green-400 font-medium' : ''}>完成</span>
-          </div>
-        </div>
-      )}
       
       {/* 生成結果 */}
+      {console.log('渲染檢查 - generationOptions.length:', generationOptions.length)}
+      {console.log('渲染檢查 - 條件:', generationOptions.length > 0)}
+      {console.log('渲染檢查 - generationOptions:', generationOptions)}
       {generationOptions.length > 0 && (
-        <div className="mt-4">
+        <div 
+          className="mt-4" 
+          data-results-container
+          style={{backgroundColor: 'red', border: '2px solid yellow', padding: '10px'}}
+        >
           <h4 className="text-sm font-medium text-gold-400 mb-3">
-            生成結果 ({generationOptions.length} 個版本)
+            🎯 生成結果 ({generationOptions.length} 個版本) 🎯
           </h4>
           
           <div className="space-y-3 max-h-96 overflow-y-auto">

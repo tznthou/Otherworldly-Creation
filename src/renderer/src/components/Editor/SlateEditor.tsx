@@ -187,8 +187,38 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       className="h-full flex flex-col transition-all duration-300"
       style={{ backgroundColor: settings.backgroundColor }}
     >
+      <style>
+        {`
+          .editor-scrollbar::-webkit-scrollbar {
+            width: 28px !important;
+            height: 28px !important;
+          }
+          .editor-scrollbar::-webkit-scrollbar-track {
+            background: rgba(10, 17, 40, 0.9) !important;
+            border-radius: 14px !important;
+            border: 3px solid rgba(251, 191, 36, 0.3) !important;
+          }
+          .editor-scrollbar::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.9), rgba(251, 191, 36, 1)) !important;
+            border-radius: 14px !important;
+            border: 3px solid rgba(251, 191, 36, 1) !important;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.7) !important;
+          }
+          .editor-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 1), rgba(255, 215, 0, 1)) !important;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 1) !important;
+            transform: scale(1.15) !important;
+          }
+        `}
+      </style>
       <Slate editor={editor} value={value} onChange={onChange}>
-        <div className="flex-1 overflow-y-auto">
+        <div 
+          className="flex-1" 
+          style={{ 
+            height: 'auto',
+            minHeight: '400px'
+          }}
+        >
           {/* 行號顯示 */}
           {settings.showLineNumbers && (
             <div className="absolute left-0 top-0 bottom-0 w-12 bg-cosmic-800/50 border-r border-cosmic-700 text-xs text-gray-500 p-2">
@@ -205,7 +235,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className={`h-full p-6 focus:outline-none transition-all duration-300 ${
+            className={`min-h-96 p-6 focus:outline-none transition-all duration-300 ${
               settings.showLineNumbers ? 'pl-16' : ''
             }`}
             style={editorStyle}

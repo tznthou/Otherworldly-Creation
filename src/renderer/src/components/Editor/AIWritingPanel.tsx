@@ -4,6 +4,8 @@ import { Transforms, Range } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
+import { startProgress, updateProgress, completeProgress, failProgress } from '../../store/slices/errorSlice';
+import { store } from '../../store/store';
 import api from '../../api';
 
 interface AIWritingPanelProps {
@@ -36,12 +38,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
-  const [progress, setProgress] = useState<GenerationProgress>({
-    current: 0,
-    total: 100,
-    stage: 'preparing',
-    message: '準備中...'
-  });
+  const [progressId, setProgressId] = useState<string | null>(null);
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(200);
   const [generationCount, setGenerationCount] = useState(3);
@@ -67,14 +64,15 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
   }, []);
   
   // 更新進度的輔助函數
-  const updateProgress = useCallback((stage: GenerationProgress['stage'], current: number, message: string) => {
-    setProgress({
-      current,
-      total: 100,
-      stage,
-      message
-    });
-  }, []);
+  const updateGenerationProgress = useCallback((current: number, message: string) => {
+    if (progressId) {
+      dispatch(updateProgress({
+        id: progressId,
+        progress: current,
+        currentStep: message
+      }));
+    }
+  }, [dispatch, progressId]);
 
   // 生成文本
   const handleGenerate = async () => {
@@ -106,8 +104,35 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
     // 創建 AbortController 用於取消請求
     abortControllerRef.current = new AbortController();
     
+    // 開始進度追蹤
+    dispatch(startProgress({
+      title: 'AI 續寫',
+      description: `正在使用 ${currentModel} 模型生成文本`,
+      totalSteps: generationCount,
+      completedSteps: 0
+    }));
+    
+    // 等待一小段時間以確保進度已創建
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    // 從 store 獲取最新的進度 ID
+    const progressState = store.getState().progress;
+    const latestProgress = progressState.indicators[progressState.indicators.length - 1];
+    const newProgressId = latestProgress?.id;
+    
+    if (!newProgressId) {
+      console.error('無法創建進度指示器');
+      return;
+    }
+    
+    setProgressId(newProgressId);
+    
     try {
-      updateProgress('preparing', 10, '準備生成上下文...');
+      dispatch(updateProgress({
+        id: newProgressId,
+        progress: 10,
+        currentStep: '準備生成上下文...'
+      }));
       
       // 生成多個選項的參數配置
       const baseParams = {
@@ -129,12 +154,21 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
         });
       }
       
-      updateProgress('generating', 20, `開始生成 ${generationCount} 個版本...`);
+      dispatch(updateProgress({
+        id: newProgressId,
+        progress: 20,
+        currentStep: `開始生成 ${generationCount} 個版本...`
+      }));
       
       // 並行生成多個選項
       const generationPromises = paramVariations.map(async (params, index) => {
         try {
-          updateProgress('generating', 20 + (index * 60 / generationCount), `生成第 ${index + 1} 個版本...`);
+          dispatch(updateProgress({
+            id: newProgressId,
+            progress: 20 + (index * 60 / generationCount),
+            currentStep: `生成第 ${index + 1} 個版本...`,
+            completedSteps: index
+          }));
           
           const result = await api.ai.generateWithContext(
             projectId, 
@@ -159,7 +193,12 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
       // 等待所有生成完成
       const results = await Promise.all(generationPromises);
       
-      updateProgress('processing', 90, '處理生成結果...');
+      dispatch(updateProgress({
+        id: newProgressId,
+        progress: 90,
+        currentStep: '處理生成結果...',
+        completedSteps: generationCount
+      }));
       
       // 過濾掉失敗的結果
       const validResults = results.filter((result): result is GenerationOption => result !== null);
@@ -168,7 +207,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
         throw new Error('所有生成嘗試都失敗了');
       }
       
-      updateProgress('complete', 100, `成功生成 ${validResults.length} 個版本`);
+      // 完成進度
+      dispatch(completeProgress(newProgressId));
+      
       setGenerationOptions(validResults);
       
       dispatch(addNotification({
@@ -180,15 +221,30 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
       
     } catch (error) {
       console.error('AI 續寫失敗:', error);
+      
+      // 標記進度失敗
+      if (newProgressId) {
+        dispatch(failProgress({
+          id: newProgressId,
+          error: {
+            code: 'AI_GENERATION_ERROR',
+            message: error instanceof Error ? error.message : '生成文本時發生錯誤',
+            severity: 'error',
+            category: 'ai',
+            stack: error instanceof Error ? error.stack : undefined
+          }
+        }));
+      }
+      
       dispatch(addNotification({
         type: 'error',
         title: 'AI 續寫失敗',
         message: error instanceof Error ? error.message : '生成文本時發生錯誤',
         duration: 5000,
       }));
-      updateProgress('preparing', 0, '生成失敗');
     } finally {
       setIsGenerating(false);
+      setProgressId(null);
       abortControllerRef.current = null;
     }
   };

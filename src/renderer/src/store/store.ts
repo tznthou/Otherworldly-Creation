@@ -27,8 +27,8 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['persist/PERSIST'],
-        ignoredPaths: ['payload.timestamp', 'meta.arg', 'meta.baseQueryMeta'],
+        ignoredActions: ['persist/PERSIST', 'progress/startProgress', 'progress/updateProgress', 'progress/completeProgress', 'progress/failProgress'],
+        ignoredPaths: ['payload.timestamp', 'meta.arg', 'meta.baseQueryMeta', 'progress.indicators', 'error.errors'],
         // 自定義檢查，允許 Date 物件和函數
         isSerializable: (value: any) => {
           if (value instanceof Date) {

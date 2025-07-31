@@ -33,7 +33,8 @@ pub struct OllamaGenerateRequest {
 pub struct OllamaOptions {
     pub temperature: Option<f32>,
     pub top_p: Option<f32>,
-    pub max_tokens: Option<u32>,
+    #[serde(rename = "num_predict")]
+    pub max_tokens: Option<u32>,  // Ollama 使用 num_predict 而不是 max_tokens
     pub presence_penalty: Option<f32>,
     pub frequency_penalty: Option<f32>,
 }
@@ -104,14 +105,14 @@ pub struct OllamaService {
 impl OllamaService {
     pub fn new() -> Self {
         let client = Client::builder()
-            .timeout(Duration::from_secs(30))
+            .timeout(Duration::from_secs(300))  // 增加到 5 分鐘，給 AI 生成足夠時間
             .build()
             .expect("建立 HTTP 客戶端失敗");
         
         Self {
             client,
             base_url: "http://127.0.0.1:11434".to_string(),
-            timeout: Duration::from_secs(5),
+            timeout: Duration::from_secs(120),  // API 呼叫 timeout 設為 2 分鐘
             retry_attempts: 2,
             retry_delay: Duration::from_millis(500),
         }

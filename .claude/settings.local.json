@@ -54,7 +54,10 @@
       "mcp__ide__getDiagnostics",
       "Bash(cargo --version)",
       "Bash(ollama list:*)",
-      "Bash(ollama ps:*)"
+      "Bash(ollama ps:*)",
+      "Bash(brew list:*)",
+      "Bash(ollama:*)",
+      "mcp__puppeteer__puppeteer_screenshot"
     ],
     "deny": []
   }

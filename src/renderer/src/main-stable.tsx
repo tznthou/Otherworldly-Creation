@@ -16,6 +16,7 @@ import Statistics from './pages/Statistics/Statistics';
 import ModalContainer from './components/UI/ModalContainer';
 import { NotificationContainer } from './components/UI/NotificationSystem';
 import SimpleErrorBoundary from './components/UI/SimpleErrorBoundary';
+import ProgressContainer from './components/Progress/ProgressContainer';
 import { i18n } from './i18n';
 import './index.css';
 
@@ -265,6 +266,11 @@ const SimpleApp: React.FC = () => {
           {/* 通知系統 */}
           <SimpleErrorBoundary context="通知系統">
             <NotificationContainer />
+          </SimpleErrorBoundary>
+          
+          {/* 進度指示器容器 */}
+          <SimpleErrorBoundary context="進度指示器系統">
+            <ProgressContainer />
           </SimpleErrorBoundary>
         </Router>
       </div>

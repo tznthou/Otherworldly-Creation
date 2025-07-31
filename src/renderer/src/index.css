@@ -2,6 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 全域強制滾動條樣式 - 覆蓋 Tailwind reset */
+* {
+  scrollbar-width: thick;
+  scrollbar-color: rgba(251, 191, 36, 1) rgba(10, 17, 40, 0.9);
+}
+
+*::-webkit-scrollbar {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(10, 17, 40, 0.9) !important;
+  border-radius: 8px !important;
+  border: 2px solid rgba(251, 191, 36, 0.3) !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.9), rgba(251, 191, 36, 1)) !important;
+  border-radius: 8px !important;
+  border: 2px solid rgba(251, 191, 36, 1) !important;
+  box-shadow: 0 0 5px rgba(251, 191, 36, 0.5) !important;
+  transition: all 0.2s ease !important;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 1), rgba(255, 215, 0, 1)) !important;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.8) !important;
+  transform: scale(1.1) !important;
+}
+
+*::-webkit-scrollbar-corner {
+  background: rgba(10, 17, 40, 0.9) !important;
+}
+
+/* Ultra Thick Custom Scrollbar Styles */
+.custom-scrollbar {
+  scrollbar-width: thick;
+  scrollbar-color: rgba(251, 191, 36, 1) rgba(10, 17, 40, 0.9);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(10, 17, 40, 0.9);
+  border-radius: 8px;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.9), rgba(251, 191, 36, 1));
+  border-radius: 8px;
+  border: 2px solid rgba(251, 191, 36, 1);
+  box-shadow: 0 0 5px rgba(251, 191, 36, 0.5);
+  transition: all 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 1), rgba(255, 215, 0, 1));
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+  transform: scale(1.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: rgba(10, 17, 40, 0.9);
+}
+
+/* 強制顯示超粗滾動條 */
+.force-scrollbar {
+  overflow-y: scroll !important;
+}
+
+.force-scrollbar::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+.force-scrollbar::-webkit-scrollbar-track {
+  background: rgba(10, 17, 40, 0.9);
+  border-radius: 8px;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+}
+
+.force-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.9), rgba(251, 191, 36, 1));
+  border-radius: 8px;
+  border: 2px solid rgba(251, 191, 36, 1);
+  box-shadow: 0 0 5px rgba(251, 191, 36, 0.5);
+  transition: all 0.2s ease;
+}
+
+.force-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 1), rgba(255, 215, 0, 1));
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+  transform: scale(1.1);
+}
+
 /* CSS 變數 */
 :root {
   /* 編輯器設定變數 */

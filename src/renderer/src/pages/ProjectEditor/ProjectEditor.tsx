@@ -197,7 +197,7 @@ const ProjectEditorContent: React.FC = () => {
   }
 
   const editorContent = (
-    <div className="h-full flex">
+    <div className="h-full flex overflow-hidden">
       {/* 章節列表側邊欄 */}
       <div className="w-80 bg-cosmic-900 border-r border-cosmic-700 flex flex-col">
         {/* 專案標題 */}
@@ -214,7 +214,7 @@ const ProjectEditorContent: React.FC = () => {
         </div>
 
         {/* 章節列表 */}
-        <div className="flex-1 overflow-y-auto" data-tutorial="chapter-list">
+        <div className="flex-1 overflow-y-auto custom-scrollbar" data-tutorial="chapter-list">
           <ChapterList
             chapters={chapters}
             selectedChapterId={selectedChapterId}
@@ -247,7 +247,7 @@ const ProjectEditorContent: React.FC = () => {
       </div>
 
       {/* 編輯器區域 */}
-      <div className="flex-1 flex relative">
+      <div className="flex-1 flex relative" style={{ height: '100vh', overflow: 'auto' }}>
         {/* 主編輯區 */}
         <div className="flex-1 flex flex-col">
           {currentChapter ? (
