@@ -8,6 +8,7 @@ import Settings from './pages/Settings/Settings';
 import SettingsSimple from './pages/Settings/SettingsSimple';
 import DatabaseMaintenance from './pages/DatabaseMaintenance/DatabaseMaintenance';
 import DatabaseMaintenanceSimple from './pages/DatabaseMaintenance/DatabaseMaintenanceSimple';
+import AITest from './pages/AITest';
 import ModalContainer from './components/UI/ModalContainer';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import CosmicBackground from './components/UI/CosmicBackground';
@@ -27,6 +28,7 @@ import { useSettingsApplication, useShortcuts } from './hooks/useSettings';
 import { useI18n } from './hooks/useI18n';
 import AutoBackupService from './services/autoBackupService';
 import UpdateManager from './components/Update/UpdateManager';
+import { isElectron, isTauri } from './api';
 
 // 未知頁面組件
 const UnknownPageComponent: React.FC = () => {
@@ -88,7 +90,7 @@ const AppContent: React.FC = () => {
       try {
         // 檢查運行環境
         console.log('=== App 初始化調試信息 ===');
-        console.log('運行環境:', (typeof window !== 'undefined' && window.electronAPI) ? 'Electron' : (typeof window !== 'undefined' && window.__TAURI__) ? 'Tauri' : 'Unknown');
+        console.log('運行環境:', isElectron() ? 'Electron' : isTauri() ? 'Tauri' : 'Unknown');
         console.log('API 層已載入:', typeof api !== 'undefined');
         
         // 顯示初始化通知
@@ -100,7 +102,7 @@ const AppContent: React.FC = () => {
         // 將 Ollama 服務檢查移到背景執行（不阻塞初始化）
         setTimeout(async () => {
           console.log('App: 背景檢查 Ollama 服務...');
-          console.log('App: 當前環境:', (typeof window !== 'undefined' && window.electronAPI) ? 'Electron' : (typeof window !== 'undefined' && window.__TAURI__) ? 'Tauri' : 'Unknown');
+          console.log('App: 當前環境:', isElectron() ? 'Electron' : isTauri() ? 'Tauri' : 'Unknown');
           
           try {
             console.log('App: 開始調用 checkOllamaService...');
@@ -185,6 +187,7 @@ const AppContent: React.FC = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/ai-test" element={<AITest />} />
             <Route path="/database-maintenance" element={
               <div className="h-full flex items-center justify-center bg-cosmic-950">
                 <div className="text-center">

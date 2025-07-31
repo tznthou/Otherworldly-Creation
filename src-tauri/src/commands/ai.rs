@@ -151,20 +151,58 @@ pub async fn generate_text(
     }
 }
 
-/// 使用上下文生成文本（暫時簡化版本）
+/// 使用上下文生成文本
 #[command]
 pub async fn generate_with_context(
-    _project_id: i32,
-    _chapter_id: i32,
-    _position: i32,
+    project_id: String,
+    chapter_id: String,
+    position: usize,
     model: String,
     params: GenerateParams,
 ) -> Result<String, String> {
-    // TODO: 實現上下文管理功能
-    // 目前先使用簡單的提示詞
-    let prompt = "請根據小說內容，繼續寫下去：".to_string();
+    log::info!("=== 開始使用上下文生成文本 ===");
+    log::info!("專案: {}, 章節: {}, 位置: {}, 模型: {}", project_id, chapter_id, position, model);
     
-    generate_text(prompt, model, params).await
+    // 1. 構建上下文
+    let context = crate::commands::context::build_context(project_id, chapter_id, position)
+        .await
+        .map_err(|e| format!("構建上下文失敗: {}", e))?;
+    
+    log::info!("上下文長度: {} 字符", context.len());
+    
+    // 2. 如果設定了最大上下文 token，進行壓縮
+    let final_context = if let Some(max_context_tokens) = params.max_context_tokens {
+        crate::commands::context::compress_context(context, max_context_tokens as usize)
+            .await
+            .map_err(|e| format!("壓縮上下文失敗: {}", e))?
+    } else {
+        context
+    };
+    
+    log::info!("最終上下文長度: {} 字符", final_context.len());
+    
+    // 3. 使用上下文生成文本
+    let options = OllamaOptions {
+        temperature: params.temperature,
+        top_p: params.top_p,
+        max_tokens: params.max_tokens,
+        presence_penalty: params.presence_penalty,
+        frequency_penalty: params.frequency_penalty,
+    };
+    
+    let ollama_service = get_ollama_service();
+    let service = ollama_service.lock().await;
+    let result = service.generate_text(&model, &final_context, Some(options)).await;
+    
+    if result.success {
+        let generated_text = result.response.unwrap_or_default();
+        log::info!("生成文本成功，長度: {} 字符", generated_text.len());
+        Ok(generated_text)
+    } else {
+        let error_msg = result.error.unwrap_or("生成文本失敗".to_string());
+        log::error!("生成文本失敗: {}", error_msg);
+        Err(error_msg)
+    }
 }
 
 /// 更新 Ollama 配置

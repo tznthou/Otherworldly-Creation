@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, RefreshCw, AlertCircle, CheckCircle, X } from 'lucide-react';
-import api from '../../api';
-import { isTauri } from '../../api';
+import { api, isTauri } from '../../api';
 
 interface UpdateInfo {
   version: string;
@@ -44,31 +43,39 @@ const UpdateManager: React.FC = () => {
       return;
     }
 
-    // Electron 環境的更新事件監聽
+    // 只在 Electron 環境中設置更新事件監聽
     if (typeof window !== 'undefined' && window.electronAPI?.update) {
-      // 監聽更新事件
-      window.electronAPI.update.onUpdateAvailable((updateInfo: UpdateCheckResult) => {
+      try {
+        // 監聽更新事件
+        window.electronAPI.update.onUpdateAvailable((updateInfo: UpdateCheckResult) => {
         setUpdateResult(updateInfo);
         setIsVisible(true);
       });
 
-      window.electronAPI.update.onDownloadProgress((progress: UpdateProgress) => {
-        setDownloadProgress(progress);
-      });
+        window.electronAPI.update.onDownloadProgress((progress: UpdateProgress) => {
+          setDownloadProgress(progress);
+        });
 
-      window.electronAPI.update.onPendingInstall((updatePath: string) => {
-        setDownloadedFilePath(updatePath);
-        setIsVisible(true);
-      });
+        window.electronAPI.update.onPendingInstall((updatePath: string) => {
+          setDownloadedFilePath(updatePath);
+          setIsVisible(true);
+        });
 
-      // 檢查待安裝的更新
-      checkPendingUpdate();
+        // 檢查待安裝的更新
+        checkPendingUpdate();
 
-      return () => {
-        if (typeof window !== 'undefined' && window.electronAPI?.update) {
-          window.electronAPI.update.removeAllListeners();
-        }
-      };
+        return () => {
+          try {
+            if (typeof window !== 'undefined' && window.electronAPI?.update) {
+              window.electronAPI.update.removeAllListeners();
+            }
+          } catch (error) {
+            console.warn('清理更新監聽器時發生錯誤:', error);
+          }
+        };
+      } catch (error) {
+        console.warn('設置更新監聽器時發生錯誤:', error);
+      }
     }
   }, []);
 

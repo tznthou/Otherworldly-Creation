@@ -16,6 +16,7 @@ use commands::ai::{
     check_ollama_service, get_service_status, list_models, get_models_info, check_model_availability,
     generate_text, generate_with_context, update_ollama_config,
 };
+use commands::context::{build_context, compress_context, get_context_stats};
 use commands::settings::{get_setting, set_setting, get_all_settings, reset_settings};
 use commands::database::{backup_database, restore_database, run_database_maintenance, get_database_stats, health_check};
 
@@ -85,6 +86,10 @@ pub fn run() {
       generate_text,
       generate_with_context,
       update_ollama_config,
+      // Context commands
+      build_context,
+      compress_context,
+      get_context_stats,
       // Settings commands
       get_setting,
       set_setting,

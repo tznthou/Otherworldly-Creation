@@ -63,12 +63,18 @@ export const checkOllamaService = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log('Redux: 檢查 Ollama 服務...');
+      console.log('Redux: API 對象:', api);
+      console.log('Redux: AI API:', api.ai);
       
       const isConnected = await api.ai.checkOllamaService();
       console.log('Redux: Ollama 服務結果:', isConnected);
       return isConnected;
     } catch (error) {
       console.error('Redux: 檢查 Ollama 服務失敗:', error);
+      console.error('Redux: 錯誤詳情:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       return rejectWithValue(false);
     }
   }
@@ -227,8 +233,14 @@ const aiSlice = createSlice({
       // fetchServiceStatus
       .addCase(fetchServiceStatus.fulfilled, (state, action) => {
         state.serviceStatus = action.payload;
-        state.isOllamaConnected = action.payload.service.available;
-        if (!action.payload.service.available) {
+        if (action.payload && action.payload.service) {
+          state.isOllamaConnected = action.payload.service.available;
+          if (!action.payload.service.available) {
+            state.availableModels = [];
+            state.currentModel = null;
+          }
+        } else {
+          state.isOllamaConnected = false;
           state.availableModels = [];
           state.currentModel = null;
         }
@@ -254,12 +266,14 @@ const aiSlice = createSlice({
       // fetchModelsInfo
       .addCase(fetchModelsInfo.fulfilled, (state, action) => {
         state.modelsInfo = action.payload;
-        if (action.payload.success) {
+        if (action.payload && action.payload.success) {
           state.availableModels = action.payload.models.map(m => m.name);
           // 如果沒有選擇模型且有可用模型，選擇第一個
           if (!state.currentModel && action.payload.models.length > 0) {
             state.currentModel = action.payload.models[0].name;
           }
+        } else {
+          state.availableModels = [];
         }
       })
       .addCase(fetchModelsInfo.rejected, (state, action) => {

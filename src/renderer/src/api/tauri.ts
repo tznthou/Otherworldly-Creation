@@ -1,13 +1,193 @@
 import type { API } from './types';
 
-// 安全的 invoke 函數
+// 動態導入 Tauri API
+let tauriInvoke: any = null;
+let isInitialized = false;
+
+const waitForTauri = (): Promise<void> => {
+  return new Promise((resolve) => {
+    let attempts = 0;
+    const maxAttempts = 100; // 最多等待 10 秒
+    
+    const checkTauri = () => {
+      attempts++;
+      
+      // 檢查 Tauri API 是否可用
+      if (typeof window !== 'undefined') {
+        // 檢查各種可能的 Tauri API
+        if (window.__TAURI_INVOKE__ || 
+            (window.__TAURI__ && window.__TAURI__.invoke) ||
+            (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke)) {
+          console.log('Tauri API detected after', attempts, 'attempts');
+          resolve();
+          return;
+        }
+        
+        // 在開發模式中，也嘗試檢查是否能動態載入
+        if (attempts === 1) {
+          try {
+            import('@tauri-apps/api/core').then(() => {
+              console.log('Tauri API module available');
+              resolve();
+            }).catch(() => {
+              // 繼續等待
+              if (attempts < maxAttempts) {
+                setTimeout(checkTauri, 100);
+              } else {
+                console.warn('Tauri API not available after waiting, proceeding anyway');
+                resolve(); // 不拒絕，讓後續代碼處理
+              }
+            });
+            return;
+          } catch (e) {
+            // 繼續等待
+          }
+        }
+      }
+      
+      if (attempts < maxAttempts) {
+        setTimeout(checkTauri, 100);
+      } else {
+        console.warn('Tauri API not detected after maximum attempts, proceeding anyway');
+        resolve(); // 不拒絕，讓後續代碼處理
+      }
+    };
+    
+    checkTauri();
+  });
+};
+
+const loadTauriAPI = async () => {
+  if (tauriInvoke) return tauriInvoke;
+  
+  // 等待 Tauri 初始化
+  await waitForTauri();
+  
+  try {
+    // 檢查全域對象是否存在（優先檢查）
+    if (typeof window !== 'undefined') {
+      // Tauri v2 的標準方式
+      if (window.__TAURI_INVOKE__) {
+        console.log('使用 window.__TAURI_INVOKE__');
+        tauriInvoke = window.__TAURI_INVOKE__;
+        isInitialized = true;
+        return window.__TAURI_INVOKE__;
+      }
+      
+      // 嘗試從 __TAURI__ 對象獲取
+      if (window.__TAURI__ && window.__TAURI__.invoke) {
+        console.log('使用 window.__TAURI__.invoke');
+        tauriInvoke = window.__TAURI__.invoke;
+        isInitialized = true;
+        return window.__TAURI__.invoke;
+      }
+    }
+    
+    // 最後嘗試動態導入
+    console.log('嘗試動態導入 @tauri-apps/api/core');
+    const { invoke } = await import('@tauri-apps/api/core');
+    tauriInvoke = invoke;
+    isInitialized = true;
+    return invoke;
+  } catch (error) {
+    console.warn('無法載入 Tauri API:', error);
+    throw new Error('無法找到 Tauri invoke 函數 - 請確保在 Tauri 環境中運行');
+  }
+};
+
+// 安全的 invoke 函數 - 使用標準 Tauri API
 const safeInvoke = async (command: string, args?: any) => {
   try {
-    // 動態載入 Tauri API
-    const { invoke } = await import('@tauri-apps/api/core');
-    return await invoke(command, args);
+    console.log(`調用 Tauri 命令: ${command}`, args);
+    
+    const invoke = await loadTauriAPI();
+    if (!invoke) {
+      const errorMsg = 'Tauri invoke 函數不可用 - 可能不在 Tauri 環境中運行';
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+    
+    // 使用獲取到的 invoke 函數，確保參數格式正確
+    const invokeArgs = args || {};
+    const result = await invoke(command, invokeArgs);
+    
+    console.log(`Tauri 命令 ${command} 成功:`, result);
+    return result;
+    
   } catch (error) {
     console.error(`Tauri command ${command} failed:`, error);
+    
+    // 特別處理 callbackId 相關錯誤
+    if (error && error.message && error.message.includes('callbackId')) {
+      console.error('檢測到 Tauri 回調錯誤，可能是版本不匹配問題');
+      throw new Error(`Tauri 回調機制錯誤 - 命令: ${command}`);
+    }
+    
+    // 提供更詳細的錯誤信息
+    if (error && error.message && error.message.includes('not available')) {
+      throw new Error(`Tauri 命令 ${command} 不可用 - 請確保在 Tauri 環境中運行`);
+    }
+    
+    throw error;
+  }
+};
+
+// 臨時的模擬資料回退
+const createFallbackData = (commandName: string) => {
+  console.warn(`使用 ${commandName} 的模擬資料回退`);
+  
+  switch (commandName) {
+    case 'get_all_projects':
+      return Promise.resolve([]);
+    case 'get_all_settings':
+      return Promise.resolve([]);
+    case 'check_ollama_service':
+      return Promise.resolve(false);
+    case 'get_service_status':
+      return Promise.resolve({
+        service: { available: false, error: 'Tauri API 不可用' },
+        models: { count: 0, list: [] },
+        last_checked: new Date().toISOString()
+      });
+    case 'list_models':
+      return Promise.resolve([]);
+    case 'get_models_info':
+      return Promise.resolve({ success: false, models: [], error: 'Tauri API 不可用' });
+    case 'get_chapters_by_project_id':
+      return Promise.resolve([]);
+    case 'get_characters_by_project_id':
+      return Promise.resolve([]);
+    default:
+      console.warn(`命令 ${commandName} 沒有模擬資料，返回空結果`);
+      return Promise.resolve(null);
+  }
+};
+
+// 增強的 safeInvoke，在開發模式下提供回退
+const enhancedSafeInvoke = async (command: string, args?: any) => {
+  try {
+    return await safeInvoke(command, args);
+  } catch (error) {
+    console.error(`enhancedSafeInvoke 錯誤 (${command}):`, error);
+    
+    // 特別處理 callbackId 相關錯誤
+    if (error && error.message && (
+      error.message.includes('callbackId') || 
+      error.message.includes('undefined is not an object')
+    )) {
+      console.warn(`檢測到 Tauri 回調機制錯誤，使用模擬資料 - 命令: ${command}`);
+      return createFallbackData(command);
+    }
+    
+    // 在開發模式下，如果是特定的命令錯誤，提供模擬資料
+    if (error && error.message && (
+      error.message.includes('不可用') || 
+      error.message.includes('not available') ||
+      error.message.includes('無法找到 Tauri invoke')
+    )) {
+      console.warn(`Tauri 命令 ${command} 失敗，嘗試使用模擬資料`);
+      return createFallbackData(command);
+    }
     throw error;
   }
 };
@@ -15,7 +195,19 @@ const safeInvoke = async (command: string, args?: any) => {
 // Tauri API 實現
 export const tauriAPI: API = {
   projects: {
-    getAll: () => safeInvoke('get_all_projects'),
+    getAll: async () => {
+      const projects = await enhancedSafeInvoke('get_all_projects');
+      // 轉換 Tauri 後端格式到前端格式
+      return projects.map((project: any) => ({
+        id: project.id,
+        name: project.name,
+        description: project.description || '',
+        type: project.type || 'isekai',
+        createdAt: new Date(project.created_at),
+        updatedAt: new Date(project.updated_at),
+        settings: project.settings ? JSON.parse(project.settings) : {}
+      }));
+    },
     create: (project) => {
       // 轉換前端 Project 格式為後端 CreateProjectRequest 格式
       const createRequest = {
@@ -38,11 +230,35 @@ export const tauriAPI: API = {
       return safeInvoke('update_project', { project: updateRequest });
     },
     delete: (id) => safeInvoke('delete_project', { id }),
-    getById: (id) => safeInvoke('get_project_by_id', { id }),
+    getById: async (id) => {
+      const project = await safeInvoke('get_project_by_id', { id });
+      // 轉換 Tauri 後端格式到前端格式
+      return {
+        id: project.id,
+        name: project.name,
+        description: project.description || '',
+        type: project.type || 'isekai',
+        createdAt: new Date(project.created_at),
+        updatedAt: new Date(project.updated_at),
+        settings: project.settings ? JSON.parse(project.settings) : {}
+      };
+    },
   },
   
   chapters: {
-    getByProjectId: (projectId) => safeInvoke('get_chapters_by_project_id', { projectId }),
+    getByProjectId: async (projectId) => {
+      const chapters = await safeInvoke('get_chapters_by_project_id', { projectId });
+      // 轉換 Tauri 後端格式到前端格式
+      return chapters.map((chapter: any) => ({
+        id: chapter.id,
+        projectId: chapter.project_id,
+        title: chapter.title,
+        content: chapter.content || '',
+        orderIndex: chapter.order_index,
+        createdAt: new Date(chapter.created_at),
+        updatedAt: new Date(chapter.updated_at)
+      }));
+    },
     create: (chapter) => safeInvoke('create_chapter', {
       chapter: {
         project_id: chapter.projectId,
@@ -60,7 +276,19 @@ export const tauriAPI: API = {
       }
     }),
     delete: (id) => safeInvoke('delete_chapter', { id }),
-    getById: (id) => safeInvoke('get_chapter_by_id', { id }),
+    getById: async (id) => {
+      const chapter = await safeInvoke('get_chapter_by_id', { id });
+      // 轉換 Tauri 後端格式到前端格式
+      return {
+        id: chapter.id,
+        projectId: chapter.project_id,
+        title: chapter.title,
+        content: chapter.content || '',
+        orderIndex: chapter.order_index,
+        createdAt: new Date(chapter.created_at),
+        updatedAt: new Date(chapter.updated_at)
+      };
+    },
   },
 
   characters: {
@@ -196,14 +424,22 @@ export const tauriAPI: API = {
   },
 
   ai: {
-    checkOllamaService: () => safeInvoke('check_ollama_service'),
-    getServiceStatus: () => safeInvoke('get_service_status'),
-    listModels: () => safeInvoke('list_models'),
-    getModelsInfo: () => safeInvoke('get_models_info'),
+    checkOllamaService: () => enhancedSafeInvoke('check_ollama_service'),
+    getServiceStatus: () => enhancedSafeInvoke('get_service_status'),
+    listModels: () => enhancedSafeInvoke('list_models'),
+    getModelsInfo: () => enhancedSafeInvoke('get_models_info'),
     checkModelAvailability: (modelName) => safeInvoke('check_model_availability', { modelName }),
     generateText: (prompt, model, params) => safeInvoke('generate_text', { prompt, model, params }),
-    generateWithContext: (projectId, chapterId, position, model, params) => 
-      safeInvoke('generate_with_context', { projectId: parseInt(projectId), chapterId: parseInt(chapterId), position, model, params }),
+    generateWithContext: (projectId, chapterId, position, model, params) => {
+      console.log('Tauri API: generateWithContext 被調用，參數:', { projectId, chapterId, position, model, params });
+      return safeInvoke('generate_with_context', { 
+        projectId: String(projectId), 
+        chapterId: String(chapterId), 
+        position: Number(position), 
+        model: String(model), 
+        params 
+      });
+    },
     updateOllamaConfig: (config) => safeInvoke('update_ollama_config', { config }),
   },
 
@@ -217,7 +453,7 @@ export const tauriAPI: API = {
 
   settings: {
     get: async (key) => {
-      const value = await safeInvoke('get_setting', { key });
+      const value = await enhancedSafeInvoke('get_setting', { key });
       // Tauri 後端返回字串，需要嘗試解析 JSON
       if (value && typeof value === 'string') {
         try {
@@ -234,7 +470,7 @@ export const tauriAPI: API = {
       return safeInvoke('set_setting', { key, value: stringValue });
     },
     getAll: async () => {
-      const settingsArray = await safeInvoke('get_all_settings');
+      const settingsArray = await enhancedSafeInvoke('get_all_settings');
       // 將 SettingEntry[] 轉換為物件格式
       const settings = {};
       for (const entry of settingsArray || []) {

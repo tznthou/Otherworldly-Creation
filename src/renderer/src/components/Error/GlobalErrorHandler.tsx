@@ -103,7 +103,11 @@ const GlobalErrorHandler: React.FC<GlobalErrorHandlerProps> = ({ children }) => 
 
     // 如果是 Electron 環境，監聽主進程錯誤
     if (isElectron() && typeof window !== 'undefined' && window.electronAPI?.onError) {
-      window.electronAPI.onError(handleMainProcessError);
+      try {
+        window.electronAPI.onError(handleMainProcessError);
+      } catch (error) {
+        console.warn('設置主進程錯誤監聽器失敗:', error);
+      }
     }
   }, [dispatch]);
 
