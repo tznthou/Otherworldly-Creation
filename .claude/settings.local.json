@@ -51,7 +51,10 @@
       "Bash(./src-tauri/target/release/genesis-chronicle)",
       "Bash(timeout 30 npm run dev:tauri)",
       "Bash(cargo build:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(cargo --version)",
+      "Bash(ollama list:*)",
+      "Bash(ollama ps:*)"
     ],
     "deny": []
   }
