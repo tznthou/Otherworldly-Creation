@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
-import { startProgress, updateProgress, completeProgress, failProgress } from '../../store/slices/errorSlice';
+import { startProgress, updateProgress, completeProgress, failProgress, removeProgress } from '../../store/slices/errorSlice';
 import { store } from '../../store/store';
 import { api } from '../../api';
 
@@ -73,7 +73,6 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   currentPosition,
   onInsertText 
 }) => {
-  console.log('SimpleAIWritingPanel 渲染了', { projectId, chapterId, currentPosition });
   
   const dispatch = useAppDispatch();
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -85,18 +84,9 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   
   // 從 Redux store 獲取 AI 相關狀態
   const { currentModel, availableModels, isOllamaConnected } = useAppSelector(state => state.ai);
+  const currentLanguage = useAppSelector(state => state.settings.language);
   
-  useEffect(() => {
-    console.log('AI 狀態更新:', { currentModel, availableModels, isOllamaConnected });
-    console.log('按鈕禁用狀態:', isGenerating || !currentModel || !isOllamaConnected);
-    console.log('isGenerating:', isGenerating);
-  }, [currentModel, availableModels, isOllamaConnected, isGenerating]);
   
-  // 監聽 generationOptions 變化
-  useEffect(() => {
-    console.log('generationOptions 狀態變化:', generationOptions);
-    console.log('generationOptions 數量:', generationOptions.length);
-  }, [generationOptions]);
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(200);
   const [generationCount, setGenerationCount] = useState(3);
@@ -117,17 +107,6 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     };
   }, []);
   
-  // 更新進度的輔助函數
-  const updateGenerationProgress = useCallback((current: number, message: string, completedSteps?: number) => {
-    if (progressId) {
-      dispatch(updateProgress({
-        id: progressId,
-        progress: current,
-        currentStep: message,
-        completedSteps
-      }));
-    }
-  }, [dispatch, progressId]);
 
   // 生成文本
   const handleGenerate = async () => {
@@ -135,10 +114,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     let timeoutId: NodeJS.Timeout | null = null;
     
     try {
-      console.log('handleGenerate 被調用了');
-      
       if (!currentModel) {
-        console.log('沒有選擇模型');
         dispatch(addNotification({
           type: 'warning',
           title: '未選擇模型',
@@ -148,7 +124,6 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         return;
       }
       
-      console.log('開始 AI 生成 - 專案ID:', projectId, '章節ID:', chapterId, '位置:', currentPosition);
     
     setIsGenerating(true);
     
@@ -173,27 +148,28 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     abortControllerRef.current = new AbortController();
     
     // 開始進度追蹤
-    console.log('開始創建進度指示器...');
-    console.log('當前模型:', currentModel);
-    console.log('生成數量:', generationCount);
-    
-    // 先創建一個進度 ID
-    const newProgressId = `progress-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    console.log('創建進度 ID:', newProgressId);
-    setProgressId(newProgressId);
-    
-    const progressAction = startProgress({
+    dispatch(startProgress({
       title: 'AI 續寫',
       description: `正在使用 ${currentModel} 模型生成文本`,
       totalSteps: generationCount,
       completedSteps: 0
-    });
+    }));
     
-    console.log('進度 Action:', progressAction);
-    dispatch(progressAction);
+    // 從 store 獲取最新的進度 ID
+    const state = store.getState();
+    const latestProgress = state.progress.indicators[state.progress.indicators.length - 1];
+    const newProgressId = latestProgress?.id || '';
+    setProgressId(newProgressId);
     
     try {
-      updateGenerationProgress(10, '準備生成上下文...');
+      // 立即更新進度到 10%
+      if (newProgressId) {
+        dispatch(updateProgress({
+          id: newProgressId,
+          progress: 10,
+          currentStep: '準備生成上下文...'
+        }));
+      }
       
       // 生成多個選項的參數配置
       const baseParams = {
@@ -215,7 +191,13 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         });
       }
       
-      updateGenerationProgress(20, `開始生成 ${generationCount} 個版本...`);
+      if (newProgressId) {
+        dispatch(updateProgress({
+          id: newProgressId,
+          progress: 20,
+          currentStep: `開始生成 ${generationCount} 個版本...`
+        }));
+      }
       
       // 串行生成多個選項，避免資料庫鎖衝突
       // TODO: 未來可以改進後端資料庫連接管理（如使用連接池），以支援並行生成
@@ -224,19 +206,24 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       for (let index = 0; index < paramVariations.length; index++) {
         const params = paramVariations[index];
         try {
-          updateGenerationProgress(20 + (index * 60 / generationCount), `生成第 ${index + 1} 個版本...`, index);
-          
-          console.log('調用 API - 參數:', { projectId, chapterId, currentPosition, currentModel, params });
+          if (newProgressId) {
+            const currentProgress = 20 + (index * 60 / generationCount);
+            dispatch(updateProgress({
+              id: newProgressId,
+              progress: currentProgress,
+              currentStep: `生成第 ${index + 1} 個版本...`,
+              completedSteps: index
+            }));
+          }
           
           const result = await api.ai.generateWithContext(
             projectId, 
             chapterId, 
             currentPosition, 
             currentModel, 
-            params
+            params,
+            currentLanguage
           );
-          
-          console.log('API 回應結果:', result);
           
           results.push({
             id: `${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
@@ -253,7 +240,14 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         }
       }
       
-      updateGenerationProgress(90, '處理生成結果...', generationCount);
+      if (newProgressId) {
+        dispatch(updateProgress({
+          id: newProgressId,
+          progress: 90,
+          currentStep: '處理生成結果...',
+          completedSteps: generationCount
+        }));
+      }
       
       // 過濾掉失敗的結果
       const validResults = results.filter((result): result is GenerationOption => result !== null);
@@ -265,12 +259,13 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       // 完成進度
       dispatch(completeProgress(newProgressId));
       
-      console.log('設置生成選項:', validResults);
-      console.log('validResults 數量:', validResults.length);
+      // 3秒後移除進度指示器
+      setTimeout(() => {
+        dispatch(removeProgress(newProgressId));
+      }, 3000);
       
       // 使用 functional update 確保狀態正確更新
       setGenerationOptions(() => {
-        console.log('正在設置新的 generationOptions:', validResults);
         
         // 自動滾動到結果區域
         setTimeout(() => {
@@ -285,6 +280,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         
         return validResults;
       });
+      
       
       dispatch(addNotification({
         type: 'success',
@@ -326,7 +322,6 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       abortControllerRef.current = null;
     }
     } catch (outerError) {
-      console.error('handleGenerate 外層錯誤:', outerError);
       // 清理超時計時器
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -346,13 +341,14 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     // 調用父組件的插入文本函數，再次過濾以確保安全
     onInsertText(filterThinkingTags(option.text));
     
-    // 標記選項為已選擇
-    setGenerationOptions(prev => 
-      prev.map(opt => ({
-        ...opt,
-        selected: opt.id === option.id
-      }))
-    );
+    // 立即清除選項
+    setGenerationOptions([]);
+    
+    // 如果有進度 ID，立即移除進度指示器
+    if (progressId) {
+      dispatch(removeProgress(progressId));
+      setProgressId(null);
+    }
     
     dispatch(addNotification({
       type: 'success',
@@ -360,12 +356,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       message: `已成功插入 AI 生成的文本（溫度: ${option.temperature.toFixed(1)}）`,
       duration: 3000,
     }));
-    
-    // 3秒後清除選項
-    setTimeout(() => {
-      setGenerationOptions([]);
-    }, 3000);
-  }, [onInsertText, dispatch]);
+  }, [onInsertText, dispatch, progressId]);
   
   // 取消生成
   const handleCancel = useCallback(() => {
@@ -376,7 +367,6 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     setIsGenerating(false);
   }, []);
 
-  console.log('SimpleAIWritingPanel 開始渲染 UI');
   
   return (
     <div className="relative bg-cosmic-900 border-t border-cosmic-700 p-4 rounded-lg">
@@ -476,26 +466,11 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         </div>
       </div>
       
-      {/* 測試按鈕 */}
-      <div className="flex justify-center mb-2">
-        <button
-          onClick={() => console.log('測試按鈕點擊成功！')}
-          className="px-4 py-1 bg-blue-500 text-white rounded text-sm"
-        >
-          測試按鈕（點我試試）
-        </button>
-      </div>
 
       {/* 生成按鈕 */}
       <div className="flex justify-center mb-4">
         <button
-          onClick={() => {
-            console.log('按鈕被點擊了！');
-            console.log('isGenerating:', isGenerating);
-            console.log('currentModel:', currentModel);
-            console.log('isOllamaConnected:', isOllamaConnected);
-            handleGenerate();
-          }}
+          onClick={handleGenerate}
           disabled={isGenerating || !currentModel || !isOllamaConnected}
           className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center min-w-[140px] ${
             isGenerating 
@@ -528,18 +503,23 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       
       
       {/* 生成結果 */}
-      {console.log('渲染檢查 - generationOptions.length:', generationOptions.length)}
-      {console.log('渲染檢查 - 條件:', generationOptions.length > 0)}
-      {console.log('渲染檢查 - generationOptions:', generationOptions)}
       {generationOptions.length > 0 && (
         <div 
-          className="mt-4" 
+          className="mt-4 bg-cosmic-800 border border-cosmic-700 rounded-lg p-4" 
           data-results-container
-          style={{backgroundColor: 'red', border: '2px solid yellow', padding: '10px'}}
         >
-          <h4 className="text-sm font-medium text-gold-400 mb-3">
-            🎯 生成結果 ({generationOptions.length} 個版本) 🎯
-          </h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium text-gold-400">
+              🎯 生成結果 ({generationOptions.length} 個版本) 🎯
+            </h4>
+            <button
+              onClick={() => setGenerationOptions([])}
+              className="text-sm text-gray-400 hover:text-gray-300 transition-colors px-2 py-1"
+              title="關閉結果"
+            >
+              ✕
+            </button>
+          </div>
           
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {generationOptions.map((option, index) => (

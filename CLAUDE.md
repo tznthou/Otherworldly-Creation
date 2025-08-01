@@ -95,6 +95,7 @@ npm run diagnostic
 - **AI Service**: `check_ollama_service`, `get_service_status`, `list_models`, `get_models_info`, `generate_text`
 - **Context Management**: `build_context`, `compress_context`, `get_context_stats`, `generate_with_context`
 - **Configuration**: `update_ollama_config`, `check_model_availability`
+- **Multilingual Support**: `generate_with_context` now accepts `language` parameter for localized prompts
 
 **Database & Settings Commands**:
 - **Database**: `backup_database`, `restore_database`, `run_database_maintenance`, `get_database_stats`, `health_check`
@@ -124,6 +125,20 @@ const aiStatus = await api.ai.checkOllamaService();
 **Database Location**: `~/{AppData}/genesis-chronicle/genesis-chronicle.db`
 **Migration System**: Automatic migrations in `src-tauri/src/database/migrations.rs` (current version: 6)
 **Critical**: Always use explicit field names in SQL queries to avoid field mapping errors
+
+### Redux State Architecture
+
+**Feature-Based Store Organization**:
+- **projectsSlice**: Project CRUD, current project selection, project statistics
+- **chaptersSlice**: Chapter management, content editing, auto-save state, word count calculation
+- **charactersSlice**: Character CRUD, relationship management, archetype application, search/filter
+- **aiSlice**: Ollama service status, model management, text generation, parameters configuration
+- **templatesSlice**: Template system, filtering/sorting, custom template creation, project application
+- **settingsSlice**: Application settings, AI configuration, editor preferences, backup settings
+- **uiSlice**: Modal management, notifications, theme switching, sidebar state, global loading
+- **errorSlice**: Error handling, progress tracking with stages (preparing→generating→processing→complete)
+- **editorSlice**: Editor configuration, themes, reading mode, auto-save intervals
+- **notificationSlice**: User notifications, dismissal, cleanup
 
 ## Critical Development Patterns
 
@@ -160,6 +175,23 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Error Filtering**: `main-stable.tsx` implements early error interception for Tauri-specific console errors
 - **Scrollbar Design**: 16px gold-themed scrollbars with `!important` CSS to override Tailwind reset
 
+### Component Organization Patterns
+
+**Feature-Based Component Structure**:
+- **Editor/**: Rich text editing components (`SimpleAIWritingPanel.tsx` with AI integration)
+- **Projects/**: Project management UI (`SimpleProjectEditor.tsx`, project cards)
+- **Characters/**: Character management (`CharacterManager.tsx`, relationship visualization)
+- **Templates/**: Template browser and application system
+- **Settings/**: Configuration panels (general, AI, editor, backup settings)
+- **UI/**: Reusable components (`SimpleErrorBoundary.tsx`, modals, notifications)
+- **Help/**: Documentation and tutorial system
+
+**Cross-Component Communication**:
+- Use Redux for global state sharing across feature boundaries
+- Implement unified API layer for consistent data access patterns
+- Error boundaries at feature level with graceful degradation
+- Progress tracking through `errorSlice` for long-running operations
+
 ## Common Development Tasks
 
 ### Adding New Features
@@ -191,19 +223,32 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Error Handling**: Graceful fallback when AI service unavailable
 - **Context Building**: `generate_with_context` command builds context from project/character data, handles text encoding issues
 - **Progress Integration**: AI generation operations use global progress system for user feedback
+- **Multilingual Support**: Context and prompts automatically localized based on user language setting (zh-TW, zh-CN, en, ja)
+- **Language-Specific Instructions**: Each language receives tailored writing guidelines to prevent language mixing
 
 **AI Generation Flow**:
-1. **Context Building** (`build_context`): Collects project, character, and chapter data
-2. **Text Cleaning**: Ensures Chinese characters are properly handled in context
-3. **Parameter Variation**: Creates multiple generations with different temperature settings
-4. **Parallel Processing**: Generates multiple versions simultaneously
-5. **Result Display**: Auto-scrolls to results with user selection interface
+1. **Language Detection**: Retrieves user language setting from Redux store
+2. **Context Building** (`build_context`): Collects project, character, and chapter data with localized labels
+3. **Text Cleaning**: Ensures Chinese characters are properly handled in context
+4. **Parameter Variation**: Creates multiple generations with different temperature settings
+5. **Parallel Processing**: Generates multiple versions simultaneously
+6. **Result Display**: Auto-scrolls to results with user selection interface
 
 **Common AI Issues**:
 - **"Conversion error from type Text"**: Usually indicates database field mapping issues in context building
 - **Empty Results**: Check Ollama service status and parameter formatting
 - **Timeout Errors**: Increase HTTP timeouts for longer generation tasks
 - **Missing Results in UI**: Verify functional state updates and auto-scroll implementation
+
+### Template System Architecture
+**Template Categories**: Organized into 4 main types (異世界, 校園, 科幻, 奇幻) with character archetypes
+**Template Application Flow**:
+1. **Template Selection**: Browse and filter templates by type, popularity, or custom criteria
+2. **Character Integration**: Apply character archetypes with relationship templates
+3. **Project Creation**: One-click template application creates complete project structure
+4. **Customization**: Modify template settings and character relationships post-creation
+
+**Template Storage**: JSON-based template definitions with character archetypes and world-building elements
 
 ### Critical Issue Solutions
 
@@ -271,6 +316,13 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Solution**: Use `snake_case` naming convention for Rust function parameters (e.g., `project_id` instead of `projectId`)
 - **Pattern**: Always follow Rust naming conventions in command functions
 
+**Multilingual AI Context Building** (`src-tauri/src/commands/context.rs`):
+- **Enhancement**: `build_context` now accepts `language` parameter for localized prompt generation
+- **Implementation**: Uses match statements to provide language-specific labels and instructions
+- **Supported Languages**: zh-TW (default), zh-CN, en, ja with tailored writing guidelines
+- **Language Detection**: Frontend passes user language setting from Redux store to backend
+- **API Change**: `generate_with_context` signature updated to include optional `language` parameter
+
 ## Debugging and Troubleshooting
 
 ### AI Generation Issues
@@ -319,6 +371,35 @@ log::error!("獲取專案失敗: {}", e);
 - Implement progress indicators for user feedback
 - Consider context length optimization
 
+### Token Optimization Issues
+**Problem**: Current context building in `build_context` may consume excessive tokens with formatting/instruction text
+**Analysis**:
+- System instructions and labels can consume 40-50% of available context tokens
+- Multilingual support increases instruction overhead
+- Story content gets compressed to make room for formatting
+
+**Potential Solutions**:
+1. **Immediate**: Minimize labels and formatting (e.g., "BG:" instead of "【故事背景】")
+2. **Long-term**: Implement Ollama Chat API with system prompts (instructions don't count toward context tokens)
+3. **Hybrid**: Smart context prioritization based on available token budget
+
+## Performance Considerations
+
+### Memory Management
+- **SQLite Optimization**: Use connection pooling and prepared statements for database operations
+- **Redux State**: Implement state normalization to avoid deep object nesting and improve performance
+- **Component Rendering**: Use React.memo for expensive components, especially in character/template lists
+
+### Build Optimization
+- **Tauri Bundle**: Single architecture approach reduces build complexity and application size by 90%
+- **Frontend Assets**: Vite handles code splitting and asset optimization automatically
+- **Rust Compilation**: Use `cargo tauri build --release` for production builds with full optimizations
+
+### Auto-Save Strategy
+- **Chapter Content**: 2-second debounced auto-save to prevent data loss without overwhelming the database
+- **Character Data**: Immediate save on relationship changes due to referential integrity requirements
+- **Settings**: Persist settings changes immediately to maintain user preferences
+
 ## Development Environment
 
 ### Required Tools
@@ -364,7 +445,7 @@ npm run test:performance   # Performance tests
 ## Version Information
 
 **Current Version**: v1.0.0+ (Pure Tauri Architecture with UI Enhancements)
-**Latest Update**: Serena MCP integration and ESLint configuration fixes (2025-08-01)
+**Latest Update**: Multilingual AI generation support and token optimization analysis (2025-08-01)
 **Tauri Version**: v2.0.0-alpha.1
 **Architecture**: Single unified Tauri + Rust + React stack
 **Database**: SQLite with rusqlite v0.29+

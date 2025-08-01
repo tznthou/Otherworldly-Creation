@@ -17,8 +17,9 @@ pub async fn build_context(
     project_id: String,
     chapter_id: String,
     position: usize,
+    language: String,
 ) -> Result<String, String> {
-    log::info!("構建上下文 - 專案: {}, 章節: {}, 位置: {}", project_id, chapter_id, position);
+    log::info!("構建上下文 - 專案: {}, 章節: {}, 位置: {}, 語言: {}", project_id, chapter_id, position, language);
     
     let db = get_db().map_err(|e| e.to_string())?;
     
@@ -130,24 +131,120 @@ pub async fn build_context(
             .collect()
     }
     
+    // 根據語言獲取對應的標籤文字
+    struct ContextLabels {
+        story_background: &'static str,
+        book_name: &'static str,
+        description: &'static str,
+        genre: &'static str,
+        character_settings: &'static str,
+        character_description: &'static str,
+        character_relationships: &'static str,
+        current_chapter: &'static str,
+        chapter_title: &'static str,
+        content: &'static str,
+        previous_content_omitted: &'static str,
+        insert_continuation_here: &'static str,
+        existing_content_after: &'static str,
+        remaining_content_continues: &'static str,
+        writing_instructions: &'static str,
+    }
+    
+    let labels = match language.as_str() {
+        "zh-CN" => ContextLabels {
+            story_background: "【故事背景】",
+            book_name: "书名：",
+            description: "简介：",
+            genre: "类型：",
+            character_settings: "【角色设定】",
+            character_description: "  描述：",
+            character_relationships: "【角色关系】",
+            current_chapter: "【当前章节】",
+            chapter_title: "章节标题：",
+            content: "内容：",
+            previous_content_omitted: "...（前文省略）...",
+            insert_continuation_here: "【请在此处续写，使用纯中文，不要混杂英文】",
+            existing_content_after: "【游标后的现有内容：】",
+            remaining_content_continues: "...（后续内容继续）...",
+            writing_instructions: "【续写要求】",
+        },
+        "en" => ContextLabels {
+            story_background: "[Story Background]",
+            book_name: "Title: ",
+            description: "Description: ",
+            genre: "Genre: ",
+            character_settings: "[Character Settings]",
+            character_description: "  Description: ",
+            character_relationships: "[Character Relationships]",
+            current_chapter: "[Current Chapter]",
+            chapter_title: "Chapter Title: ",
+            content: "Content:",
+            previous_content_omitted: "...(previous content omitted)...",
+            insert_continuation_here: "[INSERT CONTINUATION HERE - Use English only]",
+            existing_content_after: "[Existing content after cursor:]",
+            remaining_content_continues: "...(remaining content continues)...",
+            writing_instructions: "[Writing Instructions]",
+        },
+        "ja" => ContextLabels {
+            story_background: "【物語の背景】",
+            book_name: "タイトル：",
+            description: "概要：",
+            genre: "ジャンル：",
+            character_settings: "【キャラクター設定】",
+            character_description: "  説明：",
+            character_relationships: "【キャラクター関係】",
+            current_chapter: "【現在の章】",
+            chapter_title: "章のタイトル：",
+            content: "内容：",
+            previous_content_omitted: "...（前文省略）...",
+            insert_continuation_here: "【ここに続きを書いてください。日本語のみを使用してください】",
+            existing_content_after: "【カーソル後の既存内容：】",
+            remaining_content_continues: "...（続きがあります）...",
+            writing_instructions: "【執筆指示】",
+        },
+        _ => ContextLabels { // 默認 zh-TW
+            story_background: "【故事背景】",
+            book_name: "書名：",
+            description: "簡介：",
+            genre: "類型：",
+            character_settings: "【角色設定】",
+            character_description: "  描述：",
+            character_relationships: "【角色關係】",
+            current_chapter: "【當前章節】",
+            chapter_title: "章節標題：",
+            content: "內容：",
+            previous_content_omitted: "...（前文省略）...",
+            insert_continuation_here: "【請在此處續寫，使用純中文，不要混雜英文】",
+            existing_content_after: "【游標後的現有內容：】",
+            remaining_content_continues: "...（後續內容繼續）...",
+            writing_instructions: "【續寫要求】",
+        },
+    };
+    
     // 添加專案背景
-    context.push_str("[Story Background]\n");
-    context.push_str(&format!("Title: {}\n", clean_text(&project.name)));
+    context.push_str(labels.story_background);
+    context.push_str("\n");
+    context.push_str(&format!("{}{}
+", labels.book_name, clean_text(&project.name)));
     if let Some(desc) = &project.description {
-        context.push_str(&format!("Description: {}\n", clean_text(desc)));
+        context.push_str(&format!("{}{}
+", labels.description, clean_text(desc)));
     }
     if let Some(project_type) = &project.r#type {
-        context.push_str(&format!("Genre: {}\n", clean_text(project_type)));
+        context.push_str(&format!("{}{}
+", labels.genre, clean_text(project_type)));
     }
     context.push_str("\n");
     
     // 添加角色設定
     if !characters.is_empty() {
-        context.push_str("【角色設定】\n");
+        context.push_str(labels.character_settings);
+        context.push_str("\n");
         for character in &characters {
             context.push_str(&format!("◆ {}\n", character.name));
             if let Some(desc) = &character.description {
-                context.push_str(&format!("  描述：{}\n", desc));
+                context.push_str(&format!("{}{}
+", labels.character_description, desc));
             }
             if let Some(attrs) = &character.attributes {
                 // 解析 JSON 屬性
@@ -167,7 +264,9 @@ pub async fn build_context(
         
         // 添加角色關係
         if !relationships.is_empty() {
-            context.push_str("\n【角色關係】\n");
+            context.push_str("\n");
+            context.push_str(labels.character_relationships);
+            context.push_str("\n");
             for (from, to, rel_type, desc) in &relationships {
                 context.push_str(&format!("- {} 與 {} 的關係：{}", from, to, rel_type));
                 if let Some(d) = desc {
@@ -180,9 +279,12 @@ pub async fn build_context(
     }
     
     // 添加當前章節內容（包含游標前後的內容）
-    context.push_str("[Current Chapter]\n");
-    context.push_str(&format!("Chapter Title: {}\n", clean_text(&chapter.title)));
-    context.push_str("Content:\n");
+    context.push_str(labels.current_chapter);
+    context.push_str("\n");
+    context.push_str(&format!("{}{}
+", labels.chapter_title, clean_text(&chapter.title)));
+    context.push_str(labels.content);
+    context.push_str("\n");
     
     if let Some(content) = &chapter.content {
         let content_chars: Vec<char> = content.chars().collect();
@@ -212,7 +314,8 @@ pub async fn build_context(
                 .map(|i| i + 1)
                 .unwrap_or(0);
             
-            context.push_str("...(previous content omitted)...\n\n");
+            context.push_str(labels.previous_content_omitted);
+            context.push_str("\n\n");
             // 安全地截取調整後的內容
             let final_chars: Vec<char> = remaining_text.chars().collect();
             let final_text: String = final_chars[adjusted_start.min(final_chars.len())..].iter().collect();
@@ -222,7 +325,9 @@ pub async fn build_context(
         }
         
         // 添加游標位置標記
-        context.push_str("\n\n[[[INSERT CONTINUATION HERE]]]\n\n");
+        context.push_str("\n\n");
+        context.push_str(labels.insert_continuation_here);
+        context.push_str("\n\n");
         
         // 處理游標後的內容（如果有的話，顯示一小部分讓 AI 知道後續內容）
         if !after_cursor.is_empty() {
@@ -240,39 +345,118 @@ pub async fn build_context(
                     .rfind(|c| c == '.' || c == '!' || c == '?' || c == '\n')
                     .unwrap_or(truncated_after.len());
                 
-                context.push_str("[Existing content after cursor:]\n");
+                context.push_str(labels.existing_content_after);
+                context.push_str("\n");
                 // 安全地截取到 end_pos
                 let final_chars: Vec<char> = truncated_after.chars().collect();
                 let final_text: String = final_chars[..end_pos.min(final_chars.len())].iter().collect();
                 context.push_str(&final_text);
-                context.push_str("\n...(remaining content continues)...\n");
+                context.push_str("\n");
+                context.push_str(labels.remaining_content_continues);
+                context.push_str("\n");
             } else {
-                context.push_str("[Existing content after cursor:]\n");
+                context.push_str(labels.existing_content_after);
+                context.push_str("\n");
                 context.push_str(&cleaned_after);
             }
         }
     }
     
     // 添加續寫指示
-    context.push_str("\n\n[Writing Instructions]\n");
-    context.push_str("IMPORTANT: Insert your continuation at the position marked with [[[INSERT CONTINUATION HERE]]].\n");
-    context.push_str("Do NOT repeat or rewrite the existing content before or after the insertion point.\n");
-    context.push_str("Your response should ONLY contain the new text to be inserted.\n\n");
-    context.push_str("Requirements:\n");
-    context.push_str("1. Maintain character consistency and dialogue style\n");
-    context.push_str("2. Continue the current plot development smoothly from the insertion point\n");
-    context.push_str("3. Keep the same writing style and narrative perspective\n");
-    context.push_str("4. Ensure detail consistency (time, place, character states)\n");
-    context.push_str("5. Write only the continuation text, without any meta-comments or explanations\n");
-    context.push_str("6. Make sure your continuation flows naturally with both the text before and after the insertion point\n");
+    context.push_str("\n\n");
+    context.push_str(labels.writing_instructions);
+    context.push_str("\n");
+    
+    // 根據語言添加具體的續寫要求
+    match language.as_str() {
+        "zh-CN" => {
+            context.push_str("重要：在标记的位置插入续写内容。\n");
+            context.push_str("不要重复或重写插入点前后的现有内容。\n");
+            context.push_str("你的回应应该只包含要插入的新文本。\n\n");
+            context.push_str("要求：\n");
+            context.push_str("1. 保持角色一致性和对话风格\n");
+            context.push_str("2. 从插入点平滑地继续当前情节发展\n");
+            context.push_str("3. 保持相同的写作风格和叙事视角\n");
+            context.push_str("4. 确保细节一致性（时间、地点、角色状态）\n");
+            context.push_str("5. 只写续写文本，不要任何元评论或解释\n");
+            context.push_str("6. 确保你的续写与插入点前后的文本自然衔接\n");
+            context.push_str("7. 使用纯中文写作，不要混杂英文单词\n");
+        },
+        "en" => {
+            context.push_str("IMPORTANT: Insert your continuation at the marked position.\n");
+            context.push_str("Do NOT repeat or rewrite the existing content before or after the insertion point.\n");
+            context.push_str("Your response should ONLY contain the new text to be inserted.\n\n");
+            context.push_str("Requirements:\n");
+            context.push_str("1. Maintain character consistency and dialogue style\n");
+            context.push_str("2. Continue the current plot development smoothly from the insertion point\n");
+            context.push_str("3. Keep the same writing style and narrative perspective\n");
+            context.push_str("4. Ensure detail consistency (time, place, character states)\n");
+            context.push_str("5. Write only the continuation text, without any meta-comments or explanations\n");
+            context.push_str("6. Make sure your continuation flows naturally with both the text before and after the insertion point\n");
+            context.push_str("7. Use English only, do not mix other languages\n");
+        },
+        "ja" => {
+            context.push_str("重要：マークされた位置に続きを挿入してください。\n");
+            context.push_str("挿入ポイントの前後の既存のコンテンツを繰り返したり、書き直したりしないでください。\n");
+            context.push_str("応答には、挿入する新しいテキストのみを含める必要があります。\n\n");
+            context.push_str("要件：\n");
+            context.push_str("1. キャラクターの一貫性と対話スタイルを維持する\n");
+            context.push_str("2. 挿入ポイントから現在のプロット展開をスムーズに続ける\n");
+            context.push_str("3. 同じ文体と語りの視点を保つ\n");
+            context.push_str("4. 詳細の一貫性を確保する（時間、場所、キャラクターの状態）\n");
+            context.push_str("5. 続きのテキストのみを書き、メタコメントや説明は含めない\n");
+            context.push_str("6. 続きが挿入ポイントの前後のテキストと自然に流れるようにする\n");
+            context.push_str("7. 日本語のみを使用し、他の言語を混ぜない\n");
+        },
+        _ => { // 默認 zh-TW
+            context.push_str("重要：在標記的位置插入續寫內容。\n");
+            context.push_str("不要重複或重寫插入點前後的現有內容。\n");
+            context.push_str("你的回應應該只包含要插入的新文本。\n\n");
+            context.push_str("要求：\n");
+            context.push_str("1. 保持角色一致性和對話風格\n");
+            context.push_str("2. 從插入點平滑地繼續當前情節發展\n");
+            context.push_str("3. 保持相同的寫作風格和敘事視角\n");
+            context.push_str("4. 確保細節一致性（時間、地點、角色狀態）\n");
+            context.push_str("5. 只寫續寫文本，不要任何元評論或解釋\n");
+            context.push_str("6. 確保你的續寫與插入點前後的文本自然銜接\n");
+            context.push_str("7. 使用純中文寫作，不要混雜英文單詞\n");
+        }
+    }
     
     // 如果是輕小說類型，添加特定提示
     if let Some(project_type) = &project.r#type {
-        if project_type.contains("輕小說") || project_type.contains("light novel") {
-            context.push_str("\n輕小說風格提示：\n");
-            context.push_str("- 適當加入角色內心獨白\n");
-            context.push_str("- 保持節奏明快，對話生動\n");
-            context.push_str("- 可以適當使用擬聲詞和表情描寫\n");
+        let is_light_novel = project_type.to_lowercase().contains("輕小說") || 
+                           project_type.to_lowercase().contains("轻小说") ||
+                           project_type.to_lowercase().contains("light novel") ||
+                           project_type.to_lowercase().contains("ライトノベル");
+        
+        if is_light_novel {
+            match language.as_str() {
+                "zh-CN" => {
+                    context.push_str("\n轻小说风格提示：\n");
+                    context.push_str("- 适当加入角色内心独白\n");
+                    context.push_str("- 保持节奏明快，对话生动\n");
+                    context.push_str("- 可以适当使用拟声词和表情描写\n");
+                },
+                "en" => {
+                    context.push_str("\nLight Novel Style Tips:\n");
+                    context.push_str("- Include appropriate character inner monologues\n");
+                    context.push_str("- Maintain a brisk pace with lively dialogue\n");
+                    context.push_str("- Use onomatopoeia and expression descriptions when appropriate\n");
+                },
+                "ja" => {
+                    context.push_str("\nライトノベルスタイルのヒント：\n");
+                    context.push_str("- キャラクターの内面独白を適切に含める\n");
+                    context.push_str("- テンポよく、生き生きとした対話を維持する\n");
+                    context.push_str("- 擬音語や表情描写を適切に使用する\n");
+                },
+                _ => { // 默認 zh-TW
+                    context.push_str("\n輕小說風格提示：\n");
+                    context.push_str("- 適當加入角色內心獨白\n");
+                    context.push_str("- 保持節奏明快，對話生動\n");
+                    context.push_str("- 可以適當使用擬聲詞和表情描寫\n");
+                }
+            }
         }
     }
     
