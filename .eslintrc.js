@@ -6,7 +6,7 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
   ],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint', 'react', 'react-hooks'],
@@ -16,7 +16,7 @@ module.exports = {
     },
     ecmaVersion: 2021,
     sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.main.json'],
+    project: ['./tsconfig.json'],
   },
   rules: {
     'no-unused-vars': 'off',

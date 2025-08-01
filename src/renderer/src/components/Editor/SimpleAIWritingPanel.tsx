@@ -28,6 +28,45 @@ interface GenerationProgress {
   message: string;
 }
 
+// 過濾掉 AI 思考標籤的函數
+const filterThinkingTags = (text: string): string => {
+  // 移除常見的思考標籤及其內容
+  const patterns = [
+    // 標準 XML 格式的思考標籤
+    /<think[^>]*>[\s\S]*?<\/think>/gi,
+    /<thinking[^>]*>[\s\S]*?<\/thinking>/gi,
+    /<thought[^>]*>[\s\S]*?<\/thought>/gi,
+    /<reflection[^>]*>[\s\S]*?<\/reflection>/gi,
+    /<thinking[^>]*>[\s\S]*?<\/antml:thinking>/gi,
+    
+    // 可能的單行或不完整標籤
+    /<think[^>]*>/gi,
+    /<\/think>/gi,
+    /<thinking[^>]*>/gi,
+    /<\/thinking>/gi,
+    
+    // Markdown 風格的思考標記
+    /```thinking[\s\S]*?```/gi,
+    /```think[\s\S]*?```/gi,
+    
+    // 其他可能的思考標記
+    /\[THINKING\][\s\S]*?\[\/THINKING\]/gi,
+    /\[THINK\][\s\S]*?\[\/THINK\]/gi,
+    /\{\{thinking\}\}[\s\S]*?\{\{\/thinking\}\}/gi,
+    /\{\{think\}\}[\s\S]*?\{\{\/think\}\}/gi,
+  ];
+  
+  let filteredText = text;
+  patterns.forEach(pattern => {
+    filteredText = filteredText.replace(pattern, '');
+  });
+  
+  // 清理多餘的空行
+  filteredText = filteredText.replace(/\n{3,}/g, '\n\n').trim();
+  
+  return filteredText;
+};
+
 const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({ 
   projectId, 
   chapterId, 
@@ -92,6 +131,9 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
 
   // 生成文本
   const handleGenerate = async () => {
+    // 設置超時計時器
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     try {
       console.log('handleGenerate 被調用了');
       
@@ -109,6 +151,21 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       console.log('開始 AI 生成 - 專案ID:', projectId, '章節ID:', chapterId, '位置:', currentPosition);
     
     setIsGenerating(true);
+    
+    // 設置超時（6分鐘），給 AI 充足的生成時間
+    timeoutId = setTimeout(() => {
+      console.error('AI 生成超時');
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      setIsGenerating(false);
+      dispatch(addNotification({
+        type: 'error',
+        title: 'AI 生成超時',
+        message: '生成時間過長，請重試或考慮減少生成長度',
+        duration: 5000,
+      }));
+    }, 360000);
     // 不要在生成過程中清空選項，讓用戶可以看到之前的結果
     // setGenerationOptions([]);
     
@@ -120,6 +177,11 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     console.log('當前模型:', currentModel);
     console.log('生成數量:', generationCount);
     
+    // 先創建一個進度 ID
+    const newProgressId = `progress-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log('創建進度 ID:', newProgressId);
+    setProgressId(newProgressId);
+    
     const progressAction = startProgress({
       title: 'AI 續寫',
       description: `正在使用 ${currentModel} 模型生成文本`,
@@ -129,23 +191,6 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     
     console.log('進度 Action:', progressAction);
     dispatch(progressAction);
-    
-    // 等待一小段時間以確保進度已創建
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
-    // 從 store 獲取最新的進度 ID
-    const progressState = store.getState().progress;
-    console.log('當前進度狀態:', progressState);
-    const latestProgress = progressState.indicators[progressState.indicators.length - 1];
-    const newProgressId = latestProgress?.id;
-    
-    if (!newProgressId) {
-      console.error('無法創建進度指示器');
-      return;
-    }
-    
-    console.log('進度指示器 ID:', newProgressId);
-    setProgressId(newProgressId);
     
     try {
       updateGenerationProgress(10, '準備生成上下文...');
@@ -172,8 +217,12 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       
       updateGenerationProgress(20, `開始生成 ${generationCount} 個版本...`);
       
-      // 並行生成多個選項
-      const generationPromises = paramVariations.map(async (params, index) => {
+      // 串行生成多個選項，避免資料庫鎖衝突
+      // TODO: 未來可以改進後端資料庫連接管理（如使用連接池），以支援並行生成
+      const results: (GenerationOption | null)[] = [];
+      
+      for (let index = 0; index < paramVariations.length; index++) {
+        const params = paramVariations[index];
         try {
           updateGenerationProgress(20 + (index * 60 / generationCount), `生成第 ${index + 1} 個版本...`, index);
           
@@ -189,20 +238,20 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
           
           console.log('API 回應結果:', result);
           
-          return {
+          results.push({
             id: `${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
-            text: result,
+            text: filterThinkingTags(result),
             temperature: params.temperature,
             timestamp: new Date()
-          };
+          });
+          
+          // 在每次生成之間添加小延遲，確保資料庫操作完成
+          await new Promise(resolve => setTimeout(resolve, 100));
         } catch (error) {
           console.error(`生成第 ${index + 1} 個版本失敗:`, error);
-          return null;
+          results.push(null);
         }
-      });
-      
-      // 等待所有生成完成
-      const results = await Promise.all(generationPromises);
+      }
       
       updateGenerationProgress(90, '處理生成結果...', generationCount);
       
@@ -268,12 +317,20 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         duration: 5000,
       }));
     } finally {
+      // 清理超時計時器
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       setIsGenerating(false);
       setProgressId(null);
       abortControllerRef.current = null;
     }
     } catch (outerError) {
       console.error('handleGenerate 外層錯誤:', outerError);
+      // 清理超時計時器
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       setIsGenerating(false);
       dispatch(addNotification({
         type: 'error',
@@ -286,8 +343,8 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   
   // 應用生成的文本
   const handleApplyOption = useCallback((option: GenerationOption) => {
-    // 調用父組件的插入文本函數
-    onInsertText(option.text);
+    // 調用父組件的插入文本函數，再次過濾以確保安全
+    onInsertText(filterThinkingTags(option.text));
     
     // 標記選項為已選擇
     setGenerationOptions(prev => 
@@ -336,6 +393,10 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
             </div>
             <div className="text-sm text-gray-300 max-w-md">
               AI 正在生成文本...
+              <br />
+              <span className="text-xs text-gray-400">
+                中文生成可能需要較長時間，請耐心等待
+              </span>
             </div>
           </div>
         </div>

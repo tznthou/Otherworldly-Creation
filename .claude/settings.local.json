@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
       "Bash(node:*)",
@@ -57,7 +58,16 @@
       "Bash(ollama ps:*)",
       "Bash(brew list:*)",
       "Bash(ollama:*)",
-      "mcp__puppeteer__puppeteer_screenshot"
+      "mcp__puppeteer__puppeteer_screenshot",
+      "WebFetch(domain:github.com)",
+      "Bash(claude mcp:*)",
+      "Bash(uvx:*)",
+      "Bash(timeout 10 uvx:*)",
+      "mcp__serena__check_onboarding_performed",
+      "mcp__serena__onboarding",
+      "mcp__serena__list_dir",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__write_memory"
     ],
     "deny": []
   }

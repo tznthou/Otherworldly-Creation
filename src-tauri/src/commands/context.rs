@@ -21,7 +21,16 @@ pub async fn build_context(
     log::info!("構建上下文 - 專案: {}, 章節: {}, 位置: {}", project_id, chapter_id, position);
     
     let db = get_db().map_err(|e| e.to_string())?;
-    let conn = db.lock().map_err(|e| format!("無法獲取資料庫鎖: {}", e))?;
+    
+    // 更好地處理 poisoned lock 錯誤
+    let conn = match db.lock() {
+        Ok(conn) => conn,
+        Err(poisoned) => {
+            log::error!("資料庫鎖被 poisoned，嘗試恢復: {}", poisoned);
+            // 嘗試恢復 poisoned lock
+            poisoned.into_inner()
+        }
+    };
     
     // 1. 獲取專案資訊
     let project: Project = conn
@@ -170,46 +179,92 @@ pub async fn build_context(
         context.push_str("\n");
     }
     
-    // 添加當前章節內容（到指定位置為止）
+    // 添加當前章節內容（包含游標前後的內容）
     context.push_str("[Current Chapter]\n");
     context.push_str(&format!("Chapter Title: {}\n", clean_text(&chapter.title)));
     context.push_str("Content:\n");
     
     if let Some(content) = &chapter.content {
-        // 只取到指定位置的內容
-        let truncated_content = if position < content.len() {
-            &content[..position]
-        } else {
-            content
-        };
+        let content_chars: Vec<char> = content.chars().collect();
+        let char_len = content_chars.len();
+        let char_position = position.min(char_len); // 確保位置不超過字符長度
         
-        // 清理內容並如果內容太長，只保留最後的部分（約 1000 字）
-        let cleaned_content = clean_text(truncated_content);
+        // 安全地分割內容為游標前和游標後（按字符而非字節）
+        let before_cursor: String = content_chars[..char_position].iter().collect();
+        let after_cursor: String = content_chars[char_position..].iter().collect();
+        
+        // 處理游標前的內容
+        let cleaned_before = clean_text(&before_cursor);
         const MAX_CONTEXT_CHARS: usize = 1000;
-        if cleaned_content.len() > MAX_CONTEXT_CHARS {
-            let start_pos = cleaned_content.len().saturating_sub(MAX_CONTEXT_CHARS);
+        
+        if cleaned_before.chars().count() > MAX_CONTEXT_CHARS {
+            let before_chars: Vec<char> = cleaned_before.chars().collect();
+            let total_chars = before_chars.len();
+            let start_pos = total_chars.saturating_sub(MAX_CONTEXT_CHARS);
+            
+            // 安全地截取後面的字符
+            let remaining_chars: Vec<char> = before_chars[start_pos..].to_vec();
+            let remaining_text: String = remaining_chars.iter().collect();
+            
             // 找到最近的句號或換行符，避免從句子中間開始
-            let adjusted_start = cleaned_content[start_pos..]
+            let adjusted_start = remaining_text
                 .find(|c| c == '.' || c == '!' || c == '?' || c == '\n')
-                .map(|i| start_pos + i + 1)
-                .unwrap_or(start_pos);
+                .map(|i| i + 1)
+                .unwrap_or(0);
             
             context.push_str("...(previous content omitted)...\n\n");
-            context.push_str(&cleaned_content[adjusted_start..]);
+            // 安全地截取調整後的內容
+            let final_chars: Vec<char> = remaining_text.chars().collect();
+            let final_text: String = final_chars[adjusted_start.min(final_chars.len())..].iter().collect();
+            context.push_str(&final_text);
         } else {
-            context.push_str(&cleaned_content);
+            context.push_str(&cleaned_before);
+        }
+        
+        // 添加游標位置標記
+        context.push_str("\n\n[[[INSERT CONTINUATION HERE]]]\n\n");
+        
+        // 處理游標後的內容（如果有的話，顯示一小部分讓 AI 知道後續內容）
+        if !after_cursor.is_empty() {
+            let cleaned_after = clean_text(&after_cursor);
+            const MAX_AFTER_CHARS: usize = 200; // 只顯示後面 200 字
+            
+            if cleaned_after.chars().count() > MAX_AFTER_CHARS {
+                // 安全地截取前 MAX_AFTER_CHARS 個字符
+                let after_chars: Vec<char> = cleaned_after.chars().collect();
+                let truncated_chars: Vec<char> = after_chars[..MAX_AFTER_CHARS].to_vec();
+                let truncated_after: String = truncated_chars.iter().collect();
+                
+                // 找到最近的句號，避免在句子中間截斷
+                let end_pos = truncated_after
+                    .rfind(|c| c == '.' || c == '!' || c == '?' || c == '\n')
+                    .unwrap_or(truncated_after.len());
+                
+                context.push_str("[Existing content after cursor:]\n");
+                // 安全地截取到 end_pos
+                let final_chars: Vec<char> = truncated_after.chars().collect();
+                let final_text: String = final_chars[..end_pos.min(final_chars.len())].iter().collect();
+                context.push_str(&final_text);
+                context.push_str("\n...(remaining content continues)...\n");
+            } else {
+                context.push_str("[Existing content after cursor:]\n");
+                context.push_str(&cleaned_after);
+            }
         }
     }
     
     // 添加續寫指示
     context.push_str("\n\n[Writing Instructions]\n");
-    context.push_str("Please continue writing this story based on the background, characters, and existing content above.\n");
+    context.push_str("IMPORTANT: Insert your continuation at the position marked with [[[INSERT CONTINUATION HERE]]].\n");
+    context.push_str("Do NOT repeat or rewrite the existing content before or after the insertion point.\n");
+    context.push_str("Your response should ONLY contain the new text to be inserted.\n\n");
     context.push_str("Requirements:\n");
     context.push_str("1. Maintain character consistency and dialogue style\n");
-    context.push_str("2. Continue the current plot development smoothly\n");
+    context.push_str("2. Continue the current plot development smoothly from the insertion point\n");
     context.push_str("3. Keep the same writing style and narrative perspective\n");
     context.push_str("4. Ensure detail consistency (time, place, character states)\n");
-    context.push_str("5. Continue the story directly without any additional explanations\n");
+    context.push_str("5. Write only the continuation text, without any meta-comments or explanations\n");
+    context.push_str("6. Make sure your continuation flows naturally with both the text before and after the insertion point\n");
     
     // 如果是輕小說類型，添加特定提示
     if let Some(project_type) = &project.r#type {
@@ -278,7 +333,16 @@ pub async fn compress_context(
 #[command]
 pub async fn get_context_stats(project_id: String) -> Result<ContextStats, String> {
     let db = get_db().map_err(|e| e.to_string())?;
-    let conn = db.lock().map_err(|e| format!("無法獲取資料庫鎖: {}", e))?;
+    
+    // 更好地處理 poisoned lock 錯誤
+    let conn = match db.lock() {
+        Ok(conn) => conn,
+        Err(poisoned) => {
+            log::error!("資料庫鎖被 poisoned，嘗試恢復: {}", poisoned);
+            // 嘗試恢復 poisoned lock
+            poisoned.into_inner()
+        }
+    };
     
     // 統計章節數量
     let chapter_count: usize = conn

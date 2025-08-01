@@ -150,3 +150,6 @@ desktop.ini
 # Jest coverage
 coverage/
 *.lcov
+
+# MCP Server configurations (local only)
+.serena/

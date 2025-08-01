@@ -30,7 +30,7 @@ npm run diagnostic
 - `npm run dev:tauri` - Explicit Tauri development
 - `npm run dev:renderer` - Start Vite frontend only
 - `npm run lint` - Run ESLint with auto-fix support
-- `npm run diagnostic` - System environment diagnostics
+- `npm run diagnostic` - System environment diagnostics (legacy Electron checks, may show false positives)
 
 ### Testing
 - `npm test` - Run all tests with Jest
@@ -49,11 +49,18 @@ npm run diagnostic
 - `npm run package` - Package application for distribution
 - `npm run clean` - Clean all build artifacts
 
+### MCP Server Management
+- `claude mcp list` - Check status of all configured MCP servers
+- `claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project "$(pwd)"` - Add Serena MCP server for current project
+- `claude mcp remove serena` - Remove Serena MCP server configuration
+- **Required Setup**: Each project needs `.serena/project.yml` configuration file generated with `uvx --from git+https://github.com/oraios/serena serena project generate-yml`
+
 ### Direct Cargo Commands
 - `cargo tauri dev` - Direct Tauri development
 - `cargo tauri build` - Direct Tauri build
 - `cargo tauri build --debug` - Debug build with console
-- `cargo check` - Check Rust code without building
+- `cargo check --manifest-path src-tauri/Cargo.toml` - Check Rust code without building
+- `npx tsc --noEmit` - Check TypeScript compilation without emitting files
 
 ## Architecture Overview
 
@@ -230,10 +237,12 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Solution**: Implement auto-scroll to results container after content generation
 - **Implementation**: Use `data-results-container` attribute and `scrollIntoView` with smooth behavior
 
-**Smart Scrollbar System** (`src/renderer/src/index.css` + `src/renderer/src/pages/ProjectEditor/ProjectEditor.tsx`):
+**Nested Scrollbar System & Layout Issues** (`src/renderer/src/index.css` + layout components):
 - **Implementation**: 16px gold-themed scrollbars with gradient effects and cosmic theme integration
 - **Critical**: Use `!important` CSS declarations to override Tailwind's base reset styles
-- **Container Fix**: Ensure outer container in ProjectEditor has `overflow: 'auto'` and proper height constraints
+- **Nested Scrolling**: Supports dual-layer scrolling - outer container for page content, inner container for editor text
+- **Height Constraints**: Use `min-h-full` instead of `h-full` in ProjectEditor to allow content expansion
+- **Layout Pattern**: Outer scroll (Layout main with conditional `overflow-auto`), inner scroll (editor with `maxHeight` limits)
 - **Browser Compatibility**: Uses both webkit scrollbar properties and CSS scrollbar-width/color for cross-browser support
 
 **Database Pragma Statements** (`src-tauri/src/database/migrations.rs`):
@@ -251,6 +260,16 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - Run `cargo check` to verify Rust compilation before Tauri build
 
 **Translation Loading**: Pre-load translations during app initialization to avoid async issues in components
+
+**ESLint Configuration Issues**:
+- **Problem**: Missing TypeScript ESLint configuration causing linting failures
+- **Solution**: Updated `.eslintrc.js` to use `plugin:@typescript-eslint/recommended` format and removed non-existent `tsconfig.main.json` reference
+- **Critical**: ESLint configuration should match installed package versions and available tsconfig files
+
+**Rust Parameter Naming**:
+- **Problem**: Rust compiler warnings for non-snake_case parameter names
+- **Solution**: Use `snake_case` naming convention for Rust function parameters (e.g., `project_id` instead of `projectId`)
+- **Pattern**: Always follow Rust naming conventions in command functions
 
 ## Debugging and Troubleshooting
 
@@ -316,6 +335,16 @@ log::error!("獲取專案失敗: {}", e);
 - **Start Command**: `ollama serve`
 - **Model Installation**: `ollama pull llama3.2`
 
+### MCP Server Configuration
+- **Serena MCP**: Advanced code analysis and development assistant
+- **Prerequisites**: `uv` package manager (install from uv.pip.python.org)
+- **Project Setup**: 
+  1. Generate project configuration: `uvx --from git+https://github.com/oraios/serena serena project generate-yml`
+  2. Add to Claude Code: `claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project "$(pwd)"`
+  3. Verify connection: `claude mcp list` (should show serena as ✓ Connected)
+- **Configuration File**: `.serena/project.yml` (automatically generated for TypeScript projects)
+- **Troubleshooting**: If connection fails, ensure `.serena/project.yml` exists and remove/re-add the MCP server
+
 ## Testing Strategy
 
 **Test Environment**: Jest with jsdom for React component testing
@@ -335,9 +364,9 @@ npm run test:performance   # Performance tests
 ## Version Information
 
 **Current Version**: v1.0.0+ (Pure Tauri Architecture with UI Enhancements)
-**Latest Update**: Smart scrollbar system implementation (2025-07-31)
+**Latest Update**: Serena MCP integration and ESLint configuration fixes (2025-08-01)
 **Tauri Version**: v2.0.0-alpha.1
 **Architecture**: Single unified Tauri + Rust + React stack
 **Database**: SQLite with rusqlite v0.29+
 **Build Target**: Cross-platform desktop application
-**Recent Additions**: 16px gold-themed scrollbars, enhanced editor container scrolling
+**Recent Additions**: 16px gold-themed scrollbars, nested scrolling system, layout constraint fixes
