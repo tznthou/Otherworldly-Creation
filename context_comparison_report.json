@@ -1,0 +1,51 @@
+{
+  "legacy": [
+    {
+      "testCase": "簡單場景",
+      "success": true,
+      "contextLength": 653,
+      "estimatedTokens": 327,
+      "duration": 0,
+      "method": "legacy"
+    },
+    {
+      "testCase": "複雜場景",
+      "success": true,
+      "contextLength": 1901,
+      "estimatedTokens": 951,
+      "duration": 0,
+      "method": "legacy"
+    }
+  ],
+  "separated": [
+    {
+      "testCase": "簡單場景",
+      "success": true,
+      "systemPromptLength": 159,
+      "userContextLength": 446,
+      "totalLength": 605,
+      "estimatedTokens": 303,
+      "systemPromptTokens": 80,
+      "userContextTokens": 223,
+      "duration": 0,
+      "method": "separated",
+      "tokenSavings": 24,
+      "savingsPercentage": "7.3"
+    },
+    {
+      "testCase": "複雜場景",
+      "success": true,
+      "systemPromptLength": 159,
+      "userContextLength": 1331,
+      "totalLength": 1490,
+      "estimatedTokens": 745,
+      "systemPromptTokens": 80,
+      "userContextTokens": 666,
+      "duration": 0,
+      "method": "separated",
+      "tokenSavings": 206,
+      "savingsPercentage": "21.7"
+    }
+  ],
+  "timestamp": "2025-08-01T09:40:17.502Z"
+}
