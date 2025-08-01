@@ -38,7 +38,7 @@ export interface API {
     getModelsInfo: () => Promise<any>;
     checkModelAvailability: (modelName: string) => Promise<any>;
     generateText: (prompt: string, model: string, params: any) => Promise<string>;
-    generateWithContext: (projectId: string, chapterId: string, position: number, model: string, params: any) => Promise<string>;
+    generateWithContext: (projectId: string, chapterId: string, position: number, model: string, params: any, language?: string) => Promise<string>;
     updateOllamaConfig: (config: any) => Promise<any>;
   };
 

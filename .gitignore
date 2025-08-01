@@ -115,10 +115,15 @@ TASK-*.md
 *-COMPLETION-SUMMARY.md
 INTEGRATION-TEST-REPORT.json
 INTEGRATION-TEST-REPORT.md
+context_engineering_test_report.md
+context_comparison_report.json
+*_test_report.md
 
 # Test scripts (if they are temporary/development only)
 test-*.js
 run-*.js
+manual_test_*.js
+test_*.js
 
 # Kiro AI assistant files (optional - remove if you want to version control them)
 .kiro/

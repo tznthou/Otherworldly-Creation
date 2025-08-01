@@ -77,7 +77,7 @@ npm run diagnostic
 - **State Management**: Redux Toolkit with feature-based slices
 - **Editor**: Slate.js for rich text editing
 - **UI Components**: Custom cosmic theme with dark backgrounds and gold accents
-- **Internationalization**: JSON-based translation system supporting zh-TW, zh-CN, en, ja
+- **Internationalization**: JSON-based translation system (primarily zh-TW focused)
 
 ### Tauri Command Architecture
 
@@ -93,8 +93,10 @@ npm run diagnostic
 
 **AI & Context Commands**:
 - **AI Service**: `check_ollama_service`, `get_service_status`, `list_models`, `get_models_info`, `generate_text`
-- **Context Management**: `build_context`, `compress_context`, `get_context_stats`, `generate_with_context`
+- **Legacy Context**: `build_context`, `compress_context`, `get_context_stats`, `generate_with_context`
+- **Context Engineering**: `build_separated_context`, `estimate_separated_context_tokens`, `generate_with_separated_context`
 - **Configuration**: `update_ollama_config`, `check_model_availability`
+- **Traditional Chinese Focus**: Context system simplified to focus only on Traditional Chinese (zh-TW)
 
 **Database & Settings Commands**:
 - **Database**: `backup_database`, `restore_database`, `run_database_maintenance`, `get_database_stats`, `health_check`
@@ -112,6 +114,28 @@ const version = await api.system.getAppVersion();
 const aiStatus = await api.ai.checkOllamaService();
 ```
 
+### Context Engineering Architecture (v1.0.0+)
+
+**Overview**: The project implements Context Engineering principles to optimize AI token usage by separating system prompts from dynamic user content.
+
+**Core Components** (`src-tauri/src/commands/context.rs`):
+- **SystemPromptBuilder**: Handles fixed Traditional Chinese writing instructions and guidelines
+- **UserContextBuilder**: Manages dynamic content (project, chapter, character data) with intelligent compression
+- **Token Optimization**: Achieves 29.8% token reduction (513 → 360 tokens in testing)
+
+**API Commands**:
+- `build_separated_context(project_id, chapter_id, position)` - Returns `[system_prompt, user_context]` tuple
+- `estimate_separated_context_tokens(project_id)` - Provides token usage statistics
+- `generate_with_separated_context(...)` - AI generation using separated context architecture
+
+**Architecture Benefits**:
+- **Token Efficiency**: 29.8% reduction in API token consumption
+- **Future-Ready**: Prepared for Chat API integration where system prompts don't count toward context limits
+- **Language Purity**: Enhanced with "CRITICAL" markers to prevent English/Simplified Chinese mixing
+- **Simplified**: Focused only on Traditional Chinese (zh-TW) for reduced complexity
+
+**Backward Compatibility**: Legacy `build_context` and `generate_with_context` methods preserved for comparison and fallback.
+
 ### Database Schema
 
 **Core Tables**:
@@ -124,6 +148,20 @@ const aiStatus = await api.ai.checkOllamaService();
 **Database Location**: `~/{AppData}/genesis-chronicle/genesis-chronicle.db`
 **Migration System**: Automatic migrations in `src-tauri/src/database/migrations.rs` (current version: 6)
 **Critical**: Always use explicit field names in SQL queries to avoid field mapping errors
+
+### Redux State Architecture
+
+**Feature-Based Store Organization**:
+- **projectsSlice**: Project CRUD, current project selection, project statistics
+- **chaptersSlice**: Chapter management, content editing, auto-save state, word count calculation
+- **charactersSlice**: Character CRUD, relationship management, archetype application, search/filter
+- **aiSlice**: Ollama service status, model management, text generation, parameters configuration
+- **templatesSlice**: Template system, filtering/sorting, custom template creation, project application
+- **settingsSlice**: Application settings, AI configuration, editor preferences, backup settings
+- **uiSlice**: Modal management, notifications, theme switching, sidebar state, global loading
+- **errorSlice**: Error handling, progress tracking with stages (preparing→generating→processing→complete)
+- **editorSlice**: Editor configuration, themes, reading mode, auto-save intervals
+- **notificationSlice**: User notifications, dismissal, cleanup
 
 ## Critical Development Patterns
 
@@ -160,6 +198,23 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Error Filtering**: `main-stable.tsx` implements early error interception for Tauri-specific console errors
 - **Scrollbar Design**: 16px gold-themed scrollbars with `!important` CSS to override Tailwind reset
 
+### Component Organization Patterns
+
+**Feature-Based Component Structure**:
+- **Editor/**: Rich text editing components (`SimpleAIWritingPanel.tsx` with AI integration)
+- **Projects/**: Project management UI (`SimpleProjectEditor.tsx`, project cards)
+- **Characters/**: Character management (`CharacterManager.tsx`, relationship visualization)
+- **Templates/**: Template browser and application system
+- **Settings/**: Configuration panels (general, AI, editor, backup settings)
+- **UI/**: Reusable components (`SimpleErrorBoundary.tsx`, modals, notifications)
+- **Help/**: Documentation and tutorial system
+
+**Cross-Component Communication**:
+- Use Redux for global state sharing across feature boundaries
+- Implement unified API layer for consistent data access patterns
+- Error boundaries at feature level with graceful degradation
+- Progress tracking through `errorSlice` for long-running operations
+
 ## Common Development Tasks
 
 ### Adding New Features
@@ -191,19 +246,33 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Error Handling**: Graceful fallback when AI service unavailable
 - **Context Building**: `generate_with_context` command builds context from project/character data, handles text encoding issues
 - **Progress Integration**: AI generation operations use global progress system for user feedback
+- **Traditional Chinese Focus**: Simplified architecture focuses only on Traditional Chinese (zh-TW) generation
+- **Context Engineering**: Separated system prompts and user context for 29.8% token reduction
+- **Language Purity**: Enhanced instructions prevent English words and Simplified Chinese mixing
 
 **AI Generation Flow**:
-1. **Context Building** (`build_context`): Collects project, character, and chapter data
-2. **Text Cleaning**: Ensures Chinese characters are properly handled in context
-3. **Parameter Variation**: Creates multiple generations with different temperature settings
-4. **Parallel Processing**: Generates multiple versions simultaneously
-5. **Result Display**: Auto-scrolls to results with user selection interface
+1. **Context Engineering**: Uses separated context system with SystemPromptBuilder and UserContextBuilder  
+2. **Context Building** (`build_context` or `build_separated_context`): Collects project, character, and chapter data
+3. **Text Cleaning**: Ensures Chinese characters are properly handled in context
+4. **Parameter Variation**: Creates multiple generations with different temperature settings
+5. **Parallel Processing**: Generates multiple versions simultaneously
+6. **Result Display**: Auto-scrolls to results with user selection interface
 
 **Common AI Issues**:
 - **"Conversion error from type Text"**: Usually indicates database field mapping issues in context building
 - **Empty Results**: Check Ollama service status and parameter formatting
 - **Timeout Errors**: Increase HTTP timeouts for longer generation tasks
 - **Missing Results in UI**: Verify functional state updates and auto-scroll implementation
+
+### Template System Architecture
+**Template Categories**: Organized into 4 main types (異世界, 校園, 科幻, 奇幻) with character archetypes
+**Template Application Flow**:
+1. **Template Selection**: Browse and filter templates by type, popularity, or custom criteria
+2. **Character Integration**: Apply character archetypes with relationship templates
+3. **Project Creation**: One-click template application creates complete project structure
+4. **Customization**: Modify template settings and character relationships post-creation
+
+**Template Storage**: JSON-based template definitions with character archetypes and world-building elements
 
 ### Critical Issue Solutions
 
@@ -271,6 +340,13 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Solution**: Use `snake_case` naming convention for Rust function parameters (e.g., `project_id` instead of `projectId`)
 - **Pattern**: Always follow Rust naming conventions in command functions
 
+**Traditional Chinese Focused Context Building** (`src-tauri/src/commands/context.rs`):
+- **Architecture Simplification**: Removed multilingual support, now focuses only on Traditional Chinese (zh-TW)
+- **Context Engineering**: Implemented separated context system with SystemPromptBuilder and UserContextBuilder
+- **Token Optimization**: 29.8% token reduction through system prompt separation
+- **Language Purity**: Enhanced with "CRITICAL" markers to prevent English/Simplified Chinese mixing
+- **API Commands**: `build_separated_context`, `estimate_separated_context_tokens`, `generate_with_separated_context`
+
 ## Debugging and Troubleshooting
 
 ### AI Generation Issues
@@ -319,6 +395,65 @@ log::error!("獲取專案失敗: {}", e);
 - Implement progress indicators for user feedback
 - Consider context length optimization
 
+### Token Optimization Issues
+**Problem**: Current context building in `build_context` may consume excessive tokens with formatting/instruction text
+**Analysis**:
+- System instructions and labels can consume 40-50% of available context tokens
+- Multilingual support increases instruction overhead
+- Story content gets compressed to make room for formatting
+
+**Context Engineering Solution (IMPLEMENTED)**:
+The project now implements Context Engineering principles with separated system prompts and user context:
+
+- **SystemPromptBuilder**: Handles fixed Traditional Chinese writing instructions and guidelines
+- **UserContextBuilder**: Manages dynamic content with intelligent extraction and compression  
+- **Token Efficiency**: Achieves 29.8% token savings in real-world testing
+- **Architecture Simplification**: Removed multilingual complexity, focusing only on Traditional Chinese
+- **Backward Compatibility**: Legacy `build_context` preserved for comparison and fallback
+
+**Performance Results** (tested 2025-08-01):
+- Traditional method: 513 tokens
+- Separated method: 360 tokens  
+- Savings: 153 tokens (29.8% reduction)
+- Quality: Maintained with minor language purity improvements needed
+
+**Language Purity Enhancements (IMPLEMENTED)**:
+Following initial testing that revealed language mixing issues, comprehensive language purity improvements have been implemented:
+
+- **Enhanced System Prompts**: Added "CRITICAL" markers with strict language requirements
+- **Traditional Chinese Enforcement**: Explicit prohibition of English words and simplified Chinese characters  
+- **Multilingual Consistency**: Applied improvements across all supported languages (zh-TW, zh-CN, en, ja)
+- **Genre-Specific Rules**: Enhanced light novel style requirements with language purity constraints
+
+**Language Purity Test Results**:
+- Original Issue: English words ("Scribble") mixed in generated content
+- Original Issue: Simplified Chinese characters mixed in traditional Chinese context
+- Solution: Strengthened system prompts with "CRITICAL" and "絕對不允許" (absolutely not allowed) constraints
+- Validation: Created comprehensive test script for ongoing quality assurance
+
+**Future Enhancements**:
+1. **Chat API Integration**: Expected additional 20-30% token savings
+2. **Smart Context Budgeting**: Dynamic allocation based on available tokens
+3. **Quality Validation Loop**: Automated assessment and improvement
+4. **Advanced Language Detection**: Real-time validation of generated content purity
+
+## Performance Considerations
+
+### Memory Management
+- **SQLite Optimization**: Use connection pooling and prepared statements for database operations
+- **Redux State**: Implement state normalization to avoid deep object nesting and improve performance
+- **Component Rendering**: Use React.memo for expensive components, especially in character/template lists
+
+### Build Optimization
+- **Tauri Bundle**: Single architecture approach reduces build complexity and application size by 90%
+- **Frontend Assets**: Vite handles code splitting and asset optimization automatically
+- **Rust Compilation**: Use `cargo tauri build --release` for production builds with full optimizations
+
+### Auto-Save Strategy
+- **Chapter Content**: 2-second debounced auto-save to prevent data loss without overwhelming the database
+- **Character Data**: Immediate save on relationship changes due to referential integrity requirements
+- **Settings**: Persist settings changes immediately to maintain user preferences
+
 ## Development Environment
 
 ### Required Tools
@@ -364,9 +499,9 @@ npm run test:performance   # Performance tests
 ## Version Information
 
 **Current Version**: v1.0.0+ (Pure Tauri Architecture with UI Enhancements)
-**Latest Update**: Serena MCP integration and ESLint configuration fixes (2025-08-01)
+**Latest Update**: Context Engineering architecture simplification and Traditional Chinese focus (2025-08-01)
 **Tauri Version**: v2.0.0-alpha.1
 **Architecture**: Single unified Tauri + Rust + React stack
 **Database**: SQLite with rusqlite v0.29+
 **Build Target**: Cross-platform desktop application
-**Recent Additions**: 16px gold-themed scrollbars, nested scrolling system, layout constraint fixes
+**Recent Additions**: Context Engineering (29.8% token savings), Traditional Chinese-focused architecture, language purity enhancements

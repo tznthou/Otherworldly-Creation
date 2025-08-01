@@ -430,14 +430,15 @@ export const tauriAPI: API = {
     getModelsInfo: () => enhancedSafeInvoke('get_models_info'),
     checkModelAvailability: (modelName) => safeInvoke('check_model_availability', { modelName }),
     generateText: (prompt, model, params) => safeInvoke('generate_text', { prompt, model, params }),
-    generateWithContext: (projectId, chapterId, position, model, params) => {
-      console.log('Tauri API: generateWithContext 被調用，參數:', { projectId, chapterId, position, model, params });
+    generateWithContext: (projectId, chapterId, position, model, params, language) => {
+      console.log('Tauri API: generateWithContext 被調用，參數:', { projectId, chapterId, position, model, params, language });
       return safeInvoke('generate_with_context', { 
         projectId: String(projectId), 
         chapterId: String(chapterId), 
         position: Number(position), 
         model: String(model), 
-        params 
+        params,
+        language: language || 'zh-TW'
       });
     },
     updateOllamaConfig: (config) => safeInvoke('update_ollama_config', { config }),

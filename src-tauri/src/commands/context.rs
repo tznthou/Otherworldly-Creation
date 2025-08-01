@@ -3,6 +3,21 @@ use rusqlite::Result as SqliteResult;
 use serde::{Deserialize, Serialize};
 use tauri::command;
 
+/// 字符清理函數 - 保留合法的文字字符，包括中文
+fn clean_text(text: &str) -> String {
+    text.chars()
+        .filter(|c| {
+            // 保留所有合法的文字字符，包括中文
+            c.is_alphanumeric() || // 包括中文字符
+            c.is_whitespace() ||   // 空白字符
+            ".,!?;:\"'()[]{}「」『』，。！？；：（）【】《》〈〉".contains(*c) || 
+            *c == '-' || *c == '_' || *c == '/' || *c == '\\' || 
+            *c == '=' || *c == '+' || *c == '*' || *c == '&' ||
+            *c == '%' || *c == '$' || *c == '#' || *c == '@'
+        })
+        .collect()
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ContextStats {
     pub total_characters: usize,
@@ -11,14 +26,195 @@ pub struct ContextStats {
     pub character_count: usize,
 }
 
-/// 構建 AI 續寫的上下文
+/// 系統提示建構器 - 分離固定指令以節省 token（簡化版）
+#[derive(Debug, Clone)]
+pub struct SystemPromptBuilder {
+    pub project_type: Option<String>,
+}
+
+impl SystemPromptBuilder {
+    pub fn new(project_type: Option<String>) -> Self {
+        Self { project_type }
+    }
+
+    /// 建構系統提示，專注於繁體中文小說續寫
+    pub fn build_system_prompt(&self) -> String {
+        let base_instructions = "你是一個專業的中文小說續寫助手。你的任務是根據提供的上下文資訊，在指定位置插入合適的續寫內容。
+
+核心要求:
+- 在 [CONTINUE HERE] 標記處插入續寫內容
+- 不要重複或重寫現有內容
+- 保持角色一致性和對話風格
+- 確保情節連貫和細節一致
+- CRITICAL: 嚴格使用繁體中文，絕對不允許混雜任何英文單詞或簡體字
+- 所有描述、動作、對話都必須使用純正繁體中文
+- 禁止使用英文拼音、英文縮寫或任何英文表達
+- 只提供續寫文本，無需解釋或評論";
+
+        let genre_specific = if let Some(project_type) = &self.project_type {
+            let is_light_novel = project_type.to_lowercase().contains("輕小說") || 
+                               project_type.to_lowercase().contains("轻小说") ||
+                               project_type.to_lowercase().contains("light novel");
+            
+            if is_light_novel {
+                "\n\n輕小說風格要求:\n- 適當加入角色內心獨白\n- 保持節奏明快，對話生動\n- 可以適當使用擬聲詞和表情描寫\n- 嚴禁使用英文單詞或簡體字"
+            } else {
+                ""
+            }
+        } else {
+            ""
+        };
+
+        format!("{}{}", base_instructions, genre_specific)
+    }
+}
+
+/// 用戶上下文建構器 - 精簡的內容上下文
+#[derive(Debug)]
+pub struct UserContextBuilder {
+    pub project: Project,
+    pub chapter: Chapter,
+    pub characters: Vec<Character>,
+    pub position: usize,
+}
+
+impl UserContextBuilder {
+    pub fn new(project: Project, chapter: Chapter, characters: Vec<Character>, position: usize) -> Self {
+        Self { project, chapter, characters, position }
+    }
+
+    /// 建構精簡的用戶上下文
+    pub fn build_user_context(&self) -> String {
+        let mut context = String::new();
+        
+        // 項目基本信息 - 使用極簡標籤
+        context.push_str(&format!("Title: {}\n", clean_text(&self.project.name)));
+        
+        if let Some(desc) = &self.project.description {
+            let short_desc = clean_text(desc).chars().take(150).collect::<String>();
+            context.push_str(&format!("Summary: {}\n", short_desc));
+        }
+        
+        if let Some(project_type) = &self.project.r#type {
+            context.push_str(&format!("Genre: {}\n", clean_text(project_type)));
+        }
+        
+        // 角色信息 - 只保留核心屬性
+        if !self.characters.is_empty() {
+            context.push_str("\nCharacters:\n");
+            for character in &self.characters {
+                let char_desc = character.description.as_deref().unwrap_or("")
+                    .chars().take(80).collect::<String>(); // 限制每個角色描述為80字符
+                context.push_str(&format!("- {}: {}\n", character.name, char_desc));
+                
+                // 簡化屬性顯示
+                if let Some(attrs) = &character.attributes {
+                    if let Ok(attrs_json) = serde_json::from_str::<serde_json::Value>(attrs) {
+                        if let Some(obj) = attrs_json.as_object() {
+                            let mut key_attrs = Vec::new();
+                            for (key, value) in obj.iter().take(3) { // 最多顯示3個屬性
+                                if let Some(v) = value.as_str() {
+                                    if !v.is_empty() && v.len() < 30 {
+                                        key_attrs.push(format!("{}:{}", key, v));
+                                    }
+                                }
+                            }
+                            if !key_attrs.is_empty() {
+                                context.push_str(&format!("  ({})\n", key_attrs.join(", ")));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 當前章節內容
+        context.push_str(&format!("\nChapter: {}\n", clean_text(&self.chapter.title)));
+        context.push_str("Content:\n");
+        context.push_str(&self.extract_relevant_content());
+        context.push_str("\n[CONTINUE HERE]");
+        
+        context
+    }
+    
+    /// 智能提取相關內容
+    fn extract_relevant_content(&self) -> String {
+        if let Some(content) = &self.chapter.content {
+            let content_chars: Vec<char> = content.chars().collect();
+            let char_len = content_chars.len();
+            let char_position = self.position.min(char_len);
+            
+            // 分割內容
+            let before_cursor: String = content_chars[..char_position].iter().collect();
+            let after_cursor: String = content_chars[char_position..].iter().collect();
+            
+            let mut result = String::new();
+            
+            // 處理游標前的內容 - 動態調整長度
+            let cleaned_before = clean_text(&before_cursor);
+            const MAX_BEFORE_CHARS: usize = 800; // 減少到800字符
+            
+            if cleaned_before.chars().count() > MAX_BEFORE_CHARS {
+                let before_chars: Vec<char> = cleaned_before.chars().collect();
+                let total_chars = before_chars.len();
+                let start_pos = total_chars.saturating_sub(MAX_BEFORE_CHARS);
+                
+                // 找到合適的開始點（句子邊界）
+                let remaining_text: String = before_chars[start_pos..].iter().collect();
+                let adjusted_start = remaining_text
+                    .find(|c| c == '.' || c == '!' || c == '?' || c == '\n' || c == '。' || c == '！' || c == '？')
+                    .map(|i| i + 1)
+                    .unwrap_or(0);
+                
+                result.push_str("...(前文省略)...\n");
+                let final_chars: Vec<char> = remaining_text.chars().collect();
+                let final_text: String = final_chars[adjusted_start.min(final_chars.len())..].iter().collect();
+                result.push_str(&final_text);
+            } else {
+                result.push_str(&cleaned_before);
+            }
+            
+            // 處理游標後的內容 - 顯示少量以提供上下文
+            if !after_cursor.is_empty() {
+                let cleaned_after = clean_text(&after_cursor);
+                const MAX_AFTER_CHARS: usize = 100; // 減少到100字符
+                
+                if cleaned_after.chars().count() > MAX_AFTER_CHARS {
+                    let after_chars: Vec<char> = cleaned_after.chars().collect();
+                    let truncated_chars: Vec<char> = after_chars[..MAX_AFTER_CHARS].to_vec();
+                    let truncated_after: String = truncated_chars.iter().collect();
+                    
+                    let end_pos = truncated_after
+                        .rfind(|c| c == '.' || c == '!' || c == '?' || c == '\n' || c == '。' || c == '！' || c == '？')
+                        .unwrap_or(truncated_after.len());
+                    
+                    result.push_str("\n\n[後續內容:]\n");
+                    let final_chars: Vec<char> = truncated_after.chars().collect();
+                    let final_text: String = final_chars[..end_pos.min(final_chars.len())].iter().collect();
+                    result.push_str(&final_text);
+                    result.push_str("\n...(後續內容繼續)...");
+                } else if cleaned_after.len() > 10 { // 只有在有意義的內容時才顯示
+                    result.push_str("\n\n[後續內容:]\n");
+                    result.push_str(&cleaned_after);
+                }
+            }
+            
+            result
+        } else {
+            String::new()
+        }
+    }
+}
+
+/// 構建 AI 續寫的上下文（簡化版 - 向後兼容）
 #[command]
 pub async fn build_context(
     project_id: String,
     chapter_id: String,
     position: usize,
+    _language: Option<String>,
 ) -> Result<String, String> {
-    log::info!("構建上下文 - 專案: {}, 章節: {}, 位置: {}", project_id, chapter_id, position);
+    log::info!("構建上下文 - 專案: {}, 章節: {}, 位置: {} (簡化版)", project_id, chapter_id, position);
     
     let db = get_db().map_err(|e| e.to_string())?;
     
@@ -130,24 +326,45 @@ pub async fn build_context(
             .collect()
     }
     
+    // 使用簡化的繁體中文標籤
+    let labels = (
+        "【故事背景】",           // story_background
+        "書名：",                // book_name
+        "簡介：",                // description
+        "類型：",                // genre
+        "【角色設定】",          // character_settings
+        "  描述：",              // character_description
+        "【角色關係】",          // character_relationships
+        "【當前章節】",          // current_chapter
+        "章節標題：",            // chapter_title
+        "內容：",                // content
+        "...（前文省略）...",     // previous_content_omitted
+        "【請在此處續寫，CRITICAL: 嚴格使用繁體中文，絕對禁止任何英文單詞或簡體字】", // insert_continuation_here
+        "【游標後的現有內容：】", // existing_content_after
+        "...（後續內容繼續）...", // remaining_content_continues
+        "【續寫要求】",          // writing_instructions
+    );
+    
     // 添加專案背景
-    context.push_str("[Story Background]\n");
-    context.push_str(&format!("Title: {}\n", clean_text(&project.name)));
+    context.push_str(labels.0); // story_background
+    context.push_str("\n");
+    context.push_str(&format!("{}{}\n", labels.1, clean_text(&project.name))); // book_name
     if let Some(desc) = &project.description {
-        context.push_str(&format!("Description: {}\n", clean_text(desc)));
+        context.push_str(&format!("{}{}\n", labels.2, clean_text(desc))); // description
     }
     if let Some(project_type) = &project.r#type {
-        context.push_str(&format!("Genre: {}\n", clean_text(project_type)));
+        context.push_str(&format!("{}{}\n", labels.3, clean_text(project_type))); // genre
     }
     context.push_str("\n");
     
     // 添加角色設定
     if !characters.is_empty() {
-        context.push_str("【角色設定】\n");
+        context.push_str(labels.4); // character_settings
+        context.push_str("\n");
         for character in &characters {
             context.push_str(&format!("◆ {}\n", character.name));
             if let Some(desc) = &character.description {
-                context.push_str(&format!("  描述：{}\n", desc));
+                context.push_str(&format!("{}{}\n", labels.5, desc)); // character_description
             }
             if let Some(attrs) = &character.attributes {
                 // 解析 JSON 屬性
@@ -167,7 +384,9 @@ pub async fn build_context(
         
         // 添加角色關係
         if !relationships.is_empty() {
-            context.push_str("\n【角色關係】\n");
+            context.push_str("\n");
+            context.push_str(labels.6); // character_relationships
+            context.push_str("\n");
             for (from, to, rel_type, desc) in &relationships {
                 context.push_str(&format!("- {} 與 {} 的關係：{}", from, to, rel_type));
                 if let Some(d) = desc {
@@ -180,9 +399,11 @@ pub async fn build_context(
     }
     
     // 添加當前章節內容（包含游標前後的內容）
-    context.push_str("[Current Chapter]\n");
-    context.push_str(&format!("Chapter Title: {}\n", clean_text(&chapter.title)));
-    context.push_str("Content:\n");
+    context.push_str(labels.7); // current_chapter
+    context.push_str("\n");
+    context.push_str(&format!("{}{}\n", labels.8, clean_text(&chapter.title))); // chapter_title
+    context.push_str(labels.9); // content
+    context.push_str("\n");
     
     if let Some(content) = &chapter.content {
         let content_chars: Vec<char> = content.chars().collect();
@@ -212,7 +433,8 @@ pub async fn build_context(
                 .map(|i| i + 1)
                 .unwrap_or(0);
             
-            context.push_str("...(previous content omitted)...\n\n");
+            context.push_str(labels.10); // previous_content_omitted
+            context.push_str("\n\n");
             // 安全地截取調整後的內容
             let final_chars: Vec<char> = remaining_text.chars().collect();
             let final_text: String = final_chars[adjusted_start.min(final_chars.len())..].iter().collect();
@@ -222,7 +444,9 @@ pub async fn build_context(
         }
         
         // 添加游標位置標記
-        context.push_str("\n\n[[[INSERT CONTINUATION HERE]]]\n\n");
+        context.push_str("\n\n");
+        context.push_str(labels.11); // insert_continuation_here
+        context.push_str("\n\n");
         
         // 處理游標後的內容（如果有的話，顯示一小部分讓 AI 知道後續內容）
         if !after_cursor.is_empty() {
@@ -240,35 +464,48 @@ pub async fn build_context(
                     .rfind(|c| c == '.' || c == '!' || c == '?' || c == '\n')
                     .unwrap_or(truncated_after.len());
                 
-                context.push_str("[Existing content after cursor:]\n");
+                context.push_str(labels.12); // existing_content_after
+                context.push_str("\n");
                 // 安全地截取到 end_pos
                 let final_chars: Vec<char> = truncated_after.chars().collect();
                 let final_text: String = final_chars[..end_pos.min(final_chars.len())].iter().collect();
                 context.push_str(&final_text);
-                context.push_str("\n...(remaining content continues)...\n");
+                context.push_str("\n");
+                context.push_str(labels.13); // remaining_content_continues
+                context.push_str("\n");
             } else {
-                context.push_str("[Existing content after cursor:]\n");
+                context.push_str(labels.12); // existing_content_after
+                context.push_str("\n");
                 context.push_str(&cleaned_after);
             }
         }
     }
     
     // 添加續寫指示
-    context.push_str("\n\n[Writing Instructions]\n");
-    context.push_str("IMPORTANT: Insert your continuation at the position marked with [[[INSERT CONTINUATION HERE]]].\n");
-    context.push_str("Do NOT repeat or rewrite the existing content before or after the insertion point.\n");
-    context.push_str("Your response should ONLY contain the new text to be inserted.\n\n");
-    context.push_str("Requirements:\n");
-    context.push_str("1. Maintain character consistency and dialogue style\n");
-    context.push_str("2. Continue the current plot development smoothly from the insertion point\n");
-    context.push_str("3. Keep the same writing style and narrative perspective\n");
-    context.push_str("4. Ensure detail consistency (time, place, character states)\n");
-    context.push_str("5. Write only the continuation text, without any meta-comments or explanations\n");
-    context.push_str("6. Make sure your continuation flows naturally with both the text before and after the insertion point\n");
+    context.push_str("\n\n");
+    context.push_str(labels.14); // writing_instructions
+    context.push_str("\n");
     
-    // 如果是輕小說類型，添加特定提示
+    // 添加繁體中文續寫要求（簡化版）
+    context.push_str("重要：在標記的位置插入續寫內容。\n");
+    context.push_str("不要重複或重寫插入點前後的現有內容。\n");
+    context.push_str("你的回應應該只包含要插入的新文本。\n\n");
+    context.push_str("要求：\n");
+    context.push_str("1. 保持角色一致性和對話風格\n");
+    context.push_str("2. 從插入點平滑地繼續當前情節發展\n");
+    context.push_str("3. 保持相同的寫作風格和敘事視角\n");
+    context.push_str("4. 確保細節一致性（時間、地點、角色狀態）\n");
+    context.push_str("5. 只寫續寫文本，不要任何元評論或解釋\n");
+    context.push_str("6. 確保你的續寫與插入點前後的文本自然銜接\n");
+    context.push_str("7. CRITICAL: 嚴格使用繁體中文寫作，絕對不允許混雜任何英文單詞或簡體字\n");
+    
+    // 如果是輕小說類型，添加特定提示（簡化版）
     if let Some(project_type) = &project.r#type {
-        if project_type.contains("輕小說") || project_type.contains("light novel") {
+        let is_light_novel = project_type.to_lowercase().contains("輕小說") || 
+                           project_type.to_lowercase().contains("轻小说") ||
+                           project_type.to_lowercase().contains("light novel");
+        
+        if is_light_novel {
             context.push_str("\n輕小說風格提示：\n");
             context.push_str("- 適當加入角色內心獨白\n");
             context.push_str("- 保持節奏明快，對話生動\n");
@@ -380,4 +617,168 @@ pub async fn get_context_stats(project_id: String) -> Result<ContextStats, Strin
         chapter_count,
         character_count,
     })
+}
+
+/// 構建分離的上下文（系統提示 + 用戶上下文）- 簡化版
+#[command]
+pub async fn build_separated_context(
+    project_id: String,
+    chapter_id: String,
+    position: usize,
+) -> Result<(String, String), String> {
+    log::info!("構建分離上下文 - 專案: {}, 章節: {}, 位置: {}", project_id, chapter_id, position);
+    
+    let db = get_db().map_err(|e| e.to_string())?;
+    
+    // 處理 poisoned lock 錯誤
+    let conn = match db.lock() {
+        Ok(conn) => conn,
+        Err(poisoned) => {
+            log::error!("資料庫鎖被 poisoned，嘗試恢復: {}", poisoned);
+            poisoned.into_inner()
+        }
+    };
+    
+    // 1. 獲取專案資訊
+    let project: Project = conn
+        .query_row(
+            "SELECT id, name, description, type, settings, created_at, updated_at FROM projects WHERE id = ?",
+            [&project_id],
+            |row| Ok(Project {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                description: row.get(2)?,
+                r#type: row.get(3)?,
+                settings: row.get(4)?,
+                created_at: row.get(5)?,
+                updated_at: row.get(6)?,
+            })
+        )
+        .map_err(|e| format!("獲取專案失敗: {}", e))?;
+    
+    // 2. 獲取當前章節內容
+    let chapter: Chapter = conn
+        .query_row(
+            "SELECT id, project_id, title, content, order_index, created_at, updated_at FROM chapters WHERE id = ?",
+            [&chapter_id],
+            |row| Ok(Chapter {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                title: row.get(2)?,
+                content: row.get(3)?,
+                order_index: row.get(4)?,
+                created_at: row.get(5)?,
+                updated_at: row.get(6)?,
+            })
+        )
+        .map_err(|e| format!("獲取章節失敗: {}", e))?;
+    
+    // 3. 獲取專案的所有角色
+    let mut stmt = conn
+        .prepare("SELECT id, project_id, name, description, attributes, avatar_url, created_at, updated_at FROM characters WHERE project_id = ?")
+        .map_err(|e| e.to_string())?;
+    
+    let characters: Vec<Character> = stmt
+        .query_map([&project_id], |row| {
+            Ok(Character {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                name: row.get(2)?,
+                description: row.get(3)?,
+                attributes: row.get(4)?,
+                avatar_url: row.get(5)?,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<SqliteResult<Vec<_>>>()
+        .map_err(|e| e.to_string())?;
+    
+    // 4. 構建系統提示
+    let system_prompt_builder = SystemPromptBuilder::new(project.r#type.clone());
+    let system_prompt = system_prompt_builder.build_system_prompt();
+    
+    // 5. 構建用戶上下文
+    let user_context_builder = UserContextBuilder::new(project, chapter, characters, position);
+    let user_context = user_context_builder.build_user_context();
+    
+    log::info!("上下文構建完成 - 系統提示: {} 字符, 用戶上下文: {} 字符", 
+              system_prompt.chars().count(), 
+              user_context.chars().count());
+    
+    Ok((system_prompt, user_context))
+}
+
+/// 估算分離上下文的 token 使用情況
+#[command]
+pub async fn estimate_separated_context_tokens(project_id: String) -> Result<SeparatedContextStats, String> {
+    let db = get_db().map_err(|e| e.to_string())?;
+    
+    let conn = match db.lock() {
+        Ok(conn) => conn,
+        Err(poisoned) => {
+            log::error!("資料庫鎖被 poisoned，嘗試恢復: {}", poisoned);
+            poisoned.into_inner()
+        }
+    };
+    
+    // 獲取專案類型用於系統提示估算
+    let project_type: Option<String> = conn
+        .query_row(
+            "SELECT type FROM projects WHERE id = ?",
+            [&project_id],
+            |row| Ok(row.get(0)?)
+        )
+        .map_err(|e| format!("獲取專案類型失敗: {}", e))?;
+    
+    // 統計用戶內容（用於日誌記錄）
+    let _total_chars: usize = conn
+        .query_row(
+            "SELECT COALESCE(SUM(LENGTH(content)), 0) FROM chapters WHERE project_id = ?",
+            [&project_id],
+            |row| row.get(0)
+        )
+        .map_err(|e| e.to_string())?;
+    
+    let character_count: usize = conn
+        .query_row(
+            "SELECT COUNT(*) FROM characters WHERE project_id = ?",
+            [&project_id],
+            |row| row.get(0)
+        )
+        .map_err(|e| e.to_string())?;
+    
+    // 估算系統提示 token（相對固定）
+    let system_prompt_builder = SystemPromptBuilder::new(project_type);
+    let system_prompt = system_prompt_builder.build_system_prompt();
+    let system_prompt_tokens = system_prompt.chars().count() / 2; // 中文約 2 字符 = 1 token
+    
+    // 估算用戶上下文 token（動態）
+    let estimated_user_context_chars = 200 + // 項目信息
+        (character_count * 100) + // 角色信息（簡化）
+        1000; // 章節內容（截斷後）
+    let user_context_tokens = estimated_user_context_chars / 2;
+    
+    let total_tokens = system_prompt_tokens + user_context_tokens;
+    let efficiency = (user_context_tokens as f32 / total_tokens as f32) * 100.0;
+    
+    Ok(SeparatedContextStats {
+        system_prompt_tokens,
+        user_context_tokens,
+        total_tokens,
+        efficiency_percentage: efficiency,
+        character_count,
+        estimated_savings_vs_legacy: 40.0, // 預估節省 40%
+    })
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SeparatedContextStats {
+    pub system_prompt_tokens: usize,
+    pub user_context_tokens: usize,
+    pub total_tokens: usize,
+    pub efficiency_percentage: f32,
+    pub character_count: usize,
+    pub estimated_savings_vs_legacy: f32,
 }

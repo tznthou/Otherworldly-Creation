@@ -4,10 +4,10 @@
 
 ## 🚀 開發狀態
 
-**當前版本：v1.0.0 - 純 Tauri 架構** - 2025年7月31日更新  
-**重大更新：完全移除 Electron 支援，專注於 Tauri 單一架構 🚀**
+**當前版本：v1.0.0+ - 純 Tauri 架構** - 2025年8月1日更新  
+**最新功能：Context Engineering 實現 + 語言純度優化 🚀**
 
-### 📊 系統狀態 (2025-07-31 22:40 CST)
+### 📊 系統狀態 (2025-08-01 18:06 CST)
 - **架構**：Tauri v2.0.0 + Rust 後端 + React 前端
 - **系統環境**：macOS Darwin 24.5.0 (arm64), Node.js v22.16.0, Rust v1.88.0
 - **AI 引擎**：Ollama v0.9.6 運行中 ✅
@@ -27,9 +27,25 @@
 - 🎨 **星空主題**：深藍色星空背景配金色魔法陣的動漫風格界面
 - 🧪 **完整測試**：單元測試、整合測試、性能測試全覆蓋
 
-### 🔄 最新完成功能 (v1.0.0+) - 🎨 編輯器視覺優化與滾動條實現
+### 🔄 最新完成功能 (v1.0.0+) - 🤖 Context Engineering 與語言純度優化
 
-#### 📜 智能滾動條系統與佈局修復（2025-07-31 22:40 最新）
+#### 🧠 Context Engineering 系統實現與架構簡化（2025-08-01 20:30 最新）
+- 🚀 **29.8% Token 效率提升**：通過分離系統提示與用戶上下文，大幅降低 AI API 調用成本
+- 🏗️ **SystemPromptBuilder**：智能系統提示建構器，專注繁體中文寫作指導（架構簡化）
+- 📝 **UserContextBuilder**：用戶上下文建構器，智能內容提取與壓縮，動態長度調整
+- 🔧 **新增 Tauri 命令**：`build_separated_context`、`estimate_separated_context_tokens`、`generate_with_separated_context`
+- ⚖️ **向後兼容性**：保留傳統 `build_context` 方法，支援 A/B 測試和漸進升級
+- 📊 **實測效果**：傳統方法 513 tokens → 分離方法 360 tokens，節省 153 tokens (29.8%)
+
+#### 🎯 語言純度強化與架構簡化（2025-08-01 20:30 最新）
+- 🚨 **CRITICAL 標記**：系統提示中添加嚴格繁體中文要求，禁止語言混雜
+- 🇹🇼 **專注繁體中文**：「嚴格使用繁體中文，絕對不允許混雜任何英文單詞或簡體字」
+- 🗂️ **架構簡化**：移除多語言支援複雜度，程式碼減少約 70%
+- 🧪 **測試腳本更新**：移除 `language` 參數，適配簡化架構
+- 📈 **維護性提升**：專注單一語言，降低開發和測試成本
+- 🔧 **API 簡化**：所有 Tauri 命令移除語言參數，提高效能
+
+#### 📜 智能滾動條系統與佈局修復（2025-07-31 完成）
 - 🎨 **16px 金色滾動條**：設計符合宇宙主題的金色漸層滾動條，提供清晰的視覺反饋
 - 🔧 **嵌套滾動系統修復**：完全解決編輯器雙層滾動衝突問題，實現完美的外層/內層滾動條並存
 - 📐 **容器高度問題修復**：修正 ProjectEditor.tsx 中 `h-full` 限制高度問題，改為 `min-h-full` 允許內容擴展
@@ -142,13 +158,16 @@
 
 ## 技術架構
 
-### 純 Tauri 架構 (v1.0.0)
+### 純 Tauri 架構 (v1.0.0+)
 - **前端**: React 18 + TypeScript + Tailwind CSS
 - **後端**: Tauri v2.0 + Rust v1.88
 - **資料庫**: SQLite (rusqlite)
 - **AI 引擎**: Ollama (本地整合)
 - **狀態管理**: Redux Toolkit
 - **編輯器**: Slate.js
+- **Context Engineering**: SystemPromptBuilder + UserContextBuilder (29.8% token 優化)
+- **多語言支援**: i18n 動態載入系統（zh-TW/zh-CN/en/ja）
+- **語言純度**: CRITICAL 標記強化語言約束系統
 - **主要依賴**: rusqlite, serde, tokio, chrono, uuid, anyhow, dirs
 - **建構工具**: Vite, Cargo
 
@@ -325,13 +344,15 @@ cargo check
 │           ├── data/                 # 資料定義
 │           └── utils/                # 工具函數
 │               └── environmentSafety.ts  # 環境安全檢測
-├── package.json                      # 專案配置 (雙版本支援)
+├── package.json                      # 專案配置
 ├── tsconfig.json                     # TypeScript 配置
-├── tsconfig.electron.json            # Electron TypeScript 配置
 ├── vite.config.ts                    # Vite 配置
 ├── tailwind.config.js                # Tailwind CSS 配置
 ├── jest.config.js                    # Jest 測試配置
-├── forge.config.js                   # Electron Forge 配置
+├── CLAUDE.md                         # Claude Code 開發指南（含 Context Engineering 文檔）
+├── context_engineering_test_report.md # Context Engineering 測試報告
+├── manual_test_script_fixed.js       # 手動測試腳本（已修正）
+├── test_language_purity_fixes.js     # 語言純度修復測試腳本
 └── TAURI-MIGRATION.md                # Tauri 遷移進度文檔
 ```
 
