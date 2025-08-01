@@ -151,7 +151,7 @@ pub async fn generate_text(
     }
 }
 
-/// 使用分離上下文生成文本（Chat API 優化版）
+/// 使用分離上下文生成文本（簡化版）
 #[command]
 pub async fn generate_with_separated_context(
     project_id: String,
@@ -159,16 +159,13 @@ pub async fn generate_with_separated_context(
     position: usize,
     model: String,
     params: GenerateParams,
-    language: Option<String>,
 ) -> Result<String, String> {
-    log::info!("=== 開始使用分離上下文生成文本（Chat API 優化版）===");
-    log::info!("專案: {}, 章節: {}, 位置: {}, 模型: {}, 語言: {:?}", project_id, chapter_id, position, model, language);
-    
-    let lang = language.unwrap_or_else(|| "zh-TW".to_string());
+    log::info!("=== 開始使用分離上下文生成文本（簡化版）===");
+    log::info!("專案: {}, 章節: {}, 位置: {}, 模型: {}", project_id, chapter_id, position, model);
     
     // 1. 構建分離的上下文
     let (system_prompt, user_context) = crate::commands::context::build_separated_context(
-        project_id.clone(), chapter_id.clone(), position, lang
+        project_id.clone(), chapter_id.clone(), position
     )
         .await
         .map_err(|e| format!("構建分離上下文失敗: {}", e))?;
@@ -220,7 +217,7 @@ pub async fn generate_with_context(
     let lang = language.unwrap_or_else(|| "zh-TW".to_string());
     
     // 1. 構建上下文
-    let context = crate::commands::context::build_context(project_id, chapter_id, position, lang)
+    let context = crate::commands::context::build_context(project_id, chapter_id, position, Some(lang))
         .await
         .map_err(|e| format!("構建上下文失敗: {}", e))?;
     

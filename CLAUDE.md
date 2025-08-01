@@ -77,7 +77,7 @@ npm run diagnostic
 - **State Management**: Redux Toolkit with feature-based slices
 - **Editor**: Slate.js for rich text editing
 - **UI Components**: Custom cosmic theme with dark backgrounds and gold accents
-- **Internationalization**: JSON-based translation system supporting zh-TW, zh-CN, en, ja
+- **Internationalization**: JSON-based translation system (primarily zh-TW focused)
 
 ### Tauri Command Architecture
 
@@ -96,7 +96,7 @@ npm run diagnostic
 - **Legacy Context**: `build_context`, `compress_context`, `get_context_stats`, `generate_with_context`
 - **Context Engineering**: `build_separated_context`, `estimate_separated_context_tokens`, `generate_with_separated_context`
 - **Configuration**: `update_ollama_config`, `check_model_availability`
-- **Multilingual Support**: Context commands accept `language` parameter for localized prompts
+- **Traditional Chinese Focus**: Context system simplified to focus only on Traditional Chinese (zh-TW)
 
 **Database & Settings Commands**:
 - **Database**: `backup_database`, `restore_database`, `run_database_maintenance`, `get_database_stats`, `health_check`
@@ -113,6 +113,28 @@ const projects = await api.projects.getAll();
 const version = await api.system.getAppVersion();
 const aiStatus = await api.ai.checkOllamaService();
 ```
+
+### Context Engineering Architecture (v1.0.0+)
+
+**Overview**: The project implements Context Engineering principles to optimize AI token usage by separating system prompts from dynamic user content.
+
+**Core Components** (`src-tauri/src/commands/context.rs`):
+- **SystemPromptBuilder**: Handles fixed Traditional Chinese writing instructions and guidelines
+- **UserContextBuilder**: Manages dynamic content (project, chapter, character data) with intelligent compression
+- **Token Optimization**: Achieves 29.8% token reduction (513 → 360 tokens in testing)
+
+**API Commands**:
+- `build_separated_context(project_id, chapter_id, position)` - Returns `[system_prompt, user_context]` tuple
+- `estimate_separated_context_tokens(project_id)` - Provides token usage statistics
+- `generate_with_separated_context(...)` - AI generation using separated context architecture
+
+**Architecture Benefits**:
+- **Token Efficiency**: 29.8% reduction in API token consumption
+- **Future-Ready**: Prepared for Chat API integration where system prompts don't count toward context limits
+- **Language Purity**: Enhanced with "CRITICAL" markers to prevent English/Simplified Chinese mixing
+- **Simplified**: Focused only on Traditional Chinese (zh-TW) for reduced complexity
+
+**Backward Compatibility**: Legacy `build_context` and `generate_with_context` methods preserved for comparison and fallback.
 
 ### Database Schema
 
@@ -224,12 +246,13 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Error Handling**: Graceful fallback when AI service unavailable
 - **Context Building**: `generate_with_context` command builds context from project/character data, handles text encoding issues
 - **Progress Integration**: AI generation operations use global progress system for user feedback
-- **Multilingual Support**: Context and prompts automatically localized based on user language setting (zh-TW, zh-CN, en, ja)
-- **Language-Specific Instructions**: Each language receives tailored writing guidelines to prevent language mixing
+- **Traditional Chinese Focus**: Simplified architecture focuses only on Traditional Chinese (zh-TW) generation
+- **Context Engineering**: Separated system prompts and user context for 29.8% token reduction
+- **Language Purity**: Enhanced instructions prevent English words and Simplified Chinese mixing
 
 **AI Generation Flow**:
-1. **Language Detection**: Retrieves user language setting from Redux store
-2. **Context Building** (`build_context`): Collects project, character, and chapter data with localized labels
+1. **Context Engineering**: Uses separated context system with SystemPromptBuilder and UserContextBuilder  
+2. **Context Building** (`build_context` or `build_separated_context`): Collects project, character, and chapter data
 3. **Text Cleaning**: Ensures Chinese characters are properly handled in context
 4. **Parameter Variation**: Creates multiple generations with different temperature settings
 5. **Parallel Processing**: Generates multiple versions simultaneously
@@ -317,12 +340,12 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Solution**: Use `snake_case` naming convention for Rust function parameters (e.g., `project_id` instead of `projectId`)
 - **Pattern**: Always follow Rust naming conventions in command functions
 
-**Multilingual AI Context Building** (`src-tauri/src/commands/context.rs`):
-- **Enhancement**: `build_context` now accepts `language` parameter for localized prompt generation
-- **Implementation**: Uses match statements to provide language-specific labels and instructions
-- **Supported Languages**: zh-TW (default), zh-CN, en, ja with tailored writing guidelines
-- **Language Detection**: Frontend passes user language setting from Redux store to backend
-- **API Change**: `generate_with_context` signature updated to include optional `language` parameter
+**Traditional Chinese Focused Context Building** (`src-tauri/src/commands/context.rs`):
+- **Architecture Simplification**: Removed multilingual support, now focuses only on Traditional Chinese (zh-TW)
+- **Context Engineering**: Implemented separated context system with SystemPromptBuilder and UserContextBuilder
+- **Token Optimization**: 29.8% token reduction through system prompt separation
+- **Language Purity**: Enhanced with "CRITICAL" markers to prevent English/Simplified Chinese mixing
+- **API Commands**: `build_separated_context`, `estimate_separated_context_tokens`, `generate_with_separated_context`
 
 ## Debugging and Troubleshooting
 
@@ -382,9 +405,10 @@ log::error!("獲取專案失敗: {}", e);
 **Context Engineering Solution (IMPLEMENTED)**:
 The project now implements Context Engineering principles with separated system prompts and user context:
 
-- **SystemPromptBuilder**: Handles fixed instructions and multilingual writing guidelines
+- **SystemPromptBuilder**: Handles fixed Traditional Chinese writing instructions and guidelines
 - **UserContextBuilder**: Manages dynamic content with intelligent extraction and compression  
 - **Token Efficiency**: Achieves 29.8% token savings in real-world testing
+- **Architecture Simplification**: Removed multilingual complexity, focusing only on Traditional Chinese
 - **Backward Compatibility**: Legacy `build_context` preserved for comparison and fallback
 
 **Performance Results** (tested 2025-08-01):
@@ -475,9 +499,9 @@ npm run test:performance   # Performance tests
 ## Version Information
 
 **Current Version**: v1.0.0+ (Pure Tauri Architecture with UI Enhancements)
-**Latest Update**: Language purity enhancements and Context Engineering optimizations (2025-08-01)
+**Latest Update**: Context Engineering architecture simplification and Traditional Chinese focus (2025-08-01)
 **Tauri Version**: v2.0.0-alpha.1
 **Architecture**: Single unified Tauri + Rust + React stack
 **Database**: SQLite with rusqlite v0.29+
 **Build Target**: Cross-platform desktop application
-**Recent Additions**: 16px gold-themed scrollbars, nested scrolling system, layout constraint fixes
+**Recent Additions**: Context Engineering (29.8% token savings), Traditional Chinese-focused architecture, language purity enhancements
