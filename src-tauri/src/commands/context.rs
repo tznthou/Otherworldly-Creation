@@ -49,7 +49,7 @@ impl SystemPromptBuilder {
 - 不要重复或重写现有内容
 - 保持角色一致性和对话风格
 - 确保情节连贯和细节一致
-- 使用纯中文，不混杂英文
+- CRITICAL: 严格使用简体中文，绝对不允许混杂任何英文单词或繁体字
 - 只提供续写文本，无需解释或评论"
             },
             "en" => {
@@ -60,7 +60,7 @@ Core Requirements:
 - Do not repeat or rewrite existing content
 - Maintain character consistency and dialogue style
 - Ensure plot coherence and detail consistency
-- Use English only, do not mix other languages
+- CRITICAL: Use English only, absolutely no mixing of other languages including Chinese characters
 - Provide only the continuation text without explanations or comments"
             },
             "ja" => {
@@ -71,7 +71,7 @@ Core Requirements:
 - 既存のコンテンツを繰り返したり書き直したりしない
 - キャラクターの一貫性と対話スタイルを維持
 - プロットの一貫性と詳細の一致を確保
-- 日本語のみを使用し、他の言語を混ぜない
+- CRITICAL: 厳密に日本語のみを使用し、他の言語（英語や中国語）を絶対に混ぜない
 - 説明やコメントなしで続きのテキストのみを提供"
             },
             _ => { // 默認 zh-TW
@@ -82,7 +82,9 @@ Core Requirements:
 - 不要重複或重寫現有內容
 - 保持角色一致性和對話風格
 - 確保情節連貫和細節一致
-- 使用純中文，不混雜英文
+- CRITICAL: 嚴格使用繁體中文，絕對不允許混雜任何英文單詞或簡體字
+- 所有描述、動作、對話都必須使用純正繁體中文
+- 禁止使用英文拼音、英文縮寫或任何英文表達
 - 只提供續寫文本，無需解釋或評論"
             }
         };
@@ -95,10 +97,10 @@ Core Requirements:
             
             if is_light_novel {
                 match self.language.as_str() {
-                    "zh-CN" => "\n\n轻小说风格要求:\n- 适当加入角色内心独白\n- 保持节奏明快，对话生动\n- 可以适当使用拟声词和表情描写",
-                    "en" => "\n\nLight Novel Style Requirements:\n- Include appropriate character inner monologues\n- Maintain brisk pace with lively dialogue\n- Use onomatopoeia and expression descriptions when appropriate",
-                    "ja" => "\n\nライトノベルスタイル要件:\n- キャラクターの内面独白を適切に含める\n- テンポよく、生き生きとした対話を維持\n- 擬音語や表情描写を適切に使用",
-                    _ => "\n\n輕小說風格要求:\n- 適當加入角色內心獨白\n- 保持節奏明快，對話生動\n- 可以適當使用擬聲詞和表情描寫",
+                    "zh-CN" => "\n\n轻小说风格要求:\n- 适当加入角色内心独白\n- 保持节奏明快，对话生动\n- 可以适当使用拟声词和表情描写\n- 严禁使用英文单词或繁体字",
+                    "en" => "\n\nLight Novel Style Requirements:\n- Include appropriate character inner monologues\n- Maintain brisk pace with lively dialogue\n- Use onomatopoeia and expression descriptions when appropriate\n- Strictly no foreign language mixing",
+                    "ja" => "\n\nライトノベルスタイル要件:\n- キャラクターの内面独白を適切に含める\n- テンポよく、生き生きとした対話を維持\n- 擬音語や表情描写を適切に使用\n- 他言語の混入を厳格に禁止",
+                    _ => "\n\n輕小說風格要求:\n- 適當加入角色內心獨白\n- 保持節奏明快，對話生動\n- 可以適當使用擬聲詞和表情描寫\n- 嚴禁使用英文單詞或簡體字",
                 }
             } else {
                 ""
@@ -400,7 +402,7 @@ pub async fn build_context(
             chapter_title: "章节标题：",
             content: "内容：",
             previous_content_omitted: "...（前文省略）...",
-            insert_continuation_here: "【请在此处续写，使用纯中文，不要混杂英文】",
+            insert_continuation_here: "【请在此处续写，CRITICAL: 严格使用简体中文，绝对禁止任何英文单词或繁体字】",
             existing_content_after: "【游标后的现有内容：】",
             remaining_content_continues: "...（后续内容继续）...",
             writing_instructions: "【续写要求】",
@@ -417,7 +419,7 @@ pub async fn build_context(
             chapter_title: "Chapter Title: ",
             content: "Content:",
             previous_content_omitted: "...(previous content omitted)...",
-            insert_continuation_here: "[INSERT CONTINUATION HERE - Use English only]",
+            insert_continuation_here: "[INSERT CONTINUATION HERE - CRITICAL: Use English only, absolutely no foreign language mixing]",
             existing_content_after: "[Existing content after cursor:]",
             remaining_content_continues: "...(remaining content continues)...",
             writing_instructions: "[Writing Instructions]",
@@ -434,7 +436,7 @@ pub async fn build_context(
             chapter_title: "章のタイトル：",
             content: "内容：",
             previous_content_omitted: "...（前文省略）...",
-            insert_continuation_here: "【ここに続きを書いてください。日本語のみを使用してください】",
+            insert_continuation_here: "【ここに続きを書いてください。CRITICAL: 厳密に日本語のみを使用し、他言語を絶対に混ぜない】",
             existing_content_after: "【カーソル後の既存内容：】",
             remaining_content_continues: "...（続きがあります）...",
             writing_instructions: "【執筆指示】",
@@ -451,7 +453,7 @@ pub async fn build_context(
             chapter_title: "章節標題：",
             content: "內容：",
             previous_content_omitted: "...（前文省略）...",
-            insert_continuation_here: "【請在此處續寫，使用純中文，不要混雜英文】",
+            insert_continuation_here: "【請在此處續寫，CRITICAL: 嚴格使用繁體中文，絕對禁止任何英文單詞或簡體字】",
             existing_content_after: "【游標後的現有內容：】",
             remaining_content_continues: "...（後續內容繼續）...",
             writing_instructions: "【續寫要求】",
@@ -617,7 +619,7 @@ pub async fn build_context(
             context.push_str("4. 确保细节一致性（时间、地点、角色状态）\n");
             context.push_str("5. 只写续写文本，不要任何元评论或解释\n");
             context.push_str("6. 确保你的续写与插入点前后的文本自然衔接\n");
-            context.push_str("7. 使用纯中文写作，不要混杂英文单词\n");
+            context.push_str("7. CRITICAL: 严格使用简体中文写作，绝对不允许混杂任何英文单词或繁体字\n");
         },
         "en" => {
             context.push_str("IMPORTANT: Insert your continuation at the marked position.\n");
@@ -630,7 +632,7 @@ pub async fn build_context(
             context.push_str("4. Ensure detail consistency (time, place, character states)\n");
             context.push_str("5. Write only the continuation text, without any meta-comments or explanations\n");
             context.push_str("6. Make sure your continuation flows naturally with both the text before and after the insertion point\n");
-            context.push_str("7. Use English only, do not mix other languages\n");
+            context.push_str("7. CRITICAL: Use English only, absolutely no mixing of other languages including Chinese characters\n");
         },
         "ja" => {
             context.push_str("重要：マークされた位置に続きを挿入してください。\n");
@@ -643,7 +645,7 @@ pub async fn build_context(
             context.push_str("4. 詳細の一貫性を確保する（時間、場所、キャラクターの状態）\n");
             context.push_str("5. 続きのテキストのみを書き、メタコメントや説明は含めない\n");
             context.push_str("6. 続きが挿入ポイントの前後のテキストと自然に流れるようにする\n");
-            context.push_str("7. 日本語のみを使用し、他の言語を混ぜない\n");
+            context.push_str("7. CRITICAL: 厳密に日本語のみを使用し、他の言語（英語や中国語）を絶対に混ぜない\n");
         },
         _ => { // 默認 zh-TW
             context.push_str("重要：在標記的位置插入續寫內容。\n");
@@ -656,7 +658,7 @@ pub async fn build_context(
             context.push_str("4. 確保細節一致性（時間、地點、角色狀態）\n");
             context.push_str("5. 只寫續寫文本，不要任何元評論或解釋\n");
             context.push_str("6. 確保你的續寫與插入點前後的文本自然銜接\n");
-            context.push_str("7. 使用純中文寫作，不要混雜英文單詞\n");
+            context.push_str("7. CRITICAL: 嚴格使用繁體中文寫作，絕對不允許混雜任何英文單詞或簡體字\n");
         }
     }
     

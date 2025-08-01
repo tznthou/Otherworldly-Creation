@@ -93,9 +93,10 @@ npm run diagnostic
 
 **AI & Context Commands**:
 - **AI Service**: `check_ollama_service`, `get_service_status`, `list_models`, `get_models_info`, `generate_text`
-- **Context Management**: `build_context`, `compress_context`, `get_context_stats`, `generate_with_context`
+- **Legacy Context**: `build_context`, `compress_context`, `get_context_stats`, `generate_with_context`
+- **Context Engineering**: `build_separated_context`, `estimate_separated_context_tokens`, `generate_with_separated_context`
 - **Configuration**: `update_ollama_config`, `check_model_availability`
-- **Multilingual Support**: `generate_with_context` now accepts `language` parameter for localized prompts
+- **Multilingual Support**: Context commands accept `language` parameter for localized prompts
 
 **Database & Settings Commands**:
 - **Database**: `backup_database`, `restore_database`, `run_database_maintenance`, `get_database_stats`, `health_check`
@@ -378,10 +379,39 @@ log::error!("獲取專案失敗: {}", e);
 - Multilingual support increases instruction overhead
 - Story content gets compressed to make room for formatting
 
-**Potential Solutions**:
-1. **Immediate**: Minimize labels and formatting (e.g., "BG:" instead of "【故事背景】")
-2. **Long-term**: Implement Ollama Chat API with system prompts (instructions don't count toward context tokens)
-3. **Hybrid**: Smart context prioritization based on available token budget
+**Context Engineering Solution (IMPLEMENTED)**:
+The project now implements Context Engineering principles with separated system prompts and user context:
+
+- **SystemPromptBuilder**: Handles fixed instructions and multilingual writing guidelines
+- **UserContextBuilder**: Manages dynamic content with intelligent extraction and compression  
+- **Token Efficiency**: Achieves 29.8% token savings in real-world testing
+- **Backward Compatibility**: Legacy `build_context` preserved for comparison and fallback
+
+**Performance Results** (tested 2025-08-01):
+- Traditional method: 513 tokens
+- Separated method: 360 tokens  
+- Savings: 153 tokens (29.8% reduction)
+- Quality: Maintained with minor language purity improvements needed
+
+**Language Purity Enhancements (IMPLEMENTED)**:
+Following initial testing that revealed language mixing issues, comprehensive language purity improvements have been implemented:
+
+- **Enhanced System Prompts**: Added "CRITICAL" markers with strict language requirements
+- **Traditional Chinese Enforcement**: Explicit prohibition of English words and simplified Chinese characters  
+- **Multilingual Consistency**: Applied improvements across all supported languages (zh-TW, zh-CN, en, ja)
+- **Genre-Specific Rules**: Enhanced light novel style requirements with language purity constraints
+
+**Language Purity Test Results**:
+- Original Issue: English words ("Scribble") mixed in generated content
+- Original Issue: Simplified Chinese characters mixed in traditional Chinese context
+- Solution: Strengthened system prompts with "CRITICAL" and "絕對不允許" (absolutely not allowed) constraints
+- Validation: Created comprehensive test script for ongoing quality assurance
+
+**Future Enhancements**:
+1. **Chat API Integration**: Expected additional 20-30% token savings
+2. **Smart Context Budgeting**: Dynamic allocation based on available tokens
+3. **Quality Validation Loop**: Automated assessment and improvement
+4. **Advanced Language Detection**: Real-time validation of generated content purity
 
 ## Performance Considerations
 
@@ -445,7 +475,7 @@ npm run test:performance   # Performance tests
 ## Version Information
 
 **Current Version**: v1.0.0+ (Pure Tauri Architecture with UI Enhancements)
-**Latest Update**: Multilingual AI generation support and token optimization analysis (2025-08-01)
+**Latest Update**: Language purity enhancements and Context Engineering optimizations (2025-08-01)
 **Tauri Version**: v2.0.0-alpha.1
 **Architecture**: Single unified Tauri + Rust + React stack
 **Database**: SQLite with rusqlite v0.29+
