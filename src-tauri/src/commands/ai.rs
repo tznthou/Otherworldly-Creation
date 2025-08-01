@@ -151,7 +151,60 @@ pub async fn generate_text(
     }
 }
 
-/// 使用上下文生成文本
+/// 使用分離上下文生成文本（Chat API 優化版）
+#[command]
+pub async fn generate_with_separated_context(
+    project_id: String,
+    chapter_id: String,
+    position: usize,
+    model: String,
+    params: GenerateParams,
+    language: Option<String>,
+) -> Result<String, String> {
+    log::info!("=== 開始使用分離上下文生成文本（Chat API 優化版）===");
+    log::info!("專案: {}, 章節: {}, 位置: {}, 模型: {}, 語言: {:?}", project_id, chapter_id, position, model, language);
+    
+    let lang = language.unwrap_or_else(|| "zh-TW".to_string());
+    
+    // 1. 構建分離的上下文
+    let (system_prompt, user_context) = crate::commands::context::build_separated_context(
+        project_id.clone(), chapter_id.clone(), position, lang
+    )
+        .await
+        .map_err(|e| format!("構建分離上下文失敗: {}", e))?;
+    
+    log::info!("系統提示長度: {} 字符", system_prompt.len());
+    log::info!("用戶上下文長度: {} 字符", user_context.len());
+    
+    // 2. 如果有 Chat API 支援，使用 Chat API
+    // 目前先回退到傳統方式，但結構已準備好 Chat API 升級
+    let combined_prompt = format!("{}\n\n{}", system_prompt, user_context);
+    
+    // 3. 使用上下文生成文本
+    let options = crate::services::ollama::OllamaOptions {
+        temperature: params.temperature,
+        top_p: params.top_p,
+        max_tokens: params.max_tokens,
+        presence_penalty: params.presence_penalty,
+        frequency_penalty: params.frequency_penalty,
+    };
+    
+    let ollama_service = get_ollama_service();
+    let service = ollama_service.lock().await;
+    let result = service.generate_text(&model, &combined_prompt, Some(options)).await;
+    
+    if result.success {
+        let generated_text = result.response.unwrap_or_default();
+        log::info!("生成文本成功，長度: {} 字符", generated_text.len());
+        Ok(generated_text)
+    } else {
+        let error_msg = result.error.unwrap_or("生成文本失敗".to_string());
+        log::error!("生成文本失敗: {}", error_msg);
+        Err(error_msg)
+    }
+}
+
+/// 使用上下文生成文本（傳統版本）
 #[command]
 pub async fn generate_with_context(
     project_id: String,
