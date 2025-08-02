@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
-import { startProgress, updateProgress, completeProgress, failProgress, removeProgress } from '../../store/slices/errorSlice';
+import { startProgress, updateProgress, completeProgress, failProgress, removeProgress, selectProgressById } from '../../store/slices/errorSlice';
 import { store } from '../../store/store';
 import { api } from '../../api';
+import { AIGenerationProgress } from '../AI';
 
 interface SimpleAIWritingPanelProps {
   projectId: string;
@@ -85,6 +86,11 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   // 從 Redux store 獲取 AI 相關狀態
   const { currentModel, availableModels, isOllamaConnected } = useAppSelector(state => state.ai);
   const currentLanguage = useAppSelector(state => state.settings.language);
+  
+  // 獲取當前進度信息
+  const currentProgress = useAppSelector(state => 
+    progressId ? selectProgressById(progressId)(state) : null
+  );
   
   
   const [temperature, setTemperature] = useState(0.7);
@@ -369,28 +375,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
 
   
   return (
-    <div className="relative bg-cosmic-900 border-t border-cosmic-700 p-4 rounded-lg">
-      {/* 生成中的覆蓋層 */}
-      {isGenerating && (
-        <div className="absolute inset-0 bg-cosmic-900/80 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center space-x-2">
-              <svg className="animate-spin h-8 w-8 text-gold-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span className="text-lg font-medium text-gold-400">AI 正在創作中...</span>
-            </div>
-            <div className="text-sm text-gray-300 max-w-md">
-              AI 正在生成文本...
-              <br />
-              <span className="text-xs text-gray-400">
-                中文生成可能需要較長時間，請耐心等待
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="bg-cosmic-900 border-t border-cosmic-700 p-4 rounded-lg">
       
       <div className="mb-4">
         <h3 className="text-lg font-medium text-gold-400 mb-2">AI 續寫</h3>
@@ -466,6 +451,19 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         </div>
       </div>
       
+
+      {/* AI 生成進度顯示 */}
+      {currentProgress && isGenerating && (
+        <div className="mb-6">
+          <AIGenerationProgress
+            progress={currentProgress}
+            generationCount={generationCount}
+            currentGenerationIndex={currentProgress.completedSteps || 0}
+            showDetailedStats={true}
+            className="shadow-lg"
+          />
+        </div>
+      )}
 
       {/* 生成按鈕 */}
       <div className="flex justify-center mb-4">

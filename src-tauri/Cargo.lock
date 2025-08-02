@@ -1481,6 +1481,7 @@ dependencies = [
  "chrono",
  "dirs 5.0.1",
  "log",
+ "regex",
  "reqwest",
  "rusqlite",
  "serde",

@@ -34,18 +34,12 @@ npm run diagnostic
 
 ### Testing
 - `npm test` - Run all tests with Jest
-- `npm test -- path/to/test.spec.ts` - Run specific test file
-- `npm test -- --testNamePattern="pattern"` - Run tests matching pattern
-- `npm test -- --watch` - Run tests in watch mode
-- `npm test -- --coverage` - Generate coverage report
-- `npm run test:unit` - Unit tests only
+- `npm test -- --testNamePattern="pattern"` - Run specific test pattern
+- `npm test -- --watch` - Watch mode for development
 - `npm run test:integration` - Integration tests only
-- `npm run test:performance` - Performance tests only
 
 ### Building & Packaging
 - `npm run build` - Build complete application (renderer + Tauri)
-- `npm run build:renderer` - Build Vite frontend only
-- `npm run build:tauri` - Build Tauri backend only
 - `npm run package` - Package application for distribution
 - `npm run clean` - Clean all build artifacts
 
@@ -55,12 +49,10 @@ npm run diagnostic
 - `claude mcp remove serena` - Remove Serena MCP server configuration
 - **Required Setup**: Each project needs `.serena/project.yml` configuration file generated with `uvx --from git+https://github.com/oraios/serena serena project generate-yml`
 
-### Direct Cargo Commands
-- `cargo tauri dev` - Direct Tauri development
-- `cargo tauri build` - Direct Tauri build
+### Direct Commands
+- `cargo check --manifest-path src-tauri/Cargo.toml` - Check Rust compilation
+- `npx tsc --noEmit` - Check TypeScript compilation
 - `cargo tauri build --debug` - Debug build with console
-- `cargo check --manifest-path src-tauri/Cargo.toml` - Check Rust code without building
-- `npx tsc --noEmit` - Check TypeScript compilation without emitting files
 
 ## Architecture Overview
 
@@ -95,6 +87,7 @@ npm run diagnostic
 - **AI Service**: `check_ollama_service`, `get_service_status`, `list_models`, `get_models_info`, `generate_text`
 - **Legacy Context**: `build_context`, `compress_context`, `get_context_stats`, `generate_with_context`
 - **Context Engineering**: `build_separated_context`, `estimate_separated_context_tokens`, `generate_with_separated_context`
+- **Language Purity**: `analyze_text_purity`, `enhance_generation_parameters`
 - **Configuration**: `update_ollama_config`, `check_model_availability`
 - **Traditional Chinese Focus**: Context system simplified to focus only on Traditional Chinese (zh-TW)
 
@@ -143,6 +136,45 @@ const aiStatus = await api.ai.checkOllamaService();
 - **Focused Design**: Single-language architecture eliminates multilingual complexity
 
 **Backward Compatibility**: Legacy `build_context` and `generate_with_context` methods preserved but simplified to match new architecture.
+
+### Language Purity Control System (v1.0.0+)
+
+**Overview**: Advanced language purity detection and enforcement system ensuring Traditional Chinese text generation without English words or Simplified Chinese character contamination.
+
+**Core Components** (`src-tauri/src/utils/language_purity.rs`):
+- **LanguagePurityEnforcer**: Main enforcement engine with regex-based detection
+  - English word pattern detection (`[A-Za-z]{2,}` for multi-character English)
+  - Simplified Chinese character detection (curated character set)
+  - Forbidden pattern matching for common contamination sources
+  - Statistical analysis with percentage purity calculation
+
+**Detection Capabilities**:
+- English word identification with context awareness
+- Simplified vs Traditional Chinese character distinction
+- Proper noun preservation (single characters, names)
+- Statistical purity scoring (0-100%)
+
+**API Commands**:
+- `analyze_text_purity(text)` - Returns detailed purity analysis with violations list
+- `enhance_generation_parameters(base_params, purity_requirements)` - Adjusts AI parameters for better language purity
+
+**Integration Points**:
+- Context Engineering system integration for prompt enhancement
+- AI generation parameter optimization based on purity requirements
+- Real-time text analysis during generation process
+- Post-generation validation and scoring
+
+**Usage Patterns**:
+```rust
+// Analyze text purity
+let analysis = LanguagePurityEnforcer::new().analyze_purity(&text);
+if analysis.purity_percentage < 95.0 {
+    // Apply enhanced generation parameters
+}
+
+// Enhance AI parameters for better purity
+let enhanced_params = enhancer.enhance_parameters(base_params, purity_requirements);
+```
 
 ### Database Schema
 
@@ -223,21 +255,51 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - Error boundaries at feature level with graceful degradation
 - Progress tracking through `errorSlice` for long-running operations
 
-## Common Development Tasks
+### AI Progress Visualization Architecture (v1.0.0+)
 
-### Adding New Features
+**Overview**: Advanced progress visualization system providing real-time feedback during AI text generation with multi-stage tracking, animated visual elements, and detailed performance statistics.
 
-**Tauri Command**:
+**Core Components**:
+- **AIGenerationProgress** (`src/renderer/src/components/AI/AIGenerationProgress.tsx`): Main progress visualization component
+  - Multi-stage progress tracking (preparing → generating → processing → complete)
+  - Real-time statistics display (generation speed, token count, quality estimation, language purity)
+  - Animated visual feedback (gradient progress bars, thinking animations, shimmer effects)
+  - Error handling with friendly user feedback
+  - Success celebration with completion statistics
+
+**Integration with SimpleAIWritingPanel**:
+- Automatic show/hide based on generation state
+- Real-time progress updates synchronized with Redux store
+- Replaced old overlay design with embedded progress component
+- Support for multi-version generation tracking (x/n display)
+
+**Visual Features**:
+- Cosmic-themed design matching application aesthetics
+- Gradient progress bars with animated shimmer during generation
+- Pulsing dot animations showing AI "thinking" state
+- Stage indicators with appropriate icons and colors
+- Detailed statistics grid with real-time updates
+- Step-by-step progress visualization for multi-generation tasks
+
+**Performance Benefits**:
+- Enhanced user experience with transparent progress visibility
+- Reduced user anxiety during long AI generation tasks
+- Professional visual feedback matching application theme
+- Intelligent error reporting with actionable suggestions
+
+## Key Development Workflows
+
+### Adding New Tauri Commands
 1. Add command function in `src-tauri/src/commands/*.rs`
 2. Register in `src-tauri/src/lib.rs` invoke_handler
 3. Add API interface in `src/renderer/src/api/types.ts`
 4. Implement in `src/renderer/src/api/tauri.ts`
 
-**Frontend Component**:
-1. Create React component in appropriate `src/renderer/src/components/` subdirectory
-2. Add Redux slice if state management needed in `src/renderer/src/store/slices/`
-3. Add translation keys to all language files in `src/renderer/src/i18n/locales/`
-4. Write tests in `src/__tests__/`
+### Adding Frontend Features
+1. Create component in `src/renderer/src/components/[feature]/`
+2. Add Redux slice if needed in `src/renderer/src/store/slices/`
+3. Add translation keys to `src/renderer/src/i18n/locales/*.json`
+4. Write integration tests in `src/__tests__/integration/`
 
 ### Database Operations
 **Rust Backend** (`src-tauri/src/database/`):
@@ -245,6 +307,30 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Critical**: Use `conn.pragma_update()` for PRAGMA statements, not `conn.execute()`
 - All database operations are async and require proper error handling
 - Foreign key constraints are enabled - consider cascade effects
+
+### Development Task Management
+
+**Current Todo System**: The project uses a structured todo list for tracking development progress and maintaining focus on priority tasks.
+
+**Active Tasks** (as of 2025-08-02):
+- ✅ Ollama service modifications and configuration
+- ✅ AI service testing infrastructure
+- ✅ Language purity control optimization
+- ✅ AI generation progress visualization
+- 🔲 AI generation history feature implementation (Priority: Low)
+- 🔲 Language purity control strategy fine-tuning (Priority: High)
+
+**Task Prioritization**:
+- **High Priority**: Core functionality improvements, bug fixes, performance optimizations
+- **Medium Priority**: UX/UI enhancements, additional features, system optimizations
+- **Low Priority**: Nice-to-have features, future enhancements, experimental features
+
+**Development Workflow**:
+1. Complete high-priority tasks before medium/low priority items
+2. Test thoroughly after each major implementation
+3. Document changes and update CLAUDE.md accordingly
+4. Maintain backward compatibility where possible
+5. Focus on Traditional Chinese language support as primary use case
 
 ### AI Integration  
 **External Dependency**: Requires Ollama service running locally
@@ -354,6 +440,13 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **Token Optimization**: 29.8% token reduction through system prompt separation
 - **Language Purity**: Enhanced with "CRITICAL" markers to prevent English/Simplified Chinese mixing
 - **API Commands**: `build_separated_context`, `estimate_separated_context_tokens`, `generate_with_separated_context`
+
+**Recent Critical Fixes (2025-08-02)**:
+- **Nested Scrollbar System Resolution** (`src/renderer/src/index.css`): Implemented 16px gold-themed scrollbars with proper `!important` declarations to override Tailwind reset, supporting dual-layer scrolling for page and editor content
+- **Error Boundary Reference Fix** (`src/renderer/src/components/UI/SimpleErrorBoundary.tsx`): Corrected component export paths to prevent runtime errors during error handling
+- **ESLint Configuration Update** (`.eslintrc.js`): Fixed TypeScript ESLint configuration to use correct plugin format and removed invalid tsconfig references
+- **Progress Integration Enhancement** (`src/renderer/src/components/Editor/SimpleAIWritingPanel.tsx`): Seamlessly integrated AIGenerationProgress component with Redux state management and auto-cleanup functionality
+- **Language Purity Module Setup** (`src-tauri/src/utils/mod.rs`): Proper module registration and export structure for language purity enforcement system
 
 ## Debugging and Troubleshooting
 
@@ -504,18 +597,63 @@ npm run test:integration   # Integration tests
 npm run test:performance   # Performance tests
 ```
 
+### Testing Infrastructure & Scripts
+
+**AI Service Testing** (`scripts/test-ollama-service.js`):
+- Comprehensive Ollama service functionality testing
+- Connection verification, model listing, text generation
+- Concurrent request handling and error scenarios
+- Language purity validation with test cases
+- Performance benchmarking and timeout testing
+
+**Progress Visualization Testing** (`scripts/test-ai-progress-visualization.js`):
+- AI generation progress system validation
+- Visual component feature verification
+- User experience improvement assessment
+- Performance considerations and recommendations
+- Future enhancement roadmap
+
+**System Diagnostics** (`npm run diagnostic`):
+- Environment validation (Node.js, Rust, Git versions)
+- Dependency verification and compilation checks
+- Ollama service status and model availability
+- Memory usage analysis and recommendations
+- Network connectivity and external service checks
+
+**Test Execution Patterns**:
+```bash
+# Run AI service tests
+node scripts/test-ollama-service.js
+
+# Test progress visualization
+node scripts/test-ai-progress-visualization.js
+
+# System-wide diagnostics
+npm run diagnostic
+
+# Manual testing recommendations
+# 1. Restart Tauri application
+# 2. Open project and enter editor
+# 3. Click "AI 續寫" button and observe progress
+# 4. Test different generation parameters
+# 5. Verify cancellation and cleanup functions
+```
+
 ## Version Information
 
-**Current Version**: v1.0.0+ (Pure Tauri Architecture with Context Engineering)
-**Latest Update**: Context Engineering architecture deep simplification (2025-08-01)
-**Tauri Version**: v2.0.0-alpha.1
+**Current Version**: v1.0.0+ (Pure Tauri Architecture with Context Engineering & Progress Visualization)
+**Latest Update**: AI Generation Progress Visualization system implementation (2025-08-02)
+**Tauri Version**: v2.7.0
+**React Version**: 18.2.0
+**Ollama Version**: v0.10.1
 **Architecture**: Single unified Tauri + Rust + React stack
 **Database**: SQLite with rusqlite v0.29+
 **Build Target**: Cross-platform desktop application
 
 **Recent Updates**:
-- Context Engineering: 29.8% token savings achieved
-- Architecture Simplification: Removed multilingual support, focused on Traditional Chinese
-- Code Reduction: ~200 lines removed, 40% complexity reduction
-- API Simplification: Removed language parameters across all commands
-- Language Purity: Enhanced with CRITICAL markers to prevent language mixing
+- AI Progress Visualization: Comprehensive progress tracking with real-time statistics and animations
+- Language Purity Control: Advanced detection and enforcement system for Traditional Chinese
+- Nested Scrollbar System: 16px gold-themed scrollbars with cosmic theme integration
+- Context Engineering: 29.8% token savings achieved through separated context architecture
+- UI/UX Enhancements: Improved error boundaries, modal systems, and visual feedback
+- Testing Infrastructure: Comprehensive test scripts for AI services and progress visualization

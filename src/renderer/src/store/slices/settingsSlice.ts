@@ -16,6 +16,11 @@ export interface AppSettings {
     contextLength: number;
     enableAutoComplete: boolean;
     autoCompleteDelay: number; // 毫秒
+    // Ollama 服務設定
+    ollamaBaseUrl: string;
+    ollamaTimeout: number; // 秒
+    ollamaRetryAttempts: number;
+    ollamaRetryDelay: number; // 毫秒
   };
   
   // 編輯器設定
@@ -75,6 +80,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
     contextLength: 4000,
     enableAutoComplete: false,
     autoCompleteDelay: 1000,
+    // Ollama 服務預設設定
+    ollamaBaseUrl: 'http://127.0.0.1:11434',
+    ollamaTimeout: 120, // 120 秒
+    ollamaRetryAttempts: 3,
+    ollamaRetryDelay: 1000, // 1 秒
   },
   
   editor: {

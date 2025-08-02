@@ -1,6 +1,7 @@
 mod commands;
 mod database;
 mod services;
+mod utils;
 
 use commands::system::{
     get_app_version, quit_app, reload_app, show_save_dialog, show_open_dialog, open_external,
@@ -16,7 +17,7 @@ use commands::ai::{
     check_ollama_service, get_service_status, list_models, get_models_info, check_model_availability,
     generate_text, generate_with_context, generate_with_separated_context, update_ollama_config,
 };
-use commands::context::{build_context, compress_context, get_context_stats, build_separated_context, estimate_separated_context_tokens};
+use commands::context::{build_context, compress_context, get_context_stats, build_separated_context, estimate_separated_context_tokens, analyze_text_purity, enhance_generation_parameters};
 use commands::settings::{get_setting, set_setting, get_all_settings, reset_settings};
 use commands::database::{backup_database, restore_database, run_database_maintenance, get_database_stats, health_check};
 
@@ -93,6 +94,8 @@ pub fn run() {
       get_context_stats,
       build_separated_context,
       estimate_separated_context_tokens,
+      analyze_text_purity,
+      enhance_generation_parameters,
       // Settings commands
       get_setting,
       set_setting,

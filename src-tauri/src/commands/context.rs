@@ -1,4 +1,5 @@
 use crate::database::{get_db, models::*};
+use crate::utils::language_purity::LanguagePurityEnforcer;
 use rusqlite::Result as SqliteResult;
 use serde::{Deserialize, Serialize};
 use tauri::command;
@@ -39,6 +40,8 @@ impl SystemPromptBuilder {
 
     /// 建構系統提示，專注於繁體中文小說續寫
     pub fn build_system_prompt(&self) -> String {
+        let enforcer = LanguagePurityEnforcer::new();
+        
         let base_instructions = "你是一個專業的中文小說續寫助手。你的任務是根據提供的上下文資訊，在指定位置插入合適的續寫內容。
 
 核心要求:
@@ -65,7 +68,9 @@ impl SystemPromptBuilder {
             ""
         };
 
-        format!("{}{}", base_instructions, genre_specific)
+        // 使用語言純度增強器生成強化的系統提示
+        let enhanced_prompt = format!("{}{}", base_instructions, genre_specific);
+        enforcer.generate_enhanced_system_prompt(&enhanced_prompt)
     }
 }
 
@@ -771,6 +776,60 @@ pub async fn estimate_separated_context_tokens(project_id: String) -> Result<Sep
         character_count,
         estimated_savings_vs_legacy: 40.0, // 預估節省 40%
     })
+}
+
+/// 檢測文本的語言純度
+#[command]
+pub async fn analyze_text_purity(text: String) -> Result<PurityAnalysisResult, String> {
+    let enforcer = LanguagePurityEnforcer::new();
+    let analysis = enforcer.analyze_purity(&text);
+    
+    Ok(PurityAnalysisResult {
+        is_pure: analysis.is_pure,
+        purity_score: analysis.purity_score,
+        issues: analysis.issues.into_iter().map(|issue| PurityIssueResult {
+            issue_type: match issue.issue_type {
+                crate::utils::language_purity::IssueType::EnglishWords => "english_words".to_string(),
+                crate::utils::language_purity::IssueType::SimplifiedChinese => "simplified_chinese".to_string(),
+                crate::utils::language_purity::IssueType::ForbiddenPattern => "forbidden_pattern".to_string(),
+            },
+            content: issue.content,
+            severity: match issue.severity {
+                crate::utils::language_purity::Severity::High => "high".to_string(),
+                crate::utils::language_purity::Severity::Medium => "medium".to_string(),
+                crate::utils::language_purity::Severity::Low => "low".to_string(),
+            },
+        }).collect(),
+    })
+}
+
+/// 生成增強的 AI 生成參數
+#[command]
+pub async fn enhance_generation_parameters(
+    base_parameters: serde_json::Value
+) -> Result<serde_json::Value, String> {
+    let enforcer = LanguagePurityEnforcer::new();
+    
+    if let Some(params_obj) = base_parameters.as_object() {
+        let enhanced = enforcer.enhance_generation_options(params_obj.clone());
+        Ok(serde_json::Value::Object(enhanced))
+    } else {
+        Err("參數必須是 JSON 物件".to_string())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PurityAnalysisResult {
+    pub is_pure: bool,
+    pub purity_score: f64,
+    pub issues: Vec<PurityIssueResult>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PurityIssueResult {
+    pub issue_type: String,
+    pub content: String,
+    pub severity: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
