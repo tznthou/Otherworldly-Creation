@@ -2,7 +2,6 @@ import type { API } from './types';
 
 // 動態導入 Tauri API
 let tauriInvoke: any = null;
-let isInitialized = false;
 
 const waitForTauri = (): Promise<void> => {
   return new Promise((resolve) => {
@@ -39,7 +38,7 @@ const waitForTauri = (): Promise<void> => {
               }
             });
             return;
-          } catch (e) {
+          } catch {
             // 繼續等待
           }
         }
@@ -70,7 +69,6 @@ const loadTauriAPI = async () => {
       if (window.__TAURI_INVOKE__) {
         console.log('使用 window.__TAURI_INVOKE__');
         tauriInvoke = window.__TAURI_INVOKE__;
-        isInitialized = true;
         return window.__TAURI_INVOKE__;
       }
       
@@ -78,7 +76,6 @@ const loadTauriAPI = async () => {
       if (window.__TAURI__ && window.__TAURI__.invoke) {
         console.log('使用 window.__TAURI__.invoke');
         tauriInvoke = window.__TAURI__.invoke;
-        isInitialized = true;
         return window.__TAURI__.invoke;
       }
     }
@@ -87,7 +84,6 @@ const loadTauriAPI = async () => {
     console.log('嘗試動態導入 @tauri-apps/api/core');
     const { invoke } = await import('@tauri-apps/api/core');
     tauriInvoke = invoke;
-    isInitialized = true;
     return invoke;
   } catch (error) {
     console.warn('無法載入 Tauri API:', error);
@@ -301,7 +297,7 @@ export const tauriAPI: API = {
           let attributes: any = {};
           try {
             attributes = char.attributes ? JSON.parse(char.attributes) : {};
-          } catch (e) {
+          } catch {
             console.warn('Failed to parse character attributes:', char.attributes);
           }
           
@@ -377,7 +373,7 @@ export const tauriAPI: API = {
       let attributes: any = {};
       try {
         attributes = char.attributes ? JSON.parse(char.attributes) : {};
-      } catch (e) {
+      } catch {
         console.warn('Failed to parse character attributes:', char.attributes);
       }
       

@@ -331,10 +331,12 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         dispatch(failProgress({
           id: newProgressId,
           error: {
+            id: Date.now().toString(),
             code: 'AI_GENERATION_ERROR',
             message: error instanceof Error ? error.message : '生成文本時發生錯誤',
-            severity: 'error' as ErrorSeverity,
+            severity: 'high' as ErrorSeverity,
             category: 'ai',
+            timestamp: new Date(),
             stack: error instanceof Error ? error.stack : undefined
           }
         }));

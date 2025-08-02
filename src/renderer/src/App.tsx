@@ -5,9 +5,6 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import ProjectEditor from './pages/ProjectEditor/ProjectEditor';
 import CharacterManager from './pages/CharacterManager/CharacterManager';
 import Settings from './pages/Settings/Settings';
-import SettingsSimple from './pages/Settings/SettingsSimple';
-import DatabaseMaintenance from './pages/DatabaseMaintenance/DatabaseMaintenance';
-import DatabaseMaintenanceSimple from './pages/DatabaseMaintenance/DatabaseMaintenanceSimple';
 import AITest from './pages/AITest';
 import ModalContainer from './components/UI/ModalContainer';
 import LoadingSpinner from './components/UI/LoadingSpinner';
@@ -61,8 +58,6 @@ const AppContent: React.FC = () => {
   const dispatch = useAppDispatch();
   const [isInitialized, setIsInitialized] = useState(false);
   
-  // 應用設定
-  const settings = useSettingsApplication();
   
   // 全域快捷鍵
   useShortcuts();
@@ -75,10 +70,8 @@ const AppContent: React.FC = () => {
     currentStep,
     currentTutorialId,
     setCurrentStep,
-    startTutorial,
     completeTutorial,
-    skipTutorial,
-    isTutorialCompleted
+    skipTutorial
   } = useTutorial();
 
   useEffect(() => {
@@ -148,7 +141,7 @@ const AppContent: React.FC = () => {
     };
 
     initializeApp();
-  }, [dispatch]);
+  }, [dispatch, t]);
 
   if (!isInitialized) {
     return (

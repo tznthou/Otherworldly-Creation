@@ -207,6 +207,7 @@ pub enum IssueType {
 pub enum Severity {
     High,
     Medium,
+    #[allow(dead_code)]
     Low,
 }
 

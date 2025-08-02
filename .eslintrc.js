@@ -38,5 +38,8 @@ module.exports = {
     '*.spec.ts',
     '*.spec.tsx',
     'test-*.js',
+    'src/__tests__/**/*',
+    'vite.config.ts',
+    'scripts/**/*',
   ],
 };

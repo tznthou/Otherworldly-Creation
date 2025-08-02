@@ -40,6 +40,10 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
   const [progressId, setProgressId] = useState<string | null>(null);
+  
+  // 從 Redux store 獲取進度狀態
+  const progressState = useAppSelector(state => state.progress);
+  const currentProgress = progressId ? progressState.indicators.find(p => p.id === progressId) : null;
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(200);
   const [generationCount, setGenerationCount] = useState(3);
@@ -229,10 +233,12 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
         dispatch(failProgress({
           id: newProgressId,
           error: {
+            id: Date.now().toString(),
             code: 'AI_GENERATION_ERROR',
             message: error instanceof Error ? error.message : '生成文本時發生錯誤',
-            severity: 'error' as ErrorSeverity,
+            severity: 'high' as ErrorSeverity,
             category: 'ai',
+            timestamp: new Date(),
             stack: error instanceof Error ? error.stack : undefined
           }
         }));
@@ -521,40 +527,40 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
       </div>
       
       {/* 進度指示器 */}
-      {isGenerating && (
+      {isGenerating && currentProgress && (
         <div className="mb-4 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-300">{progress.message}</span>
-            <span className="text-sm text-gold-400">{progress.current}%</span>
+            <span className="text-sm text-gray-300">{currentProgress.currentStep || currentProgress.description || currentProgress.title}</span>
+            <span className="text-sm text-gold-400">{currentProgress.progress}%</span>
           </div>
           
           <div className="h-2 bg-cosmic-900 rounded-full overflow-hidden mb-2">
             <div 
               className={`h-full transition-all duration-500 ${
-                progress.stage === 'complete' ? 'bg-green-500' : 
-                progress.stage === 'generating' ? 'bg-gold-500' : 
+                currentProgress.status === 'completed' ? 'bg-green-500' : 
+                currentProgress.status === 'running' ? 'bg-gold-500' : 
                 'bg-blue-500'
               }`}
-              style={{ width: `${progress.current}%` }}
+              style={{ width: `${currentProgress.progress}%` }}
             ></div>
           </div>
           
           <div className="flex items-center justify-between text-xs text-gray-400">
             <div className="flex items-center space-x-4">
-              <span className={`flex items-center ${progress.stage === 'preparing' ? 'text-blue-400' : 'text-gray-500'}`}>
-                <div className={`w-2 h-2 rounded-full mr-1 ${progress.stage === 'preparing' ? 'bg-blue-400 animate-pulse' : 'bg-gray-500'}`}></div>
+              <span className={`flex items-center ${currentProgress.status === 'pending' ? 'text-blue-400' : 'text-gray-500'}`}>
+                <div className={`w-2 h-2 rounded-full mr-1 ${currentProgress.status === 'pending' ? 'bg-blue-400 animate-pulse' : 'bg-gray-500'}`}></div>
                 準備
               </span>
-              <span className={`flex items-center ${progress.stage === 'generating' ? 'text-gold-400' : 'text-gray-500'}`}>
-                <div className={`w-2 h-2 rounded-full mr-1 ${progress.stage === 'generating' ? 'bg-gold-400 animate-pulse' : 'bg-gray-500'}`}></div>
+              <span className={`flex items-center ${currentProgress.status === 'running' ? 'text-gold-400' : 'text-gray-500'}`}>
+                <div className={`w-2 h-2 rounded-full mr-1 ${currentProgress.status === 'running' ? 'bg-gold-400 animate-pulse' : 'bg-gray-500'}`}></div>
                 生成
               </span>
-              <span className={`flex items-center ${progress.stage === 'processing' ? 'text-purple-400' : 'text-gray-500'}`}>
-                <div className={`w-2 h-2 rounded-full mr-1 ${progress.stage === 'processing' ? 'bg-purple-400 animate-pulse' : 'bg-gray-500'}`}></div>
+              <span className={`flex items-center ${currentProgress.status === 'running' && currentProgress.progress > 50 ? 'text-purple-400' : 'text-gray-500'}`}>
+                <div className={`w-2 h-2 rounded-full mr-1 ${currentProgress.status === 'running' && currentProgress.progress > 50 ? 'bg-purple-400 animate-pulse' : 'bg-gray-500'}`}></div>
                 處理
               </span>
-              <span className={`flex items-center ${progress.stage === 'complete' ? 'text-green-400' : 'text-gray-500'}`}>
-                <div className={`w-2 h-2 rounded-full mr-1 ${progress.stage === 'complete' ? 'bg-green-400' : 'bg-gray-500'}`}></div>
+              <span className={`flex items-center ${currentProgress.status === 'completed' ? 'text-green-400' : 'text-gray-500'}`}>
+                <div className={`w-2 h-2 rounded-full mr-1 ${currentProgress.status === 'completed' ? 'bg-green-400' : 'bg-gray-500'}`}></div>
                 完成
               </span>
             </div>

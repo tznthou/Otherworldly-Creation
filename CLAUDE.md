@@ -10,7 +10,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Performance Benefits**: 300% faster startup, 70% less memory usage, and 90% smaller application size compared to the previous dual-architecture system.
 
-**Latest Updates** (2025-08-02): AI Generation History system implementation, AI progress visualization enhancements, nested scrollbar system improvements, and comprehensive language purity control system.
+**Latest Updates** (2025-08-02): AI Generation History system implementation, AI progress visualization enhancements, nested scrollbar system improvements, comprehensive language purity control system, and major code quality improvements.
+
+**Code Quality Status**: 
+- ✅ Rust backend: Compiles without errors or warnings
+- ✅ Frontend build: Successful with minor performance warnings
+- ⚠️ TypeScript errors: Reduced from 100+ to 31 errors (68% improvement)
+- ⚠️ ESLint issues: Reduced from 270+ to 257 issues (5% improvement)
+- 🔧 Key fixes: ESLint config, AppError types, Redux dispatch types, database pragma usage
 
 ## Quick Start
 
@@ -21,8 +28,13 @@ npm install && cargo install tauri-cli
 # Start development environment
 npm run dev
 
-# Run diagnostics
+# Run diagnostics (may show legacy Electron warnings - can be ignored)
 npm run diagnostic
+
+# Key development commands for common tasks
+cargo check --manifest-path src-tauri/Cargo.toml  # Check Rust compilation
+npx tsc --noEmit                                   # Check TypeScript compilation
+npm run lint                                       # Code quality checks
 ```
 
 ## Essential Commands
@@ -30,9 +42,15 @@ npm run diagnostic
 ### Development
 - `npm run dev` - Start Tauri development (primary command)
 - `npm run dev:tauri` - Explicit Tauri development
-- `npm run dev:renderer` - Start Vite frontend only
+- `npm run dev:renderer` - Start Vite frontend only for UI development
 - `npm run lint` - Run ESLint with auto-fix support
 - `npm run diagnostic` - System environment diagnostics (legacy Electron checks, may show false positives)
+
+### Code Quality & Debugging
+- `cargo check --manifest-path src-tauri/Cargo.toml` - Check Rust compilation without building
+- `npx tsc --noEmit` - TypeScript type checking without compilation
+- `npm run build:renderer` - Test frontend build process
+- `cargo tauri build --debug` - Debug build with console access
 
 ### Testing
 - `npm test` - Run all tests with Jest
@@ -51,10 +69,21 @@ npm run diagnostic
 - `claude mcp remove serena` - Remove Serena MCP server configuration
 - **Required Setup**: Each project needs `.serena/project.yml` configuration file generated with `uvx --from git+https://github.com/oraios/serena serena project generate-yml`
 
-### Direct Commands
-- `cargo check --manifest-path src-tauri/Cargo.toml` - Check Rust compilation
-- `npx tsc --noEmit` - Check TypeScript compilation
-- `cargo tauri build --debug` - Debug build with console
+### Common Troubleshooting Commands
+```bash
+# When encountering build issues
+npm run clean && npm install              # Clean and reinstall dependencies
+cargo clean --manifest-path src-tauri/    # Clean Rust build cache
+
+# When database schema changes
+rm ~/.local/share/genesis-chronicle/genesis-chronicle.db  # Reset database (macOS/Linux)
+# Database will auto-recreate with latest schema on next run
+
+# When AI features aren't working
+ollama serve                               # Start Ollama service
+ollama list                               # Check installed models
+ollama pull llama3.2                     # Install recommended model
+```
 
 ## Architecture Overview
 
@@ -211,12 +240,54 @@ let enhanced_params = enhancer.enhance_parameters(base_params, purity_requiremen
 
 ## Critical Development Patterns
 
-### API Layer Architecture
+### API Layer Architecture (MANDATORY)
 The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **index.ts**: Exports single `api` object, always use this interface
 - **tauri.ts**: Tauri-specific implementation  
 - **types.ts**: TypeScript interfaces for all API operations
 - **Critical**: Never use direct `window.__TAURI__.*` calls, always use `api.*` methods
+
+```typescript
+// ✅ Correct: Use unified API
+import { api } from './api';
+const projects = await api.projects.getAll();
+
+// ❌ Wrong: Direct Tauri calls
+import { invoke } from '@tauri-apps/api/core';
+const projects = await invoke('get_all_projects');
+```
+
+### Redux Pattern with AppDispatch
+Always use typed dispatch for Redux operations:
+```typescript
+// ✅ Correct: Typed dispatch
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../store/store';
+const dispatch = useDispatch<AppDispatch>();
+
+// ❌ Wrong: Untyped dispatch
+const dispatch = useDispatch();
+```
+
+### Database Field Mapping (CRITICAL)
+**Always use explicit field names in SQL queries to avoid field mapping errors:**
+```rust
+// ✅ Correct: Explicit field names
+"SELECT id, name, description, created_at FROM projects WHERE id = ?"
+
+// ❌ Wrong: SELECT * causes field index mismatches
+"SELECT * FROM projects WHERE id = ?"
+```
+
+### Chinese Text Handling
+**Never use ASCII-only filters for Chinese content:**
+```rust
+// ✅ Correct: Unicode-aware filtering
+text.chars().filter(|c| c.is_alphanumeric() || c.is_whitespace()).collect()
+
+// ❌ Wrong: ASCII-only filtering breaks Chinese characters
+text.chars().filter(|c| c.is_ascii_alphanumeric()).collect()
+```
 
 ### Error Handling
 - **SimpleErrorBoundary**: Located in `src/renderer/src/components/UI/SimpleErrorBoundary.tsx`
@@ -729,3 +800,63 @@ npm run diagnostic
 - **TypeScript Improvements**: Fixed compilation errors, enhanced type safety, and standardized API parameter naming
 - **UI/UX Enhancements**: Improved error boundaries, modal systems, and visual feedback across all components
 - **Testing Infrastructure**: Comprehensive test scripts for AI services and progress visualization
+
+## Quick Reference for Common Tasks
+
+### Adding a New Tauri Command
+1. **Rust Backend** (`src-tauri/src/commands/[feature].rs`):
+   ```rust
+   #[tauri::command]
+   pub async fn new_command(param: String) -> Result<String, String> {
+       // Implementation
+   }
+   ```
+2. **Register in lib.rs**:
+   ```rust
+   .invoke_handler(tauri::generate_handler![new_command])
+   ```
+3. **Frontend API** (`src/renderer/src/api/types.ts` + `tauri.ts`):
+   ```typescript
+   newCommand: (param: string) => Promise<string>
+   ```
+
+### Adding a Redux Slice
+```typescript
+// In src/renderer/src/store/slices/featureSlice.ts
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
+export const fetchData = createAsyncThunk(
+  'feature/fetchData',
+  async (params: any, { rejectWithValue }) => {
+    try {
+      return await api.feature.getData(params);
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+```
+
+### Database Migration Pattern
+```rust
+// In src-tauri/src/database/migrations.rs
+pub fn migrate_to_v8(conn: &Connection) -> Result<(), rusqlite::Error> {
+    conn.execute("ALTER TABLE projects ADD COLUMN new_field TEXT", [])?;
+    conn.pragma_update(None, "user_version", 8)?;  // Use pragma_update, not execute
+    Ok(())
+}
+```
+
+### Error Object Creation
+```typescript
+// Always include id and timestamp for AppError
+const error: AppError = {
+  id: Date.now().toString(),
+  code: 'ERROR_CODE',
+  message: 'Error message',
+  severity: 'high' as ErrorSeverity,
+  category: 'ai',
+  timestamp: new Date(),
+  stack: error instanceof Error ? error.stack : undefined
+};
+```

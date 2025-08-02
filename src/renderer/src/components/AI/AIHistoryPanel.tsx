@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store/store';
+import { RootState, AppDispatch } from '../../store/store';
 import {
   queryAIHistory,
   markHistorySelected,
@@ -23,7 +23,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
   chapterId,
   onSelectHistory,
 }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { t } = useI18n();
   
   const {
