@@ -6,7 +6,8 @@ import { addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
 import { startProgress, updateProgress, completeProgress, failProgress } from '../../store/slices/errorSlice';
 import { store } from '../../store/store';
-import api from '../../api';
+import { api } from '../../api';
+import { ErrorSeverity } from '../../types/error';
 
 interface AIWritingPanelProps {
   projectId: string;
@@ -109,7 +110,8 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
       title: 'AI 續寫',
       description: `正在使用 ${currentModel} 模型生成文本`,
       totalSteps: generationCount,
-      completedSteps: 0
+      completedSteps: 0,
+      progress: 0
     }));
     
     // 等待一小段時間以確保進度已創建
@@ -229,7 +231,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
           error: {
             code: 'AI_GENERATION_ERROR',
             message: error instanceof Error ? error.message : '生成文本時發生錯誤',
-            severity: 'error',
+            severity: 'error' as ErrorSeverity,
             category: 'ai',
             stack: error instanceof Error ? error.stack : undefined
           }
@@ -296,7 +298,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
     }
     setGenerationOptions([]);
     setIsGenerating(false);
-    updateProgress('preparing', 0, '已取消');
+    // 取消操作，暫時不更新進度
   }, [updateProgress]);
 
   // 重新生成特定選項
@@ -355,7 +357,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
   // 清除所有選項
   const handleClearOptions = useCallback(() => {
     setGenerationOptions([]);
-    updateProgress('preparing', 0, '準備中...');
+    // 清除選項，暫時不更新進度
   }, [updateProgress]);
   
   return (

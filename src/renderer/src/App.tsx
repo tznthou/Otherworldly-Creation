@@ -18,6 +18,7 @@ import ErrorFallback from './components/UI/ErrorFallback';
 import { SystemStatusPanel } from './components/UI/StatusIndicator';
 import TutorialOverlay, { useTutorial } from './components/Tutorial/TutorialOverlay';
 import HelpButton from './components/Help/HelpButton';
+import { api } from './api';
 import QuickHelp from './components/Help/QuickHelp';
 import { firstTimeTutorial } from './data/tutorialSteps';
 import { useAppDispatch } from './hooks/redux';
@@ -44,12 +45,7 @@ const UnknownPageComponent: React.FC = () => {
           <p className="text-sm text-gray-300 mb-2">Full URL: {window.location.href}</p>
           <p className="text-sm text-gray-300">Hash: {window.location.hash || '無'}</p>
         </div>
-        {console.log('路由調試 - React Router:', location)}
-        {console.log('路由調試 - Window:', {
-          pathname: window.location.pathname,
-          href: window.location.href,
-          hash: window.location.hash
-        })}
+        {/* 路由調試輸出 */}
         <button 
           onClick={() => window.history.back()} 
           className="btn-primary"
@@ -193,7 +189,7 @@ const AppContent: React.FC = () => {
                 <div className="text-center">
                   <h1 className="text-2xl font-cosmic text-gold-500 mb-4">💾 資料管理</h1>
                   <p className="text-gray-300 mb-4">資料管理頁面正常工作！</p>
-                  {console.log('Database Maintenance 路由匹配成功')}
+                  {/* Database Maintenance 路由 */}
                 </div>
               </div>
             } />

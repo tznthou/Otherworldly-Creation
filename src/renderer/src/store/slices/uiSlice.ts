@@ -22,6 +22,7 @@ interface UIState {
     backupManager: boolean;
     helpCenter: boolean;
     updateManager: boolean;
+    testModal: boolean; // 用於測試的模態框
   };
   loading: {
     global: boolean;
@@ -64,6 +65,7 @@ const initialState: UIState = {
     backupManager: false,
     helpCenter: false,
     updateManager: false,
+    testModal: false,
   },
   loading: {
     global: false,

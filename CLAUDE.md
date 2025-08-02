@@ -10,6 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Performance Benefits**: 300% faster startup, 70% less memory usage, and 90% smaller application size compared to the previous dual-architecture system.
 
+**Latest Updates** (2025-08-02): AI Generation History system implementation, AI progress visualization enhancements, nested scrollbar system improvements, and comprehensive language purity control system.
+
 ## Quick Start
 
 ```bash
@@ -59,10 +61,11 @@ npm run diagnostic
 ### Single Tauri Architecture (v1.0.0)
 
 **Backend** (`src-tauri/src/`):
-- **Rust Backend**: Tauri v2.0 with rusqlite for SQLite operations
+- **Rust Backend**: Tauri v2.7.0 with rusqlite for SQLite operations
 - **Commands** (`src-tauri/src/commands/`): Tauri command handlers organized by feature
-- **Database** (`src-tauri/src/database/`): SQLite models, migrations, and connection management
+- **Database** (`src-tauri/src/database/`): SQLite models, migrations, and connection management (current: v7)
 - **Services** (`src-tauri/src/services/`): Business logic (Ollama AI integration)
+- **Utils** (`src-tauri/src/utils/`): Language purity enforcement system
 
 **Frontend** (`src/renderer/`):
 - **Framework**: React 18 + TypeScript + Tailwind CSS
@@ -82,6 +85,7 @@ npm run diagnostic
 - **Chapters**: `get_chapters_by_project_id`, `get_chapter_by_id`, `create_chapter`, `update_chapter`, `delete_chapter`
 - **Characters**: `get_characters_by_project_id`, `create_character`, `update_character`, `delete_character`
 - **Relationships**: `create_character_relationship`, `delete_character_relationship`, `get_character_relationships`
+- **AI History**: `create_ai_history`, `query_ai_history`, `mark_ai_history_selected`, `delete_ai_history`, `cleanup_ai_history`
 
 **AI & Context Commands**:
 - **AI Service**: `check_ollama_service`, `get_service_status`, `list_models`, `get_models_info`, `generate_text`
@@ -183,10 +187,11 @@ let enhanced_params = enhancer.enhance_parameters(base_params, purity_requiremen
 - **chapters**: id, project_id, title, content, order_index, created_at, updated_at  
 - **characters**: id, project_id, name, description, attributes, avatar_url, created_at, updated_at
 - **character_relationships**: id, from_character_id, to_character_id, relationship_type, description, created_at, updated_at
+- **ai_generation_history**: id, project_id, chapter_id, model, prompt, generated_text, parameters, language_purity, token_count, generation_time_ms, selected, position, created_at
 - **settings**: key, value, created_at, updated_at
 
 **Database Location**: `~/{AppData}/genesis-chronicle/genesis-chronicle.db`
-**Migration System**: Automatic migrations in `src-tauri/src/database/migrations.rs` (current version: 6)
+**Migration System**: Automatic migrations in `src-tauri/src/database/migrations.rs` (current version: 7)
 **Critical**: Always use explicit field names in SQL queries to avoid field mapping errors
 
 ### Redux State Architecture
@@ -196,6 +201,7 @@ let enhanced_params = enhancer.enhance_parameters(base_params, purity_requiremen
 - **chaptersSlice**: Chapter management, content editing, auto-save state, word count calculation
 - **charactersSlice**: Character CRUD, relationship management, archetype application, search/filter
 - **aiSlice**: Ollama service status, model management, text generation, parameters configuration
+- **aiHistorySlice**: AI generation history tracking, CRUD operations, selection management, pagination
 - **templatesSlice**: Template system, filtering/sorting, custom template creation, project application
 - **settingsSlice**: Application settings, AI configuration, editor preferences, backup settings
 - **uiSlice**: Modal management, notifications, theme switching, sidebar state, global loading
@@ -287,6 +293,62 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - Professional visual feedback matching application theme
 - Intelligent error reporting with actionable suggestions
 
+### AI Generation History System (v1.0.0+)
+
+**Overview**: Comprehensive tracking and management system for all AI generation activities, providing detailed history, analytics, and reusability features for generated content.
+
+**Core Components**:
+- **Database Storage** (`ai_generation_history` table): Complete generation history with metadata
+  - Generation parameters, model information, timing data
+  - Language purity scores and token count tracking
+  - Selection status and position context
+  - Automatic cleanup and retention management
+
+**Key Features**:
+- **Automatic History Saving**: Every AI generation automatically saved with full context
+- **Generation Analytics**: Performance metrics, token usage, and language purity scoring
+- **History Query System**: Flexible filtering by project, chapter, selection status, and date ranges
+- **Selection Tracking**: Mark and track which generations were actually used
+- **Cleanup Management**: Automatic cleanup of old entries while preserving selected generations
+
+**API Commands**:
+- `create_ai_history(history_data)` - Save new generation with metadata
+- `query_ai_history(filters)` - Query history with flexible filtering options
+- `mark_ai_history_selected(history_id, project_id)` - Mark generation as used
+- `delete_ai_history(history_id)` - Delete specific history entry
+- `cleanup_ai_history(project_id, keep_count)` - Automatic cleanup of old entries
+
+**Integration Points**:
+- **SimpleAIWritingPanel**: Automatic history saving after each successful generation
+- **Redux State Management**: Full integration with aiHistorySlice for state tracking
+- **Performance Metrics**: Integration with language purity analysis and token counting
+- **Future UI Components**: Prepared for history browsing and analytics interfaces
+
+**Data Structure**:
+```typescript
+interface AIGenerationHistory {
+  id: string;
+  projectId: string;
+  chapterId: string;
+  model: string;
+  prompt: string;
+  generatedText: string;
+  parameters?: any;
+  languagePurity?: number;
+  tokenCount?: number;
+  generationTimeMs?: number;
+  selected: boolean;
+  position?: number;
+  createdAt: Date;
+}
+```
+
+**Benefits**:
+- **Quality Improvement**: Track which parameters and models produce best results
+- **Performance Analysis**: Monitor generation speed and efficiency trends  
+- **Content Reuse**: Access to previously generated content for inspiration
+- **Analytics Ready**: Foundation for detailed AI usage analytics and optimization
+
 ## Key Development Workflows
 
 ### Adding New Tauri Commands
@@ -312,13 +374,17 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 
 **Current Todo System**: The project uses a structured todo list for tracking development progress and maintaining focus on priority tasks.
 
-**Active Tasks** (as of 2025-08-02):
+**Completed Tasks** (as of 2025-08-02):
 - ✅ Ollama service modifications and configuration
-- ✅ AI service testing infrastructure
+- ✅ AI service testing infrastructure  
 - ✅ Language purity control optimization
-- ✅ AI generation progress visualization
-- 🔲 AI generation history feature implementation (Priority: Low)
-- 🔲 Language purity control strategy fine-tuning (Priority: High)
+- ✅ AI generation progress visualization (AIGenerationProgress component)
+- ✅ AI generation history feature implementation (complete CRUD system)
+- ✅ AI generation history UI interface (AIHistoryPanel component)
+- ✅ AI progress panel color contrast fixes
+- ✅ API parameter naming standardization (camelCase consistency)
+- ✅ Nested scrollbar system improvements
+- ✅ TypeScript compilation fixes across all components
 
 **Task Prioritization**:
 - **High Priority**: Core functionality improvements, bug fixes, performance optimizations
@@ -442,6 +508,10 @@ The project uses a unified API abstraction in `src/renderer/src/api/`:
 - **API Commands**: `build_separated_context`, `estimate_separated_context_tokens`, `generate_with_separated_context`
 
 **Recent Critical Fixes (2025-08-02)**:
+- **AI Generation History Implementation** (Database Migration v7 + Full Stack): Complete CRUD system for tracking AI generations with automatic saving, history management, and analytics preparation
+- **TypeScript Compilation Fixes** (Multiple files): Resolved all TypeScript errors including React imports, type guards, modal definitions, and progress indicator types
+- **Database Connection Standardization** (`src-tauri/src/commands/ai_history.rs`): Fixed database connection method naming from `get_connection()` to `get_db()` for consistency
+- **Error Object Type Checking** (`src/renderer/src/api/tauri.ts`): Added proper type guards for error objects: `typeof error === 'object' && 'message' in error`
 - **Nested Scrollbar System Resolution** (`src/renderer/src/index.css`): Implemented 16px gold-themed scrollbars with proper `!important` declarations to override Tailwind reset, supporting dual-layer scrolling for page and editor content
 - **Error Boundary Reference Fix** (`src/renderer/src/components/UI/SimpleErrorBoundary.tsx`): Corrected component export paths to prevent runtime errors during error handling
 - **ESLint Configuration Update** (`.eslintrc.js`): Fixed TypeScript ESLint configuration to use correct plugin format and removed invalid tsconfig references
@@ -642,7 +712,7 @@ npm run diagnostic
 ## Version Information
 
 **Current Version**: v1.0.0+ (Pure Tauri Architecture with Context Engineering & Progress Visualization)
-**Latest Update**: AI Generation Progress Visualization system implementation (2025-08-02)
+**Latest Update**: AI Generation History & Progress Visualization systems completed (2025-08-02)
 **Tauri Version**: v2.7.0
 **React Version**: 18.2.0
 **Ollama Version**: v0.10.1
@@ -651,9 +721,11 @@ npm run diagnostic
 **Build Target**: Cross-platform desktop application
 
 **Recent Updates**:
-- AI Progress Visualization: Comprehensive progress tracking with real-time statistics and animations
-- Language Purity Control: Advanced detection and enforcement system for Traditional Chinese
-- Nested Scrollbar System: 16px gold-themed scrollbars with cosmic theme integration
-- Context Engineering: 29.8% token savings achieved through separated context architecture
-- UI/UX Enhancements: Improved error boundaries, modal systems, and visual feedback
-- Testing Infrastructure: Comprehensive test scripts for AI services and progress visualization
+- **AI Generation History System**: Complete CRUD implementation with automatic tracking, analytics preparation, and full UI integration
+- **AI Progress Visualization**: Comprehensive progress tracking with real-time statistics, animations, and cosmic theme integration
+- **Language Purity Control**: Advanced detection and enforcement system for Traditional Chinese text generation
+- **Nested Scrollbar System**: 16px gold-themed scrollbars with cosmic theme integration and dual-layer scrolling support
+- **Context Engineering**: 29.8% token savings achieved through separated context architecture
+- **TypeScript Improvements**: Fixed compilation errors, enhanced type safety, and standardized API parameter naming
+- **UI/UX Enhancements**: Improved error boundaries, modal systems, and visual feedback across all components
+- **Testing Infrastructure**: Comprehensive test scripts for AI services and progress visualization

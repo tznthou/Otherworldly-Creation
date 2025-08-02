@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 6;
+const DB_VERSION: i32 = 7;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -56,6 +56,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v6(conn)?;
             update_version(conn, 6)?;
             log::info!("遷移到版本 6 完成");
+        }
+        
+        if current_version < 7 {
+            apply_migration_v7(conn)?;
+            update_version(conn, 7)?;
+            log::info!("遷移到版本 7 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -486,6 +492,58 @@ fn apply_migration_v6(conn: &Connection) -> Result<()> {
     } else {
         log::info!("settings 表已存在，跳過創建");
     }
+    
+    Ok(())
+}
+
+/// 版本 7: 新增 AI 生成歷史記錄表
+fn apply_migration_v7(conn: &Connection) -> Result<()> {
+    log::info!("版本 7 遷移：新增 AI 生成歷史記錄表");
+    
+    // 創建 AI 生成歷史記錄表
+    conn.execute(
+        "CREATE TABLE ai_generation_history (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            chapter_id TEXT NOT NULL,
+            model TEXT NOT NULL,
+            prompt TEXT NOT NULL,
+            generated_text TEXT NOT NULL,
+            parameters TEXT, -- JSON string containing generation parameters
+            language_purity REAL, -- 語言純度分數 (0-100)
+            token_count INTEGER,
+            generation_time_ms INTEGER,
+            selected BOOLEAN DEFAULT 0, -- 是否被用戶選擇使用
+            position INTEGER, -- 在章節中的位置
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
+            FOREIGN KEY (chapter_id) REFERENCES chapters (id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    
+    // 創建索引以提高查詢效能
+    conn.execute(
+        "CREATE INDEX idx_ai_history_project ON ai_generation_history (project_id)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX idx_ai_history_chapter ON ai_generation_history (chapter_id)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX idx_ai_history_created ON ai_generation_history (created_at DESC)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX idx_ai_history_selected ON ai_generation_history (project_id, selected)",
+        [],
+    )?;
+    
+    log::info!("AI 生成歷史記錄表創建成功");
     
     Ok(())
 }

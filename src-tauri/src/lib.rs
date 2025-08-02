@@ -20,6 +20,7 @@ use commands::ai::{
 use commands::context::{build_context, compress_context, get_context_stats, build_separated_context, estimate_separated_context_tokens, analyze_text_purity, enhance_generation_parameters};
 use commands::settings::{get_setting, set_setting, get_all_settings, reset_settings};
 use commands::database::{backup_database, restore_database, run_database_maintenance, get_database_stats, health_check};
+use commands::ai_history::{create_ai_history, query_ai_history, mark_ai_history_selected, delete_ai_history, cleanup_ai_history};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -107,6 +108,12 @@ pub fn run() {
       run_database_maintenance,
       get_database_stats,
       health_check,
+      // AI History commands
+      create_ai_history,
+      query_ai_history,
+      mark_ai_history_selected,
+      delete_ai_history,
+      cleanup_ai_history,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

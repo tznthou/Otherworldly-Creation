@@ -112,3 +112,46 @@ pub struct UpdateCharacterRequest {
     pub attributes: Option<String>,
     pub avatar_url: Option<String>,
 }
+
+// AI 生成歷史記錄模型
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AIGenerationHistory {
+    pub id: String,
+    pub project_id: String,
+    pub chapter_id: String,
+    pub model: String,
+    pub prompt: String,
+    pub generated_text: String,
+    pub parameters: Option<String>, // JSON string
+    pub language_purity: Option<f64>,
+    pub token_count: Option<i32>,
+    pub generation_time_ms: Option<i32>,
+    pub selected: bool,
+    pub position: Option<i32>,
+    pub created_at: DateTime<Utc>,
+}
+
+// 新增 AI 生成歷史記錄的請求結構
+#[derive(Debug, Deserialize)]
+pub struct CreateAIHistoryRequest {
+    pub project_id: String,
+    pub chapter_id: String,
+    pub model: String,
+    pub prompt: String,
+    pub generated_text: String,
+    pub parameters: Option<String>,
+    pub language_purity: Option<f64>,
+    pub token_count: Option<i32>,
+    pub generation_time_ms: Option<i32>,
+    pub position: Option<i32>,
+}
+
+// 查詢 AI 生成歷史記錄的請求結構
+#[derive(Debug, Deserialize)]
+pub struct QueryAIHistoryRequest {
+    pub project_id: Option<String>,
+    pub chapter_id: Option<String>,
+    pub selected_only: Option<bool>,
+    pub limit: Option<i32>,
+    pub offset: Option<i32>,
+}

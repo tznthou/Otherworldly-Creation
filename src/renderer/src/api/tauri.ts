@@ -118,13 +118,13 @@ const safeInvoke = async (command: string, args?: any) => {
     console.error(`Tauri command ${command} failed:`, error);
     
     // 特別處理 callbackId 相關錯誤
-    if (error && error.message && error.message.includes('callbackId')) {
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && error.message.includes('callbackId')) {
       console.error('檢測到 Tauri 回調錯誤，可能是版本不匹配問題');
       throw new Error(`Tauri 回調機制錯誤 - 命令: ${command}`);
     }
     
     // 提供更詳細的錯誤信息
-    if (error && error.message && error.message.includes('not available')) {
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && error.message.includes('not available')) {
       throw new Error(`Tauri 命令 ${command} 不可用 - 請確保在 Tauri 環境中運行`);
     }
     
@@ -171,7 +171,7 @@ const enhancedSafeInvoke = async (command: string, args?: any) => {
     console.error(`enhancedSafeInvoke 錯誤 (${command}):`, error);
     
     // 特別處理 callbackId 相關錯誤
-    if (error && error.message && (
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && (
       error.message.includes('callbackId') || 
       error.message.includes('undefined is not an object')
     )) {
@@ -180,7 +180,7 @@ const enhancedSafeInvoke = async (command: string, args?: any) => {
     }
     
     // 在開發模式下，如果是特定的命令錯誤，提供模擬資料
-    if (error && error.message && (
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && (
       error.message.includes('不可用') || 
       error.message.includes('not available') ||
       error.message.includes('無法找到 Tauri invoke')
@@ -298,7 +298,7 @@ export const tauriAPI: API = {
       // 轉換 Tauri 格式到前端格式，並載入關係資料
       const charactersWithRelationships = await Promise.all(
         characters.map(async (char: any) => {
-          let attributes = {};
+          let attributes: any = {};
           try {
             attributes = char.attributes ? JSON.parse(char.attributes) : {};
           } catch (e) {
@@ -374,7 +374,7 @@ export const tauriAPI: API = {
     delete: (id) => safeInvoke('delete_character', { id }),
     getById: async (id) => {
       const char = await safeInvoke('get_character_by_id', { id });
-      let attributes = {};
+      let attributes: any = {};
       try {
         attributes = char.attributes ? JSON.parse(char.attributes) : {};
       } catch (e) {
@@ -473,7 +473,7 @@ export const tauriAPI: API = {
     getAll: async () => {
       const settingsArray = await enhancedSafeInvoke('get_all_settings');
       // 將 SettingEntry[] 轉換為物件格式
-      const settings = {};
+      const settings: Record<string, any> = {};
       for (const entry of settingsArray || []) {
         try {
           settings[entry.key] = JSON.parse(entry.value);
@@ -517,5 +517,69 @@ export const tauriAPI: API = {
     downloadUpdate: () => safeInvoke('download_update'),
     installUpdate: () => safeInvoke('install_update'),
     setAutoUpdate: (enabled) => safeInvoke('set_auto_update', { enabled }),
+  },
+
+  aiHistory: {
+    create: async (history) => {
+      const createRequest = {
+        project_id: history.projectId,
+        chapter_id: history.chapterId,
+        model: history.model,
+        prompt: history.prompt,
+        generated_text: history.generatedText,
+        parameters: history.parameters ? JSON.stringify(history.parameters) : null,
+        language_purity: history.languagePurity,
+        token_count: history.tokenCount,
+        generation_time_ms: history.generationTimeMs,
+        position: history.position,
+      };
+      const result = await safeInvoke('create_ai_history', { request: createRequest });
+      return {
+        id: result.id,
+        projectId: result.project_id,
+        chapterId: result.chapter_id,
+        model: result.model,
+        prompt: result.prompt,
+        generatedText: result.generated_text,
+        parameters: result.parameters ? JSON.parse(result.parameters) : null,
+        languagePurity: result.language_purity,
+        tokenCount: result.token_count,
+        generationTimeMs: result.generation_time_ms,
+        selected: result.selected,
+        position: result.position,
+        createdAt: new Date(result.created_at),
+      };
+    },
+    query: async (params) => {
+      const queryRequest = {
+        project_id: params.projectId,
+        chapter_id: params.chapterId,
+        selected_only: params.selectedOnly,
+        limit: params.limit,
+        offset: params.offset,
+      };
+      const results = await safeInvoke('query_ai_history', { request: queryRequest });
+      return results.map((result: any) => ({
+        id: result.id,
+        projectId: result.project_id,
+        chapterId: result.chapter_id,
+        model: result.model,
+        prompt: result.prompt,
+        generatedText: result.generated_text,
+        parameters: result.parameters ? JSON.parse(result.parameters) : null,
+        languagePurity: result.language_purity,
+        tokenCount: result.token_count,
+        generationTimeMs: result.generation_time_ms,
+        selected: result.selected,
+        position: result.position,
+        createdAt: new Date(result.created_at),
+      }));
+    },
+    markSelected: (historyId, projectId) => 
+      safeInvoke('mark_ai_history_selected', { historyId, projectId }),
+    delete: (historyId) => 
+      safeInvoke('delete_ai_history', { historyId }),
+    cleanup: (projectId, keepCount) => 
+      safeInvoke('cleanup_ai_history', { projectId, keepCount }),
   },
 };

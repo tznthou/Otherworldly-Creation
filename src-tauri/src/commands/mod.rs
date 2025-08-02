@@ -6,3 +6,4 @@ pub mod ai;
 pub mod context;
 pub mod settings;
 pub mod database;
+pub mod ai_history;

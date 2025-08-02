@@ -1,3 +1,4 @@
+import React from 'react';
 import { AppError, ErrorCategory, ErrorSeverity, ERROR_CODES } from '../types/error';
 import { store } from '../store/store';
 import { addError } from '../store/slices/errorSlice';

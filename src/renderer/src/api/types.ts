@@ -83,4 +83,13 @@ export interface API {
     installUpdate: () => Promise<void>;
     setAutoUpdate: (enabled: boolean) => Promise<void>;
   };
+
+  // AI 歷史記錄管理
+  aiHistory: {
+    create: (history: any) => Promise<any>;
+    query: (params: any) => Promise<any[]>;
+    markSelected: (historyId: string, projectId: string) => Promise<void>;
+    delete: (historyId: string) => Promise<void>;
+    cleanup: (projectId: string, keepCount: number) => Promise<number>;
+  };
 }

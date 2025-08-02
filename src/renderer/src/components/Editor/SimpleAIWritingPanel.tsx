@@ -3,9 +3,12 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
 import { startProgress, updateProgress, completeProgress, failProgress, removeProgress, selectProgressById } from '../../store/slices/errorSlice';
+import { createAIHistory, AIGenerationHistory } from '../../store/slices/aiHistorySlice';
 import { store } from '../../store/store';
 import { api } from '../../api';
 import { AIGenerationProgress } from '../AI';
+import AIHistoryPanel from '../AI/AIHistoryPanel';
+import { ErrorSeverity } from '../../types/error';
 
 interface SimpleAIWritingPanelProps {
   projectId: string;
@@ -82,10 +85,11 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
   const [progressId, setProgressId] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   
   // 從 Redux store 獲取 AI 相關狀態
   const { currentModel, availableModels, isOllamaConnected } = useAppSelector(state => state.ai);
-  const currentLanguage = useAppSelector(state => state.settings.language);
+  const currentLanguage = 'zh-TW'; // 固定使用繁體中文
   
   // 獲取當前進度信息
   const currentProgress = useAppSelector(state => 
@@ -158,7 +162,8 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       title: 'AI 續寫',
       description: `正在使用 ${currentModel} 模型生成文本`,
       totalSteps: generationCount,
-      completedSteps: 0
+      completedSteps: 0,
+      progress: 0
     }));
     
     // 從 store 獲取最新的進度 ID
@@ -222,6 +227,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
             }));
           }
           
+          const startTime = Date.now();
           const result = await api.ai.generateWithContext(
             projectId, 
             chapterId, 
@@ -230,10 +236,32 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
             params,
             currentLanguage
           );
+          const generationTime = Date.now() - startTime;
+          
+          const filteredText = filterThinkingTags(result);
+          
+          // 保存到 AI 歷史記錄
+          try {
+            await dispatch(createAIHistory({
+              projectId,
+              chapterId,
+              model: currentModel,
+              prompt: `在位置 ${currentPosition} 進行 AI 續寫`,
+              generatedText: filteredText,
+              parameters: params,
+              languagePurity: undefined, // 稍後可以整合語言純度分析
+              tokenCount: undefined, // 稍後可以添加 token 計數
+              generationTimeMs: generationTime,
+              position: currentPosition,
+            })).unwrap();
+          } catch (historyError) {
+            console.error('保存 AI 歷史記錄失敗:', historyError);
+            // 不中斷主流程
+          }
           
           results.push({
             id: `${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
-            text: filterThinkingTags(result),
+            text: filteredText,
             temperature: params.temperature,
             timestamp: new Date()
           });
@@ -305,7 +333,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
           error: {
             code: 'AI_GENERATION_ERROR',
             message: error instanceof Error ? error.message : '生成文本時發生錯誤',
-            severity: 'error',
+            severity: 'error' as ErrorSeverity,
             category: 'ai',
             stack: error instanceof Error ? error.stack : undefined
           }
@@ -373,12 +401,44 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     setIsGenerating(false);
   }, []);
 
+  // 處理從歷史記錄選擇文本
+  const handleSelectFromHistory = useCallback((history: AIGenerationHistory) => {
+    // 直接插入歷史記錄中的文本
+    onInsertText(filterThinkingTags(history.generatedText));
+    
+    dispatch(addNotification({
+      type: 'success',
+      title: '已插入歷史記錄',
+      message: `已成功插入來自 ${history.model} 的生成文本`,
+      duration: 3000,
+    }));
+    
+    // 關閉歷史記錄面板
+    setShowHistory(false);
+  }, [onInsertText, dispatch]);
+
   
   return (
     <div className="bg-cosmic-900 border-t border-cosmic-700 p-4 rounded-lg">
       
       <div className="mb-4">
-        <h3 className="text-lg font-medium text-gold-400 mb-2">AI 續寫</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-medium text-gold-400">AI 續寫</h3>
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className={`px-3 py-1 rounded-md text-sm transition-colors ${
+              showHistory 
+                ? 'bg-gold-600 text-white' 
+                : 'bg-cosmic-800 text-gold-400 hover:bg-cosmic-700'
+            }`}
+            title="AI 生成歷史記錄"
+          >
+            <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            歷史記錄
+          </button>
+        </div>
         <p className="text-sm text-gray-400">
           AI 將根據當前位置的上下文生成續寫內容
         </p>
@@ -565,6 +625,17 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* AI 生成歷史記錄面板 */}
+      {showHistory && (
+        <div className="mt-6">
+          <AIHistoryPanel
+            projectId={projectId}
+            chapterId={chapterId}
+            onSelectHistory={handleSelectFromHistory}
+          />
         </div>
       )}
     </div>
