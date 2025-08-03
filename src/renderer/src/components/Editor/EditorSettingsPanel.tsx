@@ -13,7 +13,6 @@ import {
   setTextAlign,
   setTheme,
   setReadingModeWidth,
-  setReadingModeOpacity,
   toggleAutoSave,
   setAutoSaveInterval,
   toggleSpellCheck,
@@ -24,7 +23,6 @@ import {
 } from '../../store/slices/editorSlice';
 import { FONT_OPTIONS, THEME_OPTIONS } from '../../types/editor';
 import CosmicButton from '../UI/CosmicButton';
-import CosmicInput from '../UI/CosmicInput';
 
 interface EditorSettingsPanelProps {
   className?: string;

@@ -3,9 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { createProject } from '../../store/slices/projectsSlice';
 import { closeModal } from '../../store/slices/uiSlice';
 import { fetchAvailableModels } from '../../store/slices/aiSlice';
-import { fetchAllTemplates, selectTemplatesByType } from '../../store/slices/templatesSlice';
-import { TemplateApplicationWizard } from '../Templates/TemplateApplicationWizard';
-import { NovelTemplate, TemplateType, TemplateApplicationResult } from '../../types/template';
+import { fetchAllTemplates } from '../../store/slices/templatesSlice';
 
 interface ProjectType {
   id: 'isekai' | 'school' | 'scifi' | 'fantasy';

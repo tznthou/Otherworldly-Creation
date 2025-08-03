@@ -1,5 +1,4 @@
 import React from 'react';
-import { useAppDispatch } from '../../../hooks/redux';
 import { updateSettings } from '../../../store/slices/settingsSlice';
 import { SettingsComponentProps } from '../types';
 import { useI18n } from '../../../hooks/useI18n';

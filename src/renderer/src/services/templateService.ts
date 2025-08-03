@@ -268,7 +268,7 @@ export class TemplateService {
       throw new Error('找不到要複製的模板');
     }
 
-    const { id: originalId, createdAt, updatedAt, ...clonedTemplate } = {
+    const { id: _originalId, createdAt: _createdAt, updatedAt: _updatedAt, ...clonedTemplate } = {
       ...originalTemplate,
       name: newName || `${originalTemplate.name} (副本)`,
       isCustom: true
@@ -454,7 +454,7 @@ export class TemplateService {
       const templateData = JSON.parse(templateJson) as NovelTemplate;
       
       // 移除 ID 和時間戳，讓系統重新生成
-      const { id, createdAt, updatedAt, ...importData } = templateData;
+      const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...importData } = templateData;
       
       return this.createCustomTemplate(importData);
     } catch (error) {

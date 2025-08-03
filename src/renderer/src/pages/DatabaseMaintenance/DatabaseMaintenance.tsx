@@ -5,7 +5,6 @@ import { Badge } from '../../components/UI/Badge';
 import { Progress } from '../../components/UI/Progress';
 import { Alert, AlertDescription } from '../../components/UI/Alert';
 import api from '../../api';
-import { isTauri } from '../../api';
 import { 
   Database, 
   CheckCircle, 

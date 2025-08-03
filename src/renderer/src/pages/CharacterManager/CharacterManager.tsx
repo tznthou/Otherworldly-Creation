@@ -30,10 +30,10 @@ const CharacterManager: React.FC = () => {
     currentStep,
     currentTutorialId,
     setCurrentStep,
-    startTutorial,
+    startTutorial: _startTutorial,
     completeTutorial,
     skipTutorial,
-    isTutorialCompleted
+    isTutorialCompleted: _isTutorialCompleted
   } = useTutorial();
 
   // 載入角色列表

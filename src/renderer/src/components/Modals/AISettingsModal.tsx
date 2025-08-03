@@ -8,7 +8,7 @@ const AISettingsModal: React.FC = () => {
   const dispatch = useAppDispatch();
   const currentModel = useAppSelector(state => state.ai.currentModel);
   const modalRef = useRef<HTMLDivElement>(null);
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const [_forceUpdate, __setForceUpdate] = useState(0);
   
   const [settings, setSettings] = useState({
     baseUrl: 'http://127.0.0.1:11434',
@@ -36,7 +36,7 @@ const AISettingsModal: React.FC = () => {
     
     // 強制觸發重新渲染以修復初始顯示問題
     const timer = setTimeout(() => {
-      setForceUpdate(prev => prev + 1);
+      __setForceUpdate((prev: number) => prev + 1);
       // 觸發 resize 事件以強制瀏覽器重新計算佈局
       window.dispatchEvent(new Event('resize'));
     }, 50);
@@ -64,8 +64,8 @@ const AISettingsModal: React.FC = () => {
         models,
         loading: false,
       });
-    } catch (error) {
-      console.error('檢查服務狀態失敗:', error);
+    } catch (_error) {
+      console.error('檢查服務狀態失敗:', _error);
       setServiceStatus({
         available: false,
         models: [],
@@ -109,12 +109,12 @@ const AISettingsModal: React.FC = () => {
       } else {
         throw new Error(result.error || '更新設定失敗');
       }
-    } catch (error) {
-      console.error('更新 AI 設定失敗:', error);
+    } catch (_error) {
+      console.error('更新 AI 設定失敗:', _error);
       dispatch(addNotification({
         type: 'error',
         title: '更新失敗',
-        message: error instanceof Error ? error.message : '更新 AI 設定時發生錯誤',
+        message: _error instanceof Error ? _error.message : '更新 AI 設定時發生錯誤',
         duration: 5000,
       }));
     } finally {
@@ -136,7 +136,7 @@ const AISettingsModal: React.FC = () => {
       if (available) {
         await checkServiceStatus();
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch(addNotification({
         type: 'error',
         title: '連接測試失敗',

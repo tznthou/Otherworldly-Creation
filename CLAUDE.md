@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -8,25 +8,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 **Architecture**: Pure Tauri v2.7.0 (v1.0.0+) - 300% faster startup, 70% less memory, 90% smaller size
 **Latest Updates** (2025-08-03): TypeScript Error Resolution Complete, AI Generation History, Progress Visualization, Language Purity Control
-**Code Quality**: ✅ Rust: Clean | ✅ TypeScript: 0 errors | ⚠️ ESLint: 269 issues (mostly any type warnings)
-
-## Quick Start
-
-```bash
-# Install dependencies and Tauri CLI
-npm install && cargo install tauri-cli
-
-# Start development environment
-npm run dev
-
-# Run diagnostics (may show legacy Electron warnings - can be ignored)
-npm run diagnostic
-
-# Key development commands for common tasks
-cargo check --manifest-path src-tauri/Cargo.toml  # Check Rust compilation
-npx tsc --noEmit                                   # Check TypeScript compilation
-npm run lint                                       # Code quality checks
-```
+**Code Quality**: ✅ Rust: Clean | ✅ TypeScript: 0 errors | ⚠️ ESLint: 179 warnings (any type only)
 
 ## Essential Commands
 
@@ -63,55 +45,25 @@ ollama pull llama3.2                     # Install recommended model
 
 ## Architecture Overview
 
-### Architecture
+### Backend (`src-tauri/`)
+**Stack**: Rust + Tauri v2.7.0 + SQLite (rusqlite)
+- **Commands**: Feature-organized handlers in `src/commands/` (system, project, chapter, character, ai, context, settings, database, ai_history)
+- **Database**: Migration system (current v7) with automatic schema updates
+- **Services**: Ollama integration for AI text generation
+- **Utils**: Language purity enforcement, text processing utilities
 
-**Backend** (`src-tauri/`): Rust + Tauri v2.7.0 + SQLite (rusqlite)
-- Commands: Feature-organized handlers
-- Database: Migrations system (v7)
-- Services: Ollama AI integration
-- Utils: Language purity enforcement
-
-**Frontend** (`src/renderer/`): React 18 + TypeScript + Redux Toolkit + Tailwind CSS
-- Editor: Slate.js rich text
-- Theme: Cosmic dark + gold accents
-- i18n: JSON-based (zh-TW focus)
-
-### Commands Summary
-
-**Core APIs**: System, Projects, Chapters, Characters, AI Service, Database, Settings
-**Context Engineering**: Separated prompts for 29.8% token reduction (zh-TW only)
-**AI Features**: Ollama integration, history tracking, language purity control
-
-### API Usage Pattern
-
-```typescript
-// Frontend code uses unified API interface
-import { api } from './api';
-
-// All API calls follow this pattern
-const projects = await api.projects.getAll();
-const version = await api.system.getAppVersion();
-const aiStatus = await api.ai.checkOllamaService();
-```
+### Frontend (`src/renderer/`)
+**Stack**: React 18 + TypeScript + Redux Toolkit + Tailwind CSS
+- **Editor**: Slate.js for rich text editing with custom formatting
+- **State Management**: Redux slices for projects, chapters, characters, ai, aiHistory, templates, settings, ui, error, editor, notification
+- **Theme**: Cosmic dark theme (`bg-cosmic-950`) with gold accents (`text-gold-400`)
+- **i18n**: JSON-based translations with Traditional Chinese (zh-TW) as primary language
 
 ### Key Features
-
-**Context Engineering**: SystemPromptBuilder + UserContextBuilder = 29.8% token savings
-**Language Purity System**: Regex-based detection for Traditional Chinese enforcement
-**AI Progress Visualization**: Real-time multi-stage tracking with animations
-**AI Generation History**: Complete CRUD system with analytics preparation
-
-
-### Database
-
-**Tables**: projects, chapters, characters, character_relationships, ai_generation_history, settings
-**Location**: `~/{AppData}/genesis-chronicle/genesis-chronicle.db`
-**Migrations**: v7 (automatic via `migrations.rs`)
-**⚠️ Critical**: Always use explicit field names in SQL queries
-
-### Redux Store
-
-**Slices**: projects, chapters, characters, ai, aiHistory, templates, settings, ui, error (with progress), editor, notification
+- **Context Engineering**: Separated prompts achieve 29.8% token reduction (SystemPromptBuilder + UserContextBuilder)
+- **Language Purity**: Regex-based enforcement for Traditional Chinese only content
+- **AI Progress Visualization**: Multi-stage progress tracking (preparing→generating→processing→complete)
+- **AI Generation History**: Complete CRUD operations with timestamp tracking
 
 ## Critical Development Patterns
 
@@ -122,133 +74,44 @@ const aiStatus = await api.ai.checkOllamaService();
 3. **Database**: Always use explicit field names in SQL - NEVER `SELECT *`
 4. **Chinese Text**: Use Unicode-aware methods - NEVER ASCII-only filters
 5. **PRAGMA**: Use `conn.pragma_update()` - NOT `conn.execute()`
+6. **ESLint**: Variables prefixed with `_` are allowed to be unused
 
-### Key Patterns
+### Development Workflows
 
-**Error Handling**: SimpleErrorBoundary + Console filtering in main-stable.tsx
-**UI Theme**: Cosmic dark (`bg-cosmic-950`) + Gold accents (`text-gold-400`)
-**Entry Point**: `main-stable.tsx` (NOT App.tsx)
-**i18n**: `useI18n()` hook with zh-TW default
-**Progress**: Global system via errorSlice (preparing→generating→processing→complete)
-**Scrollbars**: 16px gold-themed with `!important` CSS
-
-
-## Development Workflows
-
-### Adding New Tauri Command
+#### Adding New Tauri Command
 1. Add command in `src-tauri/src/commands/*.rs`
-2. Register in `src-tauri/src/lib.rs` 
-3. Add to `src/renderer/src/api/types.ts` + `tauri.ts`
+2. Register in `src-tauri/src/lib.rs` invoke_handler
+3. Add types to `src/renderer/src/api/types.ts`
+4. Implement in `src/renderer/src/api/tauri.ts`
 
-### Adding Frontend Feature
+#### Adding Frontend Feature
 1. Component in `src/renderer/src/components/[feature]/`
 2. Redux slice in `src/renderer/src/store/slices/`
 3. Translation keys in `src/renderer/src/i18n/locales/*.json`
 
-### AI Integration
-
-**Setup**: Ollama service (`http://127.0.0.1:11434`) + llama3.2 model
-**Context System**: 29.8% token savings with separated prompts (zh-TW only)
-**Generation Flow**: Context → Clean → Generate (multi-temp) → Display
-**Common Issues**: Database mapping, timeouts, UI state updates
-
 ## Common Issues & Solutions
 
-### Chinese Text
+### Chinese Text Processing
 - **Issue**: ASCII filters break Chinese characters
-- **Fix**: Use `c.is_alphanumeric()` (Unicode-aware)
+- **Fix**: Use `c.is_alphanumeric()` (Unicode-aware) in Rust
 
-### Database
-- **Issue**: `SELECT *` causes field mismatches
-- **Fix**: Always use explicit field names
-- **Schema Issues**: Delete DB file to reinitialize
+### Database Operations
+- **Issue**: `SELECT *` causes field mapping errors
+- **Fix**: Always specify field names explicitly
+- **Schema Issues**: Delete DB file to force recreation with latest schema
 
-### Ollama API
+### Ollama Integration
+- **Service URL**: `http://127.0.0.1:11434`
 - **Parameter**: Use `num_predict` not `max_tokens`
-- **Timeouts**: Set to 300s client, 120s API
+- **Timeouts**: Client 300s, API 120s
+- **Model**: Default is llama3.2
 
-### UI State
-- **React Updates**: Use functional setState
-- **Auto-scroll**: Use `scrollIntoView` after generation
-- **Scrollbars**: Apply `!important` CSS to override Tailwind
+### UI State Management
+- **React Updates**: Use functional setState: `setState(prev => ...)`
+- **Auto-scroll**: Call `scrollIntoView()` after AI generation
+- **Scrollbars**: Gold-themed 16px with `!important` CSS overrides
 
-### Build & Config
-- **CSP**: Disabled in tauri.conf.json
-- **ESLint**: Use `@typescript-eslint/recommended`
-- **Rust**: Use snake_case for parameters
-
-## Code Quality & Debugging
-
-### TypeScript Compilation
-- **Status**: ✅ All 31 TypeScript errors resolved (100% success rate)
-- **Key Fixes**: SlateEditor type assertions, API interface mismatches, character slice parameters
-- **Check Command**: `npx tsc --noEmit`
-
-### Common TypeScript Issues
-- **Slate.js Types**: Use `n as any` for Editor.isBlock() calls
-- **API Mismatches**: Ensure Rust backend and TypeScript frontend parameter alignment
-- **Unused Variables**: Prefix with underscore `_param` for allowed unused parameters
-
-### AI Generation Debugging
-1. Check `ollama serve` is running
-2. Verify database field mapping
-3. Test with simple parameters first
-4. Add console logs for state changes
-
-### Performance Monitoring
-- Increase timeouts for AI generation
-- Use parallel processing
-- Monitor token usage (360 avg with context engineering)
-- **ESLint**: 269 issues (mostly `any` type warnings - consider gradual type improvement)
-
-## Performance
-
-**Memory**: SQLite pooling, Redux normalization, React.memo
-**Build**: Tauri single-arch (90% smaller), Vite optimization
-**Auto-save**: 2s debounce for chapters, immediate for critical data
-
-## Environment
-
-**Required**: Node.js 18+, Rust 1.75+, Tauri CLI
-**AI**: Ollama (`ollama serve` + `ollama pull llama3.2`)
-**Platform**: Xcode (macOS), VS Build Tools (Windows), build-essential (Linux)
-
-### MCP Server (Serena)
-**Setup**:
-1. `uvx --from git+https://github.com/oraios/serena serena project generate-yml`
-2. `claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project "$(pwd)"`
-3. `claude mcp list` - Verify ✓ Connected
-
-**Required**: `.serena/project.yml` configuration file
-
-## Testing
-
-**Framework**: Jest + jsdom
-**Scripts**: `test-ollama-service.js`, `test-ai-progress-visualization.js`
-**Commands**: `npm test`, `npm run diagnostic`
-
-## Version
-
-**Current**: v1.0.0+ (Pure Tauri)
-**Stack**: Tauri v2.7.0 + React 18.2.0 + SQLite
-**Recent**: AI History, Progress Viz, Language Purity, Context Engineering (29.8% token savings)
-
-## Quick Reference
-
-### New Tauri Command
-```rust
-// 1. src-tauri/src/commands/[feature].rs
-#[tauri::command]
-pub async fn new_command(param: String) -> Result<String, String> { }
-
-// 2. Register in lib.rs
-.invoke_handler(tauri::generate_handler![new_command])
-
-// 3. Frontend API
-newCommand: (param: string) => Promise<string>
-```
-
-### Key Patterns
+### TypeScript Patterns
 ```typescript
 // Redux with typed dispatch
 const dispatch = useDispatch<AppDispatch>();
@@ -267,8 +130,22 @@ const error: AppError = {
 match: (n) => Editor.isBlock(editor, n as any)
 ```
 
-### Database Migration
+### Database Migration Pattern
 ```rust
+// In migrations.rs
 conn.execute("ALTER TABLE...", [])?;
 conn.pragma_update(None, "user_version", 8)?;  // NOT conn.execute()
 ```
+
+## Performance Considerations
+
+- **Memory**: SQLite connection pooling, Redux state normalization, React.memo for expensive components
+- **Auto-save**: 2s debounce for chapter content, immediate for critical operations
+- **Token Usage**: Average 360 tokens with context engineering (down from 513)
+- **Build Size**: Tauri single-arch builds are 90% smaller than Electron equivalents
+
+## Testing
+
+- **Framework**: Jest with jsdom environment
+- **Test Scripts**: Located in project root (test-*.js)
+- **Run Tests**: `npm test` for all tests, `npm run test:unit` for unit tests only

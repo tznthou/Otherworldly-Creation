@@ -12,7 +12,7 @@ const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
   showText = true,
   size = 'medium'
 }) => {
-  const { autoSaveStatus, isSaving, hasUnsavedChanges, lastSaved, autoSaveEnabled } = useAutoSave();
+  const { autoSaveStatus, isSaving: _isSaving, hasUnsavedChanges, lastSaved, autoSaveEnabled } = useAutoSave();
 
   if (!autoSaveEnabled) {
     return null;

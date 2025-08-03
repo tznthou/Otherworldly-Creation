@@ -7,7 +7,7 @@ import {
   selectTemplateLoading,
   selectTemplateError,
   setFilters,
-  setSortOptions
+  setSortOptions as _setSortOptions
 } from '../../store/slices/templatesSlice';
 
 interface TemplateSelectorProps {

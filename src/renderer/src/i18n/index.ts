@@ -16,8 +16,8 @@ class I18nService {
       await translationLoader.preloadAllTranslations();
       this.isInitialized = true;
       console.log('I18n system initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize i18n system:', error);
+    } catch (_error) {
+      console.error('Failed to initialize i18n system:', _error);
       // 即使失敗也標記為已初始化，避免重複嘗試
       this.isInitialized = true;
     }
@@ -29,7 +29,7 @@ class I18nService {
     // 確保該語言的翻譯已載入
     try {
       await translationLoader.loadTranslation(language);
-    } catch (error) {
+    } catch (_error) {
       console.warn(`Failed to load translation for ${language}, keeping current language`);
     }
     
@@ -69,8 +69,8 @@ class I18nService {
       // 都找不到時返回 key 本身
       console.warn(`找不到翻譯: ${key}`);
       return key;
-    } catch (error) {
-      console.error(`Translation failed for key ${key}:`, error);
+    } catch (_error) {
+      console.error(`Translation failed for key ${key}:`, _error);
       return key;
     }
   }

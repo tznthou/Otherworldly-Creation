@@ -28,7 +28,7 @@ const ImportProjectModal: React.FC = () => {
           const data = JSON.parse(event.target?.result as string);
           validateImportData(data);
           setImportedData(data);
-        } catch (err) {
+        } catch (_err) {
           setError('無法解析檔案，請確保是有效的 JSON 格式');
           setImportedData(null);
         }

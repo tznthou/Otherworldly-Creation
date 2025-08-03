@@ -110,12 +110,6 @@ export const QuickHelp: React.FC<QuickHelpProps> = ({ className = '' }) => {
     handleClose();
   };
 
-  const resetTips = () => {
-    setShownTips([]);
-    localStorage.removeItem('shown-quick-tips');
-    setIsVisible(false);
-    setCurrentTip(null);
-  };
 
   if (!currentTip || !isVisible) {
     return null;

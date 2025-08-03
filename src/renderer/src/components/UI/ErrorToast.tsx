@@ -4,7 +4,6 @@ import { RootState } from '../../store/store';
 import { removeError, resolveError } from '../../store/slices/errorSlice';
 import { AppError, ErrorSeverity } from '../../types/error';
 import CosmicButton from './CosmicButton';
-import LoadingSpinner from './LoadingSpinner';
 
 interface ErrorToastProps {
   error: AppError;

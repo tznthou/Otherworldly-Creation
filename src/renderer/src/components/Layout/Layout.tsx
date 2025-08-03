@@ -4,7 +4,6 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
 import CosmicBackground from '../UI/CosmicBackground';
-import ModalContainer from '../UI/ModalContainer';
 import { useAppSelector } from '../../hooks/redux';
 
 interface LayoutProps {

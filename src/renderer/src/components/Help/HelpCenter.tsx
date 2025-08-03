@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { tutorialIndex, TutorialId } from '../../data/tutorialSteps';
-import { faqData, categoryNames, searchFAQ, getRelatedQuestions } from '../../data/faqData';
+import { categoryNames, searchFAQ } from '../../data/faqData';
 import { useTutorial } from '../Tutorial/TutorialOverlay';
 import CosmicButton from '../UI/CosmicButton';
 import { useNotification } from '../UI/NotificationSystem';
@@ -20,7 +20,7 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
   const [showUserManual, setShowUserManual] = useState(false);
   const [showQuickStart, setShowQuickStart] = useState(false);
   
-  const { startTutorial, isTutorialCompleted, resetTutorials } = useTutorial();
+  const { startTutorial, resetTutorials: _resetTutorials } = useTutorial();
   const notification = useNotification();
 
   // 使用新的搜索函數
@@ -48,10 +48,6 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
     notification.info('教學開始', `正在開始「${tutorialIndex[tutorialId].title}」教學`);
   };
 
-  const handleResetTutorials = () => {
-    resetTutorials();
-    notification.success('重置完成', '所有教學狀態已重置，您可以重新體驗教學');
-  };
 
   if (!isOpen) return null;
 

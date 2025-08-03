@@ -20,7 +20,7 @@ const SimpleProjectEditor: React.FC = () => {
   
   const [content, setContent] = useState('');
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null);
-  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [_chapters, _setChapters] = useState<Chapter[]>([]);
   const [isSaved, setIsSaved] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [showAIPanel, setShowAIPanel] = useState(false);
@@ -38,7 +38,7 @@ const SimpleProjectEditor: React.FC = () => {
         
         // 載入章節列表
         const chapterList = await api.chapters.getByProjectId(id);
-        setChapters(chapterList);
+        _setChapters(chapterList);
         
         // 如果有章節，載入第一個章節
         if (chapterList.length > 0) {
@@ -47,7 +47,7 @@ const SimpleProjectEditor: React.FC = () => {
           setContent(firstChapter.content || '');
         } else {
           // 如果沒有章節，創建第一個章節
-          const newChapter = await api.chapters.create({
+          const _newChapter = await api.chapters.create({
             projectId: id,
             title: '第一章',
             content: `開始你的創作...
@@ -62,7 +62,7 @@ const SimpleProjectEditor: React.FC = () => {
           
           // 重新載入章節列表
           const updatedChapters = await api.chapters.getByProjectId(id);
-          setChapters(updatedChapters);
+          _setChapters(updatedChapters);
           
           if (updatedChapters.length > 0) {
             const newChapterData = updatedChapters[0];

@@ -6,7 +6,6 @@ import {
   fetchChaptersByProjectId, 
   setCurrentChapter, 
   updateCurrentChapterContent,
-  createChapter,
   updateChapter,
   Chapter
 } from '../../store/slices/chaptersSlice';
@@ -29,7 +28,6 @@ import { useNotification } from '../../components/UI/NotificationSystem';
 import { OperationStatus } from '../../components/UI/StatusIndicator';
 import { SimpleProgressBar } from '../../components/UI/ProgressIndicator';
 import { MiniErrorFallback } from '../../components/UI/ErrorFallback';
-import SaveManager from '../../services/saveManager';
 import TutorialOverlay, { useTutorial } from '../../components/Tutorial/TutorialOverlay';
 import { editorTutorial, aiTutorial } from '../../data/tutorialSteps';
 
@@ -42,7 +40,7 @@ const ProjectEditorContent: React.FC = () => {
   const { currentProject } = useAppSelector(state => state.projects);
   const { chapters, currentChapter, loading } = useAppSelector(state => state.chapters);
   const isSettingsOpen = useAppSelector(selectIsSettingsOpen);
-  const isReadingMode = useAppSelector(selectIsReadingMode);
+  const _isReadingMode = useAppSelector(selectIsReadingMode);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showSavePanel, setShowSavePanel] = useState(false);
@@ -54,20 +52,18 @@ const ProjectEditorContent: React.FC = () => {
     currentStep,
     currentTutorialId,
     setCurrentStep,
-    startTutorial,
     completeTutorial,
-    skipTutorial,
-    isTutorialCompleted
+    skipTutorial
   } = useTutorial();
   
   // 自動儲存
   const { 
     saveNow, 
-    hasUnsavedChanges, 
+    hasUnsavedChanges: _hasUnsavedChanges, 
     isSaving, 
-    autoSaveEnabled,
-    autoSaveStatus,
-    lastSaved 
+    autoSaveEnabled: _autoSaveEnabled,
+    autoSaveStatus: _autoSaveStatus,
+    lastSaved: _lastSaved 
   } = useAutoSave({
     onSave: () => {
       notification.success('儲存成功', '章節已自動儲存');

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import CosmicButton from './CosmicButton';
-import { ErrorHandler } from '../../utils/errorUtils';
 import { useNotification } from './NotificationSystem';
 
 interface ErrorFallbackProps {
@@ -23,7 +22,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
     try {
       // 這裡可以實現錯誤報告功能
       // 例如發送到錯誤追蹤服務
-      const errorReport = {
+      const _errorReport = {
         message: error.message,
         stack: error.stack,
         context,
@@ -36,7 +35,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       notification.success('錯誤報告已發送', '感謝您的回饋，我們會盡快修復此問題');
-    } catch (reportError) {
+    } catch (_reportError) {
       notification.error('發送失敗', '無法發送錯誤報告，請稍後再試');
     } finally {
       setIsReporting(false);

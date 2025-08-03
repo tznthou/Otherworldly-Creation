@@ -25,12 +25,6 @@ interface GenerationOption {
   selected?: boolean;
 }
 
-interface GenerationProgress {
-  current: number;
-  total: number;
-  stage: 'preparing' | 'generating' | 'processing' | 'complete';
-  message: string;
-}
 
 // 過濾掉 AI 思考標籤的函數
 const filterThinkingTags = (text: string): string => {

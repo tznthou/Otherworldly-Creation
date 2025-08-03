@@ -17,7 +17,7 @@ const UpdateManagerModal: React.FC = () => {
     currentVersion: '0.4.12'
   });
   const [isChecking, setIsChecking] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [_isDownloading, _setIsDownloading] = useState(false);
 
   useEffect(() => {
     checkCurrentVersion();
@@ -156,7 +156,7 @@ const UpdateManagerModal: React.FC = () => {
             <div className="mt-6 space-x-4">
               <button 
                 onClick={handleCheckUpdates}
-                disabled={isChecking || isDownloading}
+                disabled={isChecking || _isDownloading}
                 className="btn-primary"
               >
                 {isChecking ? '檢查中...' : '檢查更新'}
@@ -164,10 +164,10 @@ const UpdateManagerModal: React.FC = () => {
               {updateInfo.hasUpdate && (
                 <button 
                   onClick={() => {}}
-                  disabled={isDownloading}
+                  disabled={_isDownloading}
                   className="btn-secondary"
                 >
-                  {isDownloading ? '下載中...' : '立即更新'}
+                  {_isDownloading ? '下載中...' : '立即更新'}
                 </button>
               )}
             </div>

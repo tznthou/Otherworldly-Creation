@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
-import { createEditor, Descendant, Editor, Transforms, Range, Point } from 'slate';
+import React, { useCallback, useMemo } from 'react';
+import { createEditor, Descendant, Editor, Transforms, Range } from 'slate';
 import { Slate, Editable, withReact, ReactEditor } from 'slate-react';
 import { withHistory } from 'slate-history';
 import { useAppSelector } from '../../hooks/redux';
@@ -44,7 +44,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   onSave,
 }) => {
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
-  const [isFocused, setIsFocused] = useState(false);
   const settings = useAppSelector(selectEditorSettings);
 
   // 處理鍵盤快捷鍵
@@ -101,7 +100,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   // 渲染元素
   const renderElement = useCallback((props: any) => {
     switch (props.element.type) {
-      case 'heading':
+      case 'heading': {
         const level = props.element.level || 1;
         const HeadingTag = `h${Math.min(level, 6)}` as keyof JSX.IntrinsicElements;
         return (
@@ -112,6 +111,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             {props.children}
           </HeadingTag>
         );
+      }
       case 'quote':
         return (
           <blockquote
@@ -177,10 +177,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     whiteSpace: settings.wordWrap ? 'pre-wrap' : 'pre',
   };
 
-  // 計算段落樣式
-  const paragraphStyle = {
-    marginBottom: `${settings.paragraphSpacing}px`,
-  };
 
   return (
     <div 
@@ -205,8 +201,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             spellCheck={settings.spellCheck}
             autoFocus={autoFocus}
             onKeyDown={handleKeyDown}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
             className={`p-6 focus:outline-none transition-all duration-300 ${
               settings.showLineNumbers ? 'pl-16' : ''
             }`}

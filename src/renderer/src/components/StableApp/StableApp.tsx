@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PageType } from './types';
 import { errorPageStyles, baseStyles } from './styles';
-import { storage, textStats, generateId } from './utils';
+import { storage } from './utils';
 import { DEFAULTS } from './constants';
 
 // 組件引入

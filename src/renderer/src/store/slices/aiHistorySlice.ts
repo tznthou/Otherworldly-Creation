@@ -203,7 +203,7 @@ const aiHistorySlice = createSlice({
       .addCase(cleanupAIHistory.pending, (state) => {
         state.error = null;
       })
-      .addCase(cleanupAIHistory.fulfilled, (state, action) => {
+      .addCase(cleanupAIHistory.fulfilled, (state, _action) => {
         // 清理完成後，可能需要重新查詢
         state.error = null;
       })

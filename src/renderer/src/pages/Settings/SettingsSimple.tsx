@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux';
+import { useAppDispatch } from '../../hooks/redux';
 import { openModal } from '../../store/slices/uiSlice';
 
 const SettingsSimple: React.FC = () => {

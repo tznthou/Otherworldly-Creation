@@ -1,6 +1,5 @@
 import BackupService from './backupService';
 import { SettingsService } from './settingsService';
-import api from '../api';
 
 interface AutoBackupStatus {
   enabled: boolean;
@@ -283,7 +282,7 @@ class AutoBackupServiceClass {
     message: string;
   } {
     const now = Date.now();
-    const settings = SettingsService.loadSettings();
+    const _settings = SettingsService.loadSettings();
     
     // 如果自動備份已停用
     if (!this.status.enabled) {

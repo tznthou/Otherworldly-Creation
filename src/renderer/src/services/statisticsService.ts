@@ -1,4 +1,3 @@
-import { useAppSelector } from '../hooks/redux';
 import api from '../api';
 
 export interface ProjectStatistics {

@@ -6,7 +6,7 @@ import { AppError } from '../types/error';
 
 // 錯誤處理 hook
 export const useErrorHandler = () => {
-  const dispatch = useAppDispatch();
+  const _dispatch = useAppDispatch();
 
   const handleError = useCallback((error: any, context?: Record<string, any>) => {
     if (error.code?.startsWith('AI_')) {

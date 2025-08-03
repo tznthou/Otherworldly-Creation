@@ -59,7 +59,7 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
           message: result.message
         }));
       }
-    } catch (error) {
+    } catch (_error) {
       dispatch(addNotification({
         type: 'error',
         title: '創建失敗',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
 import HelpCenter from '../Help/HelpCenter';

@@ -83,7 +83,7 @@ export const checkOllamaService = createAsyncThunk(
 // 延遲初始化 AI 服務（背景執行，不阻塞 UI）
 export const initializeAIServiceLazy = createAsyncThunk(
   'ai/initializeAIServiceLazy',
-  async (_, { dispatch, rejectWithValue }) => {
+  async (_, { dispatch }) => {
     try {
       console.log('Redux: 開始延遲 AI 服務初始化...');
       

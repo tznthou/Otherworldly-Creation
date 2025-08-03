@@ -1,7 +1,6 @@
 // 模板角色原型創建服務
 import { CharacterArchetypeTemplate, NovelTemplate } from '../types/template';
 import { Character, CharacterFormData } from '../types/character';
-import { v4 as uuidv4 } from 'uuid';
 import { api } from '../api';
 
 export interface TemplateCharacterCreationResult {

@@ -167,7 +167,7 @@ export class SettingsService {
       }
       
       return true;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }

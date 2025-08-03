@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { openModal } from '../../store/slices/uiSlice';
 import ProjectCard from './ProjectCard';
-import { Project } from '../../store/slices/projectsSlice';
 import { api } from '../../api';
 
 const ProjectGrid: React.FC = () => {

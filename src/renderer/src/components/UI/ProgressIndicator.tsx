@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
 import LoadingSpinner from './LoadingSpinner';
 
 export interface ProgressStep {
@@ -21,7 +19,7 @@ interface ProgressIndicatorProps {
 
 export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   steps,
-  currentStep,
+  currentStep: _currentStep,
   showEstimatedTime = true,
   className = ''
 }) => {

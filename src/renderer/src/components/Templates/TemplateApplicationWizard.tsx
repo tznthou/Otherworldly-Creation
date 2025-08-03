@@ -24,7 +24,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
   const [createCharacters, setCreateCharacters] = useState(true);
   const [updateProjectSettings, setUpdateProjectSettings] = useState(true);
   const [applicationResult, setApplicationResult] = useState<TemplateApplicationResult | null>(null);
-  const [isApplying, setIsApplying] = useState(false);
+  const [_isApplying, _setIsApplying] = useState(false);
   const [characterPreviews, setCharacterPreviews] = useState<Array<{
     archetype: CharacterArchetypeTemplate;
     previewData: any;
@@ -32,7 +32,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
 
   useEffect(() => {
     // 獲取推薦的角色組合
-    const { essential, optional } = templateCharacterService.getRecommendedCharacterCombination(template);
+    const { essential, optional: _optional } = templateCharacterService.getRecommendedCharacterCombination(template);
     const recommendedArchetypes = essential.map(arch => arch.name);
     setSelectedArchetypes(recommendedArchetypes);
     
@@ -55,7 +55,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
   };
 
   const handleApplyTemplate = async () => {
-    setIsApplying(true);
+    _setIsApplying(true);
     setCurrentStep('applying');
 
     try {
@@ -81,7 +81,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
       });
       setCurrentStep('complete');
     } finally {
-      setIsApplying(false);
+      _setIsApplying(false);
     }
   };
 

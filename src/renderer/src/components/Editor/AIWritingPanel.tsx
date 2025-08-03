@@ -61,16 +61,6 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
     };
   }, []);
   
-  // 更新進度的輔助函數
-  const updateGenerationProgress = useCallback((current: number, message: string) => {
-    if (progressId) {
-      dispatch(updateProgress({
-        id: progressId,
-        progress: current,
-        currentStep: message
-      }));
-    }
-  }, [dispatch, progressId]);
 
   // 生成文本
   const handleGenerate = async () => {

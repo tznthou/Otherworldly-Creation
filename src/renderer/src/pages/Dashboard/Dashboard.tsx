@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { fetchProjects } from '../../store/slices/projectsSlice';
-import { fetchModelsInfo } from '../../store/slices/aiSlice'; // 只更新模型列表
 import ProjectGrid from './ProjectGrid';
 import QuickActions from './QuickActions';
 
@@ -57,7 +56,7 @@ const Dashboard: React.FC = () => {
             
             <div className="card text-center">
               <div className="text-3xl font-bold text-mystic-400 mb-2">
-                {projects.reduce((total, project) => {
+                {projects.reduce((total, _project) => {
                   // 這裡之後會從章節數據計算
                   return total + 0;
                 }, 0)}

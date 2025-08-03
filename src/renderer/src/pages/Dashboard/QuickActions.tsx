@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const QuickActions: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { modals } = useAppSelector(state => state.ui);
+  const { modals: _modals } = useAppSelector(state => state.ui);
 
   const actions = [
     {
