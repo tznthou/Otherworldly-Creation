@@ -86,7 +86,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
         if (match) {
           const [block] = match;
-          if (block.type === 'quote') {
+          if ('type' in block && block.type === 'quote') {
             event.preventDefault();
             Transforms.insertNodes(editor, {
               type: 'paragraph',
@@ -189,7 +189,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         backgroundColor: settings.backgroundColor
       }}
     >
-      <Slate editor={editor} value={value} onChange={onChange}>
+      <Slate editor={editor} initialValue={value} onChange={onChange}>
         <div className="w-full">
           {/* 行號顯示 */}
           {settings.showLineNumbers && (
@@ -232,7 +232,7 @@ const toggleMark = (editor: Editor, format: keyof CustomText) => {
 // 輔助函數：檢查標記是否激活
 const isMarkActive = (editor: Editor, format: keyof CustomText) => {
   const marks = Editor.marks(editor);
-  return marks ? marks[format] === true : false;
+  return marks ? marks[format as keyof typeof marks] === true : false;
 };
 
 // 輔助函數：切換塊級元素
@@ -241,7 +241,7 @@ const toggleBlock = (editor: Editor, format: CustomElement['type']) => {
   const isList = format === 'list-item';
 
   Transforms.unwrapNodes(editor, {
-    match: n => Editor.isBlock(editor, n) && n.type === 'list-item',
+    match: n => Editor.isBlock(editor, n) && 'type' in n && n.type === 'list-item',
     split: true,
   });
 
@@ -265,7 +265,7 @@ const isBlockActive = (editor: Editor, format: CustomElement['type']) => {
   const [match] = Array.from(
     Editor.nodes(editor, {
       at: Editor.unhangRange(editor, selection),
-      match: n => Editor.isBlock(editor, n) && n.type === format,
+      match: n => Editor.isBlock(editor, n) && 'type' in n && n.type === format,
     })
   );
 

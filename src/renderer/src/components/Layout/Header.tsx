@@ -3,7 +3,7 @@ import { useAppSelector } from '../../hooks/redux';
 
 const Header: React.FC = () => {
   const { currentProject } = useAppSelector(state => state.projects);
-  const { autoSaving } = useAppSelector(state => state.chapters || { autoSaving: false });
+  const { saving } = useAppSelector(state => state.chapters || { saving: false });
 
   const getPageTitle = () => {
     const path = window.location.pathname;
@@ -33,7 +33,7 @@ const Header: React.FC = () => {
       {/* 右側：狀態指示器 */}
       <div className="flex items-center space-x-4">
         {/* 自動儲存指示器 */}
-        {autoSaving && (
+        {saving && (
           <div className="flex items-center space-x-2 text-sm text-gold-400">
             <div className="w-2 h-2 bg-gold-400 rounded-full animate-pulse" />
             <span>自動儲存中...</span>

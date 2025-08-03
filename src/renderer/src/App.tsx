@@ -15,14 +15,14 @@ import ErrorFallback from './components/UI/ErrorFallback';
 import { SystemStatusPanel } from './components/UI/StatusIndicator';
 import TutorialOverlay, { useTutorial } from './components/Tutorial/TutorialOverlay';
 import HelpButton from './components/Help/HelpButton';
-import { api } from './api';
+
 import QuickHelp from './components/Help/QuickHelp';
 import { firstTimeTutorial } from './data/tutorialSteps';
 import { useAppDispatch } from './hooks/redux';
 import { checkOllamaService, fetchModelsInfo } from './store/slices/aiSlice';
 import { ErrorHandler, withErrorBoundary } from './utils/errorUtils';
 import { NotificationService } from './components/UI/NotificationSystem';
-import { useSettingsApplication, useShortcuts } from './hooks/useSettings';
+import { useShortcuts } from './hooks/useSettings';
 import { useI18n } from './hooks/useI18n';
 import AutoBackupService from './services/autoBackupService';
 import UpdateManager from './components/Update/UpdateManager';
