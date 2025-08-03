@@ -81,7 +81,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       const { selection } = editor;
       if (selection && Range.isCollapsed(selection)) {
         const [match] = Editor.nodes(editor, {
-          match: n => Editor.isBlock(editor, n),
+          match: (n) => Editor.isBlock(editor, n as any),
         });
 
         if (match) {
@@ -241,7 +241,7 @@ const toggleBlock = (editor: Editor, format: CustomElement['type']) => {
   const isList = format === 'list-item';
 
   Transforms.unwrapNodes(editor, {
-    match: (n): n is CustomElement => Editor.isBlock(editor, n) && 'type' in n && (n as any).type === 'list-item',
+    match: (n): n is CustomElement => Editor.isBlock(editor, n as any) && 'type' in n && (n as any).type === 'list-item',
     split: true,
   });
 
@@ -265,7 +265,7 @@ const isBlockActive = (editor: Editor, format: CustomElement['type']) => {
   const [match] = Array.from(
     Editor.nodes(editor, {
       at: Editor.unhangRange(editor, selection),
-      match: (n): n is CustomElement => Editor.isBlock(editor, n) && 'type' in n && (n as any).type === format,
+      match: (n): n is CustomElement => Editor.isBlock(editor, n as any) && 'type' in n && (n as any).type === format,
     })
   );
 
