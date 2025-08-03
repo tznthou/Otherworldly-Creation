@@ -39,7 +39,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
   useEffect(() => {
     // 更新過濾器
-    const filters: any = {};
+    const filters: { search?: string; type?: string; category?: string } = {};
     
     if (searchQuery.trim()) {
       filters.search = searchQuery.trim();
@@ -196,7 +196,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">排序</label>
             <select
-              onChange={(e) => handleSortChange(e.target.value as any)}
+              onChange={(e) => handleSortChange(e.target.value as 'name' | 'type' | 'createdAt' | 'updatedAt')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="name">名稱</option>

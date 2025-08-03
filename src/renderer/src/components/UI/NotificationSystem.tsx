@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, store } from '../../store/store';
 import { removeNotification, addNotification, clearNotifications } from '../../store/slices/notificationSlice';
@@ -42,14 +42,14 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClo
       }, notification.duration);
       return () => clearTimeout(timer);
     }
-  }, [notification.duration]);
+  }, [notification.duration, handleClose]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsLeaving(true);
     setTimeout(() => {
       onClose();
     }, 300);
-  };
+  }, [onClose]);
 
   const getTypeStyles = (type: Notification['type']) => {
     switch (type) {

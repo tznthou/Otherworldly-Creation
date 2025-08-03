@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import CosmicButton from '../UI/CosmicButton';
 import { useNotification } from '../UI/NotificationSystem';
@@ -58,10 +58,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         inline: 'center'
       });
     }
-  }, [currentStep, isActive, currentStepData]);
+  }, [currentStep, isActive, currentStepData, updateTooltipPosition]);
 
   // 更新提示框位置
-  const updateTooltipPosition = (element: HTMLElement) => {
+  const updateTooltipPosition = useCallback((element: HTMLElement) => {
     const rect = element.getBoundingClientRect();
     const tooltipRect = tooltipRef.current?.getBoundingClientRect();
     
@@ -95,7 +95,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     y = Math.max(20, Math.min(y, window.innerHeight - (tooltipRect?.height || 0) - 20));
 
     setTooltipPosition({ x, y });
-  };
+  }, [currentStepData.position]);
 
   // 處理下一步
   const handleNext = () => {

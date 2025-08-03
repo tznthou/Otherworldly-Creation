@@ -190,7 +190,7 @@ class SaveManagerClass {
   /**
    * 儲存設定
    */
-  private async saveSettings(settings: any): Promise<void> {
+  private async saveSettings(settings: Record<string, unknown>): Promise<void> {
     // 將設定物件轉換為多個 set 操作
     for (const [key, value] of Object.entries(settings)) {
       await api.settings.set(key, value);
@@ -200,7 +200,7 @@ class SaveManagerClass {
   /**
    * 處理儲存錯誤
    */
-  private async handleSaveError(operation: SaveOperation, error: any): Promise<void> {
+  private async handleSaveError(operation: SaveOperation, error: unknown): Promise<void> {
     const errorMessage = error instanceof Error ? error.message : String(error);
     
     operation.retryCount += 1;

@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { NovelTemplate } from '../../types/template';
 
 interface UIState {
   sidebarCollapsed: boolean;
   currentView: 'dashboard' | 'editor' | 'characters' | 'settings';
   theme: 'cosmic' | 'light' | 'dark';
   notifications: Notification[];
-  selectedTemplate: any | null; // 儲存選中的模板
+  selectedTemplate: NovelTemplate | null; // 儲存選中的模板
   modals: {
     createProject: boolean;
     projectManage: boolean;
@@ -133,7 +134,7 @@ const uiSlice = createSlice({
     },
     
     // 模板管理
-    setSelectedTemplate: (state, action: PayloadAction<any>) => {
+    setSelectedTemplate: (state, action: PayloadAction<NovelTemplate | null>) => {
       state.selectedTemplate = action.payload;
     },
   },

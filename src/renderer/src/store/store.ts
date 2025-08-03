@@ -32,7 +32,7 @@ export const store = configureStore({
         ignoredActions: ['persist/PERSIST', 'progress/startProgress', 'progress/updateProgress', 'progress/completeProgress', 'progress/failProgress'],
         ignoredPaths: ['payload.timestamp', 'meta.arg', 'meta.baseQueryMeta', 'progress.indicators', 'error.errors'],
         // 自定義檢查，允許 Date 物件和函數
-        isSerializable: (value: any) => {
+        isSerializable: (value: unknown) => {
           if (value instanceof Date) {
             return true;
           }

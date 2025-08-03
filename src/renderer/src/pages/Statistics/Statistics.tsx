@@ -74,7 +74,7 @@ const Statistics: React.FC = () => {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'overview' | 'projects' | 'trends')}
               className={`flex items-center space-x-2 pb-4 border-b-2 font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'border-gold-500 text-gold-400'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { NovelTemplate, TemplateApplicationResult } from '../../types/template';
 import { CharacterArchetypeTemplate } from '../../types/template';
 import { templateService } from '../../services/templateService';
@@ -38,12 +38,12 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
     
     // 生成角色預覽
     updateCharacterPreviews(recommendedArchetypes);
-  }, [template]);
+  }, [template, updateCharacterPreviews]);
 
-  const updateCharacterPreviews = (archetypes: string[]) => {
+  const updateCharacterPreviews = useCallback((archetypes: string[]) => {
     const previews = templateCharacterService.previewCharacterCreation(template, archetypes);
     setCharacterPreviews(previews);
-  };
+  }, [template]);
 
   const handleArchetypeToggle = (archetypeName: string) => {
     const newSelection = selectedArchetypes.includes(archetypeName)

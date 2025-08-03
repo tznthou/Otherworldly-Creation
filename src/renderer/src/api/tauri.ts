@@ -1,13 +1,5 @@
 import type { API } from './types';
 import type {
-  Project,
-  Chapter,
-  Character,
-  Relationship,
-  AIGenerationHistory,
-  AIGenerationParams,
-  SaveDialogOptions,
-  OpenDialogOptions,
   CharacterAttributes
 } from './models';
 

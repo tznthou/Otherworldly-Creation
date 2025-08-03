@@ -78,7 +78,9 @@
       "mcp__serena__read_memory",
       "Bash(timeout 10 npm run dev)",
       "mcp__serena__think_about_collected_information",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs"
     ],
     "deny": []
   }

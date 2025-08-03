@@ -288,7 +288,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
     setGenerationOptions([]);
     setIsGenerating(false);
     // 取消操作，暫時不更新進度
-  }, [updateProgress]);
+  }, []);
 
   // 重新生成特定選項
   const handleRegenerateOption = useCallback(async (optionId: string) => {
@@ -347,7 +347,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
   const handleClearOptions = useCallback(() => {
     setGenerationOptions([]);
     // 清除選項，暫時不更新進度
-  }, [updateProgress]);
+  }, []);
   
   return (
     <div className="bg-cosmic-900 border-t border-cosmic-700 p-4">

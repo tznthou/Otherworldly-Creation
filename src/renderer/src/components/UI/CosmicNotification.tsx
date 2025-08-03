@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 interface CosmicNotificationProps {
   type: 'success' | 'error' | 'warning' | 'info' | 'magic';
@@ -30,14 +30,14 @@ const CosmicNotification: React.FC<CosmicNotificationProps> = ({
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration]);
+  }, [duration, handleClose]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsLeaving(true);
     setTimeout(() => {
       onClose();
     }, 300);
-  };
+  }, [onClose]);
 
   const typeConfig = {
     success: {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Settings, Bell, Download, Shield } from 'lucide-react';
 import api from '../../api';
 
@@ -25,9 +25,9 @@ const UpdateSettings: React.FC = () => {
   useEffect(() => {
     loadSettings();
     getCurrentVersion();
-  }, []);
+  }, [loadSettings]);
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const appSettings = await api.settings.getAll();
       if (appSettings.update) {
@@ -41,7 +41,7 @@ const UpdateSettings: React.FC = () => {
     } catch (error) {
       console.error('載入更新設置失敗:', error);
     }
-  };
+  }, [settings]);
 
   const getCurrentVersion = async () => {
     try {

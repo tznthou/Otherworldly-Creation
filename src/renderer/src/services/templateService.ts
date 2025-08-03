@@ -1,5 +1,5 @@
 // 模板管理服務
-import { NovelTemplate, TemplateType, TemplateApplicationResult, TemplateValidationError } from '../types/template';
+import { NovelTemplate, TemplateType, TemplateApplicationResult, TemplateValidationError, WorldSetting } from '../types/template';
 import { defaultTemplates } from '../data/defaultTemplates';
 import { api } from '../api';
 
@@ -295,7 +295,7 @@ export class TemplateService {
         success: false,
         message: '找不到指定的模板',
         appliedSettings: {
-          worldSetting: {} as any,
+          worldSetting: {} as WorldSetting,
           createdCharacters: [],
           projectSettings: {}
         }
@@ -386,7 +386,7 @@ export class TemplateService {
         success: false,
         message: `應用模板失敗: ${error instanceof Error ? error.message : '未知錯誤'}`,
         appliedSettings: {
-          worldSetting: {} as any,
+          worldSetting: {} as WorldSetting,
           createdCharacters: [],
           projectSettings: {}
         },

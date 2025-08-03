@@ -2,14 +2,14 @@
 declare global {
   interface Window {
     __TAURI__?: {
-      invoke?: (command: string, args?: any) => Promise<any>;
-      [key: string]: any;
+      invoke?: (command: string, args?: Record<string, unknown>) => Promise<unknown>;
+      [key: string]: unknown;
     };
     __TAURI_INTERNALS__?: {
-      invoke?: (command: string, args?: any) => Promise<any>;
-      [key: string]: any;
+      invoke?: (command: string, args?: Record<string, unknown>) => Promise<unknown>;
+      [key: string]: unknown;
     };
-    __TAURI_INVOKE__?: (command: string, args?: any) => Promise<any>;
+    __TAURI_INVOKE__?: (command: string, args?: Record<string, unknown>) => Promise<unknown>;
   }
 }
 

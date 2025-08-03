@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { SettingsTab } from './types';
 import { useSettingsActions } from './hooks/useSettingsActions';
@@ -32,7 +32,7 @@ const SettingsMain: React.FC = () => {
 
   useEffect(() => {
     loadUserSettings();
-  }, []);
+  }, [loadUserSettings]);
 
   // 鍵盤快捷鍵支持
   useEffect(() => {
@@ -47,16 +47,16 @@ const SettingsMain: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hasUnsavedChanges, isSaving]);
+  }, [hasUnsavedChanges, isSaving, handleSaveSettings]);
 
-  const handleSaveSettings = async () => {
+  const handleSaveSettings = useCallback(async () => {
     setIsSaving(true);
     try {
       await saveSettings(settings);
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [saveSettings, settings]);
 
   const renderTabContent = () => {
     const commonProps = { settings, dispatch };

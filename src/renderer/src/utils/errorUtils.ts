@@ -15,7 +15,7 @@ export class ErrorHandler {
       description?: string;
       severity?: ErrorSeverity;
       category?: ErrorCategory;
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
       stack?: string;
     } = {}
   ): void {
@@ -36,7 +36,7 @@ export class ErrorHandler {
   /**
    * 處理 API 錯誤
    */
-  static handleApiError(error: any, context?: Record<string, any>): void {
+  static handleApiError(error: unknown, context?: Record<string, unknown>): void {
     if (error.code === 'NETWORK_ERROR') {
       this.createError(
         ERROR_CODES.NETWORK_CONNECTION_FAILED,
@@ -76,7 +76,7 @@ export class ErrorHandler {
   /**
    * 處理 AI 相關錯誤
    */
-  static handleAIError(error: any, context?: Record<string, any>): void {
+  static handleAIError(error: unknown, context?: Record<string, unknown>): void {
     if (error.message?.includes('connection refused')) {
       this.createError(
         ERROR_CODES.AI_SERVICE_UNAVAILABLE,
@@ -127,7 +127,7 @@ export class ErrorHandler {
   /**
    * 處理資料庫錯誤
    */
-  static handleDatabaseError(error: any, context?: Record<string, any>): void {
+  static handleDatabaseError(error: unknown, context?: Record<string, unknown>): void {
     if (error.code === 'SQLITE_CANTOPEN') {
       this.createError(
         ERROR_CODES.DATABASE_CONNECTION_FAILED,
@@ -167,7 +167,7 @@ export class ErrorHandler {
   /**
    * 處理檔案系統錯誤
    */
-  static handleFileSystemError(error: any, context?: Record<string, any>): void {
+  static handleFileSystemError(error: unknown, context?: Record<string, unknown>): void {
     if (error.code === 'ENOENT') {
       this.createError(
         ERROR_CODES.FILE_NOT_FOUND,
@@ -221,7 +221,7 @@ export class ErrorHandler {
   static handleValidationError(
     field: string,
     message: string,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): void {
     this.createError(
       ERROR_CODES.VALIDATION_INVALID_FORMAT,
@@ -256,7 +256,7 @@ export function withErrorBoundary<P extends object>(
       return { hasError: true, error };
     }
 
-    componentDidCatch(error: Error, errorInfo: any) {
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
       ErrorHandler.createError(
         ERROR_CODES.SYSTEM_UNKNOWN_ERROR,
         '組件渲染錯誤',
@@ -318,11 +318,11 @@ export function withErrorBoundary<P extends object>(
 }
 
 // 異步錯誤處理裝飾器
-export function handleAsyncErrors<T extends (...args: any[]) => Promise<any>>(
+export function handleAsyncErrors<T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
-  errorHandler?: (error: any) => void
+  errorHandler?: (error: unknown) => void
 ): T {
-  return (async (...args: any[]) => {
+  return (async (...args: unknown[]) => {
     try {
       return await fn(...args);
     } catch (error) {
@@ -353,7 +353,7 @@ export async function retryWithBackoff<T>(
   baseDelay: number = 1000,
   backoffFactor: number = 2
 ): Promise<T> {
-  let lastError: any;
+  let lastError: unknown;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {

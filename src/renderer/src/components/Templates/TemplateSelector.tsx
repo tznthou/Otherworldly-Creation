@@ -39,7 +39,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   useEffect(() => {
     // 設置過濾器
-    const filters: any = {};
+    const filters: { search?: string; type?: string; category?: string } = {};
     if (filterType) {
       filters.type = filterType;
     }

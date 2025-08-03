@@ -1,6 +1,14 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../../api';
 
+interface RelationshipConsistencyIssue {
+  type: 'missing' | 'conflicting' | 'orphaned';
+  characterId: string;
+  characterName: string;
+  relationshipId?: string;
+  description: string;
+}
+
 export interface Relationship {
   id?: string;
   targetId: string;
@@ -30,7 +38,7 @@ interface CharactersState {
   error: string | null;
   searchQuery: string;
   filteredCharacters: Character[];
-  relationshipConsistencyIssues: any[];
+  relationshipConsistencyIssues: RelationshipConsistencyIssue[];
 }
 
 const initialState: CharactersState = {
@@ -113,7 +121,7 @@ export const checkRelationshipConsistency = createAsyncThunk(
   'characters/checkRelationshipConsistency',
   async (_projectId: string) => {
     // checkRelationshipConsistency 方法不存在，返回空陣列
-    const issues: any[] = [];
+    const issues: RelationshipConsistencyIssue[] = [];
     return issues;
   }
 );

@@ -141,7 +141,7 @@ export class SettingsService {
   /**
    * 驗證設定格式
    */
-  static validateSettings(settings: any): boolean {
+  static validateSettings(settings: unknown): boolean {
     try {
       // 基本結構檢查
       if (!settings || typeof settings !== 'object') {
@@ -175,12 +175,12 @@ export class SettingsService {
   /**
    * 合併設定與預設值
    */
-  private static mergeWithDefaults(settings: any): AppSettings {
+  private static mergeWithDefaults(settings: unknown): AppSettings {
     const merged = { ...DEFAULT_SETTINGS };
     
     if (settings && typeof settings === 'object') {
       // 一般設定
-      if (typeof settings.language === 'string') merged.language = settings.language as any;
+      if (typeof settings.language === 'string') merged.language = settings.language;
       if (typeof settings.autoSave === 'boolean') merged.autoSave = settings.autoSave;
       if (typeof settings.autoSaveInterval === 'number') merged.autoSaveInterval = settings.autoSaveInterval;
       
@@ -225,7 +225,7 @@ export class SettingsService {
     try {
       const history = localStorage.getItem(`${SETTINGS_KEY}-history`);
       if (history) {
-        return JSON.parse(history).map((item: any) => ({
+        return JSON.parse(history).map((item: { timestamp: string; settings: AppSettings }) => ({
           ...item,
           timestamp: new Date(item.timestamp)
         }));

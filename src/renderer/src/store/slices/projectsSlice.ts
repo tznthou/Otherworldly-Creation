@@ -38,7 +38,7 @@ export const fetchProjects = createAsyncThunk(
   async () => {
     const projects = await api.projects.getAll();
     // 確保日期是字符串格式
-    return projects.map((project: any) => ({
+    return projects.map((project: { id: string; name: string; type: string; description: string; createdAt: Date | string; updatedAt: Date | string; settings?: Record<string, unknown> }) => ({
       ...project,
       createdAt: project.createdAt instanceof Date ? project.createdAt.toISOString() : project.createdAt,
       updatedAt: project.updatedAt instanceof Date ? project.updatedAt.toISOString() : project.updatedAt,

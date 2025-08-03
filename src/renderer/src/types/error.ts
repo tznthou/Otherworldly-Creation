@@ -11,7 +11,7 @@ export interface AppError {
   severity: ErrorSeverity;
   category: ErrorCategory;
   timestamp: Date;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   stack?: string;
   resolved?: boolean;
   suggestions?: ErrorSuggestion[];

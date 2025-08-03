@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../../api';
+import { AIGenerationParams } from '../../api/models';
 
 // AI 歷史記錄類型定義
 export interface AIGenerationHistory {
@@ -9,7 +10,7 @@ export interface AIGenerationHistory {
   model: string;
   prompt: string;
   generatedText: string;
-  parameters?: any;
+  parameters?: AIGenerationParams;
   languagePurity?: number;
   tokenCount?: number;
   generationTimeMs?: number;

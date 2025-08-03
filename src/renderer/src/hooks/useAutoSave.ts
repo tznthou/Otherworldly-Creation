@@ -206,7 +206,7 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
     if (currentChapter) {
       triggerAutoSave();
     }
-  }, [currentChapter?.content, currentChapter?.title, triggerAutoSave]);
+  }, [currentChapter?.content, currentChapter?.title, currentChapter, triggerAutoSave]);
 
   // 監聽設定變化
   useEffect(() => {

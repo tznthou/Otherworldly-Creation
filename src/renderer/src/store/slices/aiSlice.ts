@@ -267,7 +267,7 @@ const aiSlice = createSlice({
       .addCase(fetchModelsInfo.fulfilled, (state, action) => {
         state.modelsInfo = action.payload;
         if (action.payload && action.payload.success) {
-          state.availableModels = action.payload.models.map((m: any) => m.name);
+          state.availableModels = action.payload.models.map((m: { name: string; size: number; modified_at: string }) => m.name);
           // 如果沒有選擇模型且有可用模型，選擇第一個
           if (!state.currentModel && action.payload.models.length > 0) {
             state.currentModel = action.payload.models[0].name;

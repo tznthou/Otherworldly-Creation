@@ -147,8 +147,8 @@ const filterAndSortTemplates = (
 
   // 應用排序
   filtered.sort((a, b) => {
-    let aValue: any;
-    let bValue: any;
+    let aValue: string | number;
+    let bValue: string | number;
 
     switch (sortOptions.field) {
       case 'name':

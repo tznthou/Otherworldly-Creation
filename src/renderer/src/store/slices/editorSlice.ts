@@ -46,7 +46,7 @@ const editorSlice = createSlice({
     setTheme: (state, action: PayloadAction<string>) => {
       const theme = THEME_OPTIONS.find(t => t.value === action.payload) || THEME_OPTIONS[0];
       state.currentTheme = theme;
-      state.settings.theme = action.payload as any;
+      state.settings.theme = action.payload as 'cosmic' | 'light' | 'dark' | 'sepia';
       
       // 更新相關顏色設定
       state.settings.backgroundColor = theme.colors.background;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Character, CharacterFormData } from '../../types/character';
 import { 
@@ -48,7 +48,7 @@ const CharacterManager: React.FC = () => {
   } = useTutorial();
 
   // 載入角色列表
-  const loadCharacters = async () => {
+  const loadCharacters = useCallback(async () => {
     if (!projectId) return;
     
     try {
@@ -67,7 +67,7 @@ const CharacterManager: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
 
   // 載入專案資訊和角色列表
   useEffect(() => {
@@ -90,7 +90,7 @@ const CharacterManager: React.FC = () => {
     };
     
     loadProjectData();
-  }, [projectId]);
+  }, [projectId, loadCharacters]);
 
   if (!projectId) {
     return (

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { checkOllamaService, fetchServiceStatus, fetchModelsInfo, fetchAvailableModels } from '../../store/slices/aiSlice';
 
@@ -7,7 +7,7 @@ const AIStatus: React.FC = () => {
   const { isOllamaConnected, availableModels, currentModel } = useAppSelector(state => state.ai);
 
 
-  const handleRefreshConnection = async () => {
+  const handleRefreshConnection = useCallback(async () => {
     console.log('重新檢測 AI 服務...');
     try {
       // 檢查服務狀態
@@ -37,7 +37,7 @@ const AIStatus: React.FC = () => {
     } catch (error) {
       console.error('重新檢測失敗:', error);
     }
-  };
+  }, [dispatch]);
 
   // 初始化 AI 狀態檢查
   useEffect(() => {
@@ -54,7 +54,7 @@ const AIStatus: React.FC = () => {
     };
     
     initAIStatus();
-  }, []);
+  }, [handleRefreshConnection]);
 
   return (
     <div className="card">

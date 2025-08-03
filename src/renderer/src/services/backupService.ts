@@ -2,6 +2,7 @@ import { Project } from '../store/slices/projectsSlice';
 import { Chapter } from '../store/slices/chaptersSlice';
 import { Character } from '../store/slices/charactersSlice';
 import { AppSettings } from '../store/slices/settingsSlice';
+import { NovelTemplate } from '../types/template';
 import api from '../api';
 
 // 備份資料結構
@@ -20,7 +21,7 @@ export interface BackupData {
     chapters: Chapter[];
     characters: Character[];
     settings: AppSettings;
-    templates?: any[];
+    templates?: NovelTemplate[];
   };
 }
 
@@ -286,7 +287,7 @@ class BackupServiceClass {
    * 執行還原操作
    */
   private async performRestore(backupData: BackupData, options: RestoreOptions): Promise<void> {
-    const operations: Promise<any>[] = [];
+    const operations: Promise<unknown>[] = [];
 
     // 還原設定
     if (options.includeSettings && backupData.data.settings) {

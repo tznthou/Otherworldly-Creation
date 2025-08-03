@@ -14,7 +14,7 @@ export interface Chapter {
   metadata?: {
     notes?: string;
     status?: 'draft' | 'in_progress' | 'review' | 'completed';
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -41,7 +41,7 @@ export const fetchChaptersByProjectId = createAsyncThunk(
   'chapters/fetchByProjectId',
   async (projectId: string) => {
     const chapters = await api.chapters.getByProjectId(projectId);
-    return chapters.map((chapter: any) => ({
+    return chapters.map((chapter: { id: string; projectId: string; title: string; content: string; orderIndex: number; createdAt: string; updatedAt: string; wordCount?: number }) => ({
       ...chapter,
       content: chapter.content ? JSON.parse(chapter.content) : [{ type: 'paragraph', children: [{ text: '' }] }],
       createdAt: new Date(chapter.createdAt),

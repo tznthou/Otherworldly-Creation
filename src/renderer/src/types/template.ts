@@ -92,7 +92,7 @@ export interface NovelTemplate {
   };
   
   // 自定義設定
-  customSettings?: Record<string, any>;  // 自定義設定
+  customSettings?: Record<string, unknown>;  // 自定義設定
   isCustom?: boolean;             // 是否為自定義模板
   isActive?: boolean;             // 是否啟用
 }
@@ -104,7 +104,7 @@ export interface TemplateApplicationResult {
   appliedSettings: {
     worldSetting: WorldSetting;
     createdCharacters: string[];  // 創建的角色 ID
-    projectSettings: Record<string, any>;
+    projectSettings: Record<string, unknown>;
   };
   errors?: string[];
 }
