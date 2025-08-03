@@ -1,6 +1,9 @@
 // 國際化系統
 import { translationLoader } from './translations';
 
+// 翻譯文件結構類型
+type TranslationRecord = Record<string, string | Record<string, string>>;
+
 export type Language = 'zh-TW' | 'zh-CN' | 'en' | 'ja';
 
 class I18nService {
@@ -103,19 +106,19 @@ class I18nService {
     return key;
   }
 
-  private getValueByKey(translation: any, key: string): any {
+  private getValueByKey(translation: TranslationRecord, key: string): string | undefined {
     const keys = key.split('.');
-    let value = translation;
+    let value: string | Record<string, string> | undefined = translation;
     
     for (const k of keys) {
-      if (value && typeof value === 'object') {
+      if (value && typeof value === 'object' && !(typeof value === 'string')) {
         value = value[k];
       } else {
         return undefined;
       }
     }
     
-    return value;
+    return typeof value === 'string' ? value : undefined;
   }
 
   private interpolateParams(text: string, params?: Record<string, string>): string {

@@ -80,7 +80,7 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'faq' | 'shortcuts' | 'manual' | 'quickstart')}
               className={`flex items-center space-x-2 px-6 py-3 transition-colors ${
                 activeTab === tab.id
                   ? 'bg-gold-500/20 text-gold-400 border-b-2 border-gold-500'

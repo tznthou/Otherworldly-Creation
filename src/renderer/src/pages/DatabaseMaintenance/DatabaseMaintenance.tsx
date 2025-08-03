@@ -5,6 +5,15 @@ import { Badge } from '../../components/UI/Badge';
 import { Progress } from '../../components/UI/Progress';
 import { Alert, AlertDescription } from '../../components/UI/Alert';
 import api from '../../api';
+
+// 資料庫修復結果類型
+interface RepairResult {
+  success: boolean;
+  message: string;
+  issuesFixed?: number;
+  errors?: string[];
+  warnings?: string[];
+}
 import { 
   Database, 
   CheckCircle, 
@@ -51,7 +60,7 @@ const DatabaseMaintenance: React.FC = () => {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [repairResult, setRepairResult] = useState<any>(null);
+  const [repairResult, setRepairResult] = useState<RepairResult | null>(null);
   const [errorReport, setErrorReport] = useState<string>('');
 
   useEffect(() => {

@@ -21,7 +21,7 @@ const EditorSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }
           <label className="block text-gray-300 mb-2">主題</label>
           <select
             value={settings.editor.theme}
-            onChange={(e) => dispatch(updateEditorSettings({ theme: e.target.value as any }))}
+            onChange={(e) => dispatch(updateEditorSettings({ theme: e.target.value as 'cosmic' | 'light' | 'dark' | 'sepia' }))}
             className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
           >
             <option value="cosmic">宇宙深藍</option>

@@ -140,7 +140,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
     }
   };
 
-  const handleInputChange = (field: keyof CharacterFormData, value: any) => {
+  const handleInputChange = (field: keyof CharacterFormData, value: string | number | null) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from './redux';
-import { loadSettings, markSettingsSaved } from '../store/slices/settingsSlice';
+import { loadSettings, markSettingsSaved, AppSettings } from '../store/slices/settingsSlice';
 import { SettingsService, SettingsWatcher } from '../services/settingsService';
 
 /**
@@ -27,7 +27,7 @@ export const useSettings = () => {
 
   // 監聽設定變更
   useEffect(() => {
-    const handleSettingsChange = (newSettings: any) => {
+    const handleSettingsChange = (newSettings: AppSettings) => {
       // 可以在這裡處理設定變更的副作用
       console.log('設定已變更:', newSettings);
     };

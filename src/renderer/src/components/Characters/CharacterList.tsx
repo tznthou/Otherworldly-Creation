@@ -63,8 +63,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({
 
     // 應用排序
     filtered.sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortOptions.field) {
         case 'name':
@@ -130,17 +130,18 @@ export const CharacterList: React.FC<CharacterListProps> = ({
       }
       setDeleteModalOpen(false);
       setCharacterToDelete(null);
-    } catch (err: any) {
-      console.error('刪除角色失敗:', err);
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error('刪除角色失敗:', error);
       
-      if (err.message === 'CHARACTER_HAS_REFERENCES') {
+      if (error.message === 'CHARACTER_HAS_REFERENCES') {
         // 這個錯誤應該由 CharacterDeleteModal 處理
-        throw err;
+        throw error;
       } else {
         // 錯誤處理由父組件負責
         setDeleteModalOpen(false);
         setCharacterToDelete(null);
-        throw err;
+        throw error;
       }
     }
   };

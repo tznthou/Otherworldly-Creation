@@ -84,7 +84,7 @@ export const Menu: React.FC<MenuProps> = ({
         >
           {React.Children.map(children, child => {
             if (React.isValidElement(child)) {
-              return React.cloneElement(child as React.ReactElement<any>, {
+              return React.cloneElement(child as React.ReactElement<{ closeMenu?: () => void }>, {
                 closeMenu
               });
             }

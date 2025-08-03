@@ -80,7 +80,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       const { selection } = editor;
       if (selection && Range.isCollapsed(selection)) {
         const [match] = Editor.nodes(editor, {
-          match: (n) => Editor.isBlock(editor, n as any),
+          match: (n): n is CustomElement => Editor.isBlock(editor, n),
         });
 
         if (match) {
@@ -98,7 +98,12 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   }, [editor, onSave]);
 
   // 渲染元素
-  const renderElement = useCallback((props: any) => {
+  interface RenderElementProps {
+    attributes: React.HTMLAttributes<HTMLElement>;
+    children: React.ReactNode;
+    element: CustomElement;
+  }
+  const renderElement = useCallback((props: RenderElementProps) => {
     switch (props.element.type) {
       case 'heading': {
         const level = props.element.level || 1;
@@ -137,7 +142,12 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   }, []);
 
   // 渲染葉子節點
-  const renderLeaf = useCallback((props: any) => {
+  interface RenderLeafProps {
+    attributes: React.HTMLAttributes<HTMLElement>;
+    children: React.ReactNode;
+    leaf: CustomText;
+  }
+  const renderLeaf = useCallback((props: RenderLeafProps) => {
     let children = props.children;
 
     if (props.leaf.bold) {
@@ -235,7 +245,7 @@ const toggleBlock = (editor: Editor, format: CustomElement['type']) => {
   const isList = format === 'list-item';
 
   Transforms.unwrapNodes(editor, {
-    match: (n): n is CustomElement => Editor.isBlock(editor, n as any) && 'type' in n && (n as any).type === 'list-item',
+    match: (n): n is CustomElement => Editor.isBlock(editor, n) && 'type' in (n as CustomElement) && (n as CustomElement).type === 'list-item',
     split: true,
   });
 
@@ -259,7 +269,7 @@ const isBlockActive = (editor: Editor, format: CustomElement['type']) => {
   const [match] = Array.from(
     Editor.nodes(editor, {
       at: Editor.unhangRange(editor, selection),
-      match: (n): n is CustomElement => Editor.isBlock(editor, n as any) && 'type' in n && (n as any).type === format,
+      match: (n): n is CustomElement => Editor.isBlock(editor, n) && 'type' in (n as CustomElement) && (n as CustomElement).type === format,
     })
   );
 

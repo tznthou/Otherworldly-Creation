@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import AutoBackupService from '../../services/autoBackupService';
+import AutoBackupService, { AutoBackupStatus } from '../../services/autoBackupService';
 
 interface AutoBackupIndicatorProps {
   className?: string;
@@ -17,7 +17,7 @@ const AutoBackupIndicator: React.FC<AutoBackupIndicatorProps> = ({
 
   useEffect(() => {
     // 監聽狀態變更
-    const handleStatusChange = (newStatus: any) => {
+    const handleStatusChange = (newStatus: AutoBackupStatus) => {
       setStatus(newStatus);
     };
 

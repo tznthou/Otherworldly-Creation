@@ -266,7 +266,7 @@ const CreateProjectModal: React.FC = () => {
   };
   
   // 處理 AI 設定變更
-  const handleAISettingChange = (key: keyof AISettings, value: any) => {
+  const handleAISettingChange = (key: keyof AISettings, value: string | number) => {
     setAiSettings(prev => ({
       ...prev,
       [key]: value

@@ -1,11 +1,14 @@
 import { Language } from './index';
 
+// 翻譯文件結構類型
+type TranslationRecord = Record<string, string | Record<string, string>>;
+
 // 動態載入翻譯檔案的類別
 class TranslationLoader {
-  private loadedTranslations: Record<Language, any> = {} as Record<Language, any>;
-  private loadingPromises: Record<Language, Promise<any>> = {} as Record<Language, Promise<any>>;
+  private loadedTranslations: Record<Language, TranslationRecord> = {} as Record<Language, TranslationRecord>;
+  private loadingPromises: Record<Language, Promise<TranslationRecord>> = {} as Record<Language, Promise<TranslationRecord>>;
 
-  async loadTranslation(language: Language): Promise<any> {
+  async loadTranslation(language: Language): Promise<TranslationRecord> {
     // 如果已經載入過，直接返回
     if (this.loadedTranslations[language]) {
       return this.loadedTranslations[language];
@@ -31,7 +34,7 @@ class TranslationLoader {
     }
   }
 
-  private async doLoadTranslation(language: Language): Promise<any> {
+  private async doLoadTranslation(language: Language): Promise<TranslationRecord> {
     try {
       // 動態匯入對應的 JSON 檔案
       const module = await import(`./locales/${language}.json`);
@@ -75,14 +78,14 @@ class TranslationLoader {
   }
 
   // 取得已載入的翻譯
-  getLoadedTranslation(language: Language): any | null {
+  getLoadedTranslation(language: Language): TranslationRecord | null {
     return this.loadedTranslations[language] || null;
   }
 
   // 清除快取
   clearCache(): void {
-    this.loadedTranslations = {} as Record<Language, any>;
-    this.loadingPromises = {} as Record<Language, Promise<any>>;
+    this.loadedTranslations = {} as Record<Language, TranslationRecord>;
+    this.loadingPromises = {} as Record<Language, Promise<TranslationRecord>>;
   }
 }
 
@@ -90,9 +93,9 @@ class TranslationLoader {
 export const translationLoader = new TranslationLoader();
 
 // 為了向後相容，匯出一個函數來取得翻譯
-export const getTranslations = async (): Promise<Record<Language, any>> => {
+export const getTranslations = async (): Promise<Record<Language, TranslationRecord>> => {
   const languages: Language[] = ['zh-TW', 'zh-CN', 'en', 'ja'];
-  const result: Record<Language, any> = {} as Record<Language, any>;
+  const result: Record<Language, TranslationRecord> = {} as Record<Language, TranslationRecord>;
   
   for (const lang of languages) {
     result[lang] = await translationLoader.loadTranslation(lang);
@@ -102,4 +105,4 @@ export const getTranslations = async (): Promise<Record<Language, any>> => {
 };
 
 // 舊的靜態匯出（為了向後相容，但建議使用動態載入）
-export const translations: Record<Language, any> = {} as Record<Language, any>;
+export const translations: Record<Language, TranslationRecord> = {} as Record<Language, TranslationRecord>;

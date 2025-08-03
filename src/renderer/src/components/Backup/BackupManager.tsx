@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
-import BackupService, { BackupValidationResult, RestoreOptions } from '../../services/backupService';
+import BackupService, { BackupValidationResult, RestoreOptions, BackupData } from '../../services/backupService';
 
 interface BackupManagerProps {
   isOpen: boolean;
@@ -15,7 +15,7 @@ const BackupManager: React.FC<BackupManagerProps> = ({ isOpen, onClose }) => {
   const [isRestoring, setIsRestoring] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [validationResult, setValidationResult] = useState<BackupValidationResult | null>(null);
-  const [backupPreview, setBackupPreview] = useState<any>(null);
+  const [backupPreview, setBackupPreview] = useState<BackupData['metadata'] & { dataStats: { projectCount: number; chapterCount: number; characterCount: number } } | null>(null);
   const [restoreOptions, setRestoreOptions] = useState<RestoreOptions>({
     includeProjects: true,
     includeChapters: true,
@@ -237,7 +237,7 @@ const CreateBackupTab: React.FC<CreateBackupTabProps> = ({
 interface RestoreBackupTabProps {
   selectedFile: File | null;
   validationResult: BackupValidationResult | null;
-  backupPreview: any;
+  backupPreview: BackupData['metadata'] & { dataStats: { projectCount: number; chapterCount: number; characterCount: number }; projects?: { id: string; name: string; type: string }[] } | null;
   restoreOptions: RestoreOptions;
   isRestoring: boolean;
   onFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -353,7 +353,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
                 <div className="mt-4">
                   <h6 className="text-white font-medium mb-2">專案列表</h6>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {backupPreview.projects.map((project: any) => (
+                    {backupPreview.projects.map((project: { id: string; name: string; type: string }) => (
                       <div key={project.id} className="flex items-center justify-between bg-cosmic-700 rounded p-2">
                         <span className="text-white">{project.name}</span>
                         <span className="text-xs text-gray-400">{project.type}</span>

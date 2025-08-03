@@ -90,11 +90,11 @@ const GlobalErrorHandler: React.FC<GlobalErrorHandlerProps> = ({ children }) => 
 
   // 監聽 Electron 主進程錯誤
   useEffect(() => {
-    const handleMainProcessError = (error: any) => {
+    const handleMainProcessError = (error: unknown) => {
       dispatch(addError({
         code: ERROR_CODES.SYSTEM_UNKNOWN_ERROR,
         message: '主進程發生錯誤',
-        description: error.message,
+        description: (error as Error)?.message || String(error),
         severity: 'critical',
         category: 'system',
         context: error

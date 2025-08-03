@@ -17,7 +17,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             <label className="block text-gray-300 mb-2">{t('settings.general.language')}</label>
             <select
               value={settings.language}
-              onChange={(e) => dispatch(updateSettings({ language: e.target.value as any }))}
+              onChange={(e) => dispatch(updateSettings({ language: e.target.value as 'zh-TW' | 'zh-CN' | 'en' | 'ja' }))}
               className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             >
               <option value="zh-TW">繁體中文</option>

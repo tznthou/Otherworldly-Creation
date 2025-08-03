@@ -108,7 +108,7 @@ export const useTemplateApplication = () => {
       } else if (typeof err === 'string') {
         errorMessage = err;
       } else if (err && typeof err === 'object' && 'message' in err) {
-        errorMessage = (err as any).message;
+        errorMessage = (err as { message: string }).message;
       }
       
       setError(errorMessage);

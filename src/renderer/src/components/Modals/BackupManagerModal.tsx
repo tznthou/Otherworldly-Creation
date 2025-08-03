@@ -39,9 +39,9 @@ const BackupManagerModal: React.FC = () => {
       await api.database.backup(saveResult.filePath || saveResult.file_path);
       
       setMessage({ type: 'success', text: `備份已成功建立至：${saveResult.filePath || saveResult.file_path}` });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('備份失敗:', error);
-      setMessage({ type: 'error', text: error.message || '備份建立失敗，請稍後再試' });
+      setMessage({ type: 'error', text: (error as Error)?.message || '備份建立失敗，請稍後再試' });
     } finally {
       setIsBackingUp(false);
     }
@@ -80,9 +80,9 @@ const BackupManagerModal: React.FC = () => {
       setTimeout(() => {
         window.location.reload();
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('還原失敗:', error);
-      setMessage({ type: 'error', text: error.message || '還原失敗，請稍後再試' });
+      setMessage({ type: 'error', text: (error as Error)?.message || '還原失敗，請稍後再試' });
     } finally {
       setIsRestoring(false);
     }

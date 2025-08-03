@@ -4,11 +4,14 @@ import { startProgress, updateProgress, completeProgress, failProgress } from '.
 import { ErrorHandler } from '../utils/errorUtils';
 import { AppError } from '../types/error';
 
+// 錯誤對象類型定義
+type ErrorObject = Error | AppError | { code?: string; message?: string; stack?: string } | string;
+
 // 錯誤處理 hook
 export const useErrorHandler = () => {
   const _dispatch = useAppDispatch();
 
-  const handleError = useCallback((error: any, context?: Record<string, any>) => {
+  const handleError = useCallback((error: ErrorObject, context?: Record<string, unknown>) => {
     if (error.code?.startsWith('AI_')) {
       ErrorHandler.handleAIError(error, context);
     } else if (error.code?.startsWith('DATABASE_')) {
@@ -39,7 +42,7 @@ export const useErrorHandler = () => {
       description?: string;
       severity?: 'low' | 'medium' | 'high' | 'critical';
       category?: 'network' | 'database' | 'ai' | 'file' | 'validation' | 'system' | 'user';
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
     }
   ) => {
     ErrorHandler.createError(code, message, options);
@@ -123,7 +126,7 @@ export const useAsyncOperation = () => {
       description?: string;
       estimatedDuration?: number;
       totalSteps?: number;
-      onError?: (error: any) => void;
+      onError?: (error: ErrorObject) => void;
     }
   ): Promise<T> => {
     const progressId = startProgressIndicator(options.title, {
@@ -186,7 +189,7 @@ export const useRetryOperation = () => {
       maxRetries?: number;
       baseDelay?: number;
       backoffFactor?: number;
-      onRetry?: (attempt: number, error: any) => void;
+      onRetry?: (attempt: number, error: ErrorObject) => void;
     } = {}
   ): Promise<T> => {
     const {
@@ -196,7 +199,7 @@ export const useRetryOperation = () => {
       onRetry
     } = options;
 
-    let lastError: any;
+    let lastError: ErrorObject;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {

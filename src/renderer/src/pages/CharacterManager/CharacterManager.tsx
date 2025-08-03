@@ -11,6 +11,17 @@ import TutorialOverlay, { useTutorial } from '../../components/Tutorial/Tutorial
 import { characterTutorial } from '../../data/tutorialSteps';
 import { api } from '../../api';
 
+// 角色一致性問題類型
+interface ConsistencyIssue {
+  id: string;
+  type: 'duplicate' | 'conflict' | 'missing' | 'invalid';
+  characterId?: string;
+  characterName?: string;
+  field?: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
 const CharacterManager: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -20,7 +31,7 @@ const CharacterManager: React.FC = () => {
   const [projectType, setProjectType] = useState<string>('');
   const [allCharacters, setAllCharacters] = useState<Character[]>([]);
   const [showRelationshipView, setShowRelationshipView] = useState(false);
-  const [consistencyIssues, setConsistencyIssues] = useState<any[]>([]);
+  const [consistencyIssues, setConsistencyIssues] = useState<ConsistencyIssue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   

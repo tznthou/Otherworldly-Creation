@@ -1,12 +1,16 @@
 import { Chapter } from '../store/slices/chaptersSlice';
 import { Character } from '../store/slices/charactersSlice';
 import { Project } from '../store/slices/projectsSlice';
+import { AppSettings } from '../store/slices/settingsSlice';
 import api from '../api';
+
+// 儲存資料類型聯合
+type SaveData = Chapter | Character | Project | AppSettings | Record<string, unknown>;
 
 export interface SaveOperation {
   id: string;
   type: 'chapter' | 'character' | 'project' | 'settings';
-  data: any;
+  data: SaveData;
   timestamp: Date;
   status: 'pending' | 'saving' | 'saved' | 'error';
   retryCount: number;
@@ -40,7 +44,7 @@ class SaveManagerClass {
   /**
    * 添加儲存操作到佇列
    */
-  addSaveOperation(type: SaveOperation['type'], data: any): string {
+  addSaveOperation(type: SaveOperation['type'], data: SaveData): string {
     const id = `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     const operation: SaveOperation = {

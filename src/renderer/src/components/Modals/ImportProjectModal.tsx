@@ -9,7 +9,20 @@ const ImportProjectModal: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [importedData, setImportedData] = useState<any | null>(null);
+  const [importedData, setImportedData] = useState<{
+    name: string;
+    type: string;
+    description?: string;
+    settings?: {
+      aiModel: string;
+      aiParams: {
+        temperature: number;
+        topP: number;
+        maxTokens: number;
+      };
+    };
+    exportedAt?: string;
+  } | null>(null);
 
   const handleClose = () => {
     dispatch(closeModal('importProject'));
@@ -44,16 +57,28 @@ const ImportProjectModal: React.FC = () => {
     }
   };
 
-  const validateImportData = (data: any) => {
+  const validateImportData = (data: unknown): data is {
+    name: string;
+    type: string;
+    description?: string;
+    settings?: object;
+    exportedAt?: string;
+  } => {
     // 檢查必要欄位
-    if (!data.name || !data.type) {
+    if (!data || typeof data !== 'object' || !('name' in data) || !('type' in data)) {
       setError('匯入檔案缺少必要欄位（名稱或類型）');
+      return false;
+    }
+    
+    const typedData = data as { name: unknown; type: unknown };
+    if (typeof typedData.name !== 'string' || typeof typedData.type !== 'string') {
+      setError('匯入檔案格式錯誤');
       return false;
     }
     
     // 檢查類型是否有效
     const validTypes = ['isekai', 'school', 'scifi', 'fantasy'];
-    if (!validTypes.includes(data.type)) {
+    if (!validTypes.includes(typedData.type)) {
       setError('專案類型無效');
       return false;
     }

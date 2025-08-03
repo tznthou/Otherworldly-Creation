@@ -1,4 +1,5 @@
 import { AppSettings } from '../../store/slices/settingsSlice';
+import { AppDispatch } from '../../store';
 
 export type SettingsTab = 'general' | 'ai' | 'editor' | 'ui' | 'backup' | 'database' | 'update' | 'privacy' | 'shortcuts';
 
@@ -10,7 +11,7 @@ export interface SettingsTabConfig {
 
 export interface SettingsComponentProps {
   settings: AppSettings;
-  dispatch: any;
+  dispatch: AppDispatch;
 }
 
 export interface SettingsState {

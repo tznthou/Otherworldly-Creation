@@ -77,7 +77,8 @@
       "Bash(chmod:*)",
       "mcp__serena__read_memory",
       "Bash(timeout 10 npm run dev)",
-      "mcp__serena__think_about_collected_information"
+      "mcp__serena__think_about_collected_information",
+      "Bash(npx eslint:*)"
     ],
     "deny": []
   }

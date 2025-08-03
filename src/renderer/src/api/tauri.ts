@@ -1,7 +1,19 @@
 import type { API } from './types';
+import type {
+  Project,
+  Chapter,
+  Character,
+  Relationship,
+  AIGenerationHistory,
+  AIGenerationParams,
+  SaveDialogOptions,
+  OpenDialogOptions,
+  CharacterAttributes
+} from './models';
 
 // 動態導入 Tauri API
-let tauriInvoke: any = null;
+type TauriInvokeFunction = <T = unknown>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
+let tauriInvoke: TauriInvokeFunction | null = null;
 
 const waitForTauri = (): Promise<void> => {
   return new Promise((resolve) => {
@@ -92,7 +104,7 @@ const loadTauriAPI = async () => {
 };
 
 // 安全的 invoke 函數 - 使用標準 Tauri API
-const safeInvoke = async (command: string, args?: any) => {
+const safeInvoke = async <T = unknown>(command: string, args?: Record<string, unknown>): Promise<T> => {
   try {
     console.log(`調用 Tauri 命令: ${command}`, args);
     
@@ -105,7 +117,7 @@ const safeInvoke = async (command: string, args?: any) => {
     
     // 使用獲取到的 invoke 函數，確保參數格式正確
     const invokeArgs = args || {};
-    const result = await invoke(command, invokeArgs);
+    const result = await invoke<T>(command, invokeArgs);
     
     console.log(`Tauri 命令 ${command} 成功:`, result);
     return result;
@@ -160,7 +172,7 @@ const createFallbackData = (commandName: string) => {
 };
 
 // 增強的 safeInvoke，在開發模式下提供回退
-const enhancedSafeInvoke = async (command: string, args?: any) => {
+const enhancedSafeInvoke = async <T = unknown>(command: string, args?: Record<string, unknown>): Promise<T> => {
   try {
     return await safeInvoke(command, args);
   } catch (error) {
@@ -192,9 +204,18 @@ const enhancedSafeInvoke = async (command: string, args?: any) => {
 export const tauriAPI: API = {
   projects: {
     getAll: async () => {
-      const projects = await enhancedSafeInvoke('get_all_projects');
+      interface TauriProject {
+        id: string;
+        name: string;
+        description?: string;
+        type?: string;
+        created_at: string;
+        updated_at: string;
+        settings?: string;
+      }
+      const projects = await enhancedSafeInvoke<TauriProject[]>('get_all_projects');
       // 轉換 Tauri 後端格式到前端格式
-      return projects.map((project: any) => ({
+      return projects.map((project) => ({
         id: project.id,
         name: project.name,
         description: project.description || '',
@@ -243,9 +264,18 @@ export const tauriAPI: API = {
   
   chapters: {
     getByProjectId: async (projectId) => {
-      const chapters = await safeInvoke('get_chapters_by_project_id', { projectId });
+      interface TauriChapter {
+        id: string;
+        project_id: string;
+        title: string;
+        content?: string;
+        order_index: number;
+        created_at: string;
+        updated_at: string;
+      }
+      const chapters = await safeInvoke<TauriChapter[]>('get_chapters_by_project_id', { projectId });
       // 轉換 Tauri 後端格式到前端格式
-      return chapters.map((chapter: any) => ({
+      return chapters.map((chapter) => ({
         id: chapter.id,
         projectId: chapter.project_id,
         title: chapter.title,
@@ -289,12 +319,28 @@ export const tauriAPI: API = {
 
   characters: {
     getByProjectId: async (projectId) => {
-      const characters = await safeInvoke('get_characters_by_project_id', { projectId });
+      interface TauriCharacter {
+        id: string;
+        project_id: string;
+        name: string;
+        description?: string;
+        attributes?: string;
+        avatar_url?: string;
+        created_at: string;
+        updated_at: string;
+      }
+      interface TauriRelationship {
+        id: string;
+        to_character_id: string;
+        relationship_type: string;
+        description?: string;
+      }
+      const characters = await safeInvoke<TauriCharacter[]>('get_characters_by_project_id', { projectId });
       
       // 轉換 Tauri 格式到前端格式，並載入關係資料
       const charactersWithRelationships = await Promise.all(
-        characters.map(async (char: any) => {
-          let attributes: any = {};
+        characters.map(async (char) => {
+          let attributes: CharacterAttributes = {};
           try {
             attributes = char.attributes ? JSON.parse(char.attributes) : {};
           } catch {
@@ -304,8 +350,8 @@ export const tauriAPI: API = {
           // 載入該角色的關係資料
           let relationships = [];
           try {
-            const rawRelationships = await safeInvoke('get_character_relationships', { characterId: char.id });
-            relationships = rawRelationships.map((rel: any) => ({
+            const rawRelationships = await safeInvoke<TauriRelationship[]>('get_character_relationships', { characterId: char.id });
+            relationships = rawRelationships.map((rel) => ({
               id: rel.id,
               targetId: rel.to_character_id,
               type: rel.relationship_type,
@@ -369,8 +415,24 @@ export const tauriAPI: API = {
     }),
     delete: (id) => safeInvoke('delete_character', { id }),
     getById: async (id) => {
-      const char = await safeInvoke('get_character_by_id', { id });
-      let attributes: any = {};
+      interface TauriCharacter {
+        id: string;
+        project_id: string;
+        name: string;
+        description?: string;
+        attributes?: string;
+        avatar_url?: string;
+        created_at: string;
+        updated_at: string;
+      }
+      interface TauriRelationship {
+        id: string;
+        to_character_id: string;
+        relationship_type: string;
+        description?: string;
+      }
+      const char = await safeInvoke<TauriCharacter>('get_character_by_id', { id });
+      let attributes: CharacterAttributes = {};
       try {
         attributes = char.attributes ? JSON.parse(char.attributes) : {};
       } catch {
@@ -380,8 +442,8 @@ export const tauriAPI: API = {
       // 載入該角色的關係資料
       let relationships = [];
       try {
-        const rawRelationships = await safeInvoke('get_character_relationships', { characterId: char.id });
-        relationships = rawRelationships.map((rel: any) => ({
+        const rawRelationships = await safeInvoke<TauriRelationship[]>('get_character_relationships', { characterId: char.id });
+        relationships = rawRelationships.map((rel) => ({
           id: rel.id,
           targetId: rel.to_character_id,
           type: rel.relationship_type,
@@ -467,9 +529,13 @@ export const tauriAPI: API = {
       return safeInvoke('set_setting', { key, value: stringValue });
     },
     getAll: async () => {
-      const settingsArray = await enhancedSafeInvoke('get_all_settings');
+      interface TauriSettingEntry {
+        key: string;
+        value: string;
+      }
+      const settingsArray = await enhancedSafeInvoke<TauriSettingEntry[]>('get_all_settings');
       // 將 SettingEntry[] 轉換為物件格式
-      const settings: Record<string, any> = {};
+      const settings: Record<string, unknown> = {};
       for (const entry of settingsArray || []) {
         try {
           settings[entry.key] = JSON.parse(entry.value);
@@ -554,8 +620,23 @@ export const tauriAPI: API = {
         limit: params.limit,
         offset: params.offset,
       };
-      const results = await safeInvoke('query_ai_history', { request: queryRequest });
-      return results.map((result: any) => ({
+      interface TauriAIHistory {
+        id: string;
+        project_id: string;
+        chapter_id: string;
+        model: string;
+        prompt: string;
+        generated_text: string;
+        parameters?: string;
+        language_purity?: number;
+        token_count?: number;
+        generation_time_ms?: number;
+        selected: boolean;
+        position?: number;
+        created_at: string;
+      }
+      const results = await safeInvoke<TauriAIHistory[]>('query_ai_history', { request: queryRequest });
+      return results.map((result) => ({
         id: result.id,
         projectId: result.project_id,
         chapterId: result.chapter_id,

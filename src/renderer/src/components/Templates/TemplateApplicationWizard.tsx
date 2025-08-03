@@ -27,7 +27,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
   const [_isApplying, _setIsApplying] = useState(false);
   const [characterPreviews, setCharacterPreviews] = useState<Array<{
     archetype: CharacterArchetypeTemplate;
-    previewData: any;
+    previewData: Partial<Character>;
   }>>([]);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
         success: false,
         message: `應用模板失敗: ${error instanceof Error ? error.message : '未知錯誤'}`,
         appliedSettings: {
-          worldSetting: {} as any,
+          worldSetting: template.worldSetting,
           createdCharacters: [],
           projectSettings: {}
         },

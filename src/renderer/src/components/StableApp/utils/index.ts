@@ -1,5 +1,19 @@
 import { STORAGE_KEYS } from '../constants';
 import { Project, Character } from '../types';
+import { NovelTemplate } from '../../../types/template';
+
+// 備份數據類型定義
+interface BackupData {
+  projects: Project[];
+  characters: Character[];
+  content: string;
+  template: NovelTemplate | null;
+  stats: {
+    totalWritingTime: string;
+    savedTime: string;
+  };
+  exportTime: string;
+}
 
 // 本地儲存相關工具函數
 export const storage = {
@@ -44,13 +58,17 @@ export const storage = {
   },
   
   // 模板相關
-  getAppliedTemplate: (): any => {
+  getAppliedTemplate: (): NovelTemplate | null => {
     const data = localStorage.getItem(STORAGE_KEYS.TEMPLATE);
     return data ? JSON.parse(data) : null;
   },
   
-  saveAppliedTemplate: (template: any): void => {
-    localStorage.setItem(STORAGE_KEYS.TEMPLATE, JSON.stringify(template));
+  saveAppliedTemplate: (template: NovelTemplate | null): void => {
+    if (template) {
+      localStorage.setItem(STORAGE_KEYS.TEMPLATE, JSON.stringify(template));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.TEMPLATE);
+    }
   }
 };
 
@@ -95,7 +113,7 @@ export const backup = {
   },
   
   // 還原備份
-  restoreBackup: (data: any): void => {
+  restoreBackup: (data: BackupData): void => {
     if (data.projects) storage.saveProjects(data.projects);
     if (data.characters) storage.saveCharacters(data.characters);
     if (data.content) storage.saveContent(data.content);
@@ -109,7 +127,7 @@ export const backup = {
   },
   
   // 下載備份檔案
-  downloadBackup: (data: any, filename: string): void => {
+  downloadBackup: (data: BackupData, filename: string): void => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

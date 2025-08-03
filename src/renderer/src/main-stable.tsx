@@ -26,7 +26,7 @@ import './index.css';
   const originalConsoleWarn = console.warn;
   
   // 重寫 console.error 來過濾 Tauri 錯誤
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     const errorString = args.join(' ');
     if (errorString.includes('callbackId') || 
         errorString.includes('undefined is not an object') ||
@@ -37,7 +37,7 @@ import './index.css';
     originalConsoleError.apply(console, args);
   };
   
-  console.warn = (...args: any[]) => {
+  console.warn = (...args: unknown[]) => {
     const warnString = args.join(' ');
     if (warnString.includes('callbackId') || 
         warnString.includes('undefined is not an object')) {
