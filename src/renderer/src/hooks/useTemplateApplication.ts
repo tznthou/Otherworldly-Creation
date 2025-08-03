@@ -31,7 +31,16 @@ export const useTemplateApplication = () => {
         type: template.type as 'isekai' | 'school' | 'scifi' | 'fantasy', // 添加 type 字段
         description: options.projectDescription || template.description,
         settings: {
-          // 保存模板相關信息到 settings 中
+          // 只保留 Project 接口支援的屬性
+          aiModel: 'llama3.2', // 預設模型
+          aiParams: {
+            temperature: 0.7,
+            topP: 0.9,
+            maxTokens: 400
+          }
+        },
+        // 將模板資訊儲存為額外屬性（如果需要的話）
+        templateMetadata: {
           templateId: template.id,
           templateName: template.name,
           worldSetting: options.applyWorldSetting ? template.worldSetting : undefined,
@@ -62,7 +71,7 @@ export const useTemplateApplication = () => {
                   gender: archetype.suggestedGender?.[0] || '未設定',
                   archetype: archetype.name
                 }),
-                avatarUrl: ''
+                // avatarUrl 屬性已移除
               });
             } catch (charError) {
               console.warn('創建角色失敗:', charError);

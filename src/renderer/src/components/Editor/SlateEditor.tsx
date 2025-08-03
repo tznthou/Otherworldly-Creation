@@ -85,7 +85,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         });
 
         if (match) {
-          const [block] = match;
+          const [block] = match as [CustomElement, number[]];
           if ('type' in block && block.type === 'quote') {
             event.preventDefault();
             Transforms.insertNodes(editor, {
@@ -241,7 +241,7 @@ const toggleBlock = (editor: Editor, format: CustomElement['type']) => {
   const isList = format === 'list-item';
 
   Transforms.unwrapNodes(editor, {
-    match: n => Editor.isBlock(editor, n) && 'type' in n && n.type === 'list-item',
+    match: (n): n is CustomElement => Editor.isBlock(editor, n) && 'type' in n && (n as any).type === 'list-item',
     split: true,
   });
 
@@ -265,7 +265,7 @@ const isBlockActive = (editor: Editor, format: CustomElement['type']) => {
   const [match] = Array.from(
     Editor.nodes(editor, {
       at: Editor.unhangRange(editor, selection),
-      match: n => Editor.isBlock(editor, n) && 'type' in n && n.type === format,
+      match: (n): n is CustomElement => Editor.isBlock(editor, n) && 'type' in n && (n as any).type === format,
     })
   );
 

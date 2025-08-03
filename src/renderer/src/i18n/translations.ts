@@ -12,7 +12,7 @@ class TranslationLoader {
     }
 
     // 如果正在載入中，返回載入中的 Promise
-    if (this.loadingPromises[language] && this.loadingPromises[language] !== undefined) {
+    if (this.loadingPromises[language] !== undefined) {
       return this.loadingPromises[language];
     }
 
