@@ -2,8 +2,8 @@ import { Language } from './index';
 
 // 動態載入翻譯檔案的類別
 class TranslationLoader {
-  private loadedTranslations: Record<Language, any> = {};
-  private loadingPromises: Record<Language, Promise<any>> = {};
+  private loadedTranslations: Record<Language, any> = {} as Record<Language, any>;
+  private loadingPromises: Record<Language, Promise<any>> = {} as Record<Language, Promise<any>>;
 
   async loadTranslation(language: Language): Promise<any> {
     // 如果已經載入過，直接返回
@@ -12,7 +12,7 @@ class TranslationLoader {
     }
 
     // 如果正在載入中，返回載入中的 Promise
-    if (this.loadingPromises[language]) {
+    if (this.loadingPromises[language] && this.loadingPromises[language] !== undefined) {
       return this.loadingPromises[language];
     }
 
@@ -81,8 +81,8 @@ class TranslationLoader {
 
   // 清除快取
   clearCache(): void {
-    this.loadedTranslations = {};
-    this.loadingPromises = {};
+    this.loadedTranslations = {} as Record<Language, any>;
+    this.loadingPromises = {} as Record<Language, Promise<any>>;
   }
 }
 

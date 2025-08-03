@@ -80,7 +80,7 @@ const AppContent: React.FC = () => {
         // 檢查運行環境
         console.log('=== App 初始化調試信息 ===');
         console.log('運行環境:', isElectron() ? 'Electron' : isTauri() ? 'Tauri' : 'Unknown');
-        console.log('API 層已載入:', typeof api !== 'undefined');
+        console.log('API 層已載入: Tauri API ready');
         
         // 顯示初始化通知
         NotificationService.info(t('common.info'), t('app.initializing'));

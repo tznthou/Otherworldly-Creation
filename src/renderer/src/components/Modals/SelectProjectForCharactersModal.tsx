@@ -60,7 +60,7 @@ const SelectProjectForCharactersModal: React.FC = () => {
                   className="w-full text-left p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg hover:border-gold-500 transition-colors group"
                 >
                   <h4 className="font-medium text-white group-hover:text-gold-400">
-                    {project.title}
+                    {project.name}
                   </h4>
                   {project.description && (
                     <p className="text-sm text-gray-400 mt-1">

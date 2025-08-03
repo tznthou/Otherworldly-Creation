@@ -136,7 +136,7 @@ const CharacterManager: React.FC = () => {
             personality: formData.personality,
             background: formData.background,
           }),
-          avatarUrl: selectedCharacter.avatarUrl || '', // 保持原有的 avatarUrl
+          // avatarUrl 屬性已移除
         };
         
         await api.characters.update(updateData);
@@ -203,7 +203,7 @@ const CharacterManager: React.FC = () => {
             personality: formData.personality,
             background: formData.background,
           }),
-          avatarUrl: '', // 預設為空
+          // avatarUrl 屬性已移除
         };
         
         console.log('Creating character with data:', characterData);

@@ -217,7 +217,6 @@ const CreateProjectModal: React.FC = () => {
             topP: aiSettings.topP,
             maxTokens: aiSettings.maxTokens,
           },
-          templateSettings,
         },
       })).unwrap();
 
