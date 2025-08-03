@@ -156,7 +156,7 @@ export const ERROR_MESSAGES: Record<string, {
             try {
               const { api } = await import('../api');
               await api.system.reloadApp();
-            } catch (error) {
+            } catch (_error) {
               window.location.reload();
             }
           }

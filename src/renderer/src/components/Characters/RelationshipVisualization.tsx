@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Character, Relationship } from '../../types/character';
+import { Character } from '../../types/character';
 
 interface RelationshipVisualizationProps {
   characters: Character[];

@@ -101,7 +101,7 @@ export const fetchCharacterById = createAsyncThunk(
 
 export const updateCharacterRelationships = createAsyncThunk(
   'characters/updateCharacterRelationships',
-  async ({ characterId, relationships }: { characterId: string; relationships: Relationship[] }) => {
+  async ({ characterId, _relationships }: { characterId: string; _relationships: Relationship[] }) => {
     // updateRelationships 方法不存在，先清除再重新創建
       await api.characters.clearRelationships(characterId);
     const character = await api.characters.getById(characterId);
@@ -111,7 +111,7 @@ export const updateCharacterRelationships = createAsyncThunk(
 
 export const checkRelationshipConsistency = createAsyncThunk(
   'characters/checkRelationshipConsistency',
-  async (projectId: string) => {
+  async (_projectId: string) => {
     // checkRelationshipConsistency 方法不存在，返回空陣列
     const issues: any[] = [];
     return issues;

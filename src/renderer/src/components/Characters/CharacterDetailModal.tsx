@@ -8,7 +8,7 @@ interface CharacterDetailModalProps {
   onClose: () => void;
   character: Character | null;
   onEdit: (character: Character) => void;
-  onDelete: (character: Character) => void;
+  _onDelete: (character: Character) => void;
   allCharacters?: Character[];
 }
 
@@ -17,7 +17,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
   onClose,
   character,
   onEdit,
-  onDelete,
+  _onDelete,
   allCharacters = [],
 }) => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -33,7 +33,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
     setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = async (forceDelete: boolean) => {
+  const handleConfirmDelete = async (_forceDelete: boolean) => {
     try {
       await api.characters.delete(character.id);
       setDeleteModalOpen(false);

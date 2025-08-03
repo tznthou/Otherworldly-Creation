@@ -352,13 +352,13 @@ const CharacterManager: React.FC = () => {
         ) : (
           <div data-tutorial="create-character-btn" className="flex-1 min-h-0">
             <CharacterList
-              projectId={projectId}
+              _projectId={projectId}
               characters={allCharacters}
               loading={loading}
               error={error}
               onCreateCharacter={handleCreateCharacter}
               onEditCharacter={handleEditCharacter}
-              onDeleteCharacter={handleDeleteCharacter}
+              _onDeleteCharacter={handleDeleteCharacter}
               onViewCharacter={handleViewCharacter}
               onReload={loadCharacters}
             />
@@ -395,7 +395,7 @@ const CharacterManager: React.FC = () => {
         onClose={handleCloseModals}
         character={selectedCharacter}
         onEdit={handleEditCharacter}
-        onDelete={handleDeleteCharacter}
+        _onDelete={handleDeleteCharacter}
         allCharacters={allCharacters}
       />
 

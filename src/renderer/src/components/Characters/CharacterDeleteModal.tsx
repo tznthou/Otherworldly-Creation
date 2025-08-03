@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Character } from '../../types/character';
-import api from '../../api';
 
 interface CharacterReference {
   type: 'chapter' | 'relationship';

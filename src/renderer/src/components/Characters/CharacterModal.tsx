@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Character, CharacterFormData, CHARACTER_ARCHETYPES, GENDER_OPTIONS, Relationship } from '../../types/character';
-import { CHARACTER_ARCHETYPE_TEMPLATES, getArchetypeTemplateByName, CharacterArchetypeTemplate } from '../../data/characterArchetypes';
+import { Character, CharacterFormData, GENDER_OPTIONS, Relationship } from '../../types/character';
+import { getArchetypeTemplateByName, CharacterArchetypeTemplate } from '../../data/characterArchetypes';
 import { ArchetypeSelector } from './ArchetypeSelector';
 import { RelationshipEditor } from './RelationshipEditor';
 

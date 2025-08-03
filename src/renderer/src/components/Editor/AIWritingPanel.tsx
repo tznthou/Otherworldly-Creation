@@ -22,13 +22,6 @@ interface GenerationOption {
   selected?: boolean;
 }
 
-interface GenerationProgress {
-  current: number;
-  total: number;
-  stage: 'preparing' | 'generating' | 'processing' | 'complete';
-  message: string;
-}
-
 const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId }) => {
   const dispatch = useAppDispatch();
   const editor = useSlate();

@@ -6,25 +6,25 @@ import { CharacterDeleteModal } from './CharacterDeleteModal';
 import { api } from '../../api';
 
 interface CharacterListProps {
-  projectId: string;
+  _projectId: string;
   characters: Character[];
   loading?: boolean;
   error?: string | null;
   onCreateCharacter: () => void;
   onEditCharacter: (character: Character) => void;
-  onDeleteCharacter: (character: Character) => void;
+  _onDeleteCharacter: (character: Character) => void;
   onViewCharacter: (character: Character) => void;
   onReload?: () => void;
 }
 
 export const CharacterList: React.FC<CharacterListProps> = ({
-  projectId,
+  _projectId,
   characters,
   loading = false,
   error = null,
   onCreateCharacter,
   onEditCharacter,
-  onDeleteCharacter,
+  _onDeleteCharacter,
   onViewCharacter,
   onReload,
 }) => {
@@ -119,7 +119,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
     setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = async (forceDelete: boolean) => {
+  const handleConfirmDelete = async (_forceDelete: boolean) => {
     if (!characterToDelete) return;
 
     try {
