@@ -10,6 +10,7 @@ export interface AppSettings {
   // AI 設定
   ai: {
     defaultModel: string;
+    selectedModel?: string;
     temperature: number;
     topP: number;
     maxTokens: number;

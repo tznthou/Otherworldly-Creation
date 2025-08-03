@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { NovelTemplate, TemplateApplicationResult } from '../../types/template';
 import { CharacterArchetypeTemplate } from '../../types/template';
+import { Character } from '../../types/character';
 import { templateService } from '../../services/templateService';
 import { templateCharacterService } from '../../services/templateCharacterService';
 
@@ -30,6 +31,11 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
     previewData: Partial<Character>;
   }>>([]);
 
+  const updateCharacterPreviews = useCallback((archetypes: string[]) => {
+    const previews = templateCharacterService.previewCharacterCreation(template, archetypes);
+    setCharacterPreviews(previews);
+  }, [template]);
+
   useEffect(() => {
     // 獲取推薦的角色組合
     const { essential, optional: _optional } = templateCharacterService.getRecommendedCharacterCombination(template);
@@ -39,11 +45,6 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
     // 生成角色預覽
     updateCharacterPreviews(recommendedArchetypes);
   }, [template, updateCharacterPreviews]);
-
-  const updateCharacterPreviews = useCallback((archetypes: string[]) => {
-    const previews = templateCharacterService.previewCharacterCreation(template, archetypes);
-    setCharacterPreviews(previews);
-  }, [template]);
 
   const handleArchetypeToggle = (archetypeName: string) => {
     const newSelection = selectedArchetypes.includes(archetypeName)

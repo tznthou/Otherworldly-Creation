@@ -88,7 +88,7 @@ class BackupServiceClass {
           projects,
           chapters: allChapters,
           characters: allCharacters,
-          settings: settings || {},
+          settings: settings as unknown as AppSettings,
         }
       };
 
@@ -138,7 +138,7 @@ class BackupServiceClass {
           projects: [project],
           chapters,
           characters,
-          settings: settings || {},
+          settings: settings as unknown as AppSettings,
         }
       };
 

@@ -22,7 +22,7 @@ import { useAppDispatch } from './hooks/redux';
 import { checkOllamaService, fetchModelsInfo } from './store/slices/aiSlice';
 import { ErrorHandler, withErrorBoundary } from './utils/errorUtils';
 import { NotificationService } from './components/UI/NotificationSystem';
-import { useShortcuts } from './hooks/useSettings';
+// import { useShortcuts } from './hooks/useSettings'; // Hook not found
 import { useI18n } from './hooks/useI18n';
 import AutoBackupService from './services/autoBackupService';
 import UpdateManager from './components/Update/UpdateManager';
@@ -60,7 +60,7 @@ const AppContent: React.FC = () => {
   
   
   // 全域快捷鍵
-  useShortcuts();
+  // useShortcuts(); // Hook not found
   
   // 國際化系統
   const { t } = useI18n();

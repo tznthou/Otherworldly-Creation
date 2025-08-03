@@ -19,7 +19,7 @@ interface ConsistencyIssue {
   characterName?: string;
   field?: string;
   message: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: 'low' | 'medium' | 'high' | 'warning';
 }
 
 const CharacterManager: React.FC = () => {
@@ -136,18 +136,14 @@ const CharacterManager: React.FC = () => {
       if (selectedCharacter) {
         // 更新現有角色
         const updateData = {
-          id: selectedCharacter.id,
+          ...selectedCharacter,
           name: formData.name,
-          description: formData.background || '', // 使用 background 作為 description
-          attributes: JSON.stringify({
-            archetype: formData.archetype,
-            age: formData.age,
-            gender: formData.gender,
-            appearance: formData.appearance,
-            personality: formData.personality,
-            background: formData.background,
-          }),
-          // avatarUrl 屬性已移除
+          archetype: formData.archetype,
+          age: formData.age,
+          gender: formData.gender,
+          appearance: formData.appearance,
+          personality: formData.personality,
+          background: formData.background,
         };
         
         await api.characters.update(updateData);

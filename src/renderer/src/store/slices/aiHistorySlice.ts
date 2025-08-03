@@ -51,7 +51,10 @@ const initialState: AIHistoryState = {
 export const createAIHistory = createAsyncThunk(
   'aiHistory/create',
   async (history: Omit<AIGenerationHistory, 'id' | 'createdAt' | 'selected'>) => {
-    const result = await api.aiHistory.create(history);
+    const result = await api.aiHistory.create({
+      ...history,
+      selected: false
+    });
     return result;
   }
 );

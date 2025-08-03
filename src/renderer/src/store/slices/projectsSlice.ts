@@ -37,11 +37,12 @@ export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
   async () => {
     const projects = await api.projects.getAll();
-    // 確保日期是字符串格式
-    return projects.map((project: { id: string; name: string; type: string; description: string; createdAt: Date | string; updatedAt: Date | string; settings?: Record<string, unknown> }) => ({
+    // 確保型別匹配
+    return projects.map((project) => ({
       ...project,
-      createdAt: project.createdAt instanceof Date ? project.createdAt.toISOString() : project.createdAt,
-      updatedAt: project.updatedAt instanceof Date ? project.updatedAt.toISOString() : project.updatedAt,
+      type: project.type as 'isekai' | 'school' | 'scifi' | 'fantasy',
+      createdAt: typeof project.createdAt === 'string' ? project.createdAt : project.createdAt,
+      updatedAt: typeof project.updatedAt === 'string' ? project.updatedAt : project.updatedAt,
     }));
   }
 );
@@ -54,8 +55,8 @@ export const createProject = createAsyncThunk(
     // 確保日期是字符串格式
     return {
       ...project,
-      createdAt: project.createdAt instanceof Date ? project.createdAt.toISOString() : project.createdAt,
-      updatedAt: project.updatedAt instanceof Date ? project.updatedAt.toISOString() : project.updatedAt,
+      createdAt: project.createdAt && typeof project.createdAt === 'object' && 'toISOString' in project.createdAt ? (project.createdAt as Date).toISOString() : String(project.createdAt),
+      updatedAt: project.updatedAt && typeof project.updatedAt === 'object' && 'toISOString' in project.updatedAt ? (project.updatedAt as Date).toISOString() : String(project.updatedAt),
     };
   }
 );

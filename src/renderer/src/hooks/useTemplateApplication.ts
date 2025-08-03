@@ -62,16 +62,12 @@ export const useTemplateApplication = () => {
               await api.characters.create({
                 projectId: projectId,
                 name: archetype.name,
-                description: archetype.description,
-                attributes: JSON.stringify({
-                  personality: archetype.personality,
-                  appearance: archetype.appearance || '',
-                  background: archetype.background || '',
-                  age: archetype.suggestedAge ? Math.round((archetype.suggestedAge.min + archetype.suggestedAge.max) / 2) : undefined,
-                  gender: archetype.suggestedGender?.[0] || '未設定',
-                  archetype: archetype.name
-                }),
-                // avatarUrl 屬性已移除
+                background: archetype.description,
+                personality: archetype.personality,
+                appearance: archetype.appearance || '',
+                age: archetype.suggestedAge ? Math.round((archetype.suggestedAge.min + archetype.suggestedAge.max) / 2) : undefined,
+                gender: archetype.suggestedGender?.[0] || '未設定',
+                archetype: archetype.name
               });
             } catch (charError) {
               console.warn('創建角色失敗:', charError);
@@ -86,8 +82,11 @@ export const useTemplateApplication = () => {
           await api.chapters.create({
             projectId: projectId,
             title: '第一章：開始的故事',
-            content: template.sampleContent.opening,
-            orderIndex: 1
+            content: [{
+              type: 'paragraph' as const,
+              children: [{ text: template.sampleContent.opening }]
+            }],
+            order: 1
           });
         } catch (chapterError) {
           console.warn('創建範例章節失敗:', chapterError);

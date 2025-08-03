@@ -3,7 +3,7 @@ import type {
   Project,
   Chapter,
   Character,
-  Relationship,
+  CreateRelationshipRequest,
   AIGenerationHistory,
   AIServiceStatus,
   AIModelInfo,
@@ -47,7 +47,7 @@ export interface API {
     update: (character: Character) => Promise<void>;
     delete: (id: string) => Promise<void>;
     getById: (id: string) => Promise<Character>;
-    createRelationship: (relationship: Omit<Relationship, 'id'>) => Promise<string>;
+    createRelationship: (request: CreateRelationshipRequest) => Promise<string>;
     deleteRelationship: (id: string) => Promise<void>;
     clearRelationships: (characterId: string) => Promise<void>;
   };

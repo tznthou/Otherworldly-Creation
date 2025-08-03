@@ -98,7 +98,7 @@ const ImportProjectModal: React.FC = () => {
       // 創建新專案
       await dispatch(createProject({
         name: importedData.name,
-        type: importedData.type,
+        type: (importedData.type as 'isekai' | 'school' | 'scifi' | 'fantasy') || 'isekai',
         description: importedData.description || '',
         settings: importedData.settings || {
           aiModel: 'llama3',

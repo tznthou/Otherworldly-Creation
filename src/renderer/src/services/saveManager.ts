@@ -149,7 +149,7 @@ class SaveManagerClass {
             await this.saveProject(operation.data as Project);
             break;
           case 'settings':
-            await this.saveSettings(operation.data);
+            await this.saveSettings(operation.data as Record<string, unknown>);
             break;
           default:
             throw new Error(`未知的儲存類型: ${type}`);
@@ -167,10 +167,7 @@ class SaveManagerClass {
    * 儲存章節
    */
   private async saveChapter(chapter: Chapter): Promise<void> {
-    await api.chapters.update({
-      ...chapter,
-      content: JSON.stringify(chapter.content)
-    });
+    await api.chapters.update(chapter);
   }
 
   /**

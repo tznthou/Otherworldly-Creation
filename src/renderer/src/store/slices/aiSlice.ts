@@ -232,15 +232,21 @@ const aiSlice = createSlice({
 
       // fetchServiceStatus
       .addCase(fetchServiceStatus.fulfilled, (state, action) => {
-        state.serviceStatus = action.payload;
-        if (action.payload && action.payload.service) {
-          state.isOllamaConnected = action.payload.service.available;
-          if (!action.payload.service.available) {
-            state.availableModels = [];
-            state.currentModel = null;
-          }
-        } else {
-          state.isOllamaConnected = false;
+        const payload = action.payload as { isRunning?: boolean; version?: string; error?: string; models?: string[] };
+        state.serviceStatus = {
+          service: {
+            available: payload.isRunning || false,
+            version: payload.version,
+            error: payload.error
+          },
+          models: {
+            count: payload.models?.length || 0,
+            list: payload.models || []
+          },
+          lastChecked: new Date()
+        };
+        state.isOllamaConnected = payload.isRunning || false;
+        if (!payload.isRunning) {
           state.availableModels = [];
           state.currentModel = null;
         }
@@ -265,15 +271,36 @@ const aiSlice = createSlice({
 
       // fetchModelsInfo
       .addCase(fetchModelsInfo.fulfilled, (state, action) => {
-        state.modelsInfo = action.payload;
-        if (action.payload && action.payload.success) {
-          state.availableModels = action.payload.models.map((m: { name: string; size: number; modified_at: string }) => m.name);
-          // 如果沒有選擇模型且有可用模型，選擇第一個
-          if (!state.currentModel && action.payload.models.length > 0) {
-            state.currentModel = action.payload.models[0].name;
+        interface ModelInfo { name: string; size: number; modified_at: string; }
+        const payload = action.payload as { success?: boolean; models?: ModelInfo[]; error?: string } | ModelInfo[];
+        
+        if (Array.isArray(payload)) {
+          // 直接返回模型列表的情況
+          state.modelsInfo = {
+            success: true,
+            models: payload,
+            error: undefined
+          };
+          state.availableModels = payload.map(m => m.name);
+          if (!state.currentModel && payload.length > 0) {
+            state.currentModel = payload[0].name;
           }
         } else {
-          state.availableModels = [];
+          // 返回包含 success 字段的對象
+          state.modelsInfo = {
+            success: payload.success || true,
+            models: payload.models || [],
+            error: payload.error
+          };
+          const models = payload.models || [];
+          if (models.length > 0) {
+            state.availableModels = models.map(m => m.name);
+            if (!state.currentModel) {
+              state.currentModel = models[0].name;
+            }
+          } else {
+            state.availableModels = [];
+          }
         }
       })
       .addCase(fetchModelsInfo.rejected, (state, action) => {
@@ -284,7 +311,7 @@ const aiSlice = createSlice({
       // checkModelAvailability
       .addCase(checkModelAvailability.fulfilled, (state, action) => {
         // 可以在這裡處理特定模型的可用性狀態
-        if (!action.payload.available && state.currentModel === action.payload.modelName) {
+        if (!action.payload.isAvailable && state.currentModel === action.payload.modelName) {
           state.currentModel = null;
         }
       })

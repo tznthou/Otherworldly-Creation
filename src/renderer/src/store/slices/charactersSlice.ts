@@ -20,12 +20,12 @@ export interface Character {
   id: string;
   projectId: string;
   name: string;
-  archetype: string;
-  age: number | null;
-  gender: string;
-  appearance: string;
-  personality: string;
-  background: string;
+  archetype?: string;
+  age?: number;
+  gender?: string;
+  appearance?: string;
+  personality?: string;
+  background?: string;
   relationships?: Relationship[];
   createdAt: Date;
   updatedAt: Date;
@@ -133,9 +133,9 @@ const filterCharacters = (characters: Character[], query: string): Character[] =
   const lowercaseQuery = query.toLowerCase();
   return characters.filter(character =>
     character.name.toLowerCase().includes(lowercaseQuery) ||
-    character.archetype.toLowerCase().includes(lowercaseQuery) ||
-    character.personality.toLowerCase().includes(lowercaseQuery) ||
-    character.background.toLowerCase().includes(lowercaseQuery)
+    character.archetype?.toLowerCase().includes(lowercaseQuery) ||
+    character.personality?.toLowerCase().includes(lowercaseQuery) ||
+    character.background?.toLowerCase().includes(lowercaseQuery)
   );
 };
 

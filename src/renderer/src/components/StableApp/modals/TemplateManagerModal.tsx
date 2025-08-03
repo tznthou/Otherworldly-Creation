@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Template } from '../types';
+import { NovelTemplate } from '../../../types/template';
 import { STORY_TEMPLATES } from '../constants';
 import { componentStyles, baseStyles } from '../styles';
 import { storage } from '../utils';
@@ -20,13 +21,46 @@ const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOpen, onC
     );
     
     if (confirmation) {
-      // 儲存模板到本地儲存
-      const templateData = {
+      // 轉換 Template 為 NovelTemplate 格式
+      const templateData: NovelTemplate = {
         id: template.id,
         name: template.name,
-        type: template.type,
-        appliedAt: new Date().toISOString(),
-        outline: template.outline
+        type: template.type as 'isekai' | 'school' | 'scifi' | 'fantasy', // 明確指定類型轉換
+        description: template.description,
+        version: '1.0.0',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        worldSetting: {
+          era: 'modern',
+          technology: 'contemporary',
+          society: 'modern',
+          specialElements: [],
+          geography: template.description,
+        },
+        characterArchetypes: [],
+        plotFramework: [],
+        writingGuidelines: {
+          tone: 'neutral',
+          style: 'descriptive',
+          pacing: 'moderate',
+          themes: [],
+          commonTropes: [],
+          avoidances: []
+        },
+        aiPromptTemplate: {
+          context: '',
+          characterPrompts: [],
+          worldPrompts: [],
+          stylePrompts: [],
+          continuationPrompts: []
+        },
+        sampleContent: {
+          opening: '',
+          dialogue: [],
+          description: []
+        },
+        isCustom: false,
+        isActive: true
       };
       
       storage.saveAppliedTemplate(templateData);

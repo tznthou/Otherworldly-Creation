@@ -39,27 +39,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   const currentStepData = steps[currentStep];
 
-  // 更新目標元素和位置
-  useEffect(() => {
-    if (!isActive || !currentStepData?.target) {
-      setTargetElement(null);
-      return;
-    }
-
-    const element = document.querySelector(currentStepData.target) as HTMLElement;
-    if (element) {
-      setTargetElement(element);
-      updateTooltipPosition(element);
-      
-      // 滾動到目標元素
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center',
-        inline: 'center'
-      });
-    }
-  }, [currentStep, isActive, currentStepData, updateTooltipPosition]);
-
   // 更新提示框位置
   const updateTooltipPosition = useCallback((element: HTMLElement) => {
     const rect = element.getBoundingClientRect();
@@ -96,6 +75,27 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
     setTooltipPosition({ x, y });
   }, [currentStepData.position]);
+
+  // 更新目標元素和位置
+  useEffect(() => {
+    if (!isActive || !currentStepData?.target) {
+      setTargetElement(null);
+      return;
+    }
+
+    const element = document.querySelector(currentStepData.target) as HTMLElement;
+    if (element) {
+      setTargetElement(element);
+      updateTooltipPosition(element);
+      
+      // 滾動到目標元素
+      element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'center'
+      });
+    }
+  }, [currentStep, isActive, currentStepData, updateTooltipPosition]);
 
   // 處理下一步
   const handleNext = () => {

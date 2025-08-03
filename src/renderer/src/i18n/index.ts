@@ -108,7 +108,7 @@ class I18nService {
 
   private getValueByKey(translation: TranslationRecord, key: string): string | undefined {
     const keys = key.split('.');
-    let value: string | Record<string, string> | undefined = translation;
+    let value: string | Record<string, string> | Record<string, string | Record<string, string>> | undefined = translation;
     
     for (const k of keys) {
       if (value && typeof value === 'object' && !(typeof value === 'string')) {

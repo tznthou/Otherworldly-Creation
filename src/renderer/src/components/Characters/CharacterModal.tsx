@@ -307,7 +307,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                   type="number"
                   id="age"
                   value={formData.age || ''}
-                  onChange={(e) => handleInputChange('age', e.target.value ? parseInt(e.target.value) : undefined)}
+                  onChange={(e) => handleInputChange('age', e.target.value ? parseInt(e.target.value) : null)}
                   className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
                     errors.age ? 'border-red-400' : 'border-cosmic-600'
                   }`}

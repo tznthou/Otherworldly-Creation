@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
-import { createEditor, Descendant, Editor, Transforms, Range } from 'slate';
-import { Slate, Editable, withReact, ReactEditor } from 'slate-react';
+import { createEditor, Descendant, Editor, Transforms, Range, Element } from 'slate';
+import { Slate, Editable, withReact, ReactEditor, RenderLeafProps as SlateRenderLeafProps } from 'slate-react';
 import { withHistory } from 'slate-history';
 import { useAppSelector } from '../../hooks/redux';
 import { selectEditorSettings } from '../../store/slices/editorSlice';
@@ -80,7 +80,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       const { selection } = editor;
       if (selection && Range.isCollapsed(selection)) {
         const [match] = Editor.nodes(editor, {
-          match: (n): n is CustomElement => Editor.isBlock(editor, n),
+          match: (n): n is CustomElement => Element.isElement(n) && Editor.isBlock(editor, n),
         });
 
         if (match) {
@@ -108,13 +108,13 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       case 'heading': {
         const level = props.element.level || 1;
         const HeadingTag = `h${Math.min(level, 6)}` as keyof JSX.IntrinsicElements;
-        return (
-          <HeadingTag
-            {...props.attributes}
-            className={`text-${4 - Math.min(level, 3)}xl font-bold text-gold-400 mb-4`}
-          >
-            {props.children}
-          </HeadingTag>
+        return React.createElement(
+          HeadingTag,
+          {
+            ...props.attributes,
+            className: `text-${4 - Math.min(level, 3)}xl font-bold text-gold-400 mb-4`,
+          },
+          props.children
         );
       }
       case 'quote':
@@ -142,27 +142,23 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   }, []);
 
   // 渲染葉子節點
-  interface RenderLeafProps {
-    attributes: React.HTMLAttributes<HTMLElement>;
-    children: React.ReactNode;
-    leaf: CustomText;
-  }
-  const renderLeaf = useCallback((props: RenderLeafProps) => {
+  const renderLeaf = useCallback((props: SlateRenderLeafProps) => {
+    const leaf = props.leaf as CustomText;
     let children = props.children;
 
-    if (props.leaf.bold) {
+    if (leaf.bold) {
       children = <strong className="font-bold">{children}</strong>;
     }
 
-    if (props.leaf.italic) {
+    if (leaf.italic) {
       children = <em className="italic">{children}</em>;
     }
 
-    if (props.leaf.underline) {
+    if (leaf.underline) {
       children = <u className="underline">{children}</u>;
     }
 
-    if (props.leaf.code) {
+    if (leaf.code) {
       children = (
         <code className="bg-cosmic-800 px-2 py-1 rounded text-sm font-mono text-gold-400">
           {children}
@@ -245,7 +241,7 @@ const toggleBlock = (editor: Editor, format: CustomElement['type']) => {
   const isList = format === 'list-item';
 
   Transforms.unwrapNodes(editor, {
-    match: (n): n is CustomElement => Editor.isBlock(editor, n) && 'type' in (n as CustomElement) && (n as CustomElement).type === 'list-item',
+    match: (n): n is CustomElement => Element.isElement(n) && Editor.isBlock(editor, n) && 'type' in (n as CustomElement) && (n as CustomElement).type === 'list-item',
     split: true,
   });
 
@@ -269,7 +265,7 @@ const isBlockActive = (editor: Editor, format: CustomElement['type']) => {
   const [match] = Array.from(
     Editor.nodes(editor, {
       at: Editor.unhangRange(editor, selection),
-      match: (n): n is CustomElement => Editor.isBlock(editor, n) && 'type' in (n as CustomElement) && (n as CustomElement).type === format,
+      match: (n): n is CustomElement => Element.isElement(n) && Editor.isBlock(editor, n) && 'type' in (n as CustomElement) && (n as CustomElement).type === format,
     })
   );
 

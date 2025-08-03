@@ -326,14 +326,21 @@ export class TemplateService {
         };
 
         try {
-          // 更新專案設定
-          await api.projects.update({
-            id: projectId,
-            settings: {
-              ...projectSettings,
-              template: template
-            }
-          });
+          // 獲取當前專案並更新設定
+          const currentProject = await api.projects.getById(projectId);
+          if (currentProject) {
+            await api.projects.update({
+              ...currentProject,
+              settings: {
+                aiModel: 'llama3.2',
+                aiParams: {
+                  temperature: 0.7,
+                  topP: 0.9,
+                  maxTokens: 400
+                }
+              }
+            });
+          }
 
           results.appliedSettings.projectSettings = projectSettings;
         } catch (error) {

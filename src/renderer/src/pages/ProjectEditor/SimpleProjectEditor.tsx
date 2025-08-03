@@ -5,20 +5,18 @@ import { fetchProjectById } from '../../store/slices/projectsSlice';
 import { addNotification } from '../../store/slices/uiSlice';
 import { api } from '../../api';
 import SimpleAIWritingPanel from '../../components/Editor/SimpleAIWritingPanel';
-
-interface Chapter {
-  id: string;
-  title: string;
-  content: string;
-  order_num: number;
-}
+import { Chapter } from '../../api/models';
+import { Descendant } from 'slate';
 
 const SimpleProjectEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const dispatch = useAppDispatch();
   const { currentProject } = useAppSelector(state => state.projects);
   
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState<Descendant[]>([{
+    type: 'paragraph',
+    children: [{ text: '' }]
+  }]);
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null);
   const [_chapters, _setChapters] = useState<Chapter[]>([]);
   const [isSaved, setIsSaved] = useState(true);
@@ -44,19 +42,45 @@ const SimpleProjectEditor: React.FC = () => {
         if (chapterList.length > 0) {
           const firstChapter = chapterList[0];
           setCurrentChapter(firstChapter);
-          setContent(firstChapter.content || '');
+          setContent(firstChapter.content || [{
+            type: 'paragraph',
+            children: [{ text: '' }]
+          }]);
         } else {
           // 如果沒有章節，創建第一個章節
           const _newChapter = await api.chapters.create({
             projectId: id,
             title: '第一章',
-            content: `開始你的創作...
-
-第一章：穿越的開始
-
-我叫李明，原本是一個普通的大學生。直到那個雷雨交加的夜晚，一道奇異的光芒將我包圍...
-
-（繼續你的創作吧！）`,
+            content: [
+              {
+                type: 'paragraph',
+                children: [{ text: '開始你的創作...' }]
+              },
+              {
+                type: 'paragraph',
+                children: [{ text: '' }]
+              },
+              {
+                type: 'paragraph',
+                children: [{ text: '第一章：穿越的開始' }]
+              },
+              {
+                type: 'paragraph',
+                children: [{ text: '' }]
+              },
+              {
+                type: 'paragraph',
+                children: [{ text: '我叫李明，原本是一個普通的大學生。直到那個雷雨交加的夜晚，一道奇異的光芒將我包圍...' }]
+              },
+              {
+                type: 'paragraph',
+                children: [{ text: '' }]
+              },
+              {
+                type: 'paragraph',
+                children: [{ text: '（繼續你的創作吧！）' }]
+              }
+            ],
             order: 1
           });
           
@@ -67,7 +91,10 @@ const SimpleProjectEditor: React.FC = () => {
           if (updatedChapters.length > 0) {
             const newChapterData = updatedChapters[0];
             setCurrentChapter(newChapterData);
-            setContent(newChapterData.content || '');
+            setContent(newChapterData.content || [{
+            type: 'paragraph',
+            children: [{ text: '' }]
+          }]);
           }
         }
       } catch (error) {
@@ -87,10 +114,8 @@ const SimpleProjectEditor: React.FC = () => {
     const timer = setTimeout(async () => {
       try {
         await api.chapters.update({
-          id: currentChapter.id,
-          title: currentChapter.title,
-          content: content,
-          order: currentChapter.order_num
+          ...currentChapter,
+          content: content
         });
         setIsSaved(true);
         console.log('自動儲存成功');
@@ -108,10 +133,8 @@ const SimpleProjectEditor: React.FC = () => {
     
     try {
       await api.chapters.update({
-        id: currentChapter.id,
-        title: currentChapter.title,
-        content: content,
-        order: currentChapter.order_num
+        ...currentChapter,
+        content: content
       });
       setIsSaved(true);
       console.log('手動儲存成功');
@@ -137,19 +160,27 @@ const SimpleProjectEditor: React.FC = () => {
   
   // 處理 AI 生成的文本插入
   const handleAITextInsert = (text: string) => {
-    // 在游標位置插入文本
-    const before = content.slice(0, cursorPosition);
-    const after = content.slice(cursorPosition);
-    setContent(before + text + after);
-    setIsSaved(false);
+    // 將文本轉換為 Descendant[] 格式
+    const textParagraphs = text.split('\n').map(line => ({
+      type: 'paragraph' as const,
+      children: [{ text: line }]
+    }));
     
-    // 更新游標位置到插入文本的結尾
-    setCursorPosition(cursorPosition + text.length);
+    // 將新內容加到現有內容的末尾
+    setContent(prev => [...prev, ...textParagraphs]);
+    setIsSaved(false);
   };
   
   // 更新游標位置
   const handleTextAreaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
+    const text = e.target.value;
+    // 將字符串轉換為 Descendant[] 格式
+    const paragraphs = text.split('\n').map(line => ({
+      type: 'paragraph' as const,
+      children: [{ text: line }]
+    }));
+    
+    setContent(paragraphs);
     setCursorPosition(e.target.selectionStart);
     setIsSaved(false);
   };
@@ -219,7 +250,11 @@ const SimpleProjectEditor: React.FC = () => {
             </div>
           ) : (
             <textarea
-              value={content}
+              value={content.map(node => 
+                'type' in node && node.type === 'paragraph' && 'children' in node
+                  ? node.children.map((child: { text: string }) => child.text).join('')
+                  : ''
+              ).join('\n')}
               onChange={handleTextAreaInput}
               onClick={handleTextAreaClick}
               onKeyUp={handleTextAreaKeyUp}
@@ -231,8 +266,12 @@ const SimpleProjectEditor: React.FC = () => {
         </div>
         
         <div className="mt-4 text-sm text-gray-400 flex justify-between">
-          <span>字數: {content.length}</span>
-          <span>行數: {content.split('\n').length}</span>
+          <span>字數: {content.map(node => 
+            'type' in node && node.type === 'paragraph' && 'children' in node
+              ? node.children.map((child: { text: string }) => child.text).join('')
+              : ''
+          ).join('').length}</span>
+          <span>行數: {content.length}</span>
         </div>
       </div>
       

@@ -78,8 +78,15 @@ export class TemplateCharacterService {
 
     // 調用角色創建 API
     const characterId = await api.characters.create({
-      ...characterData,
-      projectId
+      projectId,
+      name: characterData.name,
+      archetype: characterData.archetype || '',
+      age: characterData.age,
+      gender: characterData.gender || '',
+      appearance: characterData.appearance || '',
+      personality: characterData.personality || '',
+      background: characterData.background || '',
+      relationships: characterData.relationships || []
     });
 
     // 獲取創建的角色

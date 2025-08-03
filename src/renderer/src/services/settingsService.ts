@@ -1,5 +1,6 @@
 import { AppSettings, DEFAULT_SETTINGS } from '../store/slices/settingsSlice';
 import { api } from '../api';
+import { Language } from '../i18n';
 
 const SETTINGS_KEY = 'genesis-chronicle-settings';
 
@@ -156,13 +157,14 @@ export class SettingsService {
         }
       }
       
+      const settingsObj = settings as Record<string, unknown>;
       // 檢查 AI 設定
-      if (!settings.ai || typeof settings.ai !== 'object') {
+      if (!settingsObj.ai || typeof settingsObj.ai !== 'object') {
         return false;
       }
       
       // 檢查編輯器設定
-      if (!settings.editor || typeof settings.editor !== 'object') {
+      if (!settingsObj.editor || typeof settingsObj.editor !== 'object') {
         return false;
       }
       
@@ -179,39 +181,42 @@ export class SettingsService {
     const merged = { ...DEFAULT_SETTINGS };
     
     if (settings && typeof settings === 'object') {
+      const settingsObj = settings as Record<string, unknown>;
       // 一般設定
-      if (typeof settings.language === 'string') merged.language = settings.language;
-      if (typeof settings.autoSave === 'boolean') merged.autoSave = settings.autoSave;
-      if (typeof settings.autoSaveInterval === 'number') merged.autoSaveInterval = settings.autoSaveInterval;
+      if (typeof settingsObj.language === 'string' && ['zh-TW', 'zh-CN', 'en', 'ja'].includes(settingsObj.language)) {
+        merged.language = settingsObj.language as Language;
+      }
+      if (typeof settingsObj.autoSave === 'boolean') merged.autoSave = settingsObj.autoSave;
+      if (typeof settingsObj.autoSaveInterval === 'number') merged.autoSaveInterval = settingsObj.autoSaveInterval;
       
       // AI 設定
-      if (settings.ai && typeof settings.ai === 'object') {
-        merged.ai = { ...merged.ai, ...settings.ai };
+      if (settingsObj.ai && typeof settingsObj.ai === 'object') {
+        merged.ai = { ...merged.ai, ...settingsObj.ai };
       }
       
       // 編輯器設定
-      if (settings.editor && typeof settings.editor === 'object') {
-        merged.editor = { ...merged.editor, ...settings.editor };
+      if (settingsObj.editor && typeof settingsObj.editor === 'object') {
+        merged.editor = { ...merged.editor, ...settingsObj.editor };
       }
       
       // UI 設定
-      if (settings.ui && typeof settings.ui === 'object') {
-        merged.ui = { ...merged.ui, ...settings.ui };
+      if (settingsObj.ui && typeof settingsObj.ui === 'object') {
+        merged.ui = { ...merged.ui, ...settingsObj.ui };
       }
       
       // 備份設定
-      if (settings.backup && typeof settings.backup === 'object') {
-        merged.backup = { ...merged.backup, ...settings.backup };
+      if (settingsObj.backup && typeof settingsObj.backup === 'object') {
+        merged.backup = { ...merged.backup, ...settingsObj.backup };
       }
       
       // 隱私設定
-      if (settings.privacy && typeof settings.privacy === 'object') {
-        merged.privacy = { ...merged.privacy, ...settings.privacy };
+      if (settingsObj.privacy && typeof settingsObj.privacy === 'object') {
+        merged.privacy = { ...merged.privacy, ...settingsObj.privacy };
       }
       
       // 快捷鍵設定
-      if (settings.shortcuts && typeof settings.shortcuts === 'object') {
-        merged.shortcuts = { ...merged.shortcuts, ...settings.shortcuts };
+      if (settingsObj.shortcuts && typeof settingsObj.shortcuts === 'object') {
+        merged.shortcuts = { ...merged.shortcuts, ...settingsObj.shortcuts };
       }
     }
     

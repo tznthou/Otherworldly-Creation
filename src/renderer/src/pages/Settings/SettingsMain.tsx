@@ -30,6 +30,15 @@ const SettingsMain: React.FC = () => {
     importSettings,
   } = useSettingsActions();
 
+  const handleSaveSettings = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      await saveSettings(settings);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [saveSettings, settings]);
+
   useEffect(() => {
     loadUserSettings();
   }, [loadUserSettings]);
@@ -48,15 +57,6 @@ const SettingsMain: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [hasUnsavedChanges, isSaving, handleSaveSettings]);
-
-  const handleSaveSettings = useCallback(async () => {
-    setIsSaving(true);
-    try {
-      await saveSettings(settings);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [saveSettings, settings]);
 
   const renderTabContent = () => {
     const commonProps = { settings, dispatch };

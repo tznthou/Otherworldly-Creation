@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Character } from '../../types/character';
 
 interface CharacterReference {
@@ -39,17 +39,7 @@ export const CharacterDeleteModal: React.FC<CharacterDeleteModalProps> = ({
   const [showReferences, setShowReferences] = useState(false);
   const [forceDelete, setForceDelete] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && character) {
-      checkReferences();
-    } else {
-      setReferenceCheck(null);
-      setShowReferences(false);
-      setForceDelete(false);
-    }
-  }, [isOpen, character, checkReferences]);
-
-  const checkReferences = useCallback(async () => {
+  const _checkReferences = useCallback(async () => {
     if (!character) return;
     
     try {

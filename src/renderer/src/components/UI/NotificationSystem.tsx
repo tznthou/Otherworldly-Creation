@@ -28,6 +28,13 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClo
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
+  const handleClose = useCallback(() => {
+    setIsLeaving(true);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  }, [onClose]);
+
   useEffect(() => {
     // 進入動畫
     const timer = setTimeout(() => setIsVisible(true), 50);
@@ -43,13 +50,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClo
       return () => clearTimeout(timer);
     }
   }, [notification.duration, handleClose]);
-
-  const handleClose = useCallback(() => {
-    setIsLeaving(true);
-    setTimeout(() => {
-      onClose();
-    }, 300);
-  }, [onClose]);
 
   const getTypeStyles = (type: Notification['type']) => {
     switch (type) {

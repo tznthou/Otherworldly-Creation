@@ -58,9 +58,10 @@ const AISettingsModal: React.FC = () => {
         api.ai.listModels(),
       ]);
 
+      const statusResult = status as { isRunning?: boolean; version?: string };
       setServiceStatus({
-        available: status.service.available,
-        version: status.service.version,
+        available: statusResult.isRunning || false,
+        version: statusResult.version,
         models,
         loading: false,
       });
@@ -87,9 +88,9 @@ const AISettingsModal: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const result = await api.ai.updateOllamaConfig(settings);
+      const result = await api.ai.updateOllamaConfig(settings) as { success?: boolean; error?: string };
       
-      if (result.success) {
+      if (result?.success) {
         // 更新選擇的模型
         if (settings.selectedModel && settings.selectedModel !== currentModel) {
           dispatch(setCurrentModel(settings.selectedModel));
@@ -107,7 +108,7 @@ const AISettingsModal: React.FC = () => {
         
         handleClose();
       } else {
-        throw new Error(result.error || '更新設定失敗');
+        throw new Error(result?.error || '更新設定失敗');
       }
     } catch (_error) {
       console.error('更新 AI 設定失敗:', _error);

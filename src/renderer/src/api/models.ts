@@ -44,16 +44,24 @@ export interface Relationship {
   description: string;
 }
 
+// API 創建關係請求的參數類型
+export interface CreateRelationshipRequest {
+  fromCharacterId: string;
+  toCharacterId: string;
+  relationshipType: string;
+  description: string;
+}
+
 export interface Character {
   id: string;
   projectId: string;
   name: string;
-  archetype: string;
-  age: number | null;
-  gender: string;
-  appearance: string;
-  personality: string;
-  background: string;
+  archetype?: string;
+  age?: number;
+  gender?: string;
+  appearance?: string;
+  personality?: string;
+  background?: string;
   relationships?: Relationship[];
   createdAt: Date;
   updatedAt: Date;
@@ -106,9 +114,13 @@ export interface AIModelAvailability {
 }
 
 export interface OllamaConfig {
-  host: string;
-  port: number;
-  timeout?: number;
+  baseUrl: string;
+  timeout: number;
+  retryAttempts: number;
+  retryDelay: number;
+  selectedModel: string;
+  host?: string;
+  port?: number;
 }
 
 // 上下文相關
@@ -175,11 +187,15 @@ export interface DialogResult {
 
 // 更新相關
 export interface UpdateInfo {
+  hasUpdate: boolean;
+  currentVersion: string;
+  latestVersion: string;
   version: string;
   releaseDate: string;
   releaseNotes: string;
   downloadUrl?: string;
   isAvailable: boolean;
+  error?: string;
 }
 
 // AI 歷史查詢參數

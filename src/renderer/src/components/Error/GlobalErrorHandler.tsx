@@ -97,7 +97,7 @@ const GlobalErrorHandler: React.FC<GlobalErrorHandlerProps> = ({ children }) => 
         description: (error as Error)?.message || String(error),
         severity: 'critical',
         category: 'system',
-        context: error
+        context: error as Record<string, unknown>
       }));
     };
 

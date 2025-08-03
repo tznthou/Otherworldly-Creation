@@ -36,9 +36,13 @@ const BackupManagerModal: React.FC = () => {
       setMessage({ type: 'info', text: '正在建立備份...' });
       
       // 調用統一 API 進行備份
-      await api.database.backup(saveResult.filePath || saveResult.file_path);
+      if (saveResult.filePath) {
+        await api.database.backup(saveResult.filePath);
+      } else {
+        throw new Error('未選擇儲存路徑');
+      }
       
-      setMessage({ type: 'success', text: `備份已成功建立至：${saveResult.filePath || saveResult.file_path}` });
+      setMessage({ type: 'success', text: `備份已成功建立至：${saveResult.filePath || saveResult.filePath}` });
     } catch (error: unknown) {
       console.error('備份失敗:', error);
       setMessage({ type: 'error', text: (error as Error)?.message || '備份建立失敗，請稍後再試' });
@@ -62,7 +66,7 @@ const BackupManagerModal: React.FC = () => {
         properties: ['openFile']
       });
       
-      const filePaths = openResult.filePaths || openResult.file_paths;
+      const filePaths = openResult.filePaths || openResult.filePaths;
       if (openResult.canceled || !filePaths || filePaths.length === 0) {
         setMessage(null);
         return;

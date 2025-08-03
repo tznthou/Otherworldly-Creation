@@ -65,7 +65,14 @@ const BackupManager: React.FC<BackupManagerProps> = ({ isOpen, onClose }) => {
       if (validation.isValid) {
         // 獲取備份預覽
         const preview = await BackupService.getBackupPreview(file);
-        setBackupPreview(preview);
+        setBackupPreview({
+          ...preview,
+          dataStats: {
+            projectCount: preview.projects.length,
+            chapterCount: preview.totalChapters,
+            characterCount: preview.totalCharacters
+          }
+        });
       }
     } catch (error) {
       dispatch(addNotification({

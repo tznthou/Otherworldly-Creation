@@ -22,11 +22,6 @@ const UpdateSettings: React.FC = () => {
   const [lastCheckTime, setLastCheckTime] = useState<string>('');
   const [isChecking, setIsChecking] = useState(false);
 
-  useEffect(() => {
-    loadSettings();
-    getCurrentVersion();
-  }, [loadSettings]);
-
   const loadSettings = useCallback(async () => {
     try {
       const appSettings = await api.settings.getAll();
@@ -35,7 +30,7 @@ const UpdateSettings: React.FC = () => {
       }
       
       // 獲取上次檢查時間
-      if (appSettings.lastUpdateCheck) {
+      if (appSettings.lastUpdateCheck && typeof appSettings.lastUpdateCheck === 'number') {
         setLastCheckTime(new Date(appSettings.lastUpdateCheck).toLocaleString('zh-TW'));
       }
     } catch (error) {
@@ -51,6 +46,11 @@ const UpdateSettings: React.FC = () => {
       console.error('獲取版本失敗:', error);
     }
   };
+
+  useEffect(() => {
+    loadSettings();
+    getCurrentVersion();
+  }, [loadSettings]);
 
   const saveSettings = async (newSettings: UpdateSettings) => {
     try {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NovelTemplate, TemplateType, TEMPLATE_TYPES } from '../../types/template';
+import { NovelTemplate, TemplateType, TemplateFilters, TEMPLATE_TYPES } from '../../types/template';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { 
   fetchAllTemplates, 
@@ -39,7 +39,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   useEffect(() => {
     // 設置過濾器
-    const filters: { search?: string; type?: string; category?: string } = {};
+    const filters: TemplateFilters = {};
     if (filterType) {
       filters.type = filterType;
     }

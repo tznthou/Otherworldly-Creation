@@ -23,5 +23,7 @@ export const useSettings = () => {
     };
 
     initializeSettings();
-  }, [settings, dispatch]);
-};
+  }, [dispatch]);
+
+  return { settings };
+}

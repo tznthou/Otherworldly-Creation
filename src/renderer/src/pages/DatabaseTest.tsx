@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api, isTauri } from '../api';
-
-interface Project {
-  id: string;
-  name: string;
-  description?: string;
-  type?: string;
-  template_data?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Project } from '../api/models';
 
 const DatabaseTest: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -43,8 +34,15 @@ const DatabaseTest: React.FC = () => {
       const projectId = await api.projects.create({
         name: newProjectName,
         description: '這是一個測試專案',
-        type: 'novel',
-        template_data: JSON.stringify({ genre: 'fantasy' }),
+        type: 'fantasy',
+        settings: {
+          aiModel: 'llama3.2',
+          aiParams: {
+            temperature: 0.7,
+            topP: 0.9,
+            maxTokens: 400
+          }
+        }
       });
       setMessage(`專案建立成功，ID: ${projectId}`);
       setNewProjectName('');
@@ -167,8 +165,8 @@ const DatabaseTest: React.FC = () => {
                       <div className="mt-3 text-sm text-gray-400">
                         <p>ID: {project.id}</p>
                         <p>類型: {project.type || '無'}</p>
-                        <p>建立時間: {new Date(project.created_at).toLocaleString('zh-TW')}</p>
-                        <p>更新時間: {new Date(project.updated_at).toLocaleString('zh-TW')}</p>
+                        <p>建立時間: {new Date(project.createdAt).toLocaleString('zh-TW')}</p>
+                        <p>更新時間: {new Date(project.updatedAt).toLocaleString('zh-TW')}</p>
                       </div>
                     </div>
                     <button

@@ -72,7 +72,29 @@ const DatabaseMaintenance: React.FC = () => {
     setIsChecking(true);
     try {
       const result = await api.database.healthCheck();
-      setCheckResult(result);
+      // 將 DatabaseHealth 轉換為 DatabaseCheckResult
+      const checkResult: DatabaseCheckResult = {
+        isHealthy: result.status === 'healthy',
+        issues: result.status !== 'healthy' ? [{ 
+          type: 'performance' as const, 
+          table: 'system',
+          description: result.message || '資料庫狀態異常', 
+          suggestion: '請執行資料庫維護以修復問題',
+          severity: result.status === 'error' ? 'high' : 'medium',
+          autoFixable: true
+        }] : [],
+        statistics: { 
+          totalProjects: 0, 
+          totalChapters: 0, 
+          totalCharacters: 0, 
+          totalTemplates: 0, 
+          databaseSize: 0, 
+          lastVacuum: null, 
+          fragmentationLevel: 0 
+        },
+        timestamp: new Date().toISOString()
+      };
+      setCheckResult(checkResult);
       setRepairResult(null);
     } catch (error) {
       console.error('健康檢查失敗:', error);
@@ -91,7 +113,8 @@ const DatabaseMaintenance: React.FC = () => {
       setRepairResult(result);
       
       // 修復後重新檢查
-      if (result.success) {
+      const hasSuccess = result && typeof result === 'object' && 'success' in result;
+      if (result && (!hasSuccess || (result as { success?: boolean }).success !== false)) {
         await performHealthCheck();
       }
     } catch (error) {
@@ -106,7 +129,8 @@ const DatabaseMaintenance: React.FC = () => {
     try {
       // optimize 方法不存在，使用 runMaintenance 代替
       const result = await api.database.runMaintenance();
-      if (result.success) {
+      const hasSuccess = result && typeof result === 'object' && 'success' in result;
+      if (result && (!hasSuccess || (result as { success?: boolean }).success !== false)) {
         // 優化後重新檢查
         await performHealthCheck();
       }
@@ -122,7 +146,8 @@ const DatabaseMaintenance: React.FC = () => {
     try {
       // export 方法不存在，使用 getStats 代替獲取資料庫資訊
       const result = await api.database.getStats();
-      if (result.success) {
+      const hasSuccess = result && typeof result === 'object' && 'success' in result;
+      if (result && (!hasSuccess || (result as { success?: boolean }).success !== false)) {
         // 顯示成功訊息
       }
     } catch (error) {
@@ -152,7 +177,7 @@ const DatabaseMaintenance: React.FC = () => {
     try {
       // generateReport 方法不存在，使用 getStats 代替
       const report = await api.database.getStats();
-      setErrorReport(report);
+      setErrorReport(JSON.stringify(report, null, 2));
     } catch (error) {
       console.error('生成報告失敗:', error);
     }
@@ -346,9 +371,9 @@ const DatabaseMaintenance: React.FC = () => {
         <Alert className={repairResult.success ? 'border-green-500' : 'border-red-500'}>
           <AlertDescription className="text-white">
             {repairResult.message}
-            {repairResult.fixedIssues.length > 0 && (
+            {repairResult.issuesFixed && repairResult.issuesFixed > 0 && (
               <div className="mt-2">
-                已修復 {repairResult.fixedIssues.length} 個問題
+                已修復 {repairResult.issuesFixed} 個問題
               </div>
             )}
           </AlertDescription>

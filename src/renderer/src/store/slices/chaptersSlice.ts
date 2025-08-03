@@ -41,11 +41,9 @@ export const fetchChaptersByProjectId = createAsyncThunk(
   'chapters/fetchByProjectId',
   async (projectId: string) => {
     const chapters = await api.chapters.getByProjectId(projectId);
-    return chapters.map((chapter: { id: string; projectId: string; title: string; content: string; orderIndex: number; createdAt: string; updatedAt: string; wordCount?: number }) => ({
+    return chapters.map((chapter) => ({
       ...chapter,
-      content: chapter.content ? JSON.parse(chapter.content) : [{ type: 'paragraph', children: [{ text: '' }] }],
-      createdAt: new Date(chapter.createdAt),
-      updatedAt: new Date(chapter.updatedAt),
+      content: typeof chapter.content === 'string' ? JSON.parse(chapter.content) : chapter.content || [{ type: 'paragraph', children: [{ text: '' }] }],
     }));
   }
 );
@@ -60,14 +58,13 @@ export const createChapter = createAsyncThunk(
   }) => {
     const chapterId = await api.chapters.create({
       ...chapterData,
-      content: JSON.stringify(chapterData.content || [{ type: 'paragraph', children: [{ text: '' }] }]),
+      content: chapterData.content || [{ type: 'paragraph', children: [{ text: '' }] }],
+      order: chapterData.order ?? 0,
     });
     const chapter = await api.chapters.getById(chapterId);
     return {
       ...chapter,
-      content: chapter.content ? JSON.parse(chapter.content) : [{ type: 'paragraph', children: [{ text: '' }] }],
-      createdAt: new Date(chapter.createdAt),
-      updatedAt: new Date(chapter.updatedAt),
+      content: typeof chapter.content === 'string' ? JSON.parse(chapter.content) : chapter.content || [{ type: 'paragraph', children: [{ text: '' }] }],
     };
   }
 );
@@ -75,10 +72,7 @@ export const createChapter = createAsyncThunk(
 export const updateChapter = createAsyncThunk(
   'chapters/update',
   async (chapter: Chapter) => {
-    await api.chapters.update({
-      ...chapter,
-      content: JSON.stringify(chapter.content),
-    });
+    await api.chapters.update(chapter);
     return chapter;
   }
 );
@@ -97,7 +91,7 @@ export const fetchChapterById = createAsyncThunk(
     const chapter = await api.chapters.getById(chapterId);
     return {
       ...chapter,
-      content: chapter.content ? JSON.parse(chapter.content) : [{ type: 'paragraph', children: [{ text: '' }] }],
+      content: chapter.content || [{ type: 'paragraph', children: [{ text: '' }] }],
       createdAt: new Date(chapter.createdAt),
       updatedAt: new Date(chapter.updatedAt),
     };

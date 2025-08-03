@@ -12,24 +12,41 @@ export const useErrorHandler = () => {
   const _dispatch = useAppDispatch();
 
   const handleError = useCallback((error: ErrorObject, context?: Record<string, unknown>) => {
-    if (error.code?.startsWith('AI_')) {
+    // 類型守衛：檢查是否有 code 屬性
+    const hasCode = (err: ErrorObject): err is { code?: string } => {
+      return typeof err === 'object' && err !== null && 'code' in err;
+    };
+
+    // 類型守衛：檢查是否有 message 屬性
+    const hasMessage = (err: ErrorObject): err is (Error | AppError | { code?: string; message?: string; stack?: string }) => {
+      return typeof err === 'object' && err !== null && 'message' in err;
+    };
+
+    // 類型守衛：檢查是否有 stack 屬性
+    const hasStack = (err: ErrorObject): err is (Error | AppError | { code?: string; message?: string; stack?: string }) => {
+      return typeof err === 'object' && err !== null && 'stack' in err;
+    };
+
+    const code = hasCode(error) ? error.code : undefined;
+
+    if (code?.startsWith('AI_')) {
       ErrorHandler.handleAIError(error, context);
-    } else if (error.code?.startsWith('DATABASE_')) {
+    } else if (code?.startsWith('DATABASE_')) {
       ErrorHandler.handleDatabaseError(error, context);
-    } else if (error.code?.startsWith('NETWORK_')) {
+    } else if (code?.startsWith('NETWORK_')) {
       ErrorHandler.handleApiError(error, context);
-    } else if (error.code?.startsWith('FILE_')) {
+    } else if (code?.startsWith('FILE_')) {
       ErrorHandler.handleFileSystemError(error, context);
     } else {
       ErrorHandler.createError(
         'UNKNOWN_ERROR',
         '發生未知錯誤',
         {
-          description: error.message || String(error),
+          description: hasMessage(error) ? error.message || String(error) : String(error),
           severity: 'medium',
           category: 'system',
           context,
-          stack: error.stack
+          stack: hasStack(error) ? error.stack : undefined
         }
       );
     }
@@ -52,7 +69,7 @@ export const useErrorHandler = () => {
     handleError,
     createError
   };
-};
+}
 
 // 進度處理 hook
 export const useProgressHandler = () => {
@@ -159,9 +176,9 @@ export const useAsyncOperation = () => {
       failProgressIndicator(progressId, appError);
       
       if (options.onError) {
-        options.onError(error);
+        options.onError(error as ErrorObject);
       } else {
-        handleError(error, { operationTitle: options.title });
+        handleError(error as ErrorObject, { operationTitle: options.title });
       }
       
       throw error;
@@ -199,20 +216,20 @@ export const useRetryOperation = () => {
       onRetry
     } = options;
 
-    let lastError: ErrorObject;
+    let lastError: ErrorObject | undefined;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         return await operation();
       } catch (error) {
-        lastError = error;
+        lastError = error as ErrorObject;
         
         if (attempt === maxRetries) {
           break;
         }
 
         if (onRetry) {
-          onRetry(attempt + 1, error);
+          onRetry(attempt + 1, error as ErrorObject);
         }
 
         const delay = baseDelay * Math.pow(backoffFactor, attempt);
@@ -220,12 +237,22 @@ export const useRetryOperation = () => {
       }
     }
 
-    handleError(lastError, { 
-      maxRetries, 
-      finalAttempt: true,
-      operationType: 'retry'
-    });
-    throw lastError;
+    if (lastError) {
+      handleError(lastError, { 
+        maxRetries, 
+        finalAttempt: true,
+        operationType: 'retry'
+      });
+      throw lastError;
+    } else {
+      const unknownError = new Error('未知錯誤');
+      handleError(unknownError, { 
+        maxRetries, 
+        finalAttempt: true,
+        operationType: 'retry'
+      });
+      throw unknownError;
+    }
   }, [handleError]);
 
   return {

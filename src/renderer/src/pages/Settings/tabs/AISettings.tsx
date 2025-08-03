@@ -176,10 +176,11 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             onClick={async () => {
               try {
                 await api.ai.updateOllamaConfig({
-                  base_url: settings.ai.ollamaBaseUrl,
+                  baseUrl: settings.ai.ollamaBaseUrl,
                   timeout: settings.ai.ollamaTimeout,
-                  retry_attempts: settings.ai.ollamaRetryAttempts,
-                  retry_delay: settings.ai.ollamaRetryDelay,
+                  retryAttempts: settings.ai.ollamaRetryAttempts,
+                  retryDelay: settings.ai.ollamaRetryDelay,
+                  selectedModel: settings.ai.selectedModel || 'llama3.2',
                 });
                 // 可以在這裡添加成功通知
               } catch (error) {

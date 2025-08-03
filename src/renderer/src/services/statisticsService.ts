@@ -1,4 +1,5 @@
 import api from '../api';
+import { Descendant } from 'slate';
 
 export interface ProjectStatistics {
   id: string;
@@ -43,6 +44,21 @@ export interface MonthlyStats {
 }
 
 class StatisticsService {
+  // 從 Slate 內容中提取純文字
+  private static extractTextFromSlateContent(content: Descendant[]): string {
+    const extractText = (nodes: Descendant[]): string => {
+      return nodes.map(node => {
+        if ('text' in node) {
+          return node.text;
+        } else if ('children' in node) {
+          return extractText(node.children as Descendant[]);
+        }
+        return '';
+      }).join('');
+    };
+    return extractText(content);
+  }
+
   // 計算專案統計
   static async getProjectStatistics(): Promise<ProjectStatistics[]> {
     try {
@@ -54,9 +70,10 @@ class StatisticsService {
         const characters = await api.characters.getByProjectId(project.id);
         
         const totalWords = chapters.reduce((sum, chapter) => {
-          // 更精確的字數計算：去除空白字符後計算
-          const content = chapter.content || '';
-          const wordCount = content.replace(/\s+/g, '').length;
+          // 更精確的字數計算：將 Slate 內容轉換為純文字
+          const content = chapter.content || [];
+          const text = this.extractTextFromSlateContent(content);
+          const wordCount = text.replace(/\s+/g, '').length;
           return sum + wordCount;
         }, 0);
 
@@ -72,8 +89,8 @@ class StatisticsService {
           totalChapters: chapters.length,
           totalWords,
           averageWordsPerChapter: averageWords,
-          createdAt: new Date(project.created_at),
-          lastUpdated: new Date(project.updated_at),
+          createdAt: new Date(project.createdAt),
+          lastUpdated: new Date(project.updatedAt),
           charactersCount: characters.length,
           completionPercentage: Math.round(completionPercentage)
         });
@@ -212,8 +229,9 @@ class StatisticsService {
         const chapters = await api.chapters.getByProjectId(project.id);
         
         for (const chapter of chapters) {
-          const content = chapter.content || '';
-          const wordCount = content.replace(/\s+/g, '').length;
+          const content = chapter.content || [];
+          const text = this.extractTextFromSlateContent(content);
+          const wordCount = text.replace(/\s+/g, '').length;
           if (wordCount > longestChapter.wordCount) {
             longestChapter = {
               title: chapter.title,

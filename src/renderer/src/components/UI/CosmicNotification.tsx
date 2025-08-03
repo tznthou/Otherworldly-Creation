@@ -20,6 +20,13 @@ const CosmicNotification: React.FC<CosmicNotificationProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
+  const handleClose = useCallback(() => {
+    setIsLeaving(true);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  }, [onClose]);
+
   useEffect(() => {
     // 進入動畫
     setTimeout(() => setIsVisible(true), 100);
@@ -31,13 +38,6 @@ const CosmicNotification: React.FC<CosmicNotificationProps> = ({
 
     return () => clearTimeout(timer);
   }, [duration, handleClose]);
-
-  const handleClose = useCallback(() => {
-    setIsLeaving(true);
-    setTimeout(() => {
-      onClose();
-    }, 300);
-  }, [onClose]);
 
   const typeConfig = {
     success: {

@@ -1,7 +1,7 @@
 import BackupService from './backupService';
 import { SettingsService } from './settingsService';
 
-interface AutoBackupStatus {
+export interface AutoBackupStatus {
   enabled: boolean;
   lastBackup: Date | null;
   nextBackup: Date | null;

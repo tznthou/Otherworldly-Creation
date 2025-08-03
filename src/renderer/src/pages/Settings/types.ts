@@ -1,5 +1,5 @@
 import { AppSettings } from '../../store/slices/settingsSlice';
-import { AppDispatch } from '../../store';
+import { AppDispatch } from '../../store/store';
 
 export type SettingsTab = 'general' | 'ai' | 'editor' | 'ui' | 'backup' | 'database' | 'update' | 'privacy' | 'shortcuts';
 

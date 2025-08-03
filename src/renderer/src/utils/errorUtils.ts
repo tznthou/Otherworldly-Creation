@@ -3,6 +3,29 @@ import { AppError, ErrorCategory, ErrorSeverity, ERROR_CODES } from '../types/er
 import { store } from '../store/store';
 import { addError } from '../store/slices/errorSlice';
 
+// 錯誤對象類型定義
+interface NetworkError {
+  code: 'NETWORK_ERROR' | 'TIMEOUT';
+  message: string;
+}
+
+interface ApiError {
+  code?: string;
+  message?: string;
+}
+
+interface DatabaseError {
+  code: 'SQLITE_CANTOPEN' | 'SQLITE_CORRUPT';
+  message: string;
+}
+
+interface FileSystemError {
+  code: 'ENOENT' | 'EACCES' | 'ENOSPC';
+  message: string;
+}
+
+type ErrorWithCode = NetworkError | ApiError | DatabaseError | FileSystemError | Error;
+
 // 錯誤處理工具類
 export class ErrorHandler {
   /**
@@ -37,7 +60,8 @@ export class ErrorHandler {
    * 處理 API 錯誤
    */
   static handleApiError(error: unknown, context?: Record<string, unknown>): void {
-    if (error.code === 'NETWORK_ERROR') {
+    const errorWithCode = error as ErrorWithCode;
+    if (errorWithCode && 'code' in errorWithCode && errorWithCode.code === 'NETWORK_ERROR') {
       this.createError(
         ERROR_CODES.NETWORK_CONNECTION_FAILED,
         '網路連接失敗',
@@ -48,7 +72,7 @@ export class ErrorHandler {
           context
         }
       );
-    } else if (error.code === 'TIMEOUT') {
+    } else if (errorWithCode && 'code' in errorWithCode && errorWithCode.code === 'TIMEOUT') {
       this.createError(
         ERROR_CODES.NETWORK_TIMEOUT,
         '請求超時',
@@ -64,7 +88,7 @@ export class ErrorHandler {
         ERROR_CODES.SYSTEM_UNKNOWN_ERROR,
         'API 請求失敗',
         {
-          description: error.message || '未知的 API 錯誤',
+          description: (errorWithCode && 'message' in errorWithCode ? errorWithCode.message : undefined) || '未知的 API 錯誤',
           severity: 'medium',
           category: 'network',
           context: { ...context, originalError: error }
@@ -77,7 +101,8 @@ export class ErrorHandler {
    * 處理 AI 相關錯誤
    */
   static handleAIError(error: unknown, context?: Record<string, unknown>): void {
-    if (error.message?.includes('connection refused')) {
+    const errorWithMessage = error as { message?: string };
+    if (errorWithMessage?.message?.includes('connection refused')) {
       this.createError(
         ERROR_CODES.AI_SERVICE_UNAVAILABLE,
         'AI 服務無法使用',
@@ -88,7 +113,7 @@ export class ErrorHandler {
           context
         }
       );
-    } else if (error.message?.includes('model not found')) {
+    } else if (errorWithMessage?.message?.includes('model not found')) {
       this.createError(
         ERROR_CODES.AI_MODEL_NOT_FOUND,
         'AI 模型不存在',
@@ -99,7 +124,7 @@ export class ErrorHandler {
           context
         }
       );
-    } else if (error.message?.includes('context too long')) {
+    } else if (errorWithMessage?.message?.includes('context too long')) {
       this.createError(
         ERROR_CODES.AI_CONTEXT_TOO_LONG,
         '上下文過長',
@@ -115,7 +140,7 @@ export class ErrorHandler {
         ERROR_CODES.AI_GENERATION_FAILED,
         'AI 生成失敗',
         {
-          description: error.message || 'AI 文本生成過程中發生錯誤',
+          description: errorWithMessage?.message || 'AI 文本生成過程中發生錯誤',
           severity: 'medium',
           category: 'ai',
           context: { ...context, originalError: error }
@@ -128,7 +153,8 @@ export class ErrorHandler {
    * 處理資料庫錯誤
    */
   static handleDatabaseError(error: unknown, context?: Record<string, unknown>): void {
-    if (error.code === 'SQLITE_CANTOPEN') {
+    const errorWithCode = error as ErrorWithCode;
+    if (errorWithCode && 'code' in errorWithCode && errorWithCode.code === 'SQLITE_CANTOPEN') {
       this.createError(
         ERROR_CODES.DATABASE_CONNECTION_FAILED,
         '資料庫連接失敗',
@@ -139,7 +165,7 @@ export class ErrorHandler {
           context
         }
       );
-    } else if (error.code === 'SQLITE_CORRUPT') {
+    } else if (errorWithCode && 'code' in errorWithCode && errorWithCode.code === 'SQLITE_CORRUPT') {
       this.createError(
         ERROR_CODES.DATABASE_CORRUPTION,
         '資料庫損壞',
@@ -155,7 +181,7 @@ export class ErrorHandler {
         ERROR_CODES.DATABASE_QUERY_FAILED,
         '資料庫操作失敗',
         {
-          description: error.message || '資料庫查詢執行失敗',
+          description: (errorWithCode && 'message' in errorWithCode ? errorWithCode.message : undefined) || '資料庫查詢執行失敗',
           severity: 'high',
           category: 'database',
           context: { ...context, originalError: error }
@@ -168,7 +194,8 @@ export class ErrorHandler {
    * 處理檔案系統錯誤
    */
   static handleFileSystemError(error: unknown, context?: Record<string, unknown>): void {
-    if (error.code === 'ENOENT') {
+    const errorWithCode = error as ErrorWithCode;
+    if (errorWithCode && 'code' in errorWithCode && errorWithCode.code === 'ENOENT') {
       this.createError(
         ERROR_CODES.FILE_NOT_FOUND,
         '檔案不存在',
@@ -179,7 +206,7 @@ export class ErrorHandler {
           context
         }
       );
-    } else if (error.code === 'EACCES') {
+    } else if (errorWithCode && 'code' in errorWithCode && errorWithCode.code === 'EACCES') {
       this.createError(
         ERROR_CODES.FILE_PERMISSION_DENIED,
         '檔案權限不足',
@@ -190,7 +217,7 @@ export class ErrorHandler {
           context
         }
       );
-    } else if (error.code === 'ENOSPC') {
+    } else if (errorWithCode && 'code' in errorWithCode && errorWithCode.code === 'ENOSPC') {
       this.createError(
         ERROR_CODES.DISK_SPACE_INSUFFICIENT,
         '磁碟空間不足',
@@ -206,7 +233,7 @@ export class ErrorHandler {
         ERROR_CODES.SYSTEM_UNKNOWN_ERROR,
         '檔案系統錯誤',
         {
-          description: error.message || '檔案系統操作失敗',
+          description: (errorWithCode && 'message' in errorWithCode ? errorWithCode.message : undefined) || '檔案系統操作失敗',
           severity: 'medium',
           category: 'file',
           context: { ...context, originalError: error }
