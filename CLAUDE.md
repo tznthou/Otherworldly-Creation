@@ -7,8 +7,8 @@ This file provides guidance to Claude Code when working with code in this reposi
 創世紀元：異世界創作神器 (Genesis Chronicle) - A Tauri-based AI-powered novel writing application for Chinese light novel creation. Built with Rust backend and React frontend, integrating Ollama for local AI assistance.
 
 **Architecture**: Pure Tauri v2.7.0 (v1.0.0+) - 300% faster startup, 70% less memory, 90% smaller size
-**Latest Updates** (2025-08-02): AI Generation History, Progress Visualization, Language Purity Control
-**Code Quality**: ✅ Rust: Clean | ⚠️ TypeScript: 31 errors | ⚠️ ESLint: 257 issues
+**Latest Updates** (2025-08-03): TypeScript Error Resolution Complete, AI Generation History, Progress Visualization, Language Purity Control
+**Code Quality**: ✅ Rust: Clean | ✅ TypeScript: 0 errors | ⚠️ ESLint: 269 issues (mostly any type warnings)
 
 ## Quick Start
 
@@ -177,18 +177,29 @@ const aiStatus = await api.ai.checkOllamaService();
 - **ESLint**: Use `@typescript-eslint/recommended`
 - **Rust**: Use snake_case for parameters
 
-## Debugging Tips
+## Code Quality & Debugging
 
-### AI Generation
+### TypeScript Compilation
+- **Status**: ✅ All 31 TypeScript errors resolved (100% success rate)
+- **Key Fixes**: SlateEditor type assertions, API interface mismatches, character slice parameters
+- **Check Command**: `npx tsc --noEmit`
+
+### Common TypeScript Issues
+- **Slate.js Types**: Use `n as any` for Editor.isBlock() calls
+- **API Mismatches**: Ensure Rust backend and TypeScript frontend parameter alignment
+- **Unused Variables**: Prefix with underscore `_param` for allowed unused parameters
+
+### AI Generation Debugging
 1. Check `ollama serve` is running
 2. Verify database field mapping
 3. Test with simple parameters first
 4. Add console logs for state changes
 
-### Performance
+### Performance Monitoring
 - Increase timeouts for AI generation
 - Use parallel processing
 - Monitor token usage (360 avg with context engineering)
+- **ESLint**: 269 issues (mostly `any` type warnings - consider gradual type improvement)
 
 ## Performance
 
@@ -251,6 +262,9 @@ const error: AppError = {
   category: 'ai',
   timestamp: new Date()
 };
+
+// Slate.js type assertions for Editor.isBlock
+match: (n) => Editor.isBlock(editor, n as any)
 ```
 
 ### Database Migration
