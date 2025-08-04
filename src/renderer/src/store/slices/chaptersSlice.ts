@@ -41,10 +41,7 @@ export const fetchChaptersByProjectId = createAsyncThunk(
   'chapters/fetchByProjectId',
   async (projectId: string) => {
     const chapters = await api.chapters.getByProjectId(projectId);
-    return chapters.map((chapter) => ({
-      ...chapter,
-      content: typeof chapter.content === 'string' ? JSON.parse(chapter.content) : chapter.content || [{ type: 'paragraph', children: [{ text: '' }] }],
-    }));
+    return chapters;
   }
 );
 
@@ -62,10 +59,7 @@ export const createChapter = createAsyncThunk(
       order: chapterData.order ?? 0,
     });
     const chapter = await api.chapters.getById(chapterId);
-    return {
-      ...chapter,
-      content: typeof chapter.content === 'string' ? JSON.parse(chapter.content) : chapter.content || [{ type: 'paragraph', children: [{ text: '' }] }],
-    };
+    return chapter;
   }
 );
 

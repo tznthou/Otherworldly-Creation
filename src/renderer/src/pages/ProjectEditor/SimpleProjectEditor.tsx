@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { fetchProjectById } from '../../store/slices/projectsSlice';
@@ -23,30 +23,44 @@ const SimpleProjectEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   // 載入專案和章節資料
   useEffect(() => {
     const loadData = async () => {
-      if (!id) return;
+      if (!id) {
+        console.log('No project ID provided');
+        setIsLoading(false);
+        return;
+      }
       
+      console.log('開始載入專案資料, ID:', id);
       setIsLoading(true);
+      
       try {
         // 載入專案資訊
+        console.log('載入專案資訊...');
         await dispatch(fetchProjectById(id));
+        console.log('專案資訊載入完成');
         
         // 載入章節列表
+        console.log('載入章節列表...');
         const chapterList = await api.chapters.getByProjectId(id);
+        console.log('章節列表載入完成, 章節數量:', chapterList.length);
         _setChapters(chapterList);
         
         // 如果有章節，載入第一個章節
         if (chapterList.length > 0) {
           const firstChapter = chapterList[0];
+          console.log('載入第一個章節:', firstChapter.title);
           setCurrentChapter(firstChapter);
           setContent(firstChapter.content || [{
             type: 'paragraph',
             children: [{ text: '' }]
           }]);
+          console.log('章節內容載入完成');
         } else {
+          console.log('沒有章節，創建第一個章節...');
           // 如果沒有章節，創建第一個章節
           const _newChapter = await api.chapters.create({
             projectId: id,
@@ -84,6 +98,8 @@ const SimpleProjectEditor: React.FC = () => {
             order: 1
           });
           
+          console.log('新章節創建完成');
+          
           // 重新載入章節列表
           const updatedChapters = await api.chapters.getByProjectId(id);
           _setChapters(updatedChapters);
@@ -92,14 +108,20 @@ const SimpleProjectEditor: React.FC = () => {
             const newChapterData = updatedChapters[0];
             setCurrentChapter(newChapterData);
             setContent(newChapterData.content || [{
-            type: 'paragraph',
-            children: [{ text: '' }]
-          }]);
+              type: 'paragraph',
+              children: [{ text: '' }]
+            }]);
+            console.log('新創建章節載入完成');
           }
         }
+        
+        console.log('所有載入完成，設置 isLoading = false');
+        
       } catch (error) {
         console.error('載入資料失敗:', error);
       } finally {
+        // 確保 isLoading 一定會被設為 false
+        console.log('執行 finally 區塊，設置 isLoading = false');
         setIsLoading(false);
       }
     };
@@ -112,6 +134,10 @@ const SimpleProjectEditor: React.FC = () => {
     if (!currentChapter || isSaved || isLoading) return;
     
     const timer = setTimeout(async () => {
+      // 保存當前游標位置（靜默自動儲存）
+      const savedCursorPosition = textAreaRef.current?.selectionStart;
+      const wasTextAreaFocused = document.activeElement === textAreaRef.current;
+      
       try {
         await api.chapters.update({
           ...currentChapter,
@@ -119,6 +145,16 @@ const SimpleProjectEditor: React.FC = () => {
         });
         setIsSaved(true);
         console.log('自動儲存成功');
+        
+        // 如果 textarea 之前有焦點，恢復游標位置
+        if (wasTextAreaFocused && savedCursorPosition !== undefined) {
+          setTimeout(() => {
+            if (textAreaRef.current) {
+              textAreaRef.current.focus();
+              textAreaRef.current.setSelectionRange(savedCursorPosition, savedCursorPosition);
+            }
+          }, 10);
+        }
       } catch (error) {
         console.error('自動儲存失敗:', error);
       }
@@ -127,19 +163,46 @@ const SimpleProjectEditor: React.FC = () => {
     return () => clearTimeout(timer);
   }, [content, isSaved, currentChapter, isLoading]);
 
-
   const handleSave = async () => {
     if (!currentChapter) return;
     
+    // 保存當前游標位置
+    const savedCursorPosition = textAreaRef.current?.selectionStart || cursorPosition;
+    
     try {
+      // 不設置 isLoading，避免隱藏 textarea 導致游標丟失
       await api.chapters.update({
         ...currentChapter,
         content: content
       });
       setIsSaved(true);
       console.log('手動儲存成功');
+      
+      // 恢復游標位置
+      setTimeout(() => {
+        if (textAreaRef.current) {
+          textAreaRef.current.focus();
+          textAreaRef.current.setSelectionRange(savedCursorPosition, savedCursorPosition);
+        }
+      }, 10);
+      
+      // 顯示儲存成功提示
+      dispatch(addNotification({ 
+        type: 'success', 
+        title: '儲存成功', 
+        message: `章節「${currentChapter.title}」已成功儲存到資料庫`,
+        duration: 3000
+      }));
     } catch (error) {
       console.error('儲存失敗:', error);
+      
+      // 顯示儲存失敗提示
+      dispatch(addNotification({ 
+        type: 'error', 
+        title: '儲存失敗', 
+        message: `無法儲存章節「${currentChapter.title}」，請檢查連線並重試`,
+        duration: 5000
+      }));
     }
   };
 
@@ -193,6 +256,9 @@ const SimpleProjectEditor: React.FC = () => {
     setCursorPosition((e.target as HTMLTextAreaElement).selectionStart);
   };
 
+  // Debug 資訊
+  console.log('SimpleProjectEditor render - isLoading:', isLoading, 'currentChapter:', currentChapter?.title);
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
@@ -220,10 +286,10 @@ const SimpleProjectEditor: React.FC = () => {
         <div className="mb-4 flex gap-2">
           <button 
             onClick={handleSave}
-            disabled={isSaved || isLoading || !currentChapter}
-            className={`btn-primary ${(isSaved || isLoading || !currentChapter) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading || !currentChapter}
+            className={`btn-primary ${(isLoading || !currentChapter) ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            💾 儲存至資料庫
+            💾 {isSaved ? '已儲存' : '儲存至資料庫'}
           </button>
           <button 
             onClick={handleAIWrite}
@@ -246,10 +312,12 @@ const SimpleProjectEditor: React.FC = () => {
               <div className="text-center">
                 <div className="text-4xl mb-4">📖</div>
                 <p className="text-gray-300">載入章節內容中...</p>
+                <p className="text-xs text-gray-500 mt-2">Debug: isLoading = {isLoading.toString()}</p>
               </div>
             </div>
           ) : (
             <textarea
+              ref={textAreaRef}
               value={content.map(node => 
                 'type' in node && node.type === 'paragraph' && 'children' in node
                   ? node.children.map((child: { text: string }) => child.text).join('')

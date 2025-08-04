@@ -25,9 +25,9 @@ mcp__serena__onboarding()
 創世紀元：異世界創作神器 (Genesis Chronicle) - A Tauri-based AI-powered novel writing application for Chinese light novel creation. Built with Rust backend and React frontend, integrating Ollama for local AI assistance.
 
 **Architecture**: Pure Tauri v2.7.0 (v1.0.0+) - 300% faster startup, 70% less memory, 90% smaller size
-**Latest Updates** (2025-08-04): Novel Template Import Feature Complete, Settings Navigation Fixed, Compromise NLP Integration, Database Path Standardization
+**Latest Updates** (2025-08-04): Novel Template Import Feature Complete, Settings Navigation Fixed, Compromise NLP Integration, Database Path Standardization, Cursor Position Preservation, Save Function Fixes
 **Code Quality**: ✅ Rust: Clean | ✅ TypeScript: 0 errors (100% FIXED - from 300+ to 0!) | ✅ ESLint: 0 errors, 0 warnings (PERFECT)
-**New Features**: ✅ AI-Powered Novel Analysis | ✅ Template Import Wizard | ✅ NLP Text Processing | ✅ Multi-step Analysis Pipeline
+**New Features**: ✅ AI-Powered Novel Analysis | ✅ Template Import Wizard | ✅ NLP Text Processing | ✅ Multi-step Analysis Pipeline | ✅ Intelligent Context-Aware AI Writing | ✅ Cursor Position Preservation
 
 ## Essential Commands
 
@@ -88,6 +88,8 @@ ollama pull llama3.2                     # Install recommended model
 - **Novel Template Import**: AI-powered analysis of novels to generate writing templates using Compromise.js NLP
 - **Multi-step Analysis Pipeline**: Upload → Parse → Analyze → Preview → Generate template workflow
 - **Real-time Text Processing**: NLP-based entity extraction, writing metrics, and style analysis
+- **Smart AI Writing Assistant**: Context-aware AI text generation with Compromise.js NLP integration
+- **Cursor Position Preservation**: Manual and auto-save operations maintain cursor position for seamless editing experience
 
 ## High-Level Architecture Patterns
 
@@ -209,6 +211,8 @@ src/renderer/src/i18n/
 9. **Type Safety**: Prefer specific type definitions over `as any` - use interfaces, unions, or `Record<string, unknown>`
 10. **API Interface Consistency**: Character/Relationship APIs use `CreateRelationshipRequest` type - never `Omit<Relationship, 'id'>`
 11. **Error Type Guards**: Always implement type guards for unknown/error objects before accessing properties
+12. **Chapter Content Format**: Always pass Slate.js content as JSON string to Tauri backend: `JSON.stringify(chapter.content)` 
+13. **Cursor Position Management**: Use `textAreaRef` and preserve `selectionStart` for save operations to maintain editing context
 
 ### Development Workflows
 
@@ -265,6 +269,13 @@ src/renderer/src/i18n/
 - **Progress Tracking**: Multi-stage progress indicators with error recovery
 - **Memory Usage**: Text chunking (2500 chars with 200 char overlap) for large novels
 
+### Smart AI Writing System
+- **NLP Integration**: Uses `aiWritingAssistant.ts` with Compromise.js for context analysis
+- **Context Analysis**: Detects writing style (tense, narrative perspective, emotional tone)
+- **Smart Parameters**: Auto-adjusts AI generation parameters based on text analysis
+- **Quality Checking**: Post-generation quality assessment for coherence and style consistency
+- **Cursor Preservation**: Save operations maintain cursor position using `textAreaRef` and `selectionStart`
+
 ### TypeScript Patterns
 ```typescript
 // Redux with typed dispatch
@@ -302,6 +313,24 @@ const createRelationshipRequest: CreateRelationshipRequest = {
   relationshipType: 'friend',
   description: 'Best friends'
 };
+
+// Chapter Content Serialization Pattern  
+const chapterUpdateRequest = {
+  id: chapter.id,
+  title: chapter.title,
+  content: JSON.stringify(chapter.content), // ✅ Always serialize Slate.js content
+  order_index: chapter.order
+};
+
+// Cursor Position Preservation Pattern
+const savedCursorPosition = textAreaRef.current?.selectionStart || cursorPosition;
+// ... perform save operation ...
+setTimeout(() => {
+  if (textAreaRef.current) {
+    textAreaRef.current.focus();
+    textAreaRef.current.setSelectionRange(savedCursorPosition, savedCursorPosition);
+  }
+}, 10);
 ```
 
 ### Database Migration Pattern
@@ -427,6 +456,23 @@ Key rules in `.eslintrc.js`:
 5. ✅ **Final Type Issues**: COMPLETED - Fixed all remaining Slate.js and database interface issues
 
 ## Change Log
+
+### [2025-08-04 15:50:00] - Smart AI Writing & User Experience Enhancements 🧠✨
+- **NLP-Powered AI Writing**: Complete integration of Compromise.js NLP with AI writing assistant
+  - Context-aware analysis (tense, narrative style, emotional tone, entities)
+  - Smart parameter adjustment based on writing style analysis  
+  - Quality checking for generated content coherence and consistency
+  - UI panels for NLP insights and quality reports
+- **Cursor Position Preservation**: Fixed save operations maintaining cursor position
+  - Auto-save and manual save preserve `selectionStart` position
+  - Seamless editing experience without cursor jumping to document top
+  - Smart focus management with `textAreaRef` integration
+- **Save Function Fixes**: Resolved Tauri backend content serialization issues
+  - Fixed `"invalid type: sequence, expected a string"` error
+  - Proper JSON serialization of Slate.js content: `JSON.stringify(chapter.content)`
+  - Enhanced error handling with user-friendly notifications
+- **Architecture**: Added `aiWritingAssistant.ts` service with comprehensive NLP analysis
+- **Impact**: Dramatically improved writing experience with intelligent AI assistance and seamless UX
 
 ### [2025-08-04 14:20:00] - Novel Template Import Feature Complete 📚
 - **New Major Feature**: AI-powered novel template import system

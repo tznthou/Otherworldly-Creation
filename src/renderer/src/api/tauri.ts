@@ -6,6 +6,7 @@ import type {
   CharacterAttributes,
   CreateRelationshipRequest
 } from './models';
+import type { Descendant } from 'slate';
 
 // Tauri 後端類型定義
 interface TauriProject {
@@ -274,21 +275,40 @@ export const tauriAPI: API = {
     getByProjectId: async (projectId) => {
       const chapters = await safeInvoke<TauriChapter[]>('get_chapters_by_project_id', { projectId });
       // 轉換 Tauri 後端格式到前端格式
-      return chapters.map((chapter) => ({
-        id: chapter.id,
-        projectId: chapter.project_id,
-        title: chapter.title,
-        content: chapter.content ? JSON.parse(chapter.content) : [{ type: 'paragraph', children: [{ text: '' }] }],
-        order: chapter.order_index,
-        createdAt: new Date(chapter.created_at),
-        updatedAt: new Date(chapter.updated_at)
-      }));
+      return chapters.map((chapter) => {
+        let content: Descendant[] = [{ type: 'paragraph', children: [{ text: '' }] }];
+        
+        if (chapter.content) {
+          try {
+            // 嘗試解析 JSON 格式的內容
+            content = JSON.parse(chapter.content);
+          } catch (error) {
+            // 如果解析失敗，將純文字轉換為 Slate.js 格式
+            console.log('轉換純文字章節內容為 Slate 格式');
+            const textLines = chapter.content.split('\n');
+            content = textLines.map(line => ({
+              type: 'paragraph' as const,
+              children: [{ text: line }]
+            }));
+          }
+        }
+        
+        return {
+          id: chapter.id,
+          projectId: chapter.project_id,
+          title: chapter.title,
+          content: content,
+          order: chapter.order_index,
+          createdAt: new Date(chapter.created_at),
+          updatedAt: new Date(chapter.updated_at)
+        };
+      });
     },
     create: (chapter) => safeInvoke('create_chapter', {
       chapter: {
         project_id: chapter.projectId,
         title: chapter.title,
-        content: chapter.content,
+        content: JSON.stringify(chapter.content),
         order_index: chapter.order
       }
     }),
@@ -296,19 +316,36 @@ export const tauriAPI: API = {
       chapter: {
         id: chapter.id,
         title: chapter.title,
-        content: chapter.content,
+        content: JSON.stringify(chapter.content),
         order_index: chapter.order
       }
     }),
     delete: (id) => safeInvoke('delete_chapter', { id }),
     getById: async (id) => {
       const chapter = await safeInvoke<TauriChapter>('get_chapter_by_id', { id });
-      // 轉換 Tauri 後端格式到前端格式
+      
+      let content: Descendant[] = [{ type: 'paragraph', children: [{ text: '' }] }];
+      
+      if (chapter.content) {
+        try {
+          // 嘗試解析 JSON 格式的內容
+          content = JSON.parse(chapter.content);
+        } catch (error) {
+          // 如果解析失敗，將純文字轉換為 Slate.js 格式
+          console.log('轉換純文字章節內容為 Slate 格式');
+          const textLines = chapter.content.split('\n');
+          content = textLines.map(line => ({
+            type: 'paragraph' as const,
+            children: [{ text: line }]
+          }));
+        }
+      }
+      
       return {
         id: chapter.id,
         projectId: chapter.project_id,
         title: chapter.title,
-        content: chapter.content ? JSON.parse(chapter.content) : [{ type: 'paragraph', children: [{ text: '' }] }],
+        content: content,
         order: chapter.order_index,
         createdAt: new Date(chapter.created_at),
         updatedAt: new Date(chapter.updated_at)

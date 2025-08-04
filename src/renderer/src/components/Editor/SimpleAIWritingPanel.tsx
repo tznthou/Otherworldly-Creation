@@ -9,6 +9,14 @@ import { api } from '../../api';
 import { AIGenerationProgress } from '../AI';
 import AIHistoryPanel from '../AI/AIHistoryPanel';
 import { ErrorSeverity } from '../../types/error';
+import { 
+  analyzeWritingContext, 
+  generateSmartParams, 
+  checkGeneratedQuality,
+  type ContextAnalysis,
+  type SmartGenerationParams,
+  type QualityCheck 
+} from '../../services/aiWritingAssistant';
 
 interface SimpleAIWritingPanelProps {
   projectId: string;
@@ -81,6 +89,13 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   const [progressId, setProgressId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   
+  // NLP 智能分析相關狀態
+  const [contextAnalysis, setContextAnalysis] = useState<ContextAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [smartParams, setSmartParams] = useState<SmartGenerationParams | null>(null);
+  const [lastQualityCheck, setLastQualityCheck] = useState<QualityCheck | null>(null);
+  const [showNLPInsights, setShowNLPInsights] = useState(false);
+  
   // 從 Redux store 獲取 AI 相關狀態
   const { currentModel, availableModels, isOllamaConnected } = useAppSelector(state => state.ai);
   const currentLanguage = 'zh-TW'; // 固定使用繁體中文
@@ -111,6 +126,63 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     };
   }, []);
   
+  // NLP 智能分析當前章節內容
+  const performContextAnalysis = useCallback(async () => {
+    try {
+      setIsAnalyzing(true);
+      console.log('🔍 開始 NLP 智能分析...');
+      
+      // 獲取當前章節內容
+      const chapter = await api.chapters.getById(chapterId);
+      const currentText = chapter.content
+        .map(node => 
+          'type' in node && node.type === 'paragraph' && 'children' in node
+            ? node.children.map((child: { text: string }) => child.text).join('')
+            : ''
+        )
+        .join('\n');
+      
+      if (currentText.trim().length < 50) {
+        console.log('📝 文本過短，跳過 NLP 分析');
+        return;
+      }
+      
+      // 執行 NLP 分析
+      const analysis = analyzeWritingContext(currentText);
+      setContextAnalysis(analysis);
+      
+      // 生成智能參數
+      const params = generateSmartParams(analysis, temperature);
+      setSmartParams(params);
+      
+      // 更新參數建議
+      if (params.temperature !== temperature) {
+        setTemperature(params.temperature);
+      }
+      if (params.maxTokens !== maxTokens) {
+        setMaxTokens(params.maxTokens);
+      }
+      
+      console.log('✨ NLP 分析完成，參數已優化');
+      dispatch(addNotification({
+        type: 'success',
+        title: '🧠 智能分析完成',
+        message: `檢測到${analysis.emotionalTone}風格，已優化生成參數`,
+        duration: 4000,
+      }));
+      
+    } catch (error) {
+      console.error('NLP 分析失敗:', error);
+      dispatch(addNotification({
+        type: 'warning',
+        title: 'NLP 分析失敗',
+        message: '將使用預設參數進行生成',
+        duration: 3000,
+      }));
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [chapterId, temperature, maxTokens, dispatch]);
 
   // 生成文本
   const handleGenerate = async () => {
@@ -128,8 +200,10 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         return;
       }
       
+      // 🧠 先進行 NLP 智能分析
+      await performContextAnalysis();
     
-    setIsGenerating(true);
+      setIsGenerating(true);
     
     // 設置超時（6分鐘），給 AI 充足的生成時間
     timeoutId = setTimeout(() => {
@@ -176,15 +250,29 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         }));
       }
       
-      // 生成多個選項的參數配置
+      // ✨ 使用 NLP 智能分析結果來優化參數配置
       const baseParams = {
-        temperature,
-        maxTokens,
+        temperature: smartParams?.temperature || temperature,
+        maxTokens: smartParams?.maxTokens || maxTokens,
         topP: 0.9,
         presencePenalty: 0,
         frequencyPenalty: 0,
         maxContextTokens: 2000,
       };
+      
+      // 🎯 如果有智能參數，增強 prompt
+      const smartContext = smartParams ? `
+寫作風格指導：${smartParams.style}
+${smartParams.contextHints.length > 0 ? `
+上下文提示：
+${smartParams.contextHints.map(hint => `- ${hint}`).join('\n')}` : ''}
+${smartParams.characterNames.length > 0 ? `
+主要角色：${smartParams.characterNames.join('、')}` : ''}
+${smartParams.locationNames.length > 0 ? `
+場景設定：${smartParams.locationNames.join('、')}` : ''}
+
+請根據以上分析結果，生成風格一致且連貫的續寫內容。
+` : '';
       
       // 根據生成數量創建不同的參數組合
       const paramVariations = [];
@@ -222,17 +310,50 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
           }
           
           const startTime = Date.now();
+          
+          // 🎯 增強的參數，包含智能上下文提示
+          const enhancedParams = {
+            ...params,
+            ...(smartContext && {
+              systemPrompt: `你是一位專業的中文小說續寫助手。${smartContext}`
+            })
+          };
+          
           const result = await api.ai.generateWithContext(
             projectId, 
             chapterId, 
             currentPosition, 
             currentModel, 
-            params,
+            enhancedParams,
             currentLanguage
           );
           const generationTime = Date.now() - startTime;
           
           const filteredText = filterThinkingTags(result);
+          
+          // 🔍 對生成的文本進行品質檢測
+          if (contextAnalysis && filteredText.trim().length > 0) {
+            try {
+              const originalText = (await api.chapters.getById(chapterId)).content
+                .map(node => 
+                  'type' in node && node.type === 'paragraph' && 'children' in node
+                    ? node.children.map((child: { text: string }) => child.text).join('')
+                    : ''
+                )
+                .join('\n');
+              
+              const qualityCheck = checkGeneratedQuality(originalText, filteredText, contextAnalysis);
+              setLastQualityCheck(qualityCheck);
+              
+              // 如果品質檢查發現問題，給予提示
+              if (qualityCheck.warnings.length > 0) {
+                console.warn('⚠️ 品質檢查發現問題:', qualityCheck.warnings);
+              }
+              
+            } catch (qualityError) {
+              console.warn('品質檢測失敗:', qualityError);
+            }
+          }
           
           // 保存到 AI 歷史記錄
           try {
@@ -440,6 +561,105 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         </p>
       </div>
       
+      {/* 🧠 NLP 智能分析面板 */}
+      {(contextAnalysis || isAnalyzing) && (
+        <div className="mb-4 bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium text-gold-400 flex items-center">
+              🧠 智能寫作分析
+              {isAnalyzing && (
+                <svg className="animate-spin ml-2 h-4 w-4 text-gold-400" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              )}
+            </h4>
+            <button
+              onClick={() => setShowNLPInsights(!showNLPInsights)}
+              className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
+            >
+              {showNLPInsights ? '收起' : '展開'}
+            </button>
+          </div>
+          
+          {isAnalyzing ? (
+            <div className="text-sm text-gray-400 text-center py-2">
+              正在分析文本風格和上下文...
+            </div>
+          ) : contextAnalysis && (
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="px-2 py-1 bg-cosmic-700 rounded text-gold-300">
+                  {contextAnalysis.emotionalTone}風格
+                </span>
+                <span className="px-2 py-1 bg-cosmic-700 rounded text-blue-300">
+                  {contextAnalysis.dominantTense}式
+                </span>
+                <span className="px-2 py-1 bg-cosmic-700 rounded text-green-300">
+                  {contextAnalysis.narrativeStyle === 'first' ? '第一人稱' : contextAnalysis.narrativeStyle === 'third' ? '第三人稱' : '混合視角'}
+                </span>
+                <span className="px-2 py-1 bg-cosmic-700 rounded text-purple-300">
+                  {contextAnalysis.textAnalysis.complexity}程度
+                </span>
+              </div>
+              
+              {showNLPInsights && (
+                <div className="mt-3 text-xs text-gray-400 space-y-1">
+                  <div>詞彙數: {contextAnalysis.textAnalysis.words} | 句子數: {contextAnalysis.textAnalysis.sentences}</div>
+                  <div>平均句長: {contextAnalysis.writingMetrics.averageSentenceLength.toFixed(1)} 詞</div>
+                  {contextAnalysis.entities.people.length > 0 && (
+                    <div>角色: {contextAnalysis.entities.people.slice(0, 3).join('、')}</div>
+                  )}
+                  {contextAnalysis.entities.places.length > 0 && (
+                    <div>場景: {contextAnalysis.entities.places.slice(0, 2).join('、')}</div>
+                  )}
+                </div>
+              )}
+              
+              {smartParams && (
+                <div className="mt-2 text-xs text-gray-500">
+                  ✨ 已根據分析結果優化生成參數 (溫度: {smartParams.temperature.toFixed(1)}, 長度: {smartParams.maxTokens})
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 📊 品質檢測結果 */}
+      {lastQualityCheck && (lastQualityCheck.warnings.length > 0 || lastQualityCheck.suggestions.length > 0) && (
+        <div className="mb-4 bg-cosmic-800 border border-yellow-600 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-yellow-400 flex items-center mb-2">
+            🔍 品質檢測報告
+          </h4>
+          
+          <div className="space-y-2 text-xs">
+            <div className="flex gap-4">
+              <span className="text-green-400">連貫性: {(lastQualityCheck.coherence * 100).toFixed(0)}%</span>
+              <span className="text-blue-400">風格一致性: {(lastQualityCheck.styleConsistency * 100).toFixed(0)}%</span>
+            </div>
+            
+            {lastQualityCheck.warnings.length > 0 && (
+              <div>
+                <div className="text-yellow-400 font-medium">⚠️ 注意事項:</div>
+                {lastQualityCheck.warnings.map((warning, i) => (
+                  <div key={i} className="text-yellow-300 ml-4">• {warning}</div>
+                ))}
+              </div>
+            )}
+            
+            {lastQualityCheck.suggestions.length > 0 && (
+              <div>
+                <div className="text-blue-400 font-medium">💡 建議:</div>
+                {lastQualityCheck.suggestions.map((suggestion, i) => (
+                  <div key={i} className="text-blue-300 ml-4">• {suggestion}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 模型選擇和基本參數設置 */}
       <div className="space-y-4 mb-4">
         <div>
