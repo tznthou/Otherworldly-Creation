@@ -20,11 +20,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-cosmic-950 relative">
-      {/* 宇宙背景 */}
-      <CosmicBackground intensity="medium" />
+      {/* 宇宙背景 - 確保不會阻擋點擊 */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+        <CosmicBackground intensity="medium" />
+      </div>
       
-      {/* 側邊欄 */}
-      <Sidebar />
+      {/* 側邊欄 - 確保在最上層 */}
+      <div style={{ position: 'relative', zIndex: 9999 }}>
+        <Sidebar />
+      </div>
       
       {/* 主要內容區域 */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${

@@ -10,6 +10,7 @@ import {
   AISettings,
   EditorSettings,
   UISettings,
+  TemplateManagementSettings,
   BackupSettings,
   PrivacySettings,
   ShortcutsSettings,
@@ -40,8 +41,26 @@ const SettingsMain: React.FC = () => {
   }, [saveSettings, settings]);
 
   useEffect(() => {
-    loadUserSettings();
-  }, [loadUserSettings]);
+    console.log('SettingsMain: 開始載入設定...');
+    let mounted = true;
+    
+    const loadSettings = async () => {
+      try {
+        if (mounted) {
+          await loadUserSettings();
+          console.log('SettingsMain: 設定載入完成');
+        }
+      } catch (error) {
+        console.error('SettingsMain: 設定載入失敗:', error);
+      }
+    };
+    
+    loadSettings();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []); // 移除 loadUserSettings 依賴，避免無限循環
 
   // 鍵盤快捷鍵支持
   useEffect(() => {
@@ -70,6 +89,8 @@ const SettingsMain: React.FC = () => {
         return <EditorSettings {...commonProps} />;
       case 'ui':
         return <UISettings {...commonProps} />;
+      case 'templates':
+        return <TemplateManagementSettings />;
       case 'backup':
         return <BackupSettings {...commonProps} />;
       case 'database':
@@ -88,6 +109,9 @@ const SettingsMain: React.FC = () => {
   if (isLoading) {
     return <SettingsLoadingView />;
   }
+
+  // 緊急錯誤處理
+  try {
 
   return (
     <div className="h-full flex bg-cosmic-900">
@@ -109,6 +133,23 @@ const SettingsMain: React.FC = () => {
       </div>
     </div>
   );
+  } catch (error) {
+    console.error('SettingsMain: 渲染錯誤:', error);
+    return (
+      <div className="h-full flex items-center justify-center bg-cosmic-900">
+        <div className="text-center">
+          <h2 className="text-2xl font-cosmic text-gold-500 mb-4">設定頁面載入失敗</h2>
+          <p className="text-gray-300 mb-4">發生了未預期的錯誤</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-gold-500 hover:bg-gold-600 text-cosmic-950 px-4 py-2 rounded"
+          >
+            重新載入
+          </button>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default SettingsMain;

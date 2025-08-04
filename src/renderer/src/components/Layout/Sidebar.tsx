@@ -46,15 +46,35 @@ const Sidebar: React.FC = () => {
   ];
 
   const handleNavigation = (path: string | null) => {
+    console.log('Sidebar: 嘗試導航到:', path);
     if (path) {
-      navigate(path);
+      try {
+        // 使用 setTimeout 確保事件處理完成
+        setTimeout(() => {
+          navigate(path);
+          console.log('Sidebar: 導航成功到:', path);
+        }, 0);
+      } catch (error) {
+        console.error('Sidebar: 導航失敗:', error);
+      }
+    } else {
+      console.warn('Sidebar: 路徑為空，無法導航');
     }
   };
 
   return (
-    <div className={`fixed left-0 top-0 h-full bg-cosmic-900/80 backdrop-blur-sm border-r border-cosmic-700 transition-all duration-300 z-40 ${
-      sidebarCollapsed ? 'w-16' : 'w-64'
-    }`}>
+    <div 
+      className={`fixed left-0 top-0 h-full bg-cosmic-900/80 backdrop-blur-sm border-r border-cosmic-700 transition-all duration-300 ${
+        sidebarCollapsed ? 'w-16' : 'w-64'
+      }`}
+      style={{ 
+        zIndex: 9999, 
+        pointerEvents: 'auto',
+        position: 'fixed',
+        transform: 'translateZ(0)',
+        willChange: 'transform'
+      }}
+    >
       {/* Logo 區域 */}
       <div className="flex items-center justify-between p-4 border-b border-cosmic-700">
         {!sidebarCollapsed && (
@@ -93,6 +113,7 @@ const Sidebar: React.FC = () => {
         </div>
       )}
 
+
       {/* 導航選單 */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
@@ -104,12 +125,26 @@ const Sidebar: React.FC = () => {
             return (
               <li key={item.id}>
                 <button
-                  onClick={() => handleNavigation(item.path)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log(`Sidebar: 點擊了 ${item.label}，路徑:`, item.path, '禁用狀態:', item.disabled);
+                    if (!item.disabled) {
+                      handleNavigation(item.path);
+                    } else {
+                      console.log(`Sidebar: ${item.label} 被禁用，無法導航`);
+                    }
+                  }}
                   disabled={item.disabled}
                   className={`w-full nav-item ${isActive ? 'active' : ''} ${
-                    item.disabled ? 'opacity-50 cursor-not-allowed' : ''
+                    item.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-cosmic-800 cursor-pointer'
                   } ${sidebarCollapsed ? 'justify-center px-2' : ''}`}
                   title={sidebarCollapsed ? item.label : undefined}
+                  style={{ 
+                    pointerEvents: item.disabled ? 'none' : 'auto',
+                    position: 'relative',
+                    zIndex: 100
+                  }}
                 >
                   <span className={`text-xl flex-shrink-0 ${!sidebarCollapsed ? 'mr-3' : ''}`}>{item.icon}</span>
                   {!sidebarCollapsed && (

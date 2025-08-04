@@ -81,7 +81,10 @@
       "Bash(npx eslint:*)",
       "mcp__context7__resolve-library-id",
       "mcp__context7__get-library-docs",
-      "mcp__serena__think_about_task_adherence"
+      "mcp__serena__think_about_task_adherence",
+      "Bash(timeout 10 npm run dev:renderer)",
+      "Bash(./init-db.sh:*)",
+      "mcp__serena__list_memories"
     ],
     "deny": []
   }

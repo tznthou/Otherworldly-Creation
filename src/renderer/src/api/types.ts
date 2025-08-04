@@ -21,6 +21,15 @@ import type {
   AIHistoryQueryParams
 } from './models';
 
+// 小說分析相關類型
+import type { NovelParseResult } from '../services/novelParserService';
+import type { 
+  DetailedAnalysis,
+  AnalysisOptions,
+  AnalysisProgress
+} from '../services/novelAnalysisService';
+import type { NovelTemplate } from '../types/template';
+
 export interface API {
   // 專案管理
   projects: {
@@ -113,5 +122,13 @@ export interface API {
     markSelected: (historyId: string, projectId: string) => Promise<void>;
     delete: (historyId: string) => Promise<void>;
     cleanup: (projectId: string, keepCount: number) => Promise<number>;
+  };
+
+  // 小說分析功能
+  novelAnalysis: {
+    parseNovel: (text: string, filename?: string) => Promise<NovelParseResult>;
+    analyzeNovel: (parseResult: NovelParseResult, options?: AnalysisOptions, onProgress?: (progress: AnalysisProgress) => void) => Promise<NovelTemplate>;
+    analyzeChunk: (text: string, analysisType: 'world' | 'character' | 'plot' | 'style') => Promise<string>;
+    generateTemplate: (title: string, analysis: DetailedAnalysis) => Promise<NovelTemplate>;
   };
 }

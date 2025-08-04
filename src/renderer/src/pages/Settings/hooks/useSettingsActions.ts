@@ -14,19 +14,45 @@ export const useSettingsActions = () => {
   const dispatch = useAppDispatch();
 
   const loadUserSettings = async () => {
+    let timeoutId: NodeJS.Timeout | null = null;
     try {
       dispatch(setLoading(true));
-      const userSettings = await SettingsService.loadSettings();
+      
+      // 添加超時保護，避免無限載入
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error('設定載入超時'));
+        }, 10000); // 10秒超時
+      });
+      
+      const loadPromise = SettingsService.loadSettings();
+      
+      // 使用 Promise.race 來實現超時控制
+      const userSettings = await Promise.race([loadPromise, timeoutPromise]) as AppSettings;
+      
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      
       dispatch(loadSettings(userSettings));
     } catch (error) {
       console.error('載入設定失敗:', error);
+      
+      // 載入失敗時使用預設設定
+      const { DEFAULT_SETTINGS } = await import('../../../store/slices/settingsSlice');
+      dispatch(loadSettings(DEFAULT_SETTINGS));
+      
       dispatch(addNotification({
-        type: 'error',
-        title: tSync('common.error'),
-        message: tSync('settings.messages.loadFailed'),
+        type: 'warning',
+        title: '載入設定失敗',
+        message: '已使用預設設定，你可以重新設定你的偏好',
         duration: 5000,
       }));
     } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       dispatch(setLoading(false));
     }
   };

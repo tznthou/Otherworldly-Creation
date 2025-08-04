@@ -1,7 +1,7 @@
 import { AppSettings } from '../../store/slices/settingsSlice';
 import { AppDispatch } from '../../store/store';
 
-export type SettingsTab = 'general' | 'ai' | 'editor' | 'ui' | 'backup' | 'database' | 'update' | 'privacy' | 'shortcuts';
+export type SettingsTab = 'general' | 'ai' | 'editor' | 'ui' | 'backup' | 'database' | 'update' | 'privacy' | 'shortcuts' | 'templates';
 
 export interface SettingsTabConfig {
   id: string;
@@ -24,6 +24,7 @@ export const SETTINGS_TABS: SettingsTabConfig[] = [
   { id: 'ai', name: 'AI 設定', icon: '🤖' },
   { id: 'editor', name: '編輯器', icon: '📝' },
   { id: 'ui', name: '界面', icon: '🎨' },
+  { id: 'templates', name: '模板管理', icon: '📋' },
   { id: 'backup', name: '備份', icon: '💾' },
   { id: 'database', name: '資料庫維護', icon: '🗄️' },
   { id: 'update', name: '自動更新', icon: '🔄' },

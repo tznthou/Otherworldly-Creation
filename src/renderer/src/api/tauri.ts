@@ -1,4 +1,5 @@
 import type { API } from './types';
+import type { NovelTemplate } from '../types/template';
 import type {
   Character,
   Relationship,
@@ -694,5 +695,75 @@ export const tauriAPI: API = {
       safeInvoke('delete_ai_history', { historyId }),
     cleanup: (projectId, keepCount) => 
       safeInvoke('cleanup_ai_history', { projectId, keepCount }),
+  },
+
+  // 小說分析功能
+  novelAnalysis: {
+    parseNovel: async (text, filename) => {
+      // 在前端直接使用 novelParserService 進行解析
+      const { novelParserService } = await import('../services/novelParserService');
+      return novelParserService.parseNovel(text, filename);
+    },
+    
+    analyzeNovel: async (parseResult, options, onProgress) => {
+      // 在前端使用 novelAnalysisService 進行分析
+      const { novelAnalysisService } = await import('../services/novelAnalysisService');
+      return novelAnalysisService.analyzeNovel(parseResult, options, onProgress);
+    },
+    
+    analyzeChunk: async (text, analysisType) => {
+      // 調用 AI 服務分析單個文本片段
+      const prompts = {
+        world: `分析以下文本的世界觀設定，包括時代、科技、社會結構等：\n${text}`,
+        character: `分析以下文本中的角色信息，包括姓名、性格、外貌等：\n${text}`,
+        plot: `分析以下文本的劇情結構和關鍵事件：\n${text}`,
+        style: `分析以下文本的寫作風格和語言特色：\n${text}`
+      };
+      
+      return safeInvoke('generate_ai_text', {
+        prompt: prompts[analysisType],
+        model: 'llama3.2',
+        params: {
+          temperature: 0.3,
+          max_tokens: 800,
+          top_p: 0.9
+        }
+      });
+    },
+    
+    generateTemplate: async (title, analysis) => {
+      // 基於分析結果生成模板（主要在前端完成）
+      
+      // 基於分析結果創建模板（這個函數暫時未實現完整功能）
+      const template: NovelTemplate = {
+        id: `generated-${Date.now()}`,
+        name: title,
+        description: '基於分析生成的模板',
+        type: 'fantasy',
+        version: '1.0.0',
+        isCustom: true,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        worldSetting: analysis.worldSetting,
+        characterArchetypes: analysis.characters,
+        plotFramework: analysis.plotStructure,
+        writingGuidelines: analysis.writingStyle,
+        aiPromptTemplate: {
+          context: '',
+          characterPrompts: [],
+          worldPrompts: [],
+          stylePrompts: [],
+          continuationPrompts: []
+        },
+        sampleContent: {
+          opening: '',
+          dialogue: [],
+          description: []
+        }
+      };
+      
+      return template;
+    }
   },
 };

@@ -9,56 +9,32 @@ export class SettingsService {
    * 載入設定
    */
   static async loadSettings(): Promise<AppSettings> {
+    console.log('開始載入設定...');
+    
     try {
-      // 首先嘗試從後端 API 載入（統一設定來源）
-      try {
-        const backendSettings = await api.settings.getAll();
-        if (backendSettings && Object.keys(backendSettings).length > 0) {
-          console.log('從後端載入設定:', backendSettings);
-          const mergedSettings = this.mergeWithDefaults(backendSettings);
-          
-          // 同時更新 localStorage 作為快取
-          localStorage.setItem(SETTINGS_KEY, JSON.stringify(mergedSettings));
-          
-          return mergedSettings;
-        }
-      } catch (error) {
-        console.warn('從後端載入設定失敗，回退到 localStorage:', error);
-      }
-
-      // 回退到 localStorage
+      // 簡化載入邏輯，優先使用 localStorage，避免 API 調用卡死
       const stored = localStorage.getItem(SETTINGS_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        // 合併預設設定以確保新增的設定項目有預設值
-        const mergedSettings = this.mergeWithDefaults(parsed);
-        
-        // 嘗試將 localStorage 設定同步到後端
         try {
-          for (const [key, value] of Object.entries(mergedSettings)) {
-            await api.settings.set(key, value);
-          }
-          console.log('成功將 localStorage 設定同步到後端');
+          const parsed = JSON.parse(stored);
+          const mergedSettings = this.mergeWithDefaults(parsed);
+          console.log('從 localStorage 載入設定成功');
+          return mergedSettings;
         } catch (error) {
-          console.warn('同步設定到後端失敗:', error);
+          console.warn('localStorage 設定解析失敗:', error);
         }
-        
-        return mergedSettings;
       }
       
-      // 如果都沒有設定，初始化預設設定到後端
-      try {
-        for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
-          await api.settings.set(key, value);
-        }
-        console.log('初始化預設設定到後端');
-      } catch (error) {
-        console.warn('初始化預設設定到後端失敗:', error);
-      }
+      // 如果 localStorage 沒有設定，使用預設設定
+      console.log('使用預設設定');
+      
+      // 儲存預設設定到 localStorage
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(DEFAULT_SETTINGS));
       
       return DEFAULT_SETTINGS;
+      
     } catch (error) {
-      console.error('載入設定失敗:', error);
+      console.error('設定載入完全失敗，使用預設設定:', error);
       return DEFAULT_SETTINGS;
     }
   }
@@ -68,27 +44,37 @@ export class SettingsService {
    */
   static async saveSettings(settings: AppSettings): Promise<void> {
     try {
+      // 優先儲存到 localStorage，確保不會卡死
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      console.log('設定已儲存到 localStorage');
       
       // 儲存設定變更歷史
       this.saveSettingsHistory(settings);
       
-      // 同時通知主程序更新設定
-      try {
-        // 將設定逐一儲存到統一的設定系統
-        // 對於複雜物件，需要序列化儲存
-        for (const [key, value] of Object.entries(settings)) {
-          await api.settings.set(key, value);
-        }
-      } catch (error) {
-        console.warn('同步設定到後端失敗:', error);
-      }
+      // 後台同步到後端（不阻塞主流程）
+      this.syncSettingsToBackend(settings).catch(error => {
+        console.warn('背景同步設定到後端失敗:', error);
+      });
       
       // 通知監聽器
       SettingsWatcher.notifyListeners(settings);
     } catch (error) {
       console.error('儲存設定失敗:', error);
       throw error;
+    }
+  }
+  
+  /**
+   * 後台同步設定到後端
+   */
+  private static async syncSettingsToBackend(settings: AppSettings): Promise<void> {
+    try {
+      for (const [key, value] of Object.entries(settings)) {
+        await api.settings.set(key, value);
+      }
+      console.log('設定已同步到後端');
+    } catch (error) {
+      console.warn('同步設定到後端失敗:', error);
     }
   }
   

@@ -25,8 +25,9 @@ mcp__serena__onboarding()
 創世紀元：異世界創作神器 (Genesis Chronicle) - A Tauri-based AI-powered novel writing application for Chinese light novel creation. Built with Rust backend and React frontend, integrating Ollama for local AI assistance.
 
 **Architecture**: Pure Tauri v2.7.0 (v1.0.0+) - 300% faster startup, 70% less memory, 90% smaller size
-**Latest Updates** (2025-08-03): ESLint Warnings Completely Eliminated, TypeScript Error Resolution Major Progress, API Layer Type Safety Overhaul, Character Relationship System Fixed
+**Latest Updates** (2025-08-04): Novel Template Import Feature Complete, Settings Navigation Fixed, Compromise NLP Integration, Database Path Standardization
 **Code Quality**: ✅ Rust: Clean | ✅ TypeScript: 0 errors (100% FIXED - from 300+ to 0!) | ✅ ESLint: 0 errors, 0 warnings (PERFECT)
+**New Features**: ✅ AI-Powered Novel Analysis | ✅ Template Import Wizard | ✅ NLP Text Processing | ✅ Multi-step Analysis Pipeline
 
 ## Essential Commands
 
@@ -84,6 +85,9 @@ ollama pull llama3.2                     # Install recommended model
 - **Language Purity**: Regex-based enforcement for Traditional Chinese only content
 - **AI Progress Visualization**: Multi-stage progress tracking (preparing→generating→processing→complete)
 - **AI Generation History**: Complete CRUD operations with timestamp tracking
+- **Novel Template Import**: AI-powered analysis of novels to generate writing templates using Compromise.js NLP
+- **Multi-step Analysis Pipeline**: Upload → Parse → Analyze → Preview → Generate template workflow
+- **Real-time Text Processing**: NLP-based entity extraction, writing metrics, and style analysis
 
 ## High-Level Architecture Patterns
 
@@ -158,9 +162,19 @@ src/renderer/src/components/
 ├── Editor/             # Rich text editor (Slate.js)
 ├── AI/                 # AI generation features
 ├── Characters/         # Character management
-├── Templates/          # Novel templates
+├── Templates/          # Novel templates & template import wizard
 ├── Projects/           # Project management
 └── Settings/           # Application settings
+
+# Key Template System Files:
+src/renderer/src/services/
+├── novelParserService.ts      # Novel text parsing & chapter extraction
+├── novelAnalysisService.ts    # AI-powered semantic analysis
+└── nlpUtils.ts               # Compromise.js NLP utilities
+
+src/renderer/src/components/Templates/
+├── TemplateImportWizard.tsx  # 5-step import process
+└── TemplateManager.tsx       # Template management interface
 ```
 
 ### Language System Architecture
@@ -229,6 +243,7 @@ src/renderer/src/i18n/
 - **Issue**: `SELECT *` causes field mapping errors
 - **Fix**: Always specify field names explicitly
 - **Schema Issues**: Delete DB file to force recreation with latest schema
+- **Path Issues**: Database location is `~/Library/Application Support/genesis-chronicle/genesis-chronicle.db` on macOS
 
 ### Ollama Integration
 - **Service URL**: `http://127.0.0.1:11434`
@@ -240,6 +255,15 @@ src/renderer/src/i18n/
 - **React Updates**: Use functional setState: `setState(prev => ...)`
 - **Auto-scroll**: Call `scrollIntoView()` after AI generation
 - **Scrollbars**: Gold-themed 16px with `!important` CSS overrides
+- **Settings Page**: Use cleanup functions in useEffect to prevent infinite loading
+- **Navigation Issues**: Settings accessible via Settings → 模板管理 (Template Management)
+
+### Template Import System
+- **File Types**: Supports .txt files for novel analysis
+- **NLP Processing**: Uses Compromise.js for entity extraction and text analysis
+- **AI Analysis**: Integrates with Ollama for semantic understanding of world-building, characters, plot structure
+- **Progress Tracking**: Multi-stage progress indicators with error recovery
+- **Memory Usage**: Text chunking (2500 chars with 200 char overlap) for large novels
 
 ### TypeScript Patterns
 ```typescript
@@ -403,6 +427,17 @@ Key rules in `.eslintrc.js`:
 5. ✅ **Final Type Issues**: COMPLETED - Fixed all remaining Slate.js and database interface issues
 
 ## Change Log
+
+### [2025-08-04 14:20:00] - Novel Template Import Feature Complete 📚
+- **New Major Feature**: AI-powered novel template import system
+- **NLP Integration**: Compromise.js for text analysis and entity extraction
+- **Multi-step Wizard**: 5-stage import process (Upload → Options → Analysis → Preview → Save)
+- **AI Analysis**: Semantic analysis using Ollama for world-building, characters, plot, and writing style
+- **Text Processing**: Automatic chapter detection, statistics calculation, and writing metrics
+- **Navigation Fixes**: Resolved settings page infinite loading and sidebar click issues
+- **Database Standardization**: Unified database path to ~/Library/Application Support/genesis-chronicle/
+- **UI Improvements**: Consistent naming, error boundaries, and loading state management
+- **Impact**: Users can now import existing novels to automatically generate writing templates
 
 ### [2025-08-04 01:20:06] - 完美程式碼品質里程碑 🏆
 - **總程式碼行數**: 94,490 行

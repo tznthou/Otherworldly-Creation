@@ -12,6 +12,7 @@ import {
   cloneTemplate,
   updateTemplate
 } from '../../store/slices/templatesSlice';
+import { TemplateImportWizard } from './TemplateImportWizard';
 
 interface TemplateManagerProps {
   onEditTemplate?: (template: NovelTemplate) => void;
@@ -32,9 +33,22 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
   const [customFilter, setCustomFilter] = useState<'all' | 'default' | 'custom'>('all');
   const [selectedTemplate, setSelectedTemplate] = useState<NovelTemplate | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showImportWizard, setShowImportWizard] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchAllTemplates());
+    // 添加錯誤處理，避免卡住整個設定頁面
+    const loadTemplates = async () => {
+      try {
+        console.log('TemplateManager: 開始載入模板...');
+        await dispatch(fetchAllTemplates()).unwrap();
+        console.log('TemplateManager: 模板載入成功');
+      } catch (error) {
+        console.error('TemplateManager: 模板載入失敗，使用空列表:', error);
+        // 不要讓錯誤傳播，使用空列表繼續運行
+      }
+    };
+    
+    loadTemplates();
   }, [dispatch]);
 
   useEffect(() => {
@@ -135,17 +149,29 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
             管理輕小說創作模板，包括預設模板和自定義模板
           </p>
         </div>
-        {onCreateTemplate && (
+        <div className="flex items-center space-x-3">
+          {onCreateTemplate && (
+            <button
+              onClick={onCreateTemplate}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              新增模板
+            </button>
+          )}
+          
           <button
-            onClick={onCreateTemplate}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            onClick={() => setShowImportWizard(true)}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
             </svg>
-            新增模板
+            匯入模板
           </button>
-        )}
+        </div>
       </div>
 
       {/* 過濾器 */}
@@ -395,6 +421,18 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
           </div>
         </div>
       )}
+
+      {/* 模板匯入精靈 */}
+      <TemplateImportWizard
+        isOpen={showImportWizard}
+        onClose={() => setShowImportWizard(false)}
+        onComplete={(template) => {
+          console.log('模板匯入完成:', template);
+          setShowImportWizard(false);
+          // 重新載入模板列表
+          dispatch(fetchAllTemplates());
+        }}
+      />
     </div>
   );
 };

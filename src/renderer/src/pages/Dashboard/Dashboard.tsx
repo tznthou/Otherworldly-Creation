@@ -10,8 +10,18 @@ const Dashboard: React.FC = () => {
   const { isOllamaConnected, availableModels, modelsInfo } = useAppSelector(state => state.ai); // 重新啟用 AI state
 
   useEffect(() => {
-    // 載入專案列表
-    dispatch(fetchProjects());
+    // 載入專案列表，添加錯誤處理
+    const loadProjects = async () => {
+      try {
+        console.log('Dashboard: 開始載入專案...');
+        const result = await dispatch(fetchProjects()).unwrap();
+        console.log('Dashboard: 專案載入成功，數量:', result.length);
+      } catch (error) {
+        console.error('Dashboard: 專案載入失敗:', error);
+      }
+    };
+    
+    loadProjects();
     
     // AI 服務狀態完全由 App.tsx 處理，這裡不再重複調用
     console.log('Dashboard: AI 服務由 App.tsx 統一管理');
