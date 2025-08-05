@@ -513,6 +513,18 @@ Key rules in `.eslintrc.js`:
 
 ## Change Log
 
+### [2025-08-05 15:45:00] - AI Thinking Tag Filter Fix 🧠🚫
+- **Critical Bug Fix**: Fixed AI writing panel showing thinking tags in generated content
+  - Added `filterThinkingTags` function to `AIWritingPanel.tsx` 
+  - Filters various thinking tag formats: XML (`<thinking>`), Markdown (` ```thinking```), custom tags
+  - Applied filtering at three key points: after generation, before insertion, during regeneration
+- **User Issue Resolution**: AI generated text no longer displays internal thinking/reflection tags
+- **Technical Improvements**: 
+  - Fixed TypeScript errors (function declaration order and null checks)
+  - Consistent filtering across all AI text operations
+  - Preserved clean code quality with proper type safety
+- **Impact**: Users now receive clean, polished AI-generated content without seeing AI's internal reasoning
+
 ### [2025-08-05 12:30:00] - AI History Saving Fix 📝✅
 - **Critical Bug Fix**: Fixed AI writing panel not saving generation history
   - Added missing `createAIHistory` import in `AIWritingPanel.tsx`
