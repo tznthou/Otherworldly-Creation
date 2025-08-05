@@ -28,8 +28,8 @@ export interface Chapter {
   content: Descendant[];
   order: number;
   chapterNumber?: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   wordCount?: number;
   metadata?: {
     notes?: string;
@@ -65,8 +65,8 @@ export interface Character {
   personality?: string;
   background?: string;
   relationships?: Relationship[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // AI 歷史記錄
@@ -83,7 +83,7 @@ export interface AIGenerationHistory {
   generationTimeMs?: number;
   selected: boolean;
   position?: number;
-  createdAt: Date;
+  createdAt: string;
 }
 
 // AI 相關

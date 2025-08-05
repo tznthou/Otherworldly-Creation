@@ -309,8 +309,8 @@ export const tauriAPI: API = {
           content: content,
           order: chapter.order_index,
           chapterNumber: chapter.chapter_number,
-          createdAt: new Date(chapter.created_at),
-          updatedAt: new Date(chapter.updated_at)
+          createdAt: chapter.created_at,
+          updatedAt: chapter.updated_at
         };
       });
     },
@@ -360,8 +360,8 @@ export const tauriAPI: API = {
         content: content,
         order: chapter.order_index,
         chapterNumber: chapter.chapter_number,
-        createdAt: new Date(chapter.created_at),
-        updatedAt: new Date(chapter.updated_at)
+        createdAt: chapter.created_at,
+        updatedAt: chapter.updated_at
       };
     },
   },
@@ -416,8 +416,8 @@ export const tauriAPI: API = {
             name: char.name,
             description: char.description,
             avatarUrl: char.avatar_url,
-            createdAt: new Date(char.created_at),
-            updatedAt: new Date(char.updated_at),
+            createdAt: char.created_at,
+            updatedAt: char.updated_at,
             // 展開 attributes 到個別欄位
             archetype: attributes.archetype || '',
             age: attributes.age,
@@ -531,8 +531,8 @@ export const tauriAPI: API = {
         name: char.name,
         description: char.description,
         avatarUrl: char.avatar_url,
-        createdAt: new Date(char.created_at),
-        updatedAt: new Date(char.updated_at),
+        createdAt: char.created_at,
+        updatedAt: char.updated_at,
         // 展開 attributes 到個別欄位
         archetype: attributes.archetype || '',
         age: attributes.age,
@@ -696,7 +696,7 @@ export const tauriAPI: API = {
         generationTimeMs: result.generation_time_ms,
         selected: result.selected,
         position: result.position,
-        createdAt: new Date(result.created_at),
+        createdAt: result.created_at,
       };
     },
     query: async (params) => {
@@ -736,7 +736,7 @@ export const tauriAPI: API = {
         generationTimeMs: result.generation_time_ms,
         selected: result.selected,
         position: result.position,
-        createdAt: new Date(result.created_at),
+        createdAt: result.created_at,
       }));
     },
     markSelected: (historyId, projectId) => 
