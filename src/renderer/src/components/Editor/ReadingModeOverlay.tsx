@@ -63,8 +63,11 @@ const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({ children }) => 
   }, [hideTimeout]);
 
   if (!isReadingMode) {
+    console.log('ReadingModeOverlay: Not in reading mode, rendering children normally');
     return <>{children}</>;
   }
+  
+  console.log('ReadingModeOverlay: In reading mode, applying overlay');
 
   return (
     <div 

@@ -1,13 +1,14 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { createEditor, Descendant, Editor, Transforms, Range, Element } from 'slate';
-import { Slate, Editable, withReact, ReactEditor, RenderLeafProps as SlateRenderLeafProps } from 'slate-react';
+import { Slate, Editable, withReact, ReactEditor, RenderLeafProps as SlateRenderLeafProps, useSlate } from 'slate-react';
 import { withHistory } from 'slate-history';
-import { useAppSelector } from '../../hooks/redux';
-import { selectEditorSettings } from '../../store/slices/editorSlice';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
+import { selectEditorSettings, toggleSettings, toggleReadingMode, selectIsReadingMode } from '../../store/slices/editorSlice';
+import SaveStatusIndicator from '../UI/SaveStatusIndicator';
 
 // 定義編輯器節點類型
 type CustomElement = {
-  type: 'paragraph' | 'heading' | 'quote' | 'list-item';
+  type: 'paragraph' | 'heading' | 'quote' | 'list-item' | 'bulleted-list';
   children: CustomText[];
   level?: number; // 用於標題級別
 };
@@ -34,6 +35,11 @@ interface SlateEditorProps {
   placeholder?: string;
   autoFocus?: boolean;
   onSave?: () => void;
+  onAIWrite?: () => void;
+  onEditorReady?: (editor: Editor) => void; // 新增：編輯器就緒回調
+  isSaving?: boolean;
+  isGenerating?: boolean;
+  showToolbar?: boolean;
 }
 
 const SlateEditor: React.FC<SlateEditorProps> = ({
@@ -42,9 +48,21 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   placeholder = '開始寫作...',
   autoFocus = false,
   onSave,
+  onAIWrite,
+  onEditorReady, // 新增參數
+  isSaving = false,
+  isGenerating = false,
+  showToolbar = true,
 }) => {
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const settings = useAppSelector(selectEditorSettings);
+
+  // 通知父組件編輯器已準備好
+  useEffect(() => {
+    if (onEditorReady) {
+      onEditorReady(editor);
+    }
+  }, [editor, onEditorReady]);
 
   // 處理鍵盤快捷鍵
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
@@ -126,11 +144,14 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             {props.children}
           </blockquote>
         );
+      case 'bulleted-list':
       case 'list-item':
+        // 完全避免任何列表標籤，統一渲染為段落
         return (
-          <li {...props.attributes} className="ml-4 mb-2">
-            {props.children}
-          </li>
+          <div {...props.attributes} className="mb-2 ml-4 flex">
+            <span className="text-gold-400 mr-2">•</span>
+            <span className="flex-1">{props.children}</span>
+          </div>
         );
       default:
         return (
@@ -193,6 +214,16 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     >
       <Slate editor={editor} initialValue={value} onChange={onChange}>
         <div className="w-full">
+          {/* 內聯工具欄 */}
+          {showToolbar && (
+            <InlineToolbar 
+              onSave={onSave}
+              onAIWrite={onAIWrite}
+              isSaving={isSaving}
+              isGenerating={isGenerating}
+            />
+          )}
+          
           {/* 行號顯示 */}
           {settings.showLineNumbers && (
             <div className="absolute left-0 top-0 bottom-0 w-12 bg-cosmic-800/50 border-r border-cosmic-700 text-xs text-gray-500 p-2">
@@ -235,26 +266,24 @@ const isMarkActive = (editor: Editor, format: keyof CustomText) => {
   return marks ? marks[format as keyof typeof marks] === true : false;
 };
 
-// 輔助函數：切換塊級元素
+// 輔助函數：切換塊級元素（簡化版，避免嵌套問題）
 const toggleBlock = (editor: Editor, format: CustomElement['type']) => {
   const isActive = isBlockActive(editor, format);
-  const isList = format === 'list-item';
-
-  Transforms.unwrapNodes(editor, {
-    match: (n): n is CustomElement => Element.isElement(n) && Editor.isBlock(editor, n) && 'type' in (n as CustomElement) && (n as CustomElement).type === 'list-item',
-    split: true,
-  });
+  
+  // 對於列表項目，使用簡單的段落樣式來模擬
+  if (format === 'list-item') {
+    const newProperties: Partial<CustomElement> = {
+      type: isActive ? 'paragraph' : 'paragraph', // 暫時使用段落避免嵌套問題
+    };
+    Transforms.setNodes(editor, newProperties);
+    return;
+  }
 
   const newProperties: Partial<CustomElement> = {
-    type: isActive ? 'paragraph' : isList ? 'list-item' : format,
+    type: isActive ? 'paragraph' : format,
   };
 
   Transforms.setNodes(editor, newProperties);
-
-  if (!isActive && isList) {
-    const block: CustomElement = { type: 'list-item', children: [] };
-    Transforms.wrapNodes(editor, block);
-  }
 };
 
 // 輔助函數：檢查塊級元素是否激活
@@ -270,6 +299,209 @@ const isBlockActive = (editor: Editor, format: CustomElement['type']) => {
   );
 
   return !!match;
+};
+
+// 內聯工具欄組件（在 Slate 上下文內部）
+interface InlineToolbarProps {
+  onSave?: () => void;
+  onAIWrite?: () => void;
+  isSaving?: boolean;
+  isGenerating?: boolean;
+}
+
+interface ToolbarButtonProps {
+  active: boolean;
+  onMouseDown: (event: React.MouseEvent) => void;
+  children: React.ReactNode;
+  title?: string;
+}
+
+const ToolbarButton: React.FC<ToolbarButtonProps> = ({ 
+  active, 
+  onMouseDown, 
+  children, 
+  title 
+}) => (
+  <button
+    type="button"
+    title={title}
+    className={`px-3 py-2 rounded-lg transition-colors ${
+      active 
+        ? 'bg-gold-500 text-cosmic-900' 
+        : 'bg-cosmic-800 text-gray-300 hover:bg-cosmic-700 hover:text-white'
+    }`}
+    onMouseDown={onMouseDown}
+  >
+    {children}
+  </button>
+);
+
+const InlineToolbar: React.FC<InlineToolbarProps> = ({
+  onSave,
+  onAIWrite,
+  isSaving = false,
+  isGenerating = false,
+}) => {
+  const editor = useSlate(); // 現在可以安全使用，因為在 Slate 組件內部
+  const dispatch = useAppDispatch();
+  const isReadingMode = useAppSelector(selectIsReadingMode);
+
+  return (
+    <div className="border-b border-cosmic-700 p-4 flex items-center justify-between bg-cosmic-900">
+      {/* 格式化工具 */}
+      <div className="flex items-center space-x-2">
+        {/* 文本格式 */}
+        <div className="flex items-center space-x-1">
+          <ToolbarButton
+            active={isMarkActive(editor, 'bold')}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              toggleMark(editor, 'bold');
+            }}
+            title="粗體 (Ctrl+B)"
+          >
+            <strong>B</strong>
+          </ToolbarButton>
+          
+          <ToolbarButton
+            active={isMarkActive(editor, 'italic')}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              toggleMark(editor, 'italic');
+            }}
+            title="斜體 (Ctrl+I)"
+          >
+            <em>I</em>
+          </ToolbarButton>
+          
+          <ToolbarButton
+            active={isMarkActive(editor, 'underline')}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              toggleMark(editor, 'underline');
+            }}
+            title="底線 (Ctrl+U)"
+          >
+            <u>U</u>
+          </ToolbarButton>
+          
+          <ToolbarButton
+            active={isMarkActive(editor, 'code')}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              toggleMark(editor, 'code');
+            }}
+            title="程式碼 (Ctrl+`)"
+          >
+            {'</>'}
+          </ToolbarButton>
+        </div>
+
+        <div className="w-px h-6 bg-cosmic-700 mx-2"></div>
+
+        {/* 塊級元素 */}
+        <div className="flex items-center space-x-1">
+          <ToolbarButton
+            active={isBlockActive(editor, 'heading')}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              toggleBlock(editor, 'heading');
+            }}
+            title="標題"
+          >
+            H1
+          </ToolbarButton>
+          
+          <ToolbarButton
+            active={isBlockActive(editor, 'quote')}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              toggleBlock(editor, 'quote');
+            }}
+            title="引用"
+          >
+            "
+          </ToolbarButton>
+          
+          <ToolbarButton
+            active={false}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              // 暫時禁用列表功能避免嵌套問題
+              console.log('列表功能暫時禁用');
+            }}
+            title="列表功能暫時禁用"
+          >
+            <span className="opacity-50">•</span>
+          </ToolbarButton>
+        </div>
+      </div>
+
+      {/* 操作按鈕 */}
+      <div className="flex items-center space-x-2">
+        {/* 閱讀模式按鈕 */}
+        <button
+          onClick={() => dispatch(toggleReadingMode())}
+          className={`p-2 rounded-lg transition-colors ${
+            isReadingMode 
+              ? 'bg-gold-500 text-cosmic-900' 
+              : 'bg-cosmic-800 text-gray-300 hover:bg-cosmic-700 hover:text-white'
+          }`}
+          title="閱讀模式"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </button>
+
+        {/* 設定按鈕 */}
+        <button
+          onClick={() => dispatch(toggleSettings())}
+          className="p-2 bg-cosmic-800 text-gray-300 hover:bg-cosmic-700 hover:text-white rounded-lg transition-colors"
+          title="編輯器設定"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+
+        <div className="w-px h-6 bg-cosmic-700 mx-2"></div>
+
+        {/* 儲存狀態指示器 */}
+        <div className="flex items-center">
+          <SaveStatusIndicator size="small" />
+        </div>
+
+        <div className="w-px h-6 bg-cosmic-700 mx-2"></div>
+
+        {onAIWrite && (
+          <button
+            onClick={onAIWrite}
+            disabled={isGenerating}
+            className="btn-secondary flex items-center space-x-2"
+            title="AI 續寫"
+          >
+            <span>🤖</span>
+            <span>{isGenerating ? 'AI 生成中...' : 'AI 續寫'}</span>
+          </button>
+        )}
+        
+        {onSave && (
+          <button
+            onClick={onSave}
+            disabled={isSaving}
+            className="btn-primary flex items-center space-x-2"
+            title="儲存 (Ctrl+S)"
+          >
+            <span>💾</span>
+            <span>{isSaving ? '儲存中...' : '儲存'}</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default SlateEditor;

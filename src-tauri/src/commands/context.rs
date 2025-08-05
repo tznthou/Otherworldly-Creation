@@ -236,16 +236,17 @@ pub async fn build_context(
     // 1. 獲取專案資訊
     let project: Project = conn
         .query_row(
-            "SELECT id, name, description, type, settings, created_at, updated_at FROM projects WHERE id = ?",
+            "SELECT id, name, description, type, novel_length, settings, created_at, updated_at FROM projects WHERE id = ?",
             [&project_id],
             |row| Ok(Project {
                 id: row.get(0)?,
                 name: row.get(1)?,
                 description: row.get(2)?,
                 r#type: row.get(3)?,
-                settings: row.get(4)?,
-                created_at: row.get(5)?,
-                updated_at: row.get(6)?,
+                novel_length: row.get(4)?,
+                settings: row.get(5)?,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
             })
         )
         .map_err(|e| format!("獲取專案失敗: {}", e))?;
@@ -253,7 +254,7 @@ pub async fn build_context(
     // 2. 獲取當前章節內容
     let chapter: Chapter = conn
         .query_row(
-            "SELECT id, project_id, title, content, order_index, created_at, updated_at FROM chapters WHERE id = ?",
+            "SELECT id, project_id, title, content, order_index, chapter_number, created_at, updated_at FROM chapters WHERE id = ?",
             [&chapter_id],
             |row| Ok(Chapter {
                 id: row.get(0)?,
@@ -261,8 +262,9 @@ pub async fn build_context(
                 title: row.get(2)?,
                 content: row.get(3)?,
                 order_index: row.get(4)?,
-                created_at: row.get(5)?,
-                updated_at: row.get(6)?,
+                chapter_number: row.get(5)?,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
             })
         )
         .map_err(|e| format!("獲取章節失敗: {}", e))?;
@@ -647,16 +649,17 @@ pub async fn build_separated_context(
     // 1. 獲取專案資訊
     let project: Project = conn
         .query_row(
-            "SELECT id, name, description, type, settings, created_at, updated_at FROM projects WHERE id = ?",
+            "SELECT id, name, description, type, novel_length, settings, created_at, updated_at FROM projects WHERE id = ?",
             [&project_id],
             |row| Ok(Project {
                 id: row.get(0)?,
                 name: row.get(1)?,
                 description: row.get(2)?,
                 r#type: row.get(3)?,
-                settings: row.get(4)?,
-                created_at: row.get(5)?,
-                updated_at: row.get(6)?,
+                novel_length: row.get(4)?,
+                settings: row.get(5)?,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
             })
         )
         .map_err(|e| format!("獲取專案失敗: {}", e))?;
@@ -664,7 +667,7 @@ pub async fn build_separated_context(
     // 2. 獲取當前章節內容
     let chapter: Chapter = conn
         .query_row(
-            "SELECT id, project_id, title, content, order_index, created_at, updated_at FROM chapters WHERE id = ?",
+            "SELECT id, project_id, title, content, order_index, chapter_number, created_at, updated_at FROM chapters WHERE id = ?",
             [&chapter_id],
             |row| Ok(Chapter {
                 id: row.get(0)?,
@@ -672,8 +675,9 @@ pub async fn build_separated_context(
                 title: row.get(2)?,
                 content: row.get(3)?,
                 order_index: row.get(4)?,
-                created_at: row.get(5)?,
-                updated_at: row.get(6)?,
+                chapter_number: row.get(5)?,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
             })
         )
         .map_err(|e| format!("獲取章節失敗: {}", e))?;

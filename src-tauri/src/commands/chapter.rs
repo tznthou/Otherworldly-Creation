@@ -10,7 +10,7 @@ pub async fn get_chapters_by_project_id(project_id: String) -> Result<Vec<Chapte
     let conn = db.lock().unwrap();
     
     let mut stmt = conn
-        .prepare("SELECT id, project_id, title, content, order_index, created_at, updated_at 
+        .prepare("SELECT id, project_id, title, content, order_index, chapter_number, created_at, updated_at 
                   FROM chapters WHERE project_id = ?1 ORDER BY order_index ASC")
         .map_err(|e| e.to_string())?;
     
@@ -22,8 +22,9 @@ pub async fn get_chapters_by_project_id(project_id: String) -> Result<Vec<Chapte
                 title: row.get(2)?,
                 content: row.get(3)?,
                 order_index: row.get(4)?,
-                created_at: row.get(5)?,
-                updated_at: row.get(6)?,
+                chapter_number: row.get(5)?,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -42,7 +43,7 @@ pub async fn get_chapter_by_id(id: String) -> Result<Chapter, String> {
     let conn = db.lock().unwrap();
     
     let mut stmt = conn
-        .prepare("SELECT id, project_id, title, content, order_index, created_at, updated_at 
+        .prepare("SELECT id, project_id, title, content, order_index, chapter_number, created_at, updated_at 
                   FROM chapters WHERE id = ?1")
         .map_err(|e| e.to_string())?;
     
@@ -54,8 +55,9 @@ pub async fn get_chapter_by_id(id: String) -> Result<Chapter, String> {
                 title: row.get(2)?,
                 content: row.get(3)?,
                 order_index: row.get(4)?,
-                created_at: row.get(5)?,
-                updated_at: row.get(6)?,
+                chapter_number: row.get(5)?,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
             })
         })
         .map_err(|e| format!("章節不存在: {}", e))?;
@@ -83,15 +85,23 @@ pub async fn create_chapter(chapter: CreateChapterRequest) -> Result<String, Str
         max_order + 1
     };
     
+    // 計算章節編號
+    let chapter_number = if let Some(num) = chapter.chapter_number {
+        num
+    } else {
+        order_index
+    };
+    
     conn.execute(
-        "INSERT INTO chapters (id, project_id, title, content, order_index, created_at, updated_at) 
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        "INSERT INTO chapters (id, project_id, title, content, order_index, chapter_number, created_at, updated_at) 
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
         params![
             chapter_id,
             chapter.project_id,
             chapter.title,
             chapter.content,
             order_index,
+            chapter_number,
             now,
             now
         ],
@@ -126,6 +136,12 @@ pub async fn update_chapter(chapter: UpdateChapterRequest) -> Result<(), String>
         sql.push_str(", order_index = ?");
         sql.push_str(&(params.len() + 1).to_string());
         params.push(Box::new(order_index));
+    }
+    
+    if let Some(chapter_number) = chapter.chapter_number {
+        sql.push_str(", chapter_number = ?");
+        sql.push_str(&(params.len() + 1).to_string());
+        params.push(Box::new(chapter_number));
     }
     
     sql.push_str(" WHERE id = ?");

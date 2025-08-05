@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Descendant } from 'slate';
+import { Descendant, Editor } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { 
   fetchChaptersByProjectId, 
@@ -12,7 +12,6 @@ import {
 import { fetchProjectById } from '../../store/slices/projectsSlice';
 import { openModal } from '../../store/slices/uiSlice';
 import SlateEditor from '../../components/Editor/SlateEditor';
-import EditorToolbar from '../../components/Editor/EditorToolbar';
 import EditorSettingsPanel from '../../components/Editor/EditorSettingsPanel';
 import ReadingModeOverlay from '../../components/Editor/ReadingModeOverlay';
 import ChapterList from '../../components/Editor/ChapterList';
@@ -39,12 +38,14 @@ const ProjectEditorContent: React.FC = () => {
   
   const { currentProject } = useAppSelector(state => state.projects);
   const { chapters, currentChapter, loading } = useAppSelector(state => state.chapters);
+  const { generating: isGenerating } = useAppSelector(state => state.ai);
   const isSettingsOpen = useAppSelector(selectIsSettingsOpen);
   const _isReadingMode = useAppSelector(selectIsReadingMode);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showSavePanel, setShowSavePanel] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [currentEditor, setCurrentEditor] = useState<Editor | undefined>(undefined); // 新增：存儲當前編輯器實例
   
   // 教學系統
   const {
@@ -56,6 +57,24 @@ const ProjectEditorContent: React.FC = () => {
     skipTutorial
   } = useTutorial();
   
+  // 添加調試日誌
+  console.log('ProjectEditor tutorial state:', { 
+    isTutorialActive, 
+    currentTutorialId, 
+    currentStep,
+    editorActive: isTutorialActive && currentTutorialId === 'editor',
+    aiActive: isTutorialActive && currentTutorialId === 'ai'
+  });
+  
+  // 自動儲存回調函數（移除 notification 依賴項避免無限重新渲染）
+  const handleAutoSaveSuccess = useCallback(() => {
+    notification.success('儲存成功', '章節已自動儲存');
+  }, []); // notification 方法是穩定的，不需要作為依賴項
+
+  const handleAutoSaveError = useCallback((error: Error) => {
+    notification.error('儲存失敗', error.message);
+  }, []); // notification 方法是穩定的，不需要作為依賴項
+
   // 自動儲存
   const { 
     saveNow, 
@@ -65,12 +84,8 @@ const ProjectEditorContent: React.FC = () => {
     autoSaveStatus: _autoSaveStatus,
     lastSaved: _lastSaved 
   } = useAutoSave({
-    onSave: () => {
-      notification.success('儲存成功', '章節已自動儲存');
-    },
-    onError: (error) => {
-      notification.error('儲存失敗', error.message);
-    }
+    onSave: handleAutoSaveSuccess,
+    onError: handleAutoSaveError
   });
 
   // 載入專案和章節資料
@@ -100,7 +115,8 @@ const ProjectEditorContent: React.FC = () => {
     };
 
     loadProjectData();
-  }, [id, dispatch, navigate, notification]);
+    // 移除 notification 依賴項，避免因為 notification 對象變化導致重複載入
+  }, [id, dispatch, navigate]);
 
   // 選擇第一個章節（如果有的話）
   useEffect(() => {
@@ -109,7 +125,7 @@ const ProjectEditorContent: React.FC = () => {
       setSelectedChapterId(firstChapter.id);
       dispatch(setCurrentChapter(firstChapter));
     }
-  }, [chapters, selectedChapterId, dispatch]);
+  }, [chapters.length, selectedChapterId, dispatch]);
 
   // 處理章節選擇
   const handleChapterSelect = useCallback((chapterId: string) => {
@@ -130,10 +146,8 @@ const ProjectEditorContent: React.FC = () => {
         await dispatch(updateChapter(chapter)).unwrap();
       }
       
-      // 重新獲取章節列表
-      if (id) {
-        await dispatch(fetchChaptersByProjectId(id)).unwrap();
-      }
+      // 移除重新獲取章節列表的調用，避免無限循環
+      // 章節順序已通過 updateChapter 在 Redux 中更新
       
       notification.success('排序完成', '章節順序已更新');
     } catch (error) {
@@ -152,10 +166,21 @@ const ProjectEditorContent: React.FC = () => {
     dispatch(openModal('createChapter'));
   }, [dispatch]);
 
-  // 處理 AI 續寫
+  // 處理編輯器就緒回調
+  const handleEditorReady = useCallback((editor: Editor) => {
+    setCurrentEditor(editor);
+    console.log('編輯器已準備好:', editor);
+  }, []);
+
+  // 處理 AI 續寫 - 開啟 AI 面板
   const handleAIWrite = useCallback(() => {
-    setShowAIPanel(!showAIPanel);
-  }, [showAIPanel]);
+    if (!showAIPanel) {
+      setShowAIPanel(true);
+      notification.info('AI 續寫', '請在右側面板中設定參數並生成續寫內容');
+    } else {
+      setShowAIPanel(false);
+    }
+  }, [showAIPanel, notification]);
 
   if (loading) {
     return (
@@ -201,12 +226,22 @@ const ProjectEditorContent: React.FC = () => {
           <h1 className="text-xl font-cosmic text-gold-500 mb-2">
             {currentProject.name}
           </h1>
-          <p className="text-sm text-gray-400">
-            {currentProject.type === 'isekai' && '異世界'}
-            {currentProject.type === 'school' && '校園'}
-            {currentProject.type === 'scifi' && '科幻'}
-            {currentProject.type === 'fantasy' && '奇幻'}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-400">
+              {currentProject.type === 'isekai' && '異世界'}
+              {currentProject.type === 'school' && '校園'}
+              {currentProject.type === 'scifi' && '科幻'}
+              {currentProject.type === 'fantasy' && '奇幻'}
+            </p>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs px-2 py-1 rounded-full bg-cosmic-800 text-gold-400" style={{ backgroundColor: '#2a2139' }}>
+                {currentProject?.novelLength === 'short' && '短篇'}
+                {currentProject?.novelLength === 'medium' && '中篇'}
+                {currentProject?.novelLength === 'long' && '長篇'}
+                {!currentProject?.novelLength && '中篇'}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* 章節列表 */}
@@ -248,14 +283,56 @@ const ProjectEditorContent: React.FC = () => {
         <div className="flex-1 flex flex-col">
           {currentChapter ? (
             <>
-              {/* 工具欄 */}
-              <div data-tutorial="editor-toolbar" className="flex-shrink-0">
-                <EditorToolbar
-                  onSave={saveNow}
-                  onAIWrite={handleAIWrite}
-                  isSaving={isSaving}
-                  isGenerating={false}
-                />
+              {/* 章節標題欄 */}
+              <div className="bg-cosmic-800 border-b border-cosmic-700 px-6 py-4 flex items-center justify-between" style={{ backgroundColor: '#2a2139', borderColor: '#3d3557', zIndex: 10 }}>
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-gold-500 text-cosmic-900 flex items-center justify-center font-bold text-sm mr-3">
+                    {currentChapter?.chapterNumber || currentChapter?.order || '1'}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-cosmic text-gold-400">
+                      第 {currentChapter?.chapterNumber || currentChapter?.order || '1'} 章
+                    </h2>
+                    <h3 className="text-white font-medium">
+                      {currentChapter?.title || '章節標題'}
+                    </h3>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="text-xs text-gray-400">
+                    {currentChapter?.wordCount ? `${currentChapter.wordCount} 字` : '未統計'}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        console.log('上一章按鈕點擊', chapters, currentChapter);
+                        const currentIndex = chapters.findIndex(c => c.id === currentChapter?.id);
+                        if (currentIndex > 0) {
+                          handleChapterSelect(chapters[currentIndex - 1].id);
+                        }
+                      }}
+                      disabled={chapters.findIndex(c => c.id === currentChapter?.id) === 0}
+                      className="w-8 h-8 rounded-full bg-cosmic-700 hover:bg-cosmic-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gold-400 text-sm"
+                      title="上一章"
+                    >
+                      ←
+                    </button>
+                    <button
+                      onClick={() => {
+                        console.log('下一章按鈕點擊', chapters, currentChapter);
+                        const currentIndex = chapters.findIndex(c => c.id === currentChapter?.id);
+                        if (currentIndex < chapters.length - 1) {
+                          handleChapterSelect(chapters[currentIndex + 1].id);
+                        }
+                      }}
+                      disabled={chapters.findIndex(c => c.id === currentChapter?.id) === chapters.length - 1}
+                      className="w-8 h-8 rounded-full bg-cosmic-700 hover:bg-cosmic-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gold-400 text-sm"
+                      title="下一章"
+                    >
+                      →
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* 編輯器 */}
@@ -266,6 +343,11 @@ const ProjectEditorContent: React.FC = () => {
                   placeholder="開始寫作..."
                   autoFocus={true}
                   onSave={saveNow}
+                  onAIWrite={handleAIWrite}
+                  onEditorReady={handleEditorReady} // 新增：編輯器就緒回調
+                  isSaving={isSaving}
+                  isGenerating={isGenerating}
+                  showToolbar={true}
                 />
                 
                 {/* 章節筆記 (可折疊) */}
@@ -299,8 +381,9 @@ const ProjectEditorContent: React.FC = () => {
         {showAIPanel && currentChapter && id && (
           <div className="w-96 border-l border-cosmic-700" data-tutorial="ai-panel-btn">
             <AIWritingPanel 
-              projectId={id}
+              projectId={id} 
               chapterId={currentChapter.id}
+              editor={currentEditor} // 新增：傳遞編輯器實例
             />
           </div>
         )}

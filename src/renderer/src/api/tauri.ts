@@ -14,6 +14,7 @@ interface TauriProject {
   name: string;
   description?: string;
   type?: string;
+  novel_length?: string;
   created_at: string;
   updated_at: string;
   settings?: string;
@@ -25,6 +26,7 @@ interface TauriChapter {
   title: string;
   content?: string;
   order_index: number;
+  chapter_number?: number;
   created_at: string;
   updated_at: string;
 }
@@ -115,8 +117,8 @@ const loadTauriAPI = async (): Promise<TauriInvokeFunction> => {
     const { invoke } = await import('@tauri-apps/api/core');
     tauriInvoke = invoke as TauriInvokeFunction;
     return invoke as TauriInvokeFunction;
-  } catch (error) {
-    console.warn('無法載入 Tauri API:', error);
+  } catch (_error) {
+    console.warn('無法載入 Tauri API:', _error);
     throw new Error('無法找到 Tauri invoke 函數 - 請確保在 Tauri 環境中運行');
   }
 };
@@ -140,21 +142,21 @@ const safeInvoke = async <T = unknown>(command: string, args?: Record<string, un
     console.log(`Tauri 命令 ${command} 成功:`, result);
     return result as T;
     
-  } catch (error) {
-    console.error(`Tauri command ${command} failed:`, error);
+  } catch (_error) {
+    console.error(`Tauri command ${command} failed:`, _error);
     
     // 特別處理 callbackId 相關錯誤
-    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && error.message.includes('callbackId')) {
+    if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && _error.message.includes('callbackId')) {
       console.error('檢測到 Tauri 回調錯誤，可能是版本不匹配問題');
       throw new Error(`Tauri 回調機制錯誤 - 命令: ${command}`);
     }
     
     // 提供更詳細的錯誤信息
-    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && error.message.includes('not available')) {
+    if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && _error.message.includes('not available')) {
       throw new Error(`Tauri 命令 ${command} 不可用 - 請確保在 Tauri 環境中運行`);
     }
     
-    throw error;
+    throw _error;
   }
 };
 
@@ -164,7 +166,8 @@ const createFallbackData = (commandName: string) => {
   
   switch (commandName) {
     case 'get_all_projects':
-      return Promise.resolve([]);
+      console.error('get_all_projects fallback 被觸發 - 這表示 Tauri API 連接有問題');
+      throw new Error('Tauri API 連接失敗，無法獲取專案資料');
     case 'get_all_settings':
       return Promise.resolve([]);
     case 'check_ollama_service':
@@ -192,29 +195,31 @@ const createFallbackData = (commandName: string) => {
 // 增強的 safeInvoke，在開發模式下提供回退
 const enhancedSafeInvoke = async <T = unknown>(command: string, args?: Record<string, unknown>): Promise<T> => {
   try {
-    return await safeInvoke(command, args);
-  } catch (error) {
-    console.error(`enhancedSafeInvoke 錯誤 (${command}):`, error);
+    const result = await safeInvoke(command, args);
+    console.log(`✅ Tauri 命令成功: ${command}`, result);
+    return result as T;
+  } catch (_error) {
+    console.error(`❌ enhancedSafeInvoke 錯誤 (${command}):`, _error);
     
     // 特別處理 callbackId 相關錯誤
-    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && (
-      error.message.includes('callbackId') || 
-      error.message.includes('undefined is not an object')
+    if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && (
+      _error.message.includes('callbackId') || 
+      _error.message.includes('undefined is not an object')
     )) {
       console.warn(`檢測到 Tauri 回調機制錯誤，使用模擬資料 - 命令: ${command}`);
       return createFallbackData(command) as T;
     }
     
     // 在開發模式下，如果是特定的命令錯誤，提供模擬資料
-    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && (
-      error.message.includes('不可用') || 
-      error.message.includes('not available') ||
-      error.message.includes('無法找到 Tauri invoke')
+    if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && (
+      _error.message.includes('不可用') || 
+      _error.message.includes('not available') ||
+      _error.message.includes('無法找到 Tauri invoke')
     )) {
       console.warn(`Tauri 命令 ${command} 失敗，嘗試使用模擬資料`);
       return createFallbackData(command) as T;
     }
-    throw error;
+    throw _error;
   }
 };
 
@@ -229,6 +234,7 @@ export const tauriAPI: API = {
         name: project.name,
         description: project.description || '',
         type: (project.type as 'isekai' | 'school' | 'scifi' | 'fantasy') || 'isekai',
+        novelLength: (project.novel_length as 'short' | 'medium' | 'long') || 'medium',
         createdAt: project.created_at,
         updatedAt: project.updated_at,
         settings: project.settings ? JSON.parse(project.settings) : {}
@@ -240,6 +246,7 @@ export const tauriAPI: API = {
         name: project.name,
         description: project.description || null,
         type: project.type || null,
+        novel_length: project.novelLength || 'medium',
         settings: project.settings ? JSON.stringify(project.settings) : null,
       };
       return safeInvoke('create_project', { project: createRequest });
@@ -251,6 +258,7 @@ export const tauriAPI: API = {
         name: project.name,
         description: project.description || null,
         type: project.type || null,
+        novel_length: project.novelLength || 'medium',
         settings: project.settings ? JSON.stringify(project.settings) : null,
       };
       return safeInvoke('update_project', { project: updateRequest });
@@ -264,6 +272,7 @@ export const tauriAPI: API = {
         name: project.name,
         description: project.description || '',
         type: (project.type as 'isekai' | 'school' | 'scifi' | 'fantasy') || 'isekai',
+        novelLength: (project.novel_length as 'short' | 'medium' | 'long') || 'medium',
         createdAt: project.created_at,
         updatedAt: project.updated_at,
         settings: project.settings ? JSON.parse(project.settings) : {}
@@ -282,7 +291,7 @@ export const tauriAPI: API = {
           try {
             // 嘗試解析 JSON 格式的內容
             content = JSON.parse(chapter.content);
-          } catch (error) {
+          } catch (_error) {
             // 如果解析失敗，將純文字轉換為 Slate.js 格式
             console.log('轉換純文字章節內容為 Slate 格式');
             const textLines = chapter.content.split('\n');
@@ -299,6 +308,7 @@ export const tauriAPI: API = {
           title: chapter.title,
           content: content,
           order: chapter.order_index,
+          chapterNumber: chapter.chapter_number,
           createdAt: new Date(chapter.created_at),
           updatedAt: new Date(chapter.updated_at)
         };
@@ -309,7 +319,8 @@ export const tauriAPI: API = {
         project_id: chapter.projectId,
         title: chapter.title,
         content: JSON.stringify(chapter.content),
-        order_index: chapter.order
+        order_index: chapter.order,
+        chapter_number: chapter.chapterNumber
       }
     }),
     update: (chapter) => safeInvoke('update_chapter', {
@@ -317,7 +328,8 @@ export const tauriAPI: API = {
         id: chapter.id,
         title: chapter.title,
         content: JSON.stringify(chapter.content),
-        order_index: chapter.order
+        order_index: chapter.order,
+        chapter_number: chapter.chapterNumber
       }
     }),
     delete: (id) => safeInvoke('delete_chapter', { id }),
@@ -330,7 +342,7 @@ export const tauriAPI: API = {
         try {
           // 嘗試解析 JSON 格式的內容
           content = JSON.parse(chapter.content);
-        } catch (error) {
+        } catch (_error) {
           // 如果解析失敗，將純文字轉換為 Slate.js 格式
           console.log('轉換純文字章節內容為 Slate 格式');
           const textLines = chapter.content.split('\n');
@@ -347,6 +359,7 @@ export const tauriAPI: API = {
         title: chapter.title,
         content: content,
         order: chapter.order_index,
+        chapterNumber: chapter.chapter_number,
         createdAt: new Date(chapter.created_at),
         updatedAt: new Date(chapter.updated_at)
       };
@@ -446,9 +459,9 @@ export const tauriAPI: API = {
         const result = await safeInvoke<string>('create_character', payload);
         console.log('Tauri API: create character result:', result);
         return result;
-      } catch (error) {
-        console.error('Tauri API: create character failed:', error);
-        throw error;
+      } catch (_error) {
+        console.error('Tauri API: create character failed:', _error);
+        throw _error;
       }
     },
     update: (character: Character & { description?: string; avatarUrl?: string }) => {

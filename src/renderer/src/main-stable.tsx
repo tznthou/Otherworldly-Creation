@@ -11,7 +11,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import CharacterManager from './pages/CharacterManager/CharacterManager';
 import Settings from './pages/Settings/Settings';
 import DatabaseMaintenanceSimple from './pages/DatabaseMaintenance/DatabaseMaintenanceSimple';
-import SimpleProjectEditor from './pages/ProjectEditor/SimpleProjectEditor';
+import ProjectEditor from './pages/ProjectEditor/ProjectEditor';
 import Statistics from './pages/Statistics/Statistics';
 import ModalContainer from './components/UI/ModalContainer';
 import { NotificationContainer } from './components/UI/NotificationSystem';
@@ -229,7 +229,7 @@ const SimpleApp: React.FC = () => {
                 <Route path="/project/:id" element={
                   <SimpleErrorBoundary context="專案編輯器">
                     <Layout>
-                      <SimpleProjectEditor />
+                      <ProjectEditor />
                     </Layout>
                   </SimpleErrorBoundary>
                 } />

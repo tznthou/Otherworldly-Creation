@@ -3,7 +3,7 @@ import {
   analyzeText, 
   extractEntities, 
   calculateWritingMetrics, 
-  getPartOfSpeech,
+  getPartOfSpeech as _getPartOfSpeech,
   type TextAnalysis,
   type EntityExtraction,
   type WritingMetrics 
@@ -102,7 +102,7 @@ export function generateSmartParams(context: ContextAnalysis, userTemp?: number)
   
   // 根據文本長度調整 maxTokens
   const avgSentenceLength = context.writingMetrics.averageSentenceLength;
-  let maxTokens = Math.max(150, Math.min(500, avgSentenceLength * 3));
+  const maxTokens = Math.max(150, Math.min(500, avgSentenceLength * 3));
   
   // 構建風格描述
   const styleElements = [];

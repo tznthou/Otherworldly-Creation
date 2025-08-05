@@ -8,6 +8,7 @@ export interface Chapter {
   title: string;
   content: Descendant[];
   order: number;
+  chapterNumber?: number;
   createdAt: Date;
   updatedAt: Date;
   wordCount?: number;

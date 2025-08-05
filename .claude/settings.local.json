@@ -84,7 +84,13 @@
       "mcp__serena__think_about_task_adherence",
       "Bash(timeout 10 npm run dev:renderer)",
       "Bash(./init-db.sh:*)",
-      "mcp__serena__list_memories"
+      "mcp__serena__list_memories",
+      "Bash(osascript:*)",
+      "Bash(timeout 15 npm run dev)",
+      "mcp__serena__insert_after_symbol",
+      "mcp__puppeteer__puppeteer_click",
+      "mcp__puppeteer__puppeteer_evaluate",
+      "Bash(timeout 5 npm run dev)"
     ],
     "deny": []
   }

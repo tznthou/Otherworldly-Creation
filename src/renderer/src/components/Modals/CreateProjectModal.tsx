@@ -44,6 +44,42 @@ const projectTypes: ProjectType[] = [
   },
 ];
 
+interface NovelLength {
+  id: 'short' | 'medium' | 'long';
+  name: string;
+  icon: string;
+  description: string;
+  estimatedChapters: string;
+  wordCount: string;
+}
+
+const novelLengths: NovelLength[] = [
+  {
+    id: 'short',
+    name: '短篇',
+    icon: '📄',
+    description: '簡潔有力的故事，適合初學者練習',
+    estimatedChapters: '1-5 章',
+    wordCount: '1-5 萬字',
+  },
+  {
+    id: 'medium',
+    name: '中篇',
+    icon: '📖',
+    description: '適中篇幅，有足夠空間發展情節',
+    estimatedChapters: '10-30 章',
+    wordCount: '5-20 萬字',  
+  },
+  {
+    id: 'long',
+    name: '長篇',
+    icon: '📚',
+    description: '宏大史詩，構建完整的世界觀',
+    estimatedChapters: '50+ 章',
+    wordCount: '20+ 萬字',
+  },
+];
+
 interface TemplateSettings {
   // 異世界設定
   levelSystem?: string;
@@ -78,6 +114,7 @@ const CreateProjectModal: React.FC = () => {
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [selectedType, setSelectedType] = useState<ProjectType['id'] | null>(null);
+  const [selectedNovelLength, setSelectedNovelLength] = useState<NovelLength['id']>('medium');
   
   // 模板設定
   const [templateSettings, setTemplateSettings] = useState<TemplateSettings>({});
@@ -94,6 +131,7 @@ const CreateProjectModal: React.FC = () => {
   const [errors, setErrors] = useState<{
     name?: string;
     type?: string;
+    novelLength?: string;
     model?: string;
   }>({});
   
@@ -113,6 +151,7 @@ const CreateProjectModal: React.FC = () => {
     const newErrors: {
       name?: string;
       type?: string;
+      novelLength?: string;
     } = {};
 
     if (!projectName.trim()) {
@@ -121,6 +160,10 @@ const CreateProjectModal: React.FC = () => {
 
     if (!selectedType) {
       newErrors.type = '請選擇專案類型';
+    }
+
+    if (!selectedNovelLength) {
+      newErrors.novelLength = '請選擇小說篇幅';
     }
 
     setErrors(newErrors);
@@ -208,6 +251,7 @@ const CreateProjectModal: React.FC = () => {
         name: projectName,
         type: selectedType,
         description: projectDescription,
+        novelLength: selectedNovelLength,
         settings: {
           aiModel: aiSettings.model,
           aiParams: {
@@ -366,6 +410,42 @@ const CreateProjectModal: React.FC = () => {
                 </div>
                 {errors.type && (
                   <p className="text-red-500 text-sm mt-1">{errors.type}</p>
+                )}
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-gray-300 mb-2">選擇小說篇幅</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {novelLengths.map((length) => (
+                    <div
+                      key={length.id}
+                      onClick={() => setSelectedNovelLength(length.id)}
+                      className={`p-4 rounded-lg cursor-pointer border ${
+                        selectedNovelLength === length.id
+                          ? 'border-gold-500 bg-cosmic-800'
+                          : 'border-cosmic-700 bg-cosmic-900 hover:bg-cosmic-800'
+                      }`}
+                    >
+                      <div className="flex items-center mb-2">
+                        <div className="text-2xl mr-3">
+                          {length.icon}
+                        </div>
+                        <h3 className="text-lg font-medium text-white">
+                          {length.name}
+                        </h3>
+                      </div>
+                      <p className="text-sm text-gray-400 mb-2">
+                        {length.description}
+                      </p>
+                      <div className="text-xs text-gray-500">
+                        <div>{length.estimatedChapters}</div>
+                        <div>{length.wordCount}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {errors.novelLength && (
+                  <p className="text-red-500 text-sm mt-1">{errors.novelLength}</p>
                 )}
               </div>
             </div>

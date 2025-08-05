@@ -35,6 +35,7 @@ const DatabaseTest: React.FC = () => {
         name: newProjectName,
         description: '這是一個測試專案',
         type: 'fantasy',
+        novelLength: 'medium',
         settings: {
           aiModel: 'llama3.2',
           aiParams: {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useSlate } from 'slate-react';
-import { Transforms, Range } from 'slate';
+import { Editor, Transforms, Range } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
@@ -12,6 +11,7 @@ import { ErrorSeverity } from '../../types/error';
 interface AIWritingPanelProps {
   projectId: string;
   chapterId: string;
+  editor?: Editor; // 可選的編輯器實例
 }
 
 interface GenerationOption {
@@ -22,9 +22,8 @@ interface GenerationOption {
   selected?: boolean;
 }
 
-const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId }) => {
+const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, editor }) => {
   const dispatch = useAppDispatch();
-  const editor = useSlate();
   const abortControllerRef = useRef<AbortController | null>(null);
   
   // 從 Redux store 獲取 AI 相關狀態
@@ -75,6 +74,16 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
     }
     
     // 檢查是否有選擇位置
+    if (!editor) {
+      dispatch(addNotification({
+        type: 'error',
+        title: '編輯器未準備好',
+        message: '請稍後再試',
+        duration: 3000,
+      }));
+      return;
+    }
+    
     const { selection } = editor;
     if (!selection || !Range.isCollapsed(selection)) {
       dispatch(addNotification({
@@ -243,6 +252,16 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
   // 應用生成的文本
   const handleApplyOption = useCallback((option: GenerationOption) => {
     try {
+      if (!editor) {
+        dispatch(addNotification({
+          type: 'error',
+          title: '編輯器未準備好',
+          message: '無法插入文本',
+          duration: 3000,
+        }));
+        return;
+      }
+      
       // 獲取當前選擇位置
       const { selection } = editor;
       if (selection) {
@@ -296,6 +315,8 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId })
     if (!option || !currentModel) return;
 
     try {
+      if (!editor) return;
+      
       const { selection } = editor;
       if (!selection) return;
 

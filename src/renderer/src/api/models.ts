@@ -7,6 +7,7 @@ export interface Project {
   name: string;
   type: 'isekai' | 'school' | 'scifi' | 'fantasy';
   description: string;
+  novelLength: 'short' | 'medium' | 'long';
   createdAt: string;
   updatedAt: string;
   settings: {
@@ -26,6 +27,7 @@ export interface Chapter {
   title: string;
   content: Descendant[];
   order: number;
+  chapterNumber?: number;
   createdAt: Date;
   updatedAt: Date;
   wordCount?: number;

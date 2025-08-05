@@ -134,8 +134,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   };
 
   if (!isActive || !currentStepData) {
+    console.log('Tutorial not active:', { isActive, currentStepData });
     return null;
   }
+  
+  console.log('Tutorial is active:', { isActive, currentStepData });
 
   const overlayContent = (
     <>

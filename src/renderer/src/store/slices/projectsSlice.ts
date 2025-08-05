@@ -6,6 +6,7 @@ export interface Project {
   name: string;
   type: 'isekai' | 'school' | 'scifi' | 'fantasy';
   description: string;
+  novelLength: 'short' | 'medium' | 'long';
   createdAt: string; // 改為字符串以符合 Redux 序列化要求
   updatedAt: string; // 改為字符串以符合 Redux 序列化要求
   settings: {

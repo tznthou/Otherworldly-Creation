@@ -30,6 +30,7 @@ export const useTemplateApplication = () => {
         name: options.projectName,
         type: template.type as 'isekai' | 'school' | 'scifi' | 'fantasy', // 添加 type 字段
         description: options.projectDescription || template.description,
+        novelLength: 'medium' as const,
         settings: {
           // 只保留 Project 接口支援的屬性
           aiModel: 'llama3.2', // 預設模型

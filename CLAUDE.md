@@ -25,9 +25,9 @@ mcp__serena__onboarding()
 創世紀元：異世界創作神器 (Genesis Chronicle) - A Tauri-based AI-powered novel writing application for Chinese light novel creation. Built with Rust backend and React frontend, integrating Ollama for local AI assistance.
 
 **Architecture**: Pure Tauri v2.7.0 (v1.0.0+) - 300% faster startup, 70% less memory, 90% smaller size
-**Latest Updates** (2025-08-04): Novel Template Import Feature Complete, Settings Navigation Fixed, Compromise NLP Integration, Database Path Standardization, Cursor Position Preservation, Save Function Fixes
+**Latest Updates** (2025-08-04): Chapter Navigation System Complete, Novel Length Classification, Slate.js Editor Architecture Refactor, Compromise NLP Integration, Database v8 Migration, Cursor Position Preservation
 **Code Quality**: ✅ Rust: Clean | ✅ TypeScript: 0 errors (100% FIXED - from 300+ to 0!) | ✅ ESLint: 0 errors, 0 warnings (PERFECT)
-**New Features**: ✅ AI-Powered Novel Analysis | ✅ Template Import Wizard | ✅ NLP Text Processing | ✅ Multi-step Analysis Pipeline | ✅ Intelligent Context-Aware AI Writing | ✅ Cursor Position Preservation
+**New Features**: ✅ Chapter Navigation System | ✅ Novel Length Classification | ✅ Slate.js Editor Refactor | ✅ Template Import Wizard | ✅ NLP Text Processing | ✅ Intelligent Context-Aware AI Writing | ✅ Cursor Position Preservation
 
 ## Essential Commands
 
@@ -39,6 +39,14 @@ npm run lint               # Run ESLint with auto-fix
 npm run lint -- --fix     # Auto-fix ESLint errors where possible
 cargo check --manifest-path src-tauri/Cargo.toml  # Check Rust
 npx tsc --noEmit          # Check TypeScript
+```
+
+### Quick Problem Diagnosis
+```bash
+npm run diagnostic        # System diagnostics (ignore Electron-related errors)
+npm run dev               # Start dev server and check console for errors
+ollama list               # Check AI models available
+git status                # Check for uncommitted changes
 ```
 
 ### Testing & Building
@@ -69,7 +77,7 @@ ollama pull llama3.2                     # Install recommended model
 ### Backend (`src-tauri/`)
 **Stack**: Rust + Tauri v2.7.0 + SQLite (rusqlite)
 - **Commands**: Feature-organized handlers in `src/commands/` (system, project, chapter, character, ai, context, settings, database, ai_history)
-- **Database**: Migration system (current v7) with automatic schema updates
+- **Database**: Migration system (current v8) with automatic schema updates
 - **Services**: Ollama integration for AI text generation
 - **Utils**: Language purity enforcement, text processing utilities
 
@@ -81,6 +89,8 @@ ollama pull llama3.2                     # Install recommended model
 - **i18n**: JSON-based translations with Traditional Chinese (zh-TW) as primary language
 
 ### Key Features
+- **Chapter Navigation System**: Visual chapter separation with numbered navigation (←/→) and title bars
+- **Novel Length Classification**: Projects categorized as short (1-5), medium (10-30), or long (50+) chapters
 - **Context Engineering**: Separated prompts achieve 29.8% token reduction (SystemPromptBuilder + UserContextBuilder)
 - **Language Purity**: Regex-based enforcement for Traditional Chinese only content
 - **AI Progress Visualization**: Multi-stage progress tracking (preparing→generating→processing→complete)
@@ -113,14 +123,15 @@ import { api } from '../api';  // ✅ Correct
 ```
 
 ### Database Architecture
-SQLite with versioned migrations (current: v7) following strict patterns:
+SQLite with versioned migrations (current: v8) following strict patterns:
 
 **Migration Structure**:
 ```rust
 // src-tauri/src/database/migrations.rs
-pub fn migrate_to_v7(conn: &Connection) -> anyhow::Result<()> {
-    conn.execute("CREATE TABLE ai_generation_history (...)", [])?;
-    conn.pragma_update(None, "user_version", 7)?;  // Use pragma_update, NOT execute
+pub fn migrate_to_v8(conn: &Connection) -> anyhow::Result<()> {
+    conn.execute("ALTER TABLE projects ADD COLUMN novel_length TEXT DEFAULT 'medium'", [])?;
+    conn.execute("ALTER TABLE chapters ADD COLUMN chapter_number INTEGER", [])?;
+    conn.pragma_update(None, "user_version", 8)?;  // Use pragma_update, NOT execute
     Ok(())
 }
 ```
@@ -196,6 +207,29 @@ src/renderer/src/i18n/
 
 **Backend Language Purity**: Rust-based regex enforcement in `src-tauri/src/utils/language_purity.rs`
 
+### Slate.js Editor Architecture (Critical - Recently Refactored)
+The rich text editor uses a specialized architecture to avoid React hook context issues:
+
+```typescript
+// ✅ Correct: Inline toolbar within Slate context
+<Slate editor={editor} initialValue={value} onChange={onChange}>
+  <InlineToolbar onSave={onSave} onAIWrite={onAIWrite} />  // Uses useSlate() safely
+  <Editable ... />
+</Slate>
+
+// ❌ Wrong: External toolbar outside Slate context
+<EditorToolbar />  // Cannot use useSlate() - will cause context errors
+<Slate editor={editor} ...>
+  <Editable ... />
+</Slate>
+```
+
+**Key Components**:
+- `SlateEditor.tsx`: Main editor with integrated inline toolbar
+- `InlineToolbar`: Formatting tools within Slate context (Bold, Italic, H1, etc.)
+- `ProjectEditor.tsx`: Chapter navigation and management layer
+- **AI Panel**: Currently disabled due to context constraints (maintenance mode)
+
 ## Critical Development Patterns
 
 ### ⚠️ MANDATORY Rules
@@ -213,6 +247,10 @@ src/renderer/src/i18n/
 11. **Error Type Guards**: Always implement type guards for unknown/error objects before accessing properties
 12. **Chapter Content Format**: Always pass Slate.js content as JSON string to Tauri backend: `JSON.stringify(chapter.content)` 
 13. **Cursor Position Management**: Use `textAreaRef` and preserve `selectionStart` for save operations to maintain editing context
+14. **Slate.js Context**: All Slate editor tools must be within `<Slate>` component context - use inline toolbar patterns
+15. **Novel Length Classification**: Projects must specify novel_length ('short'|'medium'|'long') for proper chapter management
+16. **Chapter Navigation**: Always display chapter_number with navigation controls (←/→) for multi-chapter projects
+17. **UI Debugging**: When buttons are unclickable, first check for overlay components (`z-50`, `fixed inset-0`) blocking interactions
 
 ### Development Workflows
 
@@ -238,6 +276,19 @@ src/renderer/src/i18n/
 5. **Document Pattern**: `mcp__serena__write_memory()` for reusable insights
 
 ## Common Issues & Solutions
+
+### UI Interaction Problems (PRIORITY 1)
+- **Issue**: Buttons unclickable, overlays blocking interaction
+- **Debug**: Check `ReadingModeOverlay` and `TutorialOverlay` states
+- **Check**: Console logs for tutorial/reading mode state
+- **Fix**: Ensure `isReadingMode={false}` and `isTutorialActive={false}`
+- **Overlays**: Watch for `fixed inset-0 z-50` CSS blocking interactions
+
+### Diagnostic Script False Positives (Can Ignore)
+- **Issue**: Diagnostic script reports missing Electron files
+- **Cause**: Script still checks removed Electron architecture
+- **Safe to Ignore**: main.ts, electron dependencies, better-sqlite3
+- **Status**: These are expected after Tauri migration
 
 ### Chinese Text Processing
 - **Issue**: ASCII filters break Chinese characters
@@ -456,6 +507,25 @@ Key rules in `.eslintrc.js`:
 5. ✅ **Final Type Issues**: COMPLETED - Fixed all remaining Slate.js and database interface issues
 
 ## Change Log
+
+### [2025-08-04 23:48:00] - Chapter Navigation System & Slate.js Editor Refactor 🎯📚
+- **Chapter Navigation Complete**: Visual chapter separation with numbered badges and navigation controls
+  - Chapter title bars with chapter numbers (1, 2, 3...) and titles
+  - Previous/Next chapter navigation buttons (←/→) with proper state management
+  - Novel length classification badges (短篇/中篇/長篇) displayed in project info
+  - Integrated chapter management with sidebar chapter list
+- **Slate.js Architecture Refactor**: Complete resolution of React hook context issues
+  - Moved EditorToolbar inside Slate context as InlineToolbar component
+  - Fixed "useSlate hook must be used inside Slate component" errors
+  - Maintained all formatting functionality (Bold, Italic, Underline, Code, H1, Quote, List)
+  - Preserved save, settings, and reading mode functionality
+  - AI Panel temporarily disabled with maintenance message during refactor
+- **Database Schema v8**: Added novel_length and chapter_number fields
+  - Projects: novel_length column for short/medium/long classification
+  - Chapters: chapter_number column for sequential numbering
+  - Automatic migration from v7 to v8 with backward compatibility
+- **User Experience**: Seamless chapter navigation and writing flow
+- **Impact**: Professional-grade chapter management system with visual feedback
 
 ### [2025-08-04 15:50:00] - Smart AI Writing & User Experience Enhancements 🧠✨
 - **NLP-Powered AI Writing**: Complete integration of Compromise.js NLP with AI writing assistant

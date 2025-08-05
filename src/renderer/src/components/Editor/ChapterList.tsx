@@ -186,7 +186,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
                       <span className="w-6 h-6 flex items-center justify-center rounded-full bg-cosmic-700 text-xs text-gold-400 mr-2">
-                        {chapter.order}
+                        {chapter.chapterNumber || chapter.order}
                       </span>
                       <h3 className="font-medium text-white truncate pr-6">
                         {chapter.title}

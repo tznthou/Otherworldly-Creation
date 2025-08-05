@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
-import { updateChapter, fetchChaptersByProjectId, Chapter } from '../../store/slices/chaptersSlice';
+import { updateChapter, Chapter } from '../../store/slices/chaptersSlice';
 import CreateProjectModal from '../Modals/CreateProjectModal';
 import ProjectManageModal from '../Modals/ProjectManageModal';
 import ImportProjectModal from '../Modals/ImportProjectModal';
@@ -18,30 +18,24 @@ import UpdateManagerModal from '../Modals/UpdateManagerModal';
 const ModalContainer: React.FC = () => {
   const dispatch = useAppDispatch();
   const { modals, selectedTemplate } = useAppSelector(state => state.ui);
-  
-  // 調試：監控 modal 狀態變化
-  console.log('ModalContainer render - modals state:', modals);
-  
-
   const { currentProject } = useAppSelector(state => state.projects);
   const { currentChapter, chapters } = useAppSelector(state => state.chapters);
 
-  // 章節重新排序處理函數
-  const handleReorderChapters = async (reorderedChapters: Chapter[]) => {
+  // 章節重新排序處理函數（使用 useCallback 避免無限重新渲染）
+  const handleReorderChapters = useCallback(async (reorderedChapters: Chapter[]) => {
     try {
       // 更新所有章節的順序
       for (const chapter of reorderedChapters) {
         await dispatch(updateChapter(chapter)).unwrap();
       }
       
-      // 重新獲取章節列表
-      if (currentProject) {
-        dispatch(fetchChaptersByProjectId(currentProject.id));
-      }
+      // 移除重新獲取章節列表的調用，避免無限循環
+      // Redux state 已經通過 updateChapter 更新了
+      
     } catch (error) {
       console.error('重新排序章節失敗:', error);
     }
-  };
+  }, [dispatch]);
 
   return (
     <>

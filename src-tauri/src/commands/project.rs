@@ -10,7 +10,7 @@ pub async fn get_all_projects() -> Result<Vec<Project>, String> {
     let conn = db.lock().unwrap();
     
     let mut stmt = conn
-        .prepare("SELECT id, name, description, type, settings, created_at, updated_at FROM projects ORDER BY updated_at DESC")
+        .prepare("SELECT id, name, description, type, settings, novel_length, created_at, updated_at FROM projects ORDER BY updated_at DESC")
         .map_err(|e| e.to_string())?;
     
     let project_iter = stmt
@@ -21,8 +21,9 @@ pub async fn get_all_projects() -> Result<Vec<Project>, String> {
                 description: row.get(2)?,
                 r#type: row.get(3)?,
                 settings: row.get(4)?,
-                created_at: row.get(5)?,
-                updated_at: row.get(6)?,
+                novel_length: row.get(5)?,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -41,7 +42,7 @@ pub async fn get_project_by_id(id: String) -> Result<Project, String> {
     let conn = db.lock().unwrap();
     
     let mut stmt = conn
-        .prepare("SELECT id, name, description, type, settings, created_at, updated_at FROM projects WHERE id = ?1")
+        .prepare("SELECT id, name, description, type, settings, novel_length, created_at, updated_at FROM projects WHERE id = ?1")
         .map_err(|e| e.to_string())?;
     
     let project = stmt
@@ -52,8 +53,9 @@ pub async fn get_project_by_id(id: String) -> Result<Project, String> {
                 description: row.get(2)?,
                 r#type: row.get(3)?,
                 settings: row.get(4)?,
-                created_at: row.get(5)?,
-                updated_at: row.get(6)?,
+                novel_length: row.get(5)?,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
             })
         })
         .map_err(|e| format!("專案不存在: {}", e))?;
@@ -70,14 +72,15 @@ pub async fn create_project(project: CreateProjectRequest) -> Result<String, Str
     let now = Utc::now();
     
     conn.execute(
-        "INSERT INTO projects (id, name, description, type, settings, created_at, updated_at) 
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        "INSERT INTO projects (id, name, description, type, settings, novel_length, created_at, updated_at) 
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
         params![
             project_id,
             project.name,
             project.description,
             project.r#type,
             project.settings,
+            project.novel_length.or(Some("medium".to_string())), // 預設為中篇
             now,
             now
         ],
@@ -97,12 +100,13 @@ pub async fn update_project(project: UpdateProjectRequest) -> Result<(), String>
     
     let rows_affected = conn
         .execute(
-            "UPDATE projects SET name = ?1, description = ?2, type = ?3, settings = ?4, updated_at = ?5 WHERE id = ?6",
+            "UPDATE projects SET name = ?1, description = ?2, type = ?3, settings = ?4, novel_length = ?5, updated_at = ?6 WHERE id = ?7",
             params![
                 project.name,
                 project.description,
                 project.r#type,
                 project.settings,
+                project.novel_length,
                 now,
                 project.id
             ],

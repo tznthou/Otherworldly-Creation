@@ -8,6 +8,7 @@ pub struct Project {
     pub description: Option<String>,
     pub r#type: Option<String>, // 使用 r#type 因為 type 是 Rust 關鍵字
     pub settings: Option<String>, // JSON 字串
+    pub novel_length: Option<String>, // 小說篇幅: short, medium, long
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -19,6 +20,7 @@ pub struct Chapter {
     pub title: String,
     pub content: Option<String>,
     pub order_index: i32,
+    pub chapter_number: Option<i32>, // 章節編號
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -62,6 +64,7 @@ pub struct CreateProjectRequest {
     #[serde(rename = "type")]
     pub r#type: Option<String>,
     pub settings: Option<String>,
+    pub novel_length: Option<String>, // 小說篇幅: short, medium, long
 }
 
 // 更新專案的請求結構
@@ -73,6 +76,7 @@ pub struct UpdateProjectRequest {
     #[serde(rename = "type")]
     pub r#type: Option<String>,
     pub settings: Option<String>,
+    pub novel_length: Option<String>, // 小說篇幅: short, medium, long
 }
 
 // 新增章節的請求結構
@@ -82,6 +86,7 @@ pub struct CreateChapterRequest {
     pub title: String,
     pub content: Option<String>,
     pub order_index: Option<i32>,
+    pub chapter_number: Option<i32>, // 章節編號
 }
 
 // 更新章節的請求結構
@@ -91,6 +96,7 @@ pub struct UpdateChapterRequest {
     pub title: String,
     pub content: Option<String>,
     pub order_index: Option<i32>,
+    pub chapter_number: Option<i32>, // 章節編號
 }
 
 // 新增角色的請求結構

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 7;
+const DB_VERSION: i32 = 8;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -62,6 +62,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v7(conn)?;
             update_version(conn, 7)?;
             log::info!("遷移到版本 7 完成");
+        }
+        
+        if current_version < 8 {
+            apply_migration_v8(conn)?;
+            update_version(conn, 8)?;
+            log::info!("遷移到版本 8 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -544,6 +550,36 @@ fn apply_migration_v7(conn: &Connection) -> Result<()> {
     )?;
     
     log::info!("AI 生成歷史記錄表創建成功");
+    
+    Ok(())
+}
+
+/// 版本 8: 新增小說篇幅類型和章節編號功能
+fn apply_migration_v8(conn: &Connection) -> Result<()> {
+    log::info!("版本 8 遷移：新增小說篇幅類型和章節編號功能");
+    
+    // 1. 為 projects 表新增 novel_length 欄位
+    conn.execute(
+        "ALTER TABLE projects ADD COLUMN novel_length TEXT DEFAULT 'medium'",
+        [],
+    )?;
+    log::info!("projects 表新增 novel_length 欄位成功");
+    
+    // 2. 為 chapters 表新增 chapter_number 欄位
+    conn.execute(
+        "ALTER TABLE chapters ADD COLUMN chapter_number INTEGER",
+        [],
+    )?;
+    log::info!("chapters 表新增 chapter_number 欄位成功");
+    
+    // 3. 更新現有章節的 chapter_number（基於 order_index）
+    conn.execute(
+        "UPDATE chapters 
+         SET chapter_number = order_index + 1 
+         WHERE chapter_number IS NULL",
+        [],
+    )?;
+    log::info!("更新現有章節編號成功");
     
     Ok(())
 }

@@ -375,7 +375,7 @@ ${smartParams.locationNames.length > 0 ? `
           }
           
           results.push({
-            id: `${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
+            id: `${Date.now()}-${index}-${Math.random().toString(36).substring(2, 11)}`,
             text: filteredText,
             temperature: params.temperature,
             timestamp: new Date()

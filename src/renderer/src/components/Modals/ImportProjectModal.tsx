@@ -100,6 +100,7 @@ const ImportProjectModal: React.FC = () => {
         name: importedData.name,
         type: (importedData.type as 'isekai' | 'school' | 'scifi' | 'fantasy') || 'isekai',
         description: importedData.description || '',
+        novelLength: 'medium',
         settings: importedData.settings || {
           aiModel: 'llama3',
           aiParams: {
