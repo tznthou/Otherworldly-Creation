@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../../api';
+import { Character, Relationship } from '../../api/models';
 
 interface RelationshipConsistencyIssue {
   type: 'missing' | 'conflicting' | 'orphaned';
@@ -7,28 +8,6 @@ interface RelationshipConsistencyIssue {
   characterName: string;
   relationshipId?: string;
   description: string;
-}
-
-export interface Relationship {
-  id?: string;
-  targetId: string;
-  type: string;
-  description: string;
-}
-
-export interface Character {
-  id: string;
-  projectId: string;
-  name: string;
-  archetype?: string;
-  age?: number;
-  gender?: string;
-  appearance?: string;
-  personality?: string;
-  background?: string;
-  relationships?: Relationship[];
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 interface CharactersState {
@@ -171,7 +150,7 @@ const charactersSlice = createSlice({
         character.personality = archetype.personality;
         if (archetype.appearance) character.appearance = archetype.appearance;
         if (archetype.background) character.background = archetype.background;
-        character.updatedAt = new Date();
+        character.updatedAt = new Date().toISOString();
         
         // 更新當前角色
         if (state.currentCharacter?.id === characterId) {

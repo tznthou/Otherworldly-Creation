@@ -1,23 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../../api';
-import { AIGenerationParams } from '../../api/models';
-
-// AI 歷史記錄類型定義
-export interface AIGenerationHistory {
-  id: string;
-  projectId: string;
-  chapterId: string;
-  model: string;
-  prompt: string;
-  generatedText: string;
-  parameters?: AIGenerationParams;
-  languagePurity?: number;
-  tokenCount?: number;
-  generationTimeMs?: number;
-  selected: boolean;
-  position?: number;
-  createdAt: Date;
-}
+import { AIGenerationHistory } from '../../api/models';
 
 // AI 歷史記錄狀態
 export interface AIHistoryState {

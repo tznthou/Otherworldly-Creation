@@ -1,23 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Descendant } from 'slate';
 import { api } from '../../api';
-
-export interface Chapter {
-  id: string;
-  projectId: string;
-  title: string;
-  content: Descendant[];
-  order: number;
-  chapterNumber?: number;
-  createdAt: Date;
-  updatedAt: Date;
-  wordCount?: number;
-  metadata?: {
-    notes?: string;
-    status?: 'draft' | 'in_progress' | 'review' | 'completed';
-    [key: string]: unknown;
-  };
-}
+import { Chapter } from '../../api/models';
 
 interface ChaptersState {
   chapters: Chapter[];
@@ -87,8 +71,8 @@ export const fetchChapterById = createAsyncThunk(
     return {
       ...chapter,
       content: chapter.content || [{ type: 'paragraph', children: [{ text: '' }] }],
-      createdAt: new Date(chapter.createdAt),
-      updatedAt: new Date(chapter.updatedAt),
+      createdAt: chapter.createdAt,
+      updatedAt: chapter.updatedAt,
     };
   }
 );
