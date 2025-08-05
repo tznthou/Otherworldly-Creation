@@ -3,6 +3,7 @@ import { Editor, Transforms, Range } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
+import { createAIHistory } from '../../store/slices/aiHistorySlice';
 import { startProgress, updateProgress, completeProgress, failProgress } from '../../store/slices/errorSlice';
 import { store } from '../../store/store';
 import { api } from '../../api';
@@ -23,6 +24,45 @@ interface GenerationOption {
   timestamp: Date;
   selected?: boolean;
 }
+
+// 過濾掉 AI 思考標籤的函數
+const filterThinkingTags = (text: string): string => {
+  // 移除常見的思考標籤及其內容
+  const patterns = [
+    // 標準 XML 格式的思考標籤
+    /<think[^>]*>[\s\S]*?<\/think>/gi,
+    /<thinking[^>]*>[\s\S]*?<\/thinking>/gi,
+    /<thought[^>]*>[\s\S]*?<\/thought>/gi,
+    /<reflection[^>]*>[\s\S]*?<\/reflection>/gi,
+    /<thinking[^>]*>[\s\S]*?<\/antml:thinking>/gi,
+    
+    // 可能的單行或不完整標籤
+    /<think[^>]*>/gi,
+    /<\/think>/gi,
+    /<thinking[^>]*>/gi,
+    /<\/thinking>/gi,
+    
+    // Markdown 風格的思考標記
+    /```thinking[\s\S]*?```/gi,
+    /```think[\s\S]*?```/gi,
+    
+    // 其他可能的思考標記
+    /\[THINKING\][\s\S]*?\[\/THINKING\]/gi,
+    /\[THINK\][\s\S]*?\[\/THINK\]/gi,
+    /\{\{thinking\}\}[\s\S]*?\{\{\/thinking\}\}/gi,
+    /\{\{think\}\}[\s\S]*?\{\{\/think\}\}/gi,
+  ];
+  
+  let filteredText = text;
+  patterns.forEach(pattern => {
+    filteredText = filteredText.replace(pattern, '');
+  });
+  
+  // 清理多餘的空行
+  filteredText = filteredText.replace(/\n{3,}/g, '\n\n').trim();
+  
+  return filteredText;
+};
 
 const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, editor }) => {
   const dispatch = useAppDispatch();
@@ -160,6 +200,23 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         currentStep: '分析寫作風格...'
       }));
       
+      // 使用改進的傳統參數生成
+      const generateTraditionalParams = () => {
+        const variations = [];
+        for (let i = 0; i < generationCount; i++) {
+          const variation = {
+            temperature: Math.max(0.2, Math.min(1.2, temperature + (i - 1) * 0.2)), // 更大變化
+            maxTokens: maxTokens + (i * 30),
+            topP: Math.max(0.5, Math.min(1.0, topP + (i - 1) * 0.2)),
+            presencePenalty: Math.max(0, Math.min(1.5, presencePenalty + (i * 0.3))),
+            frequencyPenalty: Math.max(0, Math.min(1.5, frequencyPenalty + (i * 0.25))),
+            maxContextTokens: 2000
+          };
+          variations.push(variation);
+        }
+        return variations;
+      };
+      
       let paramVariations = [];
       
       if (editorText.length > 50) {
@@ -205,23 +262,6 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         paramVariations = generateTraditionalParams();
       }
       
-      // 改進的傳統參數生成函數
-      function generateTraditionalParams() {
-        const variations = [];
-        for (let i = 0; i < generationCount; i++) {
-          const variation = {
-            temperature: Math.max(0.2, Math.min(1.2, temperature + (i - 1) * 0.2)), // 更大變化
-            maxTokens: maxTokens + (i * 30),
-            topP: Math.max(0.5, Math.min(1.0, topP + (i - 1) * 0.2)),
-            presencePenalty: Math.max(0, Math.min(1.5, presencePenalty + (i * 0.3))),
-            frequencyPenalty: Math.max(0, Math.min(1.5, frequencyPenalty + (i * 0.25))),
-            maxContextTokens: 2000
-          };
-          variations.push(variation);
-        }
-        return variations;
-      }
-      
       dispatch(updateProgress({
         id: newProgressId,
         progress: 20,
@@ -238,17 +278,42 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
             completedSteps: index
           }));
           
+          const startTime = Date.now();
+          const position = selection?.anchor.offset || 0;
           const result = await api.ai.generateWithContext(
             projectId, 
             chapterId, 
-            selection.anchor.offset, 
+            position, 
             currentModel, 
             params
           );
+          const generationTime = Date.now() - startTime;
+          
+          // 過濾思考標籤
+          const filteredText = filterThinkingTags(result);
+          
+          // 保存到 AI 歷史記錄
+          try {
+            await dispatch(createAIHistory({
+              projectId,
+              chapterId,
+              model: currentModel,
+              prompt: `在位置 ${position} 進行 AI 續寫`,
+              generatedText: filteredText,
+              parameters: params,
+              languagePurity: undefined, // 稍後可以整合語言純度分析
+              tokenCount: undefined, // 稍後可以添加 token 計數
+              generationTimeMs: generationTime,
+              position: position,
+            })).unwrap();
+          } catch (historyError) {
+            console.error('保存 AI 歷史記錄失敗:', historyError);
+            // 不中斷主流程
+          }
           
           return {
             id: `${Date.now()}-${index}`,
-            text: result,
+            text: filteredText,
             temperature: params.temperature,
             timestamp: new Date()
           };
@@ -335,8 +400,8 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       // 獲取當前選擇位置
       const { selection } = editor;
       if (selection) {
-        // 在當前位置插入文本
-        Transforms.insertText(editor, option.text);
+        // 在當前位置插入文本（再次過濾確保安全）
+        Transforms.insertText(editor, filterThinkingTags(option.text));
         
         // 標記選項為已選擇
         setGenerationOptions(prev => 
@@ -399,6 +464,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         maxContextTokens: 2000,
       };
 
+      const startTime = Date.now();
       const result = await api.ai.generateWithContext(
         projectId, 
         chapterId, 
@@ -406,12 +472,35 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         currentModel, 
         params
       );
+      const generationTime = Date.now() - startTime;
+      
+      // 過濾思考標籤
+      const filteredText = filterThinkingTags(result);
+      
+      // 保存到 AI 歷史記錄
+      try {
+        await dispatch(createAIHistory({
+          projectId,
+          chapterId,
+          model: currentModel,
+          prompt: `重新生成版本 - 在位置 ${selection.anchor.offset} 進行 AI 續寫`,
+          generatedText: filteredText,
+          parameters: params,
+          languagePurity: undefined,
+          tokenCount: undefined,
+          generationTimeMs: generationTime,
+          position: selection.anchor.offset,
+        })).unwrap();
+      } catch (historyError) {
+        console.error('保存 AI 歷史記錄失敗:', historyError);
+        // 不中斷主流程
+      }
 
       // 更新該選項
       setGenerationOptions(prev => 
         prev.map(opt => 
           opt.id === optionId 
-            ? { ...opt, text: result, timestamp: new Date() }
+            ? { ...opt, text: filteredText, timestamp: new Date() }
             : opt
         )
       );
