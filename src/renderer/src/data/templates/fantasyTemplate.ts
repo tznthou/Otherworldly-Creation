@@ -7,8 +7,8 @@ export const fantasyTemplate: NovelTemplate = {
   type: 'fantasy',
   description: '劍與魔法的奇幻世界，多種族共存的冒險故事',
   version: DEFAULT_TEMPLATE_VERSION,
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   
   worldSetting: {
     era: '中古奇幻時代',

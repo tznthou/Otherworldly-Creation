@@ -18,8 +18,8 @@ export interface Character {
   personality?: string;
   background?: string;
   relationships?: Relationship[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CharacterFormData {

@@ -196,8 +196,8 @@ export class TemplateService {
     const template: NovelTemplate = {
       ...templateData,
       id: templateId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString().toISOString(),
       isCustom: true,
       isActive: true
     };
@@ -229,7 +229,7 @@ export class TemplateService {
     const updatedTemplate = {
       ...existingTemplate,
       ...updates,
-      updatedAt: new Date()
+      updatedAt: new Date().toISOString()
     };
 
     const errors = this.validateTemplate(updatedTemplate);

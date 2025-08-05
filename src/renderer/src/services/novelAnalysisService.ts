@@ -629,8 +629,8 @@ export class NovelAnalysisService {
       type: baseTemplate.type || 'fantasy',
       description: baseTemplate.description || '',
       version: '1.0.0',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString().toISOString(),
       
       worldSetting: analysis.worldSetting || baseTemplate.worldSetting,
       characterArchetypes: analysis.characters.length > 0 

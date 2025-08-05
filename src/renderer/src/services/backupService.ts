@@ -1,6 +1,6 @@
 import { Project } from '../store/slices/projectsSlice';
-import { Chapter } from '../store/slices/chaptersSlice';
-import { Character } from '../store/slices/charactersSlice';
+import { Chapter } from '../../api/models';
+import { Character } from '../../api/models';
 import { AppSettings } from '../store/slices/settingsSlice';
 import { NovelTemplate } from '../types/template';
 import api from '../api';

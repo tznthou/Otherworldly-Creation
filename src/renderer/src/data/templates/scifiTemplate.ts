@@ -7,8 +7,8 @@ export const scifiTemplate: NovelTemplate = {
   type: 'scifi',
   description: '未來世界的科幻冒險，包含高科技、AI、太空旅行等元素',
   version: DEFAULT_TEMPLATE_VERSION,
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   
   worldSetting: {
     era: '未來世界（2150年）',

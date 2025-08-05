@@ -8,8 +8,8 @@ export const isekaiTemplate: NovelTemplate = {
   type: 'isekai',
   description: '經典的異世界轉生設定，包含等級系統、魔法世界觀和轉生要素',
   version: DEFAULT_TEMPLATE_VERSION,
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   
   worldSetting: enhancedIsekaiWorldSetting,
   

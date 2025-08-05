@@ -83,7 +83,7 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
       dispatch(setSaving(true));
       await dispatch(updateChapter(currentChapter)).unwrap();
       
-      const now = new Date();
+      const now = new Date().toISOString();
       dispatch(setLastSaved(now));
       hasChangesRef.current = false;
       saveAttemptRef.current = 0;

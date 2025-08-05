@@ -108,7 +108,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
 
         {/* 創建時間 */}
         <div className="mt-3 pt-3 border-t border-cosmic-700 text-xs text-gray-500">
-          創建於 {character.createdAt.toLocaleDateString('zh-TW')}
+          創建於 {new Date(character.createdAt).toLocaleDateString('zh-TW')}
         </div>
       </div>
     </div>

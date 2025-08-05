@@ -160,12 +160,12 @@ const filterAndSortTemplates = (
         bValue = b.type;
         break;
       case 'createdAt':
-        aValue = new Date(a.createdAt).getTime();
-        bValue = new Date(b.createdAt).getTime();
+        aValue = a.createdAt;
+        bValue = b.createdAt;
         break;
       case 'updatedAt':
-        aValue = new Date(a.updatedAt).getTime();
-        bValue = new Date(b.updatedAt).getTime();
+        aValue = a.updatedAt;
+        bValue = b.updatedAt;
         break;
       default:
         return 0;

@@ -116,8 +116,9 @@ const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
     }
   };
 
-  const formatTime = (date: Date) => {
+  const formatTime = (dateString: string | Date) => {
     const now = new Date();
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
     const diff = now.getTime() - date.getTime();
     
     if (diff < 60000) { // 小於1分鐘

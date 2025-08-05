@@ -325,7 +325,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {template.updatedAt.toLocaleDateString('zh-TW')}
+                      {new Date(template.updatedAt).toLocaleDateString('zh-TW')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">

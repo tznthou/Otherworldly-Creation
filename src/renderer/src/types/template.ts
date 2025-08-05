@@ -74,8 +74,8 @@ export interface NovelTemplate {
   type: TemplateType;             // 模板類型
   description: string;            // 模板描述
   version: string;                // 模板版本
-  createdAt: Date;                // 創建時間
-  updatedAt: Date;                // 更新時間
+  createdAt: string;              // 創建時間
+  updatedAt: string;              // 更新時間
   
   // 核心設定
   worldSetting: WorldSetting;     // 世界觀設定

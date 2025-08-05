@@ -7,8 +7,8 @@ export const schoolTemplate: NovelTemplate = {
   type: 'school',
   description: '現代日式校園背景的戀愛喜劇，充滿青春活力和浪漫元素',
   version: DEFAULT_TEMPLATE_VERSION,
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   
   worldSetting: {
     era: '現代',

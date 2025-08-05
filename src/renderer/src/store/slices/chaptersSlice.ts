@@ -9,7 +9,7 @@ interface ChaptersState {
   loading: boolean;
   saving: boolean;
   error: string | null;
-  lastSaved: Date | null;
+  lastSaved: string | null;
 }
 
 const initialState: ChaptersState = {
@@ -97,7 +97,7 @@ const chaptersSlice = createSlice({
     setSaving: (state, action: PayloadAction<boolean>) => {
       state.saving = action.payload;
     },
-    setLastSaved: (state, action: PayloadAction<Date>) => {
+    setLastSaved: (state, action: PayloadAction<string>) => {
       state.lastSaved = action.payload;
     },
   },
@@ -138,7 +138,7 @@ const chaptersSlice = createSlice({
       })
       .addCase(updateChapter.fulfilled, (state, action) => {
         state.saving = false;
-        state.lastSaved = new Date();
+        state.lastSaved = new Date().toISOString();
         const index = state.chapters.findIndex(c => c.id === action.payload.id);
         if (index !== -1) {
           state.chapters[index] = action.payload;

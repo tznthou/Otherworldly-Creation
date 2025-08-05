@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
-import { Chapter } from '../../store/slices/chaptersSlice';
+import { Chapter } from '../../api/models';
 import { addNotification } from '../../store/slices/uiSlice';
 
 interface ChapterBatchActionsProps {

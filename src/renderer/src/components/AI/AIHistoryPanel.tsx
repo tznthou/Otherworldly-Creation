@@ -8,8 +8,8 @@ import {
   cleanupAIHistory,
   setPagination,
   clearError,
-  AIGenerationHistory,
 } from '../../store/slices/aiHistorySlice';
+import { AIGenerationHistory } from '../../api/models';
 import { useI18n } from '../../hooks/useI18n';
 
 interface AIHistoryPanelProps {
