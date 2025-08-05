@@ -405,20 +405,41 @@ fn apply_migration_v5(conn: &Connection) -> Result<()> {
     // 2. 修復 character_relationships 表
     log::info!("開始修復 character_relationships 表結構...");
     
-    // 備份現有關係資料
-    let existing_relationships: Vec<(String, String, String, String, Option<String>)> = conn
-        .prepare("SELECT id, source_id, target_id, type, description FROM character_relationships")?
-        .query_map([], |row| {
-            Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, String>(1)?,
-                row.get::<_, String>(2)?,
-                row.get::<_, String>(3)?,
-                row.get::<_, Option<String>>(4)?,
-            ))
-        })?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| anyhow::anyhow!("查詢現有角色關係失敗: {}", e))?;
+    // 檢查表是否存在，並備份現有關係資料（如果存在）
+    let existing_relationships: Vec<(String, String, String, String, Option<String>)> = match conn
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='character_relationships'") {
+        Ok(mut stmt) => {
+            let tables: Result<Vec<String>, _> = stmt.query_map([], |row| {
+                Ok(row.get::<_, String>(0)?)
+            })?.collect();
+            
+            if tables.map_or(false, |t| !t.is_empty()) {
+                // 表存在，嘗試備份資料
+                match conn.prepare("SELECT id, source_id, target_id, type, description FROM character_relationships")
+                    .or_else(|_| conn.prepare("SELECT id, from_character_id, to_character_id, relationship_type, description FROM character_relationships")) {
+                    Ok(mut stmt) => {
+                        stmt.query_map([], |row| {
+                            Ok((
+                                row.get::<_, String>(0)?,
+                                row.get::<_, String>(1)?,
+                                row.get::<_, String>(2)?,
+                                row.get::<_, String>(3)?,
+                                row.get::<_, Option<String>>(4)?,
+                            ))
+                        })?.collect::<Result<Vec<_>, _>>().unwrap_or_default()
+                    },
+                    Err(_) => {
+                        log::warn!("無法讀取現有關係資料，將創建空表");
+                        Vec::new()
+                    }
+                }
+            } else {
+                // 表不存在
+                Vec::new()
+            }
+        },
+        Err(_) => Vec::new()
+    };
     
     // 刪除舊表
     conn.execute("DROP TABLE IF EXISTS character_relationships", [])?;
