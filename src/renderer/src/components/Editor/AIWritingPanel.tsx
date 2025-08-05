@@ -7,6 +7,8 @@ import { startProgress, updateProgress, completeProgress, failProgress } from '.
 import { store } from '../../store/store';
 import { api } from '../../api';
 import { ErrorSeverity } from '../../types/error';
+import AIHistoryPanel from '../AI/AIHistoryPanel';
+import { analyzeWritingContext, generateSmartParams } from '../../services/aiWritingAssistant';
 
 interface AIWritingPanelProps {
   projectId: string;
@@ -32,6 +34,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
   const [progressId, setProgressId] = useState<string | null>(null);
+  const [showAIHistory, setShowAIHistory] = useState(false);
   
   // 從 Redux store 獲取進度狀態
   const progressState = useAppSelector(state => state.progress);
@@ -63,6 +66,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
 
   // 生成文本
   const handleGenerate = async () => {
+    console.log('🚀 handleGenerate 被調用了！');
+    console.log('📊 當前狀態:', { currentModel, editor, isOllamaConnected, isGenerating });
+    
     if (!currentModel) {
       dispatch(addNotification({
         type: 'warning',
@@ -75,6 +81,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
     
     // 檢查是否有選擇位置
     if (!editor) {
+      console.log('❌ editor 實例不存在！');
       dispatch(addNotification({
         type: 'error',
         title: '編輯器未準備好',
@@ -84,15 +91,25 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       return;
     }
     
-    const { selection } = editor;
-    if (!selection || !Range.isCollapsed(selection)) {
-      dispatch(addNotification({
-        type: 'warning',
-        title: '請選擇續寫位置',
-        message: '請將游標放在您希望 AI 續寫的位置',
-        duration: 3000,
-      }));
-      return;
+    console.log('✅ editor 實例存在:', editor);
+    let { selection } = editor;
+    console.log('📍 selection 狀態:', selection);
+    
+    // 如果沒有選擇，自動設置到文檔末尾
+    if (!selection) {
+      console.log('🎯 沒有選擇位置，自動移到文檔末尾');
+      const end = Editor.end(editor, []);
+      Transforms.select(editor, end);
+      selection = editor.selection;
+      console.log('📍 新的 selection 狀態:', selection);
+    }
+    
+    // 確保選擇是折疊的（游標位置）
+    if (selection && !Range.isCollapsed(selection)) {
+      console.log('🎯 選擇不是游標位置，折疊到末尾');
+      Transforms.collapse(editor, { edge: 'end' });
+      selection = editor.selection;
+      console.log('📍 折疊後的 selection 狀態:', selection);
     }
     
     setIsGenerating(true);
@@ -132,24 +149,77 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         currentStep: '準備生成上下文...'
       }));
       
-      // 生成多個選項的參數配置
-      const baseParams = {
-        temperature,
-        maxTokens,
-        topP,
-        presencePenalty,
-        frequencyPenalty,
-        maxContextTokens: 2000,
-      };
+      // 🧠 NLP 智能分析當前文本
+      console.log('🧠 開始 NLP 文本分析...');
+      const editorText = Editor.string(editor, []);
+      console.log('📝 當前文本長度:', editorText.length);
       
-      // 根據生成數量創建不同的參數組合
-      const paramVariations = [];
-      for (let i = 0; i < generationCount; i++) {
-        const tempVariation = temperature + (i - Math.floor(generationCount / 2)) * 0.1;
-        paramVariations.push({
-          ...baseParams,
-          temperature: Math.max(0.1, Math.min(1.5, tempVariation))
-        });
+      dispatch(updateProgress({
+        id: newProgressId,
+        progress: 15,
+        currentStep: '分析寫作風格...'
+      }));
+      
+      let paramVariations = [];
+      
+      if (editorText.length > 50) {
+        // 有足夠文本進行NLP分析
+        try {
+          const context = analyzeWritingContext(editorText);
+          console.log('📊 NLP 分析結果:', context);
+          
+          dispatch(updateProgress({
+            id: newProgressId,
+            progress: 18,
+            currentStep: `檢測到${context.emotionalTone}風格，生成智能參數...`
+          }));
+          
+          // 使用智能參數生成
+          for (let i = 0; i < generationCount; i++) {
+            const smartParams = generateSmartParams(context, temperature);
+            
+            // 為每個版本創建不同的變化
+            const variation = {
+              temperature: smartParams.temperature + (i - 1) * 0.15, // 更大的變化範圍
+              maxTokens: smartParams.maxTokens + (i * 20), // 長度變化
+              topP: Math.max(0.3, Math.min(1.0, topP + (i - 1) * 0.15)), // topP變化
+              presencePenalty: Math.max(0, Math.min(2.0, presencePenalty + (i * 0.2))), // 存在懲罰變化
+              frequencyPenalty: Math.max(0, Math.min(2.0, frequencyPenalty + (i * 0.15))), // 頻率懲罰變化
+              maxContextTokens: 2000,
+              style: smartParams.style, // 使用NLP分析的風格
+              contextHints: smartParams.contextHints // 使用NLP提取的上下文提示
+            };
+            
+            paramVariations.push(variation);
+            console.log(`🎯 版本${i + 1}參數:`, variation);
+          }
+          
+        } catch (error) {
+          console.warn('⚠️ NLP分析失敗，使用傳統參數生成:', error);
+          // 回退到改進的傳統方法
+          paramVariations = generateTraditionalParams();
+        }
+      } else {
+        // 文本太短，使用改進的傳統參數生成
+        console.log('📝 文本較短，使用改進的傳統參數生成');
+        paramVariations = generateTraditionalParams();
+      }
+      
+      // 改進的傳統參數生成函數
+      function generateTraditionalParams() {
+        const variations = [];
+        for (let i = 0; i < generationCount; i++) {
+          const variation = {
+            temperature: Math.max(0.2, Math.min(1.2, temperature + (i - 1) * 0.2)), // 更大變化
+            maxTokens: maxTokens + (i * 30),
+            topP: Math.max(0.5, Math.min(1.0, topP + (i - 1) * 0.2)),
+            presencePenalty: Math.max(0, Math.min(1.5, presencePenalty + (i * 0.3))),
+            frequencyPenalty: Math.max(0, Math.min(1.5, frequencyPenalty + (i * 0.25))),
+            maxContextTokens: 2000
+          };
+          variations.push(variation);
+        }
+        return variations;
       }
       
       dispatch(updateProgress({
@@ -373,7 +443,16 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   return (
     <div className="bg-cosmic-900 border-t border-cosmic-700 p-4">
       <div className="mb-4">
-        <h3 className="text-lg font-medium text-gold-400 mb-2">AI 續寫</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-medium text-gold-400">AI 續寫</h3>
+          <button
+            onClick={() => setShowAIHistory(!showAIHistory)}
+            className="text-xs text-blue-400 hover:text-blue-300 transition-colors px-2 py-1 border border-blue-500/30 rounded-md hover:border-blue-400/50"
+            title="查看 AI 生成歷程"
+          >
+            📝 {showAIHistory ? '隱藏歷程' : '查看歷程'}
+          </button>
+        </div>
         <p className="text-sm text-gray-400">
           使用 AI 協助您繼續寫作。請先將游標放在您希望 AI 續寫的位置。
         </p>
@@ -674,6 +753,13 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* AI 歷程記錄面板 */}
+      {showAIHistory && (
+        <div className="mt-6 border-t border-cosmic-700 pt-4">
+          <AIHistoryPanel projectId={projectId} />
         </div>
       )}
     </div>

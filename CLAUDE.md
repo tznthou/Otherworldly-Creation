@@ -25,9 +25,9 @@ mcp__serena__onboarding()
 創世紀元：異世界創作神器 (Genesis Chronicle) - A Tauri-based AI-powered novel writing application for Chinese light novel creation. Built with Rust backend and React frontend, integrating Ollama for local AI assistance.
 
 **Architecture**: Pure Tauri v2.7.0 (v1.0.0+) - 300% faster startup, 70% less memory, 90% smaller size
-**Latest Updates** (2025-08-04): Chapter Navigation System Complete, Novel Length Classification, Slate.js Editor Architecture Refactor, Compromise NLP Integration, Database v8 Migration, Cursor Position Preservation
+**Latest Updates** (2025-08-05): AI Writing Enhancement with NLP Integration, Smart Parameter Generation, AI History Panel Integration, Compromise.js Context Analysis, Enhanced Content Diversity
 **Code Quality**: ✅ Rust: Clean | ✅ TypeScript: 0 errors (100% FIXED - from 300+ to 0!) | ✅ ESLint: 0 errors, 0 warnings (PERFECT)
-**New Features**: ✅ Chapter Navigation System | ✅ Novel Length Classification | ✅ Slate.js Editor Refactor | ✅ Template Import Wizard | ✅ NLP Text Processing | ✅ Intelligent Context-Aware AI Writing | ✅ Cursor Position Preservation
+**New Features**: ✅ Chapter Navigation System | ✅ Novel Length Classification | ✅ Slate.js Editor Refactor | ✅ Template Import Wizard | ✅ NLP Text Processing | ✅ Intelligent Context-Aware AI Writing | ✅ AI History Panel Integration | ✅ Smart Parameter Generation | ✅ Enhanced Content Diversity
 
 ## Essential Commands
 
@@ -251,6 +251,8 @@ The rich text editor uses a specialized architecture to avoid React hook context
 15. **Novel Length Classification**: Projects must specify novel_length ('short'|'medium'|'long') for proper chapter management
 16. **Chapter Navigation**: Always display chapter_number with navigation controls (←/→) for multi-chapter projects
 17. **UI Debugging**: When buttons are unclickable, first check for overlay components (`z-50`, `fixed inset-0`) blocking interactions
+18. **AI Writing Parameters**: Always import and use `aiWritingAssistant.ts` for NLP analysis before parameter generation
+19. **Parameter Diversity**: Use enhanced parameter variations (±0.15-0.2) instead of minimal changes (±0.1) for content diversity
 
 ### Development Workflows
 
@@ -324,7 +326,9 @@ The rich text editor uses a specialized architecture to avoid React hook context
 - **NLP Integration**: Uses `aiWritingAssistant.ts` with Compromise.js for context analysis
 - **Context Analysis**: Detects writing style (tense, narrative perspective, emotional tone)
 - **Smart Parameters**: Auto-adjusts AI generation parameters based on text analysis
+- **Enhanced Diversity**: Parameter variations increased from ±0.1 to ±0.15-0.2 for temperature, plus topP and penalty variations
 - **Quality Checking**: Post-generation quality assessment for coherence and style consistency
+- **History Integration**: AI History Panel accessible via toggle button in AI Writing Panel
 - **Cursor Preservation**: Save operations maintain cursor position using `textAreaRef` and `selectionStart`
 
 ### TypeScript Patterns
@@ -507,6 +511,23 @@ Key rules in `.eslintrc.js`:
 5. ✅ **Final Type Issues**: COMPLETED - Fixed all remaining Slate.js and database interface issues
 
 ## Change Log
+
+### [2025-08-05 08:52:00] - AI Writing Enhancement & NLP Integration 🧠✨
+- **Enhanced AI Content Diversity**: Fixed AI writing generating similar content by integrating Compromise.js NLP analysis
+  - Integrated `aiWritingAssistant.ts` into `AIWritingPanel.tsx` for intelligent context analysis
+  - Increased parameter variation range from ±0.1 to ±0.15-0.2 for temperature, topP, and penalty parameters
+  - Added smart parameter generation based on text complexity, emotional tone, and narrative style
+  - NLP analysis detects tense (past/present/future), narrative style (first/third person), and emotional tone
+- **AI History Panel Integration**: Re-integrated AI generation history functionality
+  - Added toggle button "📝 查看歷程" in AI Writing Panel header
+  - AI History Panel displays within AI Writing Panel when toggled
+  - Maintains project-specific filtering of generation history
+- **Intelligent Parameter Adjustment**: Context-aware AI generation
+  - Analyzes existing text for writing style and adjusts generation parameters accordingly
+  - Fallback to enhanced traditional parameter generation for short texts
+  - Progress indicators show detected writing style during generation
+- **Debug Improvements**: Enhanced console logging for NLP analysis and parameter generation
+- **Impact**: Significantly improved AI writing content diversity and user experience
 
 ### [2025-08-04 23:48:00] - Chapter Navigation System & Slate.js Editor Refactor 🎯📚
 - **Chapter Navigation Complete**: Visual chapter separation with numbered badges and navigation controls
