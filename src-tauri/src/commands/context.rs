@@ -46,13 +46,21 @@ impl SystemPromptBuilder {
 
 核心要求:
 - 在 [CONTINUE HERE] 標記處插入續寫內容
-- 不要重複或重寫現有內容
+- **重要**：絕對不要重複、複製或重寫現有內容
+- **重要**：只提供全新的續寫內容，延續故事情節
+- **重要**：如果看到現有內容已經完整，請提供下一個情節發展
 - 保持角色一致性和對話風格
 - 確保情節連貫和細節一致
 - CRITICAL: 嚴格使用繁體中文，絕對不允許混雜任何英文單詞或簡體字
 - 所有描述、動作、對話都必須使用純正繁體中文
 - 禁止使用英文拼音、英文縮寫或任何英文表達
-- 只提供續寫文本，無需解釋或評論";
+- 只提供續寫文本，無需解釋或評論
+
+續寫指導原則:
+- 如果現有內容已經結束在對話或動作，請續寫下一個場景或反應
+- 如果現有內容是描述性文字，請續寫角色的想法、對話或新動作
+- 推進情節發展，不要停留在已描述的內容上
+- 每次續寫應該帶來新的信息或推進故事";
 
         let genre_specific = if let Some(project_type) = &self.project_type {
             let is_light_novel = project_type.to_lowercase().contains("輕小說") || 
@@ -60,7 +68,13 @@ impl SystemPromptBuilder {
                                project_type.to_lowercase().contains("light novel");
             
             if is_light_novel {
-                "\n\n輕小說風格要求:\n- 適當加入角色內心獨白\n- 保持節奏明快，對話生動\n- 可以適當使用擬聲詞和表情描寫\n- 嚴禁使用英文單詞或簡體字"
+                "
+
+輕小說風格要求:
+- 適當加入角色內心獨白
+- 保持節奏明快，對話生動
+- 可以適當使用擬聲詞和表情描寫
+- 嚴禁使用英文單詞或簡體字"
             } else {
                 ""
             }
@@ -171,7 +185,8 @@ impl UserContextBuilder {
                     .map(|i| i + 1)
                     .unwrap_or(0);
                 
-                result.push_str("...(前文省略)...\n");
+                result.push_str("...(前文省略)...
+");
                 let final_chars: Vec<char> = remaining_text.chars().collect();
                 let final_text: String = final_chars[adjusted_start.min(final_chars.len())..].iter().collect();
                 result.push_str(&final_text);
@@ -179,7 +194,14 @@ impl UserContextBuilder {
                 result.push_str(&cleaned_before);
             }
             
-            // 處理游標後的內容 - 顯示少量以提供上下文
+            // 添加明確的續寫標記 - 更加突出
+            result.push_str("
+
+>>> [續寫位置：請在此處繼續故事，不要重複上述內容] <<<
+
+");
+            
+            // 處理游標後的內容 - 如果有後續內容，明確標示這是「未來內容」
             if !after_cursor.is_empty() {
                 let cleaned_after = clean_text(&after_cursor);
                 const MAX_AFTER_CHARS: usize = 100; // 減少到100字符
@@ -193,13 +215,16 @@ impl UserContextBuilder {
                         .rfind(|c| c == '.' || c == '!' || c == '?' || c == '\n' || c == '。' || c == '！' || c == '？')
                         .unwrap_or(truncated_after.len());
                     
-                    result.push_str("\n\n[後續內容:]\n");
+                    result.push_str("[注意：以下是已存在的後續內容，請不要重複或修改：]
+");
                     let final_chars: Vec<char> = truncated_after.chars().collect();
                     let final_text: String = final_chars[..end_pos.min(final_chars.len())].iter().collect();
                     result.push_str(&final_text);
-                    result.push_str("\n...(後續內容繼續)...");
+                    result.push_str("
+...(後續內容繼續)...");
                 } else if cleaned_after.len() > 10 { // 只有在有意義的內容時才顯示
-                    result.push_str("\n\n[後續內容:]\n");
+                    result.push_str("[注意：以下是已存在的後續內容，請不要重複或修改：]
+");
                     result.push_str(&cleaned_after);
                 }
             }
