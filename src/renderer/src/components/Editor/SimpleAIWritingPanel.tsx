@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
-import { setCurrentModel, fetchAvailableModels } from '../../store/slices/aiSlice';
+import { setCurrentModel, fetchAvailableModels, checkOllamaService } from '../../store/slices/aiSlice';
 import { startProgress, updateProgress, completeProgress, failProgress, removeProgress, selectProgressById } from '../../store/slices/errorSlice';
 import { createAIHistory } from '../../store/slices/aiHistorySlice';
 import { AIGenerationHistory } from '../../api/models';
@@ -113,10 +113,24 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   
   // 獲取可用的 AI 模型（如果尚未載入）
   useEffect(() => {
-    if (isOllamaConnected && availableModels.length === 0) {
-      dispatch(fetchAvailableModels());
-    }
-  }, [dispatch, isOllamaConnected, availableModels.length]);
+    // 在組件掛載時檢查 Ollama 服務狀態
+    const checkOllama = async () => {
+      try {
+        console.log('[SimpleAIWritingPanel] 檢查 Ollama 服務狀態...');
+        const result = await dispatch(checkOllamaService()).unwrap();
+        console.log('[SimpleAIWritingPanel] Ollama 服務檢查結果:', result);
+        
+        if (result && availableModels.length === 0) {
+          console.log('[SimpleAIWritingPanel] 載入可用模型...');
+          await dispatch(fetchAvailableModels());
+        }
+      } catch (error) {
+        console.error('[SimpleAIWritingPanel] Ollama 服務檢查失敗:', error);
+      }
+    };
+    
+    checkOllama();
+  }, [dispatch]);
 
   // 清理效果：組件卸載時取消正在進行的請求
   useEffect(() => {

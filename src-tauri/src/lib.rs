@@ -17,6 +17,10 @@ use commands::ai::{
     check_ollama_service, get_service_status, list_models, get_models_info, check_model_availability,
     generate_text, generate_with_context, generate_with_separated_context, update_ollama_config,
 };
+use commands::ai_providers::{
+    get_ai_providers, create_ai_provider, update_ai_provider, delete_ai_provider,
+    test_ai_provider, generate_ai_text, get_supported_ai_provider_types
+};
 use commands::context::{build_context, compress_context, get_context_stats, build_separated_context, estimate_separated_context_tokens, analyze_text_purity, enhance_generation_parameters};
 use commands::settings::{get_setting, set_setting, get_all_settings, reset_settings};
 use commands::database::{backup_database, restore_database, run_database_maintenance, get_database_stats, health_check};
@@ -79,7 +83,7 @@ pub fn run() {
       delete_character_relationship,
       get_character_relationships,
       clear_character_relationships,
-      // AI commands
+      // AI commands (legacy Ollama)
       check_ollama_service,
       get_service_status,
       list_models,
@@ -89,6 +93,14 @@ pub fn run() {
       generate_with_context,
       generate_with_separated_context,
       update_ollama_config,
+      // AI Providers commands (new multi-provider system)
+      get_ai_providers,
+      create_ai_provider,
+      update_ai_provider,
+      delete_ai_provider,
+      test_ai_provider,
+      generate_ai_text,
+      get_supported_ai_provider_types,
       // Context commands
       build_context,
       compress_context,

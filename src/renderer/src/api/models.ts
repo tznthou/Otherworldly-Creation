@@ -74,6 +74,7 @@ export interface AIGenerationHistory {
   id: string;
   projectId: string;
   chapterId: string;
+  providerId?: string; // 新增 AI 提供者 ID
   model: string;
   prompt: string;
   generatedText: string;
@@ -209,6 +210,78 @@ export interface AIHistoryQueryParams {
   offset?: number;
   orderBy?: 'createdAt' | 'tokenCount' | 'generationTimeMs';
   orderDirection?: 'asc' | 'desc';
+}
+
+// AI 提供者相關
+export interface AIProvider {
+  id: string;
+  name: string;
+  provider_type: 'ollama' | 'openai' | 'gemini' | 'claude' | 'openrouter';
+  api_key_encrypted?: string;
+  endpoint?: string;
+  model: string;
+  is_enabled: boolean;
+  settings_json?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateAIProviderRequest {
+  name: string;
+  provider_type: string;
+  api_key?: string;
+  endpoint?: string;
+  model: string;
+  is_enabled?: boolean;
+  settings_json?: string;
+}
+
+export interface UpdateAIProviderRequest {
+  id: string;
+  name?: string;
+  api_key?: string;
+  endpoint?: string;
+  model?: string;
+  is_enabled?: boolean;
+  settings_json?: string;
+}
+
+export interface AIProviderResponse {
+  success: boolean;
+  data?: AIProvider;
+  providers?: AIProvider[];
+  error?: string;
+}
+
+export interface AIProviderTestResult {
+  success: boolean;
+  provider_type: string;
+  models?: unknown[];
+  error?: string;
+}
+
+export interface AIGenerationResult {
+  success: boolean;
+  generated_text?: string;
+  model?: string;
+  usage?: unknown;
+  provider_id?: string;
+  error?: string;
+}
+
+export interface AIGenerationRequestData {
+  provider_id: string;
+  model: string;
+  prompt: string;
+  system_prompt?: string;
+  project_id: string;
+  chapter_id: string;
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+  presence_penalty?: number;
+  frequency_penalty?: number;
+  stop?: string[];
 }
 
 // 字符屬性類型

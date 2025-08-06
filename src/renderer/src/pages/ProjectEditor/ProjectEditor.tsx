@@ -41,7 +41,7 @@ const ProjectEditorContent: React.FC = () => {
   const { generating: isGenerating } = useAppSelector(state => state.ai);
   const isSettingsOpen = useAppSelector(selectIsSettingsOpen);
   const _isReadingMode = useAppSelector(selectIsReadingMode);
-  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(currentChapter?.id || null);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showSavePanel, setShowSavePanel] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -118,14 +118,21 @@ const ProjectEditorContent: React.FC = () => {
     // 移除 notification 依賴項，避免因為 notification 對象變化導致重複載入
   }, [id, dispatch, navigate]);
 
-  // 選擇第一個章節（如果有的話）
+  // 選擇章節：優先使用 currentChapter，否則選擇第一個章節
   useEffect(() => {
-    if (chapters.length > 0 && !selectedChapterId) {
-      const firstChapter = chapters[0];
-      setSelectedChapterId(firstChapter.id);
-      dispatch(setCurrentChapter(firstChapter));
+    if (chapters.length > 0) {
+      // 如果有 currentChapter 但 selectedChapterId 不匹配，同步它們
+      if (currentChapter && currentChapter.id !== selectedChapterId) {
+        setSelectedChapterId(currentChapter.id);
+      }
+      // 如果沒有 currentChapter 也沒有 selectedChapterId，選擇第一個章節
+      else if (!currentChapter && !selectedChapterId) {
+        const firstChapter = chapters[0];
+        setSelectedChapterId(firstChapter.id);
+        dispatch(setCurrentChapter(firstChapter));
+      }
     }
-  }, [chapters.length, selectedChapterId, dispatch]);
+  }, [chapters, currentChapter, selectedChapterId, dispatch]);
 
   // 處理章節選擇
   const handleChapterSelect = useCallback((chapterId: string) => {

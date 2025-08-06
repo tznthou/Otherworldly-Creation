@@ -1,77 +1,154 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux';
+import { useAppDispatch } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
-import { setCurrentModel } from '../../store/slices/aiSlice';
 import { api } from '../../api';
+import type { 
+  AIProvider, 
+  CreateAIProviderRequest, 
+  UpdateAIProviderRequest,
+  AIProviderTestResult
+} from '../../api/models';
 
 const AISettingsModal: React.FC = () => {
   const dispatch = useAppDispatch();
-  const currentModel = useAppSelector(state => state.ai.currentModel);
   const modalRef = useRef<HTMLDivElement>(null);
-  const [_forceUpdate, __setForceUpdate] = useState(0);
   
-  const [settings, setSettings] = useState({
-    baseUrl: 'http://127.0.0.1:11434',
-    timeout: 30000,
-    retryAttempts: 3,
-    retryDelay: 1000,
-    selectedModel: currentModel || '',
-  });
-  
-  const [serviceStatus, setServiceStatus] = useState<{
-    available: boolean;
-    version?: string;
-    models: string[];
-    loading: boolean;
-  }>({
-    available: false,
-    models: [],
-    loading: true,
-  });
-  
+  const [providers, setProviders] = useState<AIProvider[]>([]);
+  const [selectedProvider, setSelectedProvider] = useState<AIProvider | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [testResults, setTestResults] = useState<Record<string, AIProviderTestResult>>({});
+  const [supportedTypes, setSupportedTypes] = useState<string[]>([]);
+  const [availableModels, setAvailableModels] = useState<Record<string, Array<{id: string; name: string}>>>({});
+  const [isLoadingModels, setIsLoadingModels] = useState<Record<string, boolean>>({});
+  
+  // 新增提供者表單狀態
+  const [newProvider, setNewProvider] = useState<CreateAIProviderRequest>({
+    name: '',
+    provider_type: 'ollama',
+    model: '',
+    is_enabled: true,
+  });
+  
+  // 編輯提供者表單狀態
+  const [editProvider, setEditProvider] = useState<UpdateAIProviderRequest | null>(null);
 
   useEffect(() => {
-    checkServiceStatus();
-    
-    // 強制觸發重新渲染以修復初始顯示問題
-    const timer = setTimeout(() => {
-      __setForceUpdate((prev: number) => prev + 1);
-      // 觸發 resize 事件以強制瀏覽器重新計算佈局
-      window.dispatchEvent(new Event('resize'));
-    }, 50);
-    
-    return () => clearTimeout(timer);
+    loadProviders();
+    loadSupportedTypes();
   }, []);
 
-  // 當 currentModel 從 Redux 變更時，更新本地設定
-  useEffect(() => {
-    setSettings(prev => ({ ...prev, selectedModel: currentModel || '' }));
-  }, [currentModel]);
-
-  const checkServiceStatus = async () => {
+  const loadProviders = async () => {
     try {
-      setServiceStatus(prev => ({ ...prev, loading: true }));
-      
-      const [status, models] = await Promise.all([
-        api.ai.getServiceStatus(),
-        api.ai.listModels(),
-      ]);
-
-      const statusResult = status as { isRunning?: boolean; version?: string };
-      setServiceStatus({
-        available: statusResult.isRunning || false,
-        version: statusResult.version,
-        models,
-        loading: false,
-      });
+      setIsLoading(true);
+      const response = await api.aiProviders.getAll();
+      if (response.success && response.providers) {
+        setProviders(response.providers);
+        
+        // 選擇第一個啟用的提供者
+        const activeProvider = response.providers.find(p => p.is_enabled);
+        if (activeProvider) {
+          setSelectedProvider(activeProvider);
+        }
+      }
     } catch (_error) {
-      console.error('檢查服務狀態失敗:', _error);
-      setServiceStatus({
-        available: false,
-        models: [],
-        loading: false,
-      });
+      console.error('載入AI提供者失敗:', _error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '載入失敗',
+        message: '無法載入 AI 提供者列表',
+        duration: 3000,
+      }));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadSupportedTypes = async () => {
+    try {
+      const types = await api.aiProviders.getSupportedTypes();
+      setSupportedTypes(types);
+    } catch (_error) {
+      console.error('載入支援類型失敗:', _error);
+    }
+  };
+
+  const searchAvailableModels = async (providerType: string, apiKey?: string, endpoint?: string): Promise<Array<{id: string; name: string}>> => {
+    try {
+      // 根據提供者類型設置預設端點
+      let finalEndpoint = endpoint;
+      if (!finalEndpoint) {
+        switch (providerType) {
+          case 'ollama':
+            finalEndpoint = 'http://127.0.0.1:11434';
+            break;
+          case 'openrouter':
+            finalEndpoint = 'https://openrouter.ai/api/v1';
+            break;
+          default:
+            finalEndpoint = null; // OpenAI, Gemini, Claude 不需要自定義端點
+            break;
+        }
+      }
+      
+      // 創建臨時提供者配置來測試連接
+      const tempProvider: CreateAIProviderRequest = {
+        name: `temp-${providerType}`,
+        provider_type: providerType,
+        model: 'temp', // 臨時模型名稱
+        api_key: apiKey,
+        endpoint: finalEndpoint,
+        is_enabled: true,
+      };
+      
+      // 先創建臨時提供者
+      const createResponse = await api.aiProviders.create(tempProvider);
+      
+      if (createResponse.success && createResponse.data) {
+        try {
+          // 測試連接並獲取模型列表
+          const testResult = await api.aiProviders.test(createResponse.data.id);
+          
+          if (testResult.success && testResult.models) {
+            // 轉換模型格式
+            const models = testResult.models.map((model: unknown) => {
+              const modelObj = model as Record<string, unknown>;
+              return {
+                id: modelObj.id || modelObj.name || String(model),
+                name: modelObj.name || modelObj.id || String(model)
+              };
+            });
+            
+            dispatch(addNotification({
+              type: 'success',
+              title: '模型搜尋成功',
+              message: `找到 ${models.length} 個可用模型`,
+              duration: 3000,
+            }));
+            
+            return models;
+          } else {
+            throw new Error(testResult.error || '無法獲取模型列表');
+          }
+        } finally {
+          // 刪除臨時提供者
+          await api.aiProviders.delete(createResponse.data.id);
+        }
+      } else {
+        throw new Error(createResponse.error || '無法創建臨時提供者');
+      }
+      
+    } catch (error) {
+      console.error('搜尋模型失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '模型搜尋失敗',
+        message: error instanceof Error ? error.message : '無法搜尋可用模型',
+        duration: 3000,
+      }));
+      
+      return [];
     }
   };
 
@@ -79,81 +156,352 @@ const AISettingsModal: React.FC = () => {
     dispatch(closeModal('aiSettings'));
   };
 
-  const handleModelChange = (modelName: string) => {
-    setSettings(prev => ({ ...prev, selectedModel: modelName }));
-    dispatch(setCurrentModel(modelName));
+  const handleTestProvider = async (providerId: string) => {
+    try {
+      const result = await api.aiProviders.test(providerId);
+      setTestResults(prev => ({ ...prev, [providerId]: result }));
+      
+      dispatch(addNotification({
+        type: result.success ? 'success' : 'warning',
+        title: '連接測試',
+        message: result.success ? `${result.provider_type} 連接成功` : `連接失敗: ${result.error}`,
+        duration: 3000,
+      }));
+    } catch (_error) {
+      dispatch(addNotification({
+        type: 'error',
+        title: '測試失敗',
+        message: '無法測試提供者連接',
+        duration: 3000,
+      }));
+    }
   };
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-
+  const handleCreateProvider = async () => {
     try {
-      const result = await api.ai.updateOllamaConfig(settings) as { success?: boolean; error?: string };
+      setIsSubmitting(true);
+      const response = await api.aiProviders.create(newProvider);
       
-      if (result?.success) {
-        // 更新選擇的模型
-        if (settings.selectedModel && settings.selectedModel !== currentModel) {
-          dispatch(setCurrentModel(settings.selectedModel));
-        }
-        
+      if (response.success) {
         dispatch(addNotification({
           type: 'success',
-          title: '設定已更新',
-          message: 'AI 引擎設定已成功更新',
+          title: '新增成功',
+          message: `AI 提供者 "${newProvider.name}" 已新增`,
           duration: 3000,
         }));
         
-        // 重新檢查服務狀態
-        await checkServiceStatus();
-        
-        handleClose();
+        setShowAddForm(false);
+        setNewProvider({
+          name: '',
+          provider_type: 'ollama',
+          model: '',
+          is_enabled: true,
+        });
+        await loadProviders();
       } else {
-        throw new Error(result?.error || '更新設定失敗');
+        throw new Error(response.error || '新增失敗');
       }
-    } catch (_error) {
-      console.error('更新 AI 設定失敗:', _error);
+    } catch (error) {
       dispatch(addNotification({
         type: 'error',
-        title: '更新失敗',
-        message: _error instanceof Error ? _error.message : '更新 AI 設定時發生錯誤',
-        duration: 5000,
+        title: '新增失敗',
+        message: error instanceof Error ? error.message : '新增 AI 提供者時發生錯誤',
+        duration: 3000,
       }));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleTestConnection = async () => {
+  const handleUpdateProvider = async (updatedProvider: UpdateAIProviderRequest) => {
     try {
-      const available = await api.ai.checkOllamaService();
+      setIsSubmitting(true);
+      const response = await api.aiProviders.update(updatedProvider);
       
+      if (response.success) {
+        dispatch(addNotification({
+          type: 'success',
+          title: '更新成功',
+          message: 'AI 提供者設定已更新',
+          duration: 3000,
+        }));
+        
+        setEditProvider(null);
+        await loadProviders();
+      } else {
+        throw new Error(response.error || '更新失敗');
+      }
+    } catch (error) {
       dispatch(addNotification({
-        type: available ? 'success' : 'warning',
-        title: '連接測試',
-        message: available ? 'Ollama 服務連接成功' : 'Ollama 服務連接失敗',
+        type: 'error',
+        title: '更新失敗',
+        message: error instanceof Error ? error.message : '更新 AI 提供者時發生錯誤',
         duration: 3000,
       }));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteProvider = async (providerId: string) => {
+    if (!confirm('確定要刪除此 AI 提供者嗎？此操作無法撤銷。')) {
+      return;
+    }
+
+    try {
+      const response = await api.aiProviders.delete(providerId);
       
-      if (available) {
-        await checkServiceStatus();
+      if (response.success) {
+        dispatch(addNotification({
+          type: 'success',
+          title: '刪除成功',
+          message: 'AI 提供者已刪除',
+          duration: 3000,
+        }));
+        
+        await loadProviders();
+        
+        // 如果刪除的是當前選擇的提供者，重新選擇
+        if (selectedProvider?.id === providerId) {
+          const remaining = providers.filter(p => p.id !== providerId);
+          setSelectedProvider(remaining.length > 0 ? remaining[0] : null);
+        }
       }
     } catch (_error) {
       dispatch(addNotification({
         type: 'error',
-        title: '連接測試失敗',
-        message: '無法連接到 Ollama 服務',
+        title: '刪除失敗',
+        message: '刪除 AI 提供者時發生錯誤',
         duration: 3000,
       }));
     }
   };
 
+  const getProviderIcon = (type: string) => {
+    switch (type) {
+      case 'openai': return '🤖';
+      case 'gemini': return '✨';
+      case 'claude': return '🧠';
+      case 'openrouter': return '🔄';
+      case 'ollama': return '🦙';
+      default: return '🤖';
+    }
+  };
+
+  const renderProviderForm = (provider?: AIProvider, isEdit = false) => {
+    const formData = isEdit && editProvider ? editProvider : newProvider;
+    const setFormData = isEdit 
+      ? (data: Partial<UpdateAIProviderRequest>) => setEditProvider({ ...editProvider!, ...data })
+      : (data: Partial<CreateAIProviderRequest>) => setNewProvider({ ...newProvider, ...data });
+
+    // 為當前表單生成唯一標識
+    const formId = `${formData.provider_type}-${isEdit ? 'edit' : 'new'}`;
+    const currentAvailableModels = availableModels[formId] || [];
+    const isSearchingModels = isLoadingModels[formId] || false;
+    
+    console.log('renderProviderForm 狀態:', {
+      formId,
+      providerType: formData.provider_type,
+      isEdit,
+      currentAvailableModels,
+      isSearchingModels,
+      allAvailableModels: availableModels,
+      allLoadingStates: isLoadingModels
+    });
+
+    const handleSearchModels = async () => {
+      if (formData.provider_type === 'ollama' || formData.api_key) {
+        setIsLoadingModels(prev => ({ ...prev, [formId]: true }));
+        
+        try {
+          const models = await searchAvailableModels(
+            formData.provider_type, 
+            formData.api_key, 
+            formData.endpoint
+          );
+          
+          console.log(`獲取到模型列表:`, models);
+          
+          // 直接設置模型列表到當前表單ID
+          setAvailableModels(prev => ({
+            ...prev,
+            [formId]: models
+          }));
+          
+        } finally {
+          setIsLoadingModels(prev => ({ ...prev, [formId]: false }));
+        }
+      } else {
+        dispatch(addNotification({
+          type: 'warning',
+          title: '需要API金鑰',
+          message: '請先輸入API金鑰再搜尋模型',
+          duration: 3000,
+        }));
+      }
+    };
+
+    return (
+      <div className="space-y-4">
+        <div>
+          <label className="block text-gray-300 mb-2">提供者名稱</label>
+          <input
+            type="text"
+            value={isEdit ? (editProvider?.name || provider?.name) : formData.name}
+            onChange={(e) => setFormData({ name: e.target.value })}
+            placeholder="例如: OpenAI GPT-4"
+            className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-300 mb-2">提供者類型</label>
+          <select
+            value={formData.provider_type}
+            onChange={(e) => setFormData({ provider_type: e.target.value })}
+            className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            disabled={isEdit} // 編輯時不允許修改類型
+          >
+            {supportedTypes.map(type => (
+              <option key={type} value={type}>
+                {getProviderIcon(type)} {type.charAt(0).toUpperCase() + type.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {formData.provider_type !== 'ollama' && (
+          <div>
+            <label className="block text-gray-300 mb-2">API 金鑰</label>
+            <input
+              type="password"
+              value={formData.api_key || ''}
+              onChange={(e) => setFormData({ api_key: e.target.value })}
+              placeholder="輸入您的 API 金鑰"
+              className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            />
+          </div>
+        )}
+
+        {(formData.provider_type === 'ollama' || formData.provider_type === 'openrouter') && (
+          <div>
+            <label className="block text-gray-300 mb-2">服務端點</label>
+            <input
+              type="url"
+              value={formData.endpoint || ''}
+              onChange={(e) => setFormData({ endpoint: e.target.value })}
+              placeholder={
+                formData.provider_type === 'ollama' 
+                  ? 'http://127.0.0.1:11434' 
+                  : 'https://openrouter.ai/api/v1'
+              }
+              className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            />
+          </div>
+        )}
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-gray-300">模型名稱</label>
+            <button
+              type="button"
+              onClick={handleSearchModels}
+              disabled={isSearchingModels || (formData.provider_type !== 'ollama' && !formData.api_key)}
+              className="btn-secondary text-xs px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSearchingModels ? (
+                <>
+                  <div className="inline-block w-3 h-3 border border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                  搜尋中...
+                </>
+              ) : (
+                '🔍 搜尋模型'
+              )}
+            </button>
+          </div>
+          
+          {currentAvailableModels.length > 0 ? (
+            <div className="space-y-2">
+              <select
+                value={formData.model}
+                onChange={(e) => setFormData({ model: e.target.value })}
+                className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              >
+                <option value="">請選擇模型...</option>
+                {currentAvailableModels.map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400">
+                找到 {currentAvailableModels.length} 個可用模型
+              </p>
+            </div>
+          ) : (
+            <input
+              type="text"
+              value={formData.model}
+              onChange={(e) => setFormData({ model: e.target.value })}
+              placeholder={
+                formData.provider_type === 'openai' ? '例如: gpt-4' :
+                formData.provider_type === 'gemini' ? '例如: gemini-pro' :
+                formData.provider_type === 'claude' ? '例如: claude-3-sonnet' :
+                formData.provider_type === 'openrouter' ? '例如: openai/gpt-4' :
+                '例如: llama3.2'
+              }
+              className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              required
+            />
+          )}
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="is_enabled"
+            checked={formData.is_enabled}
+            onChange={(e) => setFormData({ is_enabled: e.target.checked })}
+            className="mr-2"
+          />
+          <label htmlFor="is_enabled" className="text-gray-300">
+            啟用此提供者
+          </label>
+        </div>
+
+        <div className="flex space-x-3">
+          <button
+            onClick={isEdit ? () => handleUpdateProvider(formData) : handleCreateProvider}
+            disabled={isSubmitting || !formData.name || !formData.model}
+            className="btn-primary flex-1"
+          >
+            {isSubmitting ? '處理中...' : (isEdit ? '更新' : '新增')}
+          </button>
+          <button
+            onClick={() => {
+              if (isEdit) {
+                setEditProvider(null);
+              } else {
+                setShowAddForm(false);
+              }
+            }}
+            className="btn-secondary"
+          >
+            取消
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black/70 z-50 overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
-        <div ref={modalRef} className="relative bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl">
+        <div ref={modalRef} className="relative bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
           {/* 標題 */}
           <div className="sticky top-0 bg-cosmic-900 p-6 border-b border-cosmic-700 flex items-center justify-between rounded-t-xl z-10">
-            <h2 className="text-xl font-cosmic text-gold-500">AI 引擎設定</h2>
+            <h2 className="text-xl font-cosmic text-gold-500">AI 提供者管理</h2>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-white text-2xl"
@@ -163,188 +511,194 @@ const AISettingsModal: React.FC = () => {
           </div>
 
           {/* 內容 */}
-          <div className="p-6">
-          {/* 服務狀態 */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gold-400 mb-4">服務狀態</h3>
-            <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
-              {serviceStatus.loading ? (
-                <div className="flex items-center">
-                  <div className="w-4 h-4 bg-yellow-500 rounded-full animate-pulse mr-3"></div>
-                  <span className="text-gray-300">檢查中...</span>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <div 
-                      className={`w-4 h-4 rounded-full mr-3 ${
-                        serviceStatus.available ? 'bg-green-500' : 'bg-red-500'
-                      }`}
-                    ></div>
-                    <span className="text-gray-300">
-                      {serviceStatus.available ? '服務可用' : '服務不可用'}
-                    </span>
-                    {serviceStatus.version && (
-                      <span className="ml-2 text-sm text-gray-400">
-                        (版本: {serviceStatus.version})
-                      </span>
-                    )}
+          <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-500 mx-auto"></div>
+                <p className="text-gray-300 mt-4">載入中...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* 提供者列表 */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gold-400">已配置的提供者</h3>
+                    <button
+                      onClick={() => setShowAddForm(true)}
+                      className="btn-primary text-sm"
+                    >
+                      + 新增提供者
+                    </button>
                   </div>
-                  
-                  <div className="text-sm text-gray-400">
-                    可用模型: {serviceStatus.models.length} 個
-                  </div>
-                  
-                  {serviceStatus.models.length > 0 && (
-                    <div className="mt-2">
-                      <div className="text-sm text-gray-400 mb-1">模型列表:</div>
-                      <div className="flex flex-wrap gap-2">
-                        {serviceStatus.models.map(model => (
-                          <span 
-                            key={model}
-                            className={`px-2 py-1 rounded text-xs cursor-pointer transition-colors ${
-                              settings.selectedModel === model 
-                                ? 'bg-gold-500 text-cosmic-900' 
-                                : 'bg-cosmic-700 text-gray-300 hover:bg-cosmic-600'
-                            }`}
-                            onClick={() => handleModelChange(model)}
-                          >
-                            {model}
-                          </span>
-                        ))}
-                      </div>
-                      
-                      {settings.selectedModel && (
-                        <div className="mt-2 text-sm text-gold-400">
-                          已選擇模型: {settings.selectedModel}
+
+                  {providers.length === 0 ? (
+                    <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6 text-center">
+                      <p className="text-gray-300">尚未配置任何 AI 提供者</p>
+                      <button
+                        onClick={() => setShowAddForm(true)}
+                        className="btn-primary mt-4"
+                      >
+                        新增第一個提供者
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {providers.map((provider) => (
+                        <div
+                          key={provider.id}
+                          className={`bg-cosmic-800 border rounded-lg p-4 transition-colors ${
+                            selectedProvider?.id === provider.id 
+                              ? 'border-gold-500' 
+                              : 'border-cosmic-700 hover:border-cosmic-600'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <span className="text-2xl">
+                                {getProviderIcon(provider.provider_type)}
+                              </span>
+                              <div>
+                                <h4 className="text-white font-medium">{provider.name}</h4>
+                                <p className="text-sm text-gray-400">
+                                  {provider.provider_type} • {provider.model}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                              {/* 狀態指示 */}
+                              <div className="flex items-center space-x-2">
+                                <div 
+                                  className={`w-3 h-3 rounded-full ${
+                                    provider.is_enabled ? 'bg-green-500' : 'bg-gray-500'
+                                  }`}
+                                ></div>
+                                <span className="text-sm text-gray-300">
+                                  {provider.is_enabled ? '已啟用' : '已停用'}
+                                </span>
+                              </div>
+
+                              {/* 測試結果 */}
+                              {testResults[provider.id] && (
+                                <div className="flex items-center space-x-1">
+                                  {testResults[provider.id].success ? (
+                                    <span className="text-green-500 text-sm">✓</span>
+                                  ) : (
+                                    <span className="text-red-500 text-sm">✗</span>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* 操作按鈕 */}
+                              <button
+                                onClick={() => handleTestProvider(provider.id)}
+                                className="btn-secondary text-xs px-3 py-1"
+                              >
+                                測試
+                              </button>
+                              <button
+                                onClick={() => setEditProvider({
+                                  id: provider.id,
+                                  name: provider.name,
+                                  model: provider.model,
+                                  is_enabled: provider.is_enabled,
+                                  endpoint: provider.endpoint,
+                                })}
+                                className="text-blue-400 hover:text-blue-300 text-sm"
+                              >
+                                編輯
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProvider(provider.id)}
+                                className="text-red-400 hover:text-red-300 text-sm"
+                              >
+                                刪除
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      )}
+                      ))}
                     </div>
                   )}
                 </div>
-              )}
-              
-              <div className="mt-4">
-                <button
-                  onClick={handleTestConnection}
-                  className="btn-secondary text-sm"
-                >
-                  測試連接
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {/* 模型選擇 */}
-          {serviceStatus.models.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gold-400 mb-4">模型選擇</h3>
-              <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
-                <label className="block text-gray-300 mb-2">選擇 AI 模型</label>
-                <select
-                  value={settings.selectedModel}
-                  onChange={(e) => handleModelChange(e.target.value)}
-                  className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
-                >
-                  <option value="">請選擇模型...</option>
-                  {serviceStatus.models.map(model => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
-                  ))}
-                </select>
-                
-                {settings.selectedModel && (
-                  <div className="mt-2 text-sm text-gray-400">
-                    這個模型將用於 AI 續寫功能
+                {/* 新增提供者表單 */}
+                {showAddForm && (
+                  <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
+                    <h4 className="text-lg font-medium text-gold-400 mb-4">新增 AI 提供者</h4>
+                    {renderProviderForm()}
                   </div>
                 )}
-              </div>
-            </div>
-          )}
 
-          {/* 連接設定 */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gold-400 mb-4">連接設定</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-300 mb-2">服務地址</label>
-                <input
-                  type="text"
-                  value={settings.baseUrl}
-                  onChange={(e) => setSettings(prev => ({ ...prev, baseUrl: e.target.value }))}
-                  placeholder="http://127.0.0.1:11434"
-                  className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-gray-300 mb-2">超時時間 (毫秒)</label>
-                <input
-                  type="number"
-                  value={settings.timeout}
-                  onChange={(e) => setSettings(prev => ({ ...prev, timeout: parseInt(e.target.value) || 30000 }))}
-                  min="5000"
-                  max="300000"
-                  className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-gray-300 mb-2">重試次數</label>
-                <input
-                  type="number"
-                  value={settings.retryAttempts}
-                  onChange={(e) => setSettings(prev => ({ ...prev, retryAttempts: parseInt(e.target.value) || 3 }))}
-                  min="1"
-                  max="10"
-                  className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-gray-300 mb-2">重試延遲 (毫秒)</label>
-                <input
-                  type="number"
-                  value={settings.retryDelay}
-                  onChange={(e) => setSettings(prev => ({ ...prev, retryDelay: parseInt(e.target.value) || 1000 }))}
-                  min="100"
-                  max="10000"
-                  className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
-                />
-              </div>
-            </div>
-          </div>
+                {/* 編輯提供者表單 */}
+                {editProvider && (
+                  <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
+                    <h4 className="text-lg font-medium text-gold-400 mb-4">編輯 AI 提供者</h4>
+                    {renderProviderForm(providers.find(p => p.id === editProvider.id), true)}
+                  </div>
+                )}
 
-          {/* 使用說明 */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gold-400 mb-4">使用說明</h3>
-            <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4 text-sm text-gray-300">
-              <ul className="space-y-2">
-                <li>• 確保 Ollama 服務正在運行 (預設端口: 11434)</li>
-                <li>• 至少需要安裝一個語言模型才能使用 AI 續寫功能</li>
-                <li>• 推薦模型: llama3, qwen, gemma 等中文友好模型</li>
-                <li>• 如果連接失敗，請檢查防火牆設定和服務狀態</li>
-              </ul>
-            </div>
+                {/* 使用說明 */}
+                <div>
+                  <h3 className="text-lg font-medium text-gold-400 mb-4">使用說明</h3>
+                  <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4 text-sm text-gray-300">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <h5 className="text-gold-400 mb-2">🦙 Ollama</h5>
+                        <ul className="space-y-1 text-xs">
+                          <li>• 本地運行，無需 API 金鑰</li>
+                          <li>• 需要先安裝並啟動 Ollama 服務</li>
+                          <li>• 推薦模型: llama3.2, qwen2.5</li>
+                          <li>• 點擊「🔍 搜尋模型」自動獲取可用模型</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h5 className="text-gold-400 mb-2">🤖 OpenAI</h5>
+                        <ul className="space-y-1 text-xs">
+                          <li>• 需要有效的 OpenAI API 金鑰</li>
+                          <li>• 推薦模型: gpt-4, gpt-3.5-turbo</li>
+                          <li>• 按使用量計費</li>
+                          <li>• 輸入API金鑰後可搜尋可用模型</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h5 className="text-gold-400 mb-2">✨ Google Gemini</h5>
+                        <ul className="space-y-1 text-xs">
+                          <li>• 需要 Google AI API 金鑰</li>
+                          <li>• 推薦模型: gemini-pro, gemini-1.5-pro</li>
+                          <li>• 支援多語言內容</li>
+                          <li>• 輸入API金鑰後可搜尋可用模型</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h5 className="text-gold-400 mb-2">🧠 Claude</h5>
+                        <ul className="space-y-1 text-xs">
+                          <li>• 需要 Anthropic API 金鑰</li>
+                          <li>• 推薦模型: claude-3-sonnet, claude-3-haiku</li>
+                          <li>• 適合長文本生成</li>
+                          <li>• 輸入API金鑰後可搜尋可用模型</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-cosmic-700 rounded-lg">
+                      <p className="text-gold-400 font-medium text-sm">💡 模型搜尋功能</p>
+                      <p className="text-xs mt-1">
+                        輸入API金鑰後，點擊「🔍 搜尋模型」按鈕可自動獲取該提供者的所有可用模型，無需手動輸入模型名稱。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
 
           {/* 底部按鈕 */}
           <div className="sticky bottom-0 bg-cosmic-900 p-6 border-t border-cosmic-700 flex justify-end space-x-4 rounded-b-xl">
             <button
               onClick={handleClose}
               className="btn-secondary"
-              disabled={isSubmitting}
             >
-              取消
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="btn-primary"
-            >
-              {isSubmitting ? '儲存中...' : '儲存設定'}
+              關閉
             </button>
           </div>
         </div>

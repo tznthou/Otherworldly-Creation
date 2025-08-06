@@ -15,14 +15,15 @@ pub async fn create_ai_history(request: CreateAIHistoryRequest) -> Result<AIGene
     
     conn.execute(
         "INSERT INTO ai_generation_history (
-            id, project_id, chapter_id, model, prompt, generated_text,
+            id, project_id, chapter_id, provider_id, model, prompt, generated_text,
             parameters, language_purity, token_count, generation_time_ms,
             selected, position, created_at
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
         params![
             id,
             request.project_id,
             request.chapter_id,
+            request.provider_id,
             request.model,
             request.prompt,
             request.generated_text,
@@ -43,7 +44,7 @@ pub async fn create_ai_history(request: CreateAIHistoryRequest) -> Result<AIGene
 /// 根據 ID 獲取 AI 生成歷史記錄
 fn get_ai_history_by_id(conn: &Connection, id: &str) -> Result<AIGenerationHistory, String> {
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, chapter_id, model, prompt, generated_text,
+        "SELECT id, project_id, chapter_id, provider_id, model, prompt, generated_text,
                 parameters, language_purity, token_count, generation_time_ms,
                 selected, position, created_at
          FROM ai_generation_history
@@ -55,16 +56,17 @@ fn get_ai_history_by_id(conn: &Connection, id: &str) -> Result<AIGenerationHisto
             id: row.get(0)?,
             project_id: row.get(1)?,
             chapter_id: row.get(2)?,
-            model: row.get(3)?,
-            prompt: row.get(4)?,
-            generated_text: row.get(5)?,
-            parameters: row.get(6)?,
-            language_purity: row.get(7)?,
-            token_count: row.get(8)?,
-            generation_time_ms: row.get(9)?,
-            selected: row.get(10)?,
-            position: row.get(11)?,
-            created_at: row.get(12)?,
+            provider_id: row.get(3)?,
+            model: row.get(4)?,
+            prompt: row.get(5)?,
+            generated_text: row.get(6)?,
+            parameters: row.get(7)?,
+            language_purity: row.get(8)?,
+            token_count: row.get(9)?,
+            generation_time_ms: row.get(10)?,
+            selected: row.get(11)?,
+            position: row.get(12)?,
+            created_at: row.get(13)?,
         })
     }).map_err(|e| format!("獲取 AI 歷史記錄失敗: {}", e))?;
     
@@ -78,7 +80,7 @@ pub async fn query_ai_history(request: QueryAIHistoryRequest) -> Result<Vec<AIGe
     let conn = db.lock().map_err(|e| format!("無法獲取資料庫鎖: {}", e))?;
     
     let mut query = String::from(
-        "SELECT id, project_id, chapter_id, model, prompt, generated_text,
+        "SELECT id, project_id, chapter_id, provider_id, model, prompt, generated_text,
                 parameters, language_purity, token_count, generation_time_ms,
                 selected, position, created_at
          FROM ai_generation_history
@@ -120,16 +122,17 @@ pub async fn query_ai_history(request: QueryAIHistoryRequest) -> Result<Vec<AIGe
                 id: row.get(0)?,
                 project_id: row.get(1)?,
                 chapter_id: row.get(2)?,
-                model: row.get(3)?,
-                prompt: row.get(4)?,
-                generated_text: row.get(5)?,
-                parameters: row.get(6)?,
-                language_purity: row.get(7)?,
-                token_count: row.get(8)?,
-                generation_time_ms: row.get(9)?,
-                selected: row.get(10)?,
-                position: row.get(11)?,
-                created_at: row.get(12)?,
+                provider_id: row.get(3)?,
+                model: row.get(4)?,
+                prompt: row.get(5)?,
+                generated_text: row.get(6)?,
+                parameters: row.get(7)?,
+                language_purity: row.get(8)?,
+                token_count: row.get(9)?,
+                generation_time_ms: row.get(10)?,
+                selected: row.get(11)?,
+                position: row.get(12)?,
+                created_at: row.get(13)?,
             })
         }
     ).map_err(|e| e.to_string())?;

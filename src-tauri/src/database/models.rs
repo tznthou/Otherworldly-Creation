@@ -125,6 +125,7 @@ pub struct AIGenerationHistory {
     pub id: String,
     pub project_id: String,
     pub chapter_id: String,
+    pub provider_id: Option<String>, // AI 提供者 ID
     pub model: String,
     pub prompt: String,
     pub generated_text: String,
@@ -142,6 +143,7 @@ pub struct AIGenerationHistory {
 pub struct CreateAIHistoryRequest {
     pub project_id: String,
     pub chapter_id: String,
+    pub provider_id: Option<String>, // AI 提供者 ID
     pub model: String,
     pub prompt: String,
     pub generated_text: String,
@@ -160,4 +162,43 @@ pub struct QueryAIHistoryRequest {
     pub selected_only: Option<bool>,
     pub limit: Option<i32>,
     pub offset: Option<i32>,
+}
+
+// AI 提供者模型
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AIProvider {
+    pub id: String,
+    pub name: String,
+    pub provider_type: String, // ollama, openai, gemini, claude, openrouter
+    pub api_key_encrypted: Option<String>, // 加密後的 API 金鑰
+    pub endpoint: Option<String>,
+    pub model: String,
+    pub is_enabled: bool,
+    pub settings_json: Option<String>, // JSON 格式的額外設定
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+// 新增 AI 提供者的請求結構
+#[derive(Debug, Deserialize)]
+pub struct CreateAIProviderRequest {
+    pub name: String,
+    pub provider_type: String,
+    pub api_key: Option<String>, // 未加密的 API 金鑰
+    pub endpoint: Option<String>,
+    pub model: String,
+    pub is_enabled: Option<bool>,
+    pub settings_json: Option<String>,
+}
+
+// 更新 AI 提供者的請求結構
+#[derive(Debug, Deserialize)]
+pub struct UpdateAIProviderRequest {
+    pub id: String,
+    pub name: Option<String>,
+    pub api_key: Option<String>, // 未加密的 API 金鑰
+    pub endpoint: Option<String>,
+    pub model: Option<String>,
+    pub is_enabled: Option<bool>,
+    pub settings_json: Option<String>,
 }

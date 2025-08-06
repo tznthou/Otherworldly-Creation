@@ -18,7 +18,13 @@ import type {
   OpenDialogOptions,
   DialogResult,
   UpdateInfo,
-  AIHistoryQueryParams
+  AIHistoryQueryParams,
+  CreateAIProviderRequest,
+  UpdateAIProviderRequest,
+  AIProviderResponse,
+  AIProviderTestResult,
+  AIGenerationResult,
+  AIGenerationRequestData
 } from './models';
 
 // 小說分析相關類型
@@ -61,7 +67,7 @@ export interface API {
     clearRelationships: (characterId: string) => Promise<void>;
   };
 
-  // AI 功能
+  // AI 功能 (傳統 Ollama)
   ai: {
     checkOllamaService: () => Promise<boolean>;
     getServiceStatus: () => Promise<AIServiceStatus>;
@@ -71,6 +77,17 @@ export interface API {
     generateText: (prompt: string, model: string, params: AIGenerationParams) => Promise<string>;
     generateWithContext: (projectId: string, chapterId: string, position: number, model: string, params: AIGenerationParams, language?: string) => Promise<string>;
     updateOllamaConfig: (config: OllamaConfig) => Promise<OllamaConfig>;
+  };
+
+  // AI 提供者管理 (新多提供者系統)
+  aiProviders: {
+    getAll: () => Promise<AIProviderResponse>;
+    create: (request: CreateAIProviderRequest) => Promise<AIProviderResponse>;
+    update: (request: UpdateAIProviderRequest) => Promise<AIProviderResponse>;
+    delete: (id: string) => Promise<AIProviderResponse>;
+    test: (id: string) => Promise<AIProviderTestResult>;
+    generateText: (request: AIGenerationRequestData) => Promise<AIGenerationResult>;
+    getSupportedTypes: () => Promise<string[]>;
   };
 
   // 上下文管理

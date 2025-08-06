@@ -573,6 +573,30 @@ export const tauriAPI: API = {
     },
     updateOllamaConfig: (config) => safeInvoke('update_ollama_config', { config }),
   },
+  // AI 提供者管理 (新多提供者系統)
+  aiProviders: {
+    getAll: async () => {
+      return await safeInvoke('get_ai_providers');
+    },
+    create: async (request) => {
+      return await safeInvoke('create_ai_provider', { request });
+    },
+    update: async (request) => {
+      return await safeInvoke('update_ai_provider', { request });
+    },
+    delete: async (id) => {
+      return await safeInvoke('delete_ai_provider', { id });
+    },
+    test: async (id) => {
+      return await safeInvoke('test_ai_provider', { id });
+    },
+    generateText: async (request) => {
+      return await safeInvoke('generate_ai_text', { request });
+    },
+    getSupportedTypes: async () => {
+      return await safeInvoke('get_supported_ai_provider_types');
+    },
+  },
 
   context: {
     buildContext: (projectId, chapterId, position) => 

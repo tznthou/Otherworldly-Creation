@@ -129,6 +129,119 @@
     },
     "ai": {
       "title": "AI Settings",
+      "providers": {
+        "title": "AI Provider Management",
+        "addProvider": "Add Provider",
+        "editProvider": "Edit Provider",
+        "deleteProvider": "Delete Provider",
+        "testConnection": "Test Connection",
+        "searchModels": "Search Models",
+        "searchingModels": "Searching...",
+        "noProviders": "No AI providers configured",
+        "createFirst": "Add First Provider",
+        "types": {
+          "ollama": "Ollama (Local)",
+          "openai": "OpenAI",
+          "gemini": "Google Gemini",
+          "claude": "Anthropic Claude",
+          "openrouter": "OpenRouter"
+        },
+        "fields": {
+          "name": "Provider Name",
+          "type": "Provider Type",
+          "model": "Model Name",
+          "apiKey": "API Key",
+          "endpoint": "Service Endpoint",
+          "enabled": "Enable this provider"
+        },
+        "placeholders": {
+          "name": "e.g., OpenAI GPT-4",
+          "apiKey": "Enter your API key",
+          "endpoint": "Enter service endpoint URL",
+          "models": {
+            "openai": "e.g., gpt-4",
+            "gemini": "e.g., gemini-pro",
+            "claude": "e.g., claude-3-sonnet",
+            "openrouter": "e.g., openai/gpt-4",
+            "ollama": "e.g., llama3.2"
+          }
+        },
+        "status": {
+          "enabled": "Enabled",
+          "disabled": "Disabled",
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "testing": "Testing..."
+        },
+        "messages": {
+          "createSuccess": "AI provider added successfully",
+          "createFailed": "Failed to add AI provider",
+          "updateSuccess": "AI provider settings updated",
+          "updateFailed": "Failed to update AI provider",
+          "deleteSuccess": "AI provider deleted",
+          "deleteFailed": "Failed to delete AI provider",
+          "deleteConfirm": "Are you sure you want to delete this AI provider? This action cannot be undone.",
+          "testSuccess": "Connection test successful",
+          "testFailed": "Connection test failed",
+          "modelsFound": "Found {count} available models",
+          "modelsNotFound": "No available models found",
+          "searchSuccess": "Model search successful",
+          "searchFailed": "Model search failed",
+          "apiKeyRequired": "Please enter API key before searching models"
+        },
+        "help": {
+          "title": "Usage Guide",
+          "modelSearch": {
+            "title": "Model Search Feature",
+            "description": "After entering the API key, click 'Search Models' button to automatically retrieve all available models from the provider without manual input."
+          },
+          "ollama": {
+            "title": "Ollama",
+            "features": [
+              "Runs locally, no API key required",
+              "Requires Ollama service to be installed and running",
+              "Recommended models: llama3.2, qwen2.5",
+              "Click 'Search Models' to auto-discover available models"
+            ]
+          },
+          "openai": {
+            "title": "OpenAI",
+            "features": [
+              "Requires valid OpenAI API key",
+              "Recommended models: gpt-4, gpt-3.5-turbo",
+              "Pay-per-use billing",
+              "Search available models after entering API key"
+            ]
+          },
+          "gemini": {
+            "title": "Google Gemini",
+            "features": [
+              "Requires Google AI API key",
+              "Recommended models: gemini-pro, gemini-1.5-pro",
+              "Supports multilingual content",
+              "Search available models after entering API key"
+            ]
+          },
+          "claude": {
+            "title": "Anthropic Claude",
+            "features": [
+              "Requires Anthropic API key",
+              "Recommended models: claude-3-sonnet, claude-3-haiku",
+              "Great for long-form text generation",
+              "Search available models after entering API key"
+            ]
+          },
+          "openrouter": {
+            "title": "OpenRouter",
+            "features": [
+              "Unified interface for multiple AI models",
+              "Requires OpenRouter API key",
+              "Supports various model providers",
+              "Flexible billing options"
+            ]
+          }
+        }
+      },
       "defaultModel": "Default Model",
       "temperature": "Creativity",
       "topP": "Sampling Parameter",

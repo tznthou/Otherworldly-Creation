@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 8;
+const DB_VERSION: i32 = 9;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -68,6 +68,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v8(conn)?;
             update_version(conn, 8)?;
             log::info!("遷移到版本 8 完成");
+        }
+        
+        if current_version < 9 {
+            apply_migration_v9(conn)?;
+            update_version(conn, 9)?;
+            log::info!("遷移到版本 9 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -601,6 +607,69 @@ fn apply_migration_v8(conn: &Connection) -> Result<()> {
         [],
     )?;
     log::info!("更新現有章節編號成功");
+    
+    Ok(())
+}
+
+/// 版本 9: 新增多 AI 提供者支援
+fn apply_migration_v9(conn: &Connection) -> Result<()> {
+    log::info!("版本 9 遷移：新增多 AI 提供者支援");
+    
+    // 創建 AI 提供者設定表
+    conn.execute(
+        "CREATE TABLE ai_providers (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            provider_type TEXT NOT NULL, -- 'ollama', 'openai', 'gemini', 'claude', 'openrouter'
+            api_key_encrypted TEXT, -- 加密後的 API 金鑰（Ollama 不需要）
+            endpoint TEXT, -- API 端點（可自訂）
+            model TEXT NOT NULL, -- 預設模型
+            is_enabled BOOLEAN DEFAULT 1, -- 是否啟用
+            settings_json TEXT, -- JSON 格式的額外設定
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )",
+        [],
+    )?;
+    log::info!("ai_providers 表創建成功");
+    
+    // 創建索引
+    conn.execute(
+        "CREATE INDEX idx_ai_providers_type ON ai_providers (provider_type)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX idx_ai_providers_enabled ON ai_providers (is_enabled)",
+        [],
+    )?;
+    
+    // 插入預設的 Ollama 提供者（向後相容）
+    conn.execute(
+        "INSERT INTO ai_providers (
+            id, name, provider_type, endpoint, model, is_enabled, settings_json
+        ) VALUES (
+            'ollama-default', 'Ollama (本地)', 'ollama', 
+            'http://127.0.0.1:11434', 'llama3.2', 1,
+            '{\"temperature\":0.7,\"max_tokens\":2000,\"top_p\":0.9}'
+        )",
+        [],
+    )?;
+    log::info!("預設 Ollama 提供者設定完成");
+    
+    // 更新 AI 生成歷史表，添加 provider_id 欄位
+    conn.execute(
+        "ALTER TABLE ai_generation_history ADD COLUMN provider_id TEXT",
+        [],
+    )?;
+    
+    // 將現有歷史記錄關聯到預設的 Ollama 提供者
+    conn.execute(
+        "UPDATE ai_generation_history SET provider_id = 'ollama-default' WHERE provider_id IS NULL",
+        [],
+    )?;
+    
+    log::info!("AI 生成歷史表更新完成");
     
     Ok(())
 }

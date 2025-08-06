@@ -1,7 +1,13 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../../api';
+import type { AIProvider } from '../../api/models';
 
 interface AIState {
+  // Multi-provider support
+  providers: AIProvider[];
+  currentProviderId: string | null;
+  
+  // Legacy Ollama support (for backward compatibility)
   isOllamaConnected: boolean;
   serviceStatus: {
     service: {
@@ -15,6 +21,8 @@ interface AIState {
     };
     lastChecked?: Date;
   } | null;
+  
+  // Model management
   availableModels: string[];
   modelsInfo: {
     success: boolean;
@@ -26,6 +34,8 @@ interface AIState {
     error?: string;
   } | null;
   currentModel: string | null;
+  
+  // Generation state
   generating: boolean;
   error: string | null;
   generationHistory: GenerationResult[];
@@ -36,8 +46,14 @@ interface GenerationResult {
   prompt: string;
   result: string;
   model: string;
+  providerId?: string;
   timestamp: Date;
   params: AIParameters;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
 }
 
 interface AIParameters {
@@ -47,11 +63,20 @@ interface AIParameters {
 }
 
 const initialState: AIState = {
+  // Multi-provider support
+  providers: [],
+  currentProviderId: null,
+  
+  // Legacy Ollama support (for backward compatibility)
   isOllamaConnected: false,
   serviceStatus: null,
+  
+  // Model management
   availableModels: [],
   modelsInfo: null,
   currentModel: null,
+  
+  // Generation state
   generating: false,
   error: null,
   generationHistory: [],
@@ -181,14 +206,127 @@ export const generateText = createAsyncThunk(
     };
   }
 );
+// Multi-provider async thunks
+export const fetchAIProviders = createAsyncThunk(
+  'ai/fetchAIProviders',
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('Redux: 獲取 AI 提供者列表...');
+      const response = await api.aiProviders.getAll();
+      console.log('Redux: AI 提供者列表結果:', response);
+      
+      if (response.success && response.providers) {
+        return response.providers;
+      } else {
+        throw new Error(response.error || '獲取提供者失敗');
+      }
+    } catch (error) {
+      console.error('Redux: 獲取 AI 提供者失敗:', error);
+      return rejectWithValue([]);
+    }
+  }
+);
+
+export const setActiveProvider = createAsyncThunk(
+  'ai/setActiveProvider',
+  async (providerId: string, { dispatch: _dispatch, getState: _getState }) => {
+    try {
+      console.log('Redux: 設定活躍提供者:', providerId);
+      
+      // 測試提供者連接
+      const testResult = await api.aiProviders.test(providerId);
+      
+      if (testResult.success) {
+        // 獲取該提供者的可用模型
+        const models = testResult.models || [];
+        return {
+          providerId,
+          models: models.map((model: unknown) => {
+            const modelObj = model as Record<string, unknown>;
+            const modelId = modelObj.id || modelObj.name || String(model);
+            return typeof modelId === 'string' ? modelId : String(modelId);
+          }),
+          isConnected: true,
+        };
+      } else {
+        throw new Error(testResult.error || '提供者連接失敗');
+      }
+    } catch (error) {
+      console.error('Redux: 設定活躍提供者失敗:', error);
+      return {
+        providerId,
+        models: [],
+        isConnected: false,
+        error: error instanceof Error ? error.message : '連接失敗',
+      };
+    }
+  }
+);
+
+export const generateTextWithProvider = createAsyncThunk(
+  'ai/generateTextWithProvider',
+  async (params: {
+    prompt: string;
+    providerId: string;
+    model: string;
+    aiParams: AIParameters;
+    systemPrompt?: string;
+  }) => {
+    const result = await api.aiProviders.generateText({
+      provider_id: params.providerId,
+      model: params.model,
+      prompt: params.prompt,
+      system_prompt: params.systemPrompt,
+      temperature: params.aiParams.temperature,
+      max_tokens: params.aiParams.maxTokens,
+      top_p: params.aiParams.topP,
+    });
+    
+    return {
+      id: Date.now().toString(),
+      prompt: params.prompt,
+      result: typeof result === 'string' ? result : result.generated_text || '',
+      model: params.model,
+      providerId: params.providerId,
+      timestamp: new Date(),
+      params: params.aiParams,
+      usage: typeof result === 'object' && result && 'usage' in result ? result.usage as {
+        prompt_tokens?: number;
+        completion_tokens?: number;
+        total_tokens?: number;
+      } : undefined,
+    };
+  }
+);
 
 const aiSlice = createSlice({
   name: 'ai',
   initialState,
   reducers: {
+    // Legacy single model reducers
     setCurrentModel: (state, action: PayloadAction<string>) => {
       state.currentModel = action.payload;
     },
+    
+    // Multi-provider reducers
+    setCurrentProvider: (state, action: PayloadAction<string>) => {
+      state.currentProviderId = action.payload;
+      // Clear current model when switching providers
+      state.currentModel = null;
+      state.availableModels = [];
+    },
+    setProviderModels: (state, action: PayloadAction<{providerId: string; models: string[]}>) => {
+      const { providerId, models } = action.payload;
+      if (state.currentProviderId === providerId) {
+        state.availableModels = models;
+        // Auto-select first model if none selected
+        if (!state.currentModel && models.length > 0) {
+          state.currentModel = models[0];
+        }
+      }
+    },
+    
+    // General reducers
     clearError: (state) => {
       state.error = null;
     },
@@ -232,21 +370,24 @@ const aiSlice = createSlice({
 
       // fetchServiceStatus
       .addCase(fetchServiceStatus.fulfilled, (state, action) => {
-        const payload = action.payload as { isRunning?: boolean; version?: string; error?: string; models?: string[] };
+        const payload = action.payload as { 
+          service?: { available?: boolean; version?: string; error?: string };
+          models?: { count?: number; list?: string[] };
+        };
         state.serviceStatus = {
           service: {
-            available: payload.isRunning || false,
-            version: payload.version,
-            error: payload.error
+            available: payload.service?.available || false,
+            version: payload.service?.version,
+            error: payload.service?.error
           },
           models: {
-            count: payload.models?.length || 0,
-            list: payload.models || []
+            count: payload.models?.count || 0,
+            list: payload.models?.list || []
           },
           lastChecked: new Date()
         };
-        state.isOllamaConnected = payload.isRunning || false;
-        if (!payload.isRunning) {
+        state.isOllamaConnected = payload.service?.available || false;
+        if (!payload.service?.available) {
           state.availableModels = [];
           state.currentModel = null;
         }
@@ -332,12 +473,75 @@ const aiSlice = createSlice({
       .addCase(generateText.rejected, (state, action) => {
         state.generating = false;
         state.error = action.error.message || 'AI 生成失敗';
+      })
+
+      // Multi-provider reducers
+      // fetchAIProviders
+      .addCase(fetchAIProviders.fulfilled, (state, action) => {
+        state.providers = action.payload;
+        // Auto-select first enabled provider if none selected
+        if (!state.currentProviderId && action.payload.length > 0) {
+          const enabledProvider = action.payload.find(p => p.is_enabled);
+          if (enabledProvider) {
+            state.currentProviderId = enabledProvider.id;
+          }
+        }
+      })
+      .addCase(fetchAIProviders.rejected, (state, action) => {
+        state.error = action.error.message || '獲取 AI 提供者失敗';
+        state.providers = [];
+      })
+
+      // setActiveProvider
+      .addCase(setActiveProvider.fulfilled, (state, action) => {
+        const { providerId, models, isConnected } = action.payload;
+        state.currentProviderId = providerId;
+        
+        if (isConnected && Array.isArray(models)) {
+          state.availableModels = models;
+          // Auto-select first model
+          if (models.length > 0) {
+            state.currentModel = models[0];
+          }
+          state.error = null;
+        } else {
+          state.availableModels = [];
+          state.currentModel = null;
+          if ('error' in action.payload) {
+            state.error = action.payload.error as string;
+          }
+        }
+      })
+      .addCase(setActiveProvider.rejected, (state, action) => {
+        state.error = action.error.message || '設定提供者失敗';
+        state.availableModels = [];
+        state.currentModel = null;
+      })
+
+      // generateTextWithProvider
+      .addCase(generateTextWithProvider.pending, (state) => {
+        state.generating = true;
+        state.error = null;
+      })
+      .addCase(generateTextWithProvider.fulfilled, (state, action) => {
+        state.generating = false;
+        state.generationHistory.unshift(action.payload);
+        // 限制歷史記錄數量
+        if (state.generationHistory.length > 50) {
+          state.generationHistory = state.generationHistory.slice(0, 50);
+        }
+      })
+      .addCase(generateTextWithProvider.rejected, (state, action) => {
+        state.generating = false;
+        state.error = action.error.message || 'AI 生成失敗';
       });
   },
 });
 
 export const {
   setCurrentModel,
+  setCurrentProvider,
+  setProviderModels,
   clearError,
   clearGenerationHistory,
   removeGenerationResult,

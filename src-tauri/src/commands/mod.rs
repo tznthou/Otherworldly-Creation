@@ -3,6 +3,7 @@ pub mod project;
 pub mod chapter;
 pub mod character;
 pub mod ai;
+pub mod ai_providers;
 pub mod context;
 pub mod settings;
 pub mod database;

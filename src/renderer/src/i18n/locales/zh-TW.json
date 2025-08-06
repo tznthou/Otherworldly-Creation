@@ -130,6 +130,119 @@
     },
     "ai": {
       "title": "AI 設定",
+      "providers": {
+        "title": "AI 提供者管理",
+        "addProvider": "新增提供者",
+        "editProvider": "編輯提供者",
+        "deleteProvider": "刪除提供者",
+        "testConnection": "測試連接",
+        "searchModels": "搜尋模型",
+        "searchingModels": "搜尋中...",
+        "noProviders": "尚未配置任何 AI 提供者",
+        "createFirst": "新增第一個提供者",
+        "types": {
+          "ollama": "Ollama (本地)",
+          "openai": "OpenAI",
+          "gemini": "Google Gemini",
+          "claude": "Anthropic Claude",
+          "openrouter": "OpenRouter"
+        },
+        "fields": {
+          "name": "提供者名稱",
+          "type": "提供者類型",
+          "model": "模型名稱",
+          "apiKey": "API 金鑰",
+          "endpoint": "服務端點",
+          "enabled": "啟用此提供者"
+        },
+        "placeholders": {
+          "name": "例如: OpenAI GPT-4",
+          "apiKey": "輸入您的 API 金鑰",
+          "endpoint": "輸入服務端點地址",
+          "models": {
+            "openai": "例如: gpt-4",
+            "gemini": "例如: gemini-pro",
+            "claude": "例如: claude-3-sonnet",
+            "openrouter": "例如: openai/gpt-4",
+            "ollama": "例如: llama3.2"
+          }
+        },
+        "status": {
+          "enabled": "已啟用",
+          "disabled": "已停用",
+          "connected": "已連接",
+          "disconnected": "未連接",
+          "testing": "測試中..."
+        },
+        "messages": {
+          "createSuccess": "AI 提供者已新增成功",
+          "createFailed": "新增 AI 提供者失敗",
+          "updateSuccess": "AI 提供者設定已更新",
+          "updateFailed": "更新 AI 提供者失敗",
+          "deleteSuccess": "AI 提供者已刪除",
+          "deleteFailed": "刪除 AI 提供者失敗",
+          "deleteConfirm": "確定要刪除此 AI 提供者嗎？此操作無法撤銷。",
+          "testSuccess": "連接測試成功",
+          "testFailed": "連接測試失敗",
+          "modelsFound": "找到 {count} 個可用模型",
+          "modelsNotFound": "未找到可用模型",
+          "searchSuccess": "模型搜尋成功",
+          "searchFailed": "模型搜尋失敗",
+          "apiKeyRequired": "請先輸入API金鑰再搜尋模型"
+        },
+        "help": {
+          "title": "使用說明",
+          "modelSearch": {
+            "title": "模型搜尋功能",
+            "description": "輸入API金鑰後，點擊「搜尋模型」按鈕可自動獲取該提供者的所有可用模型，無需手動輸入模型名稱。"
+          },
+          "ollama": {
+            "title": "Ollama",
+            "features": [
+              "本地運行，無需 API 金鑰",
+              "需要先安裝並啟動 Ollama 服務",
+              "推薦模型: llama3.2, qwen2.5",
+              "點擊「搜尋模型」自動獲取可用模型"
+            ]
+          },
+          "openai": {
+            "title": "OpenAI",
+            "features": [
+              "需要有效的 OpenAI API 金鑰",
+              "推薦模型: gpt-4, gpt-3.5-turbo",
+              "按使用量計費",
+              "輸入API金鑰後可搜尋可用模型"
+            ]
+          },
+          "gemini": {
+            "title": "Google Gemini",
+            "features": [
+              "需要 Google AI API 金鑰",
+              "推薦模型: gemini-pro, gemini-1.5-pro",
+              "支援多語言內容",
+              "輸入API金鑰後可搜尋可用模型"
+            ]
+          },
+          "claude": {
+            "title": "Anthropic Claude",
+            "features": [
+              "需要 Anthropic API 金鑰",
+              "推薦模型: claude-3-sonnet, claude-3-haiku",
+              "適合長文本生成",
+              "輸入API金鑰後可搜尋可用模型"
+            ]
+          },
+          "openrouter": {
+            "title": "OpenRouter",
+            "features": [
+              "統一接口訪問多種 AI 模型",
+              "需要 OpenRouter API 金鑰",
+              "支援多種模型提供者",
+              "靈活的計費方式"
+            ]
+          }
+        }
+      },
       "defaultModel": "預設模型",
       "temperature": "創意度",
       "topP": "採樣參數",

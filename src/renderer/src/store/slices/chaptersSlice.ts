@@ -125,6 +125,8 @@ const chaptersSlice = createSlice({
       .addCase(createChapter.fulfilled, (state, action) => {
         state.loading = false;
         state.chapters.push(action.payload);
+        // 自動選擇新創建的章節
+        state.currentChapter = action.payload;
       })
       .addCase(createChapter.rejected, (state, action) => {
         state.loading = false;

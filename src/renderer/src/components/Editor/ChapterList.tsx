@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
-import { Chapter, updateChapter, setCurrentChapter } from '../../store/slices/chaptersSlice';
-import { openModal } from '../../store/slices/uiSlice';
+import { Chapter, updateChapter, setCurrentChapter, deleteChapter } from '../../store/slices/chaptersSlice';
+import { openModal, addNotification } from '../../store/slices/uiSlice';
 import { Menu, MenuItem } from '../UI/Menu';
 import ChapterBatchActions from './ChapterBatchActions';
+import ConfirmDialog from '../UI/ConfirmDialog';
 
 interface ChapterListProps {
   chapters: Chapter[];
@@ -23,6 +24,10 @@ const ChapterList: React.FC<ChapterListProps> = ({
   const dispatch = useAppDispatch();
   const [draggedChapterId, setDraggedChapterId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; chapter: Chapter | null}>({
+    show: false,
+    chapter: null
+  });
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, chapterId: string) => {
     setDraggedChapterId(chapterId);
@@ -87,6 +92,31 @@ const ChapterList: React.FC<ChapterListProps> = ({
       }));
     }
   };
+
+  const handleDeleteChapter = async (chapter: Chapter) => {
+    if (!deleteConfirm.chapter) return;
+    
+    try {
+      await dispatch(deleteChapter(chapter.id)).unwrap();
+      
+      dispatch(addNotification({
+        type: 'success',
+        title: '刪除成功',
+        message: `章節「${chapter.title}」已成功刪除`,
+        duration: 3000,
+      }));
+      
+      setDeleteConfirm({ show: false, chapter: null });
+    } catch (error) {
+      console.error('刪除章節失敗:', error);
+      
+      dispatch(addNotification({
+        type: 'error',
+        title: '刪除失敗',
+        message: '刪除章節時發生錯誤，請稍後再試',
+      }));
+    }
+  };
   
   // 過濾章節列表
   const filteredChapters = useMemo(() => {
@@ -99,6 +129,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
   }, [chapters, searchQuery]);
 
   return (
+    <>
     <div className="h-full flex flex-col">
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
@@ -166,7 +197,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
           </div>
         ) : (
           <div className="space-y-2">
-            {filteredChapters
+            {[...filteredChapters]
               .sort((a, b) => a.order - b.order)
               .map((chapter) => (
                 <div
@@ -225,8 +256,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
                   <Menu
                     trigger={
                       <button
-                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-cosmic-700 hover:bg-cosmic-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => e.stopPropagation()}
+                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-cosmic-700 hover:bg-cosmic-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
                       >
                         <span className="text-gray-400">⋮</span>
                       </button>
@@ -236,6 +266,16 @@ const ChapterList: React.FC<ChapterListProps> = ({
                     <MenuItem icon="✏️" onClick={() => handleRenameChapter(chapter)}>重命名</MenuItem>
                     <MenuItem icon="⚙️" onClick={() => handleEditChapter(chapter)}>管理章節</MenuItem>
                     <MenuItem icon="📋" onClick={() => navigator.clipboard.writeText(chapter.title)}>複製標題</MenuItem>
+                    <MenuItem 
+                      icon="🗑️" 
+                      onClick={() => {
+                        console.log('刪除按鈕被點擊', chapter);
+                        setDeleteConfirm({ show: true, chapter });
+                      }}
+                      className="text-red-500 hover:text-red-400"
+                    >
+                      刪除章節
+                    </MenuItem>
                   </Menu>
                 </div>
               ))}
@@ -243,7 +283,20 @@ const ChapterList: React.FC<ChapterListProps> = ({
         )}
       </div>
     </div>
-  );
+    
+    {/* 刪除確認對話框 */}
+    {deleteConfirm.show && (
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        title="確認刪除"
+        message={`確定要刪除章節「${deleteConfirm.chapter?.title}」嗎？此操作將永久刪除所有內容，且無法復原。`}
+        confirmText="刪除"
+        cancelText="取消"
+        onConfirm={() => deleteConfirm.chapter && handleDeleteChapter(deleteConfirm.chapter)}
+        onCancel={() => setDeleteConfirm({ show: false, chapter: null })}
+      />
+    )}
+  </>);
 };
 
 export default ChapterList;
