@@ -527,7 +527,13 @@
       "brainstorm": "腦力激盪",
       "characterDevelopment": "角色發展",
       "plotSuggestions": "劇情建議",
-      "dialogueImprovement": "對話優化"
+      "dialogueImprovement": "對話優化",
+      "AI 生成歷史": "AI 生成歷史",
+      "篩選選項": "篩選選項",
+      "清理舊記錄": "清理舊記錄",
+      "標記為選擇": "標記為選擇",
+      "刪除記錄": "刪除記錄",
+      "時間": "時間"
     },
     "modes": {
       "focus": "專注模式",

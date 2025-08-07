@@ -151,7 +151,14 @@ const chaptersSlice = createSlice({
       if (state.currentChapter) {
         state.currentChapter.content = action.payload;
         // 計算字數
-        state.currentChapter.wordCount = calculateWordCount(action.payload);
+        const newWordCount = calculateWordCount(action.payload);
+        state.currentChapter.wordCount = newWordCount;
+        
+        // 🔥 修復：同步更新 chapters 數組中對應章節的 wordCount
+        const chapterIndex = state.chapters.findIndex(c => c.id === state.currentChapter?.id);
+        if (chapterIndex !== -1) {
+          state.chapters[chapterIndex].wordCount = newWordCount;
+        }
       }
     },
     clearError: (state) => {
@@ -173,7 +180,11 @@ const chaptersSlice = createSlice({
       })
       .addCase(fetchChaptersByProjectId.fulfilled, (state, action) => {
         state.loading = false;
-        state.chapters = action.payload;
+        // 🔥 修復：載入章節時重新計算所有章節的字數
+        state.chapters = action.payload.map(chapter => ({
+          ...chapter,
+          wordCount: calculateWordCount(chapter.content)
+        }));
       })
       .addCase(fetchChaptersByProjectId.rejected, (state, action) => {
         state.loading = false;
@@ -187,9 +198,14 @@ const chaptersSlice = createSlice({
       })
       .addCase(createChapter.fulfilled, (state, action) => {
         state.loading = false;
-        state.chapters.push(action.payload);
+        // 🔥 修復：新建章節時也要重新計算字數
+        const newChapter = {
+          ...action.payload,
+          wordCount: calculateWordCount(action.payload.content)
+        };
+        state.chapters.push(newChapter);
         // 自動選擇新創建的章節
-        state.currentChapter = action.payload;
+        state.currentChapter = newChapter;
       })
       .addCase(createChapter.rejected, (state, action) => {
         state.loading = false;
@@ -204,12 +220,17 @@ const chaptersSlice = createSlice({
       .addCase(updateChapter.fulfilled, (state, action) => {
         state.saving = false;
         state.lastSaved = new Date().toISOString();
+        // 🔥 修復：保存章節後也要重新計算字數
+        const updatedChapter = {
+          ...action.payload,
+          wordCount: calculateWordCount(action.payload.content)
+        };
         const index = state.chapters.findIndex(c => c.id === action.payload.id);
         if (index !== -1) {
-          state.chapters[index] = action.payload;
+          state.chapters[index] = updatedChapter;
         }
         if (state.currentChapter?.id === action.payload.id) {
-          state.currentChapter = action.payload;
+          state.currentChapter = updatedChapter;
         }
       })
       .addCase(updateChapter.rejected, (state, action) => {
@@ -227,7 +248,12 @@ const chaptersSlice = createSlice({
       
       // fetchChapterById
       .addCase(fetchChapterById.fulfilled, (state, action) => {
-        state.currentChapter = action.payload;
+        // 🔥 修復：載入單個章節時也要重新計算字數
+        const chapterWithWordCount = {
+          ...action.payload,
+          wordCount: calculateWordCount(action.payload.content)
+        };
+        state.currentChapter = chapterWithWordCount;
       });
   },
 });

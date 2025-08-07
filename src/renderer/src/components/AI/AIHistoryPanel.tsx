@@ -117,14 +117,24 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
   };
 
   // 格式化時間
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('zh-TW', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
+  const formatTime = (date: string | Date) => {
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      // 檢查日期是否有效
+      if (isNaN(dateObj.getTime())) {
+        return '無效日期';
+      }
+      return new Intl.DateTimeFormat('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(dateObj);
+    } catch (error) {
+      console.error('日期格式化錯誤:', error, date);
+      return '格式錯誤';
+    }
   };
 
   // 格式化生成時間
