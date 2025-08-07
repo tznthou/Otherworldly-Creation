@@ -25,7 +25,7 @@ mcp__serena__onboarding()
 創世紀元：異世界創作神器 (Genesis Chronicle) - A Tauri-based AI-powered novel writing application for Chinese light novel creation. Built with Rust backend and React frontend, supporting 5 major AI providers.
 
 **Architecture**: Pure Tauri v2.7.0 (v1.0.0+) - 300% faster startup, 70% less memory, 90% smaller size
-**Latest Updates** (2025-08-07): Chapter Content Duplication FIXED + Complete Horizontal Scrolling Fix + Multi-Provider AI System - Perfect editing experience with flawless chapter navigation
+**Latest Updates** (2025-08-08): Settings System Complete Optimization + UI Theme Consistency + Duplicate Feature Cleanup + Redux Optimization - Perfect user experience with streamlined settings management
 **Code Quality**: ✅ Rust: Clean | ✅ TypeScript: 0 errors (100% FIXED - from 300+ to 0!) | ✅ ESLint: Critical errors fixed
 **Critical Fixes**: ✅ Chapter Rendering (Slate.js key prop) | ✅ Double JSON Parsing | ✅ Window Mode Scrolling
 **AI Providers**: 🦙 Ollama (Local) | 🤖 OpenAI | ✨ Google Gemini | 🧠 Anthropic Claude | 🔄 OpenRouter
@@ -276,6 +276,9 @@ The rich text editor uses a specialized architecture to avoid React hook context
 26. **Double JSON Parsing Prevention**: CRITICAL - Never parse JSON in Redux slices if API layer already handles it - this corrupts Slate.js content and causes data synchronization issues
 27. **Chapter Content Rendering**: ALWAYS use `key` prop for Slate.js editor when switching content - `key={editor-${currentChapter.id}}` forces re-render and prevents content duplication
 28. **Tauri Desktop App Limitation**: This is a Tauri desktop application - CANNOT use Puppeteer or browser automation tools for testing
+29. **Settings Page Organization**: Settings now streamlined - old duplicate AI settings removed, cosmic theme applied consistently throughout all settings tabs
+30. **Template CSS Theme Pattern**: Always apply complete cosmic theme to Template components - change `bg-white` to `bg-cosmic-800`, `text-gray-900` to `text-white`, ensure button contrast with `bg-gold-600` + `text-cosmic-900`
+31. **Redux Selector Memoization**: Use `createSelector` from `@reduxjs/toolkit` for complex selectors to prevent "different result with same parameters" warnings and improve performance
 
 ### Development Workflows
 
@@ -605,6 +608,31 @@ Key rules in `.eslintrc.js`:
 5. ✅ **Final Type Issues**: COMPLETED - Fixed all remaining Slate.js and database interface issues
 
 ## Change Log
+
+### [2025-08-07 23:35:00] - CSS主題修復 & Redux效能優化 ✅🔧
+- **Template Import Wizard主題修復**: 解決白色文字在白色背景不可見問題
+  - 完全轉換為cosmic主題：`bg-cosmic-800/950` + 適當文字顏色
+  - 修復按鈕樣式：使用 `bg-gold-600` + `text-cosmic-900`
+  - 用戶確認："已套入主題成功，謝謝分分"
+- **Redux Selector記憶化優化**: 修復 `selectFilteredAndSortedTemplates` 重新渲染警告
+  - 使用 `createSelector` 從 `@reduxjs/toolkit` 進行適當記憶化
+  - 消除"Selector returned a different result when called with the same parameters"警告
+  - 提升Template Manager效能
+- **雙重toISOString()錯誤修復**: 修復 `novelAnalysisService.ts` 和 `templateService.ts` 中的重複方法調用
+- **影響**: Template系統完全可用，無視覺或效能問題
+
+### [2025-08-08 01:47:00] - Settings System Complete Optimization & UI Theme Consistency ✅🎯
+- **Complete Settings System Overhaul**: Comprehensive optimization of all settings categories with duplicate removal
+  - **UI Theme Unification**: Template Import Wizard fully converted to cosmic theme, fixing white text visibility issues
+  - **Redux Performance**: Fixed `selectFilteredAndSortedTemplates` selector memoization with `createSelector`
+  - **Duplicate Cleanup**: Removed redundant update check card from Dashboard QuickActions
+  - **Update Feature Status**: Added "開發中" (In Development) badges for unimplemented features with proper user guidance
+- **Technical Improvements**:
+  - Fixed double `toISOString()` calls causing runtime errors in analysis services
+  - Optimized Settings page navigation and removed editor settings duplication
+  - Enhanced cosmic theme consistency across all Template components
+- **System Growth**: Code base expanded to 58,568 lines (263 files) with improved organization
+- **Impact**: Perfect settings experience with streamlined UI, clear feature status, and consistent visual design
 
 ### [2025-08-07 21:35:58] - 章節內容重複問題根本修復 + 文檔全面更新 🎯📚
 - **總程式碼行數**: 77,522 行

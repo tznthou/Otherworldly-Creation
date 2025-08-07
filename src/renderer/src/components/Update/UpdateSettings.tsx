@@ -94,13 +94,13 @@ const UpdateSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* 當前版本信息 */}
-      <div className="bg-gray-50 rounded-lg p-4">
+      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">當前版本</h3>
-            <p className="text-sm text-gray-600">Genesis Chronicle v{currentVersion}</p>
+            <h3 className="text-lg font-medium text-white">當前版本</h3>
+            <p className="text-sm text-gray-300">Genesis Chronicle v{currentVersion}</p>
             {lastCheckTime && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-400 mt-1">
                 上次檢查: {lastCheckTime}
               </p>
             )}
@@ -108,7 +108,7 @@ const UpdateSettings: React.FC = () => {
           <button
             onClick={handleManualCheck}
             disabled={isChecking}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+            className="bg-gold-600 hover:bg-gold-700 disabled:bg-gold-400 text-cosmic-950 px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
             <span>{isChecking ? '檢查中...' : '立即檢查'}</span>
@@ -118,18 +118,18 @@ const UpdateSettings: React.FC = () => {
 
       {/* 自動更新設置 */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium text-gray-900 flex items-center">
-          <Settings className="w-5 h-5 mr-2" />
+        <h3 className="text-lg font-medium text-gold-400 flex items-center">
+          <Settings className="w-5 h-5 mr-2 text-gold-400" />
           自動更新設置
         </h3>
 
         {/* 自動檢查更新 */}
-        <div className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg">
           <div className="flex items-center">
-            <RefreshCw className="w-5 h-5 text-blue-500 mr-3" />
+            <RefreshCw className="w-5 h-5 text-gold-500 mr-3" />
             <div>
-              <h4 className="font-medium text-gray-900">自動檢查更新</h4>
-              <p className="text-sm text-gray-600">定期檢查是否有新版本可用</p>
+              <h4 className="font-medium text-white">自動檢查更新</h4>
+              <p className="text-sm text-gray-300">定期檢查是否有新版本可用</p>
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -139,21 +139,21 @@ const UpdateSettings: React.FC = () => {
               onChange={(e) => handleSettingChange('autoCheck', e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <div className="w-11 h-6 bg-cosmic-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-cosmic-900 after:border-cosmic-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
           </label>
         </div>
 
         {/* 檢查間隔 */}
         {settings.autoCheck && (
-          <div className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg">
             <div>
-              <h4 className="font-medium text-gray-900">檢查間隔</h4>
-              <p className="text-sm text-gray-600">設置自動檢查更新的頻率</p>
+              <h4 className="font-medium text-white">檢查間隔</h4>
+              <p className="text-sm text-gray-300">設置自動檢查更新的頻率</p>
             </div>
             <select
               value={settings.checkInterval}
               onChange={(e) => handleSettingChange('checkInterval', parseInt(e.target.value))}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="bg-cosmic-700 border border-cosmic-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             >
               {intervalOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -165,32 +165,35 @@ const UpdateSettings: React.FC = () => {
         )}
 
         {/* 自動下載更新 */}
-        <div className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg opacity-60">
           <div className="flex items-center">
-            <Download className="w-5 h-5 text-green-500 mr-3" />
+            <Download className="w-5 h-5 text-green-400 mr-3" />
             <div>
-              <h4 className="font-medium text-gray-900">自動下載更新</h4>
-              <p className="text-sm text-gray-600">發現更新時自動下載（仍需手動安裝）</p>
+              <div className="flex items-center gap-2">
+                <h4 className="font-medium text-white">自動下載更新</h4>
+                <span className="text-xs bg-yellow-600 text-yellow-100 px-2 py-1 rounded">開發中</span>
+              </div>
+              <p className="text-sm text-gray-300">發現更新時自動下載（仍需手動安裝）- 此功能正在開發中</p>
             </div>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-not-allowed">
             <input
               type="checkbox"
-              checked={settings.autoDownload}
-              onChange={(e) => handleSettingChange('autoDownload', e.target.checked)}
+              checked={false}
+              disabled={true}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <div className="w-11 h-6 bg-cosmic-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-cosmic-900 after:border-cosmic-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
           </label>
         </div>
 
         {/* 更新通知 */}
-        <div className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg">
           <div className="flex items-center">
-            <Bell className="w-5 h-5 text-yellow-500 mr-3" />
+            <Bell className="w-5 h-5 text-yellow-400 mr-3" />
             <div>
-              <h4 className="font-medium text-gray-900">更新通知</h4>
-              <p className="text-sm text-gray-600">發現更新時顯示通知</p>
+              <h4 className="font-medium text-white">更新通知</h4>
+              <p className="text-sm text-gray-300">發現更新時顯示通知</p>
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -200,38 +203,42 @@ const UpdateSettings: React.FC = () => {
               onChange={(e) => handleSettingChange('notifyOnUpdate', e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <div className="w-11 h-6 bg-cosmic-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-cosmic-900 after:border-cosmic-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
           </label>
         </div>
 
         {/* 預發布版本 */}
-        <div className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg opacity-60">
           <div className="flex items-center">
-            <Shield className="w-5 h-5 text-purple-500 mr-3" />
+            <Shield className="w-5 h-5 text-purple-400 mr-3" />
             <div>
-              <h4 className="font-medium text-gray-900">預發布版本</h4>
-              <p className="text-sm text-gray-600">接收 Beta 版本和預發布更新</p>
+              <div className="flex items-center gap-2">
+                <h4 className="font-medium text-white">預發布版本</h4>
+                <span className="text-xs bg-yellow-600 text-yellow-100 px-2 py-1 rounded">開發中</span>
+              </div>
+              <p className="text-sm text-gray-300">接收 Beta 版本和預發布更新 - 此功能正在開發中</p>
             </div>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-not-allowed">
             <input
               type="checkbox"
-              checked={settings.allowPrerelease}
-              onChange={(e) => handleSettingChange('allowPrerelease', e.target.checked)}
+              checked={false}
+              disabled={true}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <div className="w-11 h-6 bg-cosmic-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-cosmic-900 after:border-cosmic-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
           </label>
         </div>
       </div>
 
       {/* 更新說明 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-medium text-blue-900 mb-2">關於自動更新</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>• 自動更新功能會在背景檢查新版本</li>
-          <li>• 即使啟用自動下載，仍需要您的確認才會安裝</li>
-          <li>• 安裝更新時應用程式會重新啟動</li>
+      <div className="bg-cosmic-800 border border-gold-600/30 rounded-lg p-4">
+        <h4 className="font-medium text-gold-400 mb-2">關於自動更新</h4>
+        <ul className="text-sm text-gray-300 space-y-1">
+          <li>• 自動檢查更新功能已完全實現，可正常使用</li>
+          <li>• 自動下載更新和預發布版本功能正在開發中</li>
+          <li>• 更新通知功能已實現，可正常使用</li>
+          <li>• 手動檢查更新功能正常，會模擬檢查過程</li>
           <li>• 建議定期備份您的創作內容</li>
         </ul>
       </div>

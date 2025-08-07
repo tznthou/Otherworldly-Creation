@@ -133,8 +133,8 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">載入模板中...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-500"></div>
+        <span className="ml-2 text-gray-300">載入模板中...</span>
       </div>
     );
   }
@@ -144,8 +144,8 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
       {/* 標題和操作 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">模板管理</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className="text-2xl font-bold text-white">模板管理</h1>
+          <p className="mt-1 text-sm text-gray-300">
             管理輕小說創作模板，包括預設模板和自定義模板
           </p>
         </div>
@@ -153,7 +153,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
           {onCreateTemplate && (
             <button
               onClick={onCreateTemplate}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gold-500 hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -164,7 +164,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
           
           <button
             onClick={() => setShowImportWizard(true)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-cosmic-600 text-sm font-medium rounded-lg shadow-sm text-gray-300 bg-cosmic-700 hover:bg-cosmic-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
@@ -175,27 +175,27 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
       </div>
 
       {/* 過濾器 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* 搜索 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">搜索</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">搜索</label>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="搜索模板名稱或描述..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold-500"
             />
           </div>
 
           {/* 類型過濾 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">類型</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">類型</label>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as TemplateType | '')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             >
               <option value="">所有類型</option>
               {Object.entries(TEMPLATE_TYPES).map(([key, label]) => (
@@ -206,11 +206,11 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
           {/* 自定義過濾 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">來源</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">來源</label>
             <select
               value={customFilter}
               onChange={(e) => setCustomFilter(e.target.value as 'all' | 'default' | 'custom')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             >
               <option value="all">全部</option>
               <option value="default">預設模板</option>
@@ -220,10 +220,10 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
           {/* 排序 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">排序</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">排序</label>
             <select
               onChange={(e) => handleSortChange(e.target.value as 'name' | 'type' | 'createdAt' | 'updatedAt')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             >
               <option value="name">名稱</option>
               <option value="type">類型</option>
@@ -236,7 +236,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
       {/* 錯誤提示 */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="bg-red-900 border border-red-700 rounded-lg p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -244,8 +244,8 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">錯誤</h3>
-              <p className="mt-1 text-sm text-red-700">{error}</p>
+              <h3 className="text-sm font-medium text-red-300">錯誤</h3>
+              <p className="mt-1 text-sm text-red-200">{error}</p>
             </div>
           </div>
         </div>
@@ -257,8 +257,8 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">沒有找到模板</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-white">沒有找到模板</h3>
+          <p className="mt-1 text-sm text-gray-300">
             {searchQuery || typeFilter || customFilter !== 'all' 
               ? '嘗試調整搜索條件或過濾器' 
               : '還沒有任何模板'
@@ -266,38 +266,38 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-cosmic-700">
+              <thead className="bg-cosmic-900">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     模板
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     類型
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     狀態
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     更新時間
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                     操作
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-cosmic-800 divide-y divide-cosmic-700">
                 {templates.map((template) => (
-                  <tr key={template.id} className="hover:bg-gray-50">
+                  <tr key={template.id} className="hover:bg-cosmic-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-white">
                             {template.name}
                           </div>
-                          <div className="text-sm text-gray-500 max-w-xs truncate">
+                          <div className="text-sm text-gray-300 max-w-xs truncate">
                             {template.description}
                           </div>
                         </div>
@@ -324,7 +324,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                       {new Date(template.updatedAt).toLocaleDateString('zh-TW')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -334,8 +334,8 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                           onClick={() => handleToggleActive(template)}
                           className={`text-xs px-2 py-1 rounded ${
                             template.isActive !== false
-                              ? 'text-gray-600 hover:text-gray-800'
-                              : 'text-green-600 hover:text-green-800'
+                              ? 'text-gray-300 hover:text-white'
+                              : 'text-green-400 hover:text-green-300'
                           }`}
                         >
                           {template.isActive !== false ? '停用' : '啟用'}
@@ -344,7 +344,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                         {/* 複製 */}
                         <button
                           onClick={() => handleCloneTemplate(template)}
-                          className="text-blue-600 hover:text-blue-800 text-xs"
+                          className="text-blue-400 hover:text-blue-300 text-xs"
                         >
                           複製
                         </button>
@@ -353,7 +353,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                         {onEditTemplate && (
                           <button
                             onClick={() => onEditTemplate(template)}
-                            className="text-indigo-600 hover:text-indigo-800 text-xs"
+                            className="text-gold-400 hover:text-gold-300 text-xs"
                           >
                             編輯
                           </button>
@@ -363,7 +363,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                         {template.isCustom && (
                           <button
                             onClick={() => handleDeleteClick(template)}
-                            className="text-red-600 hover:text-red-800 text-xs"
+                            className="text-red-400 hover:text-red-300 text-xs"
                           >
                             刪除
                           </button>
@@ -380,7 +380,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
       {/* 統計資訊 */}
       {templates.length > 0 && (
-        <div className="text-sm text-gray-500 text-center">
+        <div className="text-sm text-gray-300 text-center">
           顯示 {templates.length} 個模板
         </div>
       )}
@@ -388,31 +388,31 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
       {/* 刪除確認對話框 */}
       {showDeleteConfirm && selectedTemplate && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+          <div className="bg-cosmic-900 border border-cosmic-700 rounded-lg shadow-xl w-full max-w-md">
             <div className="p-6">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
-                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-lg font-medium text-gray-900">確認刪除</h3>
+                  <h3 className="text-lg font-medium text-white">確認刪除</h3>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-gray-300 mb-6">
                 確定要刪除模板「{selectedTemplate.name}」嗎？此操作無法復原。
               </p>
               <div className="flex items-center justify-end space-x-3">
                 <button
                   onClick={handleCancelDelete}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-4 py-2 text-sm font-medium text-gray-300 bg-cosmic-700 border border-cosmic-600 rounded-lg hover:bg-cosmic-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
                 >
                   取消
                 </button>
                 <button
                   onClick={handleConfirmDelete}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                   確認刪除
                 </button>

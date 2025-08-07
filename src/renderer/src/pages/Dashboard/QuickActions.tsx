@@ -79,16 +79,7 @@ const QuickActions: React.FC = () => {
         dispatch(openModal('helpCenter'));
       },
     },
-    {
-      id: 'update-check',
-      title: '🔄 檢查更新',
-      description: '檢查並安裝應用程式更新',
-      icon: '🔄',
-      color: 'from-teal-500 to-teal-600',
-      action: () => {
-        dispatch(openModal('updateManager'));
-      },
-    },
+
     {
       id: 'writing-stats',
       title: '📊 創作統計',

@@ -58,7 +58,7 @@ export const fetchChaptersByProjectId = createAsyncThunk(
     
     return chapters;
   }
-);;
+);
 
 export const createChapter = createAsyncThunk(
   'chapters/create',

@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { NovelTemplate, TemplateType, TemplateFilters, TemplateSortOptions, TemplateState } from '../../types/template';
 import { templateService } from '../../services/templateService';
 
@@ -328,13 +328,15 @@ export const selectTemplateError = (state: { templates: TemplateState }) => stat
 export const selectTemplateFilters = (state: { templates: TemplateState }) => state.templates.filters;
 export const selectTemplateSortOptions = (state: { templates: TemplateState }) => state.templates.sortOptions;
 
-export const selectFilteredAndSortedTemplates = (state: { templates: TemplateState }) => {
-  return filterAndSortTemplates(
-    state.templates.templates,
-    state.templates.filters,
-    state.templates.sortOptions
-  );
-};
+// 使用 createSelector 進行 memoization 優化
+export const selectFilteredAndSortedTemplates = createSelector(
+  [(state: { templates: TemplateState }) => state.templates.templates,
+   (state: { templates: TemplateState }) => state.templates.filters,
+   (state: { templates: TemplateState }) => state.templates.sortOptions],
+  (templates, filters, sortOptions) => {
+    return filterAndSortTemplates(templates, filters, sortOptions);
+  }
+);
 
 export const selectTemplatesByType = (type: TemplateType) => (state: { templates: TemplateState }) => {
   return state.templates.templates.filter(template => template.type === type);

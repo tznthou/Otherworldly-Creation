@@ -1,6 +1,4 @@
 export { default as GeneralSettings } from './GeneralSettings';
-export { default as AISettings } from './AISettings';
-export { default as EditorSettings } from './EditorSettings';
 export { default as UISettings } from './UISettings';
 export { default as TemplateManagementSettings } from './TemplateManagementSettings';
 export { default as BackupSettings } from './BackupSettings';

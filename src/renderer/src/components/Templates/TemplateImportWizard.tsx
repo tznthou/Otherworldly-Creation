@@ -129,8 +129,8 @@ export const TemplateImportWizard: React.FC<TemplateImportWizardProps> = ({
             const template: NovelTemplate = {
               ...templateData,
               id: `import-${Date.now()}`,
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
               isCustom: true,
               isActive: true
             };
@@ -222,7 +222,7 @@ export const TemplateImportWizard: React.FC<TemplateImportWizardProps> = ({
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+        className="bg-cosmic-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gold-500/20"
       >
         {/* 標題列 */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
@@ -280,7 +280,7 @@ export const TemplateImportWizard: React.FC<TemplateImportWizardProps> = ({
         </div>
 
         {/* 內容區域 */}
-        <div className="p-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-6 max-h-[70vh] overflow-y-auto bg-cosmic-950">
           <AnimatePresence mode="wait">
             {/* 步驟 1: 檔案上傳 */}
             {currentStep === 'upload' && (
@@ -357,52 +357,52 @@ const UploadStep: React.FC<{
       className="space-y-6"
     >
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">選擇匯入方式</h3>
-        <p className="text-gray-600 mt-1">
+        <h3 className="text-lg font-semibold text-white">選擇匯入方式</h3>
+        <p className="text-gray-300 mt-1">
           您可以上傳小說檔案或貼上文本內容，系統將自動分析並生成創作模板
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 檔案上傳 */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors">
-          <div className="text-center">
-            <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+        <div className="relative border-2 border-dashed border-cosmic-600 rounded-lg p-6 hover:border-gold-400 transition-colors bg-cosmic-800">
+          <div className="text-center pointer-events-none">
+            <svg className="mx-auto h-12 w-12 text-cosmic-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
               <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <div className="mt-4">
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <span className="mt-2 block text-sm font-medium text-gray-900">
-                  點擊上傳檔案
-                </span>
-                <span className="mt-1 block text-xs text-gray-500">
-                  支援 TXT、JSON 格式，最大 10MB
-                </span>
-              </label>
-              <input
-                id="file-upload"
-                name="file-upload"
-                type="file"
-                accept=".txt,.json"
-                className="sr-only"
-                onChange={onFileSelect}
-              />
+              <span className="mt-2 block text-sm font-medium text-white">
+                點擊上傳檔案
+              </span>
+              <span className="mt-1 block text-xs text-gray-300">
+                支援 TXT、JSON 格式，最大 10MB
+              </span>
             </div>
-            {selectedFile && (
-              <div className="mt-2 text-sm text-green-600">
+          </div>
+          <input
+            id="file-upload"
+            name="file-upload"
+            type="file"
+            accept=".txt,.json"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            onChange={onFileSelect}
+          />
+          {selectedFile && (
+            <div className="absolute bottom-2 left-0 right-0 text-center">
+              <div className="inline-block bg-green-900/50 text-green-300 text-sm px-3 py-1 rounded-full border border-green-600/50">
                 已選擇：{selectedFile.name}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* 文本輸入 */}
         <div className="space-y-4">
-          <label className="block text-sm font-medium text-gray-900">
+          <label className="block text-sm font-medium text-white">
             或直接貼上小說內容
           </label>
           <textarea
-            className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            className="w-full h-32 px-3 py-2 bg-cosmic-800 border border-cosmic-600 rounded-md focus:ring-2 focus:ring-gold-400 focus:border-gold-400 resize-none text-white placeholder-gray-400"
             placeholder="在此貼上您的小說內容..."
             value={pastedText}
             onChange={(e) => setPastedText(e.target.value)}
@@ -411,7 +411,7 @@ const UploadStep: React.FC<{
             type="button"
             onClick={() => onTextPaste(pastedText)}
             disabled={!pastedText.trim()}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 bg-gold-600 text-cosmic-900 font-medium rounded-md hover:bg-gold-500 focus:ring-2 focus:ring-gold-400 disabled:bg-cosmic-600 disabled:cursor-not-allowed disabled:text-gray-400"
           >
             使用此內容
           </button>
@@ -419,13 +419,13 @@ const UploadStep: React.FC<{
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="bg-red-900/50 border border-red-500/50 rounded-md p-4">
           <div className="flex">
             <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
             <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm text-red-300">{error}</p>
             </div>
           </div>
         </div>
@@ -435,10 +435,10 @@ const UploadStep: React.FC<{
         <button
           onClick={onNext}
           disabled={!fileContent || isProcessing}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
+          className="px-6 py-2 bg-gold-600 text-cosmic-900 font-medium rounded-md hover:bg-gold-500 focus:ring-2 focus:ring-gold-400 disabled:bg-cosmic-600 disabled:cursor-not-allowed disabled:text-gray-400 flex items-center"
         >
           {isProcessing && (
-            <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-cosmic-800" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -467,38 +467,38 @@ const OptionsStep: React.FC<{
       className="space-y-6"
     >
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">設定分析選項</h3>
-        <p className="text-gray-600 mt-1">
+        <h3 className="text-lg font-semibold text-white">設定分析選項</h3>
+        <p className="text-gray-300 mt-1">
           自訂分析深度和重點領域，以獲得最適合的模板
         </p>
       </div>
 
       {/* 檔案資訊 */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="font-medium text-gray-900 mb-2">檔案資訊</h4>
+      <div className="bg-cosmic-800 rounded-lg p-4">
+        <h4 className="font-medium text-gold-400 mb-2">檔案資訊</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <span className="text-gray-500">標題:</span>
-            <span className="ml-2 font-medium">{parseResult.title || '未知'}</span>
+            <span className="text-gray-400">標題:</span>
+            <span className="ml-2 font-medium text-white">{parseResult.title || '未知'}</span>
           </div>
           <div>
-            <span className="text-gray-500">總字數:</span>
-            <span className="ml-2 font-medium">{parseResult.statistics.totalWords.toLocaleString()}</span>
+            <span className="text-gray-400">總字數:</span>
+            <span className="ml-2 font-medium text-white">{parseResult.statistics.totalWords.toLocaleString()}</span>
           </div>
           <div>
-            <span className="text-gray-500">章節數:</span>
-            <span className="ml-2 font-medium">{parseResult.chapters.length}</span>
+            <span className="text-gray-400">章節數:</span>
+            <span className="ml-2 font-medium text-white">{parseResult.chapters.length}</span>
           </div>
           <div>
-            <span className="text-gray-500">角色數:</span>
-            <span className="ml-2 font-medium">{parseResult.basicAnalysis.characters.length}</span>
+            <span className="text-gray-400">角色數:</span>
+            <span className="ml-2 font-medium text-white">{parseResult.basicAnalysis.characters.length}</span>
           </div>
         </div>
       </div>
 
       {/* 分析深度選擇 */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-3">分析深度</label>
+        <label className="block text-sm font-medium text-gold-400 mb-3">分析深度</label>
         <div className="grid grid-cols-3 gap-4">
           {[
             { value: 'basic', label: '基礎', desc: '快速分析，提取核心元素' },
@@ -519,11 +519,11 @@ const OptionsStep: React.FC<{
               />
               <div className={`border-2 rounded-lg p-4 ${
                 options.analysisDepth === depth.value
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-gold-400 bg-gold-900/20'
+                  : 'border-cosmic-600 hover:border-cosmic-500 bg-cosmic-800'
               }`}>
-                <div className="font-medium text-gray-900">{depth.label}</div>
-                <div className="text-sm text-gray-500 mt-1">{depth.desc}</div>
+                <div className="font-medium text-white">{depth.label}</div>
+                <div className="text-sm text-gray-300 mt-1">{depth.desc}</div>
               </div>
             </label>
           ))}
@@ -532,7 +532,7 @@ const OptionsStep: React.FC<{
 
       {/* 分析重點 */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-3">分析重點</label>
+        <label className="block text-sm font-medium text-gold-400 mb-3">分析重點</label>
         <div className="grid grid-cols-2 gap-4">
           {[
             { value: 'world', label: '世界觀設定', icon: '🌍' },
@@ -550,9 +550,9 @@ const OptionsStep: React.FC<{
                     : options.focusAreas.filter(a => a !== area.value);
                   onOptionsChange({ ...options, focusAreas: newAreas });
                 }}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-gold-600 focus:ring-gold-400 border-cosmic-600 rounded bg-cosmic-700"
               />
-              <span className="ml-3 text-sm">
+              <span className="ml-3 text-sm text-white">
                 {area.icon} {area.label}
               </span>
             </label>
@@ -561,22 +561,22 @@ const OptionsStep: React.FC<{
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="bg-red-900/50 border border-red-500/50 rounded-md p-4">
+          <p className="text-sm text-red-300">{error}</p>
         </div>
       )}
 
       <div className="flex justify-between">
         <button
           onClick={onBack}
-          className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500"
+          className="px-6 py-2 border border-cosmic-600 text-gray-300 rounded-md hover:bg-cosmic-700 focus:ring-2 focus:ring-blue-500"
         >
           上一步
         </button>
         <button
           onClick={onNext}
           disabled={options.focusAreas.length === 0}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-gold-600 text-cosmic-900 font-medium rounded-md hover:bg-gold-500 focus:ring-2 focus:ring-gold-400 disabled:bg-cosmic-600 disabled:cursor-not-allowed disabled:text-gray-400"
         >
           開始分析
         </button>
@@ -598,8 +598,8 @@ const AnalyzingStep: React.FC<{
       className="text-center space-y-6"
     >
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">AI 智能分析中</h3>
-        <p className="text-gray-600 mt-1">
+        <h3 className="text-lg font-semibold text-white">AI 智能分析中</h3>
+        <p className="text-gray-300 mt-1">
           正在使用人工智能技術分析您的小說內容...
         </p>
       </div>
@@ -607,7 +607,7 @@ const AnalyzingStep: React.FC<{
       {/* 動畫圖標 */}
       <div className="flex justify-center">
         <div className="relative">
-          <svg className="animate-spin h-12 w-12 text-blue-600" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-12 w-12 text-gold-500" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
@@ -618,16 +618,16 @@ const AnalyzingStep: React.FC<{
       {progress && (
         <div className="max-w-md mx-auto">
           <div className="mb-2 flex justify-between text-sm">
-            <span className="text-gray-600">{progress.message}</span>
-            <span className="text-gray-900 font-medium">{progress.current}%</span>
+            <span className="text-gray-300">{progress.message}</span>
+            <span className="text-white font-medium">{progress.current}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-cosmic-600 rounded-full h-2">
             <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+              className="bg-gold-500 h-2 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progress.current}%` }}
             />
           </div>
-          <div className="mt-2 text-xs text-gray-500">
+          <div className="mt-2 text-xs text-gray-400">
             階段: {progress.stage === 'preparing' ? '準備中' :
                   progress.stage === 'analyzing' ? '分析中' :
                   progress.stage === 'aggregating' ? '整合中' :
@@ -637,13 +637,13 @@ const AnalyzingStep: React.FC<{
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="bg-red-900/50 border border-red-500/50 rounded-md p-4">
+          <p className="text-sm text-red-300">{error}</p>
         </div>
       )}
 
       {/* 分析提示 */}
-      <div className="text-sm text-gray-500 space-y-2">
+      <div className="text-sm text-gray-300 space-y-2">
         <p>✨ 正在分析世界觀設定和角色特徵</p>
         <p>📚 解析劇情結構和寫作風格</p>
         <p>🎯 生成個性化創作模板</p>
@@ -668,49 +668,49 @@ const PreviewStep: React.FC<{
       className="space-y-6"
     >
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">預覽生成的模板</h3>
-        <p className="text-gray-600 mt-1">
+        <h3 className="text-lg font-semibold text-white">預覽生成的模板</h3>
+        <p className="text-gray-300 mt-1">
           檢查並調整模板內容，確認無誤後即可儲存
         </p>
       </div>
 
-      <div className="bg-gray-50 rounded-lg p-6 max-h-96 overflow-y-auto">
+      <div className="bg-cosmic-800 rounded-lg p-6 max-h-96 overflow-y-auto border border-cosmic-600">
         <div className="space-y-4">
           {/* 基本資訊 */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">模板名稱</label>
+            <label className="block text-sm font-medium text-gold-400 mb-1">模板名稱</label>
             <input
               type="text"
               value={template.name}
               onChange={(e) => onTemplateChange({ ...template, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-md focus:ring-2 focus:ring-gold-400 text-white placeholder-gray-400"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">描述</label>
+            <label className="block text-sm font-medium text-gold-400 mb-1">描述</label>
             <textarea
               value={template.description}
               onChange={(e) => onTemplateChange({ ...template, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-md focus:ring-2 focus:ring-gold-400 text-white placeholder-gray-400"
               rows={3}
             />
           </div>
 
           {/* 世界觀設定 */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">世界觀設定</h4>
+            <h4 className="font-medium text-gold-400 mb-2">世界觀設定</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500">時代:</span>
-                <span className="ml-2">{template.worldSetting.era}</span>
+                <span className="text-gray-400">時代:</span>
+                <span className="ml-2 text-white">{template.worldSetting.era}</span>
               </div>
               <div>
-                <span className="text-gray-500">科技:</span>
-                <span className="ml-2">{template.worldSetting.technology}</span>
+                <span className="text-gray-400">科技:</span>
+                <span className="ml-2 text-white">{template.worldSetting.technology}</span>
               </div>
               <div className="col-span-2">
-                <span className="text-gray-500">特殊元素:</span>
+                <span className="text-gray-400">特殊元素:</span>
                 <span className="ml-2">{template.worldSetting.specialElements.join('、')}</span>
               </div>
             </div>
@@ -718,12 +718,12 @@ const PreviewStep: React.FC<{
 
           {/* 角色原型 */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">角色原型 ({template.characterArchetypes.length})</h4>
+            <h4 className="font-medium text-gold-400 mb-2">角色原型 ({template.characterArchetypes.length})</h4>
             <div className="space-y-2">
               {template.characterArchetypes.slice(0, 3).map((char, index) => (
-                <div key={index} className="text-sm border-l-4 border-blue-200 pl-3">
-                  <div className="font-medium">{char.name}</div>
-                  <div className="text-gray-600">{char.description}</div>
+                <div key={index} className="text-sm border-l-4 border-gold-400 pl-3">
+                  <div className="font-medium text-white">{char.name}</div>
+                  <div className="text-gray-300">{char.description}</div>
                 </div>
               ))}
             </div>
@@ -732,15 +732,15 @@ const PreviewStep: React.FC<{
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="bg-red-900/50 border border-red-500/50 rounded-md p-4">
+          <p className="text-sm text-red-300">{error}</p>
         </div>
       )}
 
       <div className="flex justify-between">
         <button
           onClick={onBack}
-          className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500"
+          className="px-6 py-2 border border-cosmic-600 text-gray-300 rounded-md hover:bg-cosmic-700 focus:ring-2 focus:ring-blue-500"
         >
           重新分析
         </button>
@@ -765,14 +765,14 @@ const SavingStep: React.FC = () => {
       className="text-center space-y-6"
     >
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">儲存模板中</h3>
-        <p className="text-gray-600 mt-1">
+        <h3 className="text-lg font-semibold text-white">儲存模板中</h3>
+        <p className="text-gray-300 mt-1">
           正在將生成的模板儲存到您的模板庫...
         </p>
       </div>
 
       <div className="flex justify-center">
-        <svg className="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin h-8 w-8 text-gold-500" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>

@@ -197,7 +197,7 @@ export class TemplateService {
       ...templateData,
       id: templateId,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString().toISOString(),
+      updatedAt: new Date().toISOString(),
       isCustom: true,
       isActive: true
     };

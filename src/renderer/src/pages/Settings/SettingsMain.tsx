@@ -7,8 +7,6 @@ import SettingsLoadingView from './components/SettingsLoadingView';
 import UpdateSettings from '../../components/Update/UpdateSettings';
 import {
   GeneralSettings,
-  AISettings,
-  EditorSettings,
   UISettings,
   TemplateManagementSettings,
   BackupSettings,
@@ -83,10 +81,6 @@ const SettingsMain: React.FC = () => {
     switch (activeTab) {
       case 'general':
         return <GeneralSettings {...commonProps} />;
-      case 'ai':
-        return <AISettings {...commonProps} />;
-      case 'editor':
-        return <EditorSettings {...commonProps} />;
       case 'ui':
         return <UISettings {...commonProps} />;
       case 'templates':
