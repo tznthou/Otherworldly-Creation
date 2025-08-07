@@ -136,10 +136,30 @@ const ProjectEditorContent: React.FC = () => {
 
   // 處理章節選擇
   const handleChapterSelect = useCallback((chapterId: string) => {
+    console.log('🔍 [ProjectEditor] 用戶選擇章節:', chapterId);
+    console.log('🔍 [ProjectEditor] 可用章節列表:', chapters.map(c => ({
+      id: c.id,
+      title: c.title,
+      contentType: typeof c.content,
+      contentLength: Array.isArray(c.content) ? c.content.length : 'not array'
+    })));
+    
     const chapter = chapters.find(c => c.id === chapterId);
+    console.log('🔍 [ProjectEditor] 找到的章節:', chapter ? {
+      id: chapter.id,
+      title: chapter.title,
+      contentType: typeof chapter.content,
+      contentLength: Array.isArray(chapter.content) ? chapter.content.length : 'not array',
+      contentPreview: Array.isArray(chapter.content) && chapter.content.length > 0
+        ? JSON.stringify(chapter.content[0]).substring(0, 100) + '...'
+        : 'empty or invalid'
+    } : 'NOT FOUND');
+    
     if (chapter) {
       setSelectedChapterId(chapterId);
+      console.log('🔍 [ProjectEditor] 更新 selectedChapterId 為:', chapterId);
       dispatch(setCurrentChapter(chapter));
+      console.log('🔍 [ProjectEditor] 已分派 setCurrentChapter action');
     }
   }, [chapters, dispatch]);
   
@@ -165,8 +185,22 @@ const ProjectEditorContent: React.FC = () => {
 
   // 處理編輯器內容變化
   const handleEditorChange = useCallback((value: Descendant[]) => {
+    // 立即更新當前章節內容 (Redux 狀態)
     dispatch(updateCurrentChapterContent(value));
-  }, [dispatch]);
+    
+    // 同步更新 chapters 數組中的對應章節
+    if (currentChapter) {
+      const updatedChapter = {
+        ...currentChapter,
+        content: value, // 保持物件格式，API 層會處理序列化
+      };
+      
+      // 異步更新數據庫
+      dispatch(updateChapter(updatedChapter)).catch((error) => {
+        console.error('章節內容同步失敗:', error);
+      });
+    }
+  }, [dispatch, currentChapter]);
 
   // 創建新章節
   const handleCreateChapter = useCallback(() => {
@@ -288,6 +322,22 @@ const ProjectEditorContent: React.FC = () => {
       <div className="flex-1 flex relative" style={{ minWidth: '800px' }}>
         {/* 主編輯區 */}
         <div className="flex-1 flex flex-col">
+          {(() => {
+            // 調試：記錄當前要渲染的章節
+            if (currentChapter) {
+              console.log('🔍 [ProjectEditor] 準備渲染章節:', {
+                id: currentChapter.id,
+                title: currentChapter.title,
+                contentType: typeof currentChapter.content,
+                contentLength: Array.isArray(currentChapter.content) ? currentChapter.content.length : 'not array',
+                contentPreview: Array.isArray(currentChapter.content) && currentChapter.content.length > 0
+                  ? JSON.stringify(currentChapter.content[0]).substring(0, 120) + '...'
+                  : 'empty or invalid',
+                selectedChapterId: selectedChapterId
+              });
+            }
+            return null;
+          })()}
           {currentChapter ? (
             <>
               {/* 章節標題欄 */}
@@ -345,6 +395,7 @@ const ProjectEditorContent: React.FC = () => {
               {/* 編輯器 */}
               <div className="flex-1 overflow-auto" style={{ maxHeight: '60vh' }} data-tutorial="writing-area">
                 <SlateEditor
+                  key={`editor-${currentChapter.id}`} // 強制重新渲染
                   value={currentChapter.content}
                   onChange={handleEditorChange}
                   placeholder="開始寫作..."

@@ -22,13 +22,43 @@ const initialState: ChaptersState = {
 };
 
 // 異步 thunks
+// 重新導出 Chapter 類型供其他組件使用
+export type { Chapter } from '../../api/models';
 export const fetchChaptersByProjectId = createAsyncThunk(
   'chapters/fetchByProjectId',
   async (projectId: string) => {
+    console.log('🔍 [chaptersSlice] 開始載入專案章節:', projectId);
+    
     const chapters = await api.chapters.getByProjectId(projectId);
+    
+    // 詳細記錄每個章節的數據
+    console.log('🔍 [chaptersSlice] API 返回的章節數量:', chapters.length);
+    chapters.forEach((chapter, index) => {
+      console.log(`🔍 [chaptersSlice] 章節 ${index + 1}:`, {
+        id: chapter.id,
+        title: chapter.title,
+        contentType: typeof chapter.content,
+        contentLength: Array.isArray(chapter.content) ? chapter.content.length : 'not array',
+        contentPreview: Array.isArray(chapter.content) && chapter.content.length > 0 
+          ? JSON.stringify(chapter.content[0]).substring(0, 100) + '...'
+          : 'empty or invalid',
+        order: chapter.order,
+        chapterNumber: chapter.chapterNumber
+      });
+    });
+    
+    // 檢查是否有重複內容
+    const contentHashes = chapters.map(c => JSON.stringify(c.content));
+    const uniqueContents = new Set(contentHashes);
+    console.log('🔍 [chaptersSlice] 內容唯一性檢查:', {
+      總章節數: chapters.length,
+      唯一內容數: uniqueContents.size,
+      是否有重複: chapters.length !== uniqueContents.size
+    });
+    
     return chapters;
   }
-);
+);;
 
 export const createChapter = createAsyncThunk(
   'chapters/create',
@@ -52,6 +82,13 @@ export const updateChapter = createAsyncThunk(
   'chapters/update',
   async (chapter: Chapter) => {
     await api.chapters.update(chapter);
+    // API 層會處理序列化，這裡直接返回原始的 chapter 物件
+    console.log('更新章節:', {
+      id: chapter.id,
+      title: chapter.title,
+      contentType: typeof chapter.content
+    });
+    
     return chapter;
   }
 );
@@ -68,9 +105,16 @@ export const fetchChapterById = createAsyncThunk(
   'chapters/fetchById',
   async (chapterId: string) => {
     const chapter = await api.chapters.getById(chapterId);
+    // API 層已經處理了資料轉換，直接返回
+    console.log('載入單一章節:', {
+      id: chapter.id,
+      title: chapter.title,
+      contentType: typeof chapter.content,
+      contentLength: Array.isArray(chapter.content) ? chapter.content.length : 'not array'
+    });
+    
     return {
       ...chapter,
-      content: chapter.content || [{ type: 'paragraph', children: [{ text: '' }] }],
       createdAt: chapter.createdAt,
       updatedAt: chapter.updatedAt,
     };
@@ -82,7 +126,26 @@ const chaptersSlice = createSlice({
   initialState,
   reducers: {
     setCurrentChapter: (state, action: PayloadAction<Chapter | null>) => {
+      console.log('🔍 [Redux] setCurrentChapter reducer 被調用');
+      console.log('🔍 [Redux] 之前的 currentChapter:', state.currentChapter ? {
+        id: state.currentChapter.id,
+        title: state.currentChapter.title,
+        contentType: typeof state.currentChapter.content,
+        contentLength: Array.isArray(state.currentChapter.content) ? state.currentChapter.content.length : 'not array'
+      } : 'null');
+      
+      console.log('🔍 [Redux] 新的 currentChapter payload:', action.payload ? {
+        id: action.payload.id,
+        title: action.payload.title,
+        contentType: typeof action.payload.content,
+        contentLength: Array.isArray(action.payload.content) ? action.payload.content.length : 'not array',
+        contentPreview: Array.isArray(action.payload.content) && action.payload.content.length > 0
+          ? JSON.stringify(action.payload.content[0]).substring(0, 100) + '...'
+          : 'empty or invalid'
+      } : 'null');
+      
       state.currentChapter = action.payload;
+      console.log('🔍 [Redux] currentChapter 已更新');
     },
     updateCurrentChapterContent: (state, action: PayloadAction<Descendant[]>) => {
       if (state.currentChapter) {

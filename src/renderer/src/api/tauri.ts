@@ -282,27 +282,55 @@ export const tauriAPI: API = {
   
   chapters: {
     getByProjectId: async (projectId) => {
+      console.log('🔍 [API] 調用 Tauri 後端獲取章節:', projectId);
+      
       const chapters = await safeInvoke<TauriChapter[]>('get_chapters_by_project_id', { projectId });
+      console.log('🔍 [API] Tauri 後端返回的原始數據數量:', chapters.length);
+      
+      // 記錄原始數據格式
+      chapters.forEach((rawChapter, index) => {
+        console.log(`🔍 [API] 原始章節 ${index + 1}:`, {
+          id: rawChapter.id,
+          title: rawChapter.title,
+          content_type: typeof rawChapter.content,
+          content_length: rawChapter.content ? rawChapter.content.length : 0,
+          content_preview: rawChapter.content ? rawChapter.content.substring(0, 100) + '...' : 'empty',
+          order_index: rawChapter.order_index,
+          chapter_number: rawChapter.chapter_number
+        });
+      });
+      
       // 轉換 Tauri 後端格式到前端格式
-      return chapters.map((chapter) => {
+      const processedChapters = chapters.map((chapter, index) => {
         let content: Descendant[] = [{ type: 'paragraph', children: [{ text: '' }] }];
         
         if (chapter.content) {
           try {
             // 嘗試解析 JSON 格式的內容
-            content = JSON.parse(chapter.content);
-          } catch (_error) {
+            const parsedContent = JSON.parse(chapter.content);
+            content = parsedContent;
+            console.log(`🔍 [API] 章節 ${index + 1} JSON 解析成功:`, {
+              解析後類型: typeof parsedContent,
+              是否為陣列: Array.isArray(parsedContent),
+              陣列長度: Array.isArray(parsedContent) ? parsedContent.length : 'N/A',
+              第一個元素: Array.isArray(parsedContent) && parsedContent.length > 0 
+                ? JSON.stringify(parsedContent[0]).substring(0, 80) + '...'
+                : 'empty or invalid'
+            });
+          } catch (error) {
             // 如果解析失敗，將純文字轉換為 Slate.js 格式
-            console.log('轉換純文字章節內容為 Slate 格式');
+            console.log(`🔍 [API] 章節 ${index + 1} JSON 解析失敗，轉換純文字:`, error);
             const textLines = chapter.content.split('\n');
             content = textLines.map(line => ({
               type: 'paragraph' as const,
               children: [{ text: line }]
             }));
           }
+        } else {
+          console.log(`🔍 [API] 章節 ${index + 1} 內容為空`);
         }
         
-        return {
+        const processedChapter = {
           id: chapter.id,
           projectId: chapter.project_id,
           title: chapter.title,
@@ -312,7 +340,30 @@ export const tauriAPI: API = {
           createdAt: chapter.created_at,
           updatedAt: chapter.updated_at
         };
+        
+        console.log(`🔍 [API] 處理後章節 ${index + 1}:`, {
+          id: processedChapter.id,
+          title: processedChapter.title,
+          content_type: typeof processedChapter.content,
+          content_array_length: Array.isArray(processedChapter.content) ? processedChapter.content.length : 'not array',
+          content_first_element: Array.isArray(processedChapter.content) && processedChapter.content.length > 0
+            ? JSON.stringify(processedChapter.content[0]).substring(0, 80) + '...'
+            : 'empty'
+        });
+        
+        return processedChapter;
       });
+      
+      // 檢查處理後是否有重複內容
+      const processedContentHashes = processedChapters.map(c => JSON.stringify(c.content));
+      const uniqueProcessedContents = new Set(processedContentHashes);
+      console.log('🔍 [API] 處理後內容唯一性檢查:', {
+        總章節數: processedChapters.length,
+        唯一內容數: uniqueProcessedContents.size,
+        是否有重複: processedChapters.length !== uniqueProcessedContents.size
+      });
+      
+      return processedChapters;
     },
     create: (chapter) => safeInvoke('create_chapter', {
       chapter: {
