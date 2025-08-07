@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const mainOverflowClass = isEditorPage ? 'overflow-auto' : 'overflow-hidden';
 
   return (
-    <div className="flex h-screen bg-cosmic-950 relative">
+    <div className="flex h-screen bg-cosmic-950 relative" style={{ minWidth: '1400px' }}>
       {/* 宇宙背景 - 確保不會阻擋點擊 */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
         <CosmicBackground intensity="medium" />
@@ -33,12 +33,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* 主要內容區域 */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${
         sidebarCollapsed ? 'ml-16' : 'ml-64'
-      }`}>
+      }`} style={{ flexShrink: 0, minWidth: '1000px' }}>
         {/* 頂部標題欄 */}
         <Header />
         
         {/* 主要內容 */}
-        <main className={`flex-1 ${mainOverflowClass} relative`}>
+        <main className={`flex-1 ${mainOverflowClass} relative`} style={{ overflowX: 'auto' }}>
           {children}
         </main>
         

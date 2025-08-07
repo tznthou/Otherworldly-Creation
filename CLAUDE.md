@@ -559,6 +559,22 @@ Key rules in `.eslintrc.js`:
 
 ## Change Log
 
+### [2025-08-07 14:38:44] - 水平捲軸問題完全修復 🎯✨
+- **關鍵修復**: 解決窗口模式下AI面板被截斷的問題
+- **技術改進**:
+  - **Layout.tsx**: 主要內容區域添加 `flexShrink: 0` 和 `minWidth: '1000px'`，防止容器自動收縮適應視窗寬度
+  - **ProjectEditor.tsx**: AI面板添加 `flex-shrink-0` 和 `minWidth: '384px'`，防止面板文字被擠壓
+- **用戶體驗提升**:
+  - ✅ 窗口模式下出現應用程式層級水平捲軸
+  - ✅ 可完整滾動查看AI續寫面板內容
+  - ✅ AI面板文字不再被擠壓，保持完整顯示
+  - ✅ 支援響應式設計，適配各種窗口尺寸
+- **問題解決**:
+  - 修復了多次嘗試無效的flexbox收縮問題
+  - 找到了正確的父容器層級進行修復
+  - 確保水平捲軸在應用程式底部正常顯示
+- **影響**: 大幅提升窗口模式下的寫作體驗，AI面板功能完全可用
+
 ### [2025-08-06 23:13:35] - Multi-Provider AI System Implementation Complete 🤖✨
 - **Total lines of code**: 189,006
 - **Change from last update**: +94,516 lines (99.8% increase from 94,490 lines in last changelog)

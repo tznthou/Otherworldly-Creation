@@ -225,7 +225,7 @@ const ProjectEditorContent: React.FC = () => {
   }
 
   const editorContent = (
-    <div className="min-h-full flex">
+    <div className="min-h-full flex" style={{ overflowX: 'auto' }}>
       {/* 章節列表側邊欄 */}
       <div className="w-80 bg-cosmic-900 border-r border-cosmic-700 flex flex-col">
         {/* 專案標題 */}
@@ -285,7 +285,7 @@ const ProjectEditorContent: React.FC = () => {
       </div>
 
       {/* 編輯器區域 */}
-      <div className="flex-1 flex relative">
+      <div className="flex-1 flex relative" style={{ minWidth: '800px' }}>
         {/* 主編輯區 */}
         <div className="flex-1 flex flex-col">
           {currentChapter ? (
@@ -386,7 +386,7 @@ const ProjectEditorContent: React.FC = () => {
 
         {/* AI 續寫面板 */}
         {showAIPanel && currentChapter && id && (
-          <div className="w-96 border-l border-cosmic-700" data-tutorial="ai-panel-btn">
+          <div className="w-96 border-l border-cosmic-700 flex-shrink-0" style={{ minWidth: '384px' }} data-tutorial="ai-panel-btn">
             <AIWritingPanel 
               projectId={id} 
               chapterId={currentChapter.id}

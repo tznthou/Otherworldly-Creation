@@ -93,7 +93,8 @@
       "Bash(timeout 5 npm run dev)",
       "mcp__serena__think_about_whether_you_are_done",
       "Bash(npm audit:*)",
-      "Bash(gtimeout 10 npm run dev)"
+      "Bash(gtimeout 10 npm run dev)",
+      "Bash(git restore:*)"
     ],
     "deny": []
   }
