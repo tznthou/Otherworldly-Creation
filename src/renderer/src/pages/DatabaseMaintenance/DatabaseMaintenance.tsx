@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/UI/Card';
 import { Button } from '../../components/UI/Button';
 import { Badge } from '../../components/UI/Badge';
 import { Progress } from '../../components/UI/Progress';
 import { Alert, AlertDescription } from '../../components/UI/Alert';
+import ConfirmDialog from '../../components/UI/ConfirmDialog';
+// TODO: 修復 Tauri v2 dialog API 導入問題
+// import { save, open } from '@tauri-apps/api/dialog';
+import { addNotification } from '../../store/slices/uiSlice';
+import { AppDispatch } from '../../store/store';
 import api from '../../api';
 
 // 資料庫修復結果類型
@@ -54,6 +60,7 @@ interface DatabaseCheckResult {
 }
 
 const DatabaseMaintenance: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const [checkResult, setCheckResult] = useState<DatabaseCheckResult | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
@@ -62,6 +69,7 @@ const DatabaseMaintenance: React.FC = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [repairResult, setRepairResult] = useState<RepairResult | null>(null);
   const [errorReport, setErrorReport] = useState<string>('');
+  const [confirmImport, setConfirmImport] = useState<{show: boolean; filePath: string | null}>({show: false, filePath: null});
 
   useEffect(() => {
     // 頁面載入時自動執行健康檢查
@@ -72,18 +80,11 @@ const DatabaseMaintenance: React.FC = () => {
     setIsChecking(true);
     try {
       const result = await api.database.healthCheck();
-      // 將 DatabaseHealth 轉換為 DatabaseCheckResult
+      // 使用後端正確的返回格式
       const checkResult: DatabaseCheckResult = {
-        isHealthy: result.status === 'healthy',
-        issues: result.status !== 'healthy' ? [{ 
-          type: 'performance' as const, 
-          table: 'system',
-          description: result.message || '資料庫狀態異常', 
-          suggestion: '請執行資料庫維護以修復問題',
-          severity: result.status === 'error' ? 'high' : 'medium',
-          autoFixable: true
-        }] : [],
-        statistics: { 
+        isHealthy: result.isHealthy || false,
+        issues: result.issues || [],
+        statistics: result.statistics || { 
           totalProjects: 0, 
           totalChapters: 0, 
           totalCharacters: 0, 
@@ -92,8 +93,19 @@ const DatabaseMaintenance: React.FC = () => {
           lastVacuum: null, 
           fragmentationLevel: 0 
         },
-        timestamp: new Date().toISOString()
+        timestamp: result.timestamp || new Date().toISOString()
       };
+      // 如果沒有統計資訊但有問題，保留舊邏輯作為備份
+      if (!result.statistics && !result.isHealthy) {
+        checkResult.issues = checkResult.issues.length > 0 ? checkResult.issues : [{ 
+          type: 'performance' as const, 
+          table: 'system',
+          description: '資料庫狀態需要注意', 
+          suggestion: '請執行資料庫維護以修復問題',
+          severity: 'medium',
+          autoFixable: true
+        }];
+      }
       setCheckResult(checkResult);
       setRepairResult(null);
     } catch (error) {
@@ -110,12 +122,29 @@ const DatabaseMaintenance: React.FC = () => {
     try {
       // autoRepair 方法不存在，使用 runMaintenance 代替
       const result = await api.database.runMaintenance();
-      setRepairResult(result);
       
-      // 修復後重新檢查
-      const hasSuccess = result && typeof result === 'object' && 'success' in result;
-      if (result && (!hasSuccess || (result as { success?: boolean }).success !== false)) {
+      // 將 String 結果轉換為 RepairResult 格式
+      const repairResult: RepairResult = {
+        success: typeof result === 'string' && result.includes('完成'),
+        message: typeof result === 'string' ? result : '修復操作完成',
+        issuesFixed: checkResult?.issues.filter(issue => issue.autoFixable).length || 0
+      };
+      setRepairResult(repairResult);
+      
+      // 修復成功後重新檢查和通知
+      if (repairResult.success) {
         await performHealthCheck();
+        dispatch(addNotification({
+          type: 'success',
+          title: '修復成功',
+          message: repairResult.message
+        }));
+      } else {
+        dispatch(addNotification({
+          type: 'error',
+          title: '修復失敗',
+          message: repairResult.message
+        }));
       }
     } catch (error) {
       console.error('自動修復失敗:', error);
@@ -129,10 +158,22 @@ const DatabaseMaintenance: React.FC = () => {
     try {
       // optimize 方法不存在，使用 runMaintenance 代替
       const result = await api.database.runMaintenance();
-      const hasSuccess = result && typeof result === 'object' && 'success' in result;
-      if (result && (!hasSuccess || (result as { success?: boolean }).success !== false)) {
-        // 優化後重新檢查
+      // 檢查結果是否成功（String 類型且包含成功訊息）
+      const isSuccess = typeof result === 'string' && result.includes('完成');
+      if (isSuccess) {
+        // 優化成功後重新檢查
         await performHealthCheck();
+        dispatch(addNotification({
+          type: 'success',
+          title: '優化成功',
+          message: '資料庫已成功優化，查詢效能已提升'
+        }));
+      } else {
+        dispatch(addNotification({
+          type: 'warning',
+          title: '優化異常',
+          message: '資料庫優化可能未完全成功'
+        }));
       }
     } catch (error) {
       console.error('資料庫優化失敗:', error);
@@ -144,31 +185,39 @@ const DatabaseMaintenance: React.FC = () => {
   const exportDatabase = async () => {
     setIsExporting(true);
     try {
-      // export 方法不存在，使用 getStats 代替獲取資料庫資訊
-      const result = await api.database.getStats();
-      const hasSuccess = result && typeof result === 'object' && 'success' in result;
-      if (result && (!hasSuccess || (result as { success?: boolean }).success !== false)) {
-        // 顯示成功訊息
-      }
+      // TODO: 等待 Tauri v2 dialog API 修復後重新啟用文件選擇器
+      // 暫時使用預設路徑進行備份
+      const defaultFileName = `genesis-backup-${new Date().toISOString().split('T')[0]}.db`;
+      const backupPath = `~/Desktop/${defaultFileName}`;
+      
+      // 執行備份操作
+      await api.database.backup(backupPath);
+      console.log('資料庫已成功備份至:', backupPath);
+      dispatch(addNotification({
+        type: 'success',
+        title: '備份成功',
+        message: `資料庫已成功備份至桌面: ${defaultFileName}`
+      }));
     } catch (error) {
       console.error('匯出資料庫失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '備份失敗',
+        message: `資料庫備份失敗: ${error instanceof Error ? error.message : '未知錯誤'}`
+      }));
     } finally {
       setIsExporting(false);
     }
   };
 
   const importDatabase = async () => {
-    setIsImporting(true);
-    try {
-      // import 方法不存在，使用 restore 代替
-      await api.database.restore('backup.db');
-      // 匯入後重新檢查
-      await performHealthCheck();
-    } catch (error) {
-      console.error('匯入資料庫失敗:', error);
-    } finally {
-      setIsImporting(false);
-    }
+    // TODO: 等待 Tauri v2 dialog API 修復後重新啟用文件選擇器
+    // 暫時顯示提示訊息
+    dispatch(addNotification({
+      type: 'info',
+      title: '功能暫時不可用',
+      message: '文件選擇功能正在修復中，請稍後再試。您可以手動將備份檔案放置到指定位置。'
+    }));
   };
 
   const generateReport = async () => {
@@ -178,9 +227,35 @@ const DatabaseMaintenance: React.FC = () => {
       // generateReport 方法不存在，使用 getStats 代替
       const report = await api.database.getStats();
       setErrorReport(JSON.stringify(report, null, 2));
+      dispatch(addNotification({
+        type: 'success',
+        title: '報告生成成功',
+        message: '資料庫統計報告已生成'
+      }));
     } catch (error) {
       console.error('生成報告失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '報告生成失敗',
+        message: `生成報告失敗: ${error instanceof Error ? error.message : '未知錯誤'}`
+      }));
     }
+  };
+
+  // 確認匯入操作 (暫時禁用)
+  const handleConfirmImport = async () => {
+    // TODO: 等待 Tauri v2 dialog API 修復後重新實現
+    dispatch(addNotification({
+      type: 'info',
+      title: '功能暫時不可用',
+      message: '匯入功能正在修復中'
+    }));
+  };
+
+  // 取消匯入操作
+  const handleCancelImport = () => {
+    setConfirmImport({show: false, filePath: null});
+    setIsImporting(false);
   };
 
   const getSeverityColor = (severity: string) => {
@@ -439,6 +514,18 @@ const DatabaseMaintenance: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* 匯入確認對話框 */}
+      <ConfirmDialog
+        isOpen={confirmImport.show}
+        title="確認匯入備份"
+        message="匯入備份將會覆蓋當前的資料庫。此操作無法復原，請確保已經備份當前資料。確定要繼續嗎？"
+        confirmText="匯入"
+        cancelText="取消"
+        confirmButtonClass="bg-orange-600 hover:bg-orange-700"
+        onConfirm={handleConfirmImport}
+        onCancel={handleCancelImport}
+      />
     </div>
   );
 };

@@ -60,6 +60,8 @@ interface AIParameters {
   temperature: number;
   topP: number;
   maxTokens: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
 }
 
 const initialState: AIState = {
@@ -269,6 +271,9 @@ export const generateTextWithProvider = createAsyncThunk(
     prompt: string;
     providerId: string;
     model: string;
+    projectId: string;
+    chapterId: string;
+    position?: number;  // 新增：位置參數
     aiParams: AIParameters;
     systemPrompt?: string;
   }) => {
@@ -277,9 +282,14 @@ export const generateTextWithProvider = createAsyncThunk(
       model: params.model,
       prompt: params.prompt,
       system_prompt: params.systemPrompt,
+      project_id: params.projectId,
+      chapter_id: params.chapterId,
+      position: params.position,  // 🔥 新增：傳遞位置參數
       temperature: params.aiParams.temperature,
       max_tokens: params.aiParams.maxTokens,
       top_p: params.aiParams.topP,
+      presence_penalty: params.aiParams.presencePenalty,
+      frequency_penalty: params.aiParams.frequencyPenalty,
     });
     
     return {
@@ -297,7 +307,7 @@ export const generateTextWithProvider = createAsyncThunk(
       } : undefined,
     };
   }
-);
+);;
 
 const aiSlice = createSlice({
   name: 'ai',
@@ -498,10 +508,19 @@ const aiSlice = createSlice({
         state.currentProviderId = providerId;
         
         if (isConnected && Array.isArray(models)) {
-          state.availableModels = models;
-          // Auto-select first model
-          if (models.length > 0) {
-            state.currentModel = models[0];
+          const modelList = models as string[]; // 明確類型轉換
+          state.availableModels = modelList;
+          // 智能模型選擇：只在需要時自動選擇
+          if (modelList.length > 0) {
+            // 如果當前模型在新的模型列表中，保持不變
+            if (state.currentModel && modelList.includes(state.currentModel)) {
+              // 用戶選擇的模型仍然可用，保持不變
+              console.log('Redux: 保持用戶選擇的模型:', state.currentModel);
+            } else {
+              // 當前模型不在新列表中或沒有選擇模型，選擇第一個
+              console.log('Redux: 自動選擇第一個模型:', modelList[0]);
+              state.currentModel = modelList[0];
+            }
           }
           state.error = null;
         } else {

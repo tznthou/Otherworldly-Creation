@@ -43,6 +43,7 @@ pub struct AIGenerationRequestData {
     pub system_prompt: Option<String>,
     pub project_id: String,
     pub chapter_id: String,
+    pub position: Option<usize>,  // 新增：游標位置，用於上下文構建
     pub temperature: Option<f64>,
     pub max_tokens: Option<i32>,
     pub top_p: Option<f64>,
@@ -354,10 +355,11 @@ pub async fn test_ai_provider(id: String) -> Result<AIProviderTestResult, String
     }
 }
 
-/// 使用指定提供者生成文本
+/// 使用指定提供者生成文本（帶上下文構建）
 #[tauri::command]
 pub async fn generate_ai_text(request: AIGenerationRequestData) -> Result<AIGenerationResult, String> {
-    log::info!("使用AI提供者生成文本: {} -> {}", request.provider_id, request.model);
+    log::info!("使用AI提供者生成文本（帶上下文）: {} -> {}", request.provider_id, request.model);
+    log::info!("項目ID: {}, 章節ID: {}, 位置: {:?}", request.project_id, request.chapter_id, request.position);
     
     let start_time = std::time::Instant::now();
     
@@ -377,14 +379,76 @@ pub async fn generate_ai_text(request: AIGenerationRequestData) -> Result<AIGene
         provider_to_config(&provider).map_err(|e| e.to_string())?
     };
     
+    // 🔥 核心修復：添加上下文構建功能（和舊版 generate_with_context 一樣）
+    let enhanced_prompt = if let Some(position) = request.position {
+        log::info!("構建上下文，位置: {}", position);
+        
+        // 1. 構建上下文（使用和舊版相同的邏輯）
+        match crate::commands::context::build_context(
+            request.project_id.clone(),
+            request.chapter_id.clone(), 
+            position,
+            Some("zh-TW".to_string())
+        ).await {
+            Ok(context) => {
+                log::info!("上下文構建成功，長度: {} 字符", context.len());
+                
+                // 2. 如果設定了最大 token，進行壓縮（和舊版一樣）
+                let final_context = if let Some(max_tokens) = request.max_tokens {
+                    if max_tokens > 1000 {  // 預留一些空間給生成內容
+                        let max_context_tokens = (max_tokens / 2) as usize; // 上下文佔一半 token
+                        match crate::commands::context::compress_context(context.clone(), max_context_tokens).await {
+                            Ok(compressed) => {
+                                log::info!("上下文壓縮成功，從 {} 字符壓縮到 {} 字符", context.len(), compressed.len());
+                                compressed
+                            }
+                            Err(e) => {
+                                log::warn!("上下文壓縮失敗，使用原始上下文: {}", e);
+                                context
+                            }
+                        }
+                    } else {
+                        context
+                    }
+                } else {
+                    context
+                };
+                
+                // 3. 構建完整的提示詞：上下文 + 原始提示
+                let full_prompt = if request.prompt.trim().is_empty() {
+                    // 如果沒有特別提示，使用預設的續寫提示
+                    format!("{}
+
+請根據以上內容繼續創作，保持一致的寫作風格和故事發展。", final_context)
+                } else {
+                    // 使用自定義提示
+                    format!("{}
+
+{}", final_context, request.prompt)
+                };
+                
+                log::info!("最終提示詞長度: {} 字符", full_prompt.len());
+                full_prompt
+            }
+            Err(e) => {
+                log::warn!("構建上下文失敗，使用原始提示: {}", e);
+                request.prompt.clone()
+            }
+        }
+    } else {
+        // 沒有位置信息，直接使用原始提示
+        log::info!("沒有位置信息，使用原始提示");
+        request.prompt.clone()
+    };
+
     // 創建提供者實例
     let provider_instance = AIProviderFactory::create_provider(&config)
         .map_err(|e| format!("創建提供者實例失敗: {}", e))?;
     
-    // 構建生成請求
+    // 構建生成請求（使用增強的上下文提示詞）
     let generation_request = crate::services::ai_providers::AIGenerationRequest {
         model: request.model.clone(),
-        prompt: request.prompt.clone(),
+        prompt: enhanced_prompt, // 🔥 使用帶上下文的增強提示詞
         system_prompt: request.system_prompt.clone(),
         params: crate::services::ai_providers::AIGenerationParams {
             temperature: request.temperature.unwrap_or(0.7),

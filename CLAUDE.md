@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🚀 Quick Start with Serena MCP
 
-**IMPORTANT**: This project requires **Serena MCP** for optimal development experience. Always start by checking onboarding status:
+**⚠️ ULTRA IMPORTANT**: This project **REQUIRES** **Serena MCP** for optimal development experience. Always start by checking onboarding status:
 
 ```typescript
 // First command to run in every session
@@ -287,6 +287,8 @@ The rich text editor uses a specialized architecture to avoid React hook context
 30. **Template CSS Theme Pattern**: Always apply complete cosmic theme to Template components - change `bg-white` to `bg-cosmic-800`, `text-gray-900` to `text-white`, ensure button contrast with `bg-gold-600` + `text-cosmic-900`
 31. **Redux Selector Memoization**: Use `createSelector` from `@reduxjs/toolkit` for complex selectors to prevent "different result with same parameters" warnings and improve performance
 32. **Security First**: ALWAYS run `./scripts/security-check.sh` before any release or commit that includes new features - this prevents API key leaks and user data exposure
+33. **AI Context Integration**: New multi-provider AI system requires `position` parameter for context-aware generation - always pass cursor position from frontend to enable context building
+34. **Smart Model Selection**: Preserve user model choices - only auto-select when necessary, never override user selections
 
 ### Development Workflows
 
@@ -341,6 +343,19 @@ The rich text editor uses a specialized architecture to avoid React hook context
   - **Symptom**: Slate.js shows "[{\"type\":\"paragraph\"..." instead of content
   - **Cause**: API layer parses JSON, Redux slice parses again, corrupts data
   - **Fix**: Trust API layer completely - remove JSON.parse() from Redux slices
+
+### Multi-Provider AI Context Issues (Fixed 2025-08-08)
+- **Issue**: New AI models not capturing context for continuation writing
+- **Root Cause**: `generate_ai_text` command missing context building functionality that `generate_with_context` had
+- **Fix**: Added position-aware context building to new multi-provider system
+- **Pattern**: Always pass `position` parameter from frontend to enable context construction
+- **Verification**: Look for "構建上下文，位置: X" and "上下文構建成功，長度: X 字符" in logs
+
+### Model Selection Persistence (Fixed 2025-08-08)
+- **Issue**: User-selected models automatically reset to first model after provider changes
+- **Root Cause**: Two places with auto-selection logic that didn't preserve user choices
+- **Fix**: Smart selection logic - preserve user choice if model still available, only auto-select when no current model
+- **Files**: `AIWritingPanel.tsx` and `aiSlice.ts` with `modelList.includes(currentModel)` checks
 
 ### Ollama Integration
 - **Service URL**: `http://127.0.0.1:11434`
@@ -491,6 +506,18 @@ const fetchChapters = createAsyncThunk(
     }));
   }
 );
+
+// TypeScript Type Assertion Pattern (Fixed 2025-08-08)
+// ✅ Correct: Explicit type conversion for complex inference
+const modelList = models as string[];
+if (currentModel && modelList.includes(currentModel)) {
+  // Type-safe operation
+}
+
+// ❌ Wrong: Let TypeScript infer complex types - causes 'never[]' errors
+if (currentModel && models.includes(currentModel)) {
+  // TypeScript inference fails here
+}
 ```
 
 ### Database Migration Pattern
@@ -615,293 +642,40 @@ Key rules in `.eslintrc.js`:
 4. ✅ **Character Relationship System**: COMPLETED - Fixed API interfaces and type definitions
 5. ✅ **Final Type Issues**: COMPLETED - Fixed all remaining Slate.js and database interface issues
 
-## Change Log
+## Recent Major Updates
 
-### [2025-08-07 23:35:00] - CSS主題修復 & Redux效能優化 ✅🔧
-- **Template Import Wizard主題修復**: 解決白色文字在白色背景不可見問題
-  - 完全轉換為cosmic主題：`bg-cosmic-800/950` + 適當文字顏色
-  - 修復按鈕樣式：使用 `bg-gold-600` + `text-cosmic-900`
-  - 用戶確認："已套入主題成功，謝謝分分"
-- **Redux Selector記憶化優化**: 修復 `selectFilteredAndSortedTemplates` 重新渲染警告
-  - 使用 `createSelector` 從 `@reduxjs/toolkit` 進行適當記憶化
-  - 消除"Selector returned a different result when called with the same parameters"警告
-  - 提升Template Manager效能
-- **雙重toISOString()錯誤修復**: 修復 `novelAnalysisService.ts` 和 `templateService.ts` 中的重複方法調用
-- **影響**: Template系統完全可用，無視覺或效能問題
+### [2025-08-08 Latest] - AI Context & Model Selection Critical Fixes 🎯🤖
+- **AI Context Recovery**: Fixed new multi-provider AI models unable to capture context for continuation writing
+- **Smart Model Selection**: Implemented user-preference preservation - models stay selected across provider switches  
+- **TypeScript Type Safety**: Fixed complex type inference issues with explicit type assertions
+- **Impact**: All 5 AI providers now fully support context-aware writing with preserved user selections
 
-### [2025-08-08 01:47:00] - Settings System Complete Optimization & UI Theme Consistency ✅🎯
-- **Complete Settings System Overhaul**: Comprehensive optimization of all settings categories with duplicate removal
-  - **UI Theme Unification**: Template Import Wizard fully converted to cosmic theme, fixing white text visibility issues
-  - **Redux Performance**: Fixed `selectFilteredAndSortedTemplates` selector memoization with `createSelector`
-  - **Duplicate Cleanup**: Removed redundant update check card from Dashboard QuickActions
-  - **Update Feature Status**: Added "開發中" (In Development) badges for unimplemented features with proper user guidance
-- **Technical Improvements**:
-  - Fixed double `toISOString()` calls causing runtime errors in analysis services
-  - Optimized Settings page navigation and removed editor settings duplication
-  - Enhanced cosmic theme consistency across all Template components
-- **System Growth**: Code base expanded to 58,568 lines (263 files) with improved organization
-- **Impact**: Perfect settings experience with streamlined UI, clear feature status, and consistent visual design
+### [2025-08-08 01:47:00] - Settings System Complete Optimization ✅🎯
+- **Complete Settings System Overhaul**: Comprehensive optimization with duplicate removal
+- **UI Theme Unification**: Template Import Wizard fully converted to cosmic theme
+- **Redux Performance**: Fixed `selectFilteredAndSortedTemplates` selector memoization
+- **Impact**: Perfect settings experience with streamlined UI
 
-### [2025-08-07 21:35:58] - 章節內容重複問題根本修復 + 文檔全面更新 🎯📚
-- **總程式碼行數**: 77,522 行
-- **與上次更新比較**: -111,484 行 (程式碼統計方式調整，排除更多構建檔案)
-- **修改檔案數**: 5 個檔案，新增 269 行，刪除 10 行
+### [2025-08-07 21:35:58] - 章節內容重複問題根本修復 🎯📚
 - **關鍵修復**: 最終解決不同章節顯示相同內容的頑固問題
-  - **根本原因發現**: React組件重用導致Slate.js編輯器未重新渲染
-  - **一行代碼解決方案**: `key={editor-${currentChapter.id}}` 強制組件重新掛載
-  - **調試過程完整記錄**: 詳細追蹤數據流路徑，確認問題在渲染層而非邏輯層
-- **文檔品質大幅提升**: 
-  - **CLAUDE.md**: 新增 92 行技術文檔和最佳實踐
-  - 新增 28 項關鍵開發規則 (包含 Slate.js, Tauri 限制, 雙重JSON解析防範)
-  - 完整的調試方法論和解決方案模式記錄
-  - 增強的 TypeScript 模式和錯誤處理指南
-- **技術改進**:
-  - **API層調試**: 新增完整的數據流追蹤日誌系統
-  - **章節切換邏輯**: 優化用戶選擇章節的調試輸出
-  - **Redux狀態管理**: 增強章節內容更新的同步機制
-- **調試經驗累積**: 
-  - 系統性問題追蹤方法論建立
-  - React組件生命週期深入理解
-  - Slate.js富文本編輯器特性掌握
-- **影響**: 章節導航功能完美運作，文檔品質達到業界標準，為未來開發奠定堅實基礎
-
-### [2025-08-07 18:30:00] - 章節內容重複問題完全修復 🔧✅
-- **關鍵修復**: 解決兩個不同章節顯示相同內容的嚴重問題
-- **根本原因**: API層和Redux slice的雙重JSON解析導致數據損壞
-  - API層 (`tauri.ts`) 已正確解析JSON
-  - Redux slice (`chaptersSlice.ts`) 錯誤地再次解析JSON
-  - 導致Slate.js收到字串而非物件陣列，造成內容顯示錯誤
-- **技術修復**:
-  - 移除 `fetchChaptersByProjectId` 中的冗餘JSON解析
-  - 移除 `fetchChapterById` 中的冗餘JSON解析  
-  - 簡化 `updateChapter` 邏輯，完全信任API層
-- **Slate.js錯誤解決**:
-  - 修復 `[Slate] initialValue is invalid!` 錯誤
-  - 確保編輯器接收正確的物件陣列格式
-- **調試經驗**:
-  - 直接檢查SQLite資料庫確認數據完整性
-  - 追蹤完整數據流路徑找出問題根源
-  - 建立雙重JSON解析防範機制
-- **影響**: 章節內容現在能正確顯示各自獨特的內容，編輯器功能完全恢復正常
-
-### [2025-08-07 18:45:00] - 章節內容重複問題最終解決方案 🎯✅
-- **關鍵修復**: 發現並解決不同章節顯示相同內容的根本原因
-- **問題核心**: Slate.js編輯器組件在章節切換時未重新渲染
-  - **數據流確認**: 後端 → API → Redux → React 全程正常
-  - **章節切換邏輯**: 完全正確，資料庫內容正確區分
-  - **真正問題**: React重用相同組件實例導致視覺內容不更新
-- **一行代碼解決方案**:
-  ```tsx
-  <SlateEditor
-    key={`editor-${currentChapter.id}`} // ← 強制重新渲染的關鍵
-    value={currentChapter.content}
-    // ... 其他屬性
-  />
-  ```
-- **調試方法論**:
-  - 系統性追蹤完整數據流路徑
-  - 在關鍵轉換點添加詳細console日誌
-  - 確認問題層級：邏輯層 vs 渲染層
-- **技術洞察**:
-  - **React Re-rendering**: `key` 屬性強制組件重新掛載
-  - **Slate.js特性**: 富文本編輯器需要明確重新掛載來處理內容切換
-  - **組件生命週期**: 內容變化但props相似時需要key來觸發重新渲染
-- **用戶反饋**: "完美成功，分分妳超棒" - 問題完全解決
-- **Serena記憶**: 已記錄完整解決方案模式供未來參考
-- **影響**: 章節導航功能現在完美運作，編輯體驗流暢無誤
-
-### [2025-08-07 14:38:44] - 水平捲軸問題完全修復 🎯✨
-- **關鍵修復**: 解決窗口模式下AI面板被截斷的問題
-- **技術改進**:
-  - **Layout.tsx**: 主要內容區域添加 `flexShrink: 0` 和 `minWidth: '1000px'`，防止容器自動收縮適應視窗寬度
-  - **ProjectEditor.tsx**: AI面板添加 `flex-shrink-0` 和 `minWidth: '384px'`，防止面板文字被擠壓
-- **用戶體驗提升**:
-  - ✅ 窗口模式下出現應用程式層級水平捲軸
-  - ✅ 可完整滾動查看AI續寫面板內容
-  - ✅ AI面板文字不再被擠壓，保持完整顯示
-  - ✅ 支援響應式設計，適配各種窗口尺寸
-- **問題解決**:
-  - 修復了多次嘗試無效的flexbox收縮問題
-  - 找到了正確的父容器層級進行修復
-  - 確保水平捲軸在應用程式底部正常顯示
-- **影響**: 大幅提升窗口模式下的寫作體驗，AI面板功能完全可用
+- **根本原因發現**: React組件重用導致Slate.js編輯器未重新渲染
+- **一行代碼解決方案**: `key={editor-${currentChapter.id}}` 強制組件重新掛載
+- **影響**: 章節導航功能完美運作，編輯體驗流暢無誤
 
 ### [2025-08-06 23:13:35] - Multi-Provider AI System Implementation Complete 🤖✨
-- **Total lines of code**: 189,006
-- **Change from last update**: +94,516 lines (99.8% increase from 94,490 lines in last changelog)
-- **Files modified**: 24 tracked files, 7 new files (2,430 new lines in AI providers system)
 - **Revolutionary Feature**: Complete multi-provider AI system implementation
-  - **5 Major Providers Supported**: Ollama (local), OpenAI, Google Gemini, Anthropic Claude, OpenRouter
-  - **Unified Trait Architecture**: Common `AIProvider` trait with provider-specific implementations
-  - **Advanced Model Discovery**: Auto-detection of available models for each provider
-  - **Smart Provider Management**: Dynamic creation, testing, and management of AI providers
-  - **Database Schema v9**: New `ai_providers` table for multi-provider configuration storage
-- **Backend Architecture**:
-  - New `ai_providers.rs` command system (436 lines)
-  - Complete provider trait system (1,994 lines across 7 files)
-  - Provider-specific implementations: Ollama, OpenAI, Gemini, Claude, OpenRouter
-  - Unified error handling and connection pooling
-- **Frontend Enhancements**:
-  - Completely redesigned AISettingsModal (866+ lines) with advanced provider management
-  - Dynamic model search and provider testing capabilities
-  - Enhanced AI slice with multi-provider state management (220+ lines added)
-  - Comprehensive type definitions for all provider interfaces
-- **User Experience**: 
-  - Seamless switching between AI providers
-  - Real-time model discovery and testing
-  - Provider connection status monitoring
-  - Intelligent fallback mechanisms
-- **Technical Impact**: 
-  - Database migration to v9 with backwards compatibility
-  - Enhanced error handling across all AI operations
-  - Improved internationalization with 113+ new translation keys
+- **5 Major Providers Supported**: Ollama (local), OpenAI, Google Gemini, Anthropic Claude, OpenRouter
+- **Database Schema v9**: New `ai_providers` table for multi-provider configuration storage
 - **Impact**: Transforms the application from single-provider to enterprise-grade multi-provider AI platform
 
-### [2025-08-05 16:45:00] - Chapter Deletion Feature Implementation 🗑️✅
-- **New Feature**: Added chapter deletion functionality to ChapterList component
-  - Integrated deletion option in three-dot menu with red styling for dangerous operation
-  - Implemented ConfirmDialog to prevent accidental deletions
-  - Added proper error handling and user notifications for success/failure
-  - Fixed Menu component click event handling issue
-- **Technical Improvements**:
-  - Resolved Menu trigger button click conflicts by removing redundant onClick handlers
-  - Added z-index styling to ensure proper layering of interactive elements
-  - Implemented comprehensive state management for deletion confirmation flow
-- **User Experience**: Users can now safely delete individual chapters directly from the chapter list
-- **Impact**: Enhanced chapter management capabilities with safe deletion workflow
-
-### [2025-08-05 15:45:00] - AI Thinking Tag Filter Fix 🧠🚫
-- **Critical Bug Fix**: Fixed AI writing panel showing thinking tags in generated content
-  - Added `filterThinkingTags` function to `AIWritingPanel.tsx` 
-  - Filters various thinking tag formats: XML (`<thinking>`), Markdown (` ```thinking```), custom tags
-  - Applied filtering at three key points: after generation, before insertion, during regeneration
-- **User Issue Resolution**: AI generated text no longer displays internal thinking/reflection tags
-- **Technical Improvements**: 
-  - Fixed TypeScript errors (function declaration order and null checks)
-  - Consistent filtering across all AI text operations
-  - Preserved clean code quality with proper type safety
-- **Impact**: Users now receive clean, polished AI-generated content without seeing AI's internal reasoning
-
-### [2025-08-05 12:30:00] - AI History Saving Fix 📝✅
-- **Critical Bug Fix**: Fixed AI writing panel not saving generation history
-  - Added missing `createAIHistory` import in `AIWritingPanel.tsx`
-  - Implemented history saving in both main generation (lines 254-268) and regeneration (lines 435-451) functions
-  - Added proper error handling to prevent history save failures from interrupting main AI generation flow
-  - Fixed ESLint error by converting inner function to arrow function
-- **User Issue Resolution**: Resolved user-reported problem where AI generation history panel showed empty despite recent AI writing activities
-- **Architecture Fix**: Identified that `ProjectEditor.tsx` uses `AIWritingPanel.tsx` which lacked history saving, while `SimpleAIWritingPanel.tsx` had correct implementation
-- **Impact**: All AI writing activities now correctly save to generation history database with complete metadata
-
-### [2025-08-05 08:52:00] - AI Writing Enhancement & NLP Integration 🧠✨
-- **Enhanced AI Content Diversity**: Fixed AI writing generating similar content by integrating Compromise.js NLP analysis
-  - Integrated `aiWritingAssistant.ts` into `AIWritingPanel.tsx` for intelligent context analysis
-  - Increased parameter variation range from ±0.1 to ±0.15-0.2 for temperature, topP, and penalty parameters
-  - Added smart parameter generation based on text complexity, emotional tone, and narrative style
-  - NLP analysis detects tense (past/present/future), narrative style (first/third person), and emotional tone
-- **AI History Panel Integration**: Re-integrated AI generation history functionality
-  - Added toggle button "📝 查看歷程" in AI Writing Panel header
-  - AI History Panel displays within AI Writing Panel when toggled
-  - Maintains project-specific filtering of generation history
-- **Intelligent Parameter Adjustment**: Context-aware AI generation
-  - Analyzes existing text for writing style and adjusts generation parameters accordingly
-  - Fallback to enhanced traditional parameter generation for short texts
-  - Progress indicators show detected writing style during generation
-- **Debug Improvements**: Enhanced console logging for NLP analysis and parameter generation
-- **Impact**: Significantly improved AI writing content diversity and user experience
-
-### [2025-08-04 23:48:00] - Chapter Navigation System & Slate.js Editor Refactor 🎯📚
-- **Chapter Navigation Complete**: Visual chapter separation with numbered badges and navigation controls
-  - Chapter title bars with chapter numbers (1, 2, 3...) and titles
-  - Previous/Next chapter navigation buttons (←/→) with proper state management
-  - Novel length classification badges (短篇/中篇/長篇) displayed in project info
-  - Integrated chapter management with sidebar chapter list
-- **Slate.js Architecture Refactor**: Complete resolution of React hook context issues
-  - Moved EditorToolbar inside Slate context as InlineToolbar component
-  - Fixed "useSlate hook must be used inside Slate component" errors
-  - Maintained all formatting functionality (Bold, Italic, Underline, Code, H1, Quote, List)
-  - Preserved save, settings, and reading mode functionality
-  - AI Panel temporarily disabled with maintenance message during refactor
-- **Database Schema v8**: Added novel_length and chapter_number fields
-  - Projects: novel_length column for short/medium/long classification
-  - Chapters: chapter_number column for sequential numbering
-  - Automatic migration from v7 to v8 with backward compatibility
-- **User Experience**: Seamless chapter navigation and writing flow
-- **Impact**: Professional-grade chapter management system with visual feedback
-
-### [2025-08-04 15:50:00] - Smart AI Writing & User Experience Enhancements 🧠✨
-- **NLP-Powered AI Writing**: Complete integration of Compromise.js NLP with AI writing assistant
-  - Context-aware analysis (tense, narrative style, emotional tone, entities)
-  - Smart parameter adjustment based on writing style analysis  
-  - Quality checking for generated content coherence and consistency
-  - UI panels for NLP insights and quality reports
-- **Cursor Position Preservation**: Fixed save operations maintaining cursor position
-  - Auto-save and manual save preserve `selectionStart` position
-  - Seamless editing experience without cursor jumping to document top
-  - Smart focus management with `textAreaRef` integration
-- **Save Function Fixes**: Resolved Tauri backend content serialization issues
-  - Fixed `"invalid type: sequence, expected a string"` error
-  - Proper JSON serialization of Slate.js content: `JSON.stringify(chapter.content)`
-  - Enhanced error handling with user-friendly notifications
-- **Architecture**: Added `aiWritingAssistant.ts` service with comprehensive NLP analysis
-- **Impact**: Dramatically improved writing experience with intelligent AI assistance and seamless UX
-
-### [2025-08-04 14:20:00] - Novel Template Import Feature Complete 📚
-- **New Major Feature**: AI-powered novel template import system
-- **NLP Integration**: Compromise.js for text analysis and entity extraction
-- **Multi-step Wizard**: 5-stage import process (Upload → Options → Analysis → Preview → Save)
-- **AI Analysis**: Semantic analysis using Ollama for world-building, characters, plot, and writing style
-- **Text Processing**: Automatic chapter detection, statistics calculation, and writing metrics
-- **Navigation Fixes**: Resolved settings page infinite loading and sidebar click issues
-- **Database Standardization**: Unified database path to ~/Library/Application Support/genesis-chronicle/
-- **UI Improvements**: Consistent naming, error boundaries, and loading state management
-- **Impact**: Users can now import existing novels to automatically generate writing templates
-
 ### [2025-08-04 01:20:06] - 完美程式碼品質里程碑 🏆
-- **總程式碼行數**: 94,490 行
-- **與上次更新比較**: +25,031 行 (36.0% 增長，從 69,459 行)
-- **修改檔案數**: 47 個檔案
 - **史無前例的成就**:
   - ✅ **TypeScript 錯誤**: 0 個錯誤 (完美狀態 - 從 300+ 錯誤降到 0)
   - ✅ **ESLint 警告**: 0 錯誤，0 警告 (完美評分)
   - ✅ **程式碼品質**: 達到業界頂尖標準
-  - ✅ **類型安全**: 整個程式碼庫完全類型安全
-  - ✅ **API 層重構**: 完整的類型定義和錯誤處理
-  - ✅ **12 個核心問題修復**: 字符關係系統、設定頁面、資料庫維護等
-- **技術改進**:
-  - 新增 models.ts 統一 API 類型定義
-  - 完善錯誤處理類型守衛系統
-  - 解決所有 Slate.js 編輯器類型問題
-  - 修復設定服務和備份系統類型安全
-  - 統一字符關係 API 介面設計
 - **影響**: 專案達到完美的程式碼品質標準，為未來開發奠定堅實基礎
 
-### [2025-08-03 22:30:00] - COMPLETE TYPESCRIPT RESOLUTION 🎉
-- **TypeScript Errors**: COMPLETELY ELIMINATED - Reduced from 300+ to 0 errors (100% success!)
-- **Key Achievements**:
-  - ✅ Fixed Character/Relationship API type system with CreateRelationshipRequest
-  - ✅ Implemented comprehensive error type guards in useErrorHandler
-  - ✅ Resolved TemplateManagerModal template type definitions 
-  - ✅ Fixed AutoBackupService export/import issues
-  - ✅ Corrected UpdateSettings date handling
-  - ✅ Enhanced CharacterManager consistency issue severity types
-  - ✅ Fixed AI Settings type definitions (selectedModel property)
-  - ✅ Eliminated all DatabaseMaintenance.tsx `any` type warnings
-  - ✅ Resolved all remaining Slate.js and database interface issues
-- **Impact**: Project now has PERFECT type safety across entire codebase
-
-### [2025-08-03 19:43:57]
-- **Total lines of code**: 69,459
-- **Change from last update**: +421 lines (0.6% increase from 69,038 estimated)
-- **Files modified**: 31 files (29 modified, 2 new: eslint-report.json, models.ts)
-- **Key Changes**:
-  - API Layer Enhancement: Complete type safety overhaul in tauri.ts and types.ts
-  - New models.ts: Centralized API type definitions for better maintainability  
-  - Component Refactoring: 20+ components with improved TypeScript typing
-  - Hook Improvements: Enhanced type safety in useErrorHandler, useSettings, useTemplateApplication
-  - ESLint Warnings: Reduced from 179 to 80 (55% improvement)
-- **Impact**: Significant TypeScript type safety improvements across the entire frontend stack
-
-## Recent Achievements (2025-08-03)
+## Key Achievements
 
 ### TypeScript Error Resolution Project ⚡ MISSION ACCOMPLISHED
 - **Progress**: COMPLETELY FINISHED - Reduced from 300+ to 0 errors (100% success!)
@@ -931,6 +705,8 @@ Key rules in `.eslintrc.js`:
 - **Generation History**: Complete CRUD with performance metrics
 - **Progress Visualization**: Multi-stage progress indicators
 - **Context Engineering**: 29.8% token reduction through prompt separation
+- **Multi-Provider Context Fixes (2025-08-08)**: Fixed context building in new multi-provider system - all providers now support position-aware context generation
+- **Smart Model Selection (2025-08-08)**: Implemented user-preference preservation - models stay selected across provider switches
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.

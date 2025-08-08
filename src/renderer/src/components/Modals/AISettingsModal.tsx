@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAppDispatch } from '../../hooks/redux';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
+import { setCurrentModel } from '../../store/slices/aiSlice';
+import ConfirmDialog from '../UI/ConfirmDialog';
 import { api } from '../../api';
 import type { 
   AIProvider, 
@@ -33,6 +35,12 @@ const AISettingsModal: React.FC = () => {
   
   // 編輯提供者表單狀態
   const [editProvider, setEditProvider] = useState<UpdateAIProviderRequest | null>(null);
+  
+  // 刪除確認狀態
+  const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean; provider: AIProvider | null}>({
+    show: false,
+    provider: null
+  });
 
   useEffect(() => {
     loadProviders();
@@ -93,10 +101,22 @@ const AISettingsModal: React.FC = () => {
       }
       
       // 創建臨時提供者配置來測試連接
+      // 為不同 provider 類型設置有效的預設模型名稱
+      const getDefaultModelName = (type: string): string => {
+        switch (type) {
+          case 'gemini': return 'gemini-2.5-flash';
+          case 'openai': return 'gpt-3.5-turbo';
+          case 'claude': return 'claude-3-sonnet-20240229';
+          case 'openrouter': return 'openai/gpt-3.5-turbo';
+          case 'ollama': return 'llama3.2'; // Ollama 使用常見模型名
+          default: return 'default-model';
+        }
+      };
+      
       const tempProvider: CreateAIProviderRequest = {
         name: `temp-${providerType}`,
         provider_type: providerType,
-        model: 'temp', // 臨時模型名稱
+        model: getDefaultModelName(providerType),
         api_key: apiKey,
         endpoint: finalEndpoint,
         is_enabled: true,
@@ -190,6 +210,17 @@ const AISettingsModal: React.FC = () => {
           duration: 3000,
         }));
         
+        // ✅ 修復：如果新Provider是啟用狀態，直接設為當前模型
+        if (newProvider.is_enabled) {
+          dispatch(setCurrentModel(newProvider.model));
+          dispatch(addNotification({
+            type: 'info',
+            title: '模型已切換',
+            message: `當前AI模型已切換至 ${newProvider.model}`,
+            duration: 2000,
+          }));
+        }
+        
         setShowAddForm(false);
         setNewProvider({
           name: '',
@@ -211,7 +242,7 @@ const AISettingsModal: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  };;;
 
   const handleUpdateProvider = async (updatedProvider: UpdateAIProviderRequest) => {
     try {
@@ -231,6 +262,17 @@ const AISettingsModal: React.FC = () => {
           duration: 3000,
         }));
         
+        // 如果更新的Provider被設為啟用狀態，且模型有變化，更新當前模型
+        if (updatedProvider.is_enabled && updatedProvider.model) {
+          dispatch(setCurrentModel(updatedProvider.model));
+          dispatch(addNotification({
+            type: 'info',
+            title: '模型已切換',
+            message: `當前AI模型已切換至 ${updatedProvider.model}`,
+            duration: 2000,
+          }));
+        }
+        
         setEditProvider(null);
         await loadProviders();
       } else {
@@ -246,15 +288,37 @@ const AISettingsModal: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  };;
 
   const handleDeleteProvider = async (providerId: string) => {
-    if (!confirm('確定要刪除此 AI 提供者嗎？此操作無法撤銷。')) {
-      return;
-    }
+    const providerToDelete = providers.find(p => p.id === providerId);
+    if (!providerToDelete) return;
+    
+    // 顯示確認對話框
+    setDeleteConfirm({
+      show: true,
+      provider: providerToDelete
+    });
+  };
+  
+  // 設為當前模型
+  const handleSetCurrentModel = (provider: AIProvider) => {
+    dispatch(setCurrentModel(provider.model));
+    dispatch(addNotification({
+      type: 'success',
+      title: '模型已切換',
+      message: `當前AI模型已切換至 ${provider.name} (${provider.model})`,
+      duration: 2000,
+    }));
+  };
+  
+  // 確認刪除的實際邏輯
+  const confirmDeleteProvider = async () => {
+    const { provider } = deleteConfirm;
+    if (!provider) return;
 
     try {
-      const response = await api.aiProviders.delete(providerId);
+      const response = await api.aiProviders.delete(provider.id);
       
       if (response.success) {
         dispatch(addNotification({
@@ -267,8 +331,8 @@ const AISettingsModal: React.FC = () => {
         await loadProviders();
         
         // 如果刪除的是當前選擇的提供者，重新選擇
-        if (selectedProvider?.id === providerId) {
-          const remaining = providers.filter(p => p.id !== providerId);
+        if (selectedProvider?.id === provider.id) {
+          const remaining = providers.filter(p => p.id !== provider.id);
           setSelectedProvider(remaining.length > 0 ? remaining[0] : null);
         }
       }
@@ -279,8 +343,11 @@ const AISettingsModal: React.FC = () => {
         message: '刪除 AI 提供者時發生錯誤',
         duration: 3000,
       }));
+    } finally {
+      // 關閉確認對話框
+      setDeleteConfirm({ show: false, provider: null });
     }
-  };
+  };;
 
   const getProviderIcon = (type: string) => {
     switch (type) {
@@ -461,7 +528,7 @@ const AISettingsModal: React.FC = () => {
               onChange={(e) => setFormData({ model: e.target.value })}
               placeholder={
                 formData.provider_type === 'openai' ? '例如: gpt-4' :
-                formData.provider_type === 'gemini' ? '例如: gemini-pro' :
+                formData.provider_type === 'gemini' ? '例如: gemini-2.5-flash 或 gemini-2.5-pro' :
                 formData.provider_type === 'claude' ? '例如: claude-3-sonnet' :
                 formData.provider_type === 'openrouter' ? '例如: openai/gpt-4' :
                 '例如: llama3.2'
@@ -611,6 +678,14 @@ const AISettingsModal: React.FC = () => {
                               >
                                 測試
                               </button>
+                              {provider.is_enabled && (
+                                <button
+                                  onClick={() => handleSetCurrentModel(provider)}
+                                  className="text-gold-400 hover:text-gold-300 text-xs px-3 py-1 border border-gold-600 rounded hover:bg-gold-600 hover:text-cosmic-900 transition-colors"
+                                >
+                                  設為當前
+                                </button>
+                              )}
                               <button
                                 onClick={() => setEditProvider({
                                   id: provider.id,
@@ -720,6 +795,18 @@ const AISettingsModal: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* 刪除確認對話框 */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        title="確認刪除 AI 提供者"
+        message={`確定要刪除 "${deleteConfirm.provider?.name}" 嗎？此操作無法撤銷。`}
+        confirmText="刪除"
+        cancelText="取消"
+        onConfirm={confirmDeleteProvider}
+        onCancel={() => setDeleteConfirm({ show: false, provider: null })}
+        variant="danger"
+      />
     </div>
   );
 };

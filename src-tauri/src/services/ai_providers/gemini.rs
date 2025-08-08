@@ -22,7 +22,7 @@ struct GeminiRequest {
 #[derive(Debug, Serialize, Deserialize)]
 struct GeminiContent {
     role: String,
-    parts: Vec<GeminiPart>,
+    parts: Option<Vec<GeminiPart>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -124,17 +124,22 @@ impl GeminiProvider {
     where
         T: for<'de> Deserialize<'de>,
     {
-        let url = format!("{}{}?key={}", self.endpoint, endpoint, self.api_key);
+        let url = format!("{}{}", self.endpoint, endpoint);
         let response = self.client
             .post(&url)
             .header("Content-Type", "application/json")
+            .header("x-goog-api-key", &self.api_key)
             .json(body)
             .timeout(self.timeout)
             .send()
             .await?;
 
         if response.status().is_success() {
-            let data = response.json::<T>().await?;
+            let response_text = response.text().await?;
+            log::info!("[GeminiProvider] API 回應: {}", response_text);
+            
+            let data: T = serde_json::from_str(&response_text)
+                .map_err(|e| anyhow!("JSON 解析錯誤: {}, 回應內容: {}", e, response_text))?;
             Ok(data)
         } else {
             let status = response.status();
@@ -147,25 +152,42 @@ impl GeminiProvider {
     fn get_available_models() -> Vec<ModelInfo> {
         vec![
             ModelInfo {
-                id: "gemini-1.5-pro".to_string(),
-                name: "Gemini 1.5 Pro".to_string(),
-                description: Some("最先進的多模態模型，支援長上下文".to_string()),
-                max_tokens: Some(1048576), // 1M tokens
+                id: "gemini-2.5-pro".to_string(),
+                name: "Gemini 2.5 Pro".to_string(),
+                description: Some("Google 最強大的思考模型，具備複雜推理能力".to_string()),
+                max_tokens: Some(8192), // 8K output tokens
                 supports_streaming: true,
-                cost_per_token: Some(0.0000035), // 輸入token成本
+                cost_per_token: Some(0.000001), // 更新的定價
             },
             ModelInfo {
-                id: "gemini-1.5-flash".to_string(),
-                name: "Gemini 1.5 Flash".to_string(),
-                description: Some("快速且經濟的多模態模型".to_string()),
+                id: "gemini-2.5-flash".to_string(),
+                name: "Gemini 2.5 Flash".to_string(),
+                description: Some("最新的多模態模型，具備下一代能力和增強功能".to_string()),
+                max_tokens: Some(8192),
+                supports_streaming: true,
+                cost_per_token: Some(0.0000005),
+            },
+            ModelInfo {
+                id: "gemini-2.5-flash-lite".to_string(),
+                name: "Gemini 2.5 Flash-Lite".to_string(),
+                description: Some("最快速且最經濟的多模態模型，適合高頻任務".to_string()),
+                max_tokens: Some(8192),
+                supports_streaming: true,
+                cost_per_token: Some(0.00000025),
+            },
+            // 保留舊版本以確保向後兼容
+            ModelInfo {
+                id: "gemini-1.5-pro".to_string(),
+                name: "Gemini 1.5 Pro (舊版)".to_string(),
+                description: Some("先前版本的多模態模型".to_string()),
                 max_tokens: Some(1048576),
                 supports_streaming: true,
-                cost_per_token: Some(0.000000075),
+                cost_per_token: Some(0.0000035),
             },
             ModelInfo {
                 id: "gemini-pro".to_string(),
-                name: "Gemini Pro".to_string(),
-                description: Some("高性能文本生成模型".to_string()),
+                name: "Gemini Pro (舊版)".to_string(),
+                description: Some("傳統版本的文本生成模型".to_string()),
                 max_tokens: Some(30720),
                 supports_streaming: true,
                 cost_per_token: Some(0.0000005),
@@ -214,17 +236,17 @@ impl AIProvider for GeminiProvider {
             contents: vec![
                 GeminiContent {
                     role: "user".to_string(),
-                    parts: vec![
+                    parts: Some(vec![
                         GeminiPart {
                             text: "Hello".to_string(),
                         }
-                    ],
+                    ]),
                 }
             ],
             generation_config: GeminiGenerationConfig {
                 temperature: 0.1,
                 top_p: 0.1,
-                max_output_tokens: 10,
+                max_output_tokens: 50,
                 stop_sequences: None,
             },
             safety_settings: Self::get_default_safety_settings(),
@@ -267,11 +289,11 @@ impl AIProvider for GeminiProvider {
         
         contents.push(GeminiContent {
             role: "user".to_string(),
-            parts: vec![
+            parts: Some(vec![
                 GeminiPart {
                     text: user_content,
                 }
-            ],
+            ]),
         });
 
         let gemini_request = GeminiRequest {
@@ -295,23 +317,25 @@ impl AIProvider for GeminiProvider {
         let response = self.make_post_request::<GeminiResponse>(&endpoint, &gemini_request).await?;
         
         if let Some(candidate) = response.candidates.first() {
-            if let Some(part) = candidate.content.parts.first() {
-                log::info!("[GeminiProvider] 文本生成成功");
-                
-                let usage = response.usage_metadata.map(|usage| {
-                    AIUsageInfo {
-                        prompt_tokens: usage.prompt_token_count,
-                        completion_tokens: usage.candidates_token_count,
-                        total_tokens: usage.total_token_count,
-                    }
-                });
+            if let Some(parts) = &candidate.content.parts {
+                if let Some(part) = parts.first() {
+                    log::info!("[GeminiProvider] 文本生成成功");
+                    
+                    let usage = response.usage_metadata.map(|usage| {
+                        AIUsageInfo {
+                            prompt_tokens: usage.prompt_token_count,
+                            completion_tokens: usage.candidates_token_count,
+                            total_tokens: usage.total_token_count,
+                        }
+                    });
 
-                return Ok(AIGenerationResponse {
-                    text: part.text.clone(),
-                    model: request.model,
-                    usage,
-                    finish_reason: candidate.finish_reason.clone(),
-                });
+                    return Ok(AIGenerationResponse {
+                        text: part.text.clone(),
+                        model: request.model,
+                        usage,
+                        finish_reason: candidate.finish_reason.clone(),
+                    });
+                }
             }
         }
         
@@ -323,23 +347,23 @@ impl AIProvider for GeminiProvider {
         
         // 建立臨時請求來測試 API 金鑰
         let temp_client = Client::new();
-        let url = format!("{}/models/gemini-pro:generateContent?key={}", self.endpoint, api_key);
+        let url = format!("{}/models/gemini-2.5-flash:generateContent", self.endpoint);
         
         let test_request = GeminiRequest {
             contents: vec![
                 GeminiContent {
                     role: "user".to_string(),
-                    parts: vec![
+                    parts: Some(vec![
                         GeminiPart {
                             text: "test".to_string(),
                         }
-                    ],
+                    ]),
                 }
             ],
             generation_config: GeminiGenerationConfig {
                 temperature: 0.1,
                 top_p: 0.1,
-                max_output_tokens: 5,
+                max_output_tokens: 50,
                 stop_sequences: None,
             },
             safety_settings: Self::get_default_safety_settings(),
@@ -348,6 +372,7 @@ impl AIProvider for GeminiProvider {
         let response = temp_client
             .post(&url)
             .header("Content-Type", "application/json")
+            .header("x-goog-api-key", api_key)
             .json(&test_request)
             .timeout(Duration::from_secs(30))
             .send()

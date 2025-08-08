@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Editor, Transforms, Range } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
-import { setCurrentModel, fetchAvailableModels, checkOllamaService } from '../../store/slices/aiSlice';
+import { setCurrentModel, fetchAvailableModels, checkOllamaService, fetchAIProviders, setActiveProvider, generateTextWithProvider } from '../../store/slices/aiSlice';
 import { createAIHistory } from '../../store/slices/aiHistorySlice';
 import { startProgress, updateProgress, completeProgress, failProgress } from '../../store/slices/errorSlice';
 import { store } from '../../store/store';
@@ -69,7 +69,13 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   const abortControllerRef = useRef<AbortController | null>(null);
   
   // 從 Redux store 獲取 AI 相關狀態
-  const { currentModel, availableModels, isOllamaConnected } = useAppSelector(state => state.ai);
+  const { 
+    currentModel, 
+    availableModels, 
+    isOllamaConnected,
+    providers,
+    currentProviderId 
+  } = useAppSelector(state => state.ai);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
@@ -86,27 +92,75 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   const [topP, setTopP] = useState(0.9);
   const [presencePenalty, setPresencePenalty] = useState(0);
   const [frequencyPenalty, setFrequencyPenalty] = useState(0);
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
+  const [providerModels, setProviderModels] = useState<string[]>([]);
   
-  // 獲取可用的 AI 模型（如果尚未載入）
+  // 載入 AI 提供商列表
   useEffect(() => {
-    // 在組件掛載時檢查 Ollama 服務狀態
-    const checkOllama = async () => {
+    const loadProviders = async () => {
       try {
-        console.log('[AIWritingPanel] 檢查 Ollama 服務狀態...');
-        const result = await dispatch(checkOllamaService()).unwrap();
-        console.log('[AIWritingPanel] Ollama 服務檢查結果:', result);
+        console.log('[AIWritingPanel] 載入 AI 提供商...');
+        await dispatch(fetchAIProviders());
         
-        if (result && availableModels.length === 0) {
-          console.log('[AIWritingPanel] 載入可用模型...');
-          await dispatch(fetchAvailableModels());
+        // 如果有當前提供商，自動選擇
+        if (currentProviderId && !selectedProviderId) {
+          setSelectedProviderId(currentProviderId);
         }
       } catch (error) {
-        console.error('[AIWritingPanel] Ollama 服務檢查失敗:', error);
+        console.error('[AIWritingPanel] 載入提供商失敗:', error);
       }
     };
-    
-    checkOllama();
-  }, [dispatch]);
+    loadProviders();
+  }, [dispatch, currentProviderId]);
+
+  // 當選擇提供商時，載入該提供商的模型
+  useEffect(() => {
+    const loadProviderModels = async () => {
+      if (selectedProviderId) {
+        try {
+          console.log('[AIWritingPanel] 載入提供商模型:', selectedProviderId);
+          const result = await dispatch(setActiveProvider(selectedProviderId)).unwrap();
+          if (result.models) {
+            setProviderModels(result.models);
+            // 智能模型選擇：只在真正需要時才自動選擇
+            if (result.models.length > 0) {
+              const modelList = result.models as string[]; // 明確類型轉換
+              // 如果當前模型在新列表中，保持不變
+              if (currentModel && modelList.includes(currentModel)) {
+                console.log('[AIWritingPanel] 保持用戶選擇的模型:', currentModel);
+                // 不做任何操作，保持用戶選擇
+              } else if (!currentModel) {
+                // 只在完全沒有模型時才自動選擇第一個
+                console.log('[AIWritingPanel] 自動選擇第一個模型:', modelList[0]);
+                dispatch(setCurrentModel(modelList[0]));
+              }
+            }
+          }
+        } catch (error) {
+          console.error('[AIWritingPanel] 載入模型失敗:', error);
+          setProviderModels([]);
+        }
+      } else {
+        // 如果沒有選擇提供商，嘗試使用 Ollama（向後兼容）
+        const checkOllama = async () => {
+          try {
+            console.log('[AIWritingPanel] 檢查 Ollama 服務狀態...');
+            const result = await dispatch(checkOllamaService()).unwrap();
+            console.log('[AIWritingPanel] Ollama 服務檢查結果:', result);
+            
+            if (result && availableModels.length === 0) {
+              console.log('[AIWritingPanel] 載入可用模型...');
+              await dispatch(fetchAvailableModels());
+            }
+          } catch (error) {
+            console.error('[AIWritingPanel] Ollama 服務檢查失敗:', error);
+          }
+        };
+        checkOllama();
+      }
+    };
+    loadProviderModels();
+  }, [selectedProviderId, dispatch, currentModel, availableModels.length]);
 
   // 清理效果：組件卸載時取消正在進行的請求
   useEffect(() => {
@@ -294,13 +348,37 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           
           const startTime = Date.now();
           const position = selection?.anchor.offset || 0;
-          const result = await api.ai.generateWithContext(
-            projectId, 
-            chapterId, 
-            position, 
-            currentModel, 
-            params
-          );
+          // 使用多提供商 API 生成文本
+          let result: string;
+          if (selectedProviderId) {
+            // 使用選擇的提供商
+            const genResult = await dispatch(generateTextWithProvider({
+              prompt: `續寫位置: ${position}`,
+              providerId: selectedProviderId,
+              model: currentModel,
+              projectId: projectId,
+              chapterId: chapterId,
+              position: position,  // 🔥 新增：傳遞位置參數給後端
+              aiParams: {
+                temperature: params.temperature,
+                maxTokens: params.maxTokens,
+                topP: params.topP,
+                presencePenalty: params.presencePenalty,
+                frequencyPenalty: params.frequencyPenalty,
+              },
+              systemPrompt: '你是一個專業的小說續寫助手，請根據上下文繼續創作。'
+            })).unwrap();
+            result = genResult.result;
+          } else {
+            // 使用舊版 Ollama API（向後兼容）
+            result = await api.ai.generateWithContext(
+              projectId, 
+              chapterId, 
+              position, 
+              currentModel, 
+              params
+            );
+          }
           const generationTime = Date.now() - startTime;
           
           // 過濾思考標籤
@@ -479,13 +557,37 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       };
 
       const startTime = Date.now();
-      const result = await api.ai.generateWithContext(
-        projectId, 
-        chapterId, 
-        selection.anchor.offset, 
-        currentModel, 
-        params
-      );
+      // 使用多提供商 API 重新生成文本
+      let result: string;
+      if (selectedProviderId) {
+        // 使用選擇的提供商
+        const genResult = await dispatch(generateTextWithProvider({
+          prompt: `續寫位置: ${selection.anchor.offset}`,
+          providerId: selectedProviderId,
+          model: currentModel,
+          projectId: projectId,
+          chapterId: chapterId,
+          position: selection.anchor.offset,  // 🔥 新增：傳遞位置參數給後端
+          aiParams: {
+            temperature: params.temperature,
+            maxTokens: params.maxTokens,
+            topP: params.topP,
+            presencePenalty: params.presencePenalty,
+            frequencyPenalty: params.frequencyPenalty,
+          },
+          systemPrompt: '你是一個專業的小說續寫助手，請根據上下文繼續創作。'
+        })).unwrap();
+        result = genResult.result;
+      } else {
+        // 使用舊版 Ollama API（向後兼容）
+        result = await api.ai.generateWithContext(
+          projectId, 
+          chapterId, 
+          selection.anchor.offset, 
+          currentModel, 
+          params
+        );
+      }
       const generationTime = Date.now() - startTime;
       
       // 過濾思考標籤
@@ -563,22 +665,59 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       
       {/* 模型選擇和基本參數設置 */}
       <div className="space-y-4 mb-4">
+        {/* AI 提供商選擇 */}
+        <div>
+          <label className="block text-sm text-gray-300 mb-1">AI 提供商</label>
+          <select
+            value={selectedProviderId || ''}
+            onChange={(e) => {
+              setSelectedProviderId(e.target.value);
+              dispatch(setCurrentModel('')); // 重置模型選擇
+            }}
+            className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+            disabled={isGenerating}
+          >
+            <option value="">選擇 AI 提供商...</option>
+            {providers.map(provider => (
+              <option key={provider.id} value={provider.id}>
+                {provider.provider_type === 'ollama' && '🦙 '}
+                {provider.provider_type === 'openai' && '🤖 '}
+                {provider.provider_type === 'gemini' && '✨ '}
+                {provider.provider_type === 'claude' && '🧠 '}
+                {provider.provider_type === 'openrouter' && '🔄 '}
+                {provider.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* AI 模型選擇 */}
         <div>
           <label className="block text-sm text-gray-300 mb-1">AI 模型</label>
           <select
             value={currentModel || ''}
             onChange={(e) => dispatch(setCurrentModel(e.target.value))}
             className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
-            disabled={isGenerating || availableModels.length === 0}
+            disabled={isGenerating || (!selectedProviderId && availableModels.length === 0)}
           >
             <option value="">請選擇模型...</option>
-            {availableModels.map(model => (
+            {/* 如果有選擇提供商，顯示該提供商的模型 */}
+            {selectedProviderId && providerModels.map(model => (
+              <option key={model} value={model}>{model}</option>
+            ))}
+            {/* 如果沒有選擇提供商，顯示 Ollama 模型（向後兼容） */}
+            {!selectedProviderId && availableModels.map(model => (
               <option key={model} value={model}>{model}</option>
             ))}
           </select>
-          {!isOllamaConnected && (
+          {!selectedProviderId && !isOllamaConnected && (
             <p className="text-xs text-red-400 mt-1">
-              Ollama 服務未連接，請在 AI 設定中檢查連接狀態
+              請選擇 AI 提供商或在 AI 設定中配置 Ollama 服務
+            </p>
+          )}
+          {selectedProviderId && providerModels.length === 0 && (
+            <p className="text-xs text-yellow-400 mt-1">
+              正在載入模型列表或該提供商無可用模型
             </p>
           )}
         </div>
@@ -586,6 +725,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-gray-300 mb-1">生成數量 ({generationCount})</label>
+            <p className="text-xs text-gray-400 mb-2">同時生成多個版本供您選擇，建議設置 3-5 個</p>
             <input
               type="range"
               min="1"
@@ -600,6 +740,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           
           <div>
             <label className="block text-sm text-gray-300 mb-1">生成長度 ({maxTokens})</label>
+            <p className="text-xs text-gray-400 mb-2">約 {Math.round(maxTokens * 0.7)}-{Math.round(maxTokens * 1.2)} 字（設定值越高生成文本越長）</p>
             <input
               type="range"
               min="50"
@@ -615,6 +756,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         
         <div>
           <label className="block text-sm text-gray-300 mb-1">創意度 ({temperature.toFixed(1)})</label>
+          <p className="text-xs text-gray-400 mb-2">控制AI的創新程度：低值產生保守穩定的文本，高值產生更有創意但可能不穩定的內容</p>
           <input
             type="range"
             min="0.1"
@@ -646,6 +788,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
             <div className="mt-3 space-y-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
               <div>
                 <label className="block text-sm text-gray-300 mb-1">Top-P ({topP.toFixed(1)})</label>
+                <p className="text-xs text-gray-400 mb-2">限制詞彙選擇範圍：低值選擇更安全的詞彙，高值允許更多樣的詞彙選擇</p>
                 <input
                   type="range"
                   min="0.1"
@@ -661,6 +804,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm text-gray-300 mb-1">存在懲罰 ({presencePenalty.toFixed(1)})</label>
+                  <p className="text-xs text-gray-400 mb-2">避免重複話題：數值越高越避免重複已出現的內容主題</p>
                   <input
                     type="range"
                     min="0"
@@ -675,6 +819,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                 
                 <div>
                   <label className="block text-sm text-gray-300 mb-1">頻率懲罰 ({frequencyPenalty.toFixed(1)})</label>
+                  <p className="text-xs text-gray-400 mb-2">避免重複用詞：數值越高越避免重複使用相同的詞語</p>
                   <input
                     type="range"
                     min="0"
@@ -696,7 +841,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       <div className="flex justify-center mb-4">
         <button
           onClick={handleGenerate}
-          disabled={isGenerating || !currentModel || !isOllamaConnected}
+          disabled={isGenerating || !currentModel || (!selectedProviderId && !isOllamaConnected)}
           className="btn-primary px-6 py-2"
         >
           {isGenerating ? '生成中...' : '開始 AI 續寫'}

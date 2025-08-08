@@ -109,7 +109,7 @@ export interface API {
   database: {
     backup: (path: string) => Promise<void>;
     restore: (path: string) => Promise<void>;
-    runMaintenance: () => Promise<{ success: boolean; message: string }>;
+    runMaintenance: () => Promise<string>;
     getStats: () => Promise<DatabaseStats>;
     healthCheck: () => Promise<DatabaseHealth>;
   };

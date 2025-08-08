@@ -157,9 +157,25 @@ export interface DatabaseStats {
 }
 
 export interface DatabaseHealth {
-  status: 'healthy' | 'warning' | 'error';
-  message?: string;
-  details?: Record<string, unknown>;
+  isHealthy: boolean;
+  issues: Array<{
+    type: 'integrity' | 'orphan' | 'corruption' | 'constraint' | 'performance';
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    table: string;
+    description: string;
+    suggestion: string;
+    autoFixable: boolean;
+  }>;
+  statistics: {
+    totalProjects: number;
+    totalChapters: number;
+    totalCharacters: number;
+    totalTemplates: number;
+    databaseSize: number;
+    lastVacuum: string | null;
+    fragmentationLevel: number;
+  };
+  timestamp: string;
 }
 
 // 系統相關
@@ -277,6 +293,7 @@ export interface AIGenerationRequestData {
   system_prompt?: string;
   project_id: string;
   chapter_id: string;
+  position?: number;  // 新增：游標位置，用於上下文構建
   temperature?: number;
   max_tokens?: number;
   top_p?: number;
