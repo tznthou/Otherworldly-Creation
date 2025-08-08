@@ -87,7 +87,7 @@ const AISettingsModal: React.FC = () => {
             finalEndpoint = 'https://openrouter.ai/api/v1';
             break;
           default:
-            finalEndpoint = null; // OpenAI, Gemini, Claude 不需要自定義端點
+            finalEndpoint = undefined; // OpenAI, Gemini, Claude 不需要自定義端點
             break;
         }
       }
@@ -115,8 +115,8 @@ const AISettingsModal: React.FC = () => {
             const models = testResult.models.map((model: unknown) => {
               const modelObj = model as Record<string, unknown>;
               return {
-                id: modelObj.id || modelObj.name || String(model),
-                name: modelObj.name || modelObj.id || String(model)
+                id: String(modelObj.id || modelObj.name || model),
+                name: String(modelObj.name || modelObj.id || model)
               };
             });
             
@@ -216,7 +216,12 @@ const AISettingsModal: React.FC = () => {
   const handleUpdateProvider = async (updatedProvider: UpdateAIProviderRequest) => {
     try {
       setIsSubmitting(true);
-      const response = await api.aiProviders.update(updatedProvider);
+      // 如果沒有提供新的API金鑰，則不包含在更新請求中（保留原有的）
+      const updateData = { ...updatedProvider };
+      if (!updateData.api_key) {
+        delete updateData.api_key;
+      }
+      const response = await api.aiProviders.update(updateData);
       
       if (response.success) {
         dispatch(addNotification({
@@ -289,7 +294,10 @@ const AISettingsModal: React.FC = () => {
   };
 
   const renderProviderForm = (provider?: AIProvider, isEdit = false) => {
-    const formData = isEdit && editProvider ? editProvider : newProvider;
+    const formData = isEdit && editProvider ? {
+      ...editProvider,
+      provider_type: editProvider.provider_type || provider?.provider_type || 'ollama'
+    } : newProvider;
     const setFormData = isEdit 
       ? (data: Partial<UpdateAIProviderRequest>) => setEditProvider({ ...editProvider!, ...data })
       : (data: Partial<CreateAIProviderRequest>) => setNewProvider({ ...newProvider, ...data });
@@ -373,12 +381,19 @@ const AISettingsModal: React.FC = () => {
 
         {formData.provider_type !== 'ollama' && (
           <div>
-            <label className="block text-gray-300 mb-2">API 金鑰</label>
+            <label className="block text-gray-300 mb-2">
+              API 金鑰
+              {isEdit && !formData.api_key && (
+                <span className="text-xs text-gray-400 ml-2">
+                  (已保存，留空保持原有金鑰)
+                </span>
+              )}
+            </label>
             <input
               type="password"
               value={formData.api_key || ''}
               onChange={(e) => setFormData({ api_key: e.target.value })}
-              placeholder="輸入您的 API 金鑰"
+              placeholder={isEdit ? "留空保持原有金鑰，或輸入新金鑰" : "輸入您的 API 金鑰"}
               className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             />
           </div>
@@ -472,7 +487,7 @@ const AISettingsModal: React.FC = () => {
 
         <div className="flex space-x-3">
           <button
-            onClick={isEdit ? () => handleUpdateProvider(formData) : handleCreateProvider}
+            onClick={isEdit ? () => handleUpdateProvider(formData as UpdateAIProviderRequest) : handleCreateProvider}
             disabled={isSubmitting || !formData.name || !formData.model}
             className="btn-primary flex-1"
           >
@@ -600,9 +615,11 @@ const AISettingsModal: React.FC = () => {
                                 onClick={() => setEditProvider({
                                   id: provider.id,
                                   name: provider.name,
+                                  provider_type: provider.provider_type,
                                   model: provider.model,
                                   is_enabled: provider.is_enabled,
                                   endpoint: provider.endpoint,
+                                  api_key: undefined, // API key is encrypted in the provider object
                                 })}
                                 className="text-blue-400 hover:text-blue-300 text-sm"
                               >

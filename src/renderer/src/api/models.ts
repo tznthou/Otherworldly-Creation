@@ -239,6 +239,7 @@ export interface CreateAIProviderRequest {
 export interface UpdateAIProviderRequest {
   id: string;
   name?: string;
+  provider_type?: string;
   api_key?: string;
   endpoint?: string;
   model?: string;

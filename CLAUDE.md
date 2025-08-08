@@ -58,6 +58,13 @@ npm run build             # Build application
 npm run clean             # Clean build artifacts
 ```
 
+### Security & Release
+```bash
+./scripts/security-check.sh               # MANDATORY before any release - checks for API keys, database files, user content
+git ls-files | grep -E '\.(db|sqlite)'   # Verify no database files are tracked
+npm run build && ls -la dist/             # Check build output for sensitive data
+```
+
 ### Troubleshooting
 ```bash
 # When encountering build issues
@@ -65,7 +72,7 @@ npm run clean && npm install              # Clean and reinstall dependencies
 cargo clean --manifest-path src-tauri/    # Clean Rust build cache
 
 # When database schema changes
-rm ~/.local/share/genesis-chronicle/genesis-chronicle.db  # Reset database (macOS/Linux)
+rm ~/Library/Application\ Support/genesis-chronicle/genesis-chronicle.db  # Reset database (macOS)
 # Database will auto-recreate with latest schema on next run
 
 # When AI features aren't working
@@ -279,6 +286,7 @@ The rich text editor uses a specialized architecture to avoid React hook context
 29. **Settings Page Organization**: Settings now streamlined - old duplicate AI settings removed, cosmic theme applied consistently throughout all settings tabs
 30. **Template CSS Theme Pattern**: Always apply complete cosmic theme to Template components - change `bg-white` to `bg-cosmic-800`, `text-gray-900` to `text-white`, ensure button contrast with `bg-gold-600` + `text-cosmic-900`
 31. **Redux Selector Memoization**: Use `createSelector` from `@reduxjs/toolkit` for complex selectors to prevent "different result with same parameters" warnings and improve performance
+32. **Security First**: ALWAYS run `./scripts/security-check.sh` before any release or commit that includes new features - this prevents API key leaks and user data exposure
 
 ### Development Workflows
 
@@ -328,7 +336,7 @@ The rich text editor uses a specialized architecture to avoid React hook context
 - **Issue**: `SELECT *` causes field mapping errors
 - **Fix**: Always specify field names explicitly
 - **Schema Issues**: Delete DB file to force recreation with latest schema
-- **Path Issues**: Database location is `~/Library/Application Support/genesis-chronicle/genesis-chronicle.db` on macOS
+- **Path Issues**: Database location is `~/Library/Application Support/genesis-chronicle/genesis-chronicle.db` on macOS (NOT in project directory for security)
 - **Double JSON Parsing**: CRITICAL - Never parse JSON in Redux if API layer already handles it
   - **Symptom**: Slate.js shows "[{\"type\":\"paragraph\"..." instead of content
   - **Cause**: API layer parses JSON, Redux slice parses again, corrupts data

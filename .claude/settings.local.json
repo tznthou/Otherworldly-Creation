@@ -96,7 +96,9 @@
       "Bash(gtimeout 10 npm run dev)",
       "Bash(git restore:*)",
       "mcp__serena__insert_before_symbol",
-      "Bash(gtimeout 15 npm run dev)"
+      "Bash(gtimeout 15 npm run dev)",
+      "Bash(git log:*)",
+      "Bash(./scripts/security-check.sh:*)"
     ],
     "deny": []
   }

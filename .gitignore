@@ -101,10 +101,18 @@ release/
 *.rpm
 *.zip
 
-# Database files
+# Database files - CRITICAL SECURITY
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+genesis-chronicle.db*
+**/genesis-chronicle.db*
+**/*.db
+**/*.sqlite*
 
 # Temporary files
 tmp/
@@ -158,3 +166,37 @@ coverage/
 
 # MCP Server configurations (local only)
 .serena/
+
+# Security - API Keys and Secrets
+*api_key*
+*apikey*
+*API_KEY*
+**/secrets*
+**/*secret*
+.env*
+*.key
+*.pem
+*.cert
+credentials*
+**/credentials*
+
+# User Data Protection
+user_data/
+**/user_data/
+backups/
+**/backups/
+exports/
+**/exports/
+
+# Development and Documentation (contains test examples)
+ENHANCED_AI_WRITING_SYSTEM_GUIDE.md
+MANUAL_TESTING_GUIDE.md
+optimized_context_example.txt
+*.backup-*
+
+# Serena MCP memories (may contain project-specific debugging info)
+.serena/memories/
+.specstory/history/
+
+# Coverage reports (may contain sensitive paths)
+coverage/
