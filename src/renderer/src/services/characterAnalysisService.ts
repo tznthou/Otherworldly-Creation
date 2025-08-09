@@ -114,7 +114,7 @@ class CharacterAnalysisService {
       
       // 3. 分析章節對話
       const dialogueAnalysis = await this.analyzeChapterDialogues(
-        JSON.parse(chapter.content), 
+        chapter.content, 
         chapterId, 
         projectId
       );

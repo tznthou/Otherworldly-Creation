@@ -18,6 +18,7 @@ import ChapterList from '../../components/Editor/ChapterList';
 import ChapterNotes from '../../components/Editor/ChapterNotes';
 import AIWritingPanel from '../../components/Editor/AIWritingPanel';
 import { PlotAnalysisPanel } from '../../components/AI/PlotAnalysisPanel';
+import { CharacterAnalysisPanel } from '../../components/AI';
 import AIStatusIndicator from '../../components/UI/AIStatusIndicator';
 import SaveStatusIndicator from '../../components/UI/SaveStatusIndicator';
 import SaveStatusPanel from '../../components/UI/SaveStatusPanel';
@@ -46,6 +47,7 @@ const ProjectEditorContent: React.FC = () => {
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(currentChapter?.id || null);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showPlotAnalysisPanel, setShowPlotAnalysisPanel] = useState(false);
+  const [showCharacterAnalysisPanel, setShowCharacterAnalysisPanel] = useState(false);
   const [showSavePanel, setShowSavePanel] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [currentEditor, setCurrentEditor] = useState<Editor | undefined>(undefined); // 新增：存儲當前編輯器實例
@@ -235,6 +237,7 @@ const ProjectEditorContent: React.FC = () => {
     if (!showAIPanel) {
       setShowAIPanel(true);
       setShowPlotAnalysisPanel(false); // 關閉劇情分析面板
+      setShowCharacterAnalysisPanel(false); // 關閉角色分析面板
       notification.info('AI 續寫', '請在右側面板中設定參數並生成續寫內容');
     } else {
       setShowAIPanel(false);
@@ -246,11 +249,24 @@ const ProjectEditorContent: React.FC = () => {
     if (!showPlotAnalysisPanel) {
       setShowPlotAnalysisPanel(true);
       setShowAIPanel(false); // 關閉AI續寫面板
+      setShowCharacterAnalysisPanel(false); // 關閉角色分析面板
       notification.info('劇情分析', '準備開始深度分析您的故事劇情');
     } else {
       setShowPlotAnalysisPanel(false);
     }
   }, [showPlotAnalysisPanel, notification]);
+
+  // 處理角色分析 - 開啟角色分析面板
+  const handleCharacterAnalysis = useCallback(() => {
+    if (!showCharacterAnalysisPanel) {
+      setShowCharacterAnalysisPanel(true);
+      setShowAIPanel(false); // 關閉AI續寫面板
+      setShowPlotAnalysisPanel(false); // 關閉劇情分析面板
+      notification.info('角色分析', '準備開始深度分析您的角色特徵');
+    } else {
+      setShowCharacterAnalysisPanel(false);
+    }
+  }, [showCharacterAnalysisPanel, notification]);
 
   if (loading) {
     return (
@@ -403,6 +419,20 @@ const ProjectEditorContent: React.FC = () => {
                       <span>劇情</span>
                     </button>
                     
+                    {/* 角色分析按鈕 */}
+                    <button
+                      onClick={handleCharacterAnalysis}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 ${
+                        showCharacterAnalysisPanel
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-cosmic-700 hover:bg-blue-600/20 text-blue-300 hover:text-blue-200'
+                      }`}
+                      title="角色分析"
+                    >
+                      <span>👥</span>
+                      <span>角色</span>
+                    </button>
+                    
                     <button
                       onClick={() => {
                         console.log('上一章按鈕點擊', chapters, currentChapter);
@@ -498,6 +528,21 @@ const ProjectEditorContent: React.FC = () => {
               currentChapter={currentChapter}
               onSuggestionApply={(suggestion) => {
                 notification.info('建議應用', `正在應用建議：${suggestion.title}`);
+                // 這裡可以添加具體的建議應用邏輯
+              }}
+            />
+          </div>
+        )}
+
+        {/* 角色分析面板 */}
+        {showCharacterAnalysisPanel && currentChapter && id && (
+          <div className="w-96 border-l border-cosmic-700 flex-shrink-0 overflow-y-auto" style={{ minWidth: '384px' }}>
+            <CharacterAnalysisPanel
+              projectId={id}
+              chapters={chapters}
+              currentChapter={currentChapter}
+              onSuggestionApply={(suggestion) => {
+                notification.info('建議應用', `正在應用建議：${suggestion}`);
                 // 這裡可以添加具體的建議應用邏輯
               }}
             />

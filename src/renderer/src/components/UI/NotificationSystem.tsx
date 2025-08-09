@@ -197,12 +197,12 @@ export const NotificationContainer: React.FC = () => {
       `}</style>
       
       <div className="fixed top-4 right-4 z-50 space-y-2">
-        {notifications
+        {[...notifications]
           .sort((a, b) => b.timestamp - a.timestamp)
           .slice(0, 5) // 最多顯示5個通知
-          .map((notification) => (
+          .map((notification, index) => (
             <NotificationItem
-              key={notification.id}
+              key={`${notification.id}-${index}`}
               notification={notification}
               onClose={() => handleCloseNotification(notification.id)}
             />
