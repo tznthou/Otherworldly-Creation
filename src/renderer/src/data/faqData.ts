@@ -102,9 +102,33 @@ export const faqData: FAQItem[] = [
 
   // AI 相關
   {
+    id: 'ai-providers-setup',
+    question: '如何配置AI供應商？',
+    answer: '1. 進入「系統設定」→「AI供應商配置」 2. 選擇要啟用的供應商 3. 填入相應的API Key（雲端服務需要）4. 測試連接確認配置成功 5. 在AI寫作面板中選擇供應商和模型。本地Ollama無需API Key，雲端服務需要註冊並取得API金鑰。',
+    category: 'ai',
+    tags: ['供應商', '配置', 'API'],
+    relatedQuestions: ['ai-models', 'ai-settings']
+  },
+  {
+    id: 'ai-provider-comparison',
+    question: '不同AI供應商有什麼特色？',
+    answer: 'Ollama：完全本地運行，隱私性佳，無需網路；OpenAI：創意寫作能力強，模型選擇多；Google Gemini：多模態支援，響應速度快；Anthropic Claude：邏輯推理優秀，安全性佳；OpenRouter：聚合多種模型，選擇靈活。建議根據創作需求和隱私要求選擇合適的供應商。',
+    category: 'ai',
+    tags: ['供應商', '特色', '比較'],
+    relatedQuestions: ['ai-providers-setup', 'ai-best-practices']
+  },
+  {
+    id: 'ai-context-writing',
+    question: '上下文感知續寫如何使用？',
+    answer: '1. 將游標放在想要續寫的位置 2. 點擊AI寫作面板中的「續寫」按鈕 3. 系統會自動分析前後文內容、角色關係、故事背景 4. 基於位置上下文生成符合故事情節的內容。上下文包括專案設定、角色資料、已寫章節內容，確保生成的內容保持故事一致性。',
+    category: 'ai',
+    tags: ['上下文', '續寫', '位置感知'],
+    relatedQuestions: ['ai-how-works', 'ai-best-practices']
+  },
+  {
     id: 'ai-how-works',
     question: 'AI 續寫是如何工作的？',
-    answer: 'AI 會分析您的專案設定、角色資訊和已寫內容，理解故事的背景和風格，然後提供符合上下文的續寫建議。它會考慮角色性格、關係動態和劇情發展，確保生成內容的一致性。',
+    answer: '創世紀元支援5大AI供應商（Ollama、OpenAI、Google Gemini、Anthropic Claude、OpenRouter），每個供應商都有獨特優勢。AI會分析您的專案設定、角色資訊和已寫內容，理解故事的背景和風格，然後提供符合上下文的續寫建議。系統支援位置感知續寫，會根據游標位置智能建立上下文，確保生成內容的一致性。',
     category: 'ai',
     tags: ['AI', '續寫', '工作原理'],
     relatedQuestions: ['ai-quality', 'ai-settings']
@@ -120,7 +144,7 @@ export const faqData: FAQItem[] = [
   {
     id: 'ai-settings',
     question: '可以調整 AI 的寫作風格嗎？',
-    answer: '是的，您可以在 AI 設定中調整創作風格、內容長度和創意程度。包含：生成長度（短/中/長）、創意程度（保守/平衡/創新）、寫作風格（描述性/對話性/動作性）等參數。',
+    answer: '是的，您可以在AI設定中調整創作風格、內容長度和創意程度。不同供應商提供不同的參數選項：溫度控制（創意程度）、最大長度、重複懲罰等。系統還支援供應商切換，每個供應商都有獨特的寫作風格：OpenAI擅長創意寫作、Claude注重邏輯推理、Gemini支援多模態、Ollama注重隱私。您可以根據創作需求選擇合適的供應商和參數組合。',
     category: 'ai',
     tags: ['AI', '設定', '風格'],
     relatedQuestions: ['ai-models', 'ai-parameters']
@@ -128,7 +152,7 @@ export const faqData: FAQItem[] = [
   {
     id: 'ai-models',
     question: '支援哪些 AI 模型？',
-    answer: '創世紀元透過 Ollama 支援多種開源 AI 模型，包括 Llama、CodeLlama、Mistral 等。推薦使用 llama3.2 或更新版本以獲得最佳的中文創作效果。您可以在設定中切換不同的模型。',
+    answer: '創世紀元支援多種AI供應商：1. Ollama（本地）：Llama、CodeLlama、Mistral等開源模型 2. OpenAI：GPT-4、GPT-3.5等 3. Google Gemini：Gemini Pro、Gemini Flash 4. Anthropic Claude：Claude-3.5-Sonnet、Claude-3等 5. OpenRouter：聚合多種模型。推薦使用llama3.2或更新版本以獲得最佳中文創作效果。您可以在設定中配置API Key並切換不同供應商。',
     category: 'ai',
     tags: ['AI', '模型', 'Ollama'],
     relatedQuestions: ['ollama-setup', 'ai-performance']
@@ -154,7 +178,7 @@ export const faqData: FAQItem[] = [
   {
     id: 'system-requirements',
     question: '系統需求是什麼？',
-    answer: '最低需求：Windows 10+/macOS 10.14+/Linux Ubuntu 18.04+，4GB RAM，2GB 可用硬碟空間。推薦配置：8GB+ RAM，SSD 硬碟。AI 功能需要額外安裝 Ollama 服務，建議至少 8GB RAM 以獲得更好的 AI 效果。',
+    answer: '最低需求：Windows 10+/macOS 10.14+/Linux Ubuntu 18.04+，4GB RAM，2GB 可用硬碟空間。推薦配置：8GB+ RAM，SSD 硬碟。AI功能支援多種配置：1. 僅本地Ollama：需8GB+ RAM 2. 雲端服務：需穩定網路連線和API Key 3. 混合模式：本地+雲端同時使用。雲端服務對硬體要求較低，但需要API使用費用。',
     category: 'technical',
     tags: ['系統需求', '硬體'],
     relatedQuestions: ['ollama-setup', 'performance-optimization']

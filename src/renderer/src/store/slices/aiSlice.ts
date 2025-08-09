@@ -3,12 +3,15 @@ import { api } from '../../api';
 import type { AIProvider } from '../../api/models';
 
 interface AIState {
-  // Multi-provider support
-  providers: AIProvider[];
-  currentProviderId: string | null;
-  
-  // Legacy Ollama support (for backward compatibility)
+  // Legacy single provider state
   isOllamaConnected: boolean;
+  isInitializing: boolean;
+  error: string | null;
+  generating: boolean;
+  generationHistory: GenerationResult[];
+  currentModel: string | null;
+  availableModels: string[];
+  modelSizes: Record<string, number>;
   serviceStatus: {
     service: {
       available: boolean;
@@ -19,11 +22,8 @@ interface AIState {
       count: number;
       list: string[];
     };
-    lastChecked?: Date;
+    lastChecked: Date | null;
   } | null;
-  
-  // Model management
-  availableModels: string[];
   modelsInfo: {
     success: boolean;
     models: Array<{
@@ -33,12 +33,12 @@ interface AIState {
     }>;
     error?: string;
   } | null;
-  currentModel: string | null;
   
-  // Generation state
-  generating: boolean;
-  error: string | null;
-  generationHistory: GenerationResult[];
+  // Multi-provider state
+  providers: AIProvider[];
+  currentProviderId: string | null;
+  defaultProviderId: string | null; // 新增：預設提供者ID
+  autoUseDefault: boolean;          // 新增：是否自動使用預設提供者
 }
 
 interface GenerationResult {
@@ -68,15 +68,19 @@ const initialState: AIState = {
   // Multi-provider support
   providers: [],
   currentProviderId: null,
+  defaultProviderId: null,    // 預設提供者
+  autoUseDefault: true,        // 自動使用預設提供者
   
   // Legacy Ollama support (for backward compatibility)
   isOllamaConnected: false,
+  isInitializing: false,
   serviceStatus: null,
   
   // Model management
   availableModels: [],
   modelsInfo: null,
   currentModel: null,
+  modelSizes: {},
   
   // Generation state
   generating: false,
@@ -336,6 +340,27 @@ const aiSlice = createSlice({
       }
     },
     
+    // 預設提供者管理
+    setDefaultProvider: (state, action: PayloadAction<string>) => {
+      state.defaultProviderId = action.payload;
+      // 如果開啟自動使用預設，立即切換
+      if (state.autoUseDefault) {
+        state.currentProviderId = action.payload;
+        // 清空模型列表，等待重新載入
+        state.currentModel = null;
+        state.availableModels = [];
+      }
+    },
+    toggleAutoUseDefault: (state) => {
+      state.autoUseDefault = !state.autoUseDefault;
+      // 如果開啟自動使用且有預設提供者，立即切換
+      if (state.autoUseDefault && state.defaultProviderId) {
+        state.currentProviderId = state.defaultProviderId;
+        state.currentModel = null;
+        state.availableModels = [];
+      }
+    },
+    
     // General reducers
     clearError: (state) => {
       state.error = null;
@@ -489,12 +514,22 @@ const aiSlice = createSlice({
       // fetchAIProviders
       .addCase(fetchAIProviders.fulfilled, (state, action) => {
         state.providers = action.payload;
-        // Auto-select first enabled provider if none selected
-        if (!state.currentProviderId && action.payload.length > 0) {
+        
+        // 設定預設提供者（第一個啟用的提供者）
+        if (!state.defaultProviderId && action.payload.length > 0) {
           const enabledProvider = action.payload.find(p => p.is_enabled);
           if (enabledProvider) {
-            state.currentProviderId = enabledProvider.id;
+            state.defaultProviderId = enabledProvider.id;
+            // 如果開啟自動使用預設，也設定為當前提供者
+            if (state.autoUseDefault) {
+              state.currentProviderId = enabledProvider.id;
+            }
           }
+        }
+        
+        // 確保當前提供者有效
+        if (!state.currentProviderId && state.defaultProviderId) {
+          state.currentProviderId = state.defaultProviderId;
         }
       })
       .addCase(fetchAIProviders.rejected, (state, action) => {
@@ -561,6 +596,8 @@ export const {
   setCurrentModel,
   setCurrentProvider,
   setProviderModels,
+  setDefaultProvider,
+  toggleAutoUseDefault,
   clearError,
   clearGenerationHistory,
   removeGenerationResult,

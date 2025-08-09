@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Editor, Transforms, Range } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
-import { setCurrentModel, fetchAvailableModels, checkOllamaService, fetchAIProviders, setActiveProvider, generateTextWithProvider } from '../../store/slices/aiSlice';
+import { setCurrentModel, fetchAvailableModels, checkOllamaService, fetchAIProviders, setActiveProvider, generateTextWithProvider, toggleAutoUseDefault } from '../../store/slices/aiSlice';
 import { createAIHistory } from '../../store/slices/aiHistorySlice';
 import { startProgress, updateProgress, completeProgress, failProgress } from '../../store/slices/errorSlice';
 import { store } from '../../store/store';
@@ -74,7 +74,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
     availableModels, 
     isOllamaConnected,
     providers,
-    currentProviderId 
+    currentProviderId,
+    defaultProviderId,    // 新增：預設提供者
+    autoUseDefault       // 新增：是否自動使用預設
   } = useAppSelector(state => state.ai);
   
   const [isGenerating, setIsGenerating] = useState(false);
@@ -102,8 +104,12 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         console.log('[AIWritingPanel] 載入 AI 提供商...');
         await dispatch(fetchAIProviders());
         
-        // 如果有當前提供商，自動選擇
-        if (currentProviderId && !selectedProviderId) {
+        // 智能選擇提供者
+        if (autoUseDefault && defaultProviderId) {
+          // 如果啟用自動使用預設，使用預設提供者
+          setSelectedProviderId(defaultProviderId);
+        } else if (currentProviderId && !selectedProviderId) {
+          // 否則使用當前提供者
           setSelectedProviderId(currentProviderId);
         }
       } catch (error) {
@@ -111,7 +117,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }
     };
     loadProviders();
-  }, [dispatch, currentProviderId]);
+  }, [dispatch, currentProviderId, defaultProviderId, autoUseDefault]);
 
   // 當選擇提供商時，載入該提供商的模型
   useEffect(() => {
@@ -665,62 +671,114 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       
       {/* 模型選擇和基本參數設置 */}
       <div className="space-y-4 mb-4">
-        {/* AI 提供商選擇 */}
-        <div>
-          <label className="block text-sm text-gray-300 mb-1">AI 提供商</label>
-          <select
-            value={selectedProviderId || ''}
-            onChange={(e) => {
-              setSelectedProviderId(e.target.value);
-              dispatch(setCurrentModel('')); // 重置模型選擇
-            }}
-            className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
-            disabled={isGenerating}
-          >
-            <option value="">選擇 AI 提供商...</option>
-            {providers.map(provider => (
-              <option key={provider.id} value={provider.id}>
-                {provider.provider_type === 'ollama' && '🦙 '}
-                {provider.provider_type === 'openai' && '🤖 '}
-                {provider.provider_type === 'gemini' && '✨ '}
-                {provider.provider_type === 'claude' && '🧠 '}
-                {provider.provider_type === 'openrouter' && '🔄 '}
-                {provider.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* 簡化的AI提供者顯示 */}
+        {autoUseDefault && defaultProviderId ? (
+          // 自動模式：顯示當前使用的提供者
+          <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs text-gray-400">使用中：</span>
+                <span className="text-sm text-white font-medium">
+                  {(() => {
+                    const provider = providers.find(p => p.id === selectedProviderId);
+                    if (!provider) return '載入中...';
+                    const icon = {
+                      'ollama': '🦙',
+                      'openai': '🤖',
+                      'gemini': '✨',
+                      'claude': '🧠',
+                      'openrouter': '🔄'
+                    }[provider.provider_type] || '';
+                    return `${icon} ${provider.name}`;
+                  })()}
+                </span>
+                {currentModel && (
+                  <span className="text-xs text-gold-400">• {currentModel}</span>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  // 臨時切換到手動選擇模式
+                  dispatch(toggleAutoUseDefault());
+                }}
+                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                title="切換到手動選擇模式"
+              >
+                切換提供者
+              </button>
+            </div>
+          </div>
+        ) : (
+          // 手動模式：顯示完整選擇器
+          <>
+            <div>
+              <label className="block text-sm text-gray-300 mb-1">
+                AI 提供商
+                {!autoUseDefault && (
+                  <button
+                    onClick={() => dispatch(toggleAutoUseDefault())}
+                    className="ml-2 text-xs text-gold-400 hover:text-gold-300"
+                  >
+                    (使用預設)
+                  </button>
+                )}
+              </label>
+              <select
+                value={selectedProviderId || ''}
+                onChange={(e) => {
+                  setSelectedProviderId(e.target.value);
+                  dispatch(setCurrentModel('')); // 重置模型選擇
+                }}
+                className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+                disabled={isGenerating}
+              >
+                <option value="">選擇 AI 提供商...</option>
+                {providers.map(provider => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.provider_type === 'ollama' && '🦙 '}
+                    {provider.provider_type === 'openai' && '🤖 '}
+                    {provider.provider_type === 'gemini' && '✨ '}
+                    {provider.provider_type === 'claude' && '🧠 '}
+                    {provider.provider_type === 'openrouter' && '🔄 '}
+                    {provider.name}
+                    {provider.id === defaultProviderId && ' (預設)'}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* AI 模型選擇 */}
-        <div>
-          <label className="block text-sm text-gray-300 mb-1">AI 模型</label>
-          <select
-            value={currentModel || ''}
-            onChange={(e) => dispatch(setCurrentModel(e.target.value))}
-            className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
-            disabled={isGenerating || (!selectedProviderId && availableModels.length === 0)}
-          >
-            <option value="">請選擇模型...</option>
-            {/* 如果有選擇提供商，顯示該提供商的模型 */}
-            {selectedProviderId && providerModels.map(model => (
-              <option key={model} value={model}>{model}</option>
-            ))}
-            {/* 如果沒有選擇提供商，顯示 Ollama 模型（向後兼容） */}
-            {!selectedProviderId && availableModels.map(model => (
-              <option key={model} value={model}>{model}</option>
-            ))}
-          </select>
-          {!selectedProviderId && !isOllamaConnected && (
-            <p className="text-xs text-red-400 mt-1">
-              請選擇 AI 提供商或在 AI 設定中配置 Ollama 服務
-            </p>
-          )}
-          {selectedProviderId && providerModels.length === 0 && (
-            <p className="text-xs text-yellow-400 mt-1">
-              正在載入模型列表或該提供商無可用模型
-            </p>
-          )}
-        </div>
+            {/* AI 模型選擇 */}
+            <div>
+              <label className="block text-sm text-gray-300 mb-1">AI 模型</label>
+              <select
+                value={currentModel || ''}
+                onChange={(e) => dispatch(setCurrentModel(e.target.value))}
+                className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+                disabled={isGenerating || (!selectedProviderId && availableModels.length === 0)}
+              >
+                <option value="">請選擇模型...</option>
+                {/* 如果有選擇提供商，顯示該提供商的模型 */}
+                {selectedProviderId && providerModels.map(model => (
+                  <option key={model} value={model}>{model}</option>
+                ))}
+                {/* 如果沒有選擇提供商，顯示 Ollama 模型（向後兼容） */}
+                {!selectedProviderId && availableModels.map(model => (
+                  <option key={model} value={model}>{model}</option>
+                ))}
+              </select>
+              {!selectedProviderId && !isOllamaConnected && (
+                <p className="text-xs text-red-400 mt-1">
+                  請選擇 AI 提供商或在 AI 設定中配置 Ollama 服務
+                </p>
+              )}
+              {selectedProviderId && providerModels.length === 0 && (
+                <p className="text-xs text-yellow-400 mt-1">
+                  正在載入模型列表或該提供商無可用模型
+                </p>
+              )}
+            </div>
+          </>
+        )}
         
         <div className="grid grid-cols-2 gap-4">
           <div>

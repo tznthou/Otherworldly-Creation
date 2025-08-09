@@ -5,6 +5,8 @@ import StatisticsService, {
   OverallStatistics, 
   MonthlyStats 
 } from '../../services/statisticsService';
+import WritingTrendChart from '../../components/Charts/WritingTrendChart';
+import MonthlyStatsChart from '../../components/Charts/MonthlyStatsChart';
 
 const Statistics: React.FC = () => {
   const navigate = useNavigate();
@@ -49,7 +51,7 @@ const Statistics: React.FC = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-8 h-screen overflow-y-scroll force-scrollbar pb-16">
       {/* 標題和導航 */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -283,9 +285,51 @@ const Statistics: React.FC = () => {
       {/* 趨勢分析標籤 */}
       {activeTab === 'trends' && (
         <div className="space-y-8">
-          {/* 月度趨勢 */}
+          {/* 寫作趨勢圖表 */}
+          {overallStats && overallStats.recentActivity.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 每日字數趨勢 */}
+              <div className="card">
+                <h3 className="text-xl font-cosmic text-gold-400 mb-6">📝 每日字數趨勢</h3>
+                <div className="h-64">
+                  <WritingTrendChart 
+                    data={overallStats.recentActivity} 
+                    type="words"
+                    className="h-full"
+                  />
+                </div>
+              </div>
+              
+              {/* 每日寫作時間趨勢 */}
+              <div className="card">
+                <h3 className="text-xl font-cosmic text-gold-400 mb-6">⏰ 每日時間趨勢</h3>
+                <div className="h-64">
+                  <WritingTrendChart 
+                    data={overallStats.recentActivity} 
+                    type="time"
+                    className="h-full"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* 月度統計圖表 */}
+          {monthlyStats.length > 0 && (
+            <div className="card">
+              <h3 className="text-xl font-cosmic text-gold-400 mb-6">📈 月度創作統計</h3>
+              <div className="h-80">
+                <MonthlyStatsChart 
+                  data={monthlyStats}
+                  className="h-full"
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* 月度詳細數據 */}
           <div className="card">
-            <h3 className="text-xl font-cosmic text-gold-400 mb-6">📈 月度創作趨勢</h3>
+            <h3 className="text-xl font-cosmic text-gold-400 mb-6">📊 月度詳細數據</h3>
             <div className="space-y-4">
               {monthlyStats.map((month, index) => (
                 <div key={index} className="flex items-center justify-between py-3 border-b border-cosmic-800 last:border-b-0">

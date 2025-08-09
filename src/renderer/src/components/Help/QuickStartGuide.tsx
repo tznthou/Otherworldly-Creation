@@ -359,15 +359,15 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
       content: (
         <div className="space-y-6">
           <div>
-            <h3 className="text-xl font-semibold text-white mb-4">步驟 4：AI 輔助創作</h3>
+            <h3 className="text-xl font-semibold text-white mb-4">步驟 4：多供應商AI輔助創作</h3>
             <p className="text-gray-300 mb-6">
-              AI 助手能理解您的故事背景和角色設定，提供個性化的創作建議。讓我們學習如何有效使用這個強大的工具。
+              創世紀元支援5大AI供應商系統，包括本地Ollama和雲端服務（OpenAI、Google Gemini、Anthropic Claude、OpenRouter）。每個供應商都有獨特優勢，讓我們學習如何配置和使用這個強大的AI創作平台。
             </p>
           </div>
 
           <div className="space-y-4">
             <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">AI 功能特色</h4>
+              <h4 className="text-lg font-semibold text-gold-400 mb-3">多供應商AI系統特色</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center mt-1">
@@ -413,22 +413,30 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
+                  <span className="text-gray-300">配置AI供應商（系統設定 → AI供應商配置）</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
+                  <span className="text-gray-300">選擇合適的AI供應商和模型</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">3</div>
                   <span className="text-gray-300">將游標放在想要續寫的位置</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
+                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">4</div>
                   <span className="text-gray-300">點擊「AI 續寫」按鈕或按 Alt+A</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">3</div>
+                  <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold">5</div>
                   <span className="text-gray-300">調整生成參數（長度、風格、創意度）</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold">4</div>
+                  <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">6</div>
                   <span className="text-gray-300">檢視生成結果，選擇合適的內容</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">5</div>
+                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">7</div>
                   <span className="text-gray-300">根據需要修改後插入到文章中</span>
                 </div>
               </div>

@@ -289,6 +289,8 @@ The rich text editor uses a specialized architecture to avoid React hook context
 32. **Security First**: ALWAYS run `./scripts/security-check.sh` before any release or commit that includes new features - this prevents API key leaks and user data exposure
 33. **AI Context Integration**: New multi-provider AI system requires `position` parameter for context-aware generation - always pass cursor position from frontend to enable context building
 34. **Smart Model Selection**: Preserve user model choices - only auto-select when necessary, never override user selections
+35. **Scrollbar UI Pattern**: Use `force-scrollbar` class for consistent gold-themed scrollbars that always display - critical for statistics pages and long content areas
+36. **Statistics Data Flow**: Statistics service uses real database data through unified API layer - never mock data in production, always use `await` for async data fetching
 
 ### Development Workflows
 
@@ -366,9 +368,10 @@ The rich text editor uses a specialized architecture to avoid React hook context
 ### UI State Management
 - **React Updates**: Use functional setState: `setState(prev => ...)`
 - **Auto-scroll**: Call `scrollIntoView()` after AI generation
-- **Scrollbars**: Gold-themed 16px with `!important` CSS overrides
+- **Scrollbars**: Gold-themed 16px with `!important` CSS overrides - use `force-scrollbar` class for always-visible scrollbars
 - **Settings Page**: Use cleanup functions in useEffect to prevent infinite loading
 - **Navigation Issues**: Settings accessible via Settings → 模板管理 (Template Management)
+- **Statistics Page Scrolling**: Use container-level `h-screen overflow-y-scroll force-scrollbar pb-16` for full-page scrollable statistics with proper bottom padding
 
 ### Template Import System
 - **File Types**: Supports .txt files for novel analysis
@@ -518,6 +521,34 @@ if (currentModel && modelList.includes(currentModel)) {
 if (currentModel && models.includes(currentModel)) {
   // TypeScript inference fails here
 }
+
+// Statistics Service Async Pattern (Fixed 2025-08-09)
+// ✅ Correct: Proper async/await for statistics data
+static async getOverallStatistics(): Promise<OverallStatistics> {
+  try {
+    const projectStats = await this.getProjectStatistics();
+    const recentActivity = await this.generateRecentActivity(); // ← Must await async call
+    return { /* ... */ recentActivity };
+  } catch (error) {
+    console.error('獲取整體統計失敗:', error);
+    return defaultStats;
+  }
+}
+
+// ❌ Wrong: Missing await causes 'reduce is not a function'
+const recentActivity = this.generateRecentActivity(); // Returns Promise, not array
+recentActivity.reduce(...); // TypeError: reduce is not a function
+
+// Scrollbar Pattern for Full-Page Content
+// ✅ Correct: Statistics page with proper scrolling
+<div className="p-8 h-screen overflow-y-scroll force-scrollbar pb-16">
+  {/* Statistics content */}
+</div>
+
+// ❌ Wrong: Missing height constraints or force-scrollbar
+<div className="p-8">
+  {/* Content may not scroll properly */}
+</div>
 ```
 
 ### Database Migration Pattern
@@ -642,7 +673,43 @@ Key rules in `.eslintrc.js`:
 4. ✅ **Character Relationship System**: COMPLETED - Fixed API interfaces and type definitions
 5. ✅ **Final Type Issues**: COMPLETED - Fixed all remaining Slate.js and database interface issues
 
+### Scrollbar System Architecture (CSS)
+The project includes a sophisticated scrollbar system in `src/renderer/src/index.css`:
+
+```css
+/* Standard gold-themed scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thick;
+  scrollbar-color: rgba(251, 191, 36, 1) rgba(10, 17, 40, 0.9);
+}
+
+/* Force-display scrollbar (always visible) */
+.force-scrollbar {
+  overflow-y: scroll !important;
+  /* Inherits gold styling with 16px width */
+}
+
+/* Editor-specific scrollbar with enhanced styling */
+.editor-scroll-container {
+  scrollbar-width: thick !important;
+  /* Enhanced gold gradient effects */
+}
+```
+
+**Usage Patterns**:
+- **Statistics Pages**: Use `force-scrollbar` for always-visible scrolling
+- **Long Content Lists**: Use `custom-scrollbar` for conditional scrolling  
+- **Editor Areas**: Use `editor-scroll-container` for enhanced styling
+- **Full-Page Scrolling**: Combine with `h-screen overflow-y-scroll pb-16`
+
 ## Recent Major Updates
+
+### [2025-08-09 Latest] - Statistics Page Complete Fix 📊✨
+- **Statistics Data Display**: Fixed all data showing as 0 - corrected API import and async data fetching
+- **Gold Scrollbar Implementation**: Added `force-scrollbar` system for consistent UI scrolling experience
+- **Container Scrolling**: Implemented proper full-page scrolling with `h-screen overflow-y-scroll pb-16`
+- **Database Integration**: Statistics now use real project data from SQLite with proper error handling
+- **Impact**: Statistics page now displays accurate data (1 project, 4 chapters, 2.5K words, 4 characters) with beautiful gold scrollbars
 
 ### [2025-08-08 Latest] - AI Context & Model Selection Critical Fixes 🎯🤖
 - **AI Context Recovery**: Fixed new multi-provider AI models unable to capture context for continuation writing

@@ -238,20 +238,21 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
       content: (
         <div className="space-y-6">
           <div>
-            <h3 className="text-xl font-semibold text-white mb-4">AI 輔助寫作</h3>
+            <h3 className="text-xl font-semibold text-white mb-4">多供應商AI系統</h3>
             <p className="text-gray-300 mb-4">
-              AI 助手是您的創作夥伴，能夠理解您的故事背景、角色設定，提供個性化的寫作建議和續寫內容。
+              創世紀元支援5大AI供應商系統：本地Ollama、OpenAI、Google Gemini、Anthropic Claude、OpenRouter。每個供應商都有獨特優勢，您可以根據創作需求選擇最適合的AI助手，享受個性化的寫作體驗。
             </p>
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">AI 功能特點</h4>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">多供應商AI系統特點</h4>
             <ul className="text-gray-300 space-y-2">
-              <li>• <strong>上下文理解</strong>：分析專案設定、角色關係、已寫內容</li>
-              <li>• <strong>風格一致性</strong>：保持與您寫作風格的一致性</li>
-              <li>• <strong>角色一致性</strong>：確保角色行為符合設定</li>
-              <li>• <strong>劇情連貫性</strong>：維持故事邏輯和時間線</li>
-              <li>• <strong>多樣化輸出</strong>：提供多種不同的續寫選項</li>
+              <li>• <strong>供應商多元化</strong>：本地Ollama + 4大雲端服務，滿足不同需求</li>
+              <li>• <strong>智能供應商選擇</strong>：根據創作類型推薦最適合的AI供應商</li>
+              <li>• <strong>統一API介面</strong>：無縫切換不同供應商，操作方式一致</li>
+              <li>• <strong>上下文感知續寫</strong>：位置感知技術，理解故事背景和情節發展</li>
+              <li>• <strong>模型自動搜尋</strong>：自動發現和選擇可用的AI模型</li>
+              <li>• <strong>參數智能調整</strong>：不同供應商自動適配最佳參數組合</li>
             </ul>
           </div>
 
@@ -324,12 +325,14 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">AI 設定</h4>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">AI供應商配置</h4>
             <ul className="text-gray-300 space-y-2">
-              <li>• <strong>模型選擇</strong>：選擇使用的 AI 模型</li>
-              <li>• <strong>預設參數</strong>：設定 AI 生成的預設參數</li>
-              <li>• <strong>服務設定</strong>：配置 Ollama 服務連線</li>
-              <li>• <strong>快取設定</strong>：AI 回應快取管理</li>
+              <li>• <strong>供應商管理</strong>：啟用或停用不同的AI供應商</li>
+              <li>• <strong>API Key設定</strong>：為雲端服務配置API金鑰</li>
+              <li>• <strong>模型選擇</strong>：從各供應商的可用模型中選擇</li>
+              <li>• <strong>連線測試</strong>：測試各供應商的連線狀態</li>
+              <li>• <strong>預設參數</strong>：為不同供應商設定最佳參數</li>
+              <li>• <strong>服務監控</strong>：即時監控AI服務狀態</li>
             </ul>
           </div>
 
@@ -469,7 +472,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex">
+    <div className="flex h-full w-full">
       {/* 側邊欄 */}
       <div className="w-80 bg-cosmic-900/95 backdrop-blur-sm border-r border-gold-500/30 overflow-y-auto">
         <div className="p-4 border-b border-cosmic-700">
