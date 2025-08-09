@@ -891,4 +891,30 @@ export const tauriAPI: API = {
       return template;
     }
   },
+
+  // EPUB 電子書生成
+  epub: {
+    generate: async (projectId, options) => {
+      return safeInvoke('generate_epub', {
+        project_id: projectId,
+        options: options || {
+          include_cover: true,
+          font_family: 'Noto Sans TC',
+          chapter_break_style: 'page-break'
+        }
+      });
+    },
+
+    getExports: async (projectId) => {
+      return safeInvoke('get_epub_exports', {
+        project_id: projectId
+      });
+    },
+
+    deleteExport: async (exportId) => {
+      return safeInvoke('delete_epub_export', {
+        export_id: exportId
+      });
+    }
+  },
 };

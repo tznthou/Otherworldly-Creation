@@ -20,10 +20,12 @@ interface UIState {
     templateManager: boolean;
     templateApplication: boolean;
     selectProjectForCharacters: boolean;
+    selectProjectForPlotAnalysis: boolean;
     backupManager: boolean;
     helpCenter: boolean;
     updateManager: boolean;
     testModal: boolean; // 用於測試的模態框
+    epubGeneration: boolean; // EPUB 生成模態框
   };
   loading: {
     global: boolean;
@@ -63,10 +65,12 @@ const initialState: UIState = {
     templateManager: false,
     templateApplication: false,
     selectProjectForCharacters: false,
+    selectProjectForPlotAnalysis: false,
     backupManager: false,
     helpCenter: false,
     updateManager: false,
     testModal: false,
+    epubGeneration: false,
   },
   loading: {
     global: false,

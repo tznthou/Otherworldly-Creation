@@ -24,7 +24,10 @@ import type {
   AIProviderResponse,
   AIProviderTestResult,
   AIGenerationResult,
-  AIGenerationRequestData
+  AIGenerationRequestData,
+  EPubGenerationOptions,
+  EPubResult,
+  EPubExportRecord
 } from './models';
 
 // 小說分析相關類型
@@ -147,5 +150,12 @@ export interface API {
     analyzeNovel: (parseResult: NovelParseResult, options?: AnalysisOptions, onProgress?: (progress: AnalysisProgress) => void) => Promise<NovelTemplate>;
     analyzeChunk: (text: string, analysisType: 'world' | 'character' | 'plot' | 'style') => Promise<string>;
     generateTemplate: (title: string, analysis: DetailedAnalysis) => Promise<NovelTemplate>;
+  };
+
+  // EPUB 電子書生成
+  epub: {
+    generate: (projectId: string, options?: EPubGenerationOptions) => Promise<EPubResult>;
+    getExports: (projectId: string) => Promise<EPubExportRecord[]>;
+    deleteExport: (exportId: string) => Promise<void>;
   };
 }

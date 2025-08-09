@@ -311,3 +311,34 @@ export interface CharacterAttributes {
   personality?: string;
   background?: string;
 }
+
+// EPUB 相關類型
+export interface EPubGenerationOptions {
+  include_cover: boolean;
+  custom_css?: string;
+  font_family: string;
+  chapter_break_style: string;
+  author?: string;
+}
+
+export interface EPubResult {
+  file_path: string;
+  file_size: number;
+  chapter_count: number;
+  title: string;
+  success: boolean;
+  error_message?: string;
+}
+
+export interface EPubExportRecord {
+  id: string;
+  project_id: string;
+  title: string;
+  file_path: string;
+  file_size: number;
+  chapter_count: number;
+  format_settings: string; // JSON string
+  export_status: string;
+  created_at: string;
+  downloaded_at?: string;
+}

@@ -90,6 +90,48 @@ const QuickActions: React.FC = () => {
         navigate('/statistics');
       },
     },
+
+    // 規劃中功能 - 來自 README.md
+    {
+      id: 'ai-illustration',
+      title: '🎨 幻想具現',
+      description: 'AI 插畫生成 - 角色插畫、場景插畫、封面設計',
+      icon: '🖼️',
+      color: 'from-pink-500 to-rose-600',
+      isPlanned: true, // 標記為規劃中功能
+      action: () => {
+        // TODO: 實現 AI 插畫生成功能
+        alert(`功能開發中：AI 插畫生成系統即將推出！
+
+✨ 計劃功能：
+• 角色插畫生成
+• 場景插畫創作
+• 專業封面設計`);
+      },
+    },
+    {
+      id: 'ebook-generation',
+      title: '📚 傳說編纂',
+      description: '一鍵生成專業電子書 - EPUB 生成、排版優化、封面設計',
+      icon: '📖',
+      color: 'from-emerald-500 to-teal-600',
+      isPlanned: false, // 功能已實現，移除規劃中標記
+      action: () => {
+        dispatch(openModal('epubGeneration'));
+      },
+    },
+    {
+      id: 'advanced-ai',
+      title: '🧠 進階 AI 功能',
+      description: '高級創作輔助 - 劇情分析、角色一致性檢查、創意建議',
+      icon: '🔬',
+      color: 'from-blue-500 to-indigo-600',
+      isPlanned: false, // 功能已實現！
+      action: () => {
+        // 導航到專案編輯器來使用劇情分析功能
+        dispatch(openModal('selectProjectForPlotAnalysis'));
+      },
+    },
   ];
 
   return (
@@ -101,14 +143,23 @@ const QuickActions: React.FC = () => {
           <button
             key={action.id}
             onClick={action.action}
-            className="card card-hover group text-left p-4 transition-all duration-200 hover:scale-105 active:scale-95 relative overflow-hidden"
+            className={`card card-hover group text-left p-4 transition-all duration-200 hover:scale-105 active:scale-95 relative overflow-hidden ${action.isPlanned ? 'opacity-75 hover:opacity-90' : ''}`}
             data-tutorial={action.id === 'create-project' ? 'create-project-btn' : undefined}
           >
             {/* 背景魔法效果 */}
             <div className="absolute inset-0 bg-gradient-to-br from-cosmic-800/50 via-cosmic-700/30 to-cosmic-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
+            {/* 規劃中功能標記 */}
+            {action.isPlanned && (
+              <div className="absolute top-2 right-2 z-20">
+                <div className="bg-orange-500/90 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+                  開發中
+                </div>
+              </div>
+            )}
+            
             <div className="relative z-10">
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
+              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform shadow-lg ${action.isPlanned ? 'grayscale hover:grayscale-0' : ''}`}>
                 {action.icon}
               </div>
               

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 9;
+const DB_VERSION: i32 = 11;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -74,6 +74,18 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v9(conn)?;
             update_version(conn, 9)?;
             log::info!("遷移到版本 9 完成");
+        }
+        
+        if current_version < 10 {
+            apply_migration_v10(conn)?;
+            update_version(conn, 10)?;
+            log::info!("遷移到版本 10 完成");
+        }
+        
+        if current_version < 11 {
+            apply_migration_v11(conn)?;
+            update_version(conn, 11)?;
+            log::info!("遷移到版本 11 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -670,6 +682,381 @@ fn apply_migration_v9(conn: &Connection) -> Result<()> {
     )?;
     
     log::info!("AI 生成歷史表更新完成");
+    
+    Ok(())
+}
+
+/// 遷移到版本 10：添加 EPUB 導出記錄表
+pub fn apply_migration_v10(conn: &Connection) -> Result<()> {
+    log::info!("開始遷移到版本 10：添加 EPUB 導出功能支援");
+    
+    // 創建 EPUB 導出記錄表
+    conn.execute(
+        "CREATE TABLE epub_exports (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            file_path TEXT NOT NULL,
+            file_size INTEGER NOT NULL,
+            chapter_count INTEGER NOT NULL,
+            format_settings TEXT NOT NULL, -- JSON 字符串存儲格式選項
+            export_status TEXT NOT NULL DEFAULT 'completed', -- completed, failed, processing
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            downloaded_at TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    
+    // 創建索引提升查詢效能
+    conn.execute(
+        "CREATE INDEX idx_epub_exports_project_id ON epub_exports (project_id)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX idx_epub_exports_created_at ON epub_exports (created_at DESC)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX idx_epub_exports_status ON epub_exports (export_status)",
+        [],
+    )?;
+    
+    log::info!("EPUB 導出記錄表和索引創建完成");
+    
+    Ok(())
+}
+
+/// 版本 11: Phase 2 進階 AI 功能 - 智能創作分析
+pub fn apply_migration_v11(conn: &Connection) -> Result<()> {
+    log::info!("開始遷移到版本 11：Phase 2 智能創作分析功能");
+    
+    // 1. 創建角色分析表 - 支援角色一致性檢查
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS character_analysis (
+            id TEXT PRIMARY KEY,
+            character_id TEXT NOT NULL,
+            chapter_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            
+            -- 對話分析數據
+            dialogue_samples TEXT, -- JSON: 對話樣本集合
+            dialogue_count INTEGER DEFAULT 0,
+            avg_dialogue_length REAL DEFAULT 0.0,
+            
+            -- 五維人格特徵向量 (Big Five)
+            openness REAL DEFAULT 0.5,           -- 開放性 (0-1)
+            conscientiousness REAL DEFAULT 0.5,  -- 盡責性 (0-1)
+            extraversion REAL DEFAULT 0.5,       -- 外向性 (0-1)
+            agreeableness REAL DEFAULT 0.5,      -- 親和性 (0-1)
+            neuroticism REAL DEFAULT 0.5,        -- 神經質 (0-1)
+            
+            -- 語言模式分析
+            linguistic_patterns TEXT, -- JSON: n-gram 模式、常用詞彙等
+            vocabulary_richness REAL DEFAULT 0.0, -- 詞彙豐富度
+            sentence_complexity REAL DEFAULT 0.0, -- 句子複雜度
+            
+            -- 情感分析
+            emotional_tone TEXT,       -- positive, negative, neutral, mixed
+            emotional_intensity REAL DEFAULT 0.5, -- 情緒強度 (0-1)
+            
+            -- 行為模式
+            action_patterns TEXT,      -- JSON: 行為描述集合
+            behavior_consistency REAL DEFAULT 1.0, -- 行為一致性分數 (0-1)
+            
+            -- 元數據
+            analysis_version TEXT DEFAULT '1.0',
+            confidence_score REAL DEFAULT 0.0, -- 分析置信度 (0-1)
+            analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            
+            FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE,
+            FOREIGN KEY (chapter_id) REFERENCES chapters (id) ON DELETE CASCADE,
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    
+    // 創建角色分析索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_character_analysis_character ON character_analysis (character_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_character_analysis_chapter ON character_analysis (chapter_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_character_analysis_project ON character_analysis (project_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_character_analysis_consistency ON character_analysis (behavior_consistency)",
+        [],
+    )?;
+    
+    // 2. 創建劇情分析表 - 支援劇情節奏和衝突點檢測
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS plot_analysis (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            chapter_id TEXT,
+            
+            -- 劇情衝突分析
+            conflict_points TEXT,      -- JSON: 衝突點位置和強度
+            tension_level REAL DEFAULT 0.5, -- 整體緊張度 (0-1)
+            climax_detected INTEGER DEFAULT 0,
+            
+            -- 節奏分析
+            pacing_score REAL DEFAULT 0.5, -- 節奏評分 (0-1)
+            scene_density REAL DEFAULT 0.0, -- 場景密度
+            dialogue_ratio REAL DEFAULT 0.0, -- 對話比例
+            action_ratio REAL DEFAULT 0.0,   -- 動作描述比例
+            description_ratio REAL DEFAULT 0.0, -- 環境描述比例
+            
+            -- 伏筆追蹤
+            foreshadowing_elements TEXT, -- JSON: 伏筆元素列表
+            plot_threads TEXT,           -- JSON: 情節線索
+            unresolved_threads INTEGER DEFAULT 0, -- 未解決線索數
+            
+            -- 情緒曲線
+            emotional_arc TEXT,          -- JSON: 章節情緒變化數據
+            emotional_peaks INTEGER DEFAULT 0, -- 情緒高峰數
+            emotional_valleys INTEGER DEFAULT 0, -- 情緒低谷數
+            
+            -- 章節統計
+            word_count INTEGER DEFAULT 0,
+            paragraph_count INTEGER DEFAULT 0,
+            sentence_count INTEGER DEFAULT 0,
+            avg_sentence_length REAL DEFAULT 0.0,
+            
+            -- AI 分析元數據
+            ai_provider TEXT,
+            ai_model TEXT,
+            analysis_prompt TEXT,        -- 使用的分析提示詞
+            
+            -- 元數據
+            summary TEXT,                -- 分析摘要
+            suggestions TEXT,             -- JSON: 改進建議
+            confidence_score REAL DEFAULT 0.0,
+            processing_time INTEGER,      -- 處理時間（毫秒）
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
+            FOREIGN KEY (chapter_id) REFERENCES chapters (id) ON DELETE SET NULL
+        )",
+        [],
+    )?;
+    
+    // 創建劇情分析索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_plot_analysis_project ON plot_analysis (project_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_plot_analysis_chapter ON plot_analysis (chapter_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_plot_analysis_tension ON plot_analysis (tension_level DESC)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_plot_analysis_created ON plot_analysis (created_at DESC)",
+        [],
+    )?;
+    
+    // 3. 創建創意建議表 - 支援 AI 生成的創意建議
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS creative_suggestions (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            chapter_id TEXT,
+            target_type TEXT NOT NULL, -- 'plot', 'character', 'dialogue', 'scene', 'general'
+            target_id TEXT,             -- 可選：具體目標的 ID
+            
+            -- 建議內容
+            suggestion_type TEXT NOT NULL, -- 'continuation', 'alternative', 'enhancement', 'conflict', 'resolution'
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            context TEXT,                -- 建議的上下文
+            
+            -- 建議評分
+            relevance_score REAL DEFAULT 0.0,    -- 相關性評分 (0-1)
+            creativity_score REAL DEFAULT 0.0,   -- 創意性評分 (0-1)
+            quality_score REAL DEFAULT 0.0,      -- 品質評分 (0-1)
+            
+            -- AI 生成資訊
+            ai_provider TEXT NOT NULL,
+            ai_model TEXT NOT NULL,
+            generation_params TEXT,       -- JSON: 生成參數
+            prompt_used TEXT,
+            
+            -- 用戶互動
+            status TEXT DEFAULT 'pending', -- 'pending', 'accepted', 'rejected', 'modified'
+            user_rating INTEGER,          -- 1-5 星評分
+            user_feedback TEXT,
+            applied_at TIMESTAMP,
+            
+            -- 多模型投票（如果使用多個 AI）
+            votes TEXT,                   -- JSON: 各模型的投票結果
+            consensus_score REAL DEFAULT 0.0, -- 共識分數 (0-1)
+            
+            -- 元數據
+            processing_time INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
+            FOREIGN KEY (chapter_id) REFERENCES chapters (id) ON DELETE SET NULL
+        )",
+        [],
+    )?;
+    
+    // 創建創意建議索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_creative_suggestions_project ON creative_suggestions (project_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_creative_suggestions_chapter ON creative_suggestions (chapter_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_creative_suggestions_type ON creative_suggestions (target_type, suggestion_type)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_creative_suggestions_status ON creative_suggestions (status)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_creative_suggestions_quality ON creative_suggestions (quality_score DESC)",
+        [],
+    )?;
+    
+    // 4. 創建分析快取表 - 提升性能
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS analysis_cache (
+            id TEXT PRIMARY KEY,
+            cache_key TEXT UNIQUE NOT NULL, -- 快取鍵：project_id + analysis_type + target_id + version
+            analysis_type TEXT NOT NULL,    -- 'character', 'plot', 'creative'
+            project_id TEXT NOT NULL,
+            target_id TEXT,
+            
+            -- 快取數據
+            cached_data TEXT NOT NULL,       -- JSON: 完整分析結果
+            data_hash TEXT NOT NULL,         -- 數據雜湊值，用於驗證
+            
+            -- 快取管理
+            hit_count INTEGER DEFAULT 0,     -- 命中次數
+            last_accessed TIMESTAMP,
+            expires_at TIMESTAMP,            -- 過期時間
+            is_valid INTEGER DEFAULT 1,
+            
+            -- 元數據
+            cache_size INTEGER,              -- 快取大小（字節）
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    
+    // 創建分析快取索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_analysis_cache_key ON analysis_cache (cache_key)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_analysis_cache_project ON analysis_cache (project_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_analysis_cache_expires ON analysis_cache (expires_at)",
+        [],
+    )?;
+    
+    // 5. 創建分析任務隊列表 - 支援背景分析
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS analysis_queue (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            analysis_type TEXT NOT NULL,     -- 'character', 'plot', 'creative', 'full'
+            target_id TEXT,
+            priority INTEGER DEFAULT 5,      -- 1-10，10 最高優先級
+            
+            -- 任務狀態
+            status TEXT DEFAULT 'pending',   -- 'pending', 'processing', 'completed', 'failed', 'cancelled'
+            progress REAL DEFAULT 0.0,        -- 進度 (0-1)
+            current_step TEXT,                -- 當前處理步驟
+            
+            -- 任務參數
+            params TEXT,                      -- JSON: 分析參數
+            retry_count INTEGER DEFAULT 0,
+            max_retries INTEGER DEFAULT 3,
+            
+            -- 結果和錯誤
+            result_id TEXT,                   -- 完成後的結果 ID
+            error_message TEXT,
+            error_details TEXT,               -- JSON: 詳細錯誤資訊
+            
+            -- 時間追蹤
+            queued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            started_at TIMESTAMP,
+            completed_at TIMESTAMP,
+            estimated_completion TIMESTAMP,
+            
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    
+    // 創建分析隊列索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_analysis_queue_status ON analysis_queue (status, priority DESC)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_analysis_queue_project ON analysis_queue (project_id)",
+        [],
+    )?;
+    
+    log::info!("Phase 2 資料表創建完成");
+    
+    // 6. 插入預設分析模板
+    let analysis_templates = vec![
+        ("character_consistency", "角色一致性分析", r#"{"personality_weight": 0.3, "dialogue_weight": 0.3, "behavior_weight": 0.4}"#),
+        ("plot_pacing", "劇情節奏分析", r#"{"ideal_tension_curve": "rising", "min_conflict_points": 3, "max_description_ratio": 0.3}"#),
+        ("creative_continuation", "創意續寫", r#"{"style_match": true, "surprise_factor": 0.3, "coherence_weight": 0.7}"#),
+    ];
+    
+    // 創建分析模板表
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS analysis_templates (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            template_type TEXT NOT NULL,
+            config TEXT NOT NULL,        -- JSON: 模板配置
+            is_default INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )",
+        [],
+    )?;
+    
+    for (id, name, config) in analysis_templates {
+        conn.execute(
+            "INSERT OR IGNORE INTO analysis_templates (id, name, template_type, config, is_default) 
+             VALUES (?1, ?2, ?3, ?4, 1)",
+            params![id, name, id.split('_').next().unwrap_or("general"), config],
+        )?;
+    }
+    
+    log::info!("預設分析模板插入完成");
+    log::info!("版本 11 遷移完成：Phase 2 智能創作分析功能已準備就緒");
     
     Ok(())
 }

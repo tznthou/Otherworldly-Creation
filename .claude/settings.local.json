@@ -99,7 +99,13 @@
       "Bash(gtimeout 15 npm run dev)",
       "Bash(git log:*)",
       "Bash(./scripts/security-check.sh:*)",
-      "WebFetch(domain:ai.google.dev)"
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(sudo chown:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(npm config:*)",
+      "Bash(npm config get:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)"
     ],
     "deny": []
   }

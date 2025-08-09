@@ -17,7 +17,10 @@ const PrivacySettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             onChange={(e) => dispatch(updatePrivacySettings({ enableTelemetry: e.target.checked }))}
             className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
           />
-          <label htmlFor="enableTelemetry" className="text-gray-300">啟用遙測資料收集</label>
+          <label htmlFor="enableTelemetry" className="text-gray-300">
+            啟用遙測資料收集
+            <span className="block text-xs text-orange-400 mt-1">⚠️ 功能未實作 - 需要添加實際遙測邏輯</span>
+          </label>
         </div>
         
         <div className="flex items-center">
@@ -28,7 +31,10 @@ const PrivacySettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             onChange={(e) => dispatch(updatePrivacySettings({ enableCrashReporting: e.target.checked }))}
             className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
           />
-          <label htmlFor="enableCrashReporting" className="text-gray-300">啟用錯誤報告</label>
+          <label htmlFor="enableCrashReporting" className="text-gray-300">
+            啟用錯誤報告
+            <span className="block text-xs text-orange-400 mt-1">⚠️ 功能未實作 - 需要添加錯誤上傳機制</span>
+          </label>
         </div>
         
         <div className="flex items-center">
@@ -39,7 +45,10 @@ const PrivacySettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             onChange={(e) => dispatch(updatePrivacySettings({ enableUsageAnalytics: e.target.checked }))}
             className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
           />
-          <label htmlFor="enableUsageAnalytics" className="text-gray-300">啟用使用情況分析</label>
+          <label htmlFor="enableUsageAnalytics" className="text-gray-300">
+            啟用使用情況分析
+            <span className="block text-xs text-orange-400 mt-1">⚠️ 功能未實作 - 需要添加使用統計追蹤</span>
+          </label>
         </div>
       </div>
       

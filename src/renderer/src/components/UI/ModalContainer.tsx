@@ -11,9 +11,11 @@ import AISettingsModal from '../Modals/AISettingsModal';
 import TemplateManagerModal from '../Modals/TemplateManagerModal';
 import TemplateApplicationModal from '../Modals/TemplateApplicationModal';
 import SelectProjectForCharactersModal from '../Modals/SelectProjectForCharactersModal';
+import SelectProjectForPlotAnalysisModal from '../Modals/SelectProjectForPlotAnalysisModal';
 import BackupManagerModal from '../Modals/BackupManagerModal';
 import HelpCenterModal from '../Modals/HelpCenterModal';
 import UpdateManagerModal from '../Modals/UpdateManagerModal';
+import EPubGenerationModal from '../Modals/EPubGenerationModal';
 
 const ModalContainer: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -60,9 +62,11 @@ const ModalContainer: React.FC = () => {
       {modals.templateManager && <TemplateManagerModal />}
       {modals.templateApplication && selectedTemplate && <TemplateApplicationModal template={selectedTemplate} />}
       {modals.selectProjectForCharacters && <SelectProjectForCharactersModal />}
+      {modals.selectProjectForPlotAnalysis && <SelectProjectForPlotAnalysisModal />}
       {modals.backupManager && <BackupManagerModal />}
       {modals.helpCenter && <HelpCenterModal />}
       {modals.updateManager && <UpdateManagerModal />}
+      {modals.epubGeneration && <EPubGenerationModal />}
     </>
   );
 };

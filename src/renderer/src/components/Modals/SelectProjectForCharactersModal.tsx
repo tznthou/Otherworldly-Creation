@@ -27,6 +27,8 @@ const SelectProjectForCharactersModal: React.FC = () => {
             onClick={handleClose}
             className="text-gray-400 hover:text-white"
           >
+
+// 選擇專案進行劇情分析的模態框
             ✕
           </button>
         </div>

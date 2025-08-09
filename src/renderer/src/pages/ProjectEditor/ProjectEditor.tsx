@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Descendant, Editor } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { 
@@ -17,6 +17,7 @@ import ReadingModeOverlay from '../../components/Editor/ReadingModeOverlay';
 import ChapterList from '../../components/Editor/ChapterList';
 import ChapterNotes from '../../components/Editor/ChapterNotes';
 import AIWritingPanel from '../../components/Editor/AIWritingPanel';
+import { PlotAnalysisPanel } from '../../components/AI/PlotAnalysisPanel';
 import AIStatusIndicator from '../../components/UI/AIStatusIndicator';
 import SaveStatusIndicator from '../../components/UI/SaveStatusIndicator';
 import SaveStatusPanel from '../../components/UI/SaveStatusPanel';
@@ -33,6 +34,7 @@ import { editorTutorial, aiTutorial } from '../../data/tutorialSteps';
 const ProjectEditorContent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const notification = useNotification();
   
@@ -43,6 +45,7 @@ const ProjectEditorContent: React.FC = () => {
   const _isReadingMode = useAppSelector(selectIsReadingMode);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(currentChapter?.id || null);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [showPlotAnalysisPanel, setShowPlotAnalysisPanel] = useState(false);
   const [showSavePanel, setShowSavePanel] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [currentEditor, setCurrentEditor] = useState<Editor | undefined>(undefined); // 新增：存儲當前編輯器實例
@@ -134,6 +137,20 @@ const ProjectEditorContent: React.FC = () => {
     }
   }, [chapters, currentChapter, selectedChapterId, dispatch]);
 
+  // 檢查 URL 參數，自動開啟劇情分析面板
+  useEffect(() => {
+    const shouldOpenPlotAnalysis = searchParams.get('plotAnalysis') === 'true';
+    if (shouldOpenPlotAnalysis && !showPlotAnalysisPanel && currentChapter) {
+      setShowPlotAnalysisPanel(true);
+      setShowAIPanel(false);
+      notification.info('劇情分析', '正在為您開啟劇情分析面板...');
+      
+      // 清除 URL 參數，避免重複觸發
+      searchParams.delete('plotAnalysis');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, showPlotAnalysisPanel, currentChapter, notification]);
+
   // 處理章節選擇
   const handleChapterSelect = useCallback((chapterId: string) => {
     console.log('🔍 [ProjectEditor] 用戶選擇章節:', chapterId);
@@ -217,11 +234,23 @@ const ProjectEditorContent: React.FC = () => {
   const handleAIWrite = useCallback(() => {
     if (!showAIPanel) {
       setShowAIPanel(true);
+      setShowPlotAnalysisPanel(false); // 關閉劇情分析面板
       notification.info('AI 續寫', '請在右側面板中設定參數並生成續寫內容');
     } else {
       setShowAIPanel(false);
     }
   }, [showAIPanel, notification]);
+
+  // 處理劇情分析 - 開啟劇情分析面板
+  const handlePlotAnalysis = useCallback(() => {
+    if (!showPlotAnalysisPanel) {
+      setShowPlotAnalysisPanel(true);
+      setShowAIPanel(false); // 關閉AI續寫面板
+      notification.info('劇情分析', '準備開始深度分析您的故事劇情');
+    } else {
+      setShowPlotAnalysisPanel(false);
+    }
+  }, [showPlotAnalysisPanel, notification]);
 
   if (loading) {
     return (
@@ -360,6 +389,20 @@ const ProjectEditorContent: React.FC = () => {
                     {currentChapter?.wordCount ? `${currentChapter.wordCount} 字` : '未統計'}
                   </div>
                   <div className="flex items-center space-x-2">
+                    {/* 劇情分析按鈕 */}
+                    <button
+                      onClick={handlePlotAnalysis}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 ${
+                        showPlotAnalysisPanel
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-cosmic-700 hover:bg-purple-600/20 text-purple-300 hover:text-purple-200'
+                      }`}
+                      title="劇情分析"
+                    >
+                      <span>🎭</span>
+                      <span>劇情</span>
+                    </button>
+                    
                     <button
                       onClick={() => {
                         console.log('上一章按鈕點擊', chapters, currentChapter);
@@ -442,6 +485,21 @@ const ProjectEditorContent: React.FC = () => {
               projectId={id} 
               chapterId={currentChapter.id}
               editor={currentEditor} // 新增：傳遞編輯器實例
+            />
+          </div>
+        )}
+
+        {/* 劇情分析面板 */}
+        {showPlotAnalysisPanel && currentChapter && id && (
+          <div className="w-96 border-l border-cosmic-700 flex-shrink-0 overflow-y-auto" style={{ minWidth: '384px' }}>
+            <PlotAnalysisPanel
+              projectId={id}
+              chapters={chapters}
+              currentChapter={currentChapter}
+              onSuggestionApply={(suggestion) => {
+                notification.info('建議應用', `正在應用建議：${suggestion.title}`);
+                // 這裡可以添加具體的建議應用邏輯
+              }}
             />
           </div>
         )}
