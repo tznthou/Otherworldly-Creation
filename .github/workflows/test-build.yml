@@ -1,40 +1,21 @@
-name: 🧪 Test Build (Manual)
+name: 🧪 Test Build
 
 on:
-  workflow_dispatch: # 僅限手動觸發
+  workflow_dispatch:
     inputs:
       platform:
         description: '選擇建置平台'
         required: true
-        default: 'all'
+        default: 'macos-only'
         type: choice
         options:
-        - all
-        - macos-only
-        - windows-only
-
-env:
-  CARGO_INCREMENTAL: 0
-  RUST_BACKTRACE: short
+          - macos-only
+          - windows-only
 
 jobs:
-  test-build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: 'macos-latest'
-            args: '--target universal-apple-darwin'
-            rust-target: universal-apple-darwin
-            os: 'macos'
-          - platform: 'windows-latest'
-            args: '--target x86_64-pc-windows-msvc'
-            rust-target: x86_64-pc-windows-msvc
-            os: 'windows'
-
-    runs-on: ${{ matrix.platform }}
-    if: ${{ github.event.inputs.platform == 'all' || (matrix.os == 'macos' && github.event.inputs.platform == 'macos-only') || (matrix.os == 'windows' && github.event.inputs.platform == 'windows-only') }}
-
+  build:
+    runs-on: ${{ github.event.inputs.platform == 'macos-only' && 'macos-latest' || 'windows-latest' }}
+    
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
@@ -42,7 +23,7 @@ jobs:
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.rust-target }}
+          targets: ${{ github.event.inputs.platform == 'macos-only' && 'universal-apple-darwin' || 'x86_64-pc-windows-msvc' }}
 
       - name: 📦 Rust cache
         uses: swatinem/rust-cache@v2
@@ -55,46 +36,25 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: 🏗️ Install frontend dependencies
+      - name: 🏗️ Install dependencies
         run: npm ci
 
       - name: 🔧 Build frontend
         run: npm run build:renderer
 
-      - name: 🔨 Build Tauri app (Test)
+      - name: 🔨 Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: ${{ matrix.args }}
-          uploadToDraft: false
-
-      - name: 📋 List built files
-        run: |
-          echo "🔍 Built files in target directory:"
-          find src-tauri/target -name "*.dmg" -o -name "*.msi" -o -name "*.exe" -o -name "*.app" | head -10
+          args: ${{ github.event.inputs.platform == 'macos-only' && '--target universal-apple-darwin' || '--target x86_64-pc-windows-msvc' }}
 
       - name: 📤 Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: genesis-chronicle-${{ matrix.platform }}
+          name: genesis-chronicle-${{ github.event.inputs.platform }}
           path: |
             src-tauri/target/**/bundle/**/*.dmg
             src-tauri/target/**/bundle/**/*.msi
             src-tauri/target/**/bundle/**/*.exe
           retention-days: 7
-
-  summary:
-    needs: test-build
-    runs-on: ubuntu-latest
-    if: always()
-
-    steps:
-      - name: 📊 Build Summary
-        run: |
-          echo "## 🎯 測試構建完成"
-          echo "平台選擇: ${{ github.event.inputs.platform }}"
-          echo "構建狀態: ${{ needs.test-build.result }}"
-          echo ""
-          echo "💾 構建產物已上傳至 Actions Artifacts"
-          echo "🔗 下載連結: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
