@@ -32,9 +32,16 @@ echo "📂 App Path: $APP_PATH"
 # 創建輸出目錄
 mkdir -p "$(dirname "$PKG_PATH")"
 
+# 創建臨時目錄來組織 PKG 結構
+TEMP_ROOT=$(mktemp -d)
+echo "🗂️ Creating temporary staging area: $TEMP_ROOT"
+
+# 將 .app 複製到臨時目錄，確保正確的目錄結構
+cp -R "$APP_PATH" "$TEMP_ROOT/"
+
 # 使用 pkgbuild 創建 PKG 安裝程式
 echo "🔨 Creating PKG installer..."
-pkgbuild --root "$(dirname "$APP_PATH")" \
+pkgbuild --root "$TEMP_ROOT" \
          --identifier "com.genesis-chronicle.desktop" \
          --version "1.0.3" \
          --install-location "/Applications" \
@@ -42,12 +49,16 @@ pkgbuild --root "$(dirname "$APP_PATH")" \
          "$PKG_PATH" 2>/dev/null || {
     # 如果沒有 scripts 目錄，則不使用 scripts 參數
     echo "📦 Building PKG without custom scripts..."
-    pkgbuild --root "$(dirname "$APP_PATH")" \
+    pkgbuild --root "$TEMP_ROOT" \
              --identifier "com.genesis-chronicle.desktop" \
              --version "1.0.3" \
              --install-location "/Applications" \
              "$PKG_PATH"
 }
+
+# 清理臨時目錄
+echo "🧹 Cleaning up temporary files..."
+rm -rf "$TEMP_ROOT"
 
 echo "✅ PKG installer created: $PKG_PATH"
 echo "💡 PKG安裝程式會自動處理quarantine屬性，用戶無需手動執行xattr指令"
