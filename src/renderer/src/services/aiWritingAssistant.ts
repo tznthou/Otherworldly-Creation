@@ -75,7 +75,7 @@ export function analyzeWritingContext(text: string): ContextAnalysis {
 /**
  * 根據上下文分析生成智能續寫參數
  */
-export function generateSmartParams(context: ContextAnalysis, userTemp?: number): SmartGenerationParams {
+export function generateSmartParams(context: ContextAnalysis, userTemp?: number, userMaxTokens?: number, currentModel?: string): SmartGenerationParams {
   console.log('🎯 生成智能續寫參數...');
   
   // 根據文本複雜度調整溫度
@@ -100,9 +100,37 @@ export function generateSmartParams(context: ContextAnalysis, userTemp?: number)
       break;
   }
   
-  // 根據文本長度調整 maxTokens
+  // 根據文本長度調整 maxTokens - 🔥 使用用戶設定值作為基礎，並考慮模型特定限制
   const avgSentenceLength = context.writingMetrics.averageSentenceLength;
-  const maxTokens = Math.max(150, Math.min(500, avgSentenceLength * 3));
+  let maxTokens = userMaxTokens || 600; // 🔥 使用用戶設定的值，預設 600
+  
+  // 🎯 模型特定的 token 限制策略 - 根據官方文檔優化
+  if (currentModel && currentModel.includes('gemini-2.5-flash')) {
+    // 官方文檔：Gemini 2.5 Flash 支持 65,536 輸出 tokens
+    // 但實際可能有嚴格的 API 配額限制，使用極度保守策略
+    const ultraConservativeLimit = Math.min(100, Math.floor(maxTokens * 0.25)); // 極度保守：用戶設定的25%，最大100
+    maxTokens = Math.max(60, ultraConservativeLimit); // 最小60，最大100
+    console.log(`🎯 檢測到 Gemini 2.5 Flash，使用極度保守 token 限制: ${maxTokens} (官方支持65536，但實際API限制更嚴格)`);
+  } else if (currentModel && currentModel.includes('gemini-2.5-pro')) {
+    // Gemini 2.5 Pro：與 2.5 Flash 相同的官方限制，但推理能力更強
+    // 採用中等保守策略，比 2.5 Flash 稍高但仍然謹慎
+    const moderateConservativeLimit = Math.min(300, Math.floor(maxTokens * 0.5)); // 用戶設定的50%，最大300
+    maxTokens = Math.max(200, moderateConservativeLimit); // 最小200，最大300
+    console.log(`🧠 檢測到 Gemini 2.5 Pro，使用中等保守 token 限制: ${maxTokens} (比2.5-Flash寬鬆但仍謹慎)`);
+  } else if (currentModel && (currentModel.includes('gemini-1.5-pro') || currentModel.includes('gemini-pro'))) {
+    // Gemini 1.5 Pro 系列：較舊但穩定的模型，支持更高的token限制
+    maxTokens = Math.min(maxTokens, 800); // 限制在800以內以確保穩定性
+    console.log(`✨ 檢測到 Gemini 1.5 Pro 系列，使用標準 token 限制: ${maxTokens}`);
+  }
+  
+  // 根據句長進行微調，但不超出合理範圍
+  if (avgSentenceLength > 15) {
+    maxTokens = Math.min(maxTokens + 30, maxTokens * 1.15); // 長句子適度增加（減少變化幅度）
+  } else if (avgSentenceLength < 8) {
+    maxTokens = Math.max(maxTokens - 30, maxTokens * 0.85); // 短句子適度減少
+  }
+  
+  maxTokens = Math.round(maxTokens); // 確保為整數
   
   // 構建風格描述
   const styleElements = [];

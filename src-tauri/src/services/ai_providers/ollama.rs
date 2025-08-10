@@ -50,6 +50,7 @@ struct OllamaOptions {
 struct OllamaGenerateResponse {
     pub response: String,
     pub done: bool,
+    pub thinking: Option<String>,  // 🔥 新增：某些模型會使用這個字段
     pub context: Option<Vec<i32>>,
     pub total_duration: Option<u64>,
     pub load_duration: Option<u64>,
@@ -57,6 +58,112 @@ struct OllamaGenerateResponse {
     pub prompt_eval_duration: Option<u64>,
     pub eval_count: Option<u32>,
     pub eval_duration: Option<u64>,
+}
+
+/// 過濾掉AI思考標籤和不當內容的函數
+fn filter_thinking_tags(text: &str) -> String {
+    use regex::Regex;
+    
+    log::info!("[OllamaProvider] 🔍 開始過濾，原始文本長度: {} 字符", text.len());
+    log::debug!("[OllamaProvider] 🔍 原始文本（前500字符）: {}", text.chars().take(500).collect::<String>());
+    
+    let mut filtered_text = text.to_string();
+    
+    // 🔥 Step 1: 移除思考標籤
+    let thinking_patterns = vec![
+        r"(?s)<think[^>]*>.*?</think>",
+        r"(?s)<thinking[^>]*>.*?</thinking>", 
+        r"(?s)```thinking.*?```",
+        r"(?s)\[THINKING\].*?\[/THINKING\]",
+    ];
+    
+    for (i, pattern) in thinking_patterns.iter().enumerate() {
+        if let Ok(re) = Regex::new(pattern) {
+            let before_len = filtered_text.len();
+            filtered_text = re.replace_all(&filtered_text, "").to_string();
+            let after_len = filtered_text.len();
+            if before_len != after_len {
+                log::info!("[OllamaProvider] 🎯 思考模式 {} 移除了 {} 字符", i+1, before_len - after_len);
+            }
+        }
+    }
+    
+    // 🔥 Step 2: 只移除明確的英文指導語句行
+    let english_lines = [
+        "We need to continue",
+        "The existing text ends with:",
+        "We need to insert",
+        "The story is about",
+        "Should be in Traditional Chinese",
+        "Let's write:",
+        "Provide continuation",
+        "We have to insert",
+        "The prompt gives",
+        "Actually the content is",
+        "The insertion point is",
+        "JSON",
+        "paragraph with some characters",
+    ];
+    
+    for (i, line) in english_lines.iter().enumerate() {
+        // 只移除包含這些短語的完整行
+        let pattern = format!(r"(?m)^.*{}.*$
+?", regex::escape(line));
+        if let Ok(re) = Regex::new(&pattern) {
+            let before_len = filtered_text.len();
+            filtered_text = re.replace_all(&filtered_text, "").to_string();
+            let after_len = filtered_text.len();
+            if before_len != after_len {
+                log::info!("[OllamaProvider] 🎯 英文行 {} '{}' 移除了 {} 字符", i+1, line, before_len - after_len);
+            }
+        }
+    }
+    
+    // 🔥 Step 3: 清理格式
+    filtered_text = filtered_text.replace("\n", "
+");
+    filtered_text = filtered_text.replace("\\n", "
+");
+    
+    // 清理過多空行
+    if let Ok(re) = Regex::new(r"
+{3,}") {
+        filtered_text = re.replace_all(&filtered_text, "
+
+").to_string();
+    }
+    
+    // 移除包圍引號
+    if (filtered_text.starts_with('"') && filtered_text.ends_with('"') && filtered_text.len() > 2) ||
+       (filtered_text.starts_with('\'') && filtered_text.ends_with('\'') && filtered_text.len() > 2) {
+        filtered_text = filtered_text[1..filtered_text.len()-1].to_string();
+        log::info!("[OllamaProvider] 🎯 移除了包圍引號");
+    }
+    
+    filtered_text = filtered_text.trim().to_string();
+    
+    // 🔥 Step 4: 品質檢查和後備策略
+    if filtered_text.is_empty() {
+        log::warn!("[OllamaProvider] ⚠️ 過濾後文本為空，使用後備策略");
+        // 後備：只移除明顯的思考標籤
+        let mut backup_text = text.to_string();
+        if let Ok(re) = Regex::new(r"(?s)<thinking>.*?</thinking>") {
+            backup_text = re.replace_all(&backup_text, "").to_string();
+        }
+        if let Ok(re) = Regex::new(r"(?s)<think>.*?</think>") {
+            backup_text = re.replace_all(&backup_text, "").to_string();
+        }
+        backup_text = backup_text.trim().to_string();
+        log::warn!("[OllamaProvider] 🔄 後備策略文本長度: {} 字符", backup_text.len());
+        return backup_text;
+    }
+    
+    log::info!("[OllamaProvider] ✅ 過濾完成，返回文本長度: {} 字符", filtered_text.len());
+    if filtered_text.len() < 50 {
+        log::debug!("[OllamaProvider] 🔍 最終文本內容: '{}'", filtered_text);
+    }
+    
+    filtered_text
 }
 
 /// Ollama AI 提供者
@@ -193,6 +300,7 @@ impl AIProvider for OllamaProvider {
 
     async fn generate_text(&self, request: AIGenerationRequest) -> Result<AIGenerationResponse> {
         log::info!("[OllamaProvider] 開始生成文本，模型: {}", request.model);
+        log::info!("[OllamaProvider] 原始請求內容長度: {} 字符", request.prompt.len());
 
         // 先檢查服務可用性
         self.check_availability().await?;
@@ -208,10 +316,16 @@ impl AIProvider for OllamaProvider {
 
         // 構建完整提示詞（包含系統提示）
         let full_prompt = if let Some(system_prompt) = &request.system_prompt {
-            format!("{}\n\n{}", system_prompt, request.prompt)
+            format!("{}
+
+{}", system_prompt, request.prompt)
         } else {
             request.prompt.clone()
         };
+        
+        log::info!("[OllamaProvider] 最終提示詞長度: {} 字符", full_prompt.len());
+        log::info!("[OllamaProvider] 最終提示詞內容（前200字符）: {}", 
+                   full_prompt.chars().take(200).collect::<String>());
 
         let request_body = OllamaGenerateRequest {
             model: request.model.clone(),
@@ -226,6 +340,11 @@ impl AIProvider for OllamaProvider {
             match self.make_post_request::<OllamaGenerateResponse>("/api/generate", &request_body).await {
                 Ok(response) => {
                     log::info!("[OllamaProvider] 文本生成成功");
+                    log::info!("[OllamaProvider] 🔍 原始回應: response.response = '{}'", response.response);
+                    log::info!("[OllamaProvider] 🔍 回應長度: {} 字符", response.response.len());
+                    log::info!("[OllamaProvider] 🔍 done: {}", response.done);
+                    log::info!("[OllamaProvider] 🔍 prompt_eval_count: {:?}", response.prompt_eval_count);
+                    log::info!("[OllamaProvider] 🔍 eval_count: {:?}", response.eval_count);
                     
                     let usage = AIUsageInfo {
                         prompt_tokens: response.prompt_eval_count.map(|v| v as i32),
@@ -234,8 +353,43 @@ impl AIProvider for OllamaProvider {
                             .and_then(|p| response.eval_count.map(|c| (p + c) as i32)),
                     };
 
+                    // 🔥 修復：記錄 thinking 字段但不使用它作為輸出
+                    if let Some(thinking_text) = &response.thinking {
+                        log::debug!("[OllamaProvider] 🧠 檢測到 thinking 字段，長度: {} 字符（僅用於調試）", thinking_text.len());
+                        log::debug!("[OllamaProvider] 🧠 thinking 內容（前100字符）: {}", 
+                                   thinking_text.chars().take(100).collect::<String>());
+                    }
+
+                    // 🔥 智能處理：優先使用 response 字段，如果為空則使用過濾後的 thinking 字段
+                    let actual_text = if !response.response.trim().is_empty() {
+                        log::info!("[OllamaProvider] ✅ 使用 response 字段作為最終輸出，長度: {} 字符", response.response.len());
+                        response.response.clone()
+                    } else if let Some(thinking_text) = &response.thinking {
+                        if !thinking_text.trim().is_empty() {
+                            log::info!("[OllamaProvider] 📝 response 字段為空，使用 thinking 字段並過濾思考標籤");
+                            log::debug!("[OllamaProvider] 🔍 原始 thinking 內容（前200字符）: {}", 
+                                       thinking_text.chars().take(200).collect::<String>());
+                            let filtered_text = filter_thinking_tags(thinking_text);
+                            log::info!("[OllamaProvider] 🎯 過濾後的文本長度: {} 字符", filtered_text.len());
+                            if !filtered_text.trim().is_empty() {
+                                filtered_text
+                            } else {
+                                log::warn!("[OllamaProvider] ⚠️ 過濾後的文本為空");
+                                String::new()
+                            }
+                        } else {
+                            log::warn!("[OllamaProvider] ⚠️ thinking 字段也為空");
+                            String::new()
+                        }
+                    } else {
+                        log::warn!("[OllamaProvider] ⚠️ response 和 thinking 字段都為空");
+                        String::new()
+                    };
+
+                    log::info!("[OllamaProvider] 🎯 最終使用的文本長度: {} 字符", actual_text.len());
+
                     return Ok(AIGenerationResponse {
-                        text: response.response,
+                        text: actual_text,
                         model: request.model,
                         usage: Some(usage),
                         finish_reason: if response.done { Some("stop".to_string()) } else { None },

@@ -1,5 +1,5 @@
 // 角色分析服務
-import { extractDialogues, analyzeChapterDialogues, ChapterDialogueAnalysis, DialogueExtraction } from '../utils/nlpUtils';
+import { analyzeChapterDialogues, ChapterDialogueAnalysis, DialogueExtraction } from '../utils/nlpUtils';
 import { api } from '../api';
 
 export interface CharacterPersonality {
@@ -77,7 +77,7 @@ class CharacterAnalysisService {
     const knownCharacters = characters.map(char => ({
       id: char.id,
       name: char.name,
-      aliases: this.extractCharacterAliases(char.name, char.description)
+      aliases: this.extractCharacterAliases(char.name, char.background || '')
     }));
     
     // 3. 分析章節對話
@@ -275,7 +275,7 @@ class CharacterAnalysisService {
     
     // 從描述中提取可能的稱呼
     if (description) {
-      const nicknamePattern = /[被叫稱作]/g;
+      const _nicknamePattern = /[被叫稱作]/g;
       // 簡化實現，實際可以更複雜
     }
     
@@ -419,7 +419,7 @@ class CharacterAnalysisService {
   private calculateAnalysisConfidence(
     dialogues: DialogueExtraction[],
     personality: CharacterPersonality,
-    linguisticPattern: LinguisticPattern
+    _linguisticPattern: LinguisticPattern
   ): number {
     
     let confidence = 0.3; // 基礎置信度

@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use super::r#trait::{
     AIProvider, ProviderConfig, AIGenerationRequest, AIGenerationResponse, 
-    AIGenerationParams, AIUsageInfo, ModelInfo
+    AIGenerationParams, AIUsageInfo, ModelInfo, detect_model_characteristics, ResponseFormat
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -236,8 +236,38 @@ impl AIProvider for ClaudeProvider {
 
         let response = self.make_post_request::<ClaudeResponse>("/messages", &claude_request).await?;
         
-        if let Some(content) = response.content.first() {
-            log::info!("[ClaudeProvider] 文本生成成功");
+        // 🔥 使用階段一檢測邏輯處理響應格式差異
+        let model_chars = detect_model_characteristics(&request.model);
+        let actual_text = match model_chars.response_format {
+            ResponseFormat::ContentArray => {
+                // Claude 標準格式：content 陣列
+                if let Some(content) = response.content.first() {
+                    if !content.text.trim().is_empty() {
+                        log::info!("[ClaudeProvider] ✅ 使用標準 content 陣列，生成 {} 字符", content.text.len());
+                        content.text.clone()
+                    } else {
+                        log::warn!("[ClaudeProvider] ⚠️ content 陣列中文本為空");
+                        String::new()
+                    }
+                } else {
+                    log::warn!("[ClaudeProvider] ⚠️ content 陣列為空");
+                    String::new()
+                }
+            },
+            _ => {
+                // 降級處理：嘗試從 content 陣列獲取
+                if let Some(content) = response.content.first() {
+                    log::info!("[ClaudeProvider] 📝 降級使用 content 陣列格式");
+                    content.text.clone()
+                } else {
+                    log::warn!("[ClaudeProvider] ⚠️ 無法獲取任何響應內容");
+                    String::new()
+                }
+            }
+        };
+        
+        if !actual_text.trim().is_empty() {
+            log::info!("[ClaudeProvider] 文本生成成功，長度: {} 字符", actual_text.len());
             
             let usage = AIUsageInfo {
                 prompt_tokens: Some(response.usage.input_tokens),
@@ -246,13 +276,13 @@ impl AIProvider for ClaudeProvider {
             };
 
             Ok(AIGenerationResponse {
-                text: content.text.clone(),
+                text: actual_text,
                 model: response.model,
                 usage: Some(usage),
                 finish_reason: response.stop_reason,
             })
         } else {
-            Err(anyhow!("Claude API 回應中沒有內容"))
+            Err(anyhow!("Claude API 回應中沒有有效內容"))
         }
     }
 

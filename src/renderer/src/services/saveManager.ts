@@ -1,5 +1,4 @@
-import { Chapter } from '../../api/models';
-import { Character } from '../../api/models';
+import { Chapter, Character } from '../api/models';
 import { Project } from '../store/slices/projectsSlice';
 import { AppSettings } from '../store/slices/settingsSlice';
 import api from '../api';

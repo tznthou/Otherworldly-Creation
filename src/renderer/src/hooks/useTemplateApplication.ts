@@ -37,7 +37,7 @@ export const useTemplateApplication = () => {
           aiParams: {
             temperature: 0.7,
             topP: 0.9,
-            maxTokens: 400
+            maxTokens: 600 // 🔥 增加到 600 tokens，適合中文小說段落
           }
         },
         // 將模板資訊儲存為額外屬性（如果需要的話）

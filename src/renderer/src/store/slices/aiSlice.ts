@@ -296,22 +296,62 @@ export const generateTextWithProvider = createAsyncThunk(
       frequency_penalty: params.aiParams.frequencyPenalty,
     });
     
-    return {
-      id: Date.now().toString(),
-      prompt: params.prompt,
-      result: typeof result === 'string' ? result : result.generated_text || '',
-      model: params.model,
-      providerId: params.providerId,
-      timestamp: new Date(),
-      params: params.aiParams,
-      usage: typeof result === 'object' && result && 'usage' in result ? result.usage as {
-        prompt_tokens?: number;
-        completion_tokens?: number;
-        total_tokens?: number;
-      } : undefined,
-    };
+    console.log('🔍 後端回應結構:', result);
+    
+    // 🔥 修復：檢查 success 字段和錯誤處理
+    if (typeof result === 'object' && result && 'success' in result) {
+      if (!result.success) {
+        // 後端明確返回失敗
+        const errorMessage = result.error || 'AI生成失敗，原因未知';
+        console.error('❌ AI生成失敗:', errorMessage);
+        throw new Error(errorMessage);
+      }
+      
+      // 成功情況：提取生成的文本
+      const generatedText = result.generated_text || '';
+      console.log('✅ AI生成成功，文本長度:', generatedText.length);
+      
+      if (!generatedText.trim()) {
+        console.warn('⚠️ 生成的文本為空');
+        throw new Error('AI生成的文本為空，請重試');
+      }
+      
+      return {
+        id: Date.now().toString(),
+        prompt: params.prompt,
+        result: generatedText,
+        model: params.model,
+        providerId: params.providerId,
+        timestamp: new Date(),
+        params: params.aiParams,
+        usage: typeof result.usage === 'object' && result.usage ? result.usage as {
+          prompt_tokens?: number;
+          completion_tokens?: number;
+          total_tokens?: number;
+        } : undefined,
+      };
+    } else {
+      // 舊格式或字符串回應（向後兼容）
+      const text = typeof result === 'string' ? result : '';
+      console.log('📝 使用舊格式，文本長度:', text.length);
+      
+      if (!text.trim()) {
+        throw new Error('AI生成的文本為空，請檢查模型連接');
+      }
+      
+      return {
+        id: Date.now().toString(),
+        prompt: params.prompt,
+        result: text,
+        model: params.model,
+        providerId: params.providerId,
+        timestamp: new Date(),
+        params: params.aiParams,
+        usage: undefined,
+      };
+    }
   }
-);;
+);
 
 const aiSlice = createSlice({
   name: 'ai',

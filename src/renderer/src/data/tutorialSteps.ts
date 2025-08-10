@@ -196,7 +196,7 @@ export const aiTutorial: TutorialStep[] = [
     position: 'center',
     highlight: false
   }
-];;
+];
 // 系統設定教學
 export const settingsTutorial: TutorialStep[] = [
   {
@@ -283,6 +283,6 @@ export const tutorialIndex = {
     steps: settingsTutorial,
     estimatedTime: '5-7 分鐘'
   }
-};;
+};
 
 export type TutorialId = keyof typeof tutorialIndex;

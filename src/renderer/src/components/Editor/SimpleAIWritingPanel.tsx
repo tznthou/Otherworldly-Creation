@@ -108,7 +108,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   
   
   const [temperature, setTemperature] = useState(0.7);
-  const [maxTokens, setMaxTokens] = useState(200);
+  const [maxTokens, setMaxTokens] = useState(600); // 🔥 增加到 600 tokens，適合中文小說段落
   const [generationCount, setGenerationCount] = useState(3);
   
   // 獲取可用的 AI 模型（如果尚未載入）
@@ -167,7 +167,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       setContextAnalysis(analysis);
       
       // 生成智能參數
-      const params = generateSmartParams(analysis, temperature);
+      const params = generateSmartParams(analysis, temperature, maxTokens, currentModel || '');
       setSmartParams(params);
       
       // 更新參數建議
@@ -179,11 +179,18 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       }
       
       console.log('✨ NLP 分析完成，參數已優化');
+      
+      // 根據模型提供不同的提示
+      let notificationMessage = `檢測到${analysis.emotionalTone}風格，已優化生成參數`;
+      if (currentModel && currentModel.includes('gemini-2.5-flash')) {
+        notificationMessage += `\n💡 提示：已針對 Gemini 2.5 Flash 優化 token 限制，如需更長文本建議使用 Gemini 1.5 Pro`;
+      }
+      
       dispatch(addNotification({
         type: 'success',
         title: '🧠 智能分析完成',
-        message: `檢測到${analysis.emotionalTone}風格，已優化生成參數`,
-        duration: 4000,
+        message: notificationMessage,
+        duration: 5000,
       }));
       
     } catch (error) {

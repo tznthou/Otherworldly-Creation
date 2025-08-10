@@ -11,7 +11,7 @@ interface PlotAnalysisPanelProps {
   _projectId?: string;
   chapters?: Array<{ id: string; title: string; content: unknown[] }>;
   currentChapter?: { id: string; title: string; content: unknown[] };
-  onSuggestionApply?: (suggestion: PlotSuggestion) => void;
+  _onSuggestionApply?: (suggestion: PlotSuggestion) => void;
 }
 
 type AnalysisTab = 'overview' | 'conflicts' | 'pace' | 'foreshadowing' | 'suggestions' | 'trends';
@@ -20,7 +20,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
   _projectId,
   chapters = [],
   currentChapter,
-  onSuggestionApply
+  _onSuggestionApply
 }) => {
   const [activeTab, setActiveTab] = useState<AnalysisTab>('overview');
   const [isAnalyzing, setIsAnalyzing] = useState(false);

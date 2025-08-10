@@ -77,7 +77,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     defaultModel: '',
     temperature: 0.7,
     topP: 0.9,
-    maxTokens: 500,
+    maxTokens: 600, // 🔥 增加到 600 tokens，適合中文小說段落
     contextLength: 4000,
     enableAutoComplete: false,
     autoCompleteDelay: 1000,

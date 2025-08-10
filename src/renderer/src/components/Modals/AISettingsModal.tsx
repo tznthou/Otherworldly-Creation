@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux';
+import { useAppDispatch } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel } from '../../store/slices/aiSlice';
 import ConfirmDialog from '../UI/ConfirmDialog';
@@ -242,7 +242,7 @@ const AISettingsModal: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };;;
+  };
 
   const handleUpdateProvider = async (updatedProvider: UpdateAIProviderRequest) => {
     try {
@@ -288,7 +288,7 @@ const AISettingsModal: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };;
+  };
 
   const handleDeleteProvider = async (providerId: string) => {
     const providerToDelete = providers.find(p => p.id === providerId);
@@ -347,7 +347,7 @@ const AISettingsModal: React.FC = () => {
       // 關閉確認對話框
       setDeleteConfirm({ show: false, provider: null });
     }
-  };;
+  };
 
   const getProviderIcon = (type: string) => {
     switch (type) {

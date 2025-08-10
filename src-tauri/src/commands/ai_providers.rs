@@ -1,5 +1,5 @@
 use crate::database::{connection::create_connection, models::*};
-use crate::services::ai_providers::{AIProvider as AIProviderTrait, AIProviderFactory, ProviderConfig};
+use crate::services::ai_providers::{AIProviderFactory, ProviderConfig};
 use anyhow::{Result, anyhow};
 use chrono::Utc;
 use rusqlite::{params, Row};
@@ -463,7 +463,7 @@ pub async fn generate_ai_text(request: AIGenerationRequestData) -> Result<AIGene
     // 生成文本
     match provider_instance.generate_text(generation_request).await {
         Ok(response) => {
-            let generation_time_ms = start_time.elapsed().as_millis() as i32;
+            let _generation_time_ms = start_time.elapsed().as_millis() as i32;
             
             // 將結果保存到歷史記錄（可選）
             // TODO: 實現歷史記錄保存

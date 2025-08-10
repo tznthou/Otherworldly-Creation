@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import LoadingSpinner from '../UI/LoadingSpinner';
-import { api } from '../../api';
+// import { api } from '../../api'; // 暫時不使用
 import { characterAnalysisService, CharacterAnalysisResult, ProjectCharacterAnalysis } from '../../services/characterAnalysisService';
 import { addNotification } from '../../store/slices/notificationSlice';
 import { fetchCharactersByProjectId } from '../../store/slices/charactersSlice';
@@ -14,7 +14,7 @@ interface CharacterAnalysisPanelProps {
   projectId: string;
   chapters: any[];
   currentChapter: any;
-  onSuggestionApply?: (suggestion: string) => void;
+  _onSuggestionApply?: (suggestion: string) => void;
 }
 
 /**
@@ -24,7 +24,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
   projectId,
   chapters = [],
   currentChapter,
-  onSuggestionApply
+  _onSuggestionApply
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { characters } = useSelector((state: RootState) => state.characters);
@@ -40,7 +40,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>('');
   const [analysisScope, setAnalysisScope] = useState<'current' | 'project'>('current');
   const [analysisResult, setAnalysisResult] = useState<CharacterAnalysisResult | null>(null);
-  const [projectAnalysis, setProjectAnalysis] = useState<ProjectCharacterAnalysis | null>(null);
+  const [_projectAnalysis, setProjectAnalysis] = useState<ProjectCharacterAnalysis | null>(null);
 
   // 獲取專案角色列表
   useEffect(() => {

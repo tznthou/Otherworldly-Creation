@@ -445,7 +445,7 @@ export function extractDialogues(text: string): DialogueExtraction[] {
   const cleanedText = text.replace(/\s+/g, ' ').trim();
   
   // 1. 使用各種對話標點符號提取對話
-  Object.entries(CHINESE_DIALOGUE_PATTERNS).forEach(([patternName, pattern]) => {
+  Object.entries(CHINESE_DIALOGUE_PATTERNS).forEach(([_patternName, pattern]) => {
     let match;
     const regex = new RegExp(pattern);
     
@@ -571,7 +571,7 @@ function getCloseQuote(fullMatch: string): string {
 /**
  * 識別說話者
  */
-function identifySpeaker(context: string, dialoguePos: number, fullText: string): {
+function identifySpeaker(context: string, _dialoguePos: number, _fullText: string): {
   speakerName?: string;
   speakerId?: string;
   attribution?: string;
@@ -600,7 +600,7 @@ function identifySpeaker(context: string, dialoguePos: number, fullText: string)
   }
   
   // 3. 嘗試從前文推斷說話者
-  const inferredSpeaker = inferSpeakerFromContext(context, dialoguePos);
+  const inferredSpeaker = inferSpeakerFromContext(context, _dialoguePos);
   
   return inferredSpeaker;
 }
@@ -641,7 +641,7 @@ function extractSpeakerName(speakerText: string): string | undefined {
 /**
  * 從上下文推斷說話者
  */
-function inferSpeakerFromContext(context: string, dialoguePos: number): {
+function inferSpeakerFromContext(context: string, _dialoguePos: number): {
   speakerName?: string;
   speakerId?: string;
   attribution?: string;

@@ -64,6 +64,68 @@ pub struct ModelInfo {
     pub cost_per_token: Option<f64>,
 }
 
+/// 模型檢測工具函數 - 階段一實施方案
+pub fn detect_model_characteristics(model_name: &str) -> ModelCharacteristics {
+    let model_lower = model_name.to_lowercase();
+    
+    // 檢測響應格式特殊情況
+    let response_format = if model_lower.contains("gpt-oss") || 
+                            (model_lower.contains("qwen") && model_lower.contains("think")) {
+        ResponseFormat::ThinkingField
+    } else if model_lower.contains("claude") {
+        ResponseFormat::ContentArray
+    } else if model_lower.contains("gemini") {
+        ResponseFormat::CandidatesArray
+    } else {
+        ResponseFormat::Standard
+    };
+    
+    // 檢測提示詞格式偏好
+    let prompt_format = if model_lower.contains("claude") {
+        PromptFormat::Conversational
+    } else if model_lower.contains("gemini") {
+        PromptFormat::Parts
+    } else if model_lower.contains("llama") || model_lower.contains("qwen") {
+        PromptFormat::Instruct
+    } else {
+        PromptFormat::Standard
+    };
+    
+    ModelCharacteristics {
+        response_format,
+        prompt_format,
+        requires_system_prompt: !model_lower.contains("gemini"),
+        supports_streaming: true,
+    }
+}
+
+/// 模型特徵描述
+#[derive(Debug, Clone)]
+pub struct ModelCharacteristics {
+    pub response_format: ResponseFormat,
+    pub prompt_format: PromptFormat,
+    pub requires_system_prompt: bool,
+    pub supports_streaming: bool,
+}
+
+/// 響應格式類型
+#[derive(Debug, Clone)]
+pub enum ResponseFormat {
+    Standard,      // OpenAI風格: choices[0].message.content
+    ThinkingField, // Ollama特殊模型: thinking字段
+    ContentArray,  // Claude風格: content[0].text
+    CandidatesArray, // Gemini風格: candidates[0].content.parts[0].text
+}
+
+/// 提示詞格式類型
+#[derive(Debug, Clone)]
+pub enum PromptFormat {
+    Standard,       // 基本提示詞
+    Conversational, // 對話格式
+    Instruct,       // 指令格式
+    Parts,          // Gemini的parts格式
+}
+
 /// AI 提供者配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderConfig {

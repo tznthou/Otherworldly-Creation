@@ -336,7 +336,7 @@ export class TemplateService {
                 aiParams: {
                   temperature: 0.7,
                   topP: 0.9,
-                  maxTokens: 400
+                  maxTokens: 600 // 🔥 增加到 600 tokens，適合中文小說段落
                 }
               }
             });

@@ -523,10 +523,10 @@ const ProjectEditorContent: React.FC = () => {
         {showPlotAnalysisPanel && currentChapter && id && (
           <div className="w-96 border-l border-cosmic-700 flex-shrink-0 overflow-y-auto" style={{ minWidth: '384px' }}>
             <PlotAnalysisPanel
-              projectId={id}
+              _projectId={id}
               chapters={chapters}
               currentChapter={currentChapter}
-              onSuggestionApply={(suggestion) => {
+              _onSuggestionApply={(suggestion: any) => {
                 notification.info('建議應用', `正在應用建議：${suggestion.title}`);
                 // 這裡可以添加具體的建議應用邏輯
               }}
@@ -541,7 +541,7 @@ const ProjectEditorContent: React.FC = () => {
               projectId={id}
               chapters={chapters}
               currentChapter={currentChapter}
-              onSuggestionApply={(suggestion) => {
+              _onSuggestionApply={(suggestion: any) => {
                 notification.info('建議應用', `正在應用建議：${suggestion}`);
                 // 這裡可以添加具體的建議應用邏輯
               }}

@@ -88,7 +88,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   const progressState = useAppSelector(state => state.progress);
   const currentProgress = progressId ? progressState.indicators.find(p => p.id === progressId) : null;
   const [temperature, setTemperature] = useState(0.7);
-  const [maxTokens, setMaxTokens] = useState(200);
+  const [maxTokens, setMaxTokens] = useState(600); // 🔥 增加到 600 tokens，適合中文小說段落
   const [generationCount, setGenerationCount] = useState(3);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [topP, setTopP] = useState(0.9);
@@ -278,9 +278,23 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       const generateTraditionalParams = () => {
         const variations = [];
         for (let i = 0; i < generationCount; i++) {
+          // 🔥 針對 Gemini 2.5 Flash 的特殊處理
+          let adjustedMaxTokens = maxTokens;
+          if (currentModel && currentModel.includes('gemini-2.5-flash')) {
+            // 對於 Gemini 2.5 Flash，使用固定的極保守值，不增加變化
+            adjustedMaxTokens = Math.min(80, maxTokens); // 極保守：最大80 tokens
+            console.log(`🔥 Gemini 2.5 Flash 傳統參數模式，固定使用 ${adjustedMaxTokens} tokens`);
+          } else if (currentModel && currentModel.includes('gemini-2.5-pro')) {
+            // 對於 Gemini 2.5 Pro，使用中等保守值，不增加變化
+            adjustedMaxTokens = Math.min(250, maxTokens); // 中等保守：最大250 tokens
+            console.log(`🧠 Gemini 2.5 Pro 傳統參數模式，固定使用 ${adjustedMaxTokens} tokens`);
+          } else {
+            adjustedMaxTokens = maxTokens + (i * 30); // 其他模型可以增加變化
+          }
+          
           const variation = {
             temperature: Math.max(0.2, Math.min(1.2, temperature + (i - 1) * 0.2)), // 更大變化
-            maxTokens: maxTokens + (i * 30),
+            maxTokens: adjustedMaxTokens, // 🔥 使用調整後的值
             topP: Math.max(0.5, Math.min(1.0, topP + (i - 1) * 0.2)),
             presencePenalty: Math.max(0, Math.min(1.5, presencePenalty + (i * 0.3))),
             frequencyPenalty: Math.max(0, Math.min(1.5, frequencyPenalty + (i * 0.25))),
@@ -307,12 +321,24 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           
           // 使用智能參數生成
           for (let i = 0; i < generationCount; i++) {
-            const smartParams = generateSmartParams(context, temperature);
+            const smartParams = generateSmartParams(context, temperature, maxTokens, currentModel || '');
             
-            // 為每個版本創建不同的變化
+            // 為每個版本創建不同的變化 - 🔥 針對 Gemini 2.5 Flash 的特殊處理
+            let adjustedMaxTokens = smartParams.maxTokens;
+            if (currentModel && currentModel.includes('gemini-2.5-flash')) {
+              // 對於 Gemini 2.5 Flash，不增加 token 變化，保持在安全範圍
+              adjustedMaxTokens = smartParams.maxTokens; // 使用智能參數的保守值，不再增加
+            } else if (currentModel && currentModel.includes('gemini-2.5-pro')) {
+              // 對於 Gemini 2.5 Pro，允許輕微變化但保持謹慎
+              adjustedMaxTokens = smartParams.maxTokens + (i * 10); // 較小的變化幅度
+            } else {
+              // 其他模型可以有較大 token 變化
+              adjustedMaxTokens = smartParams.maxTokens + (i * 20);
+            }
+            
             const variation = {
               temperature: smartParams.temperature + (i - 1) * 0.15, // 更大的變化範圍
-              maxTokens: smartParams.maxTokens + (i * 20), // 長度變化
+              maxTokens: adjustedMaxTokens, // 使用調整後的 token 數量
               topP: Math.max(0.3, Math.min(1.0, topP + (i - 1) * 0.15)), // topP變化
               presencePenalty: Math.max(0, Math.min(2.0, presencePenalty + (i * 0.2))), // 存在懲罰變化
               frequencyPenalty: Math.max(0, Math.min(2.0, frequencyPenalty + (i * 0.15))), // 頻率懲罰變化
@@ -372,7 +398,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                 presencePenalty: params.presencePenalty,
                 frequencyPenalty: params.frequencyPenalty,
               },
-              systemPrompt: '你是一個專業的小說續寫助手，請根據上下文繼續創作。'
+              systemPrompt: '你是一個專業的小說續寫助手。請直接輸出繁體中文的故事內容，不要包含任何英文說明、思考過程或指導語句。只輸出純粹的故事續寫內容。'
             })).unwrap();
             result = genResult.result;
           } else {
@@ -581,7 +607,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
             presencePenalty: params.presencePenalty,
             frequencyPenalty: params.frequencyPenalty,
           },
-          systemPrompt: '你是一個專業的小說續寫助手，請根據上下文繼續創作。'
+          systemPrompt: '你是一個專業的小說續寫助手。請直接輸出繁體中文的故事內容，不要包含任何英文說明、思考過程或指導語句。只輸出純粹的故事續寫內容。'
         })).unwrap();
         result = genResult.result;
       } else {

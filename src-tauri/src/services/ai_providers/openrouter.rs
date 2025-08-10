@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use super::r#trait::{
     AIProvider, ProviderConfig, AIGenerationRequest, AIGenerationResponse, 
-    AIGenerationParams, AIUsageInfo, ModelInfo
+    AIGenerationParams, AIUsageInfo, ModelInfo, detect_model_characteristics, ResponseFormat
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -310,8 +310,48 @@ impl AIProvider for OpenRouterProvider {
 
         let response = self.make_post_request::<OpenRouterResponse>("/chat/completions", &openrouter_request).await?;
         
-        if let Some(choice) = response.choices.first() {
-            log::info!("[OpenRouterProvider] 文本生成成功");
+        // 🔥 使用階段一檢測邏輯處理響應格式差異
+        let model_chars = detect_model_characteristics(&request.model);
+        let actual_text = match model_chars.response_format {
+            ResponseFormat::Standard => {
+                // OpenRouter 標準格式（類似 OpenAI）：choices[0].message.content
+                if let Some(choice) = response.choices.first() {
+                    if !choice.message.content.trim().is_empty() {
+                        log::info!("[OpenRouterProvider] ✅ 使用標準 choices 格式，生成 {} 字符", choice.message.content.len());
+                        choice.message.content.clone()
+                    } else {
+                        log::warn!("[OpenRouterProvider] ⚠️ choices 中文本為空");
+                        String::new()
+                    }
+                } else {
+                    log::warn!("[OpenRouterProvider] ⚠️ choices 陣列為空");
+                    String::new()
+                }
+            },
+            ResponseFormat::ThinkingField => {
+                // 特殊處理：OpenRouter 上的思維模型可能有不同響應格式
+                log::info!("[OpenRouterProvider] 📝 檢測到思維模型，使用標準降級處理");
+                if let Some(choice) = response.choices.first() {
+                    choice.message.content.clone()
+                } else {
+                    log::warn!("[OpenRouterProvider] ⚠️ 思維模型響應為空");
+                    String::new()
+                }
+            },
+            _ => {
+                // 降級處理：嘗試從 choices 獲取
+                if let Some(choice) = response.choices.first() {
+                    log::info!("[OpenRouterProvider] 📝 降級使用 choices 格式");
+                    choice.message.content.clone()
+                } else {
+                    log::warn!("[OpenRouterProvider] ⚠️ 無法獲取任何響應內容");
+                    String::new()
+                }
+            }
+        };
+        
+        if !actual_text.trim().is_empty() {
+            log::info!("[OpenRouterProvider] 文本生成成功，長度: {} 字符", actual_text.len());
             
             let usage = AIUsageInfo {
                 prompt_tokens: Some(response.usage.prompt_tokens),
@@ -320,13 +360,14 @@ impl AIProvider for OpenRouterProvider {
             };
 
             Ok(AIGenerationResponse {
-                text: choice.message.content.clone(),
+                text: actual_text,
                 model: response.model,
                 usage: Some(usage),
-                finish_reason: choice.finish_reason.clone(),
+                finish_reason: response.choices.first()
+                    .and_then(|c| c.finish_reason.clone()),
             })
         } else {
-            Err(anyhow!("OpenRouter API 回應中沒有選擇項"))
+            Err(anyhow!("OpenRouter API 回應中沒有有效內容"))
         }
     }
 
