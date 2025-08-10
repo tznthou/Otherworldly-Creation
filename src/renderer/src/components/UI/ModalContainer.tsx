@@ -16,6 +16,7 @@ import BackupManagerModal from '../Modals/BackupManagerModal';
 import HelpCenterModal from '../Modals/HelpCenterModal';
 import UpdateManagerModal from '../Modals/UpdateManagerModal';
 import EPubGenerationModal from '../Modals/EPubGenerationModal';
+import PDFGenerationModal from '../Modals/PDFGenerationModal';
 
 const ModalContainer: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -67,6 +68,7 @@ const ModalContainer: React.FC = () => {
       {modals.helpCenter && <HelpCenterModal />}
       {modals.updateManager && <UpdateManagerModal />}
       {modals.epubGeneration && <EPubGenerationModal />}
+      {modals.pdfGeneration && <PDFGenerationModal />}
     </>
   );
 };

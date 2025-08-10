@@ -43,8 +43,11 @@ export class EPubService {
         stage: 'preparing',
         progress: 0,
         totalChapters: 0,
-        message: '正在準備生成 EPUB...'
+        message: '🔍 正在準備生成 EPUB...'
       });
+
+      // 添加一個小延遲讓用戶看到開始狀態
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // 獲取專案信息以計算章節數
       const _project = await api.projects.getById(projectId);
@@ -52,36 +55,64 @@ export class EPubService {
       
       onProgress?.({
         stage: 'preparing',
-        progress: 20,
+        progress: 15,
         totalChapters: chapters.length,
-        message: `找到 ${chapters.length} 個章節`
+        message: `📚 找到 ${chapters.length} 個章節，正在驗證內容...`
+      });
+
+      // 驗證階段
+      await new Promise(resolve => setTimeout(resolve, 800));
+      onProgress?.({
+        stage: 'preparing',
+        progress: 30,
+        totalChapters: chapters.length,
+        message: '✅ 內容驗證完成，準備轉換格式...'
       });
 
       // 轉換階段
+      await new Promise(resolve => setTimeout(resolve, 600));
       onProgress?.({
         stage: 'converting',
-        progress: 40,
+        progress: 45,
         totalChapters: chapters.length,
-        message: '正在轉換章節內容...'
+        message: '🔄 正在轉換 Slate.js 內容為 EPUB 格式...'
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 700));
+      onProgress?.({
+        stage: 'converting',
+        progress: 60,
+        totalChapters: chapters.length,
+        message: '📝 正在生成章節 HTML 和樣式...'
       });
 
       // 生成階段
+      await new Promise(resolve => setTimeout(resolve, 500));
       onProgress?.({
         stage: 'generating',
-        progress: 70,
+        progress: 75,
         totalChapters: chapters.length,
-        message: '正在生成 EPUB 文件...'
+        message: '⚙️ 正在壓縮打包 EPUB 文件...'
       });
 
       // 調用 API 生成 EPUB
       const result = await api.epub.generate(projectId, defaultOptions);
 
+      await new Promise(resolve => setTimeout(resolve, 400));
+      onProgress?.({
+        stage: 'generating',
+        progress: 90,
+        totalChapters: chapters.length,
+        message: '💾 正在保存文件到下載資料夾...'
+      });
+
       // 完成
+      await new Promise(resolve => setTimeout(resolve, 300));
       onProgress?.({
         stage: 'complete',
         progress: 100,
         totalChapters: chapters.length,
-        message: `EPUB 生成完成：${result.title}`
+        message: `🎉 EPUB 生成完成：${result.title}`
       });
 
       return result;

@@ -270,10 +270,10 @@ const isMarkActive = (editor: Editor, format: keyof CustomText) => {
 const toggleBlock = (editor: Editor, format: CustomElement['type']) => {
   const isActive = isBlockActive(editor, format);
   
-  // 對於列表項目，使用簡單的段落樣式來模擬
+  // 對於列表項目，正確實現切換邏輯
   if (format === 'list-item') {
     const newProperties: Partial<CustomElement> = {
-      type: isActive ? 'paragraph' : 'paragraph', // 暫時使用段落避免嵌套問題
+      type: isActive ? 'paragraph' : 'list-item', // 修復：正確切換到列表項目
     };
     Transforms.setNodes(editor, newProperties);
     return;
@@ -421,18 +421,6 @@ const InlineToolbar: React.FC<InlineToolbarProps> = ({
             title="引用"
           >
             "
-          </ToolbarButton>
-          
-          <ToolbarButton
-            active={false}
-            onMouseDown={(event) => {
-              event.preventDefault();
-              // 暫時禁用列表功能避免嵌套問題
-              console.log('列表功能暫時禁用');
-            }}
-            title="列表功能暫時禁用"
-          >
-            <span className="opacity-50">•</span>
           </ToolbarButton>
         </div>
       </div>

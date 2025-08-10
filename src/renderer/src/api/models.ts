@@ -342,3 +342,42 @@ export interface EPubExportRecord {
   created_at: string;
   downloaded_at?: string;
 }
+
+// PDF 相關類型
+export interface PDFGenerationOptions {
+  page_size: string;        // "A4", "Letter", "Legal"
+  font_family: string;      // 字體名稱
+  font_size: number;        // 字體大小
+  line_height: number;      // 行高
+  margin_top: number;       // 上邊距 (mm)
+  margin_bottom: number;    // 下邊距 (mm)
+  margin_left: number;      // 左邊距 (mm)
+  margin_right: number;     // 右邊距 (mm)
+  include_cover: boolean;   // 是否包含封面
+  chapter_break_style: string; // "new_page" | "section_break"
+  author?: string;          // 作者名稱
+}
+
+export interface PDFResult {
+  file_path: string;
+  file_size: number;
+  page_count: number;
+  chapter_count: number;
+  title: string;
+  success: boolean;
+  error_message?: string;
+}
+
+export interface PDFExportRecord {
+  id: string;
+  project_id: string;
+  title: string;
+  file_path: string;
+  file_size: number;
+  page_count: number;
+  chapter_count: number;
+  format_settings: string; // JSON string
+  export_status: string;
+  created_at: string;
+  downloaded_at?: string;
+}

@@ -52,10 +52,10 @@ pub struct EPubExportRecord {
 /// 生成 EPUB 電子書
 #[tauri::command]
 pub async fn generate_epub(
-    project_id: String,
+    projectId: String,
     options: Option<EPubGenerationOptions>,
 ) -> Result<EPubResult, String> {
-    println!("開始生成 EPUB，專案 ID: {}", project_id);
+    println!("開始生成 EPUB，專案 ID: {}", projectId);
     
     let options = options.unwrap_or_default();
     
@@ -70,7 +70,7 @@ pub async fn generate_epub(
                 .prepare("SELECT id, name, description, type, settings, novel_length, created_at, updated_at FROM projects WHERE id = ?1")
                 .map_err(|e| format!("準備專案查詢失敗: {}", e))?;
             
-            let project_result = stmt.query_row([&project_id], |row| {
+            let project_result = stmt.query_row([&projectId], |row| {
                 Ok(Project {
                     id: row.get(0)?,
                     name: row.get(1)?,
@@ -100,7 +100,7 @@ pub async fn generate_epub(
                 .prepare("SELECT id, project_id, title, content, order_index, chapter_number, created_at, updated_at FROM chapters WHERE project_id = ?1 ORDER BY order_index")
                 .map_err(|e| format!("準備章節查詢失敗: {}", e))?;
             
-            let chapter_iter = stmt.query_map([&project_id], |row| {
+            let chapter_iter = stmt.query_map([&projectId], |row| {
                 Ok(Chapter {
                     id: row.get(0)?,
                     project_id: row.get(1)?,
@@ -149,7 +149,7 @@ pub async fn generate_epub(
     let export_id = uuid::Uuid::new_v4().to_string();
     let export_record = EPubExportRecord {
         id: export_id,
-        project_id: project_id.clone(),
+        project_id: projectId.clone(),
         title: epub_title.clone(),
         file_path: epub_result.file_path.clone(),
         file_size: epub_result.file_size as i64,
@@ -175,18 +175,18 @@ pub async fn generate_epub(
 
 /// 獲取專案的 EPUB 導出歷史
 #[tauri::command]
-pub async fn get_epub_exports(project_id: String) -> Result<Vec<EPubExportRecord>, String> {
+pub async fn get_epub_exports(projectId: String) -> Result<Vec<EPubExportRecord>, String> {
     let db = get_db().map_err(|e| format!("資料庫連接失敗: {}", e))?;
     let conn = db.lock().unwrap();
-    get_epub_export_history(&*conn, &project_id)
+    get_epub_export_history(&*conn, &projectId)
 }
 
 /// 刪除 EPUB 導出記錄
 #[tauri::command]
-pub async fn delete_epub_export(export_id: String) -> Result<(), String> {
+pub async fn delete_epub_export(exportId: String) -> Result<(), String> {
     let db = get_db().map_err(|e| format!("資料庫連接失敗: {}", e))?;
     let conn = db.lock().unwrap();
-    delete_epub_export_record(&*conn, &export_id)
+    delete_epub_export_record(&*conn, &exportId)
 }
 
 // ============ 輔助函數 ============
@@ -207,13 +207,34 @@ fn convert_chapters_to_html(chapters: &[Chapter]) -> Result<Vec<(String, String)
 
 /// 轉換 Slate.js JSON 內容為 HTML
 fn convert_slate_to_html(slate_json: &str) -> Result<String, String> {
+    // 調試日志
+    println!("🔍 轉換 Slate.js 內容: {}", slate_json);
+    
     // 解析 Slate.js JSON
     let slate_value: serde_json::Value = serde_json::from_str(slate_json)
         .map_err(|e| format!("解析 Slate.js 內容失敗: {}", e))?;
     
-    // 轉換為 HTML
-    let html = slate_to_html_recursive(&slate_value)?;
+    // Slate.js 通常是一個數組格式
+    let html = if slate_value.is_array() {
+        let array = slate_value.as_array().unwrap();
+        if array.is_empty() {
+            println!("⚠️ Slate.js 內容為空數組");
+            return Ok(String::new());
+        }
+        
+        // 處理每個根節點
+        let html_parts: Result<Vec<_>, _> = array
+            .iter()
+            .map(slate_to_html_recursive)
+            .collect();
+        
+        html_parts?.join("")
+    } else {
+        // 單個節點處理（兼容性）
+        slate_to_html_recursive(&slate_value)?
+    };
     
+    println!("✅ 生成的 HTML 長度: {} 字符", html.len());
     Ok(html)
 }
 

@@ -77,6 +77,7 @@ struct OpenRouterPricing {
 }
 
 /// OpenRouter API 提供者
+#[allow(dead_code)]
 pub struct OpenRouterProvider {
     name: String,
     api_key: String,

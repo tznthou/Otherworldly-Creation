@@ -67,6 +67,7 @@ struct OpenAIModelData {
 }
 
 /// OpenAI API 提供者
+#[allow(dead_code)]
 pub struct OpenAIProvider {
     name: String,
     api_key: String,

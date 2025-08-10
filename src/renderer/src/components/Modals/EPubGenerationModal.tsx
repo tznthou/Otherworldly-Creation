@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
 import { addNotification } from '../../store/slices/uiSlice';
 import { EPubService, EPubGenerationProgress } from '../../services/epubService';
+import { api } from '../../api';
 import type { EPubGenerationOptions } from '../../api/models';
 
 const EPubGenerationModal: React.FC = () => {
@@ -49,12 +50,30 @@ const EPubGenerationModal: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    if (!selectedProjectId || !validation?.valid) return;
+    // 更嚴格的驗證
+    if (!selectedProjectId || selectedProjectId.trim() === '') {
+      dispatch(addNotification({
+        type: 'warning',
+        title: '請選擇專案',
+        message: '請先選擇要生成 EPUB 的專案'
+      }));
+      return;
+    }
+
+    if (!validation?.valid) {
+      dispatch(addNotification({
+        type: 'error',
+        title: '專案驗證失敗',
+        message: '目前選擇的專案無法生成 EPUB，請檢查專案內容'
+      }));
+      return;
+    }
 
     setGenerating(true);
     setProgress(null);
 
     try {
+      console.log('🔍 開始生成 EPUB，專案 ID:', selectedProjectId);
       const result = await EPubService.generateEPub(
         selectedProjectId,
         options,
@@ -63,16 +82,39 @@ const EPubGenerationModal: React.FC = () => {
         }
       );
 
+      // 成功提示訊息
       dispatch(addNotification({
         type: 'success',
-        title: 'EPUB 生成成功',
-        message: `文件：${result.title}\n大小：${EPubService.formatFileSize(result.file_size)}\n章節：${result.chapter_count} 個`
+        title: '📚 EPUB 生成成功！',
+        message: `✅ 文件：${result.title}\n📁 位置：${result.file_path}\n📊 大小：${EPubService.formatFileSize(result.file_size)}\n📖 章節：${result.chapter_count} 個\n\n💡 提示：檔案已保存到下載資料夾，您可以使用任何 EPUB 閱讀器開啟`
       }));
 
-      // 自動關閉 modal
+      // 自動開啟檔案位置（避免權限問題）
+      setTimeout(async () => {
+        try {
+          // 獲取檔案所在目錄
+          const folderPath = result.file_path.substring(0, result.file_path.lastIndexOf('/'));
+          await api.system.openExternal(folderPath);
+          
+          dispatch(addNotification({
+            type: 'info',
+            title: '📁 檔案位置已開啟',
+            message: '下載資料夾已在 Finder 中開啟'
+          }));
+        } catch (error) {
+          console.error('開啟檔案夾失敗:', error);
+          dispatch(addNotification({
+            type: 'info',
+            title: '📁 檔案已保存',
+            message: `EPUB 已保存至：${result.file_path}\n請手動開啟下載資料夾查看`
+          }));
+        }
+      }, 1500);
+
+      // 延遲關閉 modal
       setTimeout(() => {
         handleClose();
-      }, 2000);
+      }, 3000);
 
     } catch (error) {
       console.error('EPUB 生成失敗:', error);
@@ -228,29 +270,37 @@ const EPubGenerationModal: React.FC = () => {
 
           {/* 生成進度 */}
           {progress && (
-            <div className="bg-cosmic-700 border border-cosmic-600 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gold-400 font-medium">
+            <div className="bg-gradient-to-br from-cosmic-700 to-cosmic-800 border border-gold-500/30 rounded-lg p-5 shadow-lg">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-gold-400 font-semibold text-lg flex items-center">
+                  <span className="animate-spin mr-2">⚙️</span>
                   {getStageText()} - {progress.progress}%
                 </span>
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-gold-300 bg-gold-500/20 px-2 py-1 rounded">
                   {progress.totalChapters > 0 && `${progress.totalChapters} 章節`}
                 </span>
               </div>
               
-              <div className="w-full bg-cosmic-600 rounded-full h-2 mb-2">
+              <div className="w-full bg-cosmic-600 rounded-full h-3 mb-3 overflow-hidden">
                 <div 
-                  className="bg-gradient-to-r from-gold-500 to-gold-600 h-2 rounded-full transition-all duration-300 ease-out"
+                  className="bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 h-3 rounded-full transition-all duration-500 ease-out relative"
                   style={{ width: getProgressBarWidth() }}
-                />
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                </div>
               </div>
               
               {progress.message && (
-                <p className="text-sm text-gray-300">{progress.message}</p>
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-gold-500 rounded-full mr-2 animate-pulse"></div>
+                  <p className="text-sm text-gray-200 font-medium">{progress.message}</p>
+                </div>
               )}
 
               {progress.currentChapter && (
-                <p className="text-sm text-blue-400">處理章節：{progress.currentChapter}</p>
+                <p className="text-sm text-blue-400 mt-2 bg-blue-500/10 px-2 py-1 rounded">
+                  📖 處理章節：{progress.currentChapter}
+                </p>
               )}
             </div>
           )}

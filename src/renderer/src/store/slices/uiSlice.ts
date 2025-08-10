@@ -26,6 +26,7 @@ interface UIState {
     updateManager: boolean;
     testModal: boolean; // 用於測試的模態框
     epubGeneration: boolean; // EPUB 生成模態框
+    pdfGeneration: boolean; // PDF 生成模態框
   };
   loading: {
     global: boolean;
@@ -71,6 +72,7 @@ const initialState: UIState = {
     updateManager: false,
     testModal: false,
     epubGeneration: false,
+    pdfGeneration: false,
   },
   loading: {
     global: false,

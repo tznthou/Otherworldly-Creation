@@ -895,8 +895,15 @@ export const tauriAPI: API = {
   // EPUB 電子書生成
   epub: {
     generate: async (projectId, options) => {
+      // 參數驗證
+      if (!projectId || typeof projectId !== 'string' || projectId.trim() === '') {
+        throw new Error('無效的專案 ID：專案 ID 不能為空');
+      }
+
+      console.log('📚 API 調用 generate_epub，專案 ID:', projectId);
+      
       return safeInvoke('generate_epub', {
-        project_id: projectId,
+        projectId: projectId.trim(),
         options: options || {
           include_cover: true,
           font_family: 'Noto Sans TC',
@@ -907,12 +914,53 @@ export const tauriAPI: API = {
 
     getExports: async (projectId) => {
       return safeInvoke('get_epub_exports', {
-        project_id: projectId
+        projectId: projectId
       });
     },
 
     deleteExport: async (exportId) => {
       return safeInvoke('delete_epub_export', {
+        exportId: exportId
+      });
+    }
+  },
+
+  // PDF 文檔生成
+  pdf: {
+    generate: async (projectId, options) => {
+      // 參數驗證
+      if (!projectId || typeof projectId !== 'string' || projectId.trim() === '') {
+        throw new Error('無效的專案 ID：專案 ID 不能為空');
+      }
+
+      console.log('📄 API 調用 generate_pdf，專案 ID:', projectId);
+      
+      return safeInvoke('generate_pdf', {
+        projectId: projectId.trim(),
+        options: options || {
+          page_size: 'A4',
+          font_family: 'Helvetica',
+          font_size: 12.0,
+          line_height: 1.5,
+          margin_top: 20.0,
+          margin_bottom: 20.0,
+          margin_left: 20.0,
+          margin_right: 20.0,
+          include_cover: true,
+          chapter_break_style: 'new_page',
+          author: null
+        }
+      });
+    },
+
+    getExports: async (projectId) => {
+      return safeInvoke('get_pdf_exports', {
+        project_id: projectId
+      });
+    },
+
+    deleteExport: async (exportId) => {
+      return safeInvoke('delete_pdf_export', {
         export_id: exportId
       });
     }

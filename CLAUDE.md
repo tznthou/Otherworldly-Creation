@@ -8,8 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Architecture**: Tauri v2.7.0 + Rust backend + React/TypeScript frontend
 - **AI Providers**: Ollama (local), OpenAI, Google Gemini, Anthropic Claude, OpenRouter
-- **Database**: SQLite v10 with rusqlite
+- **Database**: SQLite v11 with rusqlite (includes character analysis tables)
 - **Editor**: Slate.js with 2-second auto-save
+- **Export Formats**: EPUB 3.0 + PDF with embedded Chinese fonts
 
 ## Essential Commands
 
@@ -51,7 +52,7 @@ rm ~/Library/Application\ Support/genesis-chronicle/genesis-chronicle.db  # Rese
 Frontend (`src/renderer/src/api/tauri.ts`) → Tauri IPC → Rust handlers (`src-tauri/src/commands/`)
 
 - **Registration**: `src-tauri/src/lib.rs` `invoke_handler![]` macro
-- **Organization**: Modules by feature - `system`, `project`, `chapter`, `character`, `ai_providers`, `epub`
+- **Organization**: Modules by feature - `system`, `project`, `chapter`, `character`, `ai_providers`, `epub`, `pdf`
 - **Frontend Access**: Always use `import { api } from './api'` - never direct `invoke()`
 
 ### AI Provider Architecture
@@ -87,6 +88,7 @@ if let Some(text) = &candidate.content.text {
   - Use `conn.pragma_update()` for version updates
   - Delete DB file to rebuild with latest schema
 - **Analysis Tables**: `character_analysis`, `plot_analysis`, `creative_suggestions`, `analysis_cache`, `analysis_queue`, `analysis_templates`
+- **Export Tables**: `epub_exports`, `pdf_exports` for tracking generation history
 
 ### NLP & Character Analysis System
 - **Core Service**: `src/renderer/src/services/characterAnalysisService.ts` (600+ lines)
@@ -116,6 +118,29 @@ const fetchChapters = createAsyncThunk(
 );
 ```
 
+### Export System Architecture  
+Dual-format export system for professional publishing:
+
+- **EPUB 3.0 Generation**: `src-tauri/src/commands/epub.rs`
+  - Slate.js to XHTML conversion with recursive node processing
+  - Professional CSS styling and responsive layout
+  - Complete ZIP structure with META-INF and OEBPS
+  - Export history tracking in `epub_exports` table
+  
+- **PDF Generation**: `src-tauri/src/commands/pdf.rs`
+  - Embedded 7.1MB Noto Sans TC font for cross-platform Chinese support
+  - Smart text wrapping with character-width calculation
+  - Automatic pagination and chapter breaking
+  - Uses printpdf crate with custom text layout algorithms
+
+```rust
+// PDF Chinese text wrapping algorithm  
+fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) -> Vec<String> {
+    // Character width estimation: Chinese = font_size * 1.0, ASCII = font_size * 0.6
+    // Converts Mm to points (1 mm = 2.834645669 points) for accurate measurement
+}
+```
+
 ## Critical Development Rules
 
 1. **API Layer Unity**: Always use `import { api } from './api'` pattern
@@ -127,6 +152,8 @@ const fetchChapters = createAsyncThunk(
 7. **AI Filtering**: Use smart filtering in `aiWritingAssistant.ts` to prevent English thinking content leakage
 8. **Token Management**: Pass `userMaxTokens` parameter through `generateSmartParams()` to respect user settings
 9. **Character Analysis**: Use Compromise.js NLP utils for Chinese dialogue extraction and Big Five personality analysis
+10. **Export Font Handling**: PDF generation uses embedded Noto Sans TC (7.1MB) - verify font data integrity before compilation
+11. **User Format Guidance**: Recommend EPUB for digital reading (lightweight), PDF for printing (large file with embedded fonts)
 
 ## Known Issues & Solutions
 
@@ -147,10 +174,19 @@ const fetchChapters = createAsyncThunk(
 - Memory: 70% reduction vs Electron
 - Bundle size: 90% smaller
 
+### Export Issues
+- PDF Chinese fonts: Ensure `src-tauri/assets/fonts/NotoSansTC-Regular.ttf` is a valid TTF file (not HTML)
+- Large PDF files: Expected due to embedded 7.1MB Chinese font for cross-platform compatibility
+- Text wrapping: Algorithm handles Chinese/ASCII character width differences automatically
+
 ## Recent Achievements (2025-08-10)
 
 - ✅ Multi-provider AI system with context awareness
 - ✅ EPUB 3.0 generation with Slate.js conversion
+- ✅ **PDF Generation with Chinese Font Support**: Complete implementation with embedded Noto Sans TC
+  - Cross-platform Chinese text rendering (Windows/macOS/Linux compatible)
+  - Smart text wrapping algorithm for mixed Chinese/English content
+  - Professional page layout with automatic pagination
 - ✅ Plot analysis engine with NLP character extraction (Phase 2: 40% complete)
 - ✅ Model-specific response format handling
 - ✅ Gemini `parts=None` fallback mechanism
@@ -158,6 +194,7 @@ const fetchChapters = createAsyncThunk(
 - ✅ Big Five personality analysis system for character consistency
 - ✅ Database v11 migration with 6 new analysis tables
 - ✅ Smart parameter generation with model-specific token limits
+- ✅ **User Interface Enhancements**: Format selection guidance in help system and dashboard
 
 ## Current Development Status (Phase 2)
 

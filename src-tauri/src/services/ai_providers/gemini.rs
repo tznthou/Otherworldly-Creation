@@ -76,6 +76,7 @@ struct GeminiUsageMetadata {
 }
 
 /// Google Gemini API 提供者
+#[allow(dead_code)]
 pub struct GeminiProvider {
     name: String,
     api_key: String,

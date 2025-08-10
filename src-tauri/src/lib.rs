@@ -26,6 +26,7 @@ use commands::settings::{get_setting, set_setting, get_all_settings, reset_setti
 use commands::database::{backup_database, restore_database, run_database_maintenance, get_database_stats, health_check};
 use commands::ai_history::{create_ai_history, query_ai_history, mark_ai_history_selected, delete_ai_history, cleanup_ai_history};
 use commands::epub::{generate_epub, get_epub_exports, delete_epub_export};
+use commands::pdf::{generate_pdf, get_pdf_exports, delete_pdf_export};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -131,6 +132,10 @@ pub fn run() {
       generate_epub,
       get_epub_exports,
       delete_epub_export,
+      // PDF commands
+      generate_pdf,
+      get_pdf_exports,
+      delete_pdf_export,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

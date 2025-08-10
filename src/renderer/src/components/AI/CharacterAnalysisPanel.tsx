@@ -170,24 +170,32 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
   const selectedCharacter = characters.find(char => char.id === selectedCharacterId);
 
   return (
-    <div className="bg-cosmic-800 rounded-lg border border-gold-600/30 p-4">
+    <div className="bg-gradient-to-br from-cosmic-800 to-cosmic-900 rounded-xl shadow-2xl border border-gold-600/20 p-6">
       {/* 頭部控制區 */}
-      <div className="space-y-4 mb-6">
+      <div className="space-y-6 mb-8">
         {/* 標題 */}
-        <h3 className="text-lg font-bold text-gold-400 flex items-center">
-          <span className="mr-2">👥</span>
-          角色分析
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold text-gold-400 flex items-center">
+            <span className="mr-3 text-2xl">🎭</span>
+            角色分析
+          </h3>
+          <div className="text-xs text-gray-500">
+            版本 v2.0 | Phase 2 功能
+          </div>
+        </div>
         
-        {/* 控制選項 */}
-        <div className="flex flex-wrap items-end gap-4">
+        {/* 控制選項 - 改善間距和佈局 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* 角色選擇器 */}
-          <div className="flex flex-col space-y-1 min-w-[120px]">
-            <label className="text-sm text-gray-300">角色:</label>
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-gray-300 flex items-center">
+              <span className="mr-2">👤</span>
+              選擇角色
+            </label>
             <select
               value={selectedCharacterId}
               onChange={(e) => setSelectedCharacterId(e.target.value)}
-              className="bg-cosmic-700 border border-gold-600/30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="bg-cosmic-700/80 backdrop-blur border border-gold-600/30 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
             >
               <option value="">請選擇角色</option>
               {characters.map(character => (
@@ -199,27 +207,45 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
           </div>
 
           {/* 分析範圍選擇 */}
-          <div className="flex flex-col space-y-1 min-w-[100px]">
-            <label className="text-sm text-gray-300">範圍:</label>
-            <select
-              value={analysisScope}
-              onChange={(e) => setAnalysisScope(e.target.value as 'current' | 'project')}
-              className="bg-cosmic-700 border border-gold-600/30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
-            >
-              <option value="current">當前章節</option>
-              <option value="project">整個專案</option>
-            </select>
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-gray-300 flex items-center">
+              <span className="mr-2">📊</span>
+              分析範圍
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setAnalysisScope('current')}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                  analysisScope === 'current'
+                    ? 'bg-gold-600 text-cosmic-900'
+                    : 'bg-cosmic-700/80 text-gray-300 hover:bg-cosmic-600 border border-gold-600/30'
+                }`}>
+                當前章節
+              </button>
+              <button
+                onClick={() => setAnalysisScope('project')}
+                className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                  analysisScope === 'project'
+                    ? 'bg-gold-600 text-cosmic-900'
+                    : 'bg-cosmic-700/80 text-gray-300 hover:bg-cosmic-600 border border-gold-600/30'
+                }`}>
+                全專案
+              </button>
+            </div>
           </div>
 
           {/* 分析按鈕 */}
-          <button
-            onClick={performAnalysis}
-            disabled={isAnalyzing || !selectedCharacterId}
-            className="bg-gold-600 hover:bg-gold-500 disabled:bg-gray-600 text-cosmic-900 px-4 py-2 rounded font-medium transition-colors flex items-center space-x-2"
-          >
-            <span>🔍</span>
-            <span>{isAnalyzing ? '分析中...' : '開始分析'}</span>
-          </button>
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-gray-300 invisible">操作</label>
+            <button
+              onClick={performAnalysis}
+              disabled={isAnalyzing || !selectedCharacterId}
+              className="bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 disabled:from-gray-600 disabled:to-gray-700 text-cosmic-900 px-6 py-2.5 rounded-lg font-medium transition-all transform hover:scale-105 disabled:scale-100 flex items-center justify-center space-x-2 shadow-lg"
+            >
+              <span className="text-xl">{isAnalyzing ? '⏳' : '🔍'}</span>
+              <span>{isAnalyzing ? '分析中...' : '開始分析'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -238,34 +264,55 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
         </div>
       )}
 
-      {/* 標籤導航 */}
-      <div className="flex space-x-1 mb-4 bg-cosmic-700/50 rounded-lg p-1">
+      {/* 標籤導航 - 改為2x3網格佈局 */}
+      <div className="grid grid-cols-3 gap-2 mb-6 bg-cosmic-700/30 rounded-xl p-3">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center space-y-1 px-3 py-3 rounded-lg text-sm font-medium transition-all transform hover:scale-105 ${
               activeTab === tab.key
-                ? 'bg-gold-600 text-cosmic-900'
-                : 'text-gray-400 hover:text-white hover:bg-cosmic-600'
+                ? 'bg-gradient-to-br from-gold-600 to-gold-500 text-cosmic-900 shadow-lg'
+                : 'bg-cosmic-700/50 text-gray-400 hover:text-white hover:bg-cosmic-600'
             }`}
           >
-            <span>{tab.icon}</span>
-            <span className="hidden sm:block">{tab.label}</span>
+            <span className="text-2xl">{tab.icon}</span>
+            <span className="text-xs">{tab.label}</span>
           </button>
         ))}
       </div>
 
       {/* 分析結果內容 */}
-      <div className="min-h-[400px]">
+      <div className="min-h-[400px] bg-cosmic-800/30 rounded-xl p-6">
         {!analysisResult ? (
-          <div className="flex items-center justify-center h-[400px] text-gray-500">
-            <div className="text-center">
-              <div className="text-6xl mb-4">👤</div>
-              <p className="text-lg mb-2">尚未進行角色分析</p>
-              <p className="text-sm">
-                請選擇角色和分析範圍，然後點擊「開始分析」按鈕
-              </p>
+          <div className="flex items-center justify-center h-[400px]">
+            <div className="text-center space-y-4">
+              <div className="relative">
+                <div className="text-8xl animate-pulse">🎭</div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-32 h-32 bg-gold-600/20 rounded-full blur-3xl animate-ping"></div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xl font-bold text-gray-300">尚未進行角色分析</p>
+                <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                  選擇角色和分析範圍，然後點擊「開始分析」按鈕
+                </p>
+              </div>
+              <div className="flex justify-center space-x-4 pt-4">
+                <div className="text-center">
+                  <div className="text-3xl mb-1">💬</div>
+                  <p className="text-xs text-gray-500">對話分析</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl mb-1">🧠</div>
+                  <p className="text-xs text-gray-500">人格特徵</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl mb-1">📈</div>
+                  <p className="text-xs text-gray-500">一致性檢測</p>
+                </div>
+              </div>
             </div>
           </div>
         ) : (

@@ -27,7 +27,10 @@ import type {
   AIGenerationRequestData,
   EPubGenerationOptions,
   EPubResult,
-  EPubExportRecord
+  EPubExportRecord,
+  PDFGenerationOptions,
+  PDFResult,
+  PDFExportRecord
 } from './models';
 
 // 小說分析相關類型
@@ -156,6 +159,13 @@ export interface API {
   epub: {
     generate: (projectId: string, options?: EPubGenerationOptions) => Promise<EPubResult>;
     getExports: (projectId: string) => Promise<EPubExportRecord[]>;
+    deleteExport: (exportId: string) => Promise<void>;
+  };
+
+  // PDF 文檔生成
+  pdf: {
+    generate: (projectId: string, options?: PDFGenerationOptions) => Promise<PDFResult>;
+    getExports: (projectId: string) => Promise<PDFExportRecord[]>;
     deleteExport: (exportId: string) => Promise<void>;
   };
 }

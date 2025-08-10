@@ -298,6 +298,82 @@ export const faqData: FAQItem[] = [
     category: 'general',
     tags: ['協作', '分享'],
     relatedQuestions: ['data-backup', 'future-features']
+  },
+
+  // 電子書格式相關
+  {
+    id: 'ebook-formats',
+    question: 'EPUB 和 PDF 電子書格式有什麼差別？應該選擇哪一個？',
+    answer: `**建議優先使用 EPUB 格式**
+
+📚 **EPUB 電子書（推薦）**：
+• 檔案大小：輕巧，通常只有幾百 KB
+• 兼容性：支援 Kindle、Apple Books、Google Play 圖書等
+• 響應式：自動適應螢幕大小和閱讀偏好  
+• 功能豐富：支援書籤、筆記、搜尋、調整字體大小
+• 載入速度：快速開啟和瀏覽
+
+📄 **PDF 文件（特殊需求）**：
+• 檔案大小：較大，因內嵌 7.1MB 中文字體
+• 固定排版：保持精確的版面配置
+• 列印友好：適合實體列印需求  
+• 專業用途：正式文件、提交稿件
+
+**使用建議**：
+📱 一般閱讀選擇 EPUB - 在手機、平板、電子書閱讀器上體驗更佳
+🖨️ 列印分享選擇 PDF - 需要固定版面格式時使用`,
+    category: 'writing',
+    tags: ['電子書', 'EPUB', 'PDF', '格式'],
+    relatedQuestions: ['epub-generation', 'pdf-generation']
+  },
+
+  {
+    id: 'epub-generation',
+    question: '如何生成 EPUB 電子書？',
+    answer: `生成 EPUB 電子書的步驟：
+
+1. **選擇專案**：在主頁選擇「📚 傳說編纂」功能
+2. **選擇專案**：從下拉選單中選擇要導出的專案
+3. **自訂設定**：
+   • 書籍標題和作者資訊
+   • 封面設計選項
+   • 章節排版設定
+4. **生成電子書**：點擊「生成 EPUB」按鈕
+5. **下載檔案**：生成完成後自動開啟下載資料夾
+
+**EPUB 優勢**：
+• 檔案輕巧（幾百 KB）
+• 適合各種電子書閱讀器
+• 支援互動功能（書籤、筆記、搜尋）
+• 自動適應螢幕大小`,
+    category: 'writing',
+    tags: ['EPUB', '生成', '電子書', '導出'],
+    relatedQuestions: ['ebook-formats', 'pdf-generation']
+  },
+
+  {
+    id: 'pdf-generation',
+    question: '如何生成 PDF 文檔？',
+    answer: `生成 PDF 文檔的步驟：
+
+1. **選擇功能**：在主頁選擇「📄 文檔轉換」功能
+2. **選擇專案**：從下拉選單中選擇要導出的專案  
+3. **版面設定**：
+   • 頁面尺寸（A4、Letter、Legal）
+   • 邊距和字體大小設定
+   • 行距和段落間距
+   • 章節分頁樣式
+4. **生成文檔**：點擊「生成 PDF」按鈕
+5. **下載檔案**：生成完成後自動開啟下載資料夾
+
+**PDF 特色**：
+• 內嵌中文字體，跨平台顯示一致
+• 適合列印和正式提交
+• 固定版面配置
+• 檔案較大（內嵌字體約 7MB）`,
+    category: 'writing',
+    tags: ['PDF', '生成', '文檔', '導出'],
+    relatedQuestions: ['ebook-formats', 'epub-generation']
   }
 ];
 

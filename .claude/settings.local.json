@@ -106,7 +106,8 @@
       "Bash(npm config get:*)",
       "Bash(cd:*)",
       "Bash(cd:*)",
-      "mcp__serena__delete_memory"
+      "mcp__serena__delete_memory",
+      "mcp__puppeteer__puppeteer_fill"
     ],
     "deny": []
   }

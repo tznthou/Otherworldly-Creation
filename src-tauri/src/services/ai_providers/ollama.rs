@@ -167,6 +167,7 @@ fn filter_thinking_tags(text: &str) -> String {
 }
 
 /// Ollama AI 提供者
+#[allow(dead_code)]
 pub struct OllamaProvider {
     name: String,
     endpoint: String,

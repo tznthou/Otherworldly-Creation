@@ -101,6 +101,7 @@ pub fn detect_model_characteristics(model_name: &str) -> ModelCharacteristics {
 
 /// 模型特徵描述
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ModelCharacteristics {
     pub response_format: ResponseFormat,
     pub prompt_format: PromptFormat,
@@ -141,6 +142,7 @@ pub struct ProviderConfig {
 
 /// AI 提供者統一介面
 #[async_trait]
+#[allow(dead_code)]
 pub trait AIProvider: Send + Sync {
     /// 獲取提供者名稱
     fn name(&self) -> &str;

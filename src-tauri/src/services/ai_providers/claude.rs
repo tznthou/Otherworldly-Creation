@@ -55,6 +55,7 @@ struct ClaudeUsage {
 }
 
 /// Anthropic Claude API 提供者
+#[allow(dead_code)]
 pub struct ClaudeProvider {
     name: String,
     api_key: String,

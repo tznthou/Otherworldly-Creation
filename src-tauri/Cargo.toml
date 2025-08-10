@@ -42,3 +42,5 @@ html-escape = "0.2"
 zip = "0.6"
 tempfile = "3.8"
 mime_guess = "2.0"
+# PDF generation dependencies
+printpdf = "0.7"

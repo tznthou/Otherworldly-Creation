@@ -112,12 +112,23 @@ const QuickActions: React.FC = () => {
     {
       id: 'ebook-generation',
       title: '📚 傳說編纂',
-      description: '一鍵生成專業電子書 - EPUB 生成、排版優化、封面設計',
+      description: '一鍵生成專業電子書 - EPUB 生成、排版優化、封面設計（建議優先）',
       icon: '📖',
       color: 'from-emerald-500 to-teal-600',
       isPlanned: false, // 功能已實現，移除規劃中標記
       action: () => {
         dispatch(openModal('epubGeneration'));
+      },
+    },
+    {
+      id: 'pdf-generation',
+      title: '📄 文檔轉換', 
+      description: '專業 PDF 文檔生成 - 自定義排版、字體選擇、頁面設計（檔案較大）',
+      icon: '📄',
+      color: 'from-orange-500 to-red-600',
+      isPlanned: false, // 功能已實現
+      action: () => {
+        dispatch(openModal('pdfGeneration'));
       },
     },
     {

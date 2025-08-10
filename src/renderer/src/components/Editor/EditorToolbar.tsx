@@ -125,17 +125,6 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
           >
             "
           </ToolbarButton>
-          
-          <ToolbarButton
-            active={isBlockActive(editor, 'list-item')}
-            onMouseDown={(event) => {
-              event.preventDefault();
-              toggleBlock(editor, 'list-item');
-            }}
-            title="列表"
-          >
-            •
-          </ToolbarButton>
         </div>
       </div>
 

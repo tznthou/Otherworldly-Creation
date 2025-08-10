@@ -9,3 +9,4 @@ pub mod settings;
 pub mod database;
 pub mod ai_history;
 pub mod epub;
+pub mod pdf;
