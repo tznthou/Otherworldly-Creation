@@ -12,6 +12,15 @@ on:
           - both
           - macos
           - windows
+      macos_arch:
+        description: 'macOS Architecture (when platform is macos or both)'
+        required: false
+        default: 'universal'
+        type: choice
+        options:
+          - universal
+          - intel
+          - apple-silicon
 
 jobs:
   build-macos:
@@ -26,7 +35,10 @@ jobs:
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+          targets: ${{ 
+            inputs.macos_arch == 'intel' && 'x86_64-apple-darwin' || 
+            inputs.macos_arch == 'apple-silicon' && 'aarch64-apple-darwin' || 
+            'aarch64-apple-darwin,x86_64-apple-darwin' }}
 
       - name: 📦 Rust cache
         uses: swatinem/rust-cache@v2
@@ -49,11 +61,16 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ${{ 
+            inputs.macos_arch == 'intel' && '--target x86_64-apple-darwin' || 
+            inputs.macos_arch == 'apple-silicon' && '--target aarch64-apple-darwin' || 
+            '' }}
 
       - name: 📤 Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: genesis-chronicle-test-macos-${{ github.run_number }}
+          name: genesis-chronicle-test-macos-${{ inputs.macos_arch }}-${{ github.run_number }}
           path: |
             src-tauri/target/**/release/bundle/**/*.dmg
           retention-days: 7
