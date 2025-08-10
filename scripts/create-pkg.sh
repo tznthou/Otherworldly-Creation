@@ -17,9 +17,17 @@ PKG_PATH="$2"
 
 # 檢查 .app 是否存在
 if [ ! -d "$APP_PATH" ]; then
-    echo "Error: App not found at $APP_PATH"
+    echo "❌ Error: App not found at $APP_PATH"
+    echo "🔍 Current working directory: $(pwd)"
+    echo "📁 Listing parent directory contents:"
+    ls -la "$(dirname "$APP_PATH")" 2>/dev/null || echo "Parent directory not accessible"
     exit 1
 fi
+
+# 獲取應用程式的實際名稱和版本信息
+APP_NAME=$(basename "$APP_PATH" .app)
+echo "📱 App Name: $APP_NAME"
+echo "📂 App Path: $APP_PATH"
 
 # 創建輸出目錄
 mkdir -p "$(dirname "$PKG_PATH")"

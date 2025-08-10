@@ -103,20 +103,44 @@ jobs:
           
       - name: 📦 Create PKG installer
         run: |
+          # 找到生成的 .app 文件
+          APP_PATH=$(find src-tauri/target -name "genesis-chronicle.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ Error: genesis-chronicle.app not found"
+            echo "🔍 Searching in target directory:"
+            find src-tauri/target -name "*.app" -type d || echo "No .app files found"
+            exit 1
+          fi
+          
+          echo "✅ Found app at: $APP_PATH"
+          
+          # 創建PKG目錄
+          PKG_DIR="$(dirname "$APP_PATH")/pkg"
+          mkdir -p "$PKG_DIR"
+          
+          # 生成PKG
           chmod +x ./scripts/create-pkg.sh
           ./scripts/create-pkg.sh \
-            "src-tauri/target/universal-apple-darwin/release/bundle/macos/genesis-chronicle.app" \
-            "src-tauri/target/universal-apple-darwin/release/bundle/pkg/genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_universal.pkg"
+            "$APP_PATH" \
+            "$PKG_DIR/genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_universal.pkg"
         
       - name: 📤 Upload PKG to Release
-        uses: actions/upload-release-asset@v1
+        run: |
+          # 找到生成的 PKG 文件
+          PKG_PATH=$(find src-tauri/target -name "genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_universal.pkg" -type f | head -1)
+          if [ -z "$PKG_PATH" ]; then
+            echo "❌ Error: PKG file not found"
+            echo "🔍 Searching for PKG files:"
+            find src-tauri/target -name "*.pkg" -type f || echo "No .pkg files found"
+            exit 1
+          fi
+          
+          echo "✅ Found PKG at: $PKG_PATH"
+          
+          # 上傳到 Release
+          gh release upload ${{ steps.get_version.outputs.VERSION }} "$PKG_PATH" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: src-tauri/target/universal-apple-darwin/release/bundle/pkg/genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_universal.pkg
-          asset_name: genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_universal.pkg
-          asset_content_type: application/octet-stream
 
   build-windows:
     needs: create-release
