@@ -55,7 +55,7 @@ const EPubGenerationModal: React.FC = () => {
       dispatch(addNotification({
         type: 'warning',
         title: '請選擇專案',
-        message: '請先選擇要生成 EPUB 的專案'
+        message: '請先選擇要展開虛數空間的專案'
       }));
       return;
     }
@@ -64,7 +64,7 @@ const EPubGenerationModal: React.FC = () => {
       dispatch(addNotification({
         type: 'error',
         title: '專案驗證失敗',
-        message: '目前選擇的專案無法生成 EPUB，請檢查專案內容'
+        message: '目前選擇的專案無法啟動次元物語，請檢查專案內容'
       }));
       return;
     }
@@ -73,7 +73,7 @@ const EPubGenerationModal: React.FC = () => {
     setProgress(null);
 
     try {
-      console.log('🔍 開始生成 EPUB，專案 ID:', selectedProjectId);
+      console.log('🌟 開始展開虛數空間，專案 ID:', selectedProjectId);
       const result = await EPubService.generateEPub(
         selectedProjectId,
         options,
@@ -85,7 +85,7 @@ const EPubGenerationModal: React.FC = () => {
       // 成功提示訊息
       dispatch(addNotification({
         type: 'success',
-        title: '📚 EPUB 生成成功！',
+        title: '🌟 次元物語展開成功！',
         message: `✅ 文件：${result.title}\n📁 位置：${result.file_path}\n📊 大小：${EPubService.formatFileSize(result.file_size)}\n📖 章節：${result.chapter_count} 個\n\n💡 提示：檔案已保存到下載資料夾，您可以使用任何 EPUB 閱讀器開啟`
       }));
 
@@ -117,10 +117,10 @@ const EPubGenerationModal: React.FC = () => {
       }, 3000);
 
     } catch (error) {
-      console.error('EPUB 生成失敗:', error);
+      console.error('次元物語展開失敗:', error);
       dispatch(addNotification({
         type: 'error',
-        title: 'EPUB 生成失敗',
+        title: '虛數空間展開失敗',
         message: `${error instanceof Error ? error.message : '未知錯誤'}`
       }));
     } finally {
@@ -152,7 +152,7 @@ const EPubGenerationModal: React.FC = () => {
       <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-cosmic text-gold-500">
-            📚 傳說編纂 - EPUB 生成
+            🌟 次元物語・零式記錄
           </h2>
           {!generating && (
             <button
@@ -176,7 +176,7 @@ const EPubGenerationModal: React.FC = () => {
               disabled={generating}
               className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white focus:outline-none focus:border-gold-500"
             >
-              <option value="">選擇要生成 EPUB 的專案...</option>
+              <option value="">選擇要展開虛數空間的專案...</option>
               {projects.map(project => (
                 <option key={project.id} value={project.id}>
                   {project.name} ({project.type})
@@ -215,7 +215,7 @@ const EPubGenerationModal: React.FC = () => {
               )}
 
               {validation.valid && validation.errors.length === 0 && (
-                <p className="text-green-400 font-medium">✅ 專案驗證通過，可以生成 EPUB</p>
+                <p className="text-green-400 font-medium">✅ 專案驗證通過，可以展開虛數空間</p>
               )}
             </div>
           )}
@@ -329,7 +329,7 @@ const EPubGenerationModal: React.FC = () => {
                   生成中...
                 </span>
               ) : (
-                '🚀 開始生成 EPUB'
+                '🌟 展開虛數空間'
               )}
             </button>
           </div>

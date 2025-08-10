@@ -27,9 +27,14 @@ npx tsc --noEmit          # TypeScript type check
 
 ### Testing & Build
 ```bash
-npm test                   # Run all tests
+npm test                   # Run all tests (Jest with jsdom)
+npm run test:unit          # Run unit tests only
+npm run test:integration   # Run integration tests only
+npm run test:performance   # Run performance tests only
 npm run build             # Full build (frontend + Tauri)
-npm run diagnostic        # System diagnostics (ignore Electron errors)
+npm run build:renderer     # Frontend build only
+cargo tauri build --no-bundle  # Rust build without bundling (faster)
+npm run diagnostic        # System diagnostics
 ./scripts/security-check.sh  # Pre-release security check
 ```
 
@@ -44,6 +49,9 @@ ollama pull llama3.2      # Install recommended Chinese-optimized model
 ```bash
 # Database location: ~/Library/Application Support/genesis-chronicle/genesis-chronicle.db
 rm ~/Library/Application\ Support/genesis-chronicle/genesis-chronicle.db  # Reset to rebuild with latest schema
+# Test specific database operations
+node scripts/test-ai-history.js        # Test AI interaction history
+node scripts/test-ollama-service.js    # Test Ollama AI service
 ```
 
 ## Core Architecture
@@ -126,12 +134,14 @@ Dual-format export system for professional publishing:
   - Professional CSS styling and responsive layout
   - Complete ZIP structure with META-INF and OEBPS
   - Export history tracking in `epub_exports` table
+  - 中二風格命名: "次元物語・零式記錄" (虛數空間展開)
   
 - **PDF Generation**: `src-tauri/src/commands/pdf.rs`
   - Embedded 7.1MB Noto Sans TC font for cross-platform Chinese support
   - Smart text wrapping with character-width calculation
   - Automatic pagination and chapter breaking
   - Uses printpdf crate with custom text layout algorithms
+  - 中二風格命名: "絕對文書・完全具現化" (真理銘刻)
 
 ```rust
 // PDF Chinese text wrapping algorithm  
@@ -154,6 +164,8 @@ fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) 
 9. **Character Analysis**: Use Compromise.js NLP utils for Chinese dialogue extraction and Big Five personality analysis
 10. **Export Font Handling**: PDF generation uses embedded Noto Sans TC (7.1MB) - verify font data integrity before compilation
 11. **User Format Guidance**: Recommend EPUB for digital reading (lightweight), PDF for printing (large file with embedded fonts)
+12. **Naming Conventions**: Use `#[allow(non_snake_case)]` for Tauri command parameters to maintain camelCase API compatibility
+13. **Icon Updates**: macOS has aggressive icon caching - use `killall Dock && killall Finder` or restart to refresh icons
 
 ## Known Issues & Solutions
 
@@ -179,6 +191,11 @@ fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) 
 - Large PDF files: Expected due to embedded 7.1MB Chinese font for cross-platform compatibility
 - Text wrapping: Algorithm handles Chinese/ASCII character width differences automatically
 
+### Icon & UI Issues
+- macOS icon cache: System caches app icons aggressively. After updating icons in `src-tauri/icons/`, run `killall Dock && killall Finder` or restart system
+- Icon formats needed: PNG (multiple sizes), .icns (macOS), .ico (Windows)
+- 中二風格 UI: Export dialogs use themed naming ("次元物語", "絕對文書", etc.)
+
 ## Recent Achievements (2025-08-10)
 
 - ✅ Multi-provider AI system with context awareness
@@ -195,6 +212,8 @@ fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) 
 - ✅ Database v11 migration with 6 new analysis tables
 - ✅ Smart parameter generation with model-specific token limits
 - ✅ **User Interface Enhancements**: Format selection guidance in help system and dashboard
+- ✅ **中二風格命名系統**: Export features use themed Japanese-style naming ("次元物語・零式記錄" for EPUB, "絕對文書・完全具現化" for PDF)
+- ✅ **圖標系統完整更新**: 新「創」字設計 - 金色文字配紫色漸層背景，支援全平台格式
 
 ## Current Development Status (Phase 2)
 

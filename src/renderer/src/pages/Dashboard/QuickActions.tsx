@@ -111,8 +111,8 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'ebook-generation',
-      title: '📚 傳說編纂',
-      description: '一鍵生成專業電子書 - EPUB 生成、排版優化、封面設計（建議優先）',
+      title: '🌟 次元物語・零式記錄',
+      description: '虛數空間展開・輕量化傳送陣（建議優先）',
       icon: '📖',
       color: 'from-emerald-500 to-teal-600',
       isPlanned: false, // 功能已實現，移除規劃中標記
@@ -122,8 +122,8 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'pdf-generation',
-      title: '📄 文檔轉換', 
-      description: '專業 PDF 文檔生成 - 自定義排版、字體選擇、頁面設計（檔案較大）',
+      title: '⚔️ 絕對文書・完全具現化', 
+      description: '真理銘刻・最終形態解放（檔案較大）',
       icon: '📄',
       color: 'from-orange-500 to-red-600',
       isPlanned: false, // 功能已實現

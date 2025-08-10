@@ -71,6 +71,7 @@ pub struct PDFExportRecord {
 /// 生成 PDF 電子書
 #[tauri::command]
 pub async fn generate_pdf(
+    #[allow(non_snake_case)]
     projectId: String,
     options: Option<PDFGenerationOptions>,
 ) -> Result<PDFResult, String> {

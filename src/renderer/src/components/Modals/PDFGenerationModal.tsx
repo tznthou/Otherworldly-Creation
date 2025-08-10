@@ -105,7 +105,7 @@ const PDFGenerationModal: React.FC = () => {
       dispatch(addNotification({
         type: 'warning',
         title: '請選擇專案',
-        message: '請先選擇要生成 PDF 的專案'
+        message: '請先選擇要解放最終形態的專案'
       }));
       return;
     }
@@ -114,7 +114,7 @@ const PDFGenerationModal: React.FC = () => {
       dispatch(addNotification({
         type: 'error',
         title: '專案驗證失敗',
-        message: '目前選擇的專案無法生成 PDF，請檢查專案內容'
+        message: '目前選擇的專案無法完全具現化，請檢查專案內容'
       }));
       return;
     }
@@ -123,14 +123,14 @@ const PDFGenerationModal: React.FC = () => {
     setProgress(null);
 
     try {
-      console.log('🔍 開始生成 PDF，專案 ID:', selectedProjectId);
+      console.log('⚔️ 開始真理銘刻，專案 ID:', selectedProjectId);
       
       // 模擬進度更新
       const progressSteps = [
-        { stage: 'preparing' as const, progress: 10, message: '🔍 正在準備生成 PDF...' },
-        { stage: 'converting' as const, progress: 30, message: '🔄 正在轉換內容格式...' },
-        { stage: 'generating' as const, progress: 70, message: '📄 正在生成 PDF 文件...' },
-        { stage: 'complete' as const, progress: 100, message: '🎉 PDF 生成完成！' }
+        { stage: 'preparing' as const, progress: 10, message: '🔍 正在準備真理銘刻...' },
+        { stage: 'converting' as const, progress: 30, message: '🔄 正在完全具現化...' },
+        { stage: 'generating' as const, progress: 70, message: '⚔️ 正在解放最終形態...' },
+        { stage: 'complete' as const, progress: 100, message: '🎉 絕對文書完成！' }
       ];
 
       for (let i = 0; i < progressSteps.length - 1; i++) {
@@ -149,13 +149,13 @@ const PDFGenerationModal: React.FC = () => {
         stage: 'complete',
         progress: 100,
         totalChapters: result.chapter_count,
-        message: `🎉 PDF 生成完成：${result.title}`
+        message: `🎉 真理銘刻完成：${result.title}`
       });
 
       // 成功提示訊息
       dispatch(addNotification({
         type: 'success',
-        title: '📄 PDF 生成成功！',
+        title: '⚔️ 絕對文書完全具現化成功！',
         message: `✅ 文件：${result.title}\n📁 位置：${result.file_path}\n📊 大小：${formatFileSize(result.file_size)}\n📖 章節：${result.chapter_count} 個\n📄 頁數：${result.page_count} 頁\n\n💡 提示：檔案已保存到下載資料夾，您可以使用任何 PDF 閱讀器開啟`
       }));
 
@@ -186,7 +186,7 @@ const PDFGenerationModal: React.FC = () => {
       }, 3000);
 
     } catch (error) {
-      console.error('PDF 生成失敗:', error);
+      console.error('絕對文書具現化失敗:', error);
       setProgress({
         stage: 'error',
         progress: 0,
@@ -196,7 +196,7 @@ const PDFGenerationModal: React.FC = () => {
       
       dispatch(addNotification({
         type: 'error',
-        title: 'PDF 生成失敗',
+        title: '真理銘刻失敗',
         message: `${error instanceof Error ? error.message : '未知錯誤'}`
       }));
     } finally {
@@ -241,7 +241,7 @@ const PDFGenerationModal: React.FC = () => {
       <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-cosmic text-gold-500">
-            📄 傳說編纂 - PDF 生成
+            ⚔️ 絕對文書・完全具現化
           </h2>
           {!generating && (
             <button
@@ -265,7 +265,7 @@ const PDFGenerationModal: React.FC = () => {
               disabled={generating}
               className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white focus:outline-none focus:border-gold-500"
             >
-              <option value="">選擇要生成 PDF 的專案...</option>
+              <option value="">選擇要解放最終形態的專案...</option>
               {projects.map(project => (
                 <option key={project.id} value={project.id}>
                   {project.name} ({project.type})
@@ -304,7 +304,7 @@ const PDFGenerationModal: React.FC = () => {
               )}
 
               {validation.valid && validation.errors.length === 0 && (
-                <p className="text-green-400 font-medium">✅ 專案驗證通過，可以生成 PDF</p>
+                <p className="text-green-400 font-medium">✅ 專案驗證通過，可以真理銘刻</p>
               )}
             </div>
           )}
@@ -444,7 +444,7 @@ const PDFGenerationModal: React.FC = () => {
                   生成中...
                 </span>
               ) : (
-                '🚀 開始生成 PDF'
+                '⚔️ 真理銘刻'
               )}
             </button>
           </div>

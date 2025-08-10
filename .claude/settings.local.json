@@ -107,7 +107,12 @@
       "Bash(cd:*)",
       "Bash(cd:*)",
       "mcp__serena__delete_memory",
-      "mcp__puppeteer__puppeteer_fill"
+      "mcp__puppeteer__puppeteer_fill",
+      "Bash(sips:*)",
+      "Bash(iconutil:*)",
+      "Bash(npm:*)",
+      "Bash(rustup target:*)",
+      "Bash(brew install:*)"
     ],
     "deny": []
   }

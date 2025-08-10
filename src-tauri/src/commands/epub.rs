@@ -52,6 +52,7 @@ pub struct EPubExportRecord {
 /// 生成 EPUB 電子書
 #[tauri::command]
 pub async fn generate_epub(
+    #[allow(non_snake_case)]
     projectId: String,
     options: Option<EPubGenerationOptions>,
 ) -> Result<EPubResult, String> {
@@ -175,7 +176,10 @@ pub async fn generate_epub(
 
 /// 獲取專案的 EPUB 導出歷史
 #[tauri::command]
-pub async fn get_epub_exports(projectId: String) -> Result<Vec<EPubExportRecord>, String> {
+pub async fn get_epub_exports(
+    #[allow(non_snake_case)]
+    projectId: String,
+) -> Result<Vec<EPubExportRecord>, String> {
     let db = get_db().map_err(|e| format!("資料庫連接失敗: {}", e))?;
     let conn = db.lock().unwrap();
     get_epub_export_history(&*conn, &projectId)
@@ -183,7 +187,10 @@ pub async fn get_epub_exports(projectId: String) -> Result<Vec<EPubExportRecord>
 
 /// 刪除 EPUB 導出記錄
 #[tauri::command]
-pub async fn delete_epub_export(exportId: String) -> Result<(), String> {
+pub async fn delete_epub_export(
+    #[allow(non_snake_case)]
+    exportId: String,
+) -> Result<(), String> {
     let db = get_db().map_err(|e| format!("資料庫連接失敗: {}", e))?;
     let conn = db.lock().unwrap();
     delete_epub_export_record(&*conn, &exportId)
