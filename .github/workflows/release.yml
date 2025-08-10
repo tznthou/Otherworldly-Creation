@@ -111,7 +111,7 @@ jobs:
           args: '--target universal-apple-darwin'
 
       - name: 🔄 Fallback: Try alternative build
-        if: steps.build_tauri.outcome == 'failure'
+        if: ${{ steps.build_tauri.outcome == 'failure' }}
         id: build_fallback
         run: |
           echo "🔄 Primary build failed, trying alternative..."
@@ -119,7 +119,7 @@ jobs:
           cargo tauri build --target aarch64-apple-darwin || cargo tauri build --target x86_64-apple-darwin
           
       - name: 📦 Create PKG installer
-        if: always()
+        if: ${{ always() }}
         run: |
           # 找到生成的 .app 文件（支援多種架構）
           APP_PATH=$(find src-tauri/target -name "genesis-chronicle.app" -type d | head -1)
@@ -154,7 +154,7 @@ jobs:
           ./scripts/create-pkg.sh "$APP_PATH" "$PKG_DIR/$PKG_NAME"
         
       - name: 📤 Upload PKG to Release
-        if: always()
+        if: ${{ always() }}
         run: |
           # 找到生成的 PKG 文件（支援多種命名）
           PKG_PATH=$(find src-tauri/target -name "genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_*.pkg" -type f | head -1)
