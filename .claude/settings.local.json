@@ -115,7 +115,20 @@
       "Bash(brew install:*)",
       "Bash(spctl:*)",
       "Bash(sudo xattr:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(yamllint:*)",
+      "Bash(pkgutil:*)",
+      "Bash(mdfind:*)",
+      "Bash(sudo:*)",
+      "Bash(/usr/libexec/locate.updatedb:*)",
+      "Bash(locate:*)",
+      "Bash(cat:*)",
+      "Bash(tar:*)",
+      "Bash(gunzip:*)",
+      "Bash(log show:*)",
+      "Bash(installer:*)",
+      "Bash(system_profiler:*)",
+      "Bash(./genesis-chronicle.app/Contents/MacOS/genesis-chronicle:*)"
     ],
     "deny": []
   }

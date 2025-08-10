@@ -54,6 +54,19 @@ node scripts/test-ai-history.js        # Test AI interaction history
 node scripts/test-ollama-service.js    # Test Ollama AI service
 ```
 
+### macOS PKG Installer (NEW)
+```bash
+# Generate PKG installer for macOS (bypasses quarantine issues)
+chmod +x ./scripts/create-pkg.sh
+./scripts/create-pkg.sh <app_path> <output_pkg_path>
+
+# Test PKG installation
+sudo installer -pkg <pkg_file> -target /
+
+# GitHub Actions automatically generates PKG on release tag push
+git tag -a v1.0.x -m "Release message" && git push origin v1.0.x
+```
+
 ## Core Architecture
 
 ### Command System Flow
@@ -108,24 +121,6 @@ if let Some(text) = &candidate.content.text {
   - Speaker attribution with context inference
 - **Smart AI Parameters**: `src/renderer/src/services/aiWritingAssistant.ts` with model-specific token limits
 
-### Redux/TypeScript Patterns
-```typescript
-// Type-safe dispatch
-const dispatch = useDispatch<AppDispatch>();
-
-// Slate.js chapter rendering - force remount
-<SlateEditor key={`editor-${currentChapter.id}`} />
-
-// Prevent double JSON parsing
-const fetchChapters = createAsyncThunk(
-  'chapters/fetchByProjectId',
-  async (projectId: string) => {
-    const chapters = await api.chapters.getByProjectId(projectId);
-    return chapters; // API layer already parsed JSON
-  }
-);
-```
-
 ### Export System Architecture  
 Dual-format export system for professional publishing:
 
@@ -151,6 +146,47 @@ fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) 
 }
 ```
 
+### macOS Distribution System (NEW - 2025-08-10)
+Automated PKG installer generation to bypass macOS quarantine restrictions:
+
+- **PKG Script**: `scripts/create-pkg.sh`
+  - Uses `pkgbuild` with temporary staging directory
+  - Installs directly to `/Applications` without quarantine issues
+  - Supports universal binary (Intel + Apple Silicon)
+  
+- **GitHub Actions**: `.github/workflows/release.yml`
+  - Automatically generates both DMG and PKG on tag push
+  - Uses `tauri-apps/tauri-action@v0` for consistent builds
+  - Uploads to GitHub Releases with detailed installation instructions
+
+```bash
+# PKG generation process
+TEMP_ROOT=$(mktemp -d)
+cp -R "$APP_PATH" "$TEMP_ROOT/"
+pkgbuild --root "$TEMP_ROOT" \
+         --identifier "com.genesis-chronicle.desktop" \
+         --install-location "/Applications" \
+         "$PKG_PATH"
+```
+
+### Redux/TypeScript Patterns
+```typescript
+// Type-safe dispatch
+const dispatch = useDispatch<AppDispatch>();
+
+// Slate.js chapter rendering - force remount
+<SlateEditor key={`editor-${currentChapter.id}`} />
+
+// Prevent double JSON parsing
+const fetchChapters = createAsyncThunk(
+  'chapters/fetchByProjectId',
+  async (projectId: string) => {
+    const chapters = await api.chapters.getByProjectId(projectId);
+    return chapters; // API layer already parsed JSON
+  }
+);
+```
+
 ## Critical Development Rules
 
 1. **API Layer Unity**: Always use `import { api } from './api'` pattern
@@ -166,6 +202,21 @@ fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) 
 11. **User Format Guidance**: Recommend EPUB for digital reading (lightweight), PDF for printing (large file with embedded fonts)
 12. **Naming Conventions**: Use `#[allow(non_snake_case)]` for Tauri command parameters to maintain camelCase API compatibility
 13. **Icon Updates**: macOS has aggressive icon caching - use `killall Dock && killall Finder` or restart to refresh icons
+14. **macOS PKG Distribution**: Use PKG format for seamless installation without quarantine issues - see `MACOS_PKG_BYPASS_GUIDE.md`
+
+## GitHub Actions & CI/CD
+
+### Release Workflows
+- **Standard Release**: `release.yml` - Triggered by `v*` tags, generates DMG + PKG
+- **Signed Release**: `release-signed.yml` - For Apple Developer ID signed versions
+- **Test Build**: `test-build.yml` - Validates builds without releasing
+
+### macOS PKG Generation
+The automated PKG generation system solves the macOS quarantine problem:
+- **User Experience**: Download → Double-click → Install (no `xattr` commands needed)
+- **Technical**: PKG format automatically handles quarantine attributes
+- **Automation**: GitHub Actions generates both DMG and PKG on every release
+- **Universal Support**: Single PKG works on Intel and Apple Silicon Macs
 
 ## Known Issues & Solutions
 
@@ -180,6 +231,11 @@ fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) 
 - API quotas: Handle 429 errors gracefully
 - Token limits: Gemini 2.5 Flash uses ultra-conservative 60-80 tokens, 2.5 Pro uses 200-300 tokens
 - Content filtering: Check AI-generated text in `aiWritingAssistant.ts` for thinking/reasoning leakage
+
+### macOS Distribution Issues (SOLVED)
+- **Quarantine Problem**: Users needed `sudo xattr -rd com.apple.quarantine` after DMG installation
+- **Solution**: PKG installer automatically handles quarantine attributes
+- **Implementation**: See `scripts/create-pkg.sh` and `MACOS_PKG_BYPASS_GUIDE.md`
 
 ### Performance
 - Startup: 300% faster with Tauri v2.7.0
@@ -201,9 +257,10 @@ fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) 
 - ✅ Multi-provider AI system with context awareness
 - ✅ EPUB 3.0 generation with Slate.js conversion
 - ✅ **PDF Generation with Chinese Font Support**: Complete implementation with embedded Noto Sans TC
-  - Cross-platform Chinese text rendering (Windows/macOS/Linux compatible)
-  - Smart text wrapping algorithm for mixed Chinese/English content
-  - Professional page layout with automatic pagination
+- ✅ **macOS PKG Installer System**: Automated generation bypassing quarantine restrictions
+  - One-click installation experience for users
+  - GitHub Actions automation for dual-format releases (DMG + PKG)
+  - Universal binary support (Intel + Apple Silicon)
 - ✅ Plot analysis engine with NLP character extraction (Phase 2: 40% complete)
 - ✅ Model-specific response format handling
 - ✅ Gemini `parts=None` fallback mechanism
@@ -211,8 +268,7 @@ fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) 
 - ✅ Big Five personality analysis system for character consistency
 - ✅ Database v11 migration with 6 new analysis tables
 - ✅ Smart parameter generation with model-specific token limits
-- ✅ **User Interface Enhancements**: Format selection guidance in help system and dashboard
-- ✅ **中二風格命名系統**: Export features use themed Japanese-style naming ("次元物語・零式記錄" for EPUB, "絕對文書・完全具現化" for PDF)
+- ✅ **GitHub Actions Workflow Optimization**: Complete rewrite based on Tauri official best practices
 - ✅ **圖標系統完整更新**: 新「創」字設計 - 金色文字配紫色漸層背景，支援全平台格式
 
 ## Current Development Status (Phase 2)
@@ -225,6 +281,7 @@ fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) 
 - ✅ Chinese dialogue extraction (5 punctuation patterns)
 - ✅ Database v11 schema with 6 analysis tables and 30+ performance indices
 - ✅ Smart parameter generation with model-specific optimizations
+- ✅ macOS distribution system with PKG installer automation
 
 ### In Progress
 - 🚧 Character consistency detection algorithms (vector similarity)
@@ -237,3 +294,4 @@ fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm) 
 2. **Performance**: Efficient caching and batch processing
 3. **User Experience**: Seamless integration with existing writing workflow
 4. **AI Integration**: Leverage all 5 AI providers for comprehensive analysis
+5. **Distribution**: Professional-grade installation experience across platforms

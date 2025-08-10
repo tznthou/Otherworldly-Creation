@@ -43,7 +43,7 @@ cp -R "$APP_PATH" "$TEMP_ROOT/"
 echo "🔨 Creating PKG installer..."
 pkgbuild --root "$TEMP_ROOT" \
          --identifier "com.genesis-chronicle.desktop" \
-         --version "1.0.3" \
+         --version "1.0.4" \
          --install-location "/Applications" \
          --scripts "$(dirname "$0")/pkg-scripts" \
          "$PKG_PATH" 2>/dev/null || {
@@ -51,7 +51,7 @@ pkgbuild --root "$TEMP_ROOT" \
     echo "📦 Building PKG without custom scripts..."
     pkgbuild --root "$TEMP_ROOT" \
              --identifier "com.genesis-chronicle.desktop" \
-             --version "1.0.3" \
+             --version "1.0.4" \
              --install-location "/Applications" \
              "$PKG_PATH"
 }
