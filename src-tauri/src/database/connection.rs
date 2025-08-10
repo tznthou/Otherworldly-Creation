@@ -7,10 +7,15 @@ fn is_production_environment() -> bool {
     if let Ok(exe_path) = std::env::current_exe() {
         let path_str = exe_path.to_string_lossy();
         
-        // macOS: 檢查是否在 Applications 目錄中（更可靠的生產環境指標）
+        // 診斷輸出：總是顯示執行路徑用於除錯
+        println!("🔍 [診斷] 執行路徑: {}", path_str);
+        
+        // macOS: 精確檢查是否在 Applications 目錄中
         #[cfg(target_os = "macos")]
         {
-            path_str.contains("/Applications/") || path_str.contains(".app")
+            let is_production = path_str.contains("/Applications/");
+            println!("🔍 [診斷] macOS 環境判定: {}", if is_production { "🚀 生產環境" } else { "🔧 開發環境" });
+            is_production
         }
         
         // Windows: 檢查是否在安裝目錄中 (不是開發目錄)
