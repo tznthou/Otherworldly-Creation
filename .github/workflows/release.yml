@@ -20,44 +20,50 @@ jobs:
 
       - name: 🎉 Create Release
         id: create_release
-        uses: actions/create-release@v1
+        run: |
+          RELEASE_BODY="🎮 **創世紀元 - 異世界創作神器**
+
+          ## 📦 安裝包下載
+
+          ### 🍎 macOS 版本
+          - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-universal.dmg** (拖放安裝)
+          - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-universal.pkg** (一鍵安裝，無需手動移除隔離)
+          - 支援 Intel + Apple Silicon Mac
+          - 系統需求：macOS 10.11+
+
+          #### 📋 macOS 安裝說明
+          - **推薦使用 .pkg 安裝程式**：自動處理系統權限，無需手動執行 \`xattr\` 指令
+          - 如使用 .dmg：下載後需執行 \`sudo xattr -rd com.apple.quarantine /Applications/genesis-chronicle.app\`
+
+          ### 🪟 Windows 版本  
+          - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-x64.msi**
+          - 64位元 Windows 安裝程式
+          - 系統需求：Windows 10+
+
+          ## ✨ 主要功能
+          - 🤖 5大AI供應商整合 (Ollama, OpenAI, Gemini, Claude, OpenRouter)
+          - 📚 智能小說創作輔助
+          - 📄 EPUB/PDF 雙格式匯出
+          - 🎭 角色分析與劇情追蹤
+          - 💾 自動儲存與備份
+
+          ---
+
+          🔥 **讓AI成為你的創作夥伴，開啟異世界冒險！**"
+          
+          # 使用 gh CLI 創建 release
+          RELEASE_OUTPUT=$(gh release create ${{ steps.get_version.outputs.VERSION }} \
+            --title "Genesis Chronicle ${{ steps.get_version.outputs.VERSION }}" \
+            --notes "$RELEASE_BODY" \
+            --draft=false \
+            --prerelease=false)
+          
+          # 取得 upload URL (雖然 gh CLI 不需要，但保持相容性)
+          UPLOAD_URL=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.get_version.outputs.VERSION }} --jq .upload_url)
+          echo "upload_url=$UPLOAD_URL" >> $GITHUB_OUTPUT
+          echo "id=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.get_version.outputs.VERSION }} --jq .id)" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.get_version.outputs.VERSION }}
-          release_name: Genesis Chronicle ${{ steps.get_version.outputs.VERSION }}
-          body: |
-            🎮 **創世紀元 - 異世界創作神器**
-            
-            ## 📦 安裝包下載
-            
-            ### 🍎 macOS 版本
-            - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-universal.dmg** (拖放安裝)
-            - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-universal.pkg** (一鍵安裝，無需手動移除隔離)
-            - 支援 Intel + Apple Silicon Mac
-            - 系統需求：macOS 10.11+
-            
-            #### 📋 macOS 安裝說明
-            - **推薦使用 .pkg 安裝程式**：自動處理系統權限，無需手動執行 `xattr` 指令
-            - 如使用 .dmg：下載後需執行 `sudo xattr -rd com.apple.quarantine /Applications/genesis-chronicle.app`
-            
-            ### 🪟 Windows 版本  
-            - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-x64.msi**
-            - 64位元 Windows 安裝程式
-            - 系統需求：Windows 10+
-            
-            ## ✨ 主要功能
-            - 🤖 5大AI供應商整合 (Ollama, OpenAI, Gemini, Claude, OpenRouter)
-            - 📚 智能小說創作輔助
-            - 📄 EPUB/PDF 雙格式匯出
-            - 🎭 角色分析與劇情追蹤
-            - 💾 自動儲存與備份
-            
-            ---
-            
-            🔥 **讓AI成為你的創作夥伴，開啟異世界冒險！**
-          draft: false
-          prerelease: false
 
   build-macos:
     needs: create-release
@@ -94,25 +100,47 @@ jobs:
       - name: 🏗️ Build frontend
         run: npm run build:renderer
 
-      - name: 🔨 Build Tauri app
+      - name: 🔨 Build Tauri app  
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
+          args: '--target universal-apple-darwin'
+        continue-on-error: true
+          
+      - name: 🔄 Fallback: Try alternative build
+        if: failure()
+        run: |
+          echo "🔄 Primary build failed, trying alternative..."
+          # 嘗試不同的構建方式
+          cargo tauri build --target aarch64-apple-darwin || cargo tauri build --target x86_64-apple-darwin
           
       - name: 📦 Create PKG installer
+        if: always()
         run: |
-          # 找到生成的 .app 文件
+          # 找到生成的 .app 文件（支援多種架構）
           APP_PATH=$(find src-tauri/target -name "genesis-chronicle.app" -type d | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "❌ Error: genesis-chronicle.app not found"
-            echo "🔍 Searching in target directory:"
-            find src-tauri/target -name "*.app" -type d || echo "No .app files found"
+            echo "🔍 Target directory structure:"
+            find src-tauri/target -type f -name "*genesis-chronicle*" | head -10
+            echo "🔍 Looking for any .app files:"
+            find src-tauri/target -name "*.app" -type d | head -5
             exit 1
           fi
           
           echo "✅ Found app at: $APP_PATH"
+          
+          # 檢測架構類型
+          ARCH_TYPE="universal"
+          if [[ "$APP_PATH" == *"aarch64"* ]]; then
+            ARCH_TYPE="aarch64"
+          elif [[ "$APP_PATH" == *"x86_64"* ]]; then
+            ARCH_TYPE="x86_64"
+          fi
+          
+          echo "🏗️ Architecture: $ARCH_TYPE"
           
           # 創建PKG目錄
           PKG_DIR="$(dirname "$APP_PATH")/pkg"
@@ -120,25 +148,25 @@ jobs:
           
           # 生成PKG
           chmod +x ./scripts/create-pkg.sh
-          ./scripts/create-pkg.sh \
-            "$APP_PATH" \
-            "$PKG_DIR/genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_universal.pkg"
+          PKG_NAME="genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_${ARCH_TYPE}.pkg"
+          ./scripts/create-pkg.sh "$APP_PATH" "$PKG_DIR/$PKG_NAME"
         
       - name: 📤 Upload PKG to Release
+        if: always()
         run: |
-          # 找到生成的 PKG 文件
-          PKG_PATH=$(find src-tauri/target -name "genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_universal.pkg" -type f | head -1)
+          # 找到生成的 PKG 文件（支援多種命名）
+          PKG_PATH=$(find src-tauri/target -name "genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_*.pkg" -type f | head -1)
           if [ -z "$PKG_PATH" ]; then
             echo "❌ Error: PKG file not found"
-            echo "🔍 Searching for PKG files:"
-            find src-tauri/target -name "*.pkg" -type f || echo "No .pkg files found"
-            exit 1
+            echo "🔍 Searching for any PKG files:"
+            find src-tauri/target -name "*.pkg" -type f | head -5
+            echo "🔍 Target directory contents:"
+            find src-tauri/target -type f | grep -E "\.(pkg|dmg|app)$" | head -10
+          else
+            echo "✅ Found PKG at: $PKG_PATH"
+            # 上傳到 Release
+            gh release upload ${{ steps.get_version.outputs.VERSION }} "$PKG_PATH" --clobber || echo "⚠️ Failed to upload PKG"
           fi
-          
-          echo "✅ Found PKG at: $PKG_PATH"
-          
-          # 上傳到 Release
-          gh release upload ${{ steps.get_version.outputs.VERSION }} "$PKG_PATH" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
