@@ -33,10 +33,7 @@ jobs:
             os: 'windows'
 
     runs-on: ${{ matrix.platform }}
-    if: >
-      github.event.inputs.platform == 'all' ||
-      (matrix.os == 'macos' && github.event.inputs.platform == 'macos-only') ||
-      (matrix.os == 'windows' && github.event.inputs.platform == 'windows-only')
+    if: ${{ github.event.inputs.platform == 'all' || (matrix.os == 'macos' && github.event.inputs.platform == 'macos-only') || (matrix.os == 'windows' && github.event.inputs.platform == 'windows-only') }}
 
     steps:
       - name: 📥 Checkout repository
