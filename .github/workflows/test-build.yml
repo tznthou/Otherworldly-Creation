@@ -1,0 +1,107 @@
+name: 🧪 Test Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Build Platform'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - macos
+          - windows
+
+jobs:
+  build-macos:
+    if: inputs.platform == 'both' || inputs.platform == 'macos'
+    runs-on: macos-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: universal-apple-darwin
+
+      - name: 📦 Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build frontend
+        run: npm run build:renderer
+
+      - name: 🔨 Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: '--target universal-apple-darwin'
+
+      - name: 📤 Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: genesis-chronicle-test-macos-${{ github.run_number }}
+          path: |
+            src-tauri/target/universal-apple-darwin/release/bundle/**/*.dmg
+          retention-days: 7
+
+  build-windows:
+    if: inputs.platform == 'both' || inputs.platform == 'windows'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: 📦 Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build frontend
+        run: npm run build:renderer
+
+      - name: 🔨 Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: '--target x86_64-pc-windows-msvc'
+
+      - name: 📤 Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: genesis-chronicle-test-windows-${{ github.run_number }}
+          path: |
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/**/*.msi
+          retention-days: 7

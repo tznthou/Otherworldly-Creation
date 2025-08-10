@@ -1,0 +1,133 @@
+name: 🚀 Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🏷️ Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: 🎉 Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: Genesis Chronicle ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            🎮 **創世紀元 - 異世界創作神器**
+            
+            ## 📦 安裝包下載
+            
+            ### 🍎 macOS 版本
+            - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-universal.dmg**
+            - 支援 Intel + Apple Silicon Mac
+            - 系統需求：macOS 10.11+
+            
+            ### 🪟 Windows 版本  
+            - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-x64.msi**
+            - 64位元 Windows 安裝程式
+            - 系統需求：Windows 10+
+            
+            ## ✨ 主要功能
+            - 🤖 5大AI供應商整合 (Ollama, OpenAI, Gemini, Claude, OpenRouter)
+            - 📚 智能小說創作輔助
+            - 📄 EPUB/PDF 雙格式匯出
+            - 🎭 角色分析與劇情追蹤
+            - 💾 自動儲存與備份
+            
+            ---
+            
+            🔥 **讓AI成為你的創作夥伴，開啟異世界冒險！**
+          draft: false
+          prerelease: false
+
+  build-macos:
+    needs: create-release
+    runs-on: macos-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: universal-apple-darwin
+
+      - name: 📦 Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build frontend
+        run: npm run build:renderer
+
+      - name: 🔨 Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: '--target universal-apple-darwin'
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+
+  build-windows:
+    needs: create-release
+    runs-on: windows-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: 📦 Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build frontend
+        run: npm run build:renderer
+
+      - name: 🔨 Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: '--target x86_64-pc-windows-msvc'
+          releaseId: ${{ needs.create-release.outputs.release_id }}
