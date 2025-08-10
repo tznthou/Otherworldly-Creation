@@ -7,10 +7,10 @@ fn is_production_environment() -> bool {
     if let Ok(exe_path) = std::env::current_exe() {
         let path_str = exe_path.to_string_lossy();
         
-        // macOS: 檢查是否在 .app bundle 中
+        // macOS: 檢查是否在 Applications 目錄中（更可靠的生產環境指標）
         #[cfg(target_os = "macos")]
         {
-            path_str.contains(".app/Contents/MacOS/")
+            path_str.contains("/Applications/") || path_str.contains(".app")
         }
         
         // Windows: 檢查是否在安裝目錄中 (不是開發目錄)
