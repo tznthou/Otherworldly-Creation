@@ -1,0 +1,100 @@
+name: 🧪 Test Build (Manual)
+
+on:
+  workflow_dispatch: # 僅限手動觸發
+    inputs:
+      platform:
+        description: '選擇建置平台'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - macos-only
+        - windows-only
+
+env:
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: short
+
+jobs:
+  test-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            args: '--target universal-apple-darwin'
+            rust-target: universal-apple-darwin
+            condition: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos-only' }}
+          - platform: 'windows-latest'
+            args: '--target x86_64-pc-windows-msvc'
+            rust-target: x86_64-pc-windows-msvc
+            condition: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows-only' }}
+
+    runs-on: ${{ matrix.platform }}
+    if: ${{ matrix.condition }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-target }}
+
+      - name: 📦 Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 🏗️ Install frontend dependencies
+        run: npm ci
+
+      - name: 🔧 Build frontend
+        run: npm run build:renderer
+
+      - name: 🔨 Build Tauri app (Test)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ${{ matrix.args }}
+          uploadToDraft: false
+
+      - name: 📋 List built files
+        run: |
+          echo "🔍 Built files in target directory:"
+          find src-tauri/target -name "*.dmg" -o -name "*.msi" -o -name "*.exe" -o -name "*.app" | head -10
+
+      - name: 📤 Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: genesis-chronicle-${{ matrix.platform }}
+          path: |
+            src-tauri/target/**/bundle/**/*.dmg
+            src-tauri/target/**/bundle/**/*.msi
+            src-tauri/target/**/bundle/**/*.exe
+          retention-days: 7
+
+  summary:
+    needs: test-build
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: 📊 Build Summary
+        run: |
+          echo "## 🎯 測試構建完成"
+          echo "平台選擇: ${{ github.event.inputs.platform }}"
+          echo "構建狀態: ${{ needs.test-build.result }}"
+          echo ""
+          echo "💾 構建產物已上傳至 Actions Artifacts"
+          echo "🔗 下載連結: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
