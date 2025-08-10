@@ -26,14 +26,17 @@ jobs:
           - platform: 'macos-latest'
             args: '--target universal-apple-darwin'
             rust-target: universal-apple-darwin
-            condition: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos-only' }}
+            os: 'macos'
           - platform: 'windows-latest'
             args: '--target x86_64-pc-windows-msvc'
             rust-target: x86_64-pc-windows-msvc
-            condition: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows-only' }}
+            os: 'windows'
 
     runs-on: ${{ matrix.platform }}
-    if: ${{ matrix.condition }}
+    if: >
+      github.event.inputs.platform == 'all' ||
+      (matrix.os == 'macos' && github.event.inputs.platform == 'macos-only') ||
+      (matrix.os == 'windows' && github.event.inputs.platform == 'windows-only')
 
     steps:
       - name: 📥 Checkout repository
