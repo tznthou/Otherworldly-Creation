@@ -112,7 +112,10 @@
       "Bash(iconutil:*)",
       "Bash(npm:*)",
       "Bash(rustup target:*)",
-      "Bash(brew install:*)"
+      "Bash(brew install:*)",
+      "Bash(spctl:*)",
+      "Bash(sudo xattr:*)",
+      "Bash(cd:*)"
     ],
     "deny": []
   }

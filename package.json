@@ -1,6 +1,6 @@
 {
   "name": "genesis-chronicle",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "創世紀元：異世界創作神器 - 基於 AI 的輕小說創作工具 (Tauri 版本)",
   "private": true,
   "scripts": {

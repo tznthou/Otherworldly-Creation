@@ -1,8 +1,8 @@
-name: 🚀 Release
+name: 🚀 Signed Release
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v*-signed']
 
 jobs:
   create-release:
@@ -18,28 +18,26 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: 🎉 Create Release
+      - name: 🎉 Create Signed Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
-          release_name: Genesis Chronicle ${{ steps.get_version.outputs.VERSION }}
+          release_name: Genesis Chronicle ${{ steps.get_version.outputs.VERSION }} (Signed)
           body: |
-            🎮 **創世紀元 - 異世界創作神器**
+            🎮 **創世紀元 - 異世界創作神器** (Apple 官方簽名版)
             
-            ## 📦 安裝包下載
+            ## 📦 安裝包下載 - 官方簽名版本
             
-            ### 🍎 macOS 版本
-            - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-universal.dmg** (拖放安裝)
-            - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-universal.pkg** (一鍵安裝，無需手動移除隔離)
+            ### 🍎 macOS 版本 (已簽名)
+            - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-universal-signed.dmg**
+            - ✅ Apple 官方代碼簽名
+            - ✅ 已通過公證 (Notarized)
+            - ✅ 可直接安裝，無安全警告
             - 支援 Intel + Apple Silicon Mac
-            - 系統需求：macOS 10.11+
-            
-            #### 📋 macOS 安裝說明
-            - **推薦使用 .pkg 安裝程式**：自動處理系統權限，無需手動執行 `xattr` 指令
-            - 如使用 .dmg：下載後需執行 `sudo xattr -rd com.apple.quarantine /Applications/genesis-chronicle.app`
+            - 系統需求：macOS 10.15+
             
             ### 🪟 Windows 版本  
             - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-x64.msi**
@@ -53,24 +51,25 @@ jobs:
             - 🎭 角色分析與劇情追蹤
             - 💾 自動儲存與備份
             
+            ## 🔒 安全性
+            - ✅ Apple 開發者 ID 簽名
+            - ✅ 通過 Apple 公證系統
+            - ✅ 無需手動解除安全限制
+            
             ---
             
-            🔥 **讓AI成為你的創作夥伴，開啟異世界冒險！**
+            🔥 **官方簽名版本 - 安裝更安全，使用更放心！**
           draft: false
           prerelease: false
 
-  build-macos:
+  build-macos-signed:
     needs: create-release
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
-
-      - name: 🏷️ Get version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -94,29 +93,47 @@ jobs:
       - name: 🏗️ Build frontend
         run: npm run build:renderer
 
-      - name: 🔨 Build Tauri app
+      # 🔑 Apple 代碼簽名設定
+      - name: 🍎 Import Apple Developer Certificate
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # 創建臨時 keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          
+          # 導入 Apple 開發者憑證
+          echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          
+          # 列出可用的簽名身份
+          security find-identity -v
+
+      - name: 🔨 Build and Sign Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
-          
-      - name: 📦 Create PKG installer
+          # Tauri 會自動使用找到的簽名身份進行簽名和公證
+
+      # 🧹 清理
+      - name: 🧹 Cleanup
+        if: always()
         run: |
-          chmod +x ./scripts/create-pkg.sh
-          ./scripts/create-pkg.sh \
-            "src-tauri/target/universal-apple-darwin/release/bundle/macos/genesis-chronicle.app" \
-            "src-tauri/target/universal-apple-darwin/release/bundle/pkg/genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_universal.pkg"
-        
-      - name: 📤 Upload PKG to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: src-tauri/target/universal-apple-darwin/release/bundle/pkg/genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_universal.pkg
-          asset_name: genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_universal.pkg
-          asset_content_type: application/octet-stream
+          security delete-keychain build.keychain
+          rm -f certificate.p12
 
   build-windows:
     needs: create-release
