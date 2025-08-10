@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../../store';
+import { RootState, AppDispatch } from '../../store/store';
 import LoadingSpinner from '../UI/LoadingSpinner';
 // import { api } from '../../api'; // 暫時不使用
 import { characterAnalysisService, CharacterAnalysisResult, ProjectCharacterAnalysis } from '../../services/characterAnalysisService';
