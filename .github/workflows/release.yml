@@ -101,16 +101,18 @@ jobs:
         run: npm run build:renderer
 
       - name: 🔨 Build Tauri app  
+        id: build_tauri
         uses: tauri-apps/tauri-action@v0
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: '--target universal-apple-darwin'
-        continue-on-error: true
 
       - name: 🔄 Fallback: Try alternative build
-        if: failure()
+        if: steps.build_tauri.outcome == 'failure'
+        id: build_fallback
         run: |
           echo "🔄 Primary build failed, trying alternative..."
           # 嘗試不同的構建方式
