@@ -74,10 +74,6 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🏷️ Get version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -100,74 +96,46 @@ jobs:
       - name: 🏗️ Build frontend
         run: npm run build:renderer
 
-      - name: 🔨 Build Tauri app  
-        id: build_tauri
+      - name: 🔨 Build Tauri app
         uses: tauri-apps/tauri-action@v0
-        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: '--target universal-apple-darwin'
 
-      - name: 🔄 Fallback: Try alternative build
-        if: ${{ steps.build_tauri.outcome == 'failure' }}
-        id: build_fallback
-        run: |
-          echo "🔄 Primary build failed, trying alternative..."
-          # 嘗試不同的構建方式
-          cargo tauri build --target aarch64-apple-darwin || cargo tauri build --target x86_64-apple-darwin
-          
       - name: 📦 Create PKG installer
-        if: ${{ always() }}
         run: |
-          # 找到生成的 .app 文件（支援多種架構）
+          # 找到生成的 .app 文件
           APP_PATH=$(find src-tauri/target -name "genesis-chronicle.app" -type d | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "❌ Error: genesis-chronicle.app not found"
-            echo "🔍 Target directory structure:"
             find src-tauri/target -type f -name "*genesis-chronicle*" | head -10
-            echo "🔍 Looking for any .app files:"
-            find src-tauri/target -name "*.app" -type d | head -5
             exit 1
           fi
           
           echo "✅ Found app at: $APP_PATH"
           
-          # 檢測架構類型
-          ARCH_TYPE="universal"
-          if [[ "$APP_PATH" == *"aarch64"* ]]; then
-            ARCH_TYPE="aarch64"
-          elif [[ "$APP_PATH" == *"x86_64"* ]]; then
-            ARCH_TYPE="x86_64"
-          fi
+          # 獲取版本號
+          VERSION="${GITHUB_REF#refs/tags/}"
           
-          echo "🏗️ Architecture: $ARCH_TYPE"
-          
-          # 創建PKG目錄
+          # 創建PKG
           PKG_DIR="$(dirname "$APP_PATH")/pkg"
           mkdir -p "$PKG_DIR"
-          
-          # 生成PKG
           chmod +x ./scripts/create-pkg.sh
-          PKG_NAME="genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_${ARCH_TYPE}.pkg"
+          PKG_NAME="genesis-chronicle_${VERSION}_universal.pkg"
           ./scripts/create-pkg.sh "$APP_PATH" "$PKG_DIR/$PKG_NAME"
-        
+
       - name: 📤 Upload PKG to Release
-        if: ${{ always() }}
         run: |
-          # 找到生成的 PKG 文件（支援多種命名）
-          PKG_PATH=$(find src-tauri/target -name "genesis-chronicle_${{ steps.get_version.outputs.VERSION }}_*.pkg" -type f | head -1)
-          if [ -z "$PKG_PATH" ]; then
-            echo "❌ Error: PKG file not found"
-            echo "🔍 Searching for any PKG files:"
-            find src-tauri/target -name "*.pkg" -type f | head -5
-            echo "🔍 Target directory contents:"
-            find src-tauri/target -type f | grep -E "\.(pkg|dmg|app)$" | head -10
-          else
+          VERSION="${GITHUB_REF#refs/tags/}"
+          PKG_PATH=$(find src-tauri/target -name "genesis-chronicle_${VERSION}_universal.pkg" -type f | head -1)
+          if [ -n "$PKG_PATH" ]; then
             echo "✅ Found PKG at: $PKG_PATH"
-            # 上傳到 Release
-            gh release upload ${{ steps.get_version.outputs.VERSION }} "$PKG_PATH" --clobber || echo "⚠️ Failed to upload PKG"
+            gh release upload "$VERSION" "$PKG_PATH" --clobber
+          else
+            echo "❌ PKG file not found"
+            exit 1
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
