@@ -108,7 +108,7 @@ jobs:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: '--target universal-apple-darwin'
         continue-on-error: true
-          
+      
       - name: 🔄 Fallback: Try alternative build
         if: failure()
         run: |
