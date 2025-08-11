@@ -10,3 +10,7 @@ pub mod database;
 pub mod ai_history;
 pub mod epub;
 pub mod pdf;
+pub mod illustration;
+pub mod translation;
+pub mod prompt_templates;
+pub mod batch_illustration;

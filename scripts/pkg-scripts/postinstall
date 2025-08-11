@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Genesis Chronicle PKG 安裝後腳本
+# 這個腳本在 PKG 安裝完成後自動執行
+
+set -e
+
+echo "🎮 Genesis Chronicle 安裝完成！"
+
+# 確保應用程式有正確的權限
+if [ -d "/Applications/genesis-chronicle.app" ]; then
+    # 移除 quarantine 屬性（如果存在）
+    xattr -rd com.apple.quarantine "/Applications/genesis-chronicle.app" 2>/dev/null || true
+    
+    # 設置正確的權限
+    chmod -R 755 "/Applications/genesis-chronicle.app"
+    
+    echo "✅ 應用程式權限已設置"
+fi
+
+# 清理可能的快取
+rm -rf ~/Library/Caches/com.genesis-chronicle.desktop/* 2>/dev/null || true
+
+echo "🚀 您現在可以從 Applications 資料夾啟動 Genesis Chronicle"
+echo "💡 提示：首次啟動可能需要幾秒鐘載入"
+
+exit 0

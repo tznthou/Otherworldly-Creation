@@ -965,4 +965,190 @@ export const tauriAPI: API = {
       });
     }
   },
+
+  // AI 插畫生成
+  illustration: {
+    // 角色一致性管理
+    setupCharacterConsistency: async (characterId: string, characterName: string, description: string) => {
+      return safeInvoke('setup_character_consistency', {
+        character_id: characterId,
+        character_name: characterName,
+        description: description
+      });
+    },
+
+    generateConsistencyReport: async (characterId: string, characterName: string, strictMode?: boolean) => {
+      return safeInvoke('generate_consistency_report', {
+        character_id: characterId,
+        character_name: characterName,
+        strict_mode: strictMode || false
+      });
+    },
+
+    setCharacterSeed: async (characterId: string, seedValue: number, reason: string) => {
+      return safeInvoke('set_character_seed', {
+        character_id: characterId,
+        seed_value: seedValue,
+        reason: reason
+      });
+    },
+
+    addReferenceImage: async (characterId: string, imageUrl: string, imageType: string, tags: string[]) => {
+      return safeInvoke('add_reference_image', {
+        character_id: characterId,
+        image_url: imageUrl,
+        image_type: imageType,
+        tags: tags
+      });
+    },
+
+    getCharacterVisualTraits: async (characterId: string) => {
+      return safeInvoke('get_character_visual_traits', {
+        character_id: characterId
+      });
+    },
+
+    calculateSimilarityMatrix: async (projectId: string, characterIds: string[]) => {
+      return safeInvoke('calculate_character_similarity_matrix', {
+        project_id: projectId,
+        character_ids: characterIds
+      });
+    },
+
+    batchCheckConsistency: async (projectId: string, strictMode?: boolean, minimumScore?: number) => {
+      return safeInvoke('batch_check_project_consistency', {
+        project_id: projectId,
+        strict_mode: strictMode || false,
+        minimum_score: minimumScore || 0.7
+      });
+    },
+
+    generateBatchSeeds: async (baseSeed: number, count: number) => {
+      return safeInvoke('generate_batch_seeds', {
+        base_seed: baseSeed,
+        count: count
+      });
+    },
+
+    // 插畫生成
+    generateIllustration: async (
+      projectId: string,
+      characterId: string | null,
+      sceneDescription: string,
+      templateId?: string,
+      translationStyle?: string,
+      optimizationLevel?: string,
+      aspectRatio?: string,
+      safetyLevel?: string,
+      customNegativePrompt?: string,
+      apiKey?: string
+    ) => {
+      return safeInvoke('generate_enhanced_illustration', {
+        projectId: projectId,
+        characterId: characterId,
+        sceneDescription: sceneDescription,
+        templateId: templateId,
+        translationStyle: translationStyle || 'anime',
+        optimizationLevel: optimizationLevel || 'standard',
+        aspectRatio: aspectRatio || 'square',
+        safetyLevel: safetyLevel || 'block_most',
+        customNegativePrompt: customNegativePrompt,
+        apiKey: apiKey
+      });
+    },
+
+    getGenerationStatus: async (taskId: string) => {
+      return safeInvoke('get_illustration_generation_status', {
+        taskId: taskId
+      });
+    },
+
+    cancelGeneration: async (taskId: string) => {
+      return safeInvoke('cancel_illustration_generation', {
+        taskId: taskId
+      });
+    },
+
+    validateImagenConnection: async (apiKey: string) => {
+      return safeInvoke('validate_imagen_api_connection', {
+        apiKey: apiKey
+      });
+    },
+
+    // 批次生成管理
+    initializeBatchManager: async () => {
+      return safeInvoke('initialize_batch_manager', {});
+    },
+
+    submitBatchRequest: async (
+      batchName: string,
+      projectId: string,
+      requests: any[],
+      priority?: string,
+      maxParallel?: number,
+      apiKey?: string
+    ) => {
+      return safeInvoke('submit_batch_illustration_request', {
+        batchName: batchName,
+        projectId: projectId,
+        requests: requests,
+        priority: priority,
+        maxParallel: maxParallel,
+        apiKey: apiKey
+      });
+    },
+
+    getBatchStatus: async (batchId: string) => {
+      return safeInvoke('get_batch_status', {
+        batchId: batchId
+      });
+    },
+
+    cancelBatch: async (batchId: string) => {
+      return safeInvoke('cancel_batch', {
+        batchId: batchId
+      });
+    },
+
+    getQueueStatistics: async () => {
+      return safeInvoke('get_batch_queue_statistics', {});
+    },
+
+    updateBatchConfig: async (maxConcurrent?: number, maxQueue?: number, timeout?: number, retries?: number) => {
+      return safeInvoke('update_batch_manager_config', {
+        maxConcurrentTasks: maxConcurrent,
+        maxQueueSize: maxQueue,
+        taskTimeoutSeconds: timeout,
+        retryAttempts: retries
+      });
+    },
+
+    cleanupCompletedTasks: async (olderThanHours?: number) => {
+      return safeInvoke('cleanup_completed_tasks', {
+        olderThanHours: olderThanHours || 24
+      });
+    },
+
+    getAllBatchesSummary: async () => {
+      return safeInvoke('get_all_batches_summary', {});
+    },
+
+    retryFailedTasks: async (batchId: string) => {
+      return safeInvoke('retry_failed_tasks', {
+        batchId: batchId
+      });
+    },
+
+    pauseBatch: async (batchId: string) => {
+      return safeInvoke('pause_batch', {
+        batchId: batchId
+      });
+    },
+
+    resumeBatch: async (batchId: string) => {
+      return safeInvoke('resume_batch', {
+        batchId: batchId
+      });
+    }
+  },
 };

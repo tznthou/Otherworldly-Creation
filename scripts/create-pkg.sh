@@ -5,10 +5,14 @@
 
 set -e
 
+# 從環境變數或參數獲取版本號
+VERSION="${PKG_VERSION:-${3:-1.0.4}}"
+
 # 檢查參數
-if [ $# -ne 2 ]; then
-    echo "Usage: $0 <app_path> <output_pkg_path>"
-    echo "Example: $0 target/universal-apple-darwin/release/bundle/macos/genesis-chronicle.app target/universal-apple-darwin/release/bundle/pkg/genesis-chronicle.pkg"
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 <app_path> <output_pkg_path> [version]"
+    echo "Example: $0 target/universal-apple-darwin/release/bundle/macos/genesis-chronicle.app target/universal-apple-darwin/release/bundle/pkg/genesis-chronicle.pkg 1.0.5"
+    echo "Note: Version can also be set via PKG_VERSION environment variable"
     exit 1
 fi
 
@@ -28,6 +32,7 @@ fi
 APP_NAME=$(basename "$APP_PATH" .app)
 echo "📱 App Name: $APP_NAME"
 echo "📂 App Path: $APP_PATH"
+echo "📦 Package Version: $VERSION"
 
 # 創建輸出目錄
 mkdir -p "$(dirname "$PKG_PATH")"
@@ -43,7 +48,7 @@ cp -R "$APP_PATH" "$TEMP_ROOT/"
 echo "🔨 Creating PKG installer..."
 pkgbuild --root "$TEMP_ROOT" \
          --identifier "com.genesis-chronicle.desktop" \
-         --version "1.0.4" \
+         --version "$VERSION" \
          --install-location "/Applications" \
          --scripts "$(dirname "$0")/pkg-scripts" \
          "$PKG_PATH" 2>/dev/null || {
@@ -51,7 +56,7 @@ pkgbuild --root "$TEMP_ROOT" \
     echo "📦 Building PKG without custom scripts..."
     pkgbuild --root "$TEMP_ROOT" \
              --identifier "com.genesis-chronicle.desktop" \
-             --version "1.0.4" \
+             --version "$VERSION" \
              --install-location "/Applications" \
              "$PKG_PATH"
 }

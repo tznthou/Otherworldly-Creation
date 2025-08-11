@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 11;
+const DB_VERSION: i32 = 12;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -86,6 +86,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v11(conn)?;
             update_version(conn, 11)?;
             log::info!("遷移到版本 11 完成");
+        }
+        
+        if current_version < 12 {
+            apply_migration_v12(conn)?;
+            update_version(conn, 12)?;
+            log::info!("遷移到版本 12 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -1057,6 +1063,333 @@ pub fn apply_migration_v11(conn: &Connection) -> Result<()> {
     
     log::info!("預設分析模板插入完成");
     log::info!("版本 11 遷移完成：Phase 2 智能創作分析功能已準備就緒");
+    
+    Ok(())
+}
+
+/// 版本 12: Phase 3 AI插畫生成 - 角色視覺一致性系統
+pub fn apply_migration_v12(conn: &Connection) -> Result<()> {
+    log::info!("開始遷移到版本 12：Phase 3 AI插畫生成功能");
+    
+    // 1. 創建插畫生成記錄表
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS illustration_generations (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            character_id TEXT,              -- 可選：如果是角色插畫
+            
+            -- 生成請求資訊
+            scene_description TEXT NOT NULL,  -- 原始中文場景描述
+            translated_prompt TEXT NOT NULL,  -- 翻譯後的英文提示詞
+            prompt_template TEXT,            -- 使用的提示詞模板
+            negative_prompt TEXT,            -- 負面提示詞
+            
+            -- 角色一致性參數
+            seed_value INTEGER,              -- 用於保持一致性的種子值
+            reference_image_url TEXT,        -- 參考圖像URL（如果使用）
+            style_params TEXT,               -- JSON: 藝術風格參數
+            
+            -- 生成結果
+            image_url TEXT,                  -- 生成圖像的存儲位置
+            image_size TEXT,                 -- 圖像尺寸 (e.g., '512x512')
+            image_format TEXT DEFAULT 'jpeg', -- 圖像格式
+            file_size INTEGER,               -- 檔案大小（字節）
+            
+            -- API 調用資訊
+            api_provider TEXT NOT NULL DEFAULT 'gemini', -- 'gemini', 'dalle', etc.
+            api_model TEXT NOT NULL,         -- 使用的具體模型
+            api_params TEXT,                 -- JSON: API 調用參數
+            
+            -- 生成統計
+            generation_time_ms INTEGER,      -- 生成耗時（毫秒）
+            api_cost REAL,                   -- API 調用成本
+            retry_count INTEGER DEFAULT 0,   -- 重試次數
+            
+            -- 品質評估
+            quality_score REAL,              -- AI評估的品質分數 (0-1)
+            consistency_score REAL,          -- 與角色一致性分數 (0-1)
+            user_rating INTEGER,             -- 用戶評分 (1-5)
+            user_feedback TEXT,              -- 用戶反饋
+            
+            -- 使用狀態
+            status TEXT DEFAULT 'completed', -- 'pending', 'processing', 'completed', 'failed'
+            error_message TEXT,              -- 錯誤訊息（如果失敗）
+            is_favorite INTEGER DEFAULT 0,   -- 是否為收藏
+            is_deleted INTEGER DEFAULT 0,    -- 軟刪除標記
+            
+            -- 批次資訊
+            batch_id TEXT,                   -- 批次生成ID
+            generation_index INTEGER,        -- 在批次中的索引
+            
+            -- 元數據
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            downloaded_at TIMESTAMP,         -- 首次下載時間
+            
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
+            FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE SET NULL
+        )",
+        [],
+    )?;
+    
+    // 創建插畫生成記錄索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_project ON illustration_generations (project_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_character ON illustration_generations (character_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_status ON illustration_generations (status)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_created ON illustration_generations (created_at DESC)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_batch ON illustration_generations (batch_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_seed ON illustration_generations (seed_value)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_quality ON illustration_generations (quality_score DESC)",
+        [],
+    )?;
+    
+    log::info!("插畫生成記錄表創建完成");
+    
+    // 2. 創建角色視覺特徵表
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS character_visual_traits (
+            character_id TEXT PRIMARY KEY,   -- 與角色表關聯
+            
+            -- 基礎視覺特徵
+            seed_value INTEGER NOT NULL,     -- 專屬種子值（基於角色名稱生成）
+            standard_description TEXT,       -- 標準化的角色外貌描述（英文）
+            chinese_description TEXT,        -- 中文角色外貌描述
+            
+            -- 參考圖像系統
+            reference_images TEXT,           -- JSON: 參考圖像URL列表
+            primary_reference_url TEXT,      -- 主要參考圖像
+            reference_tags TEXT,             -- JSON: 參考圖像標籤
+            
+            -- 藝術風格參數
+            art_style_params TEXT NOT NULL, -- JSON: 藝術風格配置
+            default_prompt_template TEXT,   -- 預設提示詞模板
+            negative_prompt_template TEXT,   -- 預設負面提示詞模板
+            
+            -- 一致性控制
+            consistency_mode TEXT DEFAULT 'seed_reference', -- 'seed', 'reference', 'seed_reference'
+            tolerance_level REAL DEFAULT 0.8, -- 一致性容忍度 (0-1)
+            
+            -- 視覺特徵向量
+            feature_vector TEXT,             -- JSON: 視覺特徵編碼
+            dominant_colors TEXT,            -- JSON: 主要顏色配置
+            facial_features TEXT,            -- JSON: 面部特徵描述
+            clothing_style TEXT,             -- JSON: 服裝風格配置
+            
+            -- 生成統計
+            generation_count INTEGER DEFAULT 0, -- 生成次數
+            success_rate REAL DEFAULT 1.0,     -- 成功率
+            avg_consistency_score REAL,        -- 平均一致性分數
+            last_generation_at TIMESTAMP,      -- 最後生成時間
+            
+            -- 品質控制
+            quality_threshold REAL DEFAULT 0.7, -- 品質閾值
+            auto_enhance INTEGER DEFAULT 1,     -- 自動增強開關
+            manual_review INTEGER DEFAULT 0,    -- 需要手動審核
+            
+            -- 版本控制
+            traits_version TEXT DEFAULT '1.0',  -- 特徵版本
+            last_updated_by TEXT,               -- 最後更新來源
+            update_reason TEXT,                 -- 更新原因
+            
+            -- 元數據
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            
+            FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    
+    // 創建角色視覺特徵索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_character_visual_traits_seed ON character_visual_traits (seed_value)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_character_visual_traits_consistency ON character_visual_traits (avg_consistency_score DESC)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_character_visual_traits_generation_count ON character_visual_traits (generation_count DESC)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_character_visual_traits_updated ON character_visual_traits (updated_at DESC)",
+        [],
+    )?;
+    
+    log::info!("角色視覺特徵表創建完成");
+    
+    // 3. 創建插畫風格模板表
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS illustration_style_templates (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,              -- 風格模板名稱
+            description TEXT,                -- 風格描述
+            
+            -- 模板配置
+            style_type TEXT NOT NULL,        -- 'anime', 'realistic', 'cartoon', 'fantasy', etc.
+            prompt_template TEXT NOT NULL,   -- 提示詞模板
+            negative_prompt TEXT,            -- 負面提示詞
+            
+            -- API 參數
+            default_api_params TEXT,         -- JSON: 預設API參數
+            recommended_models TEXT,         -- JSON: 推薦模型列表
+            
+            -- 適用範圍
+            suitable_for TEXT,               -- JSON: 適用場景 ['character', 'scene', 'cover']
+            genre_tags TEXT,                 -- JSON: 流派標籤
+            
+            -- 品質設定
+            quality_preset TEXT DEFAULT 'balanced', -- 'speed', 'balanced', 'quality'
+            resolution_options TEXT,        -- JSON: 支援解析度選項
+            
+            -- 元數據
+            is_default INTEGER DEFAULT 0,   -- 是否為預設模板
+            is_system INTEGER DEFAULT 1,    -- 是否為系統模板
+            usage_count INTEGER DEFAULT 0,  -- 使用次數
+            rating REAL DEFAULT 0.0,        -- 用戶評分
+            
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )",
+        [],
+    )?;
+    
+    // 創建風格模板索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_style_templates_type ON illustration_style_templates (style_type)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_style_templates_rating ON illustration_style_templates (rating DESC)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_style_templates_usage ON illustration_style_templates (usage_count DESC)",
+        [],
+    )?;
+    
+    log::info!("插畫風格模板表創建完成");
+    
+    // 4. 插入預設風格模板
+    let default_templates = vec![
+        (
+            "anime_character",
+            "動漫角色風格",
+            "anime",
+            "anime style, detailed character art, clean lines, vibrant colors, {character_description}, high quality",
+            "blurry, low quality, realistic photo, western cartoon, 3d render"
+        ),
+        (
+            "light_novel_illustration",
+            "輕小說插圖風格", 
+            "anime",
+            "light novel illustration style, detailed anime art, soft shading, beautiful character design, {character_description}, professional artwork",
+            "blurry, low quality, photo realistic, sketch, unfinished"
+        ),
+        (
+            "fantasy_scene",
+            "奇幻場景風格",
+            "fantasy", 
+            "fantasy art style, detailed background, magical atmosphere, cinematic lighting, {scene_description}, concept art quality",
+            "modern, contemporary, realistic photo, low quality, blur"
+        )
+    ];
+    
+    for (id, name, style_type, prompt_template, negative_prompt) in default_templates {
+        conn.execute(
+            "INSERT OR IGNORE INTO illustration_style_templates 
+             (id, name, description, style_type, prompt_template, negative_prompt, 
+              default_api_params, suitable_for, is_default, is_system) 
+             VALUES (?1, ?2, ?2, ?3, ?4, ?5, 
+                     '{\"aspectRatio\":\"1:1\",\"numberOfImages\":1}', 
+                     '[\"character\",\"scene\"]', 1, 1)",
+            params![id, name, style_type, prompt_template, negative_prompt],
+        )?;
+    }
+    
+    log::info!("預設插畫風格模板插入完成");
+    
+    // 5. 創建專案插畫設定表（專案級配置）
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS project_illustration_settings (
+            project_id TEXT PRIMARY KEY,
+            
+            -- 預設風格設定
+            default_style_template_id TEXT,  -- 預設風格模板
+            default_art_style TEXT DEFAULT 'anime', -- 預設藝術風格
+            
+            -- API 設定
+            preferred_api_provider TEXT DEFAULT 'gemini',
+            preferred_model TEXT,
+            api_quota_limit INTEGER DEFAULT 100, -- 每日配額限制
+            api_quota_used INTEGER DEFAULT 0,    -- 已使用配額
+            quota_reset_date DATE,               -- 配額重置日期
+            
+            -- 一致性設定
+            global_consistency_mode TEXT DEFAULT 'seed_reference',
+            auto_seed_generation INTEGER DEFAULT 1, -- 自動生成種子
+            character_consistency_required INTEGER DEFAULT 1, -- 需要角色一致性
+            
+            -- 品質控制
+            min_quality_score REAL DEFAULT 0.6,  -- 最低品質要求
+            auto_retry_failed INTEGER DEFAULT 1, -- 自動重試失敗生成
+            max_retry_count INTEGER DEFAULT 3,   -- 最大重試次數
+            
+            -- 批次設定
+            default_batch_size INTEGER DEFAULT 4, -- 預設批次大小
+            parallel_generation INTEGER DEFAULT 1, -- 並行生成開關
+            
+            -- 存儲設定
+            image_storage_path TEXT,             -- 圖像存儲路徑
+            auto_cleanup_days INTEGER DEFAULT 30, -- 自動清理天數
+            max_storage_size_mb INTEGER DEFAULT 1000, -- 最大存儲限制(MB)
+            
+            -- 元數據
+            total_generations INTEGER DEFAULT 0, -- 總生成次數
+            total_cost REAL DEFAULT 0.0,        -- 總花費
+            last_generation_at TIMESTAMP,       -- 最後生成時間
+            
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
+            FOREIGN KEY (default_style_template_id) REFERENCES illustration_style_templates (id) ON DELETE SET NULL
+        )",
+        [],
+    )?;
+    
+    log::info!("專案插畫設定表創建完成");
+    
+    // 6. 為現有專案插入預設插畫設定
+    conn.execute(
+        "INSERT OR IGNORE INTO project_illustration_settings (project_id, default_style_template_id)
+         SELECT id, 'light_novel_illustration' FROM projects",
+        [],
+    )?;
+    
+    log::info!("現有專案插畫設定初始化完成");
+    log::info!("版本 12 遷移完成：Phase 3 AI插畫生成功能已準備就緒");
     
     Ok(())
 }

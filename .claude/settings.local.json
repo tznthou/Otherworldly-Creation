@@ -129,7 +129,8 @@
       "Bash(installer:*)",
       "Bash(system_profiler:*)",
       "Bash(./genesis-chronicle.app/Contents/MacOS/genesis-chronicle:*)",
-      "Bash(gtimeout:*)"
+      "Bash(gtimeout:*)",
+      "Bash(./scripts/create-pkg.sh:*)"
     ],
     "deny": []
   }

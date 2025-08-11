@@ -168,4 +168,39 @@ export interface API {
     getExports: (projectId: string) => Promise<PDFExportRecord[]>;
     deleteExport: (exportId: string) => Promise<void>;
   };
+
+  // AI 插畫生成
+  illustration: {
+    // 角色一致性管理
+    setupCharacterConsistency: (characterId: string, characterName: string, description: string) => Promise<any>;
+    generateConsistencyReport: (characterId: string, characterName: string, strictMode?: boolean) => Promise<any>;
+    setCharacterSeed: (characterId: string, seedValue: number, reason: string) => Promise<any>;
+    addReferenceImage: (characterId: string, imageUrl: string, imageType: string, tags: string[]) => Promise<any>;
+    getCharacterVisualTraits: (characterId: string) => Promise<any>;
+
+    // 插畫生成
+    generateIllustration: (
+      projectId: string, characterId: string | null, sceneDescription: string,
+      styleTemplateId: string, translationStyle: string, optimizationLevel: string,
+      aspectRatio: string, safetyLevel: string, customNegativePrompt?: string,
+      apiKey?: string
+    ) => Promise<any>;
+    getIllustrationHistory: (projectId: string, characterId?: string, limit?: number, offset?: number) => Promise<any>;
+    cancelGeneration: (taskId: string) => Promise<any>;
+    validateImagenConnection: (apiKey: string) => Promise<any>;
+
+    // 批次管理
+    initializeBatchManager: () => Promise<any>;
+    submitBatchRequest: (name: string, projectId: string, requests: any[], priority: string, maxParallel: number, apiKey: string) => Promise<any>;
+    getBatchStatus: (batchId: string) => Promise<any>;
+    cancelBatch: (batchId: string) => Promise<any>;
+    getAllBatchesSummary: () => Promise<any>;
+    retryFailedTasks: (batchId: string) => Promise<any>;
+    pauseBatch: (batchId: string) => Promise<any>;
+    resumeBatch: (batchId: string) => Promise<any>;
+
+    // 相似度分析
+    calculateSimilarityMatrix: (projectId: string, characterIds: string[]) => Promise<any>;
+    batchCheckConsistency: (projectId: string, strictMode: boolean, minScore: number) => Promise<any>;
+  };
 }

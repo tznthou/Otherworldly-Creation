@@ -4,6 +4,7 @@ import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import ProjectEditor from './pages/ProjectEditor/ProjectEditor';
 import CharacterManager from './pages/CharacterManager/CharacterManager';
+import IllustrationManager from './pages/IllustrationManager/IllustrationManager';
 import Settings from './pages/Settings/Settings';
 import AITest from './pages/AITest';
 import ModalContainer from './components/UI/ModalContainer';
@@ -188,6 +189,7 @@ const AppContent: React.FC = () => {
             } />
             <Route path="/project/:id" element={<ProjectEditor />} />
             <Route path="/characters/:projectId" element={<CharacterManager />} />
+            <Route path="/illustrations/:projectId" element={<IllustrationManager />} />
             {/* 捕捉所有未匹配的路由 */}
             <Route path="*" element={<UnknownPageComponent />} />
           </Routes>

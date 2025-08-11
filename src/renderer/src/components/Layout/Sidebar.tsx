@@ -32,6 +32,13 @@ const Sidebar: React.FC = () => {
       disabled: !currentProject,
     },
     {
+      id: 'illustrations',
+      label: 'AI 插畫',
+      icon: '🎨',
+      path: currentProject ? `/illustrations/${currentProject.id}` : null,
+      disabled: !currentProject,
+    },
+    {
       id: 'statistics',
       label: '創作統計',
       icon: '📊',
@@ -120,7 +127,8 @@ const Sidebar: React.FC = () => {
           {menuItems.map((item) => {
             const isActive = item.path === location.pathname || 
               (item.id === 'editor' && location.pathname.startsWith('/project/')) ||
-              (item.id === 'characters' && location.pathname.startsWith('/characters/'));
+              (item.id === 'characters' && location.pathname.startsWith('/characters/')) ||
+              (item.id === 'illustrations' && location.pathname.startsWith('/illustrations/'));
             
             return (
               <li key={item.id}>

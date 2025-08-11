@@ -27,6 +27,28 @@ use commands::database::{backup_database, restore_database, run_database_mainten
 use commands::ai_history::{create_ai_history, query_ai_history, mark_ai_history_selected, delete_ai_history, cleanup_ai_history};
 use commands::epub::{generate_epub, get_epub_exports, delete_epub_export};
 use commands::pdf::{generate_pdf, get_pdf_exports, delete_pdf_export};
+use commands::illustration::{
+    setup_character_consistency, generate_consistency_report, set_character_seed,
+    add_reference_image, get_character_visual_traits, calculate_character_similarity_matrix,
+    batch_check_project_consistency, generate_batch_seeds, generate_illustration,
+    generate_enhanced_illustration, get_illustration_generation_status,
+    cancel_illustration_generation, validate_imagen_api_connection
+};
+use commands::translation::{
+    translate_character_description, optimize_prompt, search_vocabulary, 
+    get_vocabulary_stats, batch_translate_descriptions
+};
+use commands::prompt_templates::{
+    apply_prompt_template, search_prompt_templates, get_template_categories,
+    get_templates_by_category, get_template_stats, batch_apply_templates,
+    get_popular_templates, get_recommended_templates
+};
+use commands::batch_illustration::{
+    initialize_batch_manager, submit_batch_illustration_request, get_batch_status,
+    cancel_batch, get_batch_queue_statistics, update_batch_manager_config,
+    cleanup_completed_tasks, get_all_batches_summary, retry_failed_tasks,
+    pause_batch, resume_batch
+};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -136,6 +158,47 @@ pub fn run() {
       generate_pdf,
       get_pdf_exports,
       delete_pdf_export,
+      // Illustration commands
+      setup_character_consistency,
+      generate_consistency_report,
+      set_character_seed,
+      add_reference_image,
+      get_character_visual_traits,
+      calculate_character_similarity_matrix,
+      batch_check_project_consistency,
+      generate_batch_seeds,
+      generate_illustration,
+      generate_enhanced_illustration,
+      get_illustration_generation_status,
+      cancel_illustration_generation,
+      validate_imagen_api_connection,
+      // Translation commands
+      translate_character_description,
+      optimize_prompt,
+      search_vocabulary,
+      get_vocabulary_stats,
+      batch_translate_descriptions,
+      // Prompt Template commands
+      apply_prompt_template,
+      search_prompt_templates,
+      get_template_categories,
+      get_templates_by_category,
+      get_template_stats,
+      batch_apply_templates,
+      get_popular_templates,
+      get_recommended_templates,
+      // Batch Illustration commands
+      initialize_batch_manager,
+      submit_batch_illustration_request,
+      get_batch_status,
+      cancel_batch,
+      get_batch_queue_statistics,
+      update_batch_manager_config,
+      cleanup_completed_tasks,
+      get_all_batches_summary,
+      retry_failed_tasks,
+      pause_batch,
+      resume_batch,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
