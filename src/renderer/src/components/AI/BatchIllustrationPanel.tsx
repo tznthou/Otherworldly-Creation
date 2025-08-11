@@ -3,14 +3,12 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { api } from '../../api';
 import { 
-  BatchRequest, 
   BatchStatusReport, 
-  BatchTaskStatus,
   TaskPriority,
-  TaskStatus,
-  EnhancedIllustrationRequest 
+  TaskStatus
 } from '../../types/illustration';
 import { Character } from '../../api/models';
+import CharacterCard from './CharacterCard';
 import CosmicButton from '../UI/CosmicButton';
 import CosmicInput from '../UI/CosmicInput';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -26,9 +24,10 @@ interface BatchIllustrationPanelProps {
 interface BatchRequestItem {
   id: string;
   scene_description: string;
-  character_id?: string;
+  selectedCharacterIds: string[];  // 改為多選陣列
   style_template: string;
   aspect_ratio: string;
+  scene_type: 'portrait' | 'scene' | 'interaction';
 }
 
 const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
@@ -51,14 +50,18 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   const [requests, setRequests] = useState<BatchRequestItem[]>([]);
   const [apiKey, setApiKey] = useState('');
 
+  // 角色選擇狀態
+  const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
+  const [sceneType, setSceneType] = useState<'portrait' | 'scene' | 'interaction'>('portrait');
+
   // 監控狀態
-  const [activeBatches, setActiveBatches] = useState<BatchStatusReport[]>([]);
+  const [_activeBatches, setActiveBatches] = useState<BatchStatusReport[]>([]);
   const [selectedBatchId, setSelectedBatchId] = useState('');
   const [batchDetails, setBatchDetails] = useState<BatchStatusReport | null>(null);
   const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
   // 歷史狀態
-  const [batchHistory, setBatchHistory] = useState<BatchStatusReport[]>([]);
+  const [_batchHistory, _setBatchHistory] = useState<BatchStatusReport[]>([]);
 
   // 獲取項目角色
   const projectCharacters = characters.filter(c => c.projectId === currentProject?.id);
@@ -72,14 +75,59 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     }
   };
 
-  // 添加新請求
+  // 角色選擇處理
+  const toggleCharacterSelection = (characterId: string) => {
+    setSelectedCharacters(prev => 
+      prev.includes(characterId) 
+        ? prev.filter(id => id !== characterId)
+        : [...prev, characterId]
+    );
+  };
+
+  // 生成智能場景描述
+  const generateSceneDescription = (characters: Character[], sceneType: string) => {
+    if (characters.length === 0) return '';
+    
+    let description = '';
+    
+    switch (sceneType) {
+      case 'portrait': {
+        const char = characters[0];
+        description = `${char.name}的精美肖像，`;
+        if (char.appearance) description += `${char.appearance}，`;
+        if (char.personality) description += `展現${char.personality}的特質`;
+        break;
+      }
+        
+      case 'interaction': {
+        description = `${characters.map(c => c.name).join('和')}的互動場景，`;
+        description += '自然的對話氛圍，細膩的表情刻畫';
+        break;
+      }
+        
+      case 'scene': {
+        description = `${characters.map(c => c.name).join('、')}在環境中的場景，`;
+        description += '豐富的背景細節，氛圍營造';
+        break;
+      }
+    }
+    
+    return description;
+  };
+
+  // 添加新請求 (基於選中角色)
   const addRequest = () => {
+    const selectedChars = selectedCharacters.map(id => 
+      projectCharacters.find(c => c.id === id)
+    ).filter(Boolean) as Character[];
+
     const newRequest: BatchRequestItem = {
       id: Date.now().toString(),
-      scene_description: '',
-      character_id: '',
-      style_template: 'anime-portrait',
-      aspect_ratio: 'square'
+      scene_description: generateSceneDescription(selectedChars, sceneType),
+      selectedCharacterIds: [...selectedCharacters],
+      style_template: sceneType === 'portrait' ? 'anime-portrait' : 'fantasy-scene',
+      aspect_ratio: 'square',
+      scene_type: sceneType
     };
     setRequests([...requests, newRequest]);
   };
@@ -90,7 +138,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   };
 
   // 更新請求
-  const updateRequest = (id: string, field: keyof BatchRequestItem, value: string) => {
+  const updateRequest = (id: string, field: keyof BatchRequestItem, value: string | string[]) => {
     setRequests(requests.map(req => 
       req.id === id ? { ...req, [field]: value } : req
     ));
@@ -132,11 +180,22 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       // 轉換為 API 格式
       const apiRequests = requests.map(req => ({
         project_id: currentProject.id,
-        character_id: req.character_id || null,
+        character_id: req.selectedCharacterIds.length > 0 ? req.selectedCharacterIds[0] : null,
         scene_description: req.scene_description,
         style_template_id: req.style_template,
-        custom_style_params: null,
-        use_reference_image: !!req.character_id,
+        custom_style_params: {
+          scene_type: req.scene_type,
+          characters: req.selectedCharacterIds.map(id => {
+            const char = projectCharacters.find(c => c.id === id);
+            return char ? {
+              id: char.id,
+              name: char.name,
+              appearance: char.appearance,
+              personality: char.personality
+            } : null;
+          }).filter(Boolean)
+        },
+        use_reference_image: req.selectedCharacterIds.length > 0,
         quality_preset: 'balanced',
         batch_size: 1
       }));
@@ -157,6 +216,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         setBatchName('');
         setBatchDescription('');
         setRequests([]);
+        setSelectedCharacters([]);
         
         // 切換到監控標籤
         setActiveTab('monitor');
@@ -304,7 +364,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   };
 
   // 獲取狀態顏色
-  const getStatusColor = (status: TaskStatus) => {
+  const _getStatusColor = (status: TaskStatus) => {
     switch (status) {
       case TaskStatus.Completed: return 'text-green-400';
       case TaskStatus.Running: return 'text-blue-400';
@@ -353,7 +413,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       clearInterval(refreshInterval);
       setRefreshInterval(null);
     }
-  }, [activeTab, selectedBatchId]);
+  }, [activeTab, selectedBatchId, refreshInterval]);
 
   return (
     <div className={`batch-illustration-panel ${className}`}>
@@ -468,6 +528,99 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
               </div>
             </div>
 
+            {/* 角色選擇區域 */}
+            <div className="bg-gray-800 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-white mb-4">
+                🎭 選擇角色 ({selectedCharacters.length} 已選擇)
+              </h3>
+              
+              <div className="character-grid grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+                {projectCharacters.map(character => (
+                  <CharacterCard
+                    key={character.id}
+                    character={character}
+                    selected={selectedCharacters.includes(character.id)}
+                    onSelect={toggleCharacterSelection}
+                    showDetails={true}
+                  />
+                ))}
+                
+                {projectCharacters.length === 0 && (
+                  <div className="col-span-full text-center py-8 text-gray-400">
+                    <p>此專案還沒有角色</p>
+                    <p className="text-sm mt-2">請先到角色管理頁面創建角色</p>
+                  </div>
+                )}
+              </div>
+
+              {/* 場景類型選擇 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  場景類型
+                </label>
+                <div className="flex space-x-2">
+                  {[
+                    { value: 'portrait', label: '🎭 角色肖像', desc: '單一角色精美肖像' },
+                    { value: 'interaction', label: '💬 角色互動', desc: '多角色對話場景' },
+                    { value: 'scene', label: '🏰 環境場景', desc: '角色在特定環境中' }
+                  ].map(type => (
+                    <button
+                      key={type.value}
+                      onClick={() => setSceneType(type.value as any)}
+                      className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                        sceneType === type.value
+                          ? 'border-gold-500 bg-gold-500/10 text-gold-400'
+                          : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="text-sm font-medium">{type.label}</div>
+                        <div className="text-xs opacity-75">{type.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 智能建議按鈕 */}
+              {selectedCharacters.length > 0 && (
+                <div className="flex space-x-2">
+                  <CosmicButton
+                    onClick={addRequest}
+                    variant="secondary"
+                    size="small"
+                    disabled={selectedCharacters.length === 0}
+                  >
+                    ✨ 基於選中角色生成請求
+                  </CosmicButton>
+                  
+                  <CosmicButton
+                    onClick={() => {
+                      // 為每個角色單獨生成肖像請求
+                      selectedCharacters.forEach(charId => {
+                        const char = projectCharacters.find(c => c.id === charId);
+                        if (char) {
+                          const portraitRequest: BatchRequestItem = {
+                            id: `${Date.now()}-${charId}`,
+                            scene_description: `${char.name}的精美角色肖像，${char.appearance || ''}，展現個性特質`,
+                            selectedCharacterIds: [charId],
+                            style_template: 'anime-portrait',
+                            aspect_ratio: 'square',
+                            scene_type: 'portrait'
+                          };
+                          setRequests(prev => [...prev, portraitRequest]);
+                        }
+                      });
+                    }}
+                    variant="secondary"
+                    size="small"
+                  >
+                    🎨 為每個角色生成肖像
+                  </CosmicButton>
+                </div>
+              )}
+            </div>
+
             {/* 請求列表 */}
             <div className="bg-gray-800 p-4 rounded-lg">
               <div className="flex items-center justify-between mb-4">
@@ -493,6 +646,26 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                       </CosmicButton>
                     </div>
 
+                    {/* 關聯角色顯示 */}
+                    {request.selectedCharacterIds && request.selectedCharacterIds.length > 0 && (
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          關聯角色
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {request.selectedCharacterIds.map(charId => {
+                            const character = projectCharacters.find(c => c.id === charId);
+                            return character ? (
+                              <span key={charId} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gold-600/20 text-gold-300 border border-gold-600/30">
+                                <span className="mr-1">{character.archetype?.includes('魔法') ? '🧙' : '👤'}</span>
+                                {character.name}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -502,26 +675,23 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                           value={request.scene_description}
                           onChange={(e) => updateRequest(request.id, 'scene_description', e.target.value)}
                           placeholder="請描述要生成的插畫場景"
-                          rows={2}
+                          rows={3}
                           className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                          關聯角色
+                          場景類型
                         </label>
                         <select
-                          value={request.character_id || ''}
-                          onChange={(e) => updateRequest(request.id, 'character_id', e.target.value)}
+                          value={request.scene_type}
+                          onChange={(e) => updateRequest(request.id, 'scene_type', e.target.value)}
                           className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                         >
-                          <option value="">不選擇角色</option>
-                          {projectCharacters.map(character => (
-                            <option key={character.id} value={character.id}>
-                              {character.name}
-                            </option>
-                          ))}
+                          <option value="portrait">🎭 角色肖像</option>
+                          <option value="interaction">💬 角色互動</option>
+                          <option value="scene">🏰 環境場景</option>
                         </select>
                       </div>
 
@@ -564,7 +734,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
               >
                 {isProcessing ? (
                   <div className="flex items-center space-x-2">
-                    <LoadingSpinner size="sm" />
+                    <LoadingSpinner size="small" />
                     <span>提交中...</span>
                   </div>
                 ) : (

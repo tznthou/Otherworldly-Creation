@@ -91,22 +91,14 @@ const QuickActions: React.FC = () => {
       },
     },
 
-    // 規劃中功能 - 來自 README.md
     {
       id: 'ai-illustration',
       title: '🎨 幻想具現',
       description: 'AI 插畫生成 - 角色插畫、場景插畫、封面設計',
       icon: '🖼️',
       color: 'from-pink-500 to-rose-600',
-      isPlanned: true, // 標記為規劃中功能
       action: () => {
-        // TODO: 實現 AI 插畫生成功能
-        alert(`功能開發中：AI 插畫生成系統即將推出！
-
-✨ 計劃功能：
-• 角色插畫生成
-• 場景插畫創作
-• 專業封面設計`);
+        dispatch(openModal('aiIllustration'));
       },
     },
     {

@@ -109,7 +109,7 @@ const IllustrationManager: React.FC<IllustrationManagerProps> = () => {
           <CosmicButton
             onClick={() => navigate('/')}
             variant="secondary"
-            size="sm"
+            size="small"
           >
             返回總覽
           </CosmicButton>

@@ -463,7 +463,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
         {/* 載入狀態 */}
         {isLoading && (
           <div className="flex justify-center py-8">
-            <LoadingSpinner size="lg" />
+            <LoadingSpinner size="large" />
           </div>
         )}
 
@@ -662,7 +662,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   variant="secondary"
-                  size="sm"
+                  size="small"
                 >
                   ←
                 </CosmicButton>
@@ -675,7 +675,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   variant="secondary"
-                  size="sm"
+                  size="small"
                 >
                   →
                 </CosmicButton>
@@ -717,7 +717,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                   <CosmicButton
                     onClick={() => setSelectedIllustration(null)}
                     variant="secondary"
-                    size="sm"
+                    size="small"
                   >
                     ✕
                   </CosmicButton>

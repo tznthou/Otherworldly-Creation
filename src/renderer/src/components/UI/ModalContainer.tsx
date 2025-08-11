@@ -17,6 +17,7 @@ import HelpCenterModal from '../Modals/HelpCenterModal';
 import UpdateManagerModal from '../Modals/UpdateManagerModal';
 import EPubGenerationModal from '../Modals/EPubGenerationModal';
 import PDFGenerationModal from '../Modals/PDFGenerationModal';
+import AiIllustrationModal from '../Modals/AiIllustrationModal';
 
 const ModalContainer: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -69,6 +70,7 @@ const ModalContainer: React.FC = () => {
       {modals.updateManager && <UpdateManagerModal />}
       {modals.epubGeneration && <EPubGenerationModal />}
       {modals.pdfGeneration && <PDFGenerationModal />}
+      {modals.aiIllustration && <AiIllustrationModal />}
     </>
   );
 };

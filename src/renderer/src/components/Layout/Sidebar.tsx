@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
-import { toggleSidebar } from '../../store/slices/uiSlice';
+import { toggleSidebar, openModal } from '../../store/slices/uiSlice';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -10,7 +10,16 @@ const Sidebar: React.FC = () => {
   const { sidebarCollapsed } = useAppSelector(state => state.ui);
   const { currentProject } = useAppSelector(state => state.projects);
 
-  const menuItems = [
+  interface MenuItem {
+    id: string;
+    label: string;
+    icon: string;
+    path?: string | null;
+    disabled?: boolean;
+    isModal?: boolean;
+  }
+
+  const menuItems: MenuItem[] = [
     {
       id: 'dashboard',
       label: '專案總覽',
@@ -35,7 +44,7 @@ const Sidebar: React.FC = () => {
       id: 'illustrations',
       label: 'AI 插畫',
       icon: '🎨',
-      path: currentProject ? `/illustrations/${currentProject.id}` : null,
+      isModal: true,
       disabled: !currentProject,
     },
     {
@@ -125,10 +134,11 @@ const Sidebar: React.FC = () => {
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
-            const isActive = item.path === location.pathname || 
+            const isActive = !item.isModal && (
+              item.path === location.pathname || 
               (item.id === 'editor' && location.pathname.startsWith('/project/')) ||
-              (item.id === 'characters' && location.pathname.startsWith('/characters/')) ||
-              (item.id === 'illustrations' && location.pathname.startsWith('/illustrations/'));
+              (item.id === 'characters' && location.pathname.startsWith('/characters/'))
+            );
             
             return (
               <li key={item.id}>
@@ -138,7 +148,12 @@ const Sidebar: React.FC = () => {
                     e.stopPropagation();
                     console.log(`Sidebar: 點擊了 ${item.label}，路徑:`, item.path, '禁用狀態:', item.disabled);
                     if (!item.disabled) {
-                      handleNavigation(item.path);
+                      if (item.isModal && item.id === 'illustrations') {
+                        // 打開 AI 插畫 modal
+                        dispatch(openModal('aiIllustration'));
+                      } else {
+                        handleNavigation(item.path || null);
+                      }
                     } else {
                       console.log(`Sidebar: ${item.label} 被禁用，無法導航`);
                     }

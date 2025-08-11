@@ -539,8 +539,14 @@ const ProjectEditorContent: React.FC = () => {
           <div className="w-96 border-l border-cosmic-700 flex-shrink-0 overflow-y-auto" style={{ minWidth: '384px' }}>
             <CharacterAnalysisPanel
               projectId={id}
-              chapters={chapters}
-              currentChapter={currentChapter}
+              chapters={chapters.map(chapter => ({
+                ...chapter,
+                content: JSON.stringify(chapter.content)
+              }))}
+              currentChapter={currentChapter ? {
+                ...currentChapter,
+                content: JSON.stringify(currentChapter.content)
+              } : null}
               _onSuggestionApply={(suggestion: any) => {
                 notification.info('建議應用', `正在應用建議：${suggestion}`);
                 // 這裡可以添加具體的建議應用邏輯

@@ -529,8 +529,8 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                       ...formData,
                       id: character?.id || '',
                       projectId,
-                      createdAt: character?.createdAt || new Date(),
-                      updatedAt: character?.updatedAt || new Date(),
+                      createdAt: character?.createdAt || new Date().toISOString(),
+                      updatedAt: character?.updatedAt || new Date().toISOString(),
                     }}
                     allCharacters={allCharacters}
                     onSave={handleRelationshipSave}

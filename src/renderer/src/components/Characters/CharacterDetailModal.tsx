@@ -159,12 +159,12 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
               <div>
                 <span className="font-medium">創建時間:</span>
                 <br />
-                {character.createdAt.toLocaleString('zh-TW')}
+                {new Date(character.createdAt).toLocaleString('zh-TW')}
               </div>
               <div>
                 <span className="font-medium">更新時間:</span>
                 <br />
-                {character.updatedAt.toLocaleString('zh-TW')}
+                {new Date(character.updatedAt).toLocaleString('zh-TW')}
               </div>
             </div>
           </div>

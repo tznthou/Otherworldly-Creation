@@ -96,8 +96,8 @@ describe('CharacterModal', () => {
       appearance: '黑髮藍眼',
       personality: '勇敢正直',
       background: '普通高中生',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     render(<CharacterModal {...defaultProps} character={character} />);

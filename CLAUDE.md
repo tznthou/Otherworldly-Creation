@@ -118,6 +118,13 @@ Frontend (`src/renderer/src/api/tauri.ts`) → Tauri IPC → Rust handlers (`src
 - **NLP**: `src/renderer/src/utils/nlpUtils.ts` with Compromise.js
 - **Features**: Chinese dialogue extraction, Big Five personality analysis, consistency detection
 
+### AI Illustration System
+- **Main Panel**: `src/renderer/src/components/AI/BatchIllustrationPanel.tsx` - Batch illustration generation
+- **Character Integration**: `src/renderer/src/components/AI/CharacterCard.tsx` - Visual character selection
+- **Modal System**: `src/renderer/src/components/Modals/AiIllustrationModal.tsx` - Modal wrapper
+- **Access**: Dashboard → "幻想具現" card OR Sidebar → "AI 插畫" (both open modal)
+- **Features**: Multi-character selection, intelligent scene suggestions, batch portrait generation
+
 ### Export System
 - **EPUB**: `src-tauri/src/commands/epub.rs` - Slate.js to XHTML, ZIP structure
 - **PDF**: `src-tauri/src/commands/pdf.rs` - Embedded Noto Sans TC font (7.1MB)
@@ -137,6 +144,20 @@ const dispatch = useDispatch<AppDispatch>();
 // API layer handles JSON parsing
 const chapters = await api.chapters.getByProjectId(projectId);
 return chapters; // Already parsed
+
+// Modal system
+dispatch(openModal('aiIllustration')); // Open AI illustration modal
+dispatch(closeModal('aiIllustration')); // Close modal
+
+// Character selection state
+const [selectedCharacterIds, setSelectedCharacterIds] = useState<string[]>([]);
+const toggleCharacterSelection = (characterId: string) => {
+  setSelectedCharacterIds(prev => 
+    prev.includes(characterId) 
+      ? prev.filter(id => id !== characterId)
+      : [...prev, characterId]
+  );
+};
 ```
 
 ## Critical Development Rules
@@ -153,6 +174,9 @@ return chapters; // Already parsed
 10. **Naming**: Use `#[allow(non_snake_case)]` for Tauri camelCase compatibility
 11. **macOS Icons**: Use `killall Dock && killall Finder` after icon updates
 12. **Distribution**: Use PKG format for macOS (bypasses quarantine)
+13. **Modal System**: Use `dispatch(openModal('modalName'))` for modal opening, never direct navigation
+14. **Character Selection**: Preserve multi-character selection state with arrays, not single IDs
+15. **Component Remounting**: Use unique keys for components that need state reset (e.g., `key={editor-${id}}`)
 
 ## GitHub Actions & CI/CD
 
@@ -168,6 +192,9 @@ PKG generation automatically handles macOS quarantine attributes for seamless in
 - Button not clickable: Check `z-50` overlay blocking
 - Menu component: Don't add onClick to trigger button
 - Long model names: Auto-truncate after 30 chars
+- Modal overlap: Use `ml-64` margin to account for sidebar (320px width)
+- Navigation 404: Use modal system instead of routes for feature panels
+- Character cards: Use visual selection with `ring-2 ring-gold-500` for selected state
 
 ### AI Generation
 - Ollama: Ensure service at `http://127.0.0.1:11434`

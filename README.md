@@ -23,9 +23,9 @@
 ## 🚀 開發狀態
 
 **當前版本：v1.0.4 - 完整 PKG 發佈版本** - 2025年8月11日更新  
-**最新功能：🍎 macOS PKG 安裝程式 + 📚 PDF/EPUB 雙格式匯出 + 🧠 劇情分析引擎 + 👥 角色對話提取器 ✨**
+**最新功能：🍎 macOS PKG 安裝程式 + 📚 PDF/EPUB 雙格式匯出 + 🧠 劇情分析引擎 + 👥 角色對話提取器 + 🎨 AI插畫角色整合系統 ✨**
 
-### 📊 系統狀態 (2025-08-11 01:32 CST)
+### 📊 系統狀態 (2025-08-11 22:36 CST)
 - **架構**：Tauri v2.7.0 + Rust 後端 + React 前端
 - **系統環境**：macOS Darwin 24.6.0 (arm64), Node.js v22.16.0, Rust v1.88.0
 - **AI 引擎**：🎯 **企業級多供應商AI系統** - 5大主流供應商 + 開放API架構，支援任何LLM整合 ✅
@@ -35,7 +35,7 @@
 - **性能**：啟動速度提升 300%，記憶體使用減少 70% ⚡
 - **體積**：應用程式體積減少 90% 📦
 - **程式碼品質**：✅ Rust: Clean | ✅ TypeScript: 0 errors | ✅ ESLint: 0 warnings (完美狀態) 
-- **總程式碼行數**：121,095行 (TypeScript/JavaScript: 67,393行, 文檔: 33,973行, JSON: 19,729行) - 2025-08-11 15:58更新
+- **總程式碼行數**：560,198行 (Rust: 268,526行, TypeScript/JavaScript: 69,209行, 文檔: 202,449行, JSON: 20,014行) - 2025-08-11 22:36更新
 - **重大里程碑**：🏆 **發佈系統完成** - PKG 自動化生成 + PDF/EPUB 完整匯出 + 劇情分析引擎 (2025-08-11 01:32)
 
 ### ✅ 已完成功能
@@ -51,6 +51,7 @@
 - 📊 **創作統計**：完整統計系統，專案統計、整體統計、趨勢分析三大模組，金色滾動軸視覺體驗
 - 💾 **資料管理**：SQLite 資料庫 (v11)，支援備份還原和資料庫維護
 - 🎨 **星空主題**：深藍色星空背景配金色魔法陣的動漫風格界面
+- 🎭 **AI插畫角色整合**：視覺化角色選擇、多角色場景生成、智能場景建議系統
 - 🧪 **完整測試**：單元測試、整合測試、性能測試全覆蓋
 
 ## 📦 安裝說明
@@ -78,6 +79,10 @@
 ### v1.0.4 (2025-08-11) - PKG 發佈系統完成
 - 🍎 **macOS PKG 安裝程式**：完整實現自動生成與 quarantine 繞過
 - 📚 **PDF 匯出系統**：嵌入 7.1MB Noto Sans TC 中文字型，跨平台兼容
+- 🎨 **AI插畫角色整合系統**：視覺化角色選擇、多角色場景生成、智能場景建議
+  - **CharacterCard 組件**：emoji 頭像、角色類型標籤、多選狀態管理
+  - **BatchIllustrationPanel**：角色整合、場景類型選擇、批量生成支援
+  - **Modal 系統優化**：避免 sidebar 重疊、統一 modal 開啟機制
 - 🔧 **版本統一**：package.json, Cargo.toml, tauri.conf.json 全部同步至 v1.0.4
 - 🛠️ **PKG 腳本優化**：修復臨時目錄結構，避免 tar.gz 問題
 - 📖 **文檔完善**：MACOS_PKG_BYPASS_GUIDE.md 完整手冊，CLAUDE.md 架構更新
@@ -485,7 +490,11 @@ cargo check
 │           │   ├── AI/               # AI 相關組件
 │           │   │   ├── AIGenerationProgress.tsx  # AI 生成進度顯示
 │           │   │   ├── AIHistoryPanel.tsx        # AI 生成歷史面板
-│           │   │   └── PlotAnalysisPanel.tsx     # 劇情分析面板 (445行)
+│           │   │   ├── PlotAnalysisPanel.tsx     # 劇情分析面板
+│           │   │   ├── CharacterAnalysisPanel.tsx # 角色分析面板
+│           │   │   ├── BatchIllustrationPanel.tsx # 批量插畫生成面板
+│           │   │   ├── CharacterCard.tsx         # 角色選擇卡片組件
+│           │   │   └── IllustrationGenerationPanel.tsx # 插畫生成面板
 │           │   ├── Editor/           # 編輯器組件
 │           │   │   ├── SimpleAIWritingPanel.tsx  # AI 續寫面板（智能優化）
 │           │   │   ├── SlateEditor.tsx           # Slate.js 富文本編輯器
@@ -504,6 +513,8 @@ cargo check
 │           │   │   └── ...           # 其他UI組件
 │           │   ├── Modals/           # 模態框組件
 │           │   │   ├── EPubGenerationModal.tsx    # EPUB生成模態框
+│           │   │   ├── PDFGenerationModal.tsx     # PDF生成模態框
+│           │   │   ├── AiIllustrationModal.tsx    # AI插畫生成模態框
 │           │   │   ├── SelectProjectForPlotAnalysisModal.tsx  # 劇情分析專案選擇
 │           │   │   └── ...           # 其他模態框組件
 │           │   └── ...               # 其他組件目錄

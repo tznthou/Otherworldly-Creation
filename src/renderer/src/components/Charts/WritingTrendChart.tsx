@@ -125,10 +125,11 @@ const WritingTrendChart: React.FC<WritingTrendChartProps> = ({
             size: 11,
           },
           callback: function(value: number | string) {
+            const numValue = typeof value === 'number' ? value : parseFloat(value.toString());
             if (type === 'words') {
-              return `${value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}`;
+              return `${numValue >= 1000 ? `${(numValue / 1000).toFixed(1)}K` : numValue}`;
             } else {
-              return `${value}min`;
+              return `${numValue}min`;
             }
           }
         },

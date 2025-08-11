@@ -90,7 +90,7 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
       
       updateStatus({ 
         status: 'saved', 
-        lastSaved: now,
+        lastSaved: new Date(now),
         error: null 
       });
       

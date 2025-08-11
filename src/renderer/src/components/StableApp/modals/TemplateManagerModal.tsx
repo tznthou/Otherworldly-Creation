@@ -28,8 +28,8 @@ const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({ isOpen, onC
         type: template.type as 'isekai' | 'school' | 'scifi' | 'fantasy', // 明確指定類型轉換
         description: template.description,
         version: '1.0.0',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         worldSetting: {
           era: 'modern',
           technology: 'contemporary',

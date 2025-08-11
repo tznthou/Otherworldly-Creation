@@ -122,7 +122,8 @@ const MonthlyStatsChart: React.FC<MonthlyStatsChartProps> = ({
             size: 11,
           },
           callback: function(value: number | string) {
-            return `${value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}`;
+            const numValue = typeof value === 'number' ? value : parseFloat(value.toString());
+            return `${numValue >= 1000 ? `${(numValue / 1000).toFixed(1)}K` : numValue}`;
           }
         },
         title: {

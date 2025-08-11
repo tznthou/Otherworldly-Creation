@@ -187,17 +187,17 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-300">衝突點</span>
-                      <Badge variant="outline">{analysis.conflicts.length}</Badge>
+                      <Badge variant="secondary">{analysis.conflicts.length}</Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-300">節奏評分</span>
-                      <Badge variant="outline" className={getPaceColor(analysis.pace.overallPace)}>
+                      <Badge variant="secondary" className={getPaceColor(analysis.pace.overallPace)}>
                         {analysis.pace.paceScore}/10
                       </Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-300">伏筆設置</span>
-                      <Badge variant="outline">{analysis.foreshadowing.setups.length}</Badge>
+                      <Badge variant="secondary">{analysis.foreshadowing.setups.length}</Badge>
                     </div>
                   </div>
                 </div>
@@ -229,7 +229,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
                           <div className="flex items-center space-x-2 mb-2">
                             <div className={`w-3 h-3 rounded-full ${getConflictIntensityColor(conflict.intensity)}`} />
                             <span className="font-medium text-gold-300">{conflict.description}</span>
-                            <Badge variant="outline" className="text-xs">強度 {conflict.intensity}/10</Badge>
+                            <Badge variant="secondary" className="text-xs">強度 {conflict.intensity}/10</Badge>
                           </div>
                           <div className="text-gray-300 text-sm mb-2">"{conflict.context}"</div>
                           <div className="flex flex-wrap gap-1">
@@ -361,7 +361,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
                             <Badge 
-                              variant={suggestion.priority === 'high' ? 'destructive' : suggestion.priority === 'medium' ? 'warning' : 'secondary'}
+                              variant={suggestion.priority === 'high' ? 'destructive' : suggestion.priority === 'medium' ? 'secondary' : 'secondary'}
                               className="text-xs"
                             >
                               {suggestion.priority === 'high' ? '高優先級' : suggestion.priority === 'medium' ? '中優先級' : '低優先級'}
@@ -372,11 +372,11 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
                           <div className="text-blue-300 text-sm mb-2">💡 建議: {suggestion.suggestion}</div>
                           <div className="text-green-300 text-xs">📈 預期效果: {suggestion.impact}</div>
                         </div>
-                        {onSuggestionApply && (
+                        {_onSuggestionApply && (
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => onSuggestionApply(suggestion)}
+                            variant="secondary"
+                            onClick={() => _onSuggestionApply(suggestion)}
                             className="ml-4"
                           >
                             應用建議
