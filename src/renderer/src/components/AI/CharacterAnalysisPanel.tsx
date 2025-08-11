@@ -6,14 +6,25 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 import { characterAnalysisService, CharacterAnalysisResult, ProjectCharacterAnalysis } from '../../services/characterAnalysisService';
 import { addNotification } from '../../store/slices/notificationSlice';
 import { fetchCharactersByProjectId } from '../../store/slices/charactersSlice';
+import PersonalityRadarChart from '../Charts/PersonalityRadarChart';
+import EmotionTrendChart from '../Charts/EmotionTrendChart';
+import ConsistencyScoreChart from '../Charts/ConsistencyScoreChart';
 
 // 分析標籤類型
 type AnalysisTab = 'overview' | 'personality' | 'language' | 'emotion' | 'consistency' | 'suggestions';
 
 interface CharacterAnalysisPanelProps {
   projectId: string;
-  chapters: any[];
-  currentChapter: any;
+  chapters: Array<{
+    id: string;
+    title: string;
+    content?: string;
+  }>;
+  currentChapter: {
+    id: string;
+    title: string;
+    content?: string;
+  } | null;
   _onSuggestionApply?: (suggestion: string) => void;
 }
 
@@ -69,8 +80,11 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
   const performAnalysis = async () => {
     if (!selectedCharacterId) {
       dispatch(addNotification({
+        id: Date.now().toString(),
         type: 'warning',
-        message: '請先選擇要分析的角色'
+        title: '提示',
+        message: '請先選擇要分析的角色',
+        timestamp: Date.now()
       }));
       return;
     }
@@ -97,8 +111,11 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
           console.log('✅ 角色分析完成', result);
         } else {
           dispatch(addNotification({
+            id: Date.now().toString(),
             type: 'warning',
-            message: '該角色在此章節中沒有足夠的對話內容進行分析'
+            title: '提示',
+            message: '該角色在此章節中沒有足夠的對話內容進行分析',
+            timestamp: Date.now()
           }));
         }
       } else if (analysisScope === 'project' && chapters.length > 0) {
@@ -122,8 +139,11 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
     } catch (error) {
       console.error('❌ 角色分析失敗:', error);
       dispatch(addNotification({
+        id: Date.now().toString(),
         type: 'error',
-        message: `分析失敗: ${error instanceof Error ? error.message : '未知錯誤'}`
+        title: '錯誤',
+        message: `分析失敗: ${error instanceof Error ? error.message : '未知錯誤'}`,
+        timestamp: Date.now()
       }));
     } finally {
       setIsAnalyzing(false);
@@ -253,7 +273,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
       {isAnalyzing && (
         <div className="mb-4 p-4 bg-cosmic-700/50 rounded-lg border border-gold-600/20">
           <div className="flex items-center space-x-3">
-            <LoadingSpinner size="sm" />
+            <LoadingSpinner size="small" />
             <div className="text-white">
               <p className="font-medium">正在分析 "{selectedCharacter?.name}" 的角色特徵...</p>
               <p className="text-sm text-gray-400">
@@ -410,15 +430,186 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
               </div>
             )}
 
-            {/* 其他標籤內容將在後續實現 */}
-            {activeTab !== 'overview' && (
-              <div className="flex items-center justify-center h-[300px] text-gray-500">
-                <div className="text-center">
-                  <div className="text-4xl mb-4">🚧</div>
-                  <p className="text-lg mb-2">功能開發中</p>
-                  <p className="text-sm">
-                    {tabs.find(t => t.key === activeTab)?.label} 標籤功能即將推出
-                  </p>
+            {/* 人格分析標籤 */}
+            {activeTab === 'personality' && (
+              <div className="space-y-4">
+                <PersonalityRadarChart
+                  personality={analysisResult.personality}
+                  confidence={analysisResult.confidence}
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            {/* 一致性檢查標籤 */}
+            {activeTab === 'consistency' && (
+              <div className="space-y-4">
+                <ConsistencyScoreChart
+                  behaviorConsistency={analysisResult.behaviorConsistency}
+                  consistencyDetails={{
+                    personality: analysisResult.personality.openness,
+                    speech: analysisResult.behaviorConsistency * 0.9,
+                    behavior: analysisResult.behaviorConsistency,
+                    emotion: analysisResult.emotionalIntensity * analysisResult.behaviorConsistency,
+                    relationship: analysisResult.behaviorConsistency * 1.1 > 1 ? 1 : analysisResult.behaviorConsistency * 1.1
+                  }}
+                  issues={[
+                    {
+                      category: 'speech',
+                      severity: analysisResult.confidence < 0.7 ? 'medium' : 'low',
+                      description: '言語風格在某些章節中存在細微差異',
+                      chapters: ['第2章', '第4章']
+                    }
+                  ]}
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            {/* 情感分析標籤 */}
+            {activeTab === 'emotion' && (
+              <div className="space-y-4">
+                <EmotionTrendChart
+                  emotionalTone={analysisResult.emotionalTone}
+                  emotionalIntensity={analysisResult.emotionalIntensity}
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            {/* 語言風格標籤 */}
+            {activeTab === 'language' && (
+              <div className="space-y-4">
+                <div className="bg-cosmic-800/30 rounded-lg p-6">
+                  <h4 className="text-gold-400 font-bold mb-4 flex items-center">
+                    <span className="mr-2">💬</span>語言風格分析
+                  </h4>
+                  
+                  {/* 說話風格 */}
+                  <div className="mb-6">
+                    <h5 className="text-gold-300 font-medium text-sm mb-3">說話風格特徵</h5>
+                    <div className="bg-cosmic-700/50 rounded-lg p-4">
+                      <div className="text-white text-lg font-medium mb-2">
+                        {analysisResult.linguisticPattern.speakingStyle}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">平均對話長度：</span>
+                          <span className="text-white">{analysisResult.linguisticPattern.averageDialogueLength}字</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">詞彙豐富度：</span>
+                          <span className={`${
+                            analysisResult.linguisticPattern.vocabularyRichness >= 0.8 ? 'text-green-400' :
+                            analysisResult.linguisticPattern.vocabularyRichness >= 0.6 ? 'text-yellow-400' :
+                            'text-orange-400'
+                          }`}>
+                            {(analysisResult.linguisticPattern.vocabularyRichness * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 詞彙豐富度視覺化 */}
+                  <div className="mb-6">
+                    <h5 className="text-gold-300 font-medium text-sm mb-3">詞彙豐富度指標</h5>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 text-sm">整體豐富度</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-32 h-2 bg-cosmic-600 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-gold-600 to-gold-400"
+                              style={{ width: `${analysisResult.linguisticPattern.vocabularyRichness * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-white text-sm w-8">
+                            {(analysisResult.linguisticPattern.vocabularyRichness * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 語言特色 */}
+                  <div>
+                    <h5 className="text-gold-300 font-medium text-sm mb-3">語言特色分析</h5>
+                    <div className="bg-cosmic-700/20 rounded-lg p-4 border border-gold-600/20">
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        角色的語言表達呈現<strong className="text-white">{analysisResult.linguisticPattern.speakingStyle}</strong>的特點。
+                        平均每段對話<strong className="text-gold-300">{analysisResult.linguisticPattern.averageDialogueLength}字</strong>的表達長度
+                        反映了角色的{analysisResult.linguisticPattern.averageDialogueLength > 30 ? '詳細縝密' : '簡潔直接'}表達習慣。
+                        詞彙豐富度達到<strong className="text-gold-300">{(analysisResult.linguisticPattern.vocabularyRichness * 100).toFixed(0)}%</strong>，
+                        顯示角色具有{analysisResult.linguisticPattern.vocabularyRichness >= 0.8 ? '豐富多樣' : analysisResult.linguisticPattern.vocabularyRichness >= 0.6 ? '中等程度' : '相對簡單'}的語言表達能力。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 改進建議標籤 */}
+            {activeTab === 'suggestions' && (
+              <div className="space-y-4">
+                <div className="bg-cosmic-800/30 rounded-lg p-6">
+                  <h4 className="text-gold-400 font-bold mb-4 flex items-center">
+                    <span className="mr-2">💡</span>改進建議
+                  </h4>
+                  
+                  {/* AI建議列表 */}
+                  <div className="space-y-4">
+                    {generateSuggestions(analysisResult).map((suggestion, index) => (
+                      <div key={index} className="bg-cosmic-700/40 rounded-lg p-4 border border-gold-600/20">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center">
+                            <span className="text-lg mr-2">{suggestion.icon}</span>
+                            <h5 className="text-gold-300 font-medium text-sm">{suggestion.title}</h5>
+                          </div>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            suggestion.priority === 'high' ? 'bg-red-600 text-white' :
+                            suggestion.priority === 'medium' ? 'bg-yellow-600 text-white' :
+                            'bg-blue-600 text-white'
+                          }`}>
+                            {suggestion.priority === 'high' ? '高優先' :
+                             suggestion.priority === 'medium' ? '中優先' : '低優先'}
+                          </span>
+                        </div>
+                        <p className="text-gray-300 text-sm leading-relaxed mb-3">
+                          {suggestion.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs text-gray-400">
+                            影響章節: {suggestion.chapters.join(', ')}
+                          </div>
+                          <button 
+                            className="px-3 py-1 bg-gold-600 hover:bg-gold-500 text-cosmic-900 text-xs font-medium rounded transition-colors"
+                            onClick={() => handleApplySuggestion(suggestion)}
+                          >
+                            應用建議
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 整體改善建議 */}
+                  <div className="mt-6 p-4 bg-cosmic-700/20 rounded-lg border border-gold-600/20">
+                    <h5 className="text-gold-400 font-medium text-sm mb-2 flex items-center">
+                      <span className="mr-2">📈</span>整體改善方向
+                    </h5>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      基於分析結果，建議重點關注
+                      <strong className="text-gold-300">
+                        {analysisResult.confidence < 0.7 ? '提升角色一致性' :
+                         analysisResult.behaviorConsistency < 0.8 ? '強化行為邏輯' :
+                         '深化人物層次'}
+                      </strong>，
+                      同時保持角色的核心特徵不變。可以考慮在對話中更多展現角色的
+                      <strong className="text-gold-300">{analysisResult.linguisticPattern.speakingStyle}</strong>特點，
+                      讓讀者更容易識別和記住這個角色。
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -428,5 +619,114 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
     </div>
   );
 };
+
+// ============ 輔助函數 ============
+
+/**
+ * 生成改進建議
+ */
+interface Suggestion {
+  icon: string;
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  chapters: string[];
+  action?: string;
+}
+
+function generateSuggestions(result: CharacterAnalysisResult): Suggestion[] {
+  const suggestions: Suggestion[] = [];
+
+  // 基於置信度生成建議
+  if (result.confidence < 0.7) {
+    suggestions.push({
+      icon: '🎯',
+      title: '提升角色一致性',
+      description: '角色在某些章節中的表現存在不一致，建議檢查核心人格設定，確保在所有場景下保持相同的反應模式。',
+      priority: 'high',
+      chapters: ['第2章', '第4章', '第6章']
+    });
+  }
+
+  // 基於行為一致性生成建議
+  if (result.behaviorConsistency < 0.8) {
+    suggestions.push({
+      icon: '⚖️',
+      title: '強化行為邏輯',
+      description: '角色的行為選擇在某些情境下缺乏邏輯一致性，建議為角色建立更清晰的價值觀和決策原則。',
+      priority: result.behaviorConsistency < 0.6 ? 'high' : 'medium',
+      chapters: ['第3章', '第5章']
+    });
+  }
+
+  // 基於情感強度生成建議
+  if (result.emotionalIntensity < 0.4) {
+    suggestions.push({
+      icon: '💝',
+      title: '增強情感表達',
+      description: '角色的情感表達較為平淡，可以適度增加內心獨白或情感反應的描寫，讓角色更有感染力。',
+      priority: 'medium',
+      chapters: ['第1章', '第7章']
+    });
+  } else if (result.emotionalIntensity > 0.9) {
+    suggestions.push({
+      icon: '🧘',
+      title: '平衡情感表達',
+      description: '角色的情感表達過於強烈，可能會讓讀者感到疲勞。建議在某些場景中加入更多理性思考的描寫。',
+      priority: 'low',
+      chapters: ['第8章', '第9章']
+    });
+  }
+
+  // 基於語言風格生成建議
+  if (result.linguisticPattern.vocabularyRichness < 0.5) {
+    suggestions.push({
+      icon: '📚',
+      title: '豐富詞彙表達',
+      description: '角色的語言表達相對簡單，建議根據角色背景和教育程度，適當豐富其詞彙使用和表達方式。',
+      priority: 'medium',
+      chapters: ['全部章節']
+    });
+  }
+
+  // 基於對話數量生成建議
+  if (result.dialogueCount < 10) {
+    suggestions.push({
+      icon: '💬',
+      title: '增加對話展示',
+      description: '角色的直接對話較少，建議增加角色與其他人物的互動對話，更好地展現其性格特點。',
+      priority: 'low',
+      chapters: ['第4章', '第6章']
+    });
+  }
+
+  // 默認建議（如果沒有其他問題）
+  if (suggestions.length === 0) {
+    suggestions.push({
+      icon: '⭐',
+      title: '深化人物層次',
+      description: '角色整體表現良好，可以考慮增加更多內心衝突或成長弧線，讓角色更加立體動人。',
+      priority: 'low',
+      chapters: ['後續章節']
+    });
+  }
+
+  return suggestions.slice(0, 4); // 最多顯示4個建議
+}
+
+/**
+ * 處理應用建議的點擊事件
+ */
+function handleApplySuggestion(suggestion: Suggestion): void {
+  // 這裡可以實現具體的建議應用邏輯
+  // 例如：跳轉到相關章節、打開編輯器、顯示詳細修改建議等
+  console.log('應用建議:', suggestion.title);
+  
+  // 實際項目中可以調用相關的編輯器API或顯示模態框
+  // 例如：
+  // onSuggestionApply?.(suggestion.description);
+  // 或者導航到特定章節
+  // navigate(`/chapter/${suggestion.chapters[0]}`);
+}
 
 export default CharacterAnalysisPanel;

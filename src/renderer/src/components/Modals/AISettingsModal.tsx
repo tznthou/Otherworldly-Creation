@@ -640,9 +640,29 @@ const AISettingsModal: React.FC = () => {
                                 {getProviderIcon(provider.provider_type)}
                               </span>
                               <div>
-                                <h4 className="text-white font-medium">{provider.name}</h4>
+                                <h4 className="text-white font-medium" title={provider.name}>
+                                  {provider.name.length > 20 ? `${provider.name.substring(0, 18)}...` : provider.name}
+                                </h4>
                                 <p className="text-sm text-gray-400">
-                                  {provider.provider_type} • {provider.model}
+                                  {provider.provider_type} • {(() => {
+                                    // 處理過長的模型名稱顯示
+                                    const modelName = provider.model;
+                                    if (provider.provider_type === 'openrouter' && modelName.length > 30) {
+                                      // OpenRouter 模型名稱通常是 "provider/model" 格式
+                                      const parts = modelName.split('/');
+                                      if (parts.length === 2) {
+                                        const [vendor, model] = parts;
+                                        // 如果模型名稱太長，只顯示供應商和簡化的模型名
+                                        if (model.length > 20) {
+                                          const shortModel = model.split('-').slice(0, 3).join('-');
+                                          return `${vendor}/${shortModel}...`;
+                                        }
+                                        return modelName;
+                                      }
+                                    }
+                                    // 其他提供者或較短的名稱直接顯示
+                                    return modelName.length > 35 ? `${modelName.substring(0, 32)}...` : modelName;
+                                  })()}
                                 </p>
                               </div>
                             </div>
@@ -805,7 +825,6 @@ const AISettingsModal: React.FC = () => {
         cancelText="取消"
         onConfirm={confirmDeleteProvider}
         onCancel={() => setDeleteConfirm({ show: false, provider: null })}
-        variant="danger"
       />
     </div>
   );
