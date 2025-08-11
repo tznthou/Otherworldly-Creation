@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { api } from '../../api';
 import { 
-  IllustrationRequest, 
-  EnhancedIllustrationRequest, 
   DetailedGenerationResult,
-  StyleTemplate,
-  TaskStatus 
+  StyleTemplate
 } from '../../types/illustration';
-import { Character } from '../../api/models';
 import CosmicButton from '../UI/CosmicButton';
 import CosmicInput from '../UI/CosmicInput';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -322,7 +318,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
           {generationResult && (
             <CosmicButton
               variant="secondary"
-              size="sm"
+              size="small"
               onClick={handleReset}
               className="ml-4"
             >
@@ -340,7 +336,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
             <CosmicInput
               type="password"
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              onChange={(value) => setApiKey(value)}
               placeholder="請輸入您的 Google Cloud API 金鑰"
               className="flex-1"
             />
@@ -349,7 +345,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
               disabled={!apiKey.trim() || isConnecting}
               variant="secondary"
             >
-              {isConnecting ? <LoadingSpinner size="sm" /> : '驗證連接'}
+              {isConnecting ? <LoadingSpinner size="small" /> : '驗證連接'}
             </CosmicButton>
           </div>
           
@@ -393,7 +389,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
               {projectCharacters.map(character => (
                 <option key={character.id} value={character.id}>
                   {character.name}
-                  {character.description && ` - ${character.description.substring(0, 30)}...`}
+                  {character.background && ` - ${character.background.substring(0, 30)}...`}
                 </option>
               ))}
             </select>
@@ -479,7 +475,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
                 </label>
                 <CosmicInput
                   value={customNegativePrompt}
-                  onChange={(e) => setCustomNegativePrompt(e.target.value)}
+                  onChange={(value) => setCustomNegativePrompt(value)}
                   placeholder="例如：blurry, low quality, distorted..."
                 />
                 <p className="text-xs text-gray-400 mt-1">
@@ -518,12 +514,12 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
           <CosmicButton
             onClick={handleGenerate}
             disabled={isGenerating || !sceneDescription.trim() || !apiKey.trim() || connectionValid === false}
-            size="lg"
+            size="large"
             className="min-w-[200px]"
           >
             {isGenerating ? (
               <div className="flex items-center space-x-2">
-                <LoadingSpinner size="sm" />
+                <LoadingSpinner size="small" />
                 <span>生成中...</span>
               </div>
             ) : (
@@ -545,7 +541,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
                     ) : step.status === 'error' ? (
                       <span className="text-red-400">✗</span>
                     ) : step.status === 'active' ? (
-                      <LoadingSpinner size="sm" />
+                      <LoadingSpinner size="small" />
                     ) : (
                       <span className="text-gray-500">{index + 1}</span>
                     )}

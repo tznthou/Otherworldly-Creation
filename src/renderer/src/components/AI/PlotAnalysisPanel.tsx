@@ -137,7 +137,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
         >
           {isAnalyzing ? (
             <>
-              <LoadingSpinner size="sm" />
+              <LoadingSpinner size="small" />
               <span className="ml-2">分析中...</span>
             </>
           ) : (

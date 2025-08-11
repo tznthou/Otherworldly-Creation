@@ -343,7 +343,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
           <div className="flex space-x-3">
             <CosmicInput
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(value) => setSearchTerm(value)}
               placeholder="搜索插畫標題、描述、角色或標籤..."
               className="flex-1"
             />
@@ -410,7 +410,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                   min="0"
                   max="10"
                   step="0.5"
-                  value={filter.quality_range?.[0] * 10 || 0}
+                  value={(filter.quality_range?.[0] || 0) * 10}
                   onChange={(e) => {
                     const newRange: [number, number] = [
                       parseFloat(e.target.value) / 10,
@@ -421,8 +421,8 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                   className="w-full"
                 />
                 <div className="flex justify-between text-xs text-gray-400">
-                  <span>{(filter.quality_range?.[0] * 10 || 0).toFixed(1)}</span>
-                  <span>{(filter.quality_range?.[1] * 10 || 10).toFixed(1)}</span>
+                  <span>{((filter.quality_range?.[0] || 0) * 10).toFixed(1)}</span>
+                  <span>{((filter.quality_range?.[1] || 1) * 10).toFixed(1)}</span>
                 </div>
               </div>
             </div>
@@ -434,7 +434,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
               </label>
               <select
                 value={filter.sort_by}
-                onChange={(e) => updateFilter('sort_by', e.target.value)}
+                onChange={(value) => updateFilter('sort_by', value)}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 mb-2"
               >
                 <option value="created_at">創建時間</option>
@@ -444,7 +444,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
               
               <select
                 value={filter.sort_order}
-                onChange={(e) => updateFilter('sort_order', e.target.value)}
+                onChange={(value) => updateFilter('sort_order', value)}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="desc">降序</option>

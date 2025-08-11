@@ -4,10 +4,8 @@ import { RootState } from '../../store/store';
 import { api } from '../../api';
 import { 
   ConsistencyReport, 
-  ConsistencyRecommendation, 
   VisualTraits 
 } from '../../types/illustration';
-import { Character } from '../../api/models';
 import CosmicButton from '../UI/CosmicButton';
 import CosmicInput from '../UI/CosmicInput';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -433,7 +431,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                       onClick={handleSetupConsistency}
                       disabled={isProcessing}
                     >
-                      {isProcessing ? <LoadingSpinner size="sm" /> : '設定一致性'}
+                      {isProcessing ? <LoadingSpinner size="small" /> : '設定一致性'}
                     </CosmicButton>
                   </div>
                 )}
@@ -453,10 +451,8 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                     <CosmicInput
                       type="number"
                       value={manualSeed}
-                      onChange={(e) => setManualSeed(e.target.value)}
+                      onChange={(value) => setManualSeed(value)}
                       placeholder="例如：123456789"
-                      min="1"
-                      max="4294967295"
                     />
                   </div>
                   
@@ -466,7 +462,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                     </label>
                     <CosmicInput
                       value={seedReason}
-                      onChange={(e) => setSeedReason(e.target.value)}
+                      onChange={(value) => setSeedReason(value)}
                       placeholder="例如：測試特定風格"
                     />
                   </div>
@@ -494,7 +490,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                     </label>
                     <CosmicInput
                       value={referenceImageUrl}
-                      onChange={(e) => setReferenceImageUrl(e.target.value)}
+                      onChange={(value) => setReferenceImageUrl(value)}
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>
@@ -522,26 +518,24 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                     <div className="flex space-x-2 mb-2">
                       <CosmicInput
                         value={currentTag}
-                        onChange={(e) => setCurrentTag(e.target.value)}
+                        onChange={(value) => setCurrentTag(value)}
                         placeholder="輸入標籤"
                         className="flex-1"
-                        onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
                       />
-                      <CosmicButton onClick={handleAddTag} variant="secondary" size="sm">
+                      <CosmicButton onClick={handleAddTag} variant="secondary" size="small">
                         添加
                       </CosmicButton>
                     </div>
                     
                     <div className="flex flex-wrap gap-2">
                       {referenceTags.map(tag => (
-                        <Badge
+                        <button
                           key={tag}
-                          variant="secondary"
-                          className="cursor-pointer"
+                          className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded cursor-pointer text-gray-300"
                           onClick={() => handleRemoveTag(tag)}
                         >
                           {tag} ✕
-                        </Badge>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -579,7 +573,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                 onClick={handleGenerateReport}
                 disabled={isProcessing || !selectedCharacter}
               >
-                {isProcessing ? <LoadingSpinner size="sm" /> : '生成報告'}
+                {isProcessing ? <LoadingSpinner size="small" /> : '生成報告'}
               </CosmicButton>
             </div>
 
@@ -661,7 +655,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                 onClick={handleCalculateSimilarity}
                 disabled={isProcessing || selectedCharacters.length < 2}
               >
-                {isProcessing ? <LoadingSpinner size="sm" /> : '計算相似度'}
+                {isProcessing ? <LoadingSpinner size="small" /> : '計算相似度'}
               </CosmicButton>
             </div>
 
@@ -740,11 +734,8 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                   <span className="text-sm text-gray-300">最低分數:</span>
                   <input
                     type="number"
-                    value={batchMinScore}
+                    value={batchMinScore.toString()}
                     onChange={(e) => setBatchMinScore(parseFloat(e.target.value))}
-                    min="0"
-                    max="1"
-                    step="0.1"
                     className="w-20 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm"
                   />
                 </div>
@@ -754,7 +745,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                 onClick={handleBatchCheck}
                 disabled={isProcessing || !currentProject}
               >
-                {isProcessing ? <LoadingSpinner size="sm" /> : '批次檢查'}
+                {isProcessing ? <LoadingSpinner size="small" /> : '批次檢查'}
               </CosmicButton>
             </div>
 
