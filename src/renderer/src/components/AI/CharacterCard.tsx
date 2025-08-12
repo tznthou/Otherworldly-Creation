@@ -47,13 +47,21 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       className={`
         character-card relative cursor-pointer transition-all duration-200 
         ${selected 
-          ? 'ring-2 ring-gold-500 bg-cosmic-800/80 scale-105' 
-          : 'bg-cosmic-800/40 hover:bg-cosmic-800/60 hover:scale-102'
+          ? 'ring-2 ring-gold-500 bg-cosmic-800/80' 
+          : 'bg-cosmic-800/40 hover:bg-cosmic-800/60'
         }
         rounded-lg p-4 min-h-[120px] flex flex-col items-center text-center
         ${className}
       `}
-      onClick={() => onSelect(character.id)}
+      onClick={(e) => {
+        console.log('🚨 點擊事件詳情:');
+        console.log('角色名稱:', character.name);
+        console.log('角色ID:', character.id);
+        console.log('點擊座標:', e.clientX, e.clientY);
+        console.log('目標元素:', e.currentTarget);
+        console.log('事件階段:', e.eventPhase);
+        onSelect(character.id);
+      }}
     >
       {/* 選中狀態指示器 */}
       {selected && (

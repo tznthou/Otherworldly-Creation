@@ -3,10 +3,9 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { 
   IllustrationGalleryItem,
-  IllustrationFilter,
-  DetailedGenerationResult 
+  IllustrationFilter
 } from '../../types/illustration';
-import { Character } from '../../api/models';
+// import { Character } from '../../api/models';
 import CosmicButton from '../UI/CosmicButton';
 import CosmicInput from '../UI/CosmicInput';
 import LoadingSpinner from '../UI/LoadingSpinner';

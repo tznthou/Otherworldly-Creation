@@ -19,8 +19,8 @@ import SimpleErrorBoundary from './components/UI/SimpleErrorBoundary';
 import ProgressContainer from './components/Progress/ProgressContainer';
 import { i18n } from './i18n';
 import { initReactScan } from './utils/reactScan';
-import { performanceMonitor } from './utils/performanceMonitor';
-import { performanceBenchmark } from './utils/performanceBenchmark';
+// import { performanceMonitor } from './utils/performanceMonitor';
+// import { performanceBenchmark } from './utils/performanceBenchmark';
 import './index.css';
 
 // 🛡️ 超早期錯誤攔截器 - 在任何其他代碼運行之前設置

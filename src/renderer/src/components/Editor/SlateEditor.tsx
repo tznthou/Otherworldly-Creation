@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { createEditor, Descendant, Editor, Transforms, Range, Element } from 'slate';
 import { Slate, Editable, withReact, ReactEditor, RenderLeafProps as SlateRenderLeafProps, useSlate } from 'slate-react';
 import { withHistory } from 'slate-history';
-import { useVirtualization } from '../../utils/componentOptimization';
+// import { useVirtualization } from '../../utils/componentOptimization';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { selectEditorSettings, toggleSettings, toggleReadingMode, selectIsReadingMode } from '../../store/slices/editorSlice';
 import SaveStatusIndicator from '../UI/SaveStatusIndicator';
@@ -31,6 +31,7 @@ declare module 'slate' {
 }
 
 // 性能優化插件：限制渲染節點數量
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const withPerformance = (editor: Editor) => {
   const { insertData, insertText } = editor;
 

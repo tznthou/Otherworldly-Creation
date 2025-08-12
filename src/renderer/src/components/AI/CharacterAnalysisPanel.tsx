@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store/store';
-import { selectCharactersByProjectId, selectFilteredCharacters } from '../../store/optimizedSelectors';
-import { withSmartMemo, useOptimizedSelector, useStableCallback, useDebounce } from '../../utils/componentOptimization';
+import { selectCharactersByProjectId } from '../../store/optimizedSelectors';
+import { withSmartMemo, useOptimizedSelector, useStableCallback } from '../../utils/componentOptimization';
 import LoadingSpinner from '../UI/LoadingSpinner';
 // import { api } from '../../api'; // 暫時不使用
 import { characterAnalysisService, CharacterAnalysisResult, ProjectCharacterAnalysis } from '../../services/characterAnalysisService';
@@ -45,11 +45,11 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
   const characters = useOptimizedSelector((state: RootState) => 
     selectCharactersByProjectId(state, projectId)
   );
-  const charactersLoading = useOptimizedSelector((state: RootState) => state.characters.loading);
-  const charactersError = useOptimizedSelector((state: RootState) => state.characters.error);
+  // const charactersLoading = useOptimizedSelector((state: RootState) => state.characters.loading);
+  // const charactersError = useOptimizedSelector((state: RootState) => state.characters.error);
   
   // 防抖的角色數據，避免頻繁重新分析
-  const debouncedCharacters = useDebounce(characters, 300);
+  // const debouncedCharacters = useDebounce(characters, 300);
   
   // 調試：監控Redux狀態變化
   useEffect(() => {

@@ -12,9 +12,9 @@ import { Card } from '../../components/UI/Card';
 import CosmicButton from '../../components/UI/CosmicButton';
 import { Alert } from '../../components/UI/Alert';
 
-interface IllustrationManagerProps {}
+// interface IllustrationManagerProps {}
 
-const IllustrationManager: React.FC<IllustrationManagerProps> = () => {
+const IllustrationManager: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   

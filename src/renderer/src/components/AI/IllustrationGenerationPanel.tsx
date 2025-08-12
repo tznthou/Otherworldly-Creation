@@ -102,7 +102,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
   // 生成狀態
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationSteps, setGenerationSteps] = useState<GenerationStep[]>([]);
-  const [currentTaskId, setCurrentTaskId] = useState<string>('');
+  // const [currentTaskId, setCurrentTaskId] = useState<string>('');
   const [generationResult, setGenerationResult] = useState<DetailedGenerationResult | null>(null);
   const [error, setError] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
@@ -216,7 +216,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
       // 步驟 2-5: 調用 API
       updateStepStatus('translation', 'active', 0);
       
-      const selectedCharacterObj = characters.find(c => c.id === selectedCharacter);
+      // const selectedCharacterObj = characters.find(c => c.id === selectedCharacter);
       
       const result = await api.illustration.generateIllustration(
         currentProject.id,
@@ -263,7 +263,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
         };
 
         setGenerationResult(detailedResult);
-        setCurrentTaskId(result.task_id);
+        // setCurrentTaskId(result.task_id);
         
         if (onGenerationComplete) {
           onGenerationComplete(detailedResult);

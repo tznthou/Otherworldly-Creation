@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import type { AppDispatch } from '../../store/store';
+import { fetchCharactersByProjectId } from '../../store/slices/charactersSlice';
 import { RootState } from '../../store/store';
 import { api } from '../../api';
 import { 
@@ -8,7 +10,6 @@ import {
   TaskStatus
 } from '../../types/illustration';
 import { Character } from '../../api/models';
-import CharacterCard from './CharacterCard';
 import CosmicButton from '../UI/CosmicButton';
 import CosmicInput from '../UI/CosmicInput';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -34,6 +35,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   className = ''
 }) => {
   // Redux 狀態
+  const dispatch = useDispatch<AppDispatch>();
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
   const characters = useSelector((state: RootState) => state.characters.characters);
 
@@ -397,6 +399,13 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     loadActiveBatches();
   }, []);
 
+  // 載入當前專案角色
+  useEffect(() => {
+    if (currentProject?.id) {
+      dispatch(fetchCharactersByProjectId(currentProject.id));
+    }
+  }, [currentProject?.id, dispatch]);
+
   // 自動刷新監控數據
   useEffect(() => {
     if (activeTab === 'monitor' && selectedBatchId) {
@@ -534,16 +543,100 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                 🎭 選擇角色 ({selectedCharacters.length} 已選擇)
               </h3>
               
-              <div className="character-grid grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-                {projectCharacters.map(character => (
-                  <CharacterCard
-                    key={character.id}
-                    character={character}
-                    selected={selectedCharacters.includes(character.id)}
-                    onSelect={toggleCharacterSelection}
-                    showDetails={true}
-                  />
-                ))}
+              <div className="character-grid flex flex-wrap gap-6 mb-6">
+                {projectCharacters.map((character) => {
+                  const isSelected = selectedCharacters.includes(character.id);
+                  
+                  // 獲取角色頭像
+                  const getCharacterAvatar = (char: any) => {
+                    if (char.gender === 'female') {
+                      return char.archetype?.includes('魔法') || char.archetype?.includes('法師') ? '🧙‍♀️' : '👩';
+                    } else if (char.gender === 'male') {
+                      return char.archetype?.includes('魔法') || char.archetype?.includes('法師') ? '🧙‍♂️' : '👨';
+                    }
+                    // 根據角色類型
+                    if (char.archetype?.includes('魔法') || char.archetype?.includes('法師')) return '🧙';
+                    if (char.archetype?.includes('戰士') || char.archetype?.includes('騎士')) return '⚔️';
+                    if (char.archetype?.includes('盜賊') || char.archetype?.includes('刺客')) return '🗡️';
+                    if (char.archetype?.includes('治療') || char.archetype?.includes('牧師')) return '🛡️';
+                    return '👤';
+                  };
+
+                  // 獲取角色類型顏色
+                  const getArchetypeColor = (archetype: any) => {
+                    if (!archetype) return 'from-gray-600 to-gray-700';
+                    
+                    if (archetype.includes('主角') || archetype.includes('英雄')) return 'from-amber-500 to-orange-600';
+                    if (archetype.includes('反派') || archetype.includes('敵人')) return 'from-red-500 to-red-700';
+                    if (archetype.includes('魔法') || archetype.includes('法師')) return 'from-purple-500 to-indigo-600';
+                    if (archetype.includes('戰士') || archetype.includes('騎士')) return 'from-blue-500 to-blue-700';
+                    if (archetype.includes('配角') || archetype.includes('朋友')) return 'from-green-500 to-green-700';
+                    return 'from-slate-500 to-slate-700';
+                  };
+
+                  return (
+                    <button
+                      key={character.id}
+                      onClick={() => toggleCharacterSelection(character.id)}
+                      className={`
+                        relative w-52 h-36 text-white rounded-xl overflow-hidden group
+                        transition-all duration-300 ease-out
+                        ${isSelected 
+                          ? 'ring-4 ring-gold-400 shadow-2xl shadow-gold-400/30' 
+                          : 'hover:shadow-xl hover:shadow-black/20'
+                        }
+                        bg-gradient-to-br ${getArchetypeColor(character.archetype)}
+                        border-2 ${isSelected ? 'border-gold-300' : 'border-white/20'}
+                      `}
+                    >
+                      {/* 背景裝飾 */}
+                      <div className="absolute inset-0 bg-black/10"></div>
+                      <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-bl-full"></div>
+                      <div className="absolute bottom-0 left-0 w-12 h-12 bg-white/5 rounded-tr-full"></div>
+                      
+                      {/* 選中狀態指示器 */}
+                      {isSelected && (
+                        <div className="absolute top-3 right-3 w-8 h-8 bg-gold-400 rounded-full flex items-center justify-center shadow-lg">
+                          <span className="text-black text-lg font-bold">✓</span>
+                        </div>
+                      )}
+                      
+                      {/* 角色頭像 */}
+                      <div className="absolute top-4 left-4 text-4xl filter drop-shadow-lg">
+                        {getCharacterAvatar(character)}
+                      </div>
+                      
+                      {/* 角色信息 */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+                        {/* 角色名稱 */}
+                        <h4 className="text-lg font-bold text-white mb-1 truncate">
+                          {character.name}
+                        </h4>
+                        
+                        {/* 角色類型標籤 */}
+                        {character.archetype && (
+                          <span className="inline-block px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs text-white font-medium">
+                            {character.archetype}
+                          </span>
+                        )}
+                        
+                        {/* 年齡 */}
+                        {character.age && (
+                          <div className="text-xs text-white/80 mt-1">
+                            📅 {character.age}歲
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Hover效果 */}
+                      <div className={`
+                        absolute inset-0 bg-gradient-to-t from-transparent to-white/10 
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                        ${isSelected ? 'opacity-20' : ''}
+                      `}></div>
+                    </button>
+                  );
+                })}
                 
                 {projectCharacters.length === 0 && (
                   <div className="col-span-full text-center py-8 text-gray-400">

@@ -5,7 +5,7 @@
 
 import { createSelector, createSelectorCreator, lruMemoize } from 'reselect';
 import { RootState } from './store';
-import { Character } from '../api/models';
+// import { Character } from '../api/models';
 
 // 創建自定義選擇器創建器，使用 LRU 緩存
 const createLRUSelector = createSelectorCreator(
@@ -18,13 +18,13 @@ const createLRUSelector = createSelectorCreator(
 
 // 基礎選擇器（直接從 state 選取值）
 const selectCharacters = (state: RootState) => state.characters.characters;
-const selectCharactersLoading = (state: RootState) => state.characters.loading;
-const selectCharactersError = (state: RootState) => state.characters.error;
+// const selectCharactersLoading = (state: RootState) => state.characters.loading;
+// const selectCharactersError = (state: RootState) => state.characters.error;
 const selectSearchQuery = (state: RootState) => state.characters.searchQuery;
-const selectCurrentProject = (state: RootState) => state.projects.currentProject;
+// const selectCurrentProject = (state: RootState) => state.projects.currentProject;
 const selectUISettings = (state: RootState) => state.ui;
 const selectChapters = (state: RootState) => state.chapters.chapters;
-const selectCurrentChapter = (state: RootState) => state.chapters.currentChapter;
+// const selectCurrentChapter = (state: RootState) => state.chapters.currentChapter;
 
 // 記憶化選擇器 - 角色相關
 export const selectCharactersByProjectId = createSelector(

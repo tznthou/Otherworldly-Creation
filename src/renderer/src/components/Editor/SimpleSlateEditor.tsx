@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { createEditor, Descendant } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 import { withHistory } from 'slate-history';
@@ -33,11 +33,11 @@ const SimpleSlateEditor: React.FC<SimpleSlateEditorProps> = ({
   value,
   onChange,
   placeholder = '開始寫作...',
-  onSave,
-  onAIWrite,
-  isSaving = false,
-  isGenerating = false,
-  showToolbar = true
+  // onSave,
+  // onAIWrite,
+  // isSaving = false,
+  // isGenerating = false,
+  // showToolbar = true
 }) => {
   console.log('[SimpleSlateEditor] Received value:', {
     type: typeof value,

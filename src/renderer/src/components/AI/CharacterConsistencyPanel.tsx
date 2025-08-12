@@ -12,7 +12,7 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 // 移除未使用的 ProgressIndicator 導入
 import { Alert } from '../UI/Alert';
 import { Card } from '../UI/Card';
-import { Badge } from '../UI/Badge';
+// import { Badge } from '../UI/Badge';
 
 interface CharacterConsistencyPanelProps {
   className?: string;
