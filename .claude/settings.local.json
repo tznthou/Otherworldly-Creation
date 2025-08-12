@@ -133,7 +133,9 @@
       "Bash(./scripts/create-pkg.sh:*)",
       "Bash(git pull:*)",
       "Bash(cargo clean:*)",
-      "Bash(env)"
+      "Bash(env)",
+      "Bash(gh run list:*)",
+      "Bash([ -d \"/Applications/genesis-chronicle.app\" ])"
     ],
     "deny": []
   }

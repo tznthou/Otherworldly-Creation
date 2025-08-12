@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Genesis Chronicle PKG 安裝前腳本
+# 這個腳本在 PKG 安裝開始前執行
+
+set -e
+
+echo "🎮 準備安裝 Genesis Chronicle..."
+
+# 檢查是否有舊版本存在
+if [ -d "/Applications/genesis-chronicle.app" ]; then
+    echo "📦 發現舊版本，準備更新..."
+    
+    # 備份使用者資料（如果需要）
+    USER_DATA_DIR="$HOME/Library/Application Support/genesis-chronicle"
+    if [ -d "$USER_DATA_DIR" ]; then
+        echo "💾 保留使用者資料..."
+        # 資料已在正確位置，無需移動
+    fi
+    
+    # 移除舊版本
+    rm -rf "/Applications/genesis-chronicle.app"
+    echo "✅ 舊版本已移除"
+fi
+
+# 確保 Applications 資料夾存在
+mkdir -p "/Applications"
+
+echo "✅ 準備工作完成，開始安裝..."
+
+exit 0

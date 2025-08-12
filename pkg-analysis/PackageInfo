@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pkg-info overwrite-permissions="true" relocatable="false" identifier="com.genesis-chronicle.desktop" postinstall-action="none" version="1.0.5-beta" format-version="2" generator-version="InstallCmds-860.14 (24G84)" install-location="/Applications" auth="root">
+    <payload numberOfFiles="15" installKBytes="56219"/>
+    <bundle path="./genesis-chronicle.app" id="com.genesis-chronicle.desktop" CFBundleShortVersionString="1.0.3" CFBundleVersion="1.0.3"/>
+    <bundle-version>
+        <bundle id="com.genesis-chronicle.desktop"/>
+    </bundle-version>
+    <upgrade-bundle>
+        <bundle id="com.genesis-chronicle.desktop"/>
+    </upgrade-bundle>
+    <update-bundle/>
+    <atomic-update-bundle/>
+    <strict-identifier>
+        <bundle id="com.genesis-chronicle.desktop"/>
+    </strict-identifier>
+    <relocate>
+        <bundle id="com.genesis-chronicle.desktop"/>
+    </relocate>
+    <scripts>
+        <preinstall file="./preinstall" timeout="600"/>
+        <postinstall file="./postinstall" timeout="600"/>
+    </scripts>
+</pkg-info>
