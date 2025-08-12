@@ -724,7 +724,7 @@ ${smartParams.locationNames.length > 0 ? `
             <input
               type="range"
               min="50"
-              max="500"
+              max="1800"
               step="10"
               value={maxTokens}
               onChange={(e) => setMaxTokens(parseInt(e.target.value))}

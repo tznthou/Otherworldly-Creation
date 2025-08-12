@@ -4,13 +4,36 @@
     "lib": [
       "DOM",
       "DOM.Iterable",
-      "ES6"
+      "ES2020",
+      "WebWorker"
     ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    
+    /* 嚴格類型檢查選項 */
     "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noImplicitReturns": false,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": false,
+    
+    /* 額外檢查 */
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitUseStrict": false,
+    "noStrictGenericChecks": false,
+    
+    /* 模塊解析選項 */
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "ESNext",
@@ -18,7 +41,28 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    
+    /* 進階選項 */
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "removeComments": false,
+    "importHelpers": true,
+    "downlevelIteration": true,
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
+    
+    /* 路徑映射 */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/renderer/src/*"],
+      "@/components/*": ["src/renderer/src/components/*"],
+      "@/utils/*": ["src/renderer/src/utils/*"],
+      "@/store/*": ["src/renderer/src/store/*"],
+      "@/types/*": ["src/renderer/src/types/*"],
+      "@/api/*": ["src/renderer/src/api/*"]
+    }
   },
   "include": [
     "src/renderer"

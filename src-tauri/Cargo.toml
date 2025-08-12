@@ -46,3 +46,40 @@ tempfile = "3.8"
 mime_guess = "2.0"
 # PDF generation dependencies
 printpdf = "0.7"
+
+# 最佳化 release profile 配置
+[profile.release]
+# 完全優化：最高等級性能優化
+opt-level = 3
+# 啟用 LTO (Link Time Optimization)：跨 crate 優化
+lto = "fat"
+# 單一代碼生成單元：最大化優化但增加編譯時間
+codegen-units = 1
+# 關閉調試信息：減少二進制大小
+debug = false
+# 開啟 panic 展開優化
+panic = "abort"
+# 啟用增量編譯緩存
+incremental = false
+
+# 優化所有依賴項：即使在 dev 構建中也優化依賴項
+[profile.dev.package."*"]
+opt-level = 2
+
+# 針對不同構建模式的優化配置
+[profile.release-fast]
+inherits = "release"
+opt-level = 2
+lto = "thin"
+codegen-units = 4
+incremental = true
+debug = false
+
+# 為分發版本優化的配置
+[profile.dist]
+inherits = "release"
+opt-level = "s"  # 優化二進制大小
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"  # 移除調試符號

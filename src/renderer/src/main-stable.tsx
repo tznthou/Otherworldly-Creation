@@ -18,6 +18,9 @@ import { NotificationContainer } from './components/UI/NotificationSystem';
 import SimpleErrorBoundary from './components/UI/SimpleErrorBoundary';
 import ProgressContainer from './components/Progress/ProgressContainer';
 import { i18n } from './i18n';
+import { initReactScan } from './utils/reactScan';
+import { performanceMonitor } from './utils/performanceMonitor';
+import { performanceBenchmark } from './utils/performanceBenchmark';
 import './index.css';
 
 // 🛡️ 超早期錯誤攔截器 - 在任何其他代碼運行之前設置
@@ -91,6 +94,9 @@ const SimpleApp: React.FC = () => {
     const initApp = async () => {
       try {
         console.log('🚀 開始應用程式初始化...');
+        
+        // 初始化 React Scan 性能監控（僅開發環境）
+        initReactScan();
         
         // 初始化 i18n 系統
         console.log('🌐 初始化國際化系統...');

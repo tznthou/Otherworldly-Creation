@@ -283,7 +283,7 @@ export function withErrorBoundary<P extends object>(
       return { hasError: true, error };
     }
 
-    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
       ErrorHandler.createError(
         ERROR_CODES.SYSTEM_UNKNOWN_ERROR,
         '組件渲染錯誤',
@@ -304,7 +304,7 @@ export function withErrorBoundary<P extends object>(
       this.setState({ hasError: false, error: null });
     };
 
-    render() {
+    override render() {
       if (this.state.hasError && this.state.error) {
         if (fallback) {
           const FallbackComponent = fallback;

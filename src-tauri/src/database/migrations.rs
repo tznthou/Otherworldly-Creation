@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 12;
+const DB_VERSION: i32 = 13;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -92,6 +92,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v12(conn)?;
             update_version(conn, 12)?;
             log::info!("遷移到版本 12 完成");
+        }
+        
+        if current_version < 13 {
+            apply_migration_v13(conn)?;
+            update_version(conn, 13)?;
+            log::info!("遷移到版本 13 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -1390,6 +1396,102 @@ pub fn apply_migration_v12(conn: &Connection) -> Result<()> {
     
     log::info!("現有專案插畫設定初始化完成");
     log::info!("版本 12 遷移完成：Phase 3 AI插畫生成功能已準備就緒");
+    
+    Ok(())
+}
+
+/// 版本 13: 性能優化 - 添加數據庫索引
+pub fn apply_migration_v13(conn: &Connection) -> Result<()> {
+    log::info!("開始遷移到版本 13：資料庫性能優化");
+    
+    // === 核心表索引 ===
+    
+    // 專案查詢索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects (created_at DESC)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_projects_updated_at ON projects (updated_at DESC)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_projects_type ON projects (type)",
+        [],
+    )?;
+    
+    // 章節查詢索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_chapters_project_id ON chapters (project_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_chapters_order ON chapters (project_id, order_index)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_chapters_updated_at ON chapters (updated_at DESC)",
+        [],
+    )?;
+    
+    // 角色查詢索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_characters_project_id ON characters (project_id)",
+        [],
+    )?;
+    // 移除不存在欄位的索引 - archetype 存儲在 attributes JSON 中
+    
+    // === AI 功能索引 ===
+    
+    // 角色分析索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_character_analysis_character_id ON character_analysis (character_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_character_analysis_analyzed_at ON character_analysis (analyzed_at DESC)",
+        [],
+    )?;
+    
+    // 插畫生成索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_project_id ON illustration_generations (project_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_character_id ON illustration_generations (character_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_status ON illustration_generations (status)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustration_generations_created_at ON illustration_generations (created_at DESC)",
+        [],
+    )?;
+    
+    // 複合索引用於常見查詢模式
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_chapters_project_content ON chapters (project_id, content) WHERE content IS NOT NULL",
+        [],
+    )?;
+    
+    // AI 提供者配置索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ai_providers_enabled ON ai_providers (enabled)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ai_providers_type ON ai_providers (provider_type)",
+        [],
+    )?;
+    
+    // === 批量操作索引 ===
+    
+    // 批次生成任務索引 - 表格尚未實現，暫時跳過
+    
+    log::info!("版本 13 遷移完成：資料庫索引優化完成");
     
     Ok(())
 }

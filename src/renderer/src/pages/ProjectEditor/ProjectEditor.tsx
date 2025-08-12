@@ -18,7 +18,7 @@ import ChapterList from '../../components/Editor/ChapterList';
 import ChapterNotes from '../../components/Editor/ChapterNotes';
 import AIWritingPanel from '../../components/Editor/AIWritingPanel';
 import { PlotAnalysisPanel } from '../../components/AI/PlotAnalysisPanel';
-import { CharacterAnalysisPanel } from '../../components/AI';
+import LazyCharacterAnalysisPanel from '../../components/AI/LazyCharacterAnalysisPanel';
 import AIStatusIndicator from '../../components/UI/AIStatusIndicator';
 import SaveStatusIndicator from '../../components/UI/SaveStatusIndicator';
 import SaveStatusPanel from '../../components/UI/SaveStatusPanel';
@@ -467,19 +467,35 @@ const ProjectEditorContent: React.FC = () => {
 
               {/* 編輯器 */}
               <div className="flex-1 overflow-auto" style={{ maxHeight: '60vh' }} data-tutorial="writing-area">
-                <SlateEditor
-                  key={`editor-${currentChapter.id}`} // 強制重新渲染
-                  value={currentChapter.content}
-                  onChange={handleEditorChange}
-                  placeholder="開始寫作..."
-                  autoFocus={true}
-                  onSave={saveNow}
-                  onAIWrite={handleAIWrite}
-                  onEditorReady={handleEditorReady} // 新增：編輯器就緒回調
-                  isSaving={isSaving}
-                  isGenerating={isGenerating}
-                  showToolbar={true}
-                />
+                {(() => {
+                  console.log('🔍 [ProjectEditor] 準備傳遞給 SlateEditor 的數據:', {
+                    chapterId: currentChapter.id,
+                    contentType: typeof currentChapter.content,
+                    isArray: Array.isArray(currentChapter.content),
+                    contentLength: currentChapter.content ? 
+                      (Array.isArray(currentChapter.content) ? currentChapter.content.length : 'not array') : 
+                      'null/undefined',
+                    rawContent: currentChapter.content
+                  });
+                  
+                  const editorValue = currentChapter.content || [{ type: 'paragraph', children: [{ text: '' }] }];
+                  console.log('🔍 [ProjectEditor] 處理後的 editorValue:', editorValue);
+                  
+                  return (
+                    <SlateEditor
+                      key={`editor-${currentChapter.id}`} // 強制重新渲染
+                      value={editorValue}
+                      onChange={handleEditorChange}
+                      placeholder="開始寫作..."
+                      onSave={saveNow}
+                      onAIWrite={handleAIWrite}
+                      onEditorReady={handleEditorReady}
+                      isSaving={isSaving}
+                      isGenerating={isGenerating}
+                      showToolbar={true}
+                    />
+                  );
+                })()}
                 
                 {/* 章節筆記 (可折疊) */}
                 <div className="p-4 border-t border-cosmic-700" data-tutorial="chapter-notes">
@@ -537,7 +553,7 @@ const ProjectEditorContent: React.FC = () => {
         {/* 角色分析面板 */}
         {showCharacterAnalysisPanel && currentChapter && id && (
           <div className="w-96 border-l border-cosmic-700 flex-shrink-0 overflow-y-auto" style={{ minWidth: '384px' }}>
-            <CharacterAnalysisPanel
+            <LazyCharacterAnalysisPanel
               projectId={id}
               chapters={chapters.map(chapter => ({
                 ...chapter,

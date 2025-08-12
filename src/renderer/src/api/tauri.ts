@@ -7,6 +7,7 @@ import type {
   CreateRelationshipRequest
 } from './models';
 import type { Descendant } from 'slate';
+import { measureAsyncFunction, performanceLogger } from '../utils/performanceLogger';
 
 // Tauri 後端類型定義
 interface TauriProject {
@@ -123,41 +124,59 @@ const loadTauriAPI = async (): Promise<TauriInvokeFunction> => {
   }
 };
 
-// 安全的 invoke 函數 - 使用標準 Tauri API
+// 安全的 invoke 函數 - 使用標準 Tauri API 並整合性能監控
 const safeInvoke = async <T = unknown>(command: string, args?: Record<string, unknown>): Promise<T> => {
-  try {
-    console.log(`調用 Tauri 命令: ${command}`, args);
-    
-    const invoke = await loadTauriAPI();
-    if (!invoke) {
-      const errorMsg = 'Tauri invoke 函數不可用 - 可能不在 Tauri 環境中運行';
-      console.error(errorMsg);
-      throw new Error(errorMsg);
+  return measureAsyncFunction(
+    `tauri_${command}`,
+    'api',
+    async () => {
+      try {
+        console.log(`調用 Tauri 命令: ${command}`, args);
+        
+        const invoke = await loadTauriAPI();
+        if (!invoke) {
+          const errorMsg = 'Tauri invoke 函數不可用 - 可能不在 Tauri 環境中運行';
+          console.error(errorMsg);
+          throw new Error(errorMsg);
+        }
+        
+        // 使用獲取到的 invoke 函數，確保參數格式正確
+        const invokeArgs = args || {};
+        const result = await invoke<T>(command, invokeArgs);
+        
+        console.log(`Tauri 命令 ${command} 成功:`, result);
+        
+        // 記錄 API 調用成功
+        performanceLogger.log('api', `tauri_${command}_success`, {
+          metadata: { command, success: true }
+        });
+        
+        return result as T;
+        
+      } catch (_error) {
+        console.error(`Tauri command ${command} failed:`, _error);
+        
+        // 記錄 API 調用失敗
+        performanceLogger.log('api', `tauri_${command}_error`, {
+          severity: 'error',
+          metadata: { command, error: _error instanceof Error ? _error.message : String(_error) }
+        });
+        
+        // 特別處理 callbackId 相關錯誤
+        if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && _error.message.includes('callbackId')) {
+          console.error('檢測到 Tauri 回調錯誤，可能是版本不匹配問題');
+          throw new Error(`Tauri 回調機制錯誤 - 命令: ${command}`);
+        }
+        
+        // 提供更詳細的錯誤信息
+        if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && _error.message.includes('not available')) {
+          throw new Error(`Tauri 命令 ${command} 不可用 - 請確保在 Tauri 環境中運行`);
+        }
+        
+        throw _error;
+      }
     }
-    
-    // 使用獲取到的 invoke 函數，確保參數格式正確
-    const invokeArgs = args || {};
-    const result = await invoke<T>(command, invokeArgs);
-    
-    console.log(`Tauri 命令 ${command} 成功:`, result);
-    return result as T;
-    
-  } catch (_error) {
-    console.error(`Tauri command ${command} failed:`, _error);
-    
-    // 特別處理 callbackId 相關錯誤
-    if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && _error.message.includes('callbackId')) {
-      console.error('檢測到 Tauri 回調錯誤，可能是版本不匹配問題');
-      throw new Error(`Tauri 回調機制錯誤 - 命令: ${command}`);
-    }
-    
-    // 提供更詳細的錯誤信息
-    if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && _error.message.includes('not available')) {
-      throw new Error(`Tauri 命令 ${command} 不可用 - 請確保在 Tauri 環境中運行`);
-    }
-    
-    throw _error;
-  }
+  );
 };
 
 // 臨時的模擬資料回退
@@ -192,35 +211,49 @@ const createFallbackData = (commandName: string) => {
   }
 };
 
-// 增強的 safeInvoke，在開發模式下提供回退
+// 增強的 safeInvoke，在開發模式下提供回退並整合性能監控
 const enhancedSafeInvoke = async <T = unknown>(command: string, args?: Record<string, unknown>): Promise<T> => {
-  try {
-    const result = await safeInvoke(command, args);
-    console.log(`✅ Tauri 命令成功: ${command}`, result);
-    return result as T;
-  } catch (_error) {
-    console.error(`❌ enhancedSafeInvoke 錯誤 (${command}):`, _error);
-    
-    // 特別處理 callbackId 相關錯誤
-    if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && (
-      _error.message.includes('callbackId') || 
-      _error.message.includes('undefined is not an object')
-    )) {
-      console.warn(`檢測到 Tauri 回調機制錯誤，使用模擬資料 - 命令: ${command}`);
-      return createFallbackData(command) as T;
+  return measureAsyncFunction(
+    `enhanced_tauri_${command}`,
+    'api',
+    async () => {
+      try {
+        const result = await safeInvoke(command, args);
+        console.log(`✅ Tauri 命令成功: ${command}`, result);
+        return result as T;
+      } catch (_error) {
+        console.error(`❌ enhancedSafeInvoke 錯誤 (${command}):`, _error);
+        
+        // 特別處理 callbackId 相關錯誤
+        if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && (
+          _error.message.includes('callbackId') || 
+          _error.message.includes('undefined is not an object')
+        )) {
+          console.warn(`檢測到 Tauri 回調機制錯誤，使用模擬資料 - 命令: ${command}`);
+          performanceLogger.log('api', `tauri_fallback_${command}`, {
+            severity: 'warning',
+            metadata: { command, reason: 'callback_error' }
+          });
+          return createFallbackData(command) as T;
+        }
+        
+        // 在開發模式下，如果是特定的命令錯誤，提供模擬資料
+        if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && (
+          _error.message.includes('不可用') || 
+          _error.message.includes('not available') ||
+          _error.message.includes('無法找到 Tauri invoke')
+        )) {
+          console.warn(`Tauri 命令 ${command} 失敗，嘗試使用模擬資料`);
+          performanceLogger.log('api', `tauri_fallback_${command}`, {
+            severity: 'warning',
+            metadata: { command, reason: 'api_unavailable' }
+          });
+          return createFallbackData(command) as T;
+        }
+        throw _error;
+      }
     }
-    
-    // 在開發模式下，如果是特定的命令錯誤，提供模擬資料
-    if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && (
-      _error.message.includes('不可用') || 
-      _error.message.includes('not available') ||
-      _error.message.includes('無法找到 Tauri invoke')
-    )) {
-      console.warn(`Tauri 命令 ${command} 失敗，嘗試使用模擬資料`);
-      return createFallbackData(command) as T;
-    }
-    throw _error;
-  }
+  );
 };
 
 // Tauri API 實現
@@ -308,7 +341,13 @@ export const tauriAPI: API = {
           try {
             // 嘗試解析 JSON 格式的內容
             const parsedContent = JSON.parse(chapter.content);
-            content = parsedContent;
+            // 驗證解析後的內容是否為有效的 Descendant[] 格式
+            if (Array.isArray(parsedContent) && parsedContent.length > 0) {
+              content = parsedContent;
+            } else {
+              // 如果不是有效陣列，使用預設空內容
+              content = [{ type: 'paragraph', children: [{ text: '' }] }];
+            }
             console.log(`🔍 [API] 章節 ${index + 1} JSON 解析成功:`, {
               解析後類型: typeof parsedContent,
               是否為陣列: Array.isArray(parsedContent),
@@ -392,7 +431,14 @@ export const tauriAPI: API = {
       if (chapter.content) {
         try {
           // 嘗試解析 JSON 格式的內容
-          content = JSON.parse(chapter.content);
+          const parsedContent = JSON.parse(chapter.content);
+          // 驗證解析後的內容是否為有效的 Descendant[] 格式
+          if (Array.isArray(parsedContent) && parsedContent.length > 0) {
+            content = parsedContent;
+          } else {
+            // 如果不是有效陣列，使用預設空內容
+            content = [{ type: 'paragraph', children: [{ text: '' }] }];
+          }
         } catch (_error) {
           // 如果解析失敗，將純文字轉換為 Slate.js 格式
           console.log('轉換純文字章節內容為 Slate 格式');
@@ -1023,13 +1069,6 @@ export const tauriAPI: API = {
       });
     },
 
-    generateBatchSeeds: async (baseSeed: number, count: number) => {
-      return safeInvoke('generate_batch_seeds', {
-        base_seed: baseSeed,
-        count: count
-      });
-    },
-
     // 插畫生成
     generateIllustration: async (
       projectId: string,
@@ -1054,12 +1093,6 @@ export const tauriAPI: API = {
         safetyLevel: safetyLevel || 'block_most',
         customNegativePrompt: customNegativePrompt,
         apiKey: apiKey
-      });
-    },
-
-    getGenerationStatus: async (taskId: string) => {
-      return safeInvoke('get_illustration_generation_status', {
-        taskId: taskId
       });
     },
 
@@ -1110,22 +1143,12 @@ export const tauriAPI: API = {
       });
     },
 
-    getQueueStatistics: async () => {
-      return safeInvoke('get_batch_queue_statistics', {});
-    },
-
-    updateBatchConfig: async (maxConcurrent?: number, maxQueue?: number, timeout?: number, retries?: number) => {
-      return safeInvoke('update_batch_manager_config', {
-        maxConcurrentTasks: maxConcurrent,
-        maxQueueSize: maxQueue,
-        taskTimeoutSeconds: timeout,
-        retryAttempts: retries
-      });
-    },
-
-    cleanupCompletedTasks: async (olderThanHours?: number) => {
-      return safeInvoke('cleanup_completed_tasks', {
-        olderThanHours: olderThanHours || 24
+    getIllustrationHistory: async (projectId: string, characterId?: string, limit?: number, offset?: number) => {
+      return safeInvoke('get_illustration_history', {
+        projectId: projectId,
+        characterId: characterId,
+        limit: limit,
+        offset: offset
       });
     },
 

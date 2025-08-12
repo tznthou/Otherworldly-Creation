@@ -1,7 +1,8 @@
-import React, { useCallback, useMemo, useEffect } from 'react';
+import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { createEditor, Descendant, Editor, Transforms, Range, Element } from 'slate';
 import { Slate, Editable, withReact, ReactEditor, RenderLeafProps as SlateRenderLeafProps, useSlate } from 'slate-react';
 import { withHistory } from 'slate-history';
+import { useVirtualization } from '../../utils/componentOptimization';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { selectEditorSettings, toggleSettings, toggleReadingMode, selectIsReadingMode } from '../../store/slices/editorSlice';
 import SaveStatusIndicator from '../UI/SaveStatusIndicator';
@@ -29,6 +30,42 @@ declare module 'slate' {
   }
 }
 
+// 性能優化插件：限制渲染節點數量
+const withPerformance = (editor: Editor) => {
+  const { insertData, insertText } = editor;
+
+  // 批量處理文本插入
+  editor.insertText = (text: string) => {
+    const { selection } = editor;
+    if (selection) {
+      const textLength = text.length;
+      if (textLength > 1000) {
+        // 對於大量文本，使用批量插入
+        Editor.withoutNormalizing(editor, () => {
+          insertText(text);
+        });
+        return;
+      }
+    }
+    insertText(text);
+  };
+
+  // 優化數據插入
+  editor.insertData = (data: DataTransfer) => {
+    const text = data.getData('text/plain');
+    if (text && text.length > 5000) {
+      // 對於大量數據，分批處理
+      Editor.withoutNormalizing(editor, () => {
+        insertData(data);
+      });
+      return;
+    }
+    insertData(data);
+  };
+
+  return editor;
+};
+
 interface SlateEditorProps {
   value: Descendant[];
   onChange: (value: Descendant[]) => void;
@@ -42,7 +79,41 @@ interface SlateEditorProps {
   showToolbar?: boolean;
 }
 
-const SlateEditor: React.FC<SlateEditorProps> = ({
+// 更安全的編輯器組件包裝
+const SafeSlateEditor: React.FC<SlateEditorProps> = (props) => {
+  try {
+    // 立即記錄和驗證 props
+    console.log('[SafeSlateEditor] Props received:', {
+      hasValue: 'value' in props,
+      valueType: typeof props.value,
+      isArray: Array.isArray(props.value),
+      length: Array.isArray(props.value) ? props.value.length : 'N/A'
+    });
+
+    // 確保 value 是有效的
+    const safeProps = {
+      ...props,
+      value: Array.isArray(props.value) && props.value.length > 0 
+        ? props.value 
+        : [{ type: 'paragraph' as const, children: [{ text: '' }] } as CustomElement]
+    };
+
+    return <SlateEditorCore {...safeProps} />;
+  } catch (error) {
+    console.error('[SafeSlateEditor] Props validation error:', error);
+    return (
+      <div className="w-full p-6 bg-red-900/20 border border-red-500 rounded-lg">
+        <h3 className="text-red-400 text-lg font-bold mb-2">編輯器初始化錯誤</h3>
+        <p className="text-red-300 text-sm">無法初始化編輯器組件</p>
+        <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-red-600 text-white rounded">
+          重新整理
+        </button>
+      </div>
+    );
+  }
+};
+
+const SlateEditorCore: React.FC<SlateEditorProps> = ({
   value,
   onChange,
   placeholder = '開始寫作...',
@@ -52,10 +123,76 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   onEditorReady, // 新增參數
   isSaving = false,
   isGenerating = false,
-  showToolbar = true,
+  showToolbar = true
 }) => {
-  const editor = useMemo(() => withHistory(withReact(createEditor())), []);
+  console.log('[SlateEditorCore] Initializing with value:', {
+    type: typeof value,
+    isArray: Array.isArray(value),
+    length: Array.isArray(value) ? value.length : 'N/A'
+  });
+  // 防禦性檢查：確保 value 是有效的 Slate 編輯器內容
+  const safeValue = useMemo(() => {
+    try {
+      // 先檢查 value 是否存在且為陣列
+      if (!value || !Array.isArray(value) || value.length === 0) {
+        console.log('[SlateEditor] Value is invalid, using default:', value);
+        return [{ type: 'paragraph' as const, children: [{ text: '' }] } as CustomElement];
+      }
+      
+      // 檢查每個節點是否有效，使用更安全的方式
+      const validatedValue = [];
+      for (let i = 0; i < value.length; i++) {
+        const node = value[i];
+        
+        if (!node || typeof node !== 'object') {
+          console.warn('[SlateEditor] Invalid node at index', i, ':', node);
+          validatedValue.push({ type: 'paragraph' as const, children: [{ text: '' }] } as CustomElement);
+          continue;
+        }
+        
+        // 檢查節點是否是 CustomElement（有 children 屬性）
+        const isElement = 'children' in node && Array.isArray((node as CustomElement).children);
+        if (!isElement) {
+          // 如果不是 Element，跳過（可能是文本節點）
+          if ('text' in node) {
+            validatedValue.push(node as CustomText);
+          } else {
+            console.warn('[SlateEditor] Unknown node type at index', i, ':', node);
+            validatedValue.push({ type: 'paragraph' as const, children: [{ text: '' }] } as CustomElement);
+          }
+          continue;
+        }
+
+        const elementNode = node as CustomElement;
+        
+        // 確保至少有一個子節點
+        if (elementNode.children.length === 0) {
+          console.warn('[SlateEditor] Node has empty children at index', i);
+          validatedValue.push({ ...elementNode, children: [{ text: '' }] } as CustomElement);
+          continue;
+        }
+        
+        validatedValue.push(node);
+      }
+      
+      return validatedValue;
+    } catch (error) {
+      console.error('[SlateEditor] Error validating value:', error, 'Value:', value);
+      return [{ type: 'paragraph' as const, children: [{ text: '' }] } as CustomElement];
+    }
+  }, [value]);
+  
+  // 優化編輯器實例化，暫時移除性能插件進行測試
+  const editor = useMemo(() => {
+    const baseEditor = createEditor();
+    // 暫時移除 withPerformance 來測試
+    return withHistory(withReact(baseEditor));
+  }, []);
+
   const settings = useAppSelector(selectEditorSettings);
+  
+  // 直接處理 onChange 事件（移除防抖避免錯誤）
+  const lastValueRef = useRef<Descendant[]>(safeValue);
 
   // 通知父組件編輯器已準備好
   useEffect(() => {
@@ -63,6 +200,18 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       onEditorReady(editor);
     }
   }, [editor, onEditorReady]);
+
+  // 優化的 onChange 處理（直接調用，無防抖）
+  const handleChange = useCallback((newValue: Descendant[]) => {
+    // 只在內容實際變化時才觸發回調
+    const newValueStr = JSON.stringify(newValue);
+    const lastValueStr = JSON.stringify(lastValueRef.current);
+    
+    if (newValueStr !== lastValueStr) {
+      lastValueRef.current = newValue;
+      onChange(newValue);
+    }
+  }, [onChange]);
 
   // 處理鍵盤快捷鍵
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
@@ -106,113 +255,120 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           if ('type' in block && block.type === 'quote') {
             event.preventDefault();
             Transforms.insertNodes(editor, {
-              type: 'paragraph',
+              type: 'paragraph' as const,
               children: [{ text: '' }],
-            });
+            } as CustomElement);
           }
         }
       }
     }
   }, [editor, onSave]);
 
-  // 渲染元素
+  // 優化的渲染元素組件
   interface RenderElementProps {
     attributes: React.HTMLAttributes<HTMLElement>;
     children: React.ReactNode;
     element: CustomElement;
   }
-  const renderElement = useCallback((props: RenderElementProps) => {
-    switch (props.element.type) {
+  
+  const ElementComponent = React.memo<RenderElementProps>(({ element, attributes, children }) => {
+    switch (element.type) {
       case 'heading': {
-        const level = props.element.level || 1;
+        const level = element.level || 1;
         const HeadingTag = `h${Math.min(level, 6)}` as keyof JSX.IntrinsicElements;
         return React.createElement(
           HeadingTag,
           {
-            ...props.attributes,
+            ...attributes,
             className: `text-${4 - Math.min(level, 3)}xl font-bold text-gold-400 mb-4`,
           },
-          props.children
+          children
         );
       }
       case 'quote':
         return (
           <blockquote
-            {...props.attributes}
+            {...attributes}
             className="border-l-4 border-gold-500 pl-4 italic text-gray-300 my-4"
           >
-            {props.children}
+            {children}
           </blockquote>
         );
       case 'bulleted-list':
       case 'list-item':
-        // 完全避免任何列表標籤，統一渲染為段落
         return (
-          <div {...props.attributes} className="mb-2 ml-4 flex">
+          <div {...attributes} className="mb-2 ml-4 flex">
             <span className="text-gold-400 mr-2">•</span>
-            <span className="flex-1">{props.children}</span>
+            <span className="flex-1">{children}</span>
           </div>
         );
       default:
         return (
-          <p {...props.attributes} className="mb-4 leading-relaxed">
-            {props.children}
+          <p {...attributes} className="mb-4 leading-relaxed">
+            {children}
           </p>
         );
     }
-  }, []);
+  });
+  
+  const renderElement = useCallback((props: RenderElementProps) => (
+    <ElementComponent {...props} />
+  ), []);
 
-  // 渲染葉子節點
-  const renderLeaf = useCallback((props: SlateRenderLeafProps) => {
-    const leaf = props.leaf as CustomText;
-    let children = props.children;
+  // 優化的葉子節點組件
+  const LeafComponent = React.memo<SlateRenderLeafProps>(({ leaf, attributes, children }) => {
+    const typedLeaf = leaf as CustomText;
+    let content = children;
 
-    if (leaf.bold) {
-      children = <strong className="font-bold">{children}</strong>;
+    if (typedLeaf.bold) {
+      content = <strong className="font-bold">{content}</strong>;
     }
-
-    if (leaf.italic) {
-      children = <em className="italic">{children}</em>;
+    if (typedLeaf.italic) {
+      content = <em className="italic">{content}</em>;
     }
-
-    if (leaf.underline) {
-      children = <u className="underline">{children}</u>;
+    if (typedLeaf.underline) {
+      content = <u className="underline">{content}</u>;
     }
-
-    if (leaf.code) {
-      children = (
+    if (typedLeaf.code) {
+      content = (
         <code className="bg-cosmic-800 px-2 py-1 rounded text-sm font-mono text-gold-400">
-          {children}
+          {content}
         </code>
       );
     }
 
-    return <span {...props.attributes}>{children}</span>;
-  }, []);
+    return <span {...attributes}>{content}</span>;
+  });
 
-  // 計算編輯器樣式
-  const editorStyle = {
-    minHeight: '100vh', // 確保編輯器有足夠高度產生滾動
+  const renderLeaf = useCallback((props: SlateRenderLeafProps) => (
+    <LeafComponent {...props} />
+  ), []);
+
+  // 優化的編輯器樣式計算
+  const editorStyle = useMemo(() => ({
+    minHeight: '100vh',
     fontFamily: settings.fontFamily,
     fontSize: `${settings.fontSize}px`,
     fontWeight: settings.fontWeight,
     lineHeight: settings.lineHeight,
     letterSpacing: `${settings.letterSpacing}px`,
-    textAlign: settings.textAlign,
+    textAlign: settings.textAlign as 'left' | 'center' | 'right' | 'justify',
     color: settings.textColor,
     backgroundColor: settings.backgroundColor,
-    whiteSpace: settings.wordWrap ? 'pre-wrap' : 'pre',
-  };
+    whiteSpace: settings.wordWrap ? 'pre-wrap' : 'pre' as 'pre-wrap' | 'pre',
+  }), [settings]);
 
 
-  return (
-    <div 
-      className="w-full transition-all duration-300"
-      style={{ 
-        backgroundColor: settings.backgroundColor
-      }}
-    >
-      <Slate editor={editor} initialValue={value} onChange={onChange}>
+  // 錯誤邊界包裝
+  try {
+    return (
+      <div 
+        className="w-full transition-all duration-300"
+        style={{ 
+          backgroundColor: settings.backgroundColor
+        }}
+      >
+        <Slate editor={editor} initialValue={safeValue} onChange={handleChange}>
         <div className="w-full">
           {/* 內聯工具欄 */}
           {showToolbar && (
@@ -247,6 +403,36 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       </Slate>
     </div>
   );
+  } catch (error) {
+    console.error('[SlateEditor] Render error:', error);
+    console.error('[SlateEditor] Error details:', {
+      value,
+      safeValue,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    
+    // 返回錯誤狀態的編輯器
+    return (
+      <div className="w-full p-6 bg-red-900/20 border border-red-500 rounded-lg">
+        <div className="text-red-400 mb-4">
+          <h3 className="text-lg font-bold mb-2">編輯器載入錯誤</h3>
+          <p className="text-sm">無法載入章節內容，請重新整理頁面或聯繫支援。</p>
+          <details className="mt-4">
+            <summary className="cursor-pointer text-xs">錯誤詳情</summary>
+            <pre className="mt-2 text-xs overflow-auto">
+              {error instanceof Error ? error.stack : String(error)}
+            </pre>
+          </details>
+        </div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="btn-primary"
+        >
+          重新整理頁面
+        </button>
+      </div>
+    );
+  }
 };
 
 // 輔助函數：切換文本標記
@@ -492,5 +678,12 @@ const InlineToolbar: React.FC<InlineToolbarProps> = ({
   );
 };
 
-export default SlateEditor;
+export default SafeSlateEditor;
 export { toggleMark, toggleBlock, isMarkActive, isBlockActive };
+
+// 開發環境性能監控（暫時註解避免模組載入錯誤）
+// if (process.env.NODE_ENV === 'development') {
+//   import('../../utils/reactScan').then(({ monitorComponent }) => {
+//     monitorComponent(SafeSlateEditor, 'SafeSlateEditor');
+//   });
+// }

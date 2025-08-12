@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -298,3 +298,10 @@ const EmotionTrendChart: React.FC<EmotionTrendChartProps> = ({
 };
 
 export default EmotionTrendChart;
+
+// 開發環境性能監控（暫時註解避免模組載入錯誤）
+// if (process.env.NODE_ENV === 'development') {
+//   import('../../utils/reactScan').then(({ monitorComponent }) => {
+//     monitorComponent(EmotionTrendChart, 'EmotionTrendChart');
+//   });
+// }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { integratePerformanceMonitoring } from './utils/performanceLogger';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
@@ -78,6 +79,9 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // 初始化性能監控系統
+        integratePerformanceMonitoring();
+        
         // 檢查運行環境
         console.log('=== App 初始化調試信息 ===');
         console.log('運行環境:', isElectron() ? 'Electron' : isTauri() ? 'Tauri' : 'Unknown');

@@ -824,11 +824,11 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           
           <div>
             <label className="block text-sm text-gray-300 mb-1">生成長度 ({maxTokens})</label>
-            <p className="text-xs text-gray-400 mb-2">約 {Math.round(maxTokens * 0.7)}-{Math.round(maxTokens * 1.2)} 字（設定值越高生成文本越長）</p>
+            <p className="text-xs text-gray-400 mb-2">約 {Math.round(maxTokens * 0.7)}-{Math.round(maxTokens * 1.2)} 字（思考式模型會扣除思考部分，實際內容更短）</p>
             <input
               type="range"
               min="50"
-              max="500"
+              max="1800"
               step="10"
               value={maxTokens}
               onChange={(e) => setMaxTokens(parseInt(e.target.value))}

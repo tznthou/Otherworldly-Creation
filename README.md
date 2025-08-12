@@ -35,7 +35,7 @@
 - **性能**：啟動速度提升 300%，記憶體使用減少 70% ⚡
 - **體積**：應用程式體積減少 90% 📦
 - **程式碼品質**：✅ Rust: Clean | ✅ TypeScript: 0 errors | ✅ ESLint: 0 warnings (完美狀態) 
-- **總程式碼行數**：560,198行 (Rust: 268,526行, TypeScript/JavaScript: 69,209行, 文檔: 202,449行, JSON: 20,014行) - 2025-08-11 22:36更新
+- **總程式碼行數**：228,908行 (核心程式碼統計，排除 node_modules 等依賴) - 2025-08-12 09:29更新
 - **重大里程碑**：🏆 **發佈系統完成** - PKG 自動化生成 + PDF/EPUB 完整匯出 + 劇情分析引擎 (2025-08-11 01:32)
 
 ### ✅ 已完成功能
@@ -75,6 +75,22 @@
 **系統需求**：macOS 10.11+
 
 ## 📋 版本變更日誌
+
+### v1.0.5 (2025-08-12) - AI續寫引擎升級 + 性能優化
+- 🚀 **AI續寫生成升級**：生成長度上限從 500 tokens 提升至 1800 tokens，支援更完整的小說段落生成
+  - **智能說明優化**：針對思考式模型（Claude o1等）添加專業說明文字，提醒用戶實際內容長度
+  - **參數調整範圍**：min=50, max=1800, step=10 的細粒度控制
+  - **覆蓋範圍**：AIWritingPanel 和 SimpleAIWritingPanel 雙重升級
+- ⚡ **性能優化系統**：新增完整的性能監控與優化框架
+  - **LazyBatchIllustrationPanel.tsx**：AI插畫面板懶加載優化
+  - **LazyCharacterAnalysisPanel.tsx**：角色分析面板懶加載優化  
+  - **optimizedSelectors.ts**：Redux 狀態選擇器優化
+  - **componentOptimization.ts**：組件渲染優化工具
+  - **performanceMonitor.ts**：實時性能監控系統
+  - **performanceBenchmark.ts**：性能基準測試工具
+  - **performanceLogger.ts**：性能日誌記錄系統
+- 🔧 **開發工具強化**：新增 ReactScan 整合和 SimpleSlateEditor 輕量版編輯器
+- 📊 **程式碼統計**：總計 228,908 行程式碼，淨增加 1,706 行（+2,920/-1,214）
 
 ### v1.0.4 (2025-08-11) - PKG 發佈系統完成
 - 🍎 **macOS PKG 安裝程式**：完整實現自動生成與 quarantine 繞過

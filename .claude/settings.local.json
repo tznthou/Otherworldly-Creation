@@ -131,7 +131,9 @@
       "Bash(./genesis-chronicle.app/Contents/MacOS/genesis-chronicle:*)",
       "Bash(gtimeout:*)",
       "Bash(./scripts/create-pkg.sh:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(cargo clean:*)",
+      "Bash(env)"
     ],
     "deny": []
   }

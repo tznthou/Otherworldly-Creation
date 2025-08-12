@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store/store';
+import { selectCharactersByProjectId, selectFilteredCharacters } from '../../store/optimizedSelectors';
+import { withSmartMemo, useOptimizedSelector, useStableCallback, useDebounce } from '../../utils/componentOptimization';
 import LoadingSpinner from '../UI/LoadingSpinner';
 // import { api } from '../../api'; // 暫時不使用
 import { characterAnalysisService, CharacterAnalysisResult, ProjectCharacterAnalysis } from '../../services/characterAnalysisService';
@@ -38,7 +40,16 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
   _onSuggestionApply
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { characters } = useSelector((state: RootState) => state.characters);
+  
+  // 使用優化的選擇器
+  const characters = useOptimizedSelector((state: RootState) => 
+    selectCharactersByProjectId(state, projectId)
+  );
+  const charactersLoading = useOptimizedSelector((state: RootState) => state.characters.loading);
+  const charactersError = useOptimizedSelector((state: RootState) => state.characters.error);
+  
+  // 防抖的角色數據，避免頻繁重新分析
+  const debouncedCharacters = useDebounce(characters, 300);
   
   // 調試：監控Redux狀態變化
   useEffect(() => {
@@ -76,8 +87,8 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
     }
   }, [projectId, selectedCharacterId, dispatch]);
 
-  // 執行角色分析
-  const performAnalysis = async () => {
+  // 使用穩定的回調函數，避免不必要的重新渲染
+  const performAnalysis = useStableCallback(async () => {
     if (!selectedCharacterId) {
       dispatch(addNotification({
         id: Date.now().toString(),
@@ -148,23 +159,23 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, [selectedCharacterId, analysisScope, currentChapter, projectId, chapters, dispatch]);
 
-  // 獲取人格特徵顏色
-  const getPersonalityColor = (score: number) => {
+  // 記憶化的人格特徵顏色獲取函數
+  const getPersonalityColor = useCallback((score: number) => {
     if (score >= 0.7) return 'text-green-400';
     if (score >= 0.5) return 'text-yellow-400';
     if (score >= 0.3) return 'text-orange-400';
     return 'text-red-400';
-  };
+  }, []);
 
-  // 獲取一致性顏色
-  const getConsistencyColor = (score: number) => {
+  // 記憶化的一致性顏色獲取函數
+  const getConsistencyColor = useCallback((score: number) => {
     if (score >= 0.8) return 'text-green-400';
     if (score >= 0.6) return 'text-yellow-400';
     if (score >= 0.4) return 'text-orange-400';
     return 'text-red-400';
-  };
+  }, []);
 
   // 獲取情感色調顏色
   const getEmotionColor = (tone: string) => {
@@ -729,4 +740,12 @@ function handleApplySuggestion(suggestion: Suggestion): void {
   // navigate(`/chapter/${suggestion.chapters[0]}`);
 }
 
-export default CharacterAnalysisPanel;
+// 導出記憶化的組件
+export default withSmartMemo(CharacterAnalysisPanel);
+
+// 開發環境性能監控（暫時註解避免模組載入錯誤）
+// if (process.env.NODE_ENV === 'development') {
+//   import('../../utils/reactScan').then(({ monitorComponent }) => {
+//     monitorComponent(CharacterAnalysisPanel, 'CharacterAnalysisPanel');
+//   });
+// }

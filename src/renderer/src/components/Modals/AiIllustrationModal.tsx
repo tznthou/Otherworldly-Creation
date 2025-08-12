@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
-import BatchIllustrationPanel from '../AI/BatchIllustrationPanel';
+import LazyBatchIllustrationPanel from '../AI/LazyBatchIllustrationPanel';
 
 const AiIllustrationModal: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -26,7 +26,7 @@ const AiIllustrationModal: React.FC = () => {
 
         {/* 內容 */}
         <div className="p-6">
-          <BatchIllustrationPanel />
+          <LazyBatchIllustrationPanel />
         </div>
       </div>
     </div>

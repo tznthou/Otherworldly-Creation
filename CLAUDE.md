@@ -54,12 +54,16 @@ ollama pull llama3.2      # Install recommended Chinese-optimized model
 
 ### Database Management
 ```bash
-# Development database
+# Development database (src-tauri/genesis-chronicle-dev.db)
 sqlite3 src-tauri/genesis-chronicle-dev.db ".tables"
 sqlite3 src-tauri/genesis-chronicle-dev.db "SELECT COUNT(*) FROM projects;"
 
 # Production database: ~/Library/Application Support/genesis-chronicle/genesis-chronicle.db
 rm ~/Library/Application\ Support/genesis-chronicle/genesis-chronicle.db  # Reset to rebuild
+
+# Database separation: development and production use different databases
+# Development: Uses local ./genesis-chronicle-dev.db
+# Production: Uses ~/Library/Application Support/genesis-chronicle/genesis-chronicle.db
 
 # Test database operations
 node scripts/test-ai-history.js
@@ -113,10 +117,10 @@ Frontend (`src/renderer/src/api/tauri.ts`) → Tauri IPC → Rust handlers (`src
 
 ### NLP & Character Analysis
 - **Service**: `src/renderer/src/services/characterAnalysisService.ts`
-- **UI**: `src/renderer/src/components/AI/CharacterAnalysisPanel.tsx`
-- **Charts**: `PersonalityRadarChart.tsx`, `EmotionTrendChart.tsx`, `ConsistencyScoreChart.tsx`
+- **UI**: `src/renderer/src/components/AI/CharacterAnalysisPanel.tsx` (715 lines, 6 complete tabs)
+- **Charts**: `PersonalityRadarChart.tsx`, `EmotionTrendChart.tsx`, `ConsistencyScoreChart.tsx` (Recharts 3.1.2)
 - **NLP**: `src/renderer/src/utils/nlpUtils.ts` with Compromise.js
-- **Features**: Chinese dialogue extraction, Big Five personality analysis, consistency detection
+- **Features**: Chinese dialogue extraction, Big Five personality analysis, consistency detection, intelligent suggestions
 
 ### AI Illustration System
 - **Main Panel**: `src/renderer/src/components/AI/BatchIllustrationPanel.tsx` - Batch illustration generation
@@ -180,10 +184,11 @@ const toggleCharacterSelection = (characterId: string) => {
 
 ## GitHub Actions & CI/CD
 
-- **release.yml**: Triggered by `v*` tags, generates DMG + PKG
+- **release.yml**: Triggered by `v*` tags, generates DMG + PKG (Windows MSI + macOS installers)
 - **release-signed.yml**: Apple Developer ID signed versions
 - **test-build.yml**: Build validation without releasing
 
+**Platform Support**: Windows (MSI) + macOS (PKG/DMG) - Linux support removed by design decision.
 PKG generation automatically handles macOS quarantine attributes for seamless installation.
 
 ## Known Issues & Solutions

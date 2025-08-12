@@ -92,6 +92,10 @@ pub async fn create_chapter(chapter: CreateChapterRequest) -> Result<String, Str
         order_index
     };
     
+    // 設置預設的章節內容
+    let default_content = r#"[{"type":"paragraph","children":[{"text":""}]}]"#.to_string();
+    let content = chapter.content.as_ref().unwrap_or(&default_content);
+    
     conn.execute(
         "INSERT INTO chapters (id, project_id, title, content, order_index, chapter_number, created_at, updated_at) 
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -99,7 +103,7 @@ pub async fn create_chapter(chapter: CreateChapterRequest) -> Result<String, Str
             chapter_id,
             chapter.project_id,
             chapter.title,
-            chapter.content,
+            content,
             order_index,
             chapter_number,
             now,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   RadarChart,
   Radar,
@@ -32,13 +32,10 @@ interface PersonalityRadarChartProps {
  * 人格特徵雷達圖組件
  * 使用 Big Five 人格模型展示角色人格特徵
  */
-const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = ({
-  personality,
-  confidence,
-  className = ''
-}) => {
-  // 轉換人格數據為雷達圖格式
-  const data: PersonalityData[] = [
+const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = React.memo((props) => {
+  const { personality, confidence, className = '' } = props;
+  // 使用 useMemo 優化數據計算
+  const data: PersonalityData[] = useMemo(() => [
     {
       trait: '開放性',
       score: Math.round(personality.openness * 100),
@@ -69,26 +66,26 @@ const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = ({
       fullName: 'Neuroticism',
       description: '情緒穩定性和對壓力的反應'
     }
-  ];
+  ], [personality]);
 
-  // 自定義提示框
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: PersonalityData }> }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-cosmic-900 border border-gold-600/30 rounded-lg p-3 shadow-lg">
-          <p className="text-gold-400 font-bold text-sm">{data.fullName}</p>
-          <p className="text-white text-sm mb-1">
-            評分: <span className="text-gold-300 font-medium">{data.score}%</span>
-          </p>
-          <p className="text-gray-300 text-xs max-w-48 leading-tight">
-            {data.description}
-          </p>
-        </div>
-      );
+  // 優化的自定義提示框
+  const CustomTooltip = React.memo(({ active, payload }: { active?: boolean; payload?: Array<{ payload: PersonalityData }> }) => {
+    if (!active || !payload || payload.length === 0) {
+      return null;
     }
-    return null;
-  };
+    
+    const data = payload[0].payload;
+    return (
+      <div className="bg-cosmic-900 border border-gold-600/30 rounded-lg p-3 shadow-lg">
+        <p className="text-white text-sm mb-1">
+          評分: <span className="text-gold-300 font-medium">{data.score}%</span>
+        </p>
+        <p className="text-gray-300 text-xs max-w-48 leading-tight">
+          {data.description}
+        </p>
+      </div>
+    );
+  });
 
   return (
     <div className={`${className}`}>
@@ -196,7 +193,10 @@ const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = ({
       </div>
     </div>
   );
-};
+});
+
+// 設置組件顯示名稱
+PersonalityRadarChart.displayName = 'PersonalityRadarChart';
 
 /**
  * 基於人格特徵生成總結
@@ -230,3 +230,10 @@ function getPersonalitySummary(data: PersonalityData[]): string {
 }
 
 export default PersonalityRadarChart;
+
+// 開發環境性能監控（暫時註解避免模組載入錯誤）
+// if (process.env.NODE_ENV === 'development') {
+//   import('../../utils/reactScan').then(({ monitorComponent }) => {
+//     monitorComponent(PersonalityRadarChart, 'PersonalityRadarChart');
+//   });
+// }

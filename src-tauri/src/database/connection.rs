@@ -78,13 +78,30 @@ pub fn create_connection() -> Result<Connection> {
     // 啟用外鍵約束
     conn.pragma_update(None, "foreign_keys", &true)?;
     
-    // 設置 WAL 模式以提高性能
+    // === 性能優化設定 ===
+    
+    // 設置 WAL 模式以提高性能（允許並行讀寫）
     conn.pragma_update(None, "journal_mode", &"WAL")?;
     
-    // 設置同步模式
+    // 設置同步模式為 NORMAL（平衡性能和安全性）
     conn.pragma_update(None, "synchronous", &"NORMAL")?;
     
-    log::info!("資料庫連接成功");
+    // 增加緩存大小（預設 -2000，約 2MB）
+    conn.pragma_update(None, "cache_size", &-8000)?; // ~8MB 緩存
+    
+    // 設置臨時表存儲位置為內存
+    conn.pragma_update(None, "temp_store", &"MEMORY")?;
+    
+    // 設置 mmap 大小以提高大文件性能
+    conn.pragma_update(None, "mmap_size", &268435456)?; // 256MB
+    
+    // 優化查詢計劃器
+    conn.pragma_update(None, "optimize", &1000)?;
+    
+    // 自動清理設置
+    conn.pragma_update(None, "auto_vacuum", &"INCREMENTAL")?;
+    
+    log::info!("資料庫連接成功，已啟用性能優化");
     
     Ok(conn)
 }
