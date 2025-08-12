@@ -548,7 +548,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   const isSelected = selectedCharacters.includes(character.id);
                   
                   // 獲取角色頭像
-                  const getCharacterAvatar = (char: any) => {
+                  const getCharacterAvatar = (char: Character) => {
                     if (char.gender === 'female') {
                       return char.archetype?.includes('魔法') || char.archetype?.includes('法師') ? '🧙‍♀️' : '👩';
                     } else if (char.gender === 'male') {
@@ -563,7 +563,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   };
 
                   // 獲取角色類型顏色
-                  const getArchetypeColor = (archetype: any) => {
+                  const getArchetypeColor = (archetype: string | undefined) => {
                     if (!archetype) return 'from-gray-600 to-gray-700';
                     
                     if (archetype.includes('主角') || archetype.includes('英雄')) return 'from-amber-500 to-orange-600';

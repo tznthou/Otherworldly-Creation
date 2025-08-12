@@ -214,7 +214,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
       
       // 排序
       filteredResults.sort((a, b) => {
-        let aValue: any, bValue: any;
+        let aValue: Date | number, bValue: Date | number;
         
         switch (filter.sort_by) {
           case 'created_at':
@@ -257,7 +257,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
   };
 
   // 更新篩選
-  const updateFilter = (key: keyof IllustrationFilter, value: any) => {
+  const updateFilter = (key: keyof IllustrationFilter, value: string[] | [number, number] | [string, string] | string) => {
     setFilter(prev => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
@@ -433,7 +433,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
               </label>
               <select
                 value={filter.sort_by}
-                onChange={(value) => updateFilter('sort_by', value)}
+                onChange={(e) => updateFilter('sort_by', e.target.value)}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 mb-2"
               >
                 <option value="created_at">創建時間</option>
@@ -443,7 +443,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
               
               <select
                 value={filter.sort_order}
-                onChange={(value) => updateFilter('sort_order', value)}
+                onChange={(e) => updateFilter('sort_order', e.target.value)}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="desc">降序</option>

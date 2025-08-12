@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { createEditor, Descendant } from 'slate';
-import { Slate, Editable, withReact } from 'slate-react';
+import { Slate, Editable, withReact, RenderElementProps, RenderLeafProps } from 'slate-react';
 import { withHistory } from 'slate-history';
 
 // 定義編輯器節點類型
@@ -65,11 +65,11 @@ const SimpleSlateEditor: React.FC<SimpleSlateEditorProps> = ({
     onChange(newValue);
   }, [onChange]);
 
-  const renderElement = useCallback((props: any) => {
+  const renderElement = useCallback((props: RenderElementProps) => {
     return <p {...props.attributes}>{props.children}</p>;
   }, []);
 
-  const renderLeaf = useCallback((props: any) => {
+  const renderLeaf = useCallback((props: RenderLeafProps) => {
     return <span {...props.attributes}>{props.children}</span>;
   }, []);
 
