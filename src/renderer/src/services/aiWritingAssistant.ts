@@ -73,110 +73,143 @@ export function analyzeWritingContext(text: string): ContextAnalysis {
 }
 
 /**
+ * 檢測是否為免費 API
+ */
+export function isFreeAPI(currentModel: string, providerType: string): boolean {
+  // 🔥 OpenRouter 免費模型檢測（模型名包含 'free'）
+  if (providerType === 'openrouter' || currentModel.includes('openrouter')) {
+    return currentModel.toLowerCase().includes('free');
+  }
+  
+  // Gemini 免費版檢測
+  if (providerType === 'gemini' || currentModel.includes('gemini')) {
+    // OpenRouter 的 Gemini 是付費的（除非明確標註 free）
+    if (currentModel.includes('google/') || currentModel.includes('openrouter')) {
+      return currentModel.toLowerCase().includes('free');
+    }
+    // 直接使用 Gemini API 的情況，大多數是免費版
+    return true;
+  }
+  
+  // Ollama 本地模型視為免費
+  if (providerType === 'ollama') {
+    return true;
+  }
+  
+  // 其他 API 提供者的免費模型檢測
+  if (currentModel.toLowerCase().includes('free')) {
+    return true;
+  }
+  
+  // 其他情況預設為付費
+  return false;
+}
+
+/**
+ * 根據 API 類型建議版本數量
+ */
+export function getRecommendedVersionCount(currentModel: string, providerType: string): number {
+  if (isFreeAPI(currentModel, providerType)) {
+    return 1; // 免費 API 建議單版本
+  }
+  return 3; // 付費 API 保持多版本
+}
+
+/**
  * 根據上下文分析生成智能續寫參數
  */
-export function generateSmartParams(context: ContextAnalysis, userTemp?: number, userMaxTokens?: number, currentModel?: string): SmartGenerationParams {
-  console.log('🎯 生成智能續寫參數...');
+export function generateSmartParams(
+  context: ContextAnalysis, 
+  baseTemperature: number = 0.8, 
+  baseMaxTokens: number = 500,
+  currentModel: string = '',
+  providerType: string = ''
+): { 
+  temperature: number; 
+  maxTokens: number; 
+  style: string; 
+  contextHints: string[]; 
+  characterNames: string[];
+  locationNames: string[];
+  recommendedVersions: number;
+  isFreeTier: boolean;
+} {
+  const { emotionalTone, entities, textAnalysis } = context;
   
-  // 根據文本複雜度調整溫度
-  let temperature = userTemp || 0.7;
+  let temperature = baseTemperature;
+  let maxTokens = baseMaxTokens;
   
-  if (context.textAnalysis.complexity === 'complex') {
-    temperature = Math.min(temperature + 0.1, 0.9); // 複雜文本需要更多創意
-  } else if (context.textAnalysis.complexity === 'simple') {
-    temperature = Math.max(temperature - 0.1, 0.3); // 簡單文本保持穩定
+  // 根據情緒調整參數
+  if (emotionalTone === 'romantic' || emotionalTone === 'peaceful') {
+    temperature *= 1.1; // 提高創造性
+    maxTokens = Math.min(maxTokens * 1.2, 800);
+  } else if (emotionalTone === 'action' || emotionalTone === 'dramatic') {
+    temperature *= 0.9; // 保持連貫
+    maxTokens = Math.min(maxTokens * 0.8, 400); // 短句更有力
   }
   
-  // 根據情感基調調整
-  switch (context.emotionalTone) {
-    case 'action':
-      temperature = Math.min(temperature + 0.15, 0.95);
-      break;
-    case 'peaceful':
-      temperature = Math.max(temperature - 0.1, 0.4);
-      break;
-    case 'mysterious':
-      temperature = Math.min(temperature + 0.1, 0.85);
-      break;
+  // 根據文本複雜度調整
+  if (textAnalysis.complexity === 'complex') {
+    temperature *= 1.05; // 複雜文本需要多樣性
   }
   
-  // 根據文本長度調整 maxTokens - 🔥 使用用戶設定值作為基礎，並考慮模型特定限制
-  const avgSentenceLength = context.writingMetrics.averageSentenceLength;
-  let maxTokens = userMaxTokens || 600; // 🔥 使用用戶設定的值，預設 600
-  
-  // 🎯 模型特定的 token 限制策略 - 根據官方文檔優化
+  // 🔥 修復 Gemini token 限制 - 根據實際配額提高限制值
   if (currentModel && currentModel.includes('gemini-2.5-flash')) {
-    // 官方文檔：Gemini 2.5 Flash 支持 65,536 輸出 tokens
-    // 但實際可能有嚴格的 API 配額限制，使用極度保守策略
-    const ultraConservativeLimit = Math.min(100, Math.floor(maxTokens * 0.25)); // 極度保守：用戶設定的25%，最大100
-    maxTokens = Math.max(60, ultraConservativeLimit); // 最小60，最大100
-    console.log(`🎯 檢測到 Gemini 2.5 Flash，使用極度保守 token 限制: ${maxTokens} (官方支持65536，但實際API限制更嚴格)`);
+    // Gemini 2.5 Flash 實際支持更高的輸出 tokens
+    maxTokens = Math.max(maxTokens, 1000); // 🚀 從 650 提升到 1000
+    console.log(`🎯 檢測到 Gemini 2.5 Flash，使用優化 token 限制: ${maxTokens}`);
   } else if (currentModel && currentModel.includes('gemini-2.5-pro')) {
-    // Gemini 2.5 Pro：與 2.5 Flash 相同的官方限制，但推理能力更強
-    // 採用中等保守策略，比 2.5 Flash 稍高但仍然謹慎
-    const moderateConservativeLimit = Math.min(300, Math.floor(maxTokens * 0.5)); // 用戶設定的50%，最大300
-    maxTokens = Math.max(200, moderateConservativeLimit); // 最小200，最大300
-    console.log(`🧠 檢測到 Gemini 2.5 Pro，使用中等保守 token 限制: ${maxTokens} (比2.5-Flash寬鬆但仍謹慎)`);
+    // Gemini 2.5 Pro 支持更高的 token 數
+    maxTokens = Math.max(maxTokens, 1200); // 🚀 從 1000 提升到 1200
+    console.log(`🧠 檢測到 Gemini 2.5 Pro，使用高性能 token 限制: ${maxTokens}`);
   } else if (currentModel && (currentModel.includes('gemini-1.5-pro') || currentModel.includes('gemini-pro'))) {
-    // Gemini 1.5 Pro 系列：較舊但穩定的模型，支持更高的token限制
-    maxTokens = Math.min(maxTokens, 800); // 限制在800以內以確保穩定性
+    // Gemini 1.5 Pro 系列：較舊但穩定的模型
+    maxTokens = Math.max(maxTokens, 1000); // 保持 1000
     console.log(`✨ 檢測到 Gemini 1.5 Pro 系列，使用標準 token 限制: ${maxTokens}`);
+  } else if (currentModel && currentModel.includes('claude')) {
+    // Claude 模型通常支持較長的輸出
+    maxTokens = Math.max(maxTokens, 1500);
+    console.log(`🤖 檢測到 Claude 模型，使用擴展 token 限制: ${maxTokens}`);
+  } else if (currentModel && currentModel.includes('gpt-4')) {
+    // GPT-4 模型
+    maxTokens = Math.max(maxTokens, 1200);
+    console.log(`🚀 檢測到 GPT-4 模型，使用擴展 token 限制: ${maxTokens}`);
   }
   
-  // 根據句長進行微調，但不超出合理範圍
-  if (avgSentenceLength > 15) {
-    maxTokens = Math.min(maxTokens + 30, maxTokens * 1.15); // 長句子適度增加（減少變化幅度）
-  } else if (avgSentenceLength < 8) {
-    maxTokens = Math.max(maxTokens - 30, maxTokens * 0.85); // 短句子適度減少
-  }
+  // 確保最小值
+  temperature = Math.max(0.3, Math.min(1.2, temperature));
+  maxTokens = Math.max(300, maxTokens); // 🚀 提高最小值從 200 到 300 tokens
   
-  maxTokens = Math.round(maxTokens); // 確保為整數
-  
-  // 構建風格描述
+  // 生成風格描述
   const styleElements = [];
-  styleElements.push(`使用${context.dominantTense === 'past' ? '過去式' : context.dominantTense === 'present' ? '現在式' : '未來式'}敘述`);
-  styleElements.push(`採用${context.narrativeStyle === 'first' ? '第一人稱' : '第三人稱'}視角`);
-  styleElements.push(`保持${context.emotionalTone}的情感基調`);
+  if (emotionalTone) styleElements.push(`${emotionalTone}風格`);
+  if (context.narrativeStyle) styleElements.push(`${context.narrativeStyle}人稱敘事`);
+  if (textAnalysis.complexity === 'complex') styleElements.push('複雜敘述');
   
-  if (context.writingMetrics.adjectiveUsage > 0.15) {
-    styleElements.push('豐富的形容詞描述');
-  }
+  const style = styleElements.length > 0 
+    ? styleElements.join('、')
+    : '標準敘事風格';
   
-  if (context.writingMetrics.sentenceVariety > 0.3) {
-    styleElements.push('多樣化的句式結構');
-  }
-  
-  const style = styleElements.join('，');
-  
-  // 提取上下文提示
+  // 生成上下文提示
   const contextHints = [];
+  if (emotionalTone === 'peaceful') contextHints.push('保持平和積極的語調');
+  if (emotionalTone === 'dramatic') contextHints.push('營造緊張戲劇化的氛圍');
+  if (entities.people.length > 2) contextHints.push('注意多角色互動');
+  if (textAnalysis.sentences > 10) contextHints.push('保持長篇敘述的連貫性');
   
-  if (context.entities.people.length > 0) {
-    contextHints.push(`故事角色：${context.entities.people.slice(0, 3).join('、')}`);
-  }
-  
-  if (context.entities.places.length > 0) {
-    contextHints.push(`場景地點：${context.entities.places.slice(0, 2).join('、')}`);
-  }
-  
-  if (context.entities.times.length > 0) {
-    contextHints.push(`時間背景：${context.entities.times.slice(0, 2).join('、')}`);
-  }
-  
-  console.log('✨ 智能參數生成完成:', {
-    temperature,
-    maxTokens,
-    style,
-    contextHints: contextHints.length
-  });
+  // 🔥 檢測 API 類型並計算建議設置
+  const isFreeTier = isFreeAPI(currentModel, providerType);
+  const recommendedVersions = getRecommendedVersionCount(currentModel, providerType);
   
   return {
     temperature,
     maxTokens,
     style,
     contextHints,
-    characterNames: context.entities.people,
-    locationNames: context.entities.places
+    characterNames: entities.people || [],
+    locationNames: entities.places || [],
+    recommendedVersions,
+    isFreeTier
   };
 }
 

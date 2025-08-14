@@ -9,6 +9,7 @@ export default defineConfig({
   build: {
     outDir: '../../dist/renderer',
     emptyOutDir: true,
+    sourcemap: true, // 🔥 確保 source map 生成
   },
   resolve: {
     alias: {

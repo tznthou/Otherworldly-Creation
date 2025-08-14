@@ -205,7 +205,12 @@ PKG generation automatically handles macOS quarantine attributes for seamless in
 - Ollama: Ensure service at `http://127.0.0.1:11434`
 - Empty responses: Check model-specific response format
 - Gemini `parts=None`: Falls back to `content.text` field
-- Token limits: Gemini Flash 60-80, Pro 200-300 tokens
+- Token limits (Updated 2025-01-14):
+  - Gemini 2.5 Flash: 500 tokens (基礎值，可增加至 650)
+  - Gemini 2.5 Pro: 800 tokens (基礎值，可增加至 1000)
+  - Gemini 1.5 Pro: 1000 tokens
+  - Claude models: 1500 tokens
+  - GPT-4 models: 1200 tokens
 - OpenRouter: Use format `provider/model`
 
 ### macOS Distribution

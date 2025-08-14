@@ -84,7 +84,7 @@ const Sidebar: React.FC = () => {
         sidebarCollapsed ? 'w-16' : 'w-64'
       }`}
       style={{ 
-        zIndex: 9999, 
+        zIndex: 1000, 
         pointerEvents: 'auto',
         position: 'fixed',
         transform: 'translateZ(0)',

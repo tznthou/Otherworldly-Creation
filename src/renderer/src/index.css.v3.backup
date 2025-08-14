@@ -1,178 +1,6 @@
-/* Tailwind CSS V4 配置 */
-@import "tailwindcss";
-
-/* V3 兼容性 - 確保畫面不跑版 */
-@layer base {
-  /* 保持 V3 默認邊框顏色 */
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
-  
-  /* 保持 V3 默認佔位符顏色 */
-  input::placeholder,
-  textarea::placeholder {
-    color: var(--color-gray-400);
-  }
-  
-  /* 保持 V3 按鈕指標行為 */
-  button:not(:disabled),
-  [role="button"]:not(:disabled) {
-    cursor: pointer;
-  }
-  
-  /* Dialog 居中 */
-  dialog {
-    margin: auto;
-  }
-}
-
-/* Tailwind V4 主題配置 */
-@theme {
-  /* 保持 V3 默認 ring 行為 */
-  --default-ring-width: 3px;
-  --default-ring-color: var(--color-blue-500);
-  
-  /* 創世紀元主題色彩系統 */
-  --color-cosmic-50: #f0f4ff;
-  --color-cosmic-100: #e0e9ff;
-  --color-cosmic-200: #c7d6ff;
-  --color-cosmic-300: #a5b8ff;
-  --color-cosmic-400: #8191ff;
-  --color-cosmic-500: #6366f1;
-  --color-cosmic-600: #4f46e5;
-  --color-cosmic-700: #4338ca;
-  --color-cosmic-800: #3730a3;
-  --color-cosmic-900: #312e81;
-  --color-cosmic-950: #0A1128;
-  
-  --color-gold-50: #fffbeb;
-  --color-gold-100: #fef3c7;
-  --color-gold-200: #fde68a;
-  --color-gold-300: #fcd34d;
-  --color-gold-400: #fbbf24;
-  --color-gold-500: #f59e0b;
-  --color-gold-600: #d97706;
-  --color-gold-700: #b45309;
-  --color-gold-800: #92400e;
-  --color-gold-900: #78350f;
-  --color-gold: #FFD700;
-  
-  --color-mystic-50: #faf5ff;
-  --color-mystic-100: #f3e8ff;
-  --color-mystic-200: #e9d5ff;
-  --color-mystic-300: #d8b4fe;
-  --color-mystic-400: #c084fc;
-  --color-mystic-500: #a855f7;
-  --color-mystic-600: #9333ea;
-  --color-mystic-700: #7c3aed;
-  --color-mystic-800: #6b21a8;
-  --color-mystic-900: #581c87;
-  --color-mystic: #6A0DAD;
-  
-  /* 字體家族 */
-  --font-cosmic: "Orbitron", sans-serif;
-  --font-chinese: "Noto Sans TC", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-  
-  /* 動畫時長和緩動 */
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-glow: glow 2s ease-in-out infinite alternate;
-  --animate-magic-circle: magic-circle 20s linear infinite;
-  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite alternate;
-  --animate-twinkle: twinkle 3s ease-in-out infinite;
-  --animate-fade-in: fade-in 0.5s ease-out;
-  --animate-slide-in-left: slide-in-left 0.3s ease-out;
-  --animate-slide-in-right: slide-in-right 0.3s ease-out;
-  --animate-slide-in-up: slide-in-up 0.3s ease-out;
-  --animate-scale-in: scale-in 0.2s ease-out;
-  --animate-rotate-glow: rotate-glow 4s linear infinite;
-  --animate-breathe: breathe 4s ease-in-out infinite;
-}
-
-/* 標準 CSS @keyframes - 從 Tailwind config 轉移 */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
-}
-
-@keyframes glow {
-  0% { box-shadow: 0 0 5px #FFD700, 0 0 10px #FFD700, 0 0 15px #FFD700; }
-  100% { box-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFD700; }
-}
-
-@keyframes magic-circle {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes pulse-glow {
-  0% { 
-    box-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
-    opacity: 0.8;
-  }
-  100% { 
-    box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
-    opacity: 1;
-  }
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-
-@keyframes fade-in {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
-@keyframes slide-in-left {
-  0% { transform: translateX(-100%); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slide-in-right {
-  0% { transform: translateX(100%); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slide-in-up {
-  0% { transform: translateY(100%); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes scale-in {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes rotate-glow {
-  0% { 
-    transform: rotate(0deg);
-    box-shadow: 0 0 5px currentColor;
-  }
-  50% { 
-    box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
-  }
-  100% { 
-    transform: rotate(360deg);
-    box-shadow: 0 0 5px currentColor;
-  }
-}
-
-@keyframes breathe {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.05); opacity: 1; }
-}
-
-@keyframes shrink {
-  from { width: 100%; }
-  to { width: 0%; }
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* 全域強制滾動條樣式 - 覆蓋 Tailwind reset */
 * {
@@ -490,6 +318,12 @@
   /* 呼吸效果 */
   .breathe {
     animation: breathe 4s ease-in-out infinite;
+  }
+  
+  /* 進度條收縮動畫 */
+  @keyframes shrink {
+    from { width: 100%; }
+    to { width: 0%; }
   }
   
   /* 標題樣式 */

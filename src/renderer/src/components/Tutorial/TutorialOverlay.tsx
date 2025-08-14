@@ -143,7 +143,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const overlayContent = (
     <>
       {/* 遮罩層 */}
-      <div className="fixed inset-0 bg-black/70 z-50 transition-opacity duration-300">
+      <div className="fixed inset-0 bg-black/70 z-[9998] transition-opacity duration-300">
         {/* 高亮區域 */}
         {targetElement && currentStepData.highlight && (
           <div
@@ -162,7 +162,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {/* 教學提示框 */}
       <div
         ref={tooltipRef}
-        className="fixed z-50 bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300"
+        className="fixed z-[9998] bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300"
         style={{
           left: currentStepData.position === 'center' ? '50%' : tooltipPosition.x,
           top: currentStepData.position === 'center' ? '50%' : tooltipPosition.y,

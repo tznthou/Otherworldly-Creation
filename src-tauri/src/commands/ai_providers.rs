@@ -452,7 +452,7 @@ pub async fn generate_ai_text(request: AIGenerationRequestData) -> Result<AIGene
         system_prompt: request.system_prompt.clone(),
         params: crate::services::ai_providers::AIGenerationParams {
             temperature: request.temperature.unwrap_or(0.7),
-            max_tokens: request.max_tokens.unwrap_or(2000),
+            max_tokens: request.max_tokens.unwrap_or(500), // 🔥 改為 500，適合小說續寫
             top_p: request.top_p,
             presence_penalty: request.presence_penalty,
             frequency_penalty: request.frequency_penalty,

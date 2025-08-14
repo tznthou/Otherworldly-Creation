@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Zap, ChevronRight, ChevronLeft, CheckCircle, Circle } from 'lucide-react';
 import CosmicButton from '../UI/CosmicButton';
 
@@ -6,6 +7,7 @@ interface QuickStartGuideProps {
   isOpen: boolean;
   onClose: () => void;
   onStartTutorial?: (tutorialId: string) => void;
+  onCreateProject?: () => void;
 }
 
 interface Step {
@@ -22,7 +24,8 @@ interface Step {
 const QuickStartGuide: React.FC<QuickStartGuideProps> = ({ 
   isOpen, 
   onClose, 
-  onStartTutorial 
+  onStartTutorial,
+  onCreateProject
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
@@ -148,8 +151,11 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
       action: {
         label: '開始創建專案',
         onClick: () => {
-          // 這裡可以觸發創建專案的動作
-          console.log('開始創建專案');
+          if (onCreateProject) {
+            onCreateProject();
+          } else {
+            console.warn('onCreateProject callback not provided');
+          }
         }
       }
     },
@@ -562,8 +568,14 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+  const modalContent = (
+    <div 
+      className="isolate fixed inset-0 bg-black/70 z-[99999] flex items-center justify-center p-4"
+      style={{ 
+        zIndex: 99999,
+        isolation: 'isolate'
+      }}
+    >
       <div className="bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
         {/* 標題欄 */}
         <div className="flex items-center justify-between p-6 border-b border-cosmic-700">
@@ -677,6 +689,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default QuickStartGuide;

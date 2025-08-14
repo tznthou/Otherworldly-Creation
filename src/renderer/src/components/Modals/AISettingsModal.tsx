@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
-import { setCurrentModel } from '../../store/slices/aiSlice';
+import { setCurrentModel, setCurrentProvider, setDefaultProvider, setDefaultModel } from '../../store/slices/aiSlice';
 import ConfirmDialog from '../UI/ConfirmDialog';
 import { api } from '../../api';
 import type { 
@@ -303,11 +303,24 @@ const AISettingsModal: React.FC = () => {
   
   // 設為當前模型
   const handleSetCurrentModel = (provider: AIProvider) => {
+    // 先設定當前提供者，再設定模型
+    dispatch(setCurrentProvider(provider.id));
     dispatch(setCurrentModel(provider.model));
     dispatch(addNotification({
       type: 'success',
       title: '模型已切換',
       message: `當前AI模型已切換至 ${provider.name} (${provider.model})`,
+      duration: 2000,
+    }));
+  };
+  const handleSetDefaultProvider = (provider: AIProvider) => {
+    // 設定預設提供者和模型
+    dispatch(setDefaultProvider(provider.id));
+    dispatch(setDefaultModel(provider.model));
+    dispatch(addNotification({
+      type: 'success',
+      title: '預設模型已設定',
+      message: `已將 ${provider.name} (${provider.model}) 設為預設 AI 模型`,
       duration: 2000,
     }));
   };
@@ -578,15 +591,15 @@ const AISettingsModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/70 z-[100] overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
         <div ref={modalRef} className="relative bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
           {/* 標題 */}
-          <div className="sticky top-0 bg-cosmic-900 p-6 border-b border-cosmic-700 flex items-center justify-between rounded-t-xl z-10">
+          <div className="sticky top-0 bg-cosmic-900 p-6 border-b border-cosmic-700 flex items-center justify-between rounded-t-xl z-50">
             <h2 className="text-xl font-cosmic text-gold-500">AI 提供者管理</h2>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-white text-2xl"
+              className="text-gray-400 hover:text-white text-2xl relative z-[110] p-2"
             >
               ×
             </button>
@@ -699,12 +712,20 @@ const AISettingsModal: React.FC = () => {
                                 測試
                               </button>
                               {provider.is_enabled && (
-                                <button
-                                  onClick={() => handleSetCurrentModel(provider)}
-                                  className="text-gold-400 hover:text-gold-300 text-xs px-3 py-1 border border-gold-600 rounded hover:bg-gold-600 hover:text-cosmic-900 transition-colors"
-                                >
-                                  設為當前
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => handleSetCurrentModel(provider)}
+                                    className="text-gold-400 hover:text-gold-300 text-xs px-3 py-1 border border-gold-600 rounded hover:bg-gold-600 hover:text-cosmic-900 transition-colors"
+                                  >
+                                    設為當前
+                                  </button>
+                                  <button
+                                    onClick={() => handleSetDefaultProvider(provider)}
+                                    className="text-purple-400 hover:text-purple-300 text-xs px-3 py-1 border border-purple-600 rounded hover:bg-purple-600 hover:text-cosmic-900 transition-colors"
+                                  >
+                                    設為預設
+                                  </button>
+                                </>
                               )}
                               <button
                                 onClick={() => setEditProvider({

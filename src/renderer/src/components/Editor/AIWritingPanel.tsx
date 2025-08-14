@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Editor, Transforms, Range } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
-import { setCurrentModel, fetchAvailableModels, checkOllamaService, fetchAIProviders, setActiveProvider, generateTextWithProvider, toggleAutoUseDefault } from '../../store/slices/aiSlice';
+import { setCurrentModel, fetchAvailableModels, checkOllamaService, fetchAIProviders, setActiveProvider, generateTextWithProvider } from '../../store/slices/aiSlice';
 import { createAIHistory } from '../../store/slices/aiHistorySlice';
 import { startProgress, updateProgress, completeProgress, failProgress } from '../../store/slices/errorSlice';
 import { store } from '../../store/store';
@@ -89,13 +89,30 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   const currentProgress = progressId ? progressState.indicators.find(p => p.id === progressId) : null;
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(600); // 🔥 增加到 600 tokens，適合中文小說段落
-  const [generationCount, setGenerationCount] = useState(3);
+  // 🔥 根據模型類型自動調整生成數量（免費版 API 使用較少的數量）
+  const defaultGenCount = currentModel?.includes('gemini') ? 1 : 2; // Gemini 免費版只生成 1 個
+  const [generationCount, setGenerationCount] = useState(defaultGenCount);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [topP, setTopP] = useState(0.9);
   const [presencePenalty, setPresencePenalty] = useState(0);
   const [frequencyPenalty, setFrequencyPenalty] = useState(0);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
   const [providerModels, setProviderModels] = useState<string[]>([]);
+  
+  // 🔥 當模型改變時，自動調整生成數量
+  useEffect(() => {
+    if (currentModel?.includes('gemini')) {
+      setGenerationCount(1); // Gemini 免費版只生成 1 個
+      dispatch(addNotification({
+        type: 'info',
+        title: '💡 Gemini 免費版優化',
+        message: '已自動調整為生成 1 個版本，降低 API 配額消耗。建議使用本地 Ollama 模型以獲得無限制體驗！',
+        duration: 8000, // 延長顯示時間
+      }));
+    } else if (currentModel) {
+      setGenerationCount(2); // 其他模型生成 2 個
+    }
+  }, [currentModel, dispatch]);
   
   // 載入 AI 提供商列表
   useEffect(() => {
@@ -104,13 +121,15 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         console.log('[AIWritingPanel] 載入 AI 提供商...');
         await dispatch(fetchAIProviders());
         
-        // 智能選擇提供者
-        if (autoUseDefault && defaultProviderId) {
-          // 如果啟用自動使用預設，使用預設提供者
-          setSelectedProviderId(defaultProviderId);
-        } else if (currentProviderId && !selectedProviderId) {
-          // 否則使用當前提供者
+        // 優先使用當前設定的提供者
+        if (currentProviderId && !selectedProviderId) {
+          // 使用當前已設定的提供者
           setSelectedProviderId(currentProviderId);
+          console.log('[AIWritingPanel] 使用當前提供者:', currentProviderId);
+        } else if (autoUseDefault && defaultProviderId && !currentProviderId) {
+          // 如果沒有當前提供者但有預設提供者，使用預設
+          setSelectedProviderId(defaultProviderId);
+          console.log('[AIWritingPanel] 使用預設提供者:', defaultProviderId);
         }
       } catch (error) {
         console.error('[AIWritingPanel] 載入提供商失敗:', error);
@@ -125,22 +144,39 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       if (selectedProviderId) {
         try {
           console.log('[AIWritingPanel] 載入提供商模型:', selectedProviderId);
+          
+          // 🔥 關鍵修復：如果選擇的提供者就是當前提供者，重新載入模型列表確保UI正確
+          if (selectedProviderId === currentProviderId && currentModel) {
+            console.log('[AIWritingPanel] 提供者已是當前設定，但仍需載入模型列表以確保UI正確');
+            // 即使是相同提供者，也要重新載入模型列表確保UI顯示正確
+          }
+          
+          // 保存當前模型，防止被 setActiveProvider 覆蓋
+          const originalCurrentModel = currentModel;
+          console.log('[AIWritingPanel] 保存當前模型:', originalCurrentModel);
+          
           const result = await dispatch(setActiveProvider(selectedProviderId)).unwrap();
-          if (result.models) {
+          console.log('[AIWritingPanel] setActiveProvider 結果:', result);
+          
+          if (result.models && result.models.length > 0) {
+            console.log('[AIWritingPanel] 設定提供商模型列表:', result.models);
             setProviderModels(result.models);
-            // 智能模型選擇：只在真正需要時才自動選擇
-            if (result.models.length > 0) {
-              const modelList = result.models as string[]; // 明確類型轉換
-              // 如果當前模型在新列表中，保持不變
-              if (currentModel && modelList.includes(currentModel)) {
-                console.log('[AIWritingPanel] 保持用戶選擇的模型:', currentModel);
-                // 不做任何操作，保持用戶選擇
-              } else if (!currentModel) {
-                // 只在完全沒有模型時才自動選擇第一個
-                console.log('[AIWritingPanel] 自動選擇第一個模型:', modelList[0]);
-                dispatch(setCurrentModel(modelList[0]));
-              }
+            
+            // 智能模型選擇：保持原本設定的模型
+            const modelList = result.models as string[]; // 明確類型轉換
+            
+            // 🔧 修復：只在原模型仍然可用時恢復，其他情況讓用戶手動選擇
+            if (originalCurrentModel && modelList.includes(originalCurrentModel)) {
+              console.log('[AIWritingPanel] 恢復原本設定的模型:', originalCurrentModel);
+              dispatch(setCurrentModel(originalCurrentModel));
+            } else {
+              // 🎯 關鍵修復：不自動選擇模型，讓用戶手動選擇
+              console.log('[AIWritingPanel] 清空模型選擇，讓用戶手動選擇');
+              dispatch(setCurrentModel(null));
             }
+          } else {
+            console.warn('[AIWritingPanel] 提供商沒有可用模型或模型列表為空:', result);
+            setProviderModels([]);
           }
         } catch (error) {
           console.error('[AIWritingPanel] 載入模型失敗:', error);
@@ -164,7 +200,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         };
         checkOllama();
       }
-    };
+    }
     loadProviderModels();
   }, [selectedProviderId, dispatch, currentModel, availableModels.length]);
 
@@ -278,18 +314,18 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       const generateTraditionalParams = () => {
         const variations = [];
         for (let i = 0; i < generationCount; i++) {
-          // 🔥 針對 Gemini 2.5 Flash 的特殊處理
+          // 🔥 更新：根據官方文檔調整各模型的 token 限制
           let adjustedMaxTokens = maxTokens;
           if (currentModel && currentModel.includes('gemini-2.5-flash')) {
-            // 對於 Gemini 2.5 Flash，使用固定的極保守值，不增加變化
-            adjustedMaxTokens = Math.min(80, maxTokens); // 極保守：最大80 tokens
-            console.log(`🔥 Gemini 2.5 Flash 傳統參數模式，固定使用 ${adjustedMaxTokens} tokens`);
+            // Gemini 2.5 Flash 提高到實用範圍
+            adjustedMaxTokens = Math.min(650, maxTokens + (i * 50)); // 🚀 基礎 650，符合 Gemini 2.5 Flash 官方規範
+            console.log(`🎯 Gemini 2.5 Flash 優化參數，使用 ${adjustedMaxTokens} tokens`);
           } else if (currentModel && currentModel.includes('gemini-2.5-pro')) {
-            // 對於 Gemini 2.5 Pro，使用中等保守值，不增加變化
-            adjustedMaxTokens = Math.min(250, maxTokens); // 中等保守：最大250 tokens
-            console.log(`🧠 Gemini 2.5 Pro 傳統參數模式，固定使用 ${adjustedMaxTokens} tokens`);
+            // Gemini 2.5 Pro 提高到更高範圍
+            adjustedMaxTokens = Math.min(1000, maxTokens + (i * 80)); // 🚀 基礎 1000，符合 Gemini 2.5 Pro 官方規範
+            console.log(`🧠 Gemini 2.5 Pro 優化參數，使用 ${adjustedMaxTokens} tokens`);
           } else {
-            adjustedMaxTokens = maxTokens + (i * 30); // 其他模型可以增加變化
+            adjustedMaxTokens = maxTokens + (i * 30); // 其他模型保持原有變化
           }
           
           const variation = {
@@ -323,16 +359,16 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           for (let i = 0; i < generationCount; i++) {
             const smartParams = generateSmartParams(context, temperature, maxTokens, currentModel || '');
             
-            // 為每個版本創建不同的變化 - 🔥 針對 Gemini 2.5 Flash 的特殊處理
+            // 為每個版本創建不同的變化 - 🔥 更新：使用更合理的 token 限制
             let adjustedMaxTokens = smartParams.maxTokens;
             if (currentModel && currentModel.includes('gemini-2.5-flash')) {
-              // 對於 Gemini 2.5 Flash，不增加 token 變化，保持在安全範圍
-              adjustedMaxTokens = smartParams.maxTokens; // 使用智能參數的保守值，不再增加
+              // Gemini 2.5 Flash 現在可以使用更高的 token 數
+              adjustedMaxTokens = smartParams.maxTokens + (i * 30); // 允許適度變化
             } else if (currentModel && currentModel.includes('gemini-2.5-pro')) {
-              // 對於 Gemini 2.5 Pro，允許輕微變化但保持謹慎
-              adjustedMaxTokens = smartParams.maxTokens + (i * 10); // 較小的變化幅度
+              // Gemini 2.5 Pro 可以有更大的變化範圍
+              adjustedMaxTokens = smartParams.maxTokens + (i * 50); // 更大的變化幅度
             } else {
-              // 其他模型可以有較大 token 變化
+              // 其他模型保持原有的變化策略
               adjustedMaxTokens = smartParams.maxTokens + (i * 20);
             }
             
@@ -368,8 +404,20 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         currentStep: `開始生成 ${generationCount} 個版本...`
       }));
       
-      // 並行生成多個選項
-      const generationPromises = paramVariations.map(async (params, index) => {
+      // 🔥 改為串行生成以避免觸發 API 頻率限制（特別是免費版）
+      const results: (GenerationOption | null)[] = [];
+      
+      // 檢測是否使用 Gemini 免費版（需要更謹慎的請求策略）
+      const isGeminiFreeAPI = currentModel?.includes('gemini');
+      const delayBetweenRequests = isGeminiFreeAPI ? 3000 : 500; // Gemini 免費版延遲 3 秒
+      
+      for (let index = 0; index < paramVariations.length; index++) {
+        const params = paramVariations[index];
+        
+        // 如果不是第一個請求，添加延遲
+        if (index > 0) {
+          await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
+        }
         try {
           dispatch(updateProgress({
             id: newProgressId,
@@ -435,20 +483,46 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
             // 不中斷主流程
           }
           
-          return {
+          results.push({
             id: `${Date.now()}-${index}`,
             text: filteredText,
             temperature: params.temperature,
             timestamp: new Date()
-          };
+          });
         } catch (error) {
           console.error(`生成第 ${index + 1} 個版本失敗:`, error);
-          return null;
+          
+          // 🔥 智能檢測配額錯誤並提供詳細建議
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (errorMessage.includes('429') || errorMessage.includes('quota') || 
+              errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('免費版') ||
+              errorMessage.includes('配額已達上限') || errorMessage.includes('Too Many Requests')) {
+            console.warn('檢測到 API 配額限制，停止後續生成');
+            
+            // 檢查是否有詳細的錯誤信息（來自我們優化的後端）
+            const hasDetailedInfo = errorMessage.includes('建議等待時間') || errorMessage.includes('解決方案');
+            
+            let notificationMessage;
+            if (hasDetailedInfo) {
+              // 使用後端提供的詳細錯誤信息
+              notificationMessage = errorMessage;
+            } else {
+              // 提供通用的增強建議
+              notificationMessage = `🚫 API 配額已達上限\n\n🔧 建議解決方案：\n• 等待幾分鐘後再試（免費配額通常每分鐘重置）\n• 使用付費版 OpenRouter (google/gemini-2.5-flash)\n• 切換到本地 Ollama 模型\n• 或嘗試其他 AI 提供者`;
+            }
+            
+            dispatch(addNotification({
+              type: 'warning',
+              title: '⚠️ API 配額限制',
+              message: notificationMessage,
+              duration: 15000, // 延長顯示時間讓用戶閱讀建議
+            }));
+            break; // 停止後續請求
+          }
+          
+          results.push(null);
         }
-      });
-      
-      // 等待所有生成完成
-      const results = await Promise.all(generationPromises);
+      }
       
       dispatch(updateProgress({
         id: newProgressId,
@@ -698,8 +772,8 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       {/* 模型選擇和基本參數設置 */}
       <div className="space-y-4 mb-4">
         {/* 簡化的AI提供者顯示 */}
-        {autoUseDefault && defaultProviderId ? (
-          // 自動模式：顯示當前使用的提供者
+        {selectedProviderId ? (
+          // 已選擇提供者：顯示當前使用的提供者
           <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -724,36 +798,40 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               </div>
               <button
                 onClick={() => {
-                  // 臨時切換到手動選擇模式
-                  dispatch(toggleAutoUseDefault());
+                  // 切換到手動選擇模式
+                  setSelectedProviderId(null);
                 }}
                 className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                title="切換到手動選擇模式"
+                title="重新選擇提供者"
               >
-                切換提供者
+                重新選擇
               </button>
             </div>
           </div>
         ) : (
-          // 手動模式：顯示完整選擇器
+          // 手動選擇模式：顯示完整選擇器
           <>
             <div>
               <label className="block text-sm text-gray-300 mb-1">
                 AI 提供商
-                {!autoUseDefault && (
+                {currentProviderId && (
                   <button
-                    onClick={() => dispatch(toggleAutoUseDefault())}
+                    onClick={() => {
+                      setSelectedProviderId(currentProviderId);
+                    }}
                     className="ml-2 text-xs text-gold-400 hover:text-gold-300"
                   >
-                    (使用預設)
+                    (使用當前設定)
                   </button>
                 )}
               </label>
               <select
                 value={selectedProviderId || ''}
                 onChange={(e) => {
-                  setSelectedProviderId(e.target.value);
-                  dispatch(setCurrentModel('')); // 重置模型選擇
+                  const providerId = e.target.value;
+                  console.log('[AIWritingPanel] 用戶選擇提供商:', providerId);
+                  setSelectedProviderId(providerId);
+                  dispatch(setCurrentModel(null)); // 重置模型選擇
                 }}
                 className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
                 disabled={isGenerating}

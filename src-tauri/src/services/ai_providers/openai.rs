@@ -15,17 +15,28 @@ struct OpenAIRequest {
     model: String,
     messages: Vec<OpenAIMessage>,
     temperature: f64,
-    max_tokens: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_tokens: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_completion_tokens: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     top_p: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     presence_penalty: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     frequency_penalty: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     stop: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OpenAIMessage {
     role: String,
-    content: String,
+    content: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reasoning: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reasoning_summary: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -78,6 +89,15 @@ pub struct OpenAIProvider {
     settings: HashMap<String, serde_json::Value>,
 }
 
+/// 檢測模型是否需要使用新的參數格式
+fn is_new_api_model(model: &str) -> bool {
+    // GPT-5 系列和某些新模型使用 max_completion_tokens
+    model.starts_with("gpt-5") || 
+    model.starts_with("gpt-4o") ||
+    model.contains("gpt-5-") ||
+    model.contains("o1-") // OpenAI o1 系列也使用新格式
+}
+
 impl OpenAIProvider {
     pub fn new(config: &ProviderConfig) -> Result<Self> {
         let api_key = config.api_key
@@ -103,6 +123,59 @@ impl OpenAIProvider {
             timeout: Duration::from_secs(120),
             settings: config.settings.clone(),
         })
+    }
+
+    /// 從 reasoning 相關欄位提取文本（增強版）
+    fn extract_text_from_reasoning_fields(choice: &OpenAIChoice) -> String {
+        // 檢查 reasoning 欄位
+        if let Some(reasoning) = &choice.message.reasoning {
+            if !reasoning.trim().is_empty() {
+                log::info!("[OpenAIProvider] ✅ 使用 reasoning 格式，生成 {} 字符", reasoning.len());
+                return reasoning.clone();
+            }
+        }
+        
+        // 檢查 reasoning_summary 欄位
+        if let Some(summary) = &choice.message.reasoning_summary {
+            if !summary.trim().is_empty() {
+                log::info!("[OpenAIProvider] ✅ 使用 reasoning_summary 格式，生成 {} 字符", summary.len());
+                return summary.clone();
+            }
+        }
+        
+        // 🔥 新增：動態檢查其他可能的欄位名稱
+        let message_value = serde_json::to_value(&choice.message).unwrap_or_default();
+        let possible_fields = [
+            "reasoning_content", "internal_thoughts", "chain_of_thought", 
+            "thoughts", "reasoning_trace", "step_by_step", "analysis"
+        ];
+        
+        for field_name in possible_fields {
+            if let Some(value) = message_value.get(field_name) {
+                if let Some(text) = value.as_str() {
+                    if !text.trim().is_empty() {
+                        log::info!("[OpenAIProvider] ✅ 使用動態欄位 '{}' 格式，生成 {} 字符", field_name, text.len());
+                        return text.to_string();
+                    }
+                }
+            }
+        }
+        
+        // 🔥 最後嘗試：檢查是否有任何字符串欄位包含內容
+        if let Some(obj) = message_value.as_object() {
+            for (key, value) in obj {
+                if let Some(text) = value.as_str() {
+                    if !text.trim().is_empty() && text.len() > 10 { // 過濾掉太短的欄位
+                        log::warn!("[OpenAIProvider] 🆘 降級：使用未知欄位 '{}' 格式，生成 {} 字符", key, text.len());
+                        return text.to_string();
+                    }
+                }
+            }
+        }
+        
+        log::warn!("[OpenAIProvider] ⚠️ 所有欄位檢查完畢，未找到有效內容");
+        log::warn!("[OpenAIProvider] 🔍 調試：message完整結構 = {}", serde_json::to_string_pretty(&choice.message).unwrap_or_default());
+        String::new()
     }
 
     /// 發送 GET 請求到 OpenAI API
@@ -273,41 +346,84 @@ impl AIProvider for OpenAIProvider {
         if let Some(system_prompt) = &request.system_prompt {
             messages.push(OpenAIMessage {
                 role: "system".to_string(),
-                content: system_prompt.clone(),
+                content: Some(system_prompt.clone()),
+                reasoning: None,
+                reasoning_summary: None,
             });
         }
         
         // 添加用戶提示
         messages.push(OpenAIMessage {
             role: "user".to_string(),
-            content: request.prompt,
+            content: Some(request.prompt),
+            reasoning: None,
+            reasoning_summary: None,
         });
+
+        // 🔥 關鍵修復：根據模型類型選擇正確的參數
+        let is_new_model = is_new_api_model(&request.model);
+        
+        let (max_tokens, max_completion_tokens) = if is_new_model {
+            log::info!("[OpenAIProvider] 🆕 使用新API格式 (max_completion_tokens) 對模型: {}", request.model);
+            (None, Some(request.params.max_tokens))
+        } else {
+            log::info!("[OpenAIProvider] 📝 使用舊API格式 (max_tokens) 對模型: {}", request.model);
+            (Some(request.params.max_tokens), None)
+        };
+
+        // 🔥 新修復：GPT-5 系列模型只接受特定的參數值
+        let (temperature, top_p, presence_penalty, frequency_penalty, stop) = if is_new_model {
+            log::info!("[OpenAIProvider] 🎯 GPT-5 系列模型：使用固定參數 (temperature=1.0)");
+            (1.0, None, None, None, None) // GPT-5 系列只接受預設值
+        } else {
+            log::info!("[OpenAIProvider] 🎛️ 傳統模型：使用用戶自定義參數");
+            (
+                request.params.temperature,
+                request.params.top_p,
+                request.params.presence_penalty,
+                request.params.frequency_penalty,
+                request.params.stop.clone(),
+            )
+        };
 
         let openai_request = OpenAIRequest {
             model: request.model.clone(),
             messages,
-            temperature: request.params.temperature,
-            max_tokens: request.params.max_tokens,
-            top_p: request.params.top_p,
-            presence_penalty: request.params.presence_penalty,
-            frequency_penalty: request.params.frequency_penalty,
-            stop: request.params.stop,
+            temperature,
+            max_tokens,
+            max_completion_tokens,
+            top_p,
+            presence_penalty,
+            frequency_penalty,
+            stop,
         };
 
         let response = self.make_post_request::<OpenAIResponse>("/chat/completions", &openai_request).await?;
+        
+        // 🔥 診斷日志：記錄完整的API回應
+        log::debug!("[OpenAIProvider] 🔍 完整API回應: {}", serde_json::to_string_pretty(&response).unwrap_or_default());
+        if let Some(choice) = response.choices.first() {
+            log::debug!("[OpenAIProvider] 🔍 message結構: {}", serde_json::to_string_pretty(&choice.message).unwrap_or_default());
+        }
         
         // 🔥 使用階段一檢測邏輯處理響應格式差異
         let model_chars = detect_model_characteristics(&request.model);
         let actual_text = match model_chars.response_format {
             ResponseFormat::Standard => {
-                // OpenAI 標準格式：choices[0].message.content
+                // OpenAI 標準格式：嘗試多個欄位
                 if let Some(choice) = response.choices.first() {
-                    if !choice.message.content.trim().is_empty() {
-                        log::info!("[OpenAIProvider] ✅ 使用標準 choices 格式，生成 {} 字符", choice.message.content.len());
-                        choice.message.content.clone()
+                    // 優先檢查 content 欄位
+                    if let Some(content) = &choice.message.content {
+                        if !content.trim().is_empty() {
+                            log::info!("[OpenAIProvider] ✅ 使用標準 content 格式，生成 {} 字符", content.len());
+                            content.clone()
+                        } else {
+                            // content 為空，檢查其他欄位
+                            Self::extract_text_from_reasoning_fields(choice)
+                        }
                     } else {
-                        log::warn!("[OpenAIProvider] ⚠️ choices 中文本為空");
-                        String::new()
+                        // content 不存在，檢查其他欄位
+                        Self::extract_text_from_reasoning_fields(choice)
                     }
                 } else {
                     log::warn!("[OpenAIProvider] ⚠️ choices 陣列為空");
@@ -315,10 +431,20 @@ impl AIProvider for OpenAIProvider {
                 }
             },
             _ => {
-                // 降級處理：嘗試從 choices 獲取
+                // 降級處理：嘗試從 choices 獲取所有可能的欄位
                 if let Some(choice) = response.choices.first() {
-                    log::info!("[OpenAIProvider] 📝 降級使用 choices 格式");
-                    choice.message.content.clone()
+                    log::info!("[OpenAIProvider] 📝 降級處理：檢查所有可能的欄位");
+                    
+                    // 檢查 content
+                    if let Some(content) = &choice.message.content {
+                        if !content.trim().is_empty() {
+                            content.clone()
+                        } else {
+                            Self::extract_text_from_reasoning_fields(choice)
+                        }
+                    } else {
+                        Self::extract_text_from_reasoning_fields(choice)
+                    }
                 } else {
                     log::warn!("[OpenAIProvider] ⚠️ 無法獲取任何響應內容");
                     String::new()

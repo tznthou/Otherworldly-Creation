@@ -214,47 +214,88 @@ pub async fn generate_with_context(
     log::info!("=== 開始使用上下文生成文本 ===");
     log::info!("專案: {}, 章節: {}, 位置: {}, 模型: {}, 語言: {:?}", project_id, chapter_id, position, model, language);
     
-    let lang = language.unwrap_or_else(|| "zh-TW".to_string());
+    // 🔥 修復：使用新的多提供者系統
+    // 首先需要找到使用此模型的提供者
+    use crate::database::connection::create_connection;
+    use rusqlite::params;
     
-    // 1. 構建上下文
-    let context = crate::commands::context::build_context(project_id, chapter_id, position, Some(lang))
-        .await
-        .map_err(|e| format!("構建上下文失敗: {}", e))?;
+    // 🔥 智能提供者匹配邏輯 - 讓一個提供者支持多個模型
+    let provider_id = {
+        let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
+        
+        // 首先嘗試精確模型匹配（向後兼容）
+        let mut stmt = conn.prepare(
+            "SELECT id FROM ai_providers WHERE model = ?1 AND is_enabled = 1 LIMIT 1"
+        ).map_err(|e| format!("準備查詢失敗: {}", e))?;
+        
+        match stmt.query_row(params![model], |row| row.get::<_, String>(0)) {
+            Ok(provider_id) => {
+                log::info!("✅ 精確匹配找到提供者: {} for model: {}", provider_id, model);
+                provider_id
+            }
+            Err(_) => {
+                // 精確匹配失敗，使用智能匹配
+                log::info!("📍 精確匹配失敗，嘗試智能匹配模型: {}", model);
+                
+                let provider_type = if model.starts_with("gpt-") || model.contains("openai") {
+                    "openai"
+                } else if model.contains("gemini") || model.starts_with("gemini-") {
+                    "gemini" 
+                } else if model.contains("claude") || model.starts_with("claude-") {
+                    "claude"
+                } else if model.contains("/") { // OpenRouter format: provider/model
+                    "openrouter"
+                } else {
+                    "ollama" // Default fallback
+                };
+                
+                log::info!("🎯 智能匹配: 模型 '{}' 映射到提供者類型 '{}'", model, provider_type);
+                
+                let mut stmt2 = conn.prepare(
+                    "SELECT id FROM ai_providers WHERE provider_type = ?1 AND is_enabled = 1 LIMIT 1"
+                ).map_err(|e| format!("準備智能匹配查詢失敗: {}", e))?;
+                
+                stmt2.query_row(params![provider_type], |row| row.get::<_, String>(0))
+                    .map_err(|e| format!("智能匹配失敗: 找不到類型為 '{}' 的啟用提供者來支持模型 '{}'. 請先配置對應的AI提供者。錯誤: {}", provider_type, model, e))?
+            }
+        }
+    }; // 在這裡關閉資料庫連接的作用域
     
-    log::info!("上下文長度: {} 字符", context.len());
+    log::info!("找到提供者 ID: {}", provider_id);
     
-    // 2. 如果設定了最大上下文 token，進行壓縮
-    let final_context = if let Some(max_context_tokens) = params.max_context_tokens {
-        crate::commands::context::compress_context(context, max_context_tokens as usize)
-            .await
-            .map_err(|e| format!("壓縮上下文失敗: {}", e))?
-    } else {
-        context
+    // 使用新的多提供者系統調用 generate_ai_text
+    let request = crate::commands::ai_providers::AIGenerationRequestData {
+        provider_id,
+        model,
+        prompt: String::new(), // 空的提示，讓系統自動構建上下文續寫
+        system_prompt: None,
+        project_id,
+        chapter_id,
+        position: Some(position),
+        temperature: params.temperature.map(|x| x as f64),
+        max_tokens: params.max_tokens.map(|x| x as i32),
+        top_p: params.top_p.map(|x| x as f64),
+        presence_penalty: params.presence_penalty.map(|x| x as f64),
+        frequency_penalty: params.frequency_penalty.map(|x| x as f64),
+        stop: None,
     };
     
-    log::info!("最終上下文長度: {} 字符", final_context.len());
-    
-    // 3. 使用上下文生成文本
-    let options = OllamaOptions {
-        temperature: params.temperature,
-        top_p: params.top_p,
-        max_tokens: params.max_tokens,
-        presence_penalty: params.presence_penalty,
-        frequency_penalty: params.frequency_penalty,
-    };
-    
-    let ollama_service = get_ollama_service();
-    let service = ollama_service.lock().await;
-    let result = service.generate_text(&model, &final_context, Some(options)).await;
-    
-    if result.success {
-        let generated_text = result.response.unwrap_or_default();
-        log::info!("生成文本成功，長度: {} 字符", generated_text.len());
-        Ok(generated_text)
-    } else {
-        let error_msg = result.error.unwrap_or("生成文本失敗".to_string());
-        log::error!("生成文本失敗: {}", error_msg);
-        Err(error_msg)
+    match crate::commands::ai_providers::generate_ai_text(request).await {
+        Ok(result) => {
+            if result.success {
+                let generated_text = result.generated_text.unwrap_or_default();
+                log::info!("生成文本成功，長度: {} 字符", generated_text.len());
+                Ok(generated_text)
+            } else {
+                let error_msg = result.error.unwrap_or("生成文本失敗".to_string());
+                log::error!("生成文本失敗: {}", error_msg);
+                Err(error_msg)
+            }
+        }
+        Err(e) => {
+            log::error!("調用AI提供者失敗: {}", e);
+            Err(e)
+        }
     }
 }
 

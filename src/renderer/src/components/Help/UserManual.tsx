@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Book, ChevronRight, ChevronDown, ArrowLeft } from 'lucide-react';
 
 interface UserManualProps {
@@ -471,8 +472,14 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  return (
-    <div className="flex h-full w-full">
+  const modalContent = (
+    <div 
+      className="isolate fixed inset-0 z-[99999] flex"
+      style={{ 
+        zIndex: 99999,
+        isolation: 'isolate'
+      }}
+    >
       {/* 側邊欄 */}
       <div className="w-80 bg-cosmic-900/95 backdrop-blur-sm border-r border-gold-500/30 overflow-y-auto">
         <div className="p-4 border-b border-cosmic-700">
@@ -548,6 +555,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default UserManual;

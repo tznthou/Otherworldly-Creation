@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { HelpCircle, Book, Zap, MessageCircle } from 'lucide-react';
+import { useAppDispatch } from '../../hooks/redux';
+import { openModal } from '../../store/slices/uiSlice';
 import HelpCenter from './HelpCenter';
 import UserManual from './UserManual';
 import QuickStartGuide from './QuickStartGuide';
@@ -15,7 +17,12 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ className }) => {
   const [showQuickStart, setShowQuickStart] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
+  const dispatch = useAppDispatch();
   const { startTutorial } = useTutorial();
+  
+  const handleCreateProject = () => {
+    dispatch(openModal('createProject'));
+  };
 
   const helpOptions = [
     {
@@ -119,6 +126,7 @@ const HelpSystem: React.FC<HelpSystemProps> = ({ className }) => {
           setShowQuickStart(false);
           startTutorial(tutorialId);
         }}
+        onCreateProject={handleCreateProject}
       />
     </div>
   );

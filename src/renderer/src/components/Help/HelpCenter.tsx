@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { tutorialIndex, TutorialId } from '../../data/tutorialSteps';
 import { categoryNames, searchFAQ } from '../../data/faqData';
 import { useTutorial } from '../Tutorial/TutorialOverlay';
+import { useAppDispatch } from '../../hooks/redux';
+import { openModal } from '../../store/slices/uiSlice';
 import CosmicButton from '../UI/CosmicButton';
 import { useNotification } from '../UI/NotificationSystem';
 import UserManual from './UserManual';
@@ -20,8 +22,13 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
   const [showUserManual, setShowUserManual] = useState(false);
   const [showQuickStart, setShowQuickStart] = useState(false);
   
+  const dispatch = useAppDispatch();
   const { startTutorial, resetTutorials: _resetTutorials } = useTutorial();
   const notification = useNotification();
+  
+  const handleCreateProject = () => {
+    dispatch(openModal('createProject'));
+  };
 
   // 使用新的搜索函數
   const filteredFAQ = searchFAQ(searchQuery, selectedCategory === 'all' ? undefined : selectedCategory);
@@ -318,6 +325,7 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
           setShowQuickStart(false);
           handleStartTutorial(tutorialId as TutorialId);
         }}
+        onCreateProject={handleCreateProject}
       />
     </div>
   );

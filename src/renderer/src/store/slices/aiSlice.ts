@@ -38,6 +38,7 @@ interface AIState {
   providers: AIProvider[];
   currentProviderId: string | null;
   defaultProviderId: string | null; // 新增：預設提供者ID
+  defaultModel: string | null;      // 新增：預設模型
   autoUseDefault: boolean;          // 新增：是否自動使用預設提供者
 }
 
@@ -69,6 +70,7 @@ const initialState: AIState = {
   providers: [],
   currentProviderId: null,
   defaultProviderId: null,    // 預設提供者
+  defaultModel: null,          // 預設模型
   autoUseDefault: true,        // 自動使用預設提供者
   
   // Legacy Ollama support (for backward compatibility)
@@ -358,7 +360,7 @@ const aiSlice = createSlice({
   initialState,
   reducers: {
     // Legacy single model reducers
-    setCurrentModel: (state, action: PayloadAction<string>) => {
+    setCurrentModel: (state, action: PayloadAction<string | null>) => {
       state.currentModel = action.payload;
     },
     
@@ -373,22 +375,45 @@ const aiSlice = createSlice({
       const { providerId, models } = action.payload;
       if (state.currentProviderId === providerId) {
         state.availableModels = models;
-        // Auto-select first model if none selected
-        if (!state.currentModel && models.length > 0) {
-          state.currentModel = models[0];
-        }
+        // 🔧 修復：不自動選擇第一個模型，讓用戶手動選擇
+        // 移除自動選擇邏輯，保持currentModel為null直到用戶手動選擇
       }
     },
     
     // 預設提供者管理
     setDefaultProvider: (state, action: PayloadAction<string>) => {
       state.defaultProviderId = action.payload;
+      
+      // 保存到 localStorage
+      try {
+        localStorage.setItem('ai_default_provider', action.payload);
+      } catch (error) {
+        console.error('Failed to save default provider to localStorage:', error);
+      }
+      
       // 如果開啟自動使用預設，立即切換
       if (state.autoUseDefault) {
         state.currentProviderId = action.payload;
         // 清空模型列表，等待重新載入
         state.currentModel = null;
         state.availableModels = [];
+      }
+    },
+
+    
+    setDefaultModel: (state, action: PayloadAction<string>) => {
+      state.defaultModel = action.payload;
+      
+      // 保存到 localStorage
+      try {
+        localStorage.setItem('ai_default_model', action.payload);
+      } catch (error) {
+        console.error('Failed to save default model to localStorage:', error);
+      }
+      
+      // 如果開啟自動使用預設，立即切換
+      if (state.autoUseDefault) {
+        state.currentModel = action.payload;
       }
     },
     toggleAutoUseDefault: (state) => {
@@ -475,8 +500,10 @@ const aiSlice = createSlice({
       // fetchAvailableModels
       .addCase(fetchAvailableModels.fulfilled, (state, action) => {
         state.availableModels = action.payload;
-        // 如果沒有選擇模型且有可用模型，選擇第一個
-        if (!state.currentModel && action.payload.length > 0) {
+        // 🔧 修復：在多提供商模式下不自動選擇模型
+        // 保留向後兼容性：只有在沒有多提供商時才自動選擇
+        if (!state.currentModel && action.payload.length > 0 && state.providers.length === 0) {
+          // 僅在單提供商（舊Ollama）模式下自動選擇
           state.currentModel = action.payload[0];
         }
       })
@@ -498,7 +525,8 @@ const aiSlice = createSlice({
             error: undefined
           };
           state.availableModels = payload.map(m => m.name);
-          if (!state.currentModel && payload.length > 0) {
+          // 🔧 修復：僅在單提供商模式下自動選擇
+          if (!state.currentModel && payload.length > 0 && state.providers.length === 0) {
             state.currentModel = payload[0].name;
           }
         } else {
@@ -511,7 +539,8 @@ const aiSlice = createSlice({
           const models = payload.models || [];
           if (models.length > 0) {
             state.availableModels = models.map(m => m.name);
-            if (!state.currentModel) {
+            // 🔧 修復：僅在單提供商模式下自動選擇
+            if (!state.currentModel && state.providers.length === 0) {
               state.currentModel = models[0].name;
             }
           } else {
@@ -555,12 +584,12 @@ const aiSlice = createSlice({
       .addCase(fetchAIProviders.fulfilled, (state, action) => {
         state.providers = action.payload;
         
-        // 設定預設提供者（第一個啟用的提供者）
+        // 僅在初始化時設定預設提供者，避免覆蓋用戶設定
         if (!state.defaultProviderId && action.payload.length > 0) {
           const enabledProvider = action.payload.find(p => p.is_enabled);
-          if (enabledProvider) {
+          if (enabledProvider && !localStorage.getItem('ai_default_provider')) {
+            // 只有在沒有 localStorage 設定時才自動設定
             state.defaultProviderId = enabledProvider.id;
-            // 如果開啟自動使用預設，也設定為當前提供者
             if (state.autoUseDefault) {
               state.currentProviderId = enabledProvider.id;
             }
@@ -585,16 +614,16 @@ const aiSlice = createSlice({
         if (isConnected && Array.isArray(models)) {
           const modelList = models as string[]; // 明確類型轉換
           state.availableModels = modelList;
-          // 智能模型選擇：只在需要時自動選擇
+          // 🔧 修復：不自動選擇模型，讓用戶手動選擇
           if (modelList.length > 0) {
             // 如果當前模型在新的模型列表中，保持不變
             if (state.currentModel && modelList.includes(state.currentModel)) {
               // 用戶選擇的模型仍然可用，保持不變
               console.log('Redux: 保持用戶選擇的模型:', state.currentModel);
             } else {
-              // 當前模型不在新列表中或沒有選擇模型，選擇第一個
-              console.log('Redux: 自動選擇第一個模型:', modelList[0]);
-              state.currentModel = modelList[0];
+              // 🎯 關鍵修復：不自動選擇第一個模型，設為null讓用戶手動選擇
+              console.log('Redux: 清空模型選擇，讓用戶手動選擇');
+              state.currentModel = null;
             }
           }
           state.error = null;
@@ -637,6 +666,7 @@ export const {
   setCurrentProvider,
   setProviderModels,
   setDefaultProvider,
+  setDefaultModel,
   toggleAutoUseDefault,
   clearError,
   clearGenerationHistory,

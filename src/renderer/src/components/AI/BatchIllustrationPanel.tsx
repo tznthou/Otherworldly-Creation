@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../store/store';
 import { fetchCharactersByProjectId } from '../../store/slices/charactersSlice';
@@ -68,14 +68,48 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   // 獲取項目角色
   const projectCharacters = characters.filter(c => c.projectId === currentProject?.id);
 
-  // 初始化批次管理器
-  const initializeBatchManager = async () => {
+  // 載入活動批次
+  const loadActiveBatches = useCallback(async () => {
     try {
-      await api.illustration.initializeBatchManager();
+      console.log('[BatchIllustrationPanel] 開始載入活動批次...');
+      const result = await api.illustration.getAllBatchesSummary();
+      console.log('[BatchIllustrationPanel] 批次摘要結果:', result);
+      
+      if (result.success) {
+        console.log('[BatchIllustrationPanel] 成功載入批次列表:', result.batches || []);
+        setActiveBatches(result.batches || []);
+      } else {
+        console.error('[BatchIllustrationPanel] 載入批次列表失敗:', result.message);
+        setError(result.message || '無法載入批次列表');
+        setActiveBatches([]);
+      }
     } catch (err) {
-      console.error('初始化批次管理器失敗:', err);
+      console.error('[BatchIllustrationPanel] 載入活動批次失敗:', err);
+      setError('載入批次列表失敗: ' + err);
+      setActiveBatches([]);
     }
-  };
+  }, []);
+
+  // 初始化批次管理器
+  const initializeBatchManager = useCallback(async () => {
+    try {
+      console.log('[BatchIllustrationPanel] 開始初始化批次管理器...');
+      const result = await api.illustration.initializeBatchManager();
+      console.log('[BatchIllustrationPanel] 批次管理器初始化結果:', result);
+      
+      if (result.success) {
+        console.log('[BatchIllustrationPanel] 批次管理器初始化成功，載入活動批次...');
+        // 初始化成功後再載入批次
+        await loadActiveBatches();
+      } else {
+        console.error('[BatchIllustrationPanel] 批次管理器初始化失敗:', result.message);
+        setError(result.message || '批次管理器初始化失敗');
+      }
+    } catch (err) {
+      console.error('[BatchIllustrationPanel] 初始化批次管理器失敗:', err);
+      setError('初始化批次管理器失敗: ' + err);
+    }
+  }, [loadActiveBatches]);
 
   // 角色選擇處理
   const toggleCharacterSelection = (characterId: string) => {
@@ -220,9 +254,18 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         setRequests([]);
         setSelectedCharacters([]);
         
-        // 切換到監控標籤
+        // 切換到監控標籤並自動填入批次 ID
         setActiveTab('monitor');
-        loadActiveBatches();
+        setSelectedBatchId(result.batch_id || '');
+        
+        // 如果有批次 ID，立即加載詳情
+        if (result.batch_id) {
+          setTimeout(() => {
+            loadBatchDetails(result.batch_id);
+          }, 500); // 稍微延遲以確保 UI 更新完成
+        }
+        
+        await loadActiveBatches();
       } else {
         setError(result.message || '批次提交失敗');
       }
@@ -233,21 +276,9 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     }
   };
 
-  // 載入活動批次
-  const loadActiveBatches = async () => {
-    try {
-      const result = await api.illustration.getAllBatchesSummary();
-      if (result.success) {
-        // 這裡需要根據實際 API 返回格式調整
-        setActiveBatches([]);
-      }
-    } catch (err) {
-      console.error('載入活動批次失敗:', err);
-    }
-  };
 
   // 載入批次詳情
-  const loadBatchDetails = async (batchId: string) => {
+  const loadBatchDetails = useCallback(async (batchId: string) => {
     if (!batchId) return;
 
     try {
@@ -321,7 +352,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     } catch (err) {
       console.error('載入批次詳情失敗:', err);
     }
-  };
+  }, []);
 
   // 取消批次
   const cancelBatch = async (batchId: string) => {
@@ -395,9 +426,9 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
 
   // 組件初始化
   useEffect(() => {
+    // 只調用初始化，loadActiveBatches 會在初始化成功後自動調用
     initializeBatchManager();
-    loadActiveBatches();
-  }, []);
+  }, []); // 只在組件掛載時運行一次
 
   // 載入當前專案角色
   useEffect(() => {
@@ -422,7 +453,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       clearInterval(refreshInterval);
       setRefreshInterval(null);
     }
-  }, [activeTab, selectedBatchId, refreshInterval]);
+  }, [activeTab, selectedBatchId]);
 
   return (
     <div className={`batch-illustration-panel ${className}`}>
@@ -841,13 +872,36 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         {/* 監控進度 */}
         {activeTab === 'monitor' && (
           <div className="space-y-6">
+            {/* 提示信息 - 當沒有選中批次ID時顯示 */}
+            {!selectedBatchId && (
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-6 text-center">
+                <div className="text-4xl mb-4">🎉</div>
+                <h3 className="text-xl font-semibold text-blue-400 mb-2">批次提交成功！</h3>
+                <p className="text-gray-300 mb-4">
+                  您的插畫生成批次已提交。批次 ID 會自動填入下方，您也可以手動輸入其他批次 ID 進行監控。
+                </p>
+                <p className="text-sm text-gray-400">
+                  💡 提示：提交新批次後會自動切換到此頁面並顯示進度
+                </p>
+              </div>
+            )}
+            
+            {/* 批次查詢區域 */}
             <div className="bg-gray-800 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold text-white mb-4">選擇批次</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">🔍 批次查詢</h3>
+                {selectedBatchId && (
+                  <div className="text-sm text-gray-400">
+                    當前批次：<span className="text-gold-400 font-mono">{selectedBatchId}</span>
+                  </div>
+                )}
+              </div>
+              
               <div className="flex space-x-3">
                 <CosmicInput
                   value={selectedBatchId}
                   onChange={(value) => setSelectedBatchId(value)}
-                  placeholder="輸入批次 ID"
+                  placeholder="輸入批次 ID（例如：batch_abc123）"
                   className="flex-1"
                 />
                 <CosmicButton
@@ -855,18 +909,24 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   disabled={!selectedBatchId.trim()}
                   variant="secondary"
                 >
-                  查詢
+                  🔍 查詢
                 </CosmicButton>
+              </div>
+              
+              <div className="mt-3 text-sm text-gray-400">
+                <p>💡 批次 ID 會在提交時顯示在控制台，格式通常為 "batch_" 開頭的字符串</p>
               </div>
             </div>
 
+            {/* 批次詳情 */}
             {batchDetails && (
               <div className="space-y-6">
                 {/* 批次概覽 */}
                 <div className="bg-gray-800 p-4 rounded-lg">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">
-                      批次 {batchDetails.batch_id}
+                    <h3 className="text-lg font-semibold text-white flex items-center">
+                      <span className="mr-2">📊</span>
+                      批次 {batchDetails.batch_id} 概覽
                     </h3>
                     <div className="flex space-x-2">
                       <CosmicButton
@@ -875,14 +935,14 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                         size="small"
                         disabled={batchDetails.failed_tasks === 0}
                       >
-                        重試失敗
+                        🔄 重試失敗
                       </CosmicButton>
                       <CosmicButton
                         onClick={() => cancelBatch(batchDetails.batch_id)}
                         variant="danger"
                         size="small"
                       >
-                        取消批次
+                        ❌ 取消批次
                       </CosmicButton>
                     </div>
                   </div>
@@ -946,13 +1006,16 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
 
                 {/* 任務詳情 */}
                 <div className="bg-gray-800 p-4 rounded-lg">
-                  <h3 className="text-lg font-semibold text-white mb-4">任務詳情</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                    <span className="mr-2">📋</span>
+                    任務詳情 ({batchDetails.task_details.length} 項任務)
+                  </h3>
                   <div className="space-y-3">
-                    {batchDetails.task_details.map(task => (
+                    {batchDetails.task_details.map((task, index) => (
                       <div key={task.task_id} className="bg-gray-700 p-3 rounded">
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium text-white">
-                            任務 {task.task_id}
+                            任務 {index + 1} - {task.task_id}
                           </span>
                           <Badge variant={
                             task.status === TaskStatus.Completed ? 'default' :
@@ -968,7 +1031,13 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                         </div>
                         
                         {task.status === TaskStatus.Running && (
-                          <Progress value={task.progress} className="mb-2 h-2" />
+                          <div className="mb-2">
+                            <div className="flex justify-between text-xs text-gray-400 mb-1">
+                              <span>進度</span>
+                              <span>{task.progress}%</span>
+                            </div>
+                            <Progress value={task.progress} className="h-2" />
+                          </div>
                         )}
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-400">
@@ -987,13 +1056,29 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                         </div>
                         
                         {task.error_message && (
-                          <div className="text-red-400 text-sm mt-2">
-                            錯誤: {task.error_message}
+                          <div className="text-red-400 text-sm mt-2 p-2 bg-red-900/20 rounded">
+                            <span className="font-semibold">錯誤:</span> {task.error_message}
                           </div>
                         )}
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            )}
+            
+            {/* 如果查詢了批次但沒有詳情，顯示說明 */}
+            {selectedBatchId && !batchDetails && (
+              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-6 text-center">
+                <div className="text-4xl mb-4">⚠️</div>
+                <h3 className="text-xl font-semibold text-yellow-400 mb-2">找不到批次詳情</h3>
+                <p className="text-gray-300 mb-4">
+                  批次 ID "<span className="font-mono text-yellow-400">{selectedBatchId}</span>" 可能不存在或尚未開始處理。
+                </p>
+                <div className="text-sm text-gray-400 space-y-1">
+                  <p>• 請確認批次 ID 是否正確</p>
+                  <p>• 剛提交的批次可能需要幾秒鐘才能開始處理</p>
+                  <p>• 可以點擊「🔍 查詢」按鈕重新獲取狀態</p>
                 </div>
               </div>
             )}

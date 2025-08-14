@@ -152,7 +152,66 @@ impl GeminiProvider {
             let status = response.status();
             let error_text = response.text().await.unwrap_or_default();
             log::error!("[GeminiProvider] ❌ API 錯誤 {}: {}", status, error_text);
-            Err(anyhow!("🚫 Gemini API 錯誤 {} ({}): {}", status.as_u16(), status.canonical_reason().unwrap_or("Unknown"), error_text))
+            
+            // 🔥 智能錯誤處理：針對 429 錯誤解析重試信息
+            if status.as_u16() == 429 {
+                let user_friendly_error = Self::parse_rate_limit_error(&error_text);
+                Err(anyhow!("{}", user_friendly_error))
+            } else {
+                Err(anyhow!("🚫 Gemini API 錯誤 {} ({}): {}", status.as_u16(), status.canonical_reason().unwrap_or("Unknown"), error_text))
+            }
+        }
+    }
+
+    /// 🔥 解析 429 速率限制錯誤，提供用戶友好的提示
+    fn parse_rate_limit_error(error_text: &str) -> String {
+        // 嘗試解析 JSON 錯誤響應
+        if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(error_text) {
+            if let Some(error_obj) = json_value.get("error") {
+                let mut retry_delay = None;
+                let mut quota_type = "未知限制".to_string();
+                
+                // 解析 retryDelay
+                if let Some(details) = error_obj.get("details").and_then(|d| d.as_array()) {
+                    for detail in details {
+                        if let Some(_retry_info) = detail.get("@type")
+                            .and_then(|t| t.as_str())
+                            .filter(|&t| t.contains("RetryInfo")) {
+                            if let Some(delay) = detail.get("retryDelay").and_then(|d| d.as_str()) {
+                                retry_delay = Some(delay.to_string());
+                            }
+                        }
+                        
+                        // 解析配額類型
+                        if let Some(violations) = detail.get("violations").and_then(|v| v.as_array()) {
+                            for violation in violations {
+                                if let Some(quota_metric) = violation.get("quotaMetric").and_then(|q| q.as_str()) {
+                                    quota_type = match quota_metric {
+                                        s if s.contains("requests") && s.contains("minute") => "每分鐘請求數".to_string(),
+                                        s if s.contains("requests") && s.contains("day") => "每日請求數".to_string(),
+                                        s if s.contains("input_token") => "每分鐘輸入 Token 數".to_string(),
+                                        _ => "API 配額".to_string(),
+                                    };
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // 生成用戶友好的錯誤消息
+                let base_message = format!("🚫 Gemini 免費版 API 配額已達上限\n💡 限制類型：{}", quota_type);
+                
+                if let Some(delay) = retry_delay {
+                    format!("{}\n⏰ 建議等待時間：{}\n\n🔧 解決方案：\n• 等待配額重置後再試\n• 使用付費版 OpenRouter (google/gemini-2.5-flash)\n• 或切換到其他 AI 提供者", base_message, delay)
+                } else {
+                    format!("{}\n\n🔧 解決方案：\n• 稍後再試（通常 1-5 分鐘後重置）\n• 使用付費版 OpenRouter (google/gemini-2.5-flash)\n• 或切換到其他 AI 提供者", base_message)
+                }
+            } else {
+                "🚫 Gemini API 配額已達上限，請稍後再試或切換到付費版本".to_string()
+            }
+        } else {
+            "🚫 Gemini API 配額已達上限，請稍後再試或切換到付費版本".to_string()
         }
     }
 
