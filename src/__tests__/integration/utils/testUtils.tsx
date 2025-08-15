@@ -3,31 +3,34 @@ import { render, RenderOptions } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
-import { projectsSlice } from '../../../renderer/src/store/slices/projectsSlice';
-import { chaptersSlice } from '../../../renderer/src/store/slices/chaptersSlice';
-import { charactersSlice } from '../../../renderer/src/store/slices/charactersSlice';
-import { aiSlice } from '../../../renderer/src/store/slices/aiSlice';
-import { editorSlice } from '../../../renderer/src/store/slices/editorSlice';
-import { settingsSlice } from '../../../renderer/src/store/slices/settingsSlice';
-import { uiSlice } from '../../../renderer/src/store/slices/uiSlice';
-import { templatesSlice } from '../../../renderer/src/store/slices/templatesSlice';
-import { errorSlice } from '../../../renderer/src/store/slices/errorSlice';
-import { notificationSlice } from '../../../renderer/src/store/slices/notificationSlice';
+import projectsReducer from '../../../renderer/src/store/slices/projectsSlice';
+import chaptersReducer from '../../../renderer/src/store/slices/chaptersSlice';
+import charactersReducer from '../../../renderer/src/store/slices/charactersSlice';
+import templatesReducer from '../../../renderer/src/store/slices/templatesSlice';
+import aiReducer from '../../../renderer/src/store/slices/aiSlice';
+import aiHistoryReducer from '../../../renderer/src/store/slices/aiHistorySlice';
+import uiReducer from '../../../renderer/src/store/slices/uiSlice';
+import editorReducer from '../../../renderer/src/store/slices/editorSlice';
+import { errorReducer, progressReducer } from '../../../renderer/src/store/slices/errorSlice';
+import notificationReducer from '../../../renderer/src/store/slices/notificationSlice';
+import settingsReducer from '../../../renderer/src/store/slices/settingsSlice';
 
 // 創建測試用的 Redux store
 export function createTestStore(preloadedState?: any) {
   return configureStore({
     reducer: {
-      projects: projectsSlice.reducer,
-      chapters: chaptersSlice.reducer,
-      characters: charactersSlice.reducer,
-      ai: aiSlice.reducer,
-      editor: editorSlice.reducer,
-      settings: settingsSlice.reducer,
-      ui: uiSlice.reducer,
-      templates: templatesSlice.reducer,
-      error: errorSlice.reducer,
-      notifications: notificationSlice.reducer,
+      projects: projectsReducer,
+      chapters: chaptersReducer,
+      characters: charactersReducer,
+      templates: templatesReducer,
+      ai: aiReducer,
+      aiHistory: aiHistoryReducer,
+      ui: uiReducer,
+      editor: editorReducer,
+      error: errorReducer,
+      progress: progressReducer,
+      notification: notificationReducer,
+      settings: settingsReducer,
     },
     preloadedState,
     middleware: (getDefaultMiddleware) =>

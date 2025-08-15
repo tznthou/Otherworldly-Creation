@@ -149,10 +149,21 @@ const mockElectronAPI = {
   },
 };
 
-// 設置全域 electronAPI
+// 模擬 Tauri API
+const mockTauriAPI = {
+  invoke: jest.fn(),
+};
+
+// 設置全域 API
 global.window = Object.assign(global.window || {}, {
   electronAPI: mockElectronAPI,
+  __TAURI__: mockTauriAPI,
 });
+
+// 模擬 @tauri-apps/api/core
+jest.mock('@tauri-apps/api/core', () => ({
+  invoke: jest.fn().mockResolvedValue({}),
+}));
 
 // 導出 mock 以供測試使用
 export { mockElectronAPI };

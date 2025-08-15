@@ -42,11 +42,7 @@ import type {
 } from '../services/novelAnalysisService';
 import type { NovelTemplate } from '../types/template';
 import type { 
-  VisualTraits,
-  CharacterConsistencyReport,
   BatchRequest,
-  BatchStatus,
-  BatchSummary,
   IllustrationHistoryItem,
   BatchListResponse,
   BatchStatusResponse,

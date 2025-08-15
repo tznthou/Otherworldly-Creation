@@ -135,7 +135,8 @@
       "Bash(cargo clean:*)",
       "Bash(env)",
       "Bash(gh run list:*)",
-      "Bash([ -d \"/Applications/genesis-chronicle.app\" ])"
+      "Bash([ -d \"/Applications/genesis-chronicle.app\" ])",
+      "WebSearch"
     ],
     "deny": []
   }
