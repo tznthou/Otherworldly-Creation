@@ -239,10 +239,11 @@ jobs:
       - name: 🔧 Install Tauri CLI
         run: |
           if (!(Get-Command "cargo-tauri" -ErrorAction SilentlyContinue)) {
-            echo "Installing Tauri CLI..."
+            Write-Output "Installing Tauri CLI..."
             cargo install tauri-cli --version "^2.0"
           } else {
-            echo "Tauri CLI already installed: $(cargo tauri --version)"
+            $version = cargo tauri --version
+            Write-Output "Tauri CLI already installed: $version"
           }
 
       - name: 🟢 Setup Node.js
