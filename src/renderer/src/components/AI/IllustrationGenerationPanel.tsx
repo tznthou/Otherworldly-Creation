@@ -4,7 +4,10 @@ import { RootState } from '../../store/store';
 import { api } from '../../api';
 import { 
   DetailedGenerationResult,
-  StyleTemplate
+  StyleTemplate,
+  TranslationResult,
+  OptimizationResult,
+  ConsistencyAnalysis
 } from '../../types/illustration';
 import CosmicButton from '../UI/CosmicButton';
 import CosmicInput from '../UI/CosmicInput';
@@ -246,8 +249,8 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
       if (result.success) {
         const detailedResult: DetailedGenerationResult = {
           basic_response: {
-            id: result.task_id,
-            status: result.status,
+            id: result.task_id || 'unknown',
+            status: (result.status as 'pending' | 'processing' | 'completed' | 'failed') || 'completed',
             image_url: result.image_url,
             translated_prompt: result.translated_prompt,
             seed_value: result.seed_value,
@@ -255,11 +258,29 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
             quality_score: result.quality_score,
             generation_time_ms: result.generation_time_ms
           },
-          generated_images: result.images || [],
-          translation_result: result.translation_info,
-          optimization_result: result.optimization_info,
-          consistency_analysis: result.consistency_analysis,
-          generation_metadata: result.metadata
+          generated_images: (result.generated_images || []).map((img, index) => 
+            typeof img === 'string' ? {
+              image_id: `img_${index}`,
+              width: 1024,
+              height: 1024,
+              file_size_bytes: 0,
+              safety_rating: { category: 'dangerous_content', probability: 'negligible', blocked: false },
+              quality_score: result.quality_score || 0,
+              file_path: img
+            } : img
+          ),
+          translation_result: result.translation_result as TranslationResult | undefined,
+          optimization_result: result.optimization_result as OptimizationResult | undefined,
+          consistency_analysis: result.consistency_analysis as ConsistencyAnalysis | undefined,
+          generation_metadata: result.generation_metadata || {
+            total_time_ms: result.generation_time_ms || 0,
+            translation_time_ms: 0,
+            generation_time_ms: result.generation_time_ms || 0,
+            processing_time_ms: 0,
+            estimated_cost: result.estimated_cost || 0,
+            model_used: 'imagen-v1',
+            timestamp: new Date().toISOString()
+          }
         };
 
         setGenerationResult(detailedResult);

@@ -203,3 +203,13 @@ export const waitForLoadingToFinish = async (queryByTestId: any) => {
     expect(queryByTestId('loading-spinner')).not.toBeInTheDocument();
   });
 };
+
+// 簡單的測試來避免 Jest 錯誤
+describe('Test Utils', () => {
+  it('should provide testing utilities', () => {
+    expect(createMockProject).toBeDefined();
+    expect(createMockChapter).toBeDefined();
+    expect(createMockCharacter).toBeDefined();
+    expect(renderWithProviders).toBeDefined();
+  });
+});

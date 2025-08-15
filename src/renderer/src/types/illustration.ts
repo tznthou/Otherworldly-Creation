@@ -104,8 +104,8 @@ export interface GenerationMetadata {
   timestamp: string;
 }
 
-/** 角色視覺特徵 */
-export interface VisualTraits {
+/** 角色視覺特徵（API 響應格式） */
+export interface VisualTraitsResponse {
   character_id: string;
   seed_value: number;
   standard_description: string;
@@ -327,4 +327,190 @@ export interface IllustrationFilter {
   tags?: string[];
   sort_by: 'created_at' | 'quality_score' | 'consistency_score';
   sort_order: 'asc' | 'desc';
+}
+
+/** 插畫歷史項目 */
+export interface IllustrationHistoryItem {
+  id: string;
+  project_id: string;
+  character_id?: string;
+  scene_description: string;
+  generated_image_url?: string;
+  thumbnail_url?: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  translated_prompt?: string;
+  seed_value?: number;
+  generation_time_ms?: number;
+  quality_score?: number;
+  consistency_score?: number;
+  cost?: number;
+  error_message?: string;
+  created_at: string;
+  style_template_id?: string;
+  aspect_ratio?: string;
+  safety_level?: string;
+}
+
+/** 角色一致性報告 */
+export interface CharacterConsistencyReport {
+  character_id: string;
+  character_name: string;
+  consistency_score: number;
+  total_images: number;
+  analyzed_traits: string[];
+  consistency_details: {
+    trait_name: string;
+    consistency_percentage: number;
+    variations_found: string[];
+    recommendations: string[];
+  }[];
+  overall_recommendations: string[];
+  generated_at: string;
+  strict_mode: boolean;
+}
+
+/** 視覺特徵 */
+export interface VisualTraits {
+  character_id: string;
+  character_name: string;
+  seed_value?: number;
+  traits_version?: number;
+  standard_description?: string;
+  chinese_description?: string;
+  created_at?: string;
+  primary_traits?: {
+    hair_color?: string;
+    hair_style?: string;
+    eye_color?: string;
+    skin_tone?: string;
+    height_description?: string;
+    build_description?: string;
+  };
+  clothing_style?: {
+    casual?: string[];
+    formal?: string[];
+    accessories?: string[];
+  };
+  distinguishing_features?: string[];
+  art_style_preferences?: string[];
+  reference_seed?: number;
+  reference_images?: {
+    url: string;
+    description: string;
+    tags: string[];
+  }[];
+  last_updated?: string;
+}
+
+/** 批次狀態 */
+export interface BatchStatus {
+  batch_id: string;
+  name: string;
+  status: 'pending' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
+  total_tasks: number;
+  completed_tasks: number;
+  failed_tasks: number;
+  progress_percentage: number;
+  estimated_completion_time?: string;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+  tasks: {
+    task_id: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    scene_description: string;
+    character_id?: string;
+    result?: IllustrationResponse;
+    error_message?: string;
+  }[];
+}
+
+/** 批次摘要 */
+export interface BatchSummary {
+  batch_id: string;
+  name: string;
+  status: 'pending' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
+  total_tasks: number;
+  completed_tasks: number;
+  failed_tasks: number;
+  running_tasks: number;
+  queued_tasks: number;
+  overall_progress: number;
+  progress_percentage: number;
+  created_at: string;
+  estimated_completion_time?: string;
+  estimated_completion?: string;
+  statistics: BatchStatistics;
+  task_details: BatchTaskStatus[];
+}
+
+/** API 響應包裝器 */
+export interface APIResponse<T = any> {
+  success: boolean;
+  message?: string;
+  error?: string;
+  data?: T;
+}
+
+/** 批次列表響應 */
+export interface BatchListResponse extends APIResponse {
+  batches?: BatchSummary[];
+}
+
+/** 批次狀態響應 */
+export interface BatchStatusResponse extends APIResponse {
+  batch?: BatchStatus;
+  status?: string;
+  task_id?: string;
+  image_url?: string;
+  translated_prompt?: string;
+  seed_value?: number;
+  consistency_analysis?: ConsistencyAnalysis;
+  generation_metadata?: GenerationMetadata;
+}
+
+/** 視覺特徵響應 */
+export interface VisualTraitsApiResponse extends APIResponse {
+  traits?: VisualTraits;
+  character_id?: string;
+  seed_value?: number;
+  standard_description?: string;
+  chinese_description?: string;
+  traits_version?: number;
+  created_at?: string;
+}
+
+/** 角色一致性檢查響應 */
+export interface ConsistencyCheckResponse extends APIResponse {
+  report?: CharacterConsistencyReport;
+}
+
+/** 插畫生成響應 */
+export interface IllustrationGenerationResponse extends APIResponse {
+  success: boolean;
+  task_id?: string;
+  status?: string;
+  image_url?: string;
+  translated_prompt?: string;
+  seed_value?: number;
+  quality_score?: number;
+  consistency_score?: number;
+  generation_time_ms?: number;
+  estimated_cost?: number;
+  consistency_analysis?: ConsistencyAnalysis;
+  generation_metadata?: GenerationMetadata;
+  translation_result?: TranslationResult;
+  optimization_result?: OptimizationResult;
+  generated_images?: GeneratedImageInfo[];
+  images?: string[];
+  translation_info?: Record<string, unknown>;
+  optimization_info?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+  error?: string;
+}
+
+/** 翻譯驗證響應 */
+export interface TranslationValidationResponse extends APIResponse {
+  valid?: boolean;
+  error?: string;
 }

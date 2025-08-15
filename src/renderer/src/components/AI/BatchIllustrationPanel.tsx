@@ -13,10 +13,15 @@ import { Character } from '../../api/models';
 import CosmicButton from '../UI/CosmicButton';
 import CosmicInput from '../UI/CosmicInput';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import { GoogleCloudBillingModal } from '../Modals/GoogleCloudBillingModal';
+import { openrouterImageService } from '../../services/openrouterImageService';
 import { Progress } from '../UI/Progress';
 import { Alert } from '../UI/Alert';
 import { Card } from '../UI/Card';
 import { Badge } from '../UI/Badge';
+import { imageGenerationService } from '../../services/imageGenerationService';
+import type { ImageGenerationOptions } from '../../services/imageGenerationService';
+import { SafetyFilterLevel } from '@google/genai';
 
 interface BatchIllustrationPanelProps {
   className?: string;
@@ -51,6 +56,18 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   const [maxParallel, setMaxParallel] = useState(2);
   const [requests, setRequests] = useState<BatchRequestItem[]>([]);
   const [apiKey, setApiKey] = useState('');
+  
+  // 新增：色彩模式和API金鑰來源狀態
+  const [globalColorMode, setGlobalColorMode] = useState<'color' | 'monochrome'>('color');
+  const [apiKeySource, setApiKeySource] = useState<'manual' | 'gemini' | 'openrouter'>('manual');
+  
+  // 新增：Google Cloud 計費模態狀態
+  const [showBillingModal, setShowBillingModal] = useState(false);
+  const [billingErrorMessage, setBillingErrorMessage] = useState('');
+  
+  // 新增：OpenRouter 測試狀態
+  const [openrouterTestResult, setOpenrouterTestResult] = useState<any>(null);
+  const [isTestingOpenrouter, setIsTestingOpenrouter] = useState(false);
 
   // 角色選擇狀態
   const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
@@ -180,7 +197,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     ));
   };
 
-  // 提交批次請求
+  // 提交批次請求（整合圖像生成服務）
   const submitBatch = async () => {
     if (!currentProject) {
       setError('請選擇專案');
@@ -213,40 +230,72 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     setError('');
 
     try {
-      // 轉換為 API 格式
-      const apiRequests = requests.map(req => ({
-        project_id: currentProject.id,
-        character_id: req.selectedCharacterIds.length > 0 ? req.selectedCharacterIds[0] : null,
-        scene_description: req.scene_description,
-        style_template_id: req.style_template,
-        custom_style_params: {
-          scene_type: req.scene_type,
-          characters: req.selectedCharacterIds.map(id => {
-            const char = projectCharacters.find(c => c.id === id);
-            return char ? {
-              id: char.id,
-              name: char.name,
-              appearance: char.appearance,
-              personality: char.personality
-            } : null;
-          }).filter(Boolean)
-        },
-        use_reference_image: req.selectedCharacterIds.length > 0,
-        quality_preset: 'balanced',
-        batch_size: 1
-      }));
+      console.log(`🚀 開始批次插畫生成：${batchName}`);
+      console.log(`🎨 色彩模式：${globalColorMode === 'color' ? '彩色' : '黑白'}`);
+      console.log(`📋 共 ${requests.length} 個請求`);
 
-      const result = await api.illustration.submitBatchRequest(
-        batchName,
-        currentProject.id,
-        apiRequests,
-        getPriorityString(batchPriority),
-        maxParallel,
-        apiKey
+      // 準備圖像生成請求
+      const imageRequests = requests.map(req => {
+        // 根據角色信息增強場景描述
+        let enhancedDescription = req.scene_description;
+        
+        // 加入角色資訊
+        if (req.selectedCharacterIds.length > 0) {
+          const characterNames = req.selectedCharacterIds.map(id => {
+            const char = projectCharacters.find(c => c.id === id);
+            return char?.name;
+          }).filter(Boolean);
+          
+          if (characterNames.length > 0) {
+            enhancedDescription = `${enhancedDescription}，featuring ${characterNames.join(' and ')}`;
+          }
+        }
+        
+        // 根據場景類型調整
+        if (req.scene_type === 'portrait') {
+          enhancedDescription += ', detailed character portrait';
+        } else if (req.scene_type === 'interaction') {
+          enhancedDescription += ', character interaction scene';
+        } else if (req.scene_type === 'scene') {
+          enhancedDescription += ', environmental scene with characters';
+        }
+        
+        return {
+          prompt: enhancedDescription,
+          options: {
+            colorMode: globalColorMode,
+            aspectRatio: req.aspect_ratio as ImageGenerationOptions['aspectRatio'],
+            numberOfImages: 1,
+            sceneType: req.scene_type,
+            safetyLevel: SafetyFilterLevel.BLOCK_MEDIUM_AND_ABOVE
+          }
+        };
+      });
+
+      // 執行批次生成
+      const results = await imageGenerationService.generateBatch(
+        imageRequests,
+        apiKey,
+        (current, total, currentPrompt) => {
+          console.log(`🎨 生成進度: ${current}/${total} - ${currentPrompt?.substring(0, 50)}...`);
+          // 可以在這裡更新 UI 顯示進度
+        }
       );
 
-      if (result.success) {
-        console.log(`批次請求提交成功！批次 ID: ${result.batch_id}`);
+      // 統計結果
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+      
+      if (successCount > 0) {
+        console.log(`✅ 成功生成 ${successCount} 張圖像`);
+        
+        // 保存成功的圖像結果到本地狀態或資料庫
+        const successfulResults = results.filter(r => r.success);
+        console.log('生成的圖像數據:', successfulResults.map(r => ({
+          success: r.success,
+          imageCount: r.data?.length || 0,
+          hasData: !!r.data
+        })));
         
         // 重置表單
         setBatchName('');
@@ -254,23 +303,36 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         setRequests([]);
         setSelectedCharacters([]);
         
-        // 切換到監控標籤並自動填入批次 ID
+        // 顯示成功消息
+        setError(''); // 清除錯誤
+        
+        // 切換到監控標籤
         setActiveTab('monitor');
-        setSelectedBatchId(result.batch_id || '');
         
-        // 如果有批次 ID，立即加載詳情
-        if (result.batch_id) {
-          setTimeout(() => {
-            loadBatchDetails(result.batch_id);
-          }, 500); // 稍微延遲以確保 UI 更新完成
+        if (failCount > 0) {
+          console.warn(`⚠️ ${failCount} 張圖像生成失敗`);
+          setError(`部分圖像生成失敗：成功 ${successCount}，失敗 ${failCount}`);
         }
-        
-        await loadActiveBatches();
       } else {
-        setError(result.message || '批次提交失敗');
+        throw new Error('所有圖像生成都失敗了');
       }
-    } catch (err) {
-      setError(`批次提交失敗: ${err}`);
+
+    } catch (err: any) {
+      console.error('❌ 批次生成失敗:', err);
+      
+      // 檢查是否為 Google Cloud 計費問題
+      const errorMessage = err.message || err.toString();
+      if (errorMessage.includes('billed users') || 
+          errorMessage.includes('需要啟用計費') || 
+          errorMessage.includes('Imagen API 需要啟用計費')) {
+        // 顯示專用的計費設定模態而不是普通錯誤
+        setBillingErrorMessage(errorMessage);
+        setShowBillingModal(true);
+        setError(''); // 清除普通錯誤，使用模態來處理
+      } else {
+        // 其他錯誤使用普通錯誤提示
+        setError(`批次生成失敗: ${errorMessage}`);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -384,8 +446,44 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     }
   };
 
-  // 獲取優先級字符串
-  const getPriorityString = (priority: TaskPriority): string => {
+  // 測試 OpenRouter 圖像生成功能
+  const testOpenRouterImageGeneration = async () => {
+    if (!apiKey.trim()) {
+      setError('請先輸入 API 金鑰');
+      return;
+    }
+
+    setIsTestingOpenrouter(true);
+    setOpenrouterTestResult(null);
+    setError('');
+
+    try {
+      console.log('🧪 開始測試 OpenRouter 圖像生成...');
+      const result = await openrouterImageService.testImageGeneration(apiKey);
+      
+      setOpenrouterTestResult(result);
+      
+      if (result.success) {
+        console.log('✅ OpenRouter 圖像生成測試成功!', result);
+      } else {
+        console.warn('⚠️ OpenRouter 圖像生成測試失敗', result);
+        setError('OpenRouter 圖像生成測試失敗，請查看詳細結果');
+      }
+    } catch (error: any) {
+      console.error('❌ OpenRouter 測試失敗:', error);
+      setError(`OpenRouter 測試失敗: ${error.message}`);
+      setOpenrouterTestResult({
+        success: false,
+        supportedModels: [],
+        testResults: { error: error.message }
+      });
+    } finally {
+      setIsTestingOpenrouter(false);
+    }
+  };
+
+  // 獲取優先級字符串 (保留給未來使用)
+  const _getPriorityString = (priority: TaskPriority): string => {
     switch (priority) {
       case TaskPriority.Low: return 'low';
       case TaskPriority.Normal: return 'normal';
@@ -436,6 +534,62 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       dispatch(fetchCharactersByProjectId(currentProject.id));
     }
   }, [currentProject?.id, dispatch]);
+
+  // 新增：自動獲取API金鑰
+  useEffect(() => {
+    const loadApiKey = async () => {
+      try {
+        // 從 AI Providers 獲取已配置的金鑰
+        const response = await api.aiProviders.getAll();
+        
+        if (response.success && response.providers) {
+          // 優先找 Gemini provider
+          const geminiProvider = response.providers.find((p) => 
+            p.provider_type === 'gemini' && p.is_enabled
+          );
+          
+          if (geminiProvider?.api_key_encrypted) {
+            // Base64 解碼 API 金鑰
+            try {
+              const decodedApiKey = atob(geminiProvider.api_key_encrypted);
+              setApiKey(decodedApiKey);
+              setApiKeySource('gemini');
+              console.log('✅ 已自動載入並解碼 Gemini API 金鑰');
+              return;
+            } catch (error) {
+              console.error('❌ 解碼 Gemini API 金鑰失敗:', error);
+            }
+          }
+          
+          // 檢查 OpenRouter（如果支援 Gemini/Imagen）
+          const openrouterProvider = response.providers.find((p) => 
+            p.provider_type === 'openrouter' && p.is_enabled
+          );
+          
+          if (openrouterProvider?.api_key_encrypted) {
+            // 檢查模型名稱中是否包含 gemini 或 imagen
+            const modelName = openrouterProvider.model || '';
+            if (modelName.toLowerCase().includes('imagen') || modelName.toLowerCase().includes('gemini')) {
+              try {
+                const decodedApiKey = atob(openrouterProvider.api_key_encrypted);
+                setApiKey(decodedApiKey);
+                setApiKeySource('openrouter');
+                console.log('✅ 已自動載入並解碼 OpenRouter API 金鑰');
+              } catch (error) {
+                console.error('❌ 解碼 OpenRouter API 金鑰失敗:', error);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('無法自動載入 API 金鑰:', error);
+      }
+    };
+    
+    if (currentProject) {
+      loadApiKey();
+    }
+  }, [currentProject]);
 
   // 自動刷新監控數據
   useEffect(() => {
@@ -500,6 +654,44 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
             <div className="bg-gray-800 p-4 rounded-lg">
               <h3 className="text-lg font-semibold text-white mb-4">批次設定</h3>
               
+              {/* 色彩模式選擇 - 全局設定 */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  🎨 色彩模式 <span className="text-gray-400">(套用至整個批次)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setGlobalColorMode('color')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      globalColorMode === 'color'
+                        ? 'border-purple-500 bg-gradient-to-br from-red-500/10 via-purple-500/10 to-blue-500/10'
+                        : 'border-gray-600 bg-gray-700 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">🌈</div>
+                      <div className="font-medium text-white">彩色插畫</div>
+                      <div className="text-xs text-gray-400 mt-1">豐富色彩表現</div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setGlobalColorMode('monochrome')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      globalColorMode === 'monochrome'
+                        ? 'border-gray-400 bg-gray-800'
+                        : 'border-gray-600 bg-gray-700 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">⚫⚪</div>
+                      <div className="font-medium text-white">黑白插畫</div>
+                      <div className="text-xs text-gray-400 mt-1">經典素描風格</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -543,14 +735,134 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    API 金鑰 <span className="text-red-400">*</span>
+                    API 金鑰 
+                    {apiKeySource !== 'manual' ? (
+                      <span className="text-green-400 ml-2">
+                        ✅ 已從 {apiKeySource === 'gemini' ? 'Gemini' : 'OpenRouter'} 載入
+                      </span>
+                    ) : (
+                      <span className="text-red-400"> *</span>
+                    )}
                   </label>
                   <CosmicInput
                     type="password"
                     value={apiKey}
-                    onChange={(value) => setApiKey(value)}
-                    placeholder="Google Cloud API 金鑰"
+                    onChange={(value) => {
+                      setApiKey(value);
+                      setApiKeySource('manual');
+                    }}
+                    placeholder={
+                      apiKeySource !== 'manual' 
+                        ? "已自動載入 (可覆寫)" 
+                        : "輸入 Google Cloud API 金鑰"
+                    }
                   />
+                  {apiKeySource !== 'manual' && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      💡 已自動使用 AI 提供者管理中的金鑰，您也可以手動輸入覆寫
+                    </p>
+                  )}
+                  <div className="mt-3 p-4 bg-gradient-to-r from-orange-900/40 to-red-900/40 border-2 border-orange-500/60 rounded-lg">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 20.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-bold text-orange-300 mb-2">
+                          ⚠️ 重要：Google Cloud 計費要求
+                        </h4>
+                        <div className="text-sm text-orange-200 space-y-1">
+                          <p className="font-medium">Imagen API 需要付費的 Google Cloud 帳戶才能使用</p>
+                          <ul className="list-disc list-inside space-y-1 mt-2 text-xs text-orange-100">
+                            <li>需要有效的 Google Cloud API 金鑰</li>
+                            <li>必須啟用 Imagen API 服務</li>
+                            <li className="font-medium text-orange-200">⭐ 必須設定付費方式（計費帳戶）</li>
+                            <li>在 Google Cloud Console 中完成所有設定</li>
+                          </ul>
+                          <p className="text-xs text-orange-300 mt-2 font-medium">
+                            💡 如果遇到計費錯誤，系統會提供詳細的設定說明
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* OpenRouter 圖像生成測試區域 */}
+              <div className="mt-4 p-4 bg-gradient-to-r from-blue-900/40 to-purple-900/40 border-2 border-blue-500/60 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-blue-300 mb-2">
+                      🧪 OpenRouter 圖像生成測試
+                    </h4>
+                    <p className="text-sm text-blue-200 mb-3">
+                      測試您的 OpenRouter API 是否支援 Gemini 2.0 Flash (Image Gen) 模型
+                    </p>
+                    
+                    <div className="flex items-center space-x-3 mb-3">
+                      <button
+                        onClick={testOpenRouterImageGeneration}
+                        disabled={!apiKey.trim() || isTestingOpenrouter}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-sm rounded transition-colors flex items-center space-x-2"
+                      >
+                        {isTestingOpenrouter ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>測試中...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                            <span>測試 OpenRouter</span>
+                          </>
+                        )}
+                      </button>
+                      
+                      {openrouterTestResult && (
+                        <div className={`px-3 py-1 rounded text-xs font-medium ${
+                          openrouterTestResult.success 
+                            ? 'bg-green-600 text-green-100' 
+                            : 'bg-red-600 text-red-100'
+                        }`}>
+                          {openrouterTestResult.success ? '✅ 支援圖像生成' : '❌ 不支援圖像生成'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 測試結果詳情 */}
+                    {openrouterTestResult && (
+                      <div className="mt-3 p-3 bg-black/20 rounded border border-blue-400/30">
+                        <p className="text-xs text-blue-300 font-medium mb-2">測試結果：</p>
+                        <div className="text-xs text-blue-100 space-y-1">
+                          {openrouterTestResult.success ? (
+                            <>
+                              <p>✅ 支援的模型: {openrouterTestResult.supportedModels.join(', ')}</p>
+                              <p className="text-green-300">🎉 您可以使用 OpenRouter 進行圖像生成！</p>
+                            </>
+                          ) : (
+                            <>
+                              <p>❌ 測試失敗</p>
+                              <div className="mt-2 text-xs text-gray-300">
+                                <pre className="whitespace-pre-wrap">
+                                  {JSON.stringify(openrouterTestResult.testResults, null, 2)}
+                                </pre>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1096,6 +1408,16 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
           </div>
         )}
       </Card>
+      
+      {/* Google Cloud 計費設定模態 */}
+      <GoogleCloudBillingModal
+        isOpen={showBillingModal}
+        onClose={() => {
+          setShowBillingModal(false);
+          setBillingErrorMessage('');
+        }}
+        errorMessage={billingErrorMessage}
+      />
     </div>
   );
 };

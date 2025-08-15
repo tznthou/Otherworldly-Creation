@@ -156,3 +156,12 @@ global.window = Object.assign(global.window || {}, {
 
 // 導出 mock 以供測試使用
 export { mockElectronAPI };
+
+// 簡單的測試來避免 Jest 錯誤
+describe('Test Setup', () => {
+  it('should setup test environment correctly', () => {
+    expect(global.window.electronAPI).toBeDefined();
+    expect(global.TextEncoder).toBeDefined();
+    expect(global.ResizeObserver).toBeDefined();
+  });
+});

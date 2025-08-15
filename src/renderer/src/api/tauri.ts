@@ -6,6 +6,7 @@ import type {
   CharacterAttributes,
   CreateRelationshipRequest
 } from './models';
+import type { BatchRequest } from '../types/illustration';
 import type { Descendant } from 'slate';
 import { measureAsyncFunction, performanceLogger } from '../utils/performanceLogger';
 
@@ -1116,7 +1117,7 @@ export const tauriAPI: API = {
     submitBatchRequest: async (
       batchName: string,
       projectId: string,
-      requests: any[],
+      requests: BatchRequest[],
       priority?: string,
       maxParallel?: number,
       apiKey?: string

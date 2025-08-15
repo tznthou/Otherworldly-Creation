@@ -7,7 +7,9 @@ module.exports = {
     '**/*.(test|spec).+(ts|tsx|js)',
   ],
   transform: {
-    '^.+\\.(ts|tsx)': 'ts-jest',
+    '^.+\\.(ts|tsx)': ['ts-jest', {
+      useESM: true,
+    }],
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -27,9 +29,4 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(.*\\.mjs$))',
   ],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
-  },
 };

@@ -41,6 +41,20 @@ import type {
   AnalysisProgress
 } from '../services/novelAnalysisService';
 import type { NovelTemplate } from '../types/template';
+import type { 
+  VisualTraits,
+  CharacterConsistencyReport,
+  BatchRequest,
+  BatchStatus,
+  BatchSummary,
+  IllustrationHistoryItem,
+  BatchListResponse,
+  BatchStatusResponse,
+  VisualTraitsApiResponse,
+  ConsistencyCheckResponse,
+  IllustrationGenerationResponse,
+  TranslationValidationResponse,
+} from '../types/illustration';
 
 export interface API {
   // 專案管理
@@ -172,11 +186,11 @@ export interface API {
   // AI 插畫生成
   illustration: {
     // 角色一致性管理
-    setupCharacterConsistency: (characterId: string, characterName: string, description: string) => Promise<any>;
-    generateConsistencyReport: (characterId: string, characterName: string, strictMode?: boolean) => Promise<any>;
-    setCharacterSeed: (characterId: string, seedValue: number, reason: string) => Promise<any>;
-    addReferenceImage: (characterId: string, imageUrl: string, imageType: string, tags: string[]) => Promise<any>;
-    getCharacterVisualTraits: (characterId: string) => Promise<any>;
+    setupCharacterConsistency: (characterId: string, characterName: string, description: string) => Promise<{ success: boolean; message?: string }>;
+    generateConsistencyReport: (characterId: string, characterName: string, strictMode?: boolean) => Promise<ConsistencyCheckResponse>;
+    setCharacterSeed: (characterId: string, seedValue: number, reason: string) => Promise<VisualTraitsApiResponse>;
+    addReferenceImage: (characterId: string, imageUrl: string, imageType: string, tags: string[]) => Promise<{ success: boolean; message?: string }>;
+    getCharacterVisualTraits: (characterId: string) => Promise<VisualTraitsApiResponse>;
 
     // 插畫生成
     generateIllustration: (
@@ -184,23 +198,23 @@ export interface API {
       styleTemplateId: string, translationStyle: string, optimizationLevel: string,
       aspectRatio: string, safetyLevel: string, customNegativePrompt?: string,
       apiKey?: string
-    ) => Promise<any>;
-    getIllustrationHistory: (projectId: string, characterId?: string, limit?: number, offset?: number) => Promise<any>;
-    cancelGeneration: (taskId: string) => Promise<any>;
-    validateImagenConnection: (apiKey: string) => Promise<any>;
+    ) => Promise<IllustrationGenerationResponse>;
+    getIllustrationHistory: (projectId: string, characterId?: string, limit?: number, offset?: number) => Promise<IllustrationHistoryItem[]>;
+    cancelGeneration: (taskId: string) => Promise<void>;
+    validateImagenConnection: (apiKey: string) => Promise<TranslationValidationResponse>;
 
     // 批次管理
-    initializeBatchManager: () => Promise<any>;
-    submitBatchRequest: (name: string, projectId: string, requests: any[], priority: string, maxParallel: number, apiKey: string) => Promise<any>;
-    getBatchStatus: (batchId: string) => Promise<any>;
-    cancelBatch: (batchId: string) => Promise<any>;
-    getAllBatchesSummary: () => Promise<any>;
-    retryFailedTasks: (batchId: string) => Promise<any>;
-    pauseBatch: (batchId: string) => Promise<any>;
-    resumeBatch: (batchId: string) => Promise<any>;
+    initializeBatchManager: () => Promise<{ success: boolean; message?: string }>;
+    submitBatchRequest: (name: string, projectId: string, requests: BatchRequest[], priority: string, maxParallel: number, apiKey: string) => Promise<{ batchId: string }>;
+    getBatchStatus: (batchId: string) => Promise<BatchStatusResponse>;
+    cancelBatch: (batchId: string) => Promise<{ success: boolean; message?: string }>;
+    getAllBatchesSummary: () => Promise<BatchListResponse>;
+    retryFailedTasks: (batchId: string) => Promise<{ success: boolean; message?: string }>;
+    pauseBatch: (batchId: string) => Promise<{ success: boolean; message?: string }>;
+    resumeBatch: (batchId: string) => Promise<{ success: boolean; message?: string }>;
 
     // 相似度分析
-    calculateSimilarityMatrix: (projectId: string, characterIds: string[]) => Promise<any>;
-    batchCheckConsistency: (projectId: string, strictMode: boolean, minScore: number) => Promise<any>;
+    calculateSimilarityMatrix: (projectId: string, characterIds: string[]) => Promise<{ success: boolean; character_ids?: string[]; similarity_matrix?: number[][]; message?: string }>;
+    batchCheckConsistency: (projectId: string, strictMode: boolean, minScore: number) => Promise<{ success: boolean; reports?: { characterId: string; score: number; issues: string[] }[]; message?: string }>;
   };
 }

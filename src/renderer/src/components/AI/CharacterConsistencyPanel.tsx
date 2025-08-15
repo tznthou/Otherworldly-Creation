@@ -4,6 +4,7 @@ import { RootState } from '../../store/store';
 import { api } from '../../api';
 import { 
   ConsistencyReport, 
+  CharacterConsistencyReport,
   VisualTraits 
 } from '../../types/illustration';
 import CosmicButton from '../UI/CosmicButton';
@@ -50,7 +51,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
   const [currentTag, setCurrentTag] = useState('');
   
   // 報告狀態
-  const [consistencyReport, setConsistencyReport] = useState<ConsistencyReport | null>(null);
+  const [consistencyReport, setConsistencyReport] = useState<CharacterConsistencyReport | null>(null);
   const [strictMode, setStrictMode] = useState(false);
   
   // 相似度矩陣狀態
@@ -58,7 +59,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
   const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
   
   // 批次檢查狀態
-  const [batchReports, setBatchReports] = useState<ConsistencyReport[]>([]);
+  const [batchReports, setBatchReports] = useState<{ characterId: string; score: number; issues: string[]; }[]>([]);
   const [batchMinScore, setBatchMinScore] = useState(0.7);
 
   // 獲取項目角色
@@ -103,18 +104,39 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
       );
 
       if (result.success) {
-        setVisualTraits({
-          character_id: result.character_id,
-          seed_value: result.seed_value,
-          standard_description: result.standard_description,
-          chinese_description: result.chinese_description,
-          traits_version: result.traits_version,
-          created_at: result.created_at
-        });
+        // 設定成功後，載入視覺特徵
+        try {
+          const traitsResult = await api.illustration.getCharacterVisualTraits(selectedCharacter.id);
+          if (traitsResult.success && traitsResult.traits) {
+            setVisualTraits(traitsResult.traits);
+          } else {
+            // 如果沒有現有特徵，創建基本結構
+            setVisualTraits({
+              character_id: selectedCharacter.id,
+              character_name: selectedCharacter.name,
+              seed_value: undefined,
+              traits_version: 1,
+              standard_description: undefined,
+              chinese_description: undefined,
+              created_at: new Date().toISOString()
+            });
+          }
+        } catch (traitsErr) {
+          console.warn('載入視覺特徵失敗，使用默認值:', traitsErr);
+          setVisualTraits({
+            character_id: selectedCharacter.id,
+            character_name: selectedCharacter.name,
+            seed_value: undefined,
+            traits_version: 1,
+            standard_description: undefined,
+            chinese_description: undefined,
+            created_at: new Date().toISOString()
+          });
+        }
         
         console.log('角色一致性設定完成');
       } else {
-        setError('一致性設定失敗');
+        setError(result.message || '一致性設定失敗');
       }
     } catch (err) {
       setError(`設定失敗: ${err}`);
@@ -239,11 +261,11 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
 
       if (result.success) {
         setSimilarityMatrix({
-          character_ids: result.character_ids,
-          similarity_matrix: result.similarity_matrix
+          character_ids: result.character_ids || [],
+          similarity_matrix: result.similarity_matrix || []
         });
       } else {
-        setError('相似度計算失敗');
+        setError(result.message || '相似度計算失敗');
       }
     } catch (err) {
       setError(`計算失敗: ${err}`);

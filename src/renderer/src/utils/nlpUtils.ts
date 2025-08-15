@@ -2,10 +2,51 @@
 import nlp from 'compromise';
 import compromiseDates from 'compromise-dates';
 import compromiseStats from 'compromise-stats';
+import type { Descendant } from 'slate';
 
 // 擴展 Compromise 功能
 nlp.plugin(compromiseDates);
 nlp.plugin(compromiseStats);
+
+// Compromise.js 類型定義
+interface CompromiseTerm {
+  text: string;
+  normal: string;
+  tags: string[];
+  index: number;
+  id: string;
+}
+
+interface CompromiseSentence {
+  text: string;
+  terms: CompromiseTerm[];
+}
+
+interface ScoredSentence {
+  text: string;
+  score: number;
+  index: number;
+}
+
+interface PersonEntity {
+  text: string;
+  normal: string;
+}
+
+interface SpeakerInfo {
+  speakerName?: string;
+  speakerId?: string;
+  attribution?: string;
+}
+
+interface SlateText {
+  text: string;
+}
+
+interface SlateElement {
+  type: string;
+  children: (SlateText | SlateElement)[];
+}
 
 export interface TextAnalysis {
   sentences: number;
@@ -100,7 +141,7 @@ export function calculateWritingMetrics(text: string): WritingMetrics {
   const averageWordLength = totalWordLength / words.length;
   
   // 平均句長
-  const sentenceLengths = sentences.map((s: any) => s.terms.length);
+  const sentenceLengths = sentences.map((s: CompromiseSentence) => s.terms.length);
   const averageSentenceLength = sentenceLengths.reduce((a: number, b: number) => a + b, 0) / sentences.length;
   
   // 詞彙豐富度
@@ -134,7 +175,7 @@ export function getPartOfSpeech(text: string): POSTag[] {
   const doc = nlp(text);
   const terms = doc.json()[0]?.terms || [];
   
-  return terms.map((term: any) => ({
+  return terms.map((term: CompromiseTerm) => ({
     text: term.text,
     tag: term.tags[0] || 'Unknown',
     normal: term.normal
@@ -181,7 +222,7 @@ export function generateSummary(text: string, sentenceCount = 3): string {
   }
   
   // 簡單策略：選擇包含最多名詞的句子
-  const scoredSentences = sentences.map((s: any, index: number) => {
+  const scoredSentences = sentences.map((s: CompromiseSentence, index: number) => {
     const sentDoc = nlp(s.text);
     const nounCount = sentDoc.match('#Noun').length;
     const verbCount = sentDoc.match('#Verb').length;
@@ -192,11 +233,11 @@ export function generateSummary(text: string, sentenceCount = 3): string {
   
   // 選擇得分最高的句子，保持原始順序
   const selected = scoredSentences
-    .sort((a: any, b: any) => b.score - a.score)
+    .sort((a: ScoredSentence, b: ScoredSentence) => b.score - a.score)
     .slice(0, sentenceCount)
-    .sort((a: any, b: any) => a.index - b.index);
+    .sort((a: ScoredSentence, b: ScoredSentence) => a.index - b.index);
   
-  return selected.map((s: any) => s.text).join(' ');
+  return selected.map((s: ScoredSentence) => s.text).join(' ');
 }
 
 /**
@@ -315,9 +356,9 @@ export function detectConsistencyIssues(text: string): ConsistencyIssue[] {
   const people = doc.people().json();
   const nameVariations = new Map<string, Set<string>>();
   
-  people.forEach((person: any) => {
+  people.forEach((person: PersonEntity) => {
     const normalized = person.text.toLowerCase();
-    const similar = people.filter((p: any) => 
+    const similar = people.filter((p: PersonEntity) => 
       calculateSentenceSimilarity(p.text, person.text) > 0.6 &&
       p.text !== person.text
     );
@@ -326,7 +367,7 @@ export function detectConsistencyIssues(text: string): ConsistencyIssue[] {
       if (!nameVariations.has(normalized)) {
         nameVariations.set(normalized, new Set([person.text]));
       }
-      similar.forEach((s: any) => nameVariations.get(normalized)!.add(s.text));
+      similar.forEach((s: PersonEntity) => nameVariations.get(normalized)!.add(s.text));
     }
   });
   
@@ -503,7 +544,7 @@ export function extractDialogues(text: string): DialogueExtraction[] {
  * @returns 章節對話分析結果
  */
 export function analyzeChapterDialogues(
-  chapterContent: any[], 
+  chapterContent: Descendant[], 
   chapterId: string, 
   knownCharacters: Array<{ id: string; name: string; aliases?: string[] }>
 ): ChapterDialogueAnalysis {
@@ -671,7 +712,7 @@ function inferSpeakerFromContext(context: string, _dialoguePos: number): {
 function calculateDialogueConfidence(
   dialogueContent: string, 
   context: string, 
-  speakerInfo: any
+  speakerInfo: Partial<SpeakerInfo>
 ): number {
   let confidence = 0.5; // 基礎分數
   
@@ -767,12 +808,12 @@ function removeDuplicateDialogues(dialogues: DialogueExtraction[]): DialogueExtr
 /**
  * 將 Slate.js 內容轉換為純文本
  */
-export function slateToPlainText(nodes: any[]): string {
+export function slateToPlainText(nodes: Descendant[]): string {
   return nodes
-    .map((node: any) => {
-      if (node.type === 'paragraph') {
-        return node.children
-          .map((child: any) => child.text || '')
+    .map((node: Descendant) => {
+      if ((node as SlateElement).type === 'paragraph') {
+        return (node as SlateElement).children
+          .map((child: SlateText | SlateElement) => (child as SlateText).text || '')
           .join('');
       }
       return '';
