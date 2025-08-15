@@ -5,26 +5,69 @@
 
 set -e
 
-echo "🎮 Genesis Chronicle 安裝完成！"
+echo "🎮 Genesis Chronicle 安裝後設置開始..."
 
-# 確保應用程式有正確的權限
-if [ -d "/Applications/genesis-chronicle.app" ]; then
+# 定義應用程式路徑
+APP_PATH="/Applications/genesis-chronicle.app"
+
+# 確保應用程式存在於預期位置
+if [ -d "$APP_PATH" ]; then
+    echo "✅ 應用程式已成功安裝到: $APP_PATH"
+    
     # 移除 quarantine 屬性（如果存在）
-    xattr -rd com.apple.quarantine "/Applications/genesis-chronicle.app" 2>/dev/null || true
+    echo "🔓 移除 quarantine 屬性..."
+    xattr -rd com.apple.quarantine "$APP_PATH" 2>/dev/null || echo "   (無需移除 quarantine 屬性)"
     
-    # 獲取安裝用戶名（即使在 sudo 環境下）
-    INSTALL_USER=$(logname 2>/dev/null || who am i | awk '{print $1}' | head -n1)
+    # 獲取安裝用戶名（處理多種情況）
+    INSTALL_USER=""
     
-    if [ -n "$INSTALL_USER" ]; then
-        # 設置正確的擁有者給安裝用戶
-        chown -R "$INSTALL_USER:staff" "/Applications/genesis-chronicle.app" 2>/dev/null || true
-        echo "✅ 應用程式擁有者已設置為: $INSTALL_USER"
+    # 方法 1: 使用 logname
+    INSTALL_USER=$(logname 2>/dev/null) || true
+    
+    # 方法 2: 使用 who am i
+    if [ -z "$INSTALL_USER" ]; then
+        INSTALL_USER=$(who am i 2>/dev/null | awk '{print $1}' | head -n1) || true
+    fi
+    
+    # 方法 3: 使用 SUDO_USER 環境變數
+    if [ -z "$INSTALL_USER" ] && [ -n "$SUDO_USER" ]; then
+        INSTALL_USER="$SUDO_USER"
+    fi
+    
+    # 方法 4: 使用 stat 獲取 /Users 目錄中最近的用戶
+    if [ -z "$INSTALL_USER" ]; then
+        INSTALL_USER=$(ls -lt /Users | grep -v Shared | head -n2 | tail -n1 | awk '{print $9}') || true
+    fi
+    
+    if [ -n "$INSTALL_USER" ] && [ "$INSTALL_USER" != "root" ]; then
+        echo "👤 設置應用程式擁有者為: $INSTALL_USER"
+        chown -R "$INSTALL_USER:staff" "$APP_PATH" 2>/dev/null || echo "   (權限設置跳過，將使用預設權限)"
+    else
+        echo "👤 使用預設權限設置"
     fi
     
     # 設置正確的權限
-    chmod -R 755 "/Applications/genesis-chronicle.app"
+    echo "🔐 設置應用程式權限..."
+    chmod -R 755 "$APP_PATH" 2>/dev/null || echo "   (權限設置失敗，應用程式可能仍然可以正常運行)"
     
-    echo "✅ 應用程式權限已設置"
+    echo "✅ 應用程式權限設置完成"
+    
+    # 驗證可執行文件
+    EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/genesis-chronicle"
+    if [ -f "$EXECUTABLE_PATH" ]; then
+        echo "✅ 可執行文件存在: $EXECUTABLE_PATH"
+        chmod +x "$EXECUTABLE_PATH" 2>/dev/null || true
+    else
+        echo "⚠️ 警告: 找不到可執行文件於 $EXECUTABLE_PATH"
+    fi
+    
+else
+    echo "❌ 錯誤: 應用程式未找到於 $APP_PATH"
+    echo "🔍 檢查可能的安裝位置："
+    find /Applications -name "*genesis*" -type d 2>/dev/null | head -5 | while read -r found_path; do
+        echo "   📁 $found_path"
+    done
+    exit 1
 fi
 
 # 清理可能的快取

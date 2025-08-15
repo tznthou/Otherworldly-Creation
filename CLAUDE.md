@@ -70,16 +70,46 @@ node scripts/test-ai-history.js
 node scripts/test-ollama-service.js
 ```
 
-### macOS PKG Installer
+### 版本管理系統 (新增！)
 ```bash
+# 版本統一同步腳本
+node scripts/sync-version.js                    # 使用 package.json 版本
+RELEASE_VERSION=1.0.5 node scripts/sync-version.js  # 使用指定版本
+
+# 發布流程測試
+scripts/test-release-flow.sh                    # 完整發布流程驗證
+```
+
+### macOS 雙軌安裝支援 (已升級！)
+
+#### DMG 格式 (推薦)
+```bash
+# Tauri 自動生成 DMG，用戶只需拖放安裝
+cargo tauri build --target universal-apple-darwin
+# 輸出：src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+```
+
+#### PKG 格式 (企業級)
+```bash
+# 修復的 PKG 安裝程式
 chmod +x ./scripts/create-pkg.sh
-./scripts/create-pkg.sh <app_path> <output_pkg_path>
+PKG_VERSION=1.0.5 ./scripts/create-pkg.sh <app_path> <output_pkg_path>
 
-# Test PKG installation
+# 測試 PKG 安裝（現已修復安裝路徑問題）
 sudo installer -pkg <pkg_file> -target /
+```
 
-# Release with GitHub Actions
-git tag -a v1.0.x -m "Release message" && git push origin v1.0.x
+### GitHub Actions 自動發布 (完全重構！)
+```bash
+# 觸發發布 - 單一指令完成所有平台建置
+git tag v1.0.5 && git push origin v1.0.5
+
+# 自動執行：
+# 1. 版本同步到所有配置文件
+# 2. macOS: 生成 DMG + PKG 雙格式
+# 3. Windows: 生成 MSI 安裝程式
+# 4. 自動上傳到 GitHub Release
+# 5. 生成詳細發布說明
 ```
 
 ## Core Architecture

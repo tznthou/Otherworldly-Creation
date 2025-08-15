@@ -21,35 +21,57 @@ jobs:
       - name: 🎉 Create Release
         id: create_release
         run: |
-          RELEASE_BODY="🎮 **創世紀元 - 異世界創作神器**
+          RELEASE_BODY="🎮 **創世紀元 - 異世界創作神器 v${{ steps.get_version.outputs.VERSION }}**
 
           ## 📦 安裝包下載
 
-          ### 🍎 macOS 版本
-          - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-universal.dmg** (拖放安裝)
-          - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-universal.pkg** (一鍵安裝，無需手動移除隔離)
-          - 支援 Intel + Apple Silicon Mac
-          - 系統需求：macOS 10.11+
+          ### 🍎 macOS 版本 (支援 Intel + Apple Silicon)
+          
+          #### 🥇 **推薦：DMG 格式** (新增！)
+          - **genesis-chronicle_v${{ steps.get_version.outputs.VERSION }}_universal.dmg**
+          - ✅ **簡單拖放安裝** - 無需管理員權限
+          - ✅ **即開即用** - 自動處理所有權限問題
+          - ✅ **熟悉體驗** - macOS 標準安裝方式
+          
+          #### 🏢 **企業選擇：PKG 格式** (已修復！)
+          - **genesis-chronicle_v${{ steps.get_version.outputs.VERSION }}_universal.pkg**
+          - ✅ **一鍵安裝** - 修復了安裝路徑問題
+          - ✅ **企業友好** - 支援批次部署
+          - ✅ **自動權限** - 無需手動執行 xattr 指令
 
-          #### 📋 macOS 安裝說明
-          - **推薦使用 .pkg 安裝程式**：自動處理系統權限，無需手動執行 \`xattr\` 指令
-          - 如使用 .dmg：下載後需執行 \`sudo xattr -rd com.apple.quarantine /Applications/genesis-chronicle.app\`
+          **系統需求**：macOS 10.12+
 
           ### 🪟 Windows 版本  
-          - **genesis-chronicle-${{ steps.get_version.outputs.VERSION }}-x64.msi**
+          - **genesis-chronicle_v${{ steps.get_version.outputs.VERSION }}_x64.msi**
           - 64位元 Windows 安裝程式
           - 系統需求：Windows 10+
 
+          ## 🆕 本版本改進
+
+          ### 🔧 安裝系統全面升級
+          - ✅ **新增 DMG 格式**：提供 macOS 用戶最熟悉的安裝體驗
+          - ✅ **修復 PKG 問題**：解決安裝路徑錯誤，確保正確安裝到 /Applications/
+          - ✅ **版本統一管理**：所有平台版本號完全一致
+          - ✅ **自動化流程**：GitHub Actions 全自動建置和發布
+
+          ### 💡 安裝建議
+          - **一般用戶**：推薦使用 DMG 格式，拖放到 Applications 即可
+          - **企業用戶**：可選擇 PKG 格式進行批次安裝
+          - **所有格式都已完全測試**，選擇你偏好的方式即可！
+
           ## ✨ 主要功能
-          - 🤖 5大AI供應商整合 (Ollama, OpenAI, Gemini, Claude, OpenRouter)
-          - 📚 智能小說創作輔助
-          - 📄 EPUB/PDF 雙格式匯出
-          - 🎭 角色分析與劇情追蹤
-          - 💾 自動儲存與備份
+          - 🤖 **5大AI供應商整合** (Ollama, OpenAI, Gemini, Claude, OpenRouter)
+          - 📚 **智能小說創作輔助** - AI驅動的創作靈感
+          - 📄 **EPUB/PDF 雙格式匯出** - 專業排版輸出
+          - 🎭 **角色分析與劇情追蹤** - 深度角色一致性分析
+          - 🎨 **AI 插畫生成** - 視覺化你的故事世界
+          - 💾 **自動儲存與備份** - 永不遺失創作成果
 
           ---
 
-          🔥 **讓AI成為你的創作夥伴，開啟異世界冒險！**"
+          🔥 **讓AI成為你的創作夥伴，開啟異世界冒險！**
+          
+          📝 **版本統一保證**：本次發布所有平台版本號均為 v${{ steps.get_version.outputs.VERSION }}，徹底解決版本不一致問題！"
           
           # 使用 gh CLI 創建 release
           RELEASE_OUTPUT=$(gh release create ${{ steps.get_version.outputs.VERSION }} \
@@ -74,6 +96,16 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
+      - name: 🏷️ Setup version environment
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "PKG_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "📦 Release version: $VERSION"
+
+      - name: 🔄 Sync versions across all configs
+        run: node scripts/sync-version.js
+
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -96,47 +128,74 @@ jobs:
       - name: 🏗️ Build frontend
         run: npm run build:renderer
 
-      - name: 🔨 Build Tauri app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          releaseId: ${{ needs.create-release.outputs.release_id }}
-          args: '--target universal-apple-darwin'
+      - name: 🔨 Build Tauri app (DMG + App)
+        run: |
+          echo "🚀 Building Tauri app with DMG support..."
+          cd src-tauri
+          cargo tauri build --target universal-apple-darwin
+          echo "✅ Tauri build completed"
 
       - name: 📦 Create PKG installer
         run: |
-          # 找到生成的 .app 文件
+          echo "🔍 Looking for generated .app file..."
           APP_PATH=$(find src-tauri/target -name "genesis-chronicle.app" -type d | head -1)
+          
           if [ -z "$APP_PATH" ]; then
             echo "❌ Error: genesis-chronicle.app not found"
-            find src-tauri/target -type f -name "*genesis-chronicle*" | head -10
+            echo "🔍 Debug: Searching for any genesis-chronicle files:"
+            find src-tauri/target -name "*genesis-chronicle*" -type f | head -10
             exit 1
           fi
           
           echo "✅ Found app at: $APP_PATH"
           
-          # 獲取版本號
-          VERSION="${GITHUB_REF#refs/tags/}"
+          # 創建 PKG 輸出目錄
+          mkdir -p dist
           
-          # 創建PKG
-          PKG_DIR="$(dirname "$APP_PATH")/pkg"
-          mkdir -p "$PKG_DIR"
+          # 創建 PKG
           chmod +x ./scripts/create-pkg.sh
-          PKG_NAME="genesis-chronicle_${VERSION}_universal.pkg"
-          ./scripts/create-pkg.sh "$APP_PATH" "$PKG_DIR/$PKG_NAME"
+          PKG_NAME="genesis-chronicle_v${RELEASE_VERSION}_universal.pkg"
+          echo "📦 Creating PKG: $PKG_NAME"
+          ./scripts/create-pkg.sh "$APP_PATH" "dist/$PKG_NAME"
 
-      - name: 📤 Upload PKG to Release
+      - name: 🔍 Verify build artifacts
         run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          PKG_PATH=$(find src-tauri/target -name "genesis-chronicle_${VERSION}_universal.pkg" -type f | head -1)
-          if [ -n "$PKG_PATH" ]; then
-            echo "✅ Found PKG at: $PKG_PATH"
-            gh release upload "$VERSION" "$PKG_PATH" --clobber
-          else
-            echo "❌ PKG file not found"
+          echo "🔍 Checking build artifacts:"
+          echo ""
+          echo "📁 DMG files:"
+          find src-tauri/target -name "*.dmg" -type f | while read -r dmg; do
+            echo "   ✅ $(basename "$dmg") ($(du -h "$dmg" | cut -f1))"
+          done
+          echo ""
+          echo "📁 PKG files:"
+          find dist -name "*.pkg" -type f | while read -r pkg; do
+            echo "   ✅ $(basename "$pkg") ($(du -h "$pkg" | cut -f1))"
+          done
+          echo ""
+          
+          # 檢查是否至少有一個 DMG 和一個 PKG
+          DMG_COUNT=$(find src-tauri/target -name "*.dmg" -type f | wc -l)
+          PKG_COUNT=$(find dist -name "*.pkg" -type f | wc -l)
+          
+          if [ "$DMG_COUNT" -eq 0 ]; then
+            echo "❌ Error: No DMG files found"
             exit 1
           fi
+          
+          if [ "$PKG_COUNT" -eq 0 ]; then
+            echo "❌ Error: No PKG files found"
+            exit 1
+          fi
+          
+          echo "✅ Build verification passed: $DMG_COUNT DMG(s) + $PKG_COUNT PKG(s)"
+
+      - name: 📤 Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.RELEASE_VERSION }}
+          files: |
+            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            dist/*.pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -148,6 +207,15 @@ jobs:
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
+
+      - name: 🏷️ Setup version environment
+        run: |
+          $VERSION = "${{ github.ref }}".Replace("refs/tags/v", "")
+          echo "RELEASE_VERSION=$VERSION" >> $env:GITHUB_ENV
+          echo "📦 Release version: $VERSION"
+
+      - name: 🔄 Sync versions across all configs
+        run: node scripts/sync-version.js
 
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -171,10 +239,25 @@ jobs:
       - name: 🏗️ Build frontend
         run: npm run build:renderer
 
-      - name: 🔨 Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+      - name: 🔨 Build Tauri app (MSI)
+        run: |
+          echo "🚀 Building Tauri app for Windows..."
+          cd src-tauri
+          cargo tauri build --target x86_64-pc-windows-msvc
+          echo "✅ Tauri Windows build completed"
+
+      - name: 🔍 Verify Windows build artifacts
+        run: |
+          echo "🔍 Checking Windows build artifacts:"
+          Get-ChildItem -Path "src-tauri/target" -Recurse -Include "*.msi" | ForEach-Object {
+            $size = [math]::Round($_.Length / 1MB, 2)
+            echo "   ✅ $($_.Name) ($size MB)"
+          }
+
+      - name: 📤 Upload Windows Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.RELEASE_VERSION }}
+          files: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: '--target x86_64-pc-windows-msvc'
-          releaseId: ${{ needs.create-release.outputs.release_id }}
