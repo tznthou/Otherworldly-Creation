@@ -116,6 +116,15 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
+      - name: 🔧 Install Tauri CLI
+        run: |
+          if ! command -v cargo-tauri &> /dev/null; then
+            echo "Installing Tauri CLI..."
+            cargo install tauri-cli --version "^2.0"
+          else
+            echo "Tauri CLI already installed: $(cargo tauri --version)"
+          fi
+
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -226,6 +235,15 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+
+      - name: 🔧 Install Tauri CLI
+        run: |
+          if (!(Get-Command "cargo-tauri" -ErrorAction SilentlyContinue)) {
+            echo "Installing Tauri CLI..."
+            cargo install tauri-cli --version "^2.0"
+          } else {
+            echo "Tauri CLI already installed: $(cargo tauri --version)"
+          }
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
