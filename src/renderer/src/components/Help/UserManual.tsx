@@ -81,9 +81,25 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               <li>1. 在儀表板點擊「創建新專案」按鈕</li>
               <li>2. 選擇小說類型（異世界、校園、科幻、奇幻）</li>
               <li>3. 填寫專案基本資訊：標題、作者、簡介</li>
-              <li>4. 選擇是否使用預設模板</li>
+              <li>4. 選擇是否使用預設模板（<strong>建議新用戶使用模板快速開始</strong>）</li>
               <li>5. 確認創建，系統會自動生成專案結構</li>
             </ol>
+            
+            <div className="bg-gold-900/20 border border-gold-500/30 rounded-lg p-4 mt-4">
+              <h5 className="text-gold-400 font-semibold mb-2">💡 使用模板快速開始</h5>
+              <p className="text-gray-300 text-sm mb-2">
+                如果您是新用戶或想要快速開始創作，建議使用模板管理系統：
+              </p>
+              <ol className="text-gray-300 text-sm space-y-1">
+                <li>1. 點擊左側選單「設定」</li>
+                <li>2. 選擇「模板管理」</li>
+                <li>3. 點擊右上角「匯入模板」按鈕</li>
+                <li>4. 選擇合適的模板類型一鍵匯入</li>
+              </ol>
+              <p className="text-gold-300 text-sm mt-2 font-medium">
+                模板包含完整的世界觀設定、角色框架和劇情大綱，讓您立即開始創作！
+              </p>
+            </div>
           </div>
 
           <div>
@@ -106,6 +122,134 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 <p className="text-gray-300 text-sm">魔法世界設定，包含種族和魔法體系</p>
               </div>
             </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'template-management',
+      title: '🎭 模板管理系統',
+      content: (
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-4">🎭 模板管理系統</h3>
+            <p className="text-gray-300 mb-4">
+              模板管理系統是創世紀元的重要功能之一，提供四大熱門類型的預設模板，讓新用戶能夠快速開始創作。
+              每個模板都包含完整的世界觀設定、角色框架和劇情大綱，是您創作路上的最佳起點。
+            </p>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">如何使用模板</h4>
+            <ol className="text-gray-300 space-y-2">
+              <li>1. 點擊左側選單的「⚙️ 設定」</li>
+              <li>2. 在設定頁面中選擇「📚 模板管理」</li>
+              <li>3. 點擊右上角的「📥 匯入模板」按鈕</li>
+              <li>4. 從四種模板類型中選擇合適的類型</li>
+              <li>5. 點擊「匯入」確認，系統會自動創建完整的專案結構</li>
+              <li>6. 返回儀表板即可看到已匯入的模板專案</li>
+            </ol>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">四大模板類型</h4>
+            <div className="space-y-4">
+              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+                <h5 className="text-purple-400 font-semibold mb-2 flex items-center">
+                  🏰 奇幻冒險模板
+                </h5>
+                <p className="text-gray-300 text-sm mb-3">
+                  經典的奇幻世界設定，包含魔法體系、種族設定、古老的預言和英雄的冒險旅程。
+                </p>
+                <div className="text-sm text-gray-400">
+                  <p><strong>包含內容：</strong></p>
+                  <ul className="ml-4 space-y-1">
+                    <li>• 完整的魔法世界觀設定</li>
+                    <li>• 多個種族和魔法體系</li>
+                    <li>• 勇者、魔法師、精靈等經典角色</li>
+                    <li>• 拯救世界的史詩劇情大綱</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-pink-900/20 border border-pink-500/30 rounded-lg p-4">
+                <h5 className="text-pink-400 font-semibold mb-2 flex items-center">
+                  💕 校園戀愛劇模板
+                </h5>
+                <p className="text-gray-300 text-sm mb-3">
+                  現代都市校園背景，青春洋溢的戀愛故事，著重於角色間的情感發展和青春成長。
+                </p>
+                <div className="text-sm text-gray-400">
+                  <p><strong>包含內容：</strong></p>
+                  <ul className="ml-4 space-y-1">
+                    <li>• 現代高中校園環境設定</li>
+                    <li>• 學園祭、社團活動等經典場景</li>
+                    <li>• 男女主角及多樣化配角群</li>
+                    <li>• 甜蜜與成長並重的劇情走向</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <h5 className="text-blue-400 font-semibold mb-2 flex items-center">
+                  ⚡ 異世界轉生模板
+                </h5>
+                <p className="text-gray-300 text-sm mb-3">
+                  熱門的輕小說題材，現代人穿越到異世界，運用現代知識在新世界中展開冒險。
+                </p>
+                <div className="text-sm text-gray-400">
+                  <p><strong>包含內容：</strong></p>
+                  <ul className="ml-4 space-y-1">
+                    <li>• 轉生機制和世界穿越設定</li>
+                    <li>• 異世界的社會體系和文化</li>
+                    <li>• 擁有現代知識的主角設定</li>
+                    <li>• 冒險公會、魔物討伐等經典元素</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-cyan-900/20 border border-cyan-500/30 rounded-lg p-4">
+                <h5 className="text-cyan-400 font-semibold mb-2 flex items-center">
+                  🚀 科幻冒險模板
+                </h5>
+                <p className="text-gray-300 text-sm mb-3">
+                  未來科技世界的冒險故事，包含AI、太空探索、科技文明等現代科幻元素。
+                </p>
+                <div className="text-sm text-gray-400">
+                  <p><strong>包含內容：</strong></p>
+                  <ul className="ml-4 space-y-1">
+                    <li>• 未來世界的科技體系設定</li>
+                    <li>• 太空殖民地、星際旅行背景</li>
+                    <li>• AI伴侶、機甲駕駛員等角色</li>
+                    <li>• 探索未知星系的史詩冒險</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">模板使用建議</h4>
+            <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+              <ul className="text-gray-300 space-y-2 text-sm">
+                <li>• <strong>新手建議</strong>：如果您是第一次使用創世紀元，強烈建議從模板開始</li>
+                <li>• <strong>靈活運用</strong>：模板內容可以自由修改，作為創作的起點和參考</li>
+                <li>• <strong>學習範例</strong>：通過模板了解完整專案的結構和設定方式</li>
+                <li>• <strong>快速原型</strong>：利用模板快速搭建故事框架，再進行個性化調整</li>
+                <li>• <strong>混合使用</strong>：可以參考多個模板的設定，創造獨特的故事世界</li>
+              </ul>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">模板管理功能</h4>
+            <ul className="text-gray-300 space-y-2">
+              <li>• <strong>匯入模板</strong>：一鍵匯入預設模板，創建完整專案</li>
+              <li>• <strong>模板預覽</strong>：匯入前可以查看模板的詳細內容</li>
+              <li>• <strong>自定義模板</strong>：將現有專案保存為自定義模板（未來版本）</li>
+              <li>• <strong>模板分享</strong>：與其他創作者分享自製模板（未來版本）</li>
+              <li>• <strong>模板更新</strong>：系統會定期更新和優化預設模板</li>
+            </ul>
           </div>
         </div>
       )
