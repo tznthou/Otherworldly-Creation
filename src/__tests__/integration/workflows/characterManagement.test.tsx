@@ -13,23 +13,35 @@ describe('角色管理工作流程整合測試', () => {
     // 設置基本的 mock 返回值
     mockElectronAPI.projects.getById.mockResolvedValue(mockProject);
     mockElectronAPI.characters.getByProjectId.mockResolvedValue([mockCharacter]);
+    
+    // 確保 mock 資料有正確的結構
+    console.log('Mock project:', mockProject);
+    console.log('Mock character:', mockCharacter);
   });
 
   describe('角色創建流程', () => {
     it('應該能夠創建新角色', async () => {
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 等待角色管理器載入
       await waitFor(() => {
-        expect(screen.getByText('角色管理')).toBeInTheDocument();
+        expect(screen.getByText('角色列表')).toBeInTheDocument();
       });
+
+      // 等待角色列表載入完成
+      await waitFor(() => {
+        expect(screen.queryByText('載入中...')).not.toBeInTheDocument();
+        expect(screen.getByText('新增角色')).toBeInTheDocument();
+      }, { timeout: 3000 });
 
       // 點擊新增角色按鈕
       fireEvent.click(screen.getByText('新增角色'));
 
       // 等待角色創建對話框出現
       await waitFor(() => {
-        expect(screen.getByText('創建新角色')).toBeInTheDocument();
+        expect(screen.getByLabelText('角色名稱')).toBeInTheDocument();
       });
 
       // 填寫角色基本資訊
@@ -99,7 +111,9 @@ describe('角色管理工作流程整合測試', () => {
     });
 
     it('應該支援從模板創建角色', async () => {
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 點擊從模板創建
       fireEvent.click(screen.getByText('從模板創建'));
@@ -139,7 +153,9 @@ describe('角色管理工作流程整合測試', () => {
 
   describe('角色編輯功能', () => {
     it('應該能夠編輯角色資訊', async () => {
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 等待角色列表載入
       await waitFor(() => {
@@ -177,7 +193,9 @@ describe('角色管理工作流程整合測試', () => {
     });
 
     it('應該能夠管理角色能力', async () => {
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 進入角色編輯模式
       await waitFor(() => {
@@ -218,7 +236,9 @@ describe('角色管理工作流程整合測試', () => {
       const character2 = createMockCharacter({ id: '2', name: '夥伴' });
       mockElectronAPI.characters.getByProjectId.mockResolvedValue([character1, character2]);
 
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 等待角色列表載入
       await waitFor(() => {
@@ -278,7 +298,9 @@ describe('角色管理工作流程整合測試', () => {
       ];
       mockElectronAPI.characters.getByProjectId.mockResolvedValue(characters);
 
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 切換到關係視圖
       fireEvent.click(screen.getByText('關係視圖'));
@@ -302,7 +324,9 @@ describe('角色管理工作流程整合測試', () => {
     });
 
     it('應該檢查關係一致性', async () => {
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 點擊關係一致性檢查
       fireEvent.click(screen.getByText('檢查一致性'));
@@ -344,7 +368,9 @@ describe('角色管理工作流程整合測試', () => {
       ];
       mockElectronAPI.characters.getByProjectId.mockResolvedValue(characters);
 
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 等待角色列表載入
       await waitFor(() => {
@@ -373,7 +399,9 @@ describe('角色管理工作流程整合測試', () => {
       ];
       mockElectronAPI.characters.getByProjectId.mockResolvedValue(characters);
 
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 等待角色列表載入
       await waitFor(() => {
@@ -395,7 +423,9 @@ describe('角色管理工作流程整合測試', () => {
 
   describe('角色刪除功能', () => {
     it('應該檢查角色引用後再刪除', async () => {
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 等待角色載入
       await waitFor(() => {
@@ -448,7 +478,9 @@ describe('角色管理工作流程整合測試', () => {
     });
 
     it('應該在有引用時阻止刪除', async () => {
-      renderWithProviders(<CharacterManager />);
+      renderWithProviders(<CharacterManager />, {
+        initialEntries: ['/characters/test-project-1']
+      });
 
       // 嘗試刪除角色
       const deleteButton = screen.getByLabelText('刪除角色');

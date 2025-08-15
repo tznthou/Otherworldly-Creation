@@ -4,7 +4,7 @@ import { renderWithProviders, mockElectronAPI } from '../utils/testUtils';
 import CreateProjectModal from '../../../renderer/src/components/Modals/CreateProjectModal';
 import CharacterModal from '../../../renderer/src/components/Characters/CharacterModal';
 import AIWritingPanel from '../../../renderer/src/components/Editor/AIWritingPanel';
-import NotificationSystem from '../../../renderer/src/components/UI/NotificationSystem';
+import { NotificationContainer } from '../../../renderer/src/components/UI/NotificationSystem';
 
 describe('組件互動測試', () => {
   beforeEach(() => {
@@ -223,7 +223,7 @@ describe('組件互動測試', () => {
 
   describe('通知系統互動', () => {
     it('應該正確顯示和隱藏通知', async () => {
-      const { store } = renderWithProviders(<NotificationSystem />);
+      const { store } = renderWithProviders(<NotificationContainer />);
 
       // 添加通知到 store
       store.dispatch({
@@ -244,7 +244,7 @@ describe('組件互動測試', () => {
       });
 
       // 點擊關閉按鈕
-      fireEvent.click(screen.getByLabelText('關閉通知'));
+      fireEvent.click(screen.getByTitle('關閉'));
 
       // 驗證通知消失
       await waitFor(() => {
@@ -253,7 +253,7 @@ describe('組件互動測試', () => {
     });
 
     it('應該支援自動消失的通知', async () => {
-      const { store } = renderWithProviders(<NotificationSystem />);
+      const { store } = renderWithProviders(<NotificationContainer />);
 
       // 添加自動消失的通知
       store.dispatch({
@@ -279,7 +279,7 @@ describe('組件互動測試', () => {
     });
 
     it('應該支援不同類型的通知樣式', async () => {
-      const { store } = renderWithProviders(<NotificationSystem />);
+      const { store } = renderWithProviders(<NotificationContainer />);
 
       // 添加不同類型的通知
       const notificationTypes = ['success', 'error', 'warning', 'info'];
@@ -304,10 +304,18 @@ describe('組件互動測試', () => {
         });
       });
 
-      // 驗證不同類型有不同的樣式類
+      // 驗證不同類型有不同的樣式（通過背景色）
+      const typeStyles = {
+        'success': 'bg-green-900/90',
+        'error': 'bg-red-900/90', 
+        'warning': 'bg-yellow-900/90',
+        'info': 'bg-blue-900/90'
+      };
+      
       notificationTypes.forEach(type => {
-        const notification = screen.getByText(`${type} 通知`).closest('.notification');
-        expect(notification).toHaveClass(`notification-${type}`);
+        const notificationTitle = screen.getByText(`${type} 通知`);
+        const notificationContainer = notificationTitle.closest('div[class*="bg-"]');
+        expect(notificationContainer).toHaveClass(typeStyles[type]);
       });
     });
   });

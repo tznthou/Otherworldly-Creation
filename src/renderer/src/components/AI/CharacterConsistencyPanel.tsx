@@ -1,5 +1,5 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 // TODO: 需要完整重構此組件的類型定義，當前使用 any 類型作為臨時解決方案
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';

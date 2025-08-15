@@ -9,6 +9,7 @@ use super::r#trait::{
     AIProvider, ProviderConfig, AIGenerationRequest, AIGenerationResponse, 
     AIGenerationParams, AIUsageInfo, ModelInfo, detect_model_characteristics, ResponseFormat
 };
+use super::security::SecurityUtils;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OpenAIRequest {
@@ -104,6 +105,8 @@ impl OpenAIProvider {
             .as_ref()
             .ok_or_else(|| anyhow!("OpenAI 需要 API 金鑰"))?
             .clone();
+            
+        log::info!("[OpenAIProvider] 初始化提供者，API金鑰: {}", SecurityUtils::mask_api_key(&api_key));
 
         let client = Client::builder()
             .timeout(Duration::from_secs(300))
@@ -184,9 +187,12 @@ impl OpenAIProvider {
         T: for<'de> Deserialize<'de>,
     {
         let url = format!("{}{}", self.endpoint, endpoint);
+        let auth_header = format!("Bearer {}", self.api_key);
+        log::debug!("[OpenAIProvider] 發送GET請求到: {}, 認證: {}", url, SecurityUtils::mask_api_key(&self.api_key));
+        
         let response = self.client
             .get(&url)
-            .header("Authorization", format!("Bearer {}", self.api_key))
+            .header("Authorization", auth_header)
             .header("Content-Type", "application/json")
             .timeout(self.timeout)
             .send()
@@ -198,7 +204,8 @@ impl OpenAIProvider {
         } else {
             let status = response.status();
             let error_text = response.text().await.unwrap_or_default();
-            Err(anyhow!("OpenAI API 錯誤 {}: {}", status, error_text))
+            let sanitized_error = SecurityUtils::sanitize_error_message(&error_text, &self.api_key);
+            Err(anyhow!("OpenAI API 錯誤 {}: {}", status, sanitized_error))
         }
     }
 
@@ -208,9 +215,12 @@ impl OpenAIProvider {
         T: for<'de> Deserialize<'de>,
     {
         let url = format!("{}{}", self.endpoint, endpoint);
+        let auth_header = format!("Bearer {}", self.api_key);
+        log::debug!("[OpenAIProvider] 發送POST請求到: {}, 認證: {}", url, SecurityUtils::mask_api_key(&self.api_key));
+        
         let response = self.client
             .post(&url)
-            .header("Authorization", format!("Bearer {}", self.api_key))
+            .header("Authorization", auth_header)
             .header("Content-Type", "application/json")
             .json(body)
             .timeout(self.timeout)
@@ -223,7 +233,8 @@ impl OpenAIProvider {
         } else {
             let status = response.status();
             let error_text = response.text().await.unwrap_or_default();
-            Err(anyhow!("OpenAI API 錯誤 {}: {}", status, error_text))
+            let sanitized_error = SecurityUtils::sanitize_error_message(&error_text, &self.api_key);
+            Err(anyhow!("OpenAI API 錯誤 {}: {}", status, sanitized_error))
         }
     }
 
@@ -277,7 +288,7 @@ impl AIProvider for OpenAIProvider {
     }
 
     async fn check_availability(&self) -> Result<bool> {
-        log::info!("[OpenAIProvider] 檢查 OpenAI API 可用性...");
+        log::info!("[OpenAIProvider] 檢查 OpenAI API 可用性，使用金鑰: {}...", SecurityUtils::mask_api_key(&self.api_key));
         
         // 嘗試獲取模型列表來測試 API 金鑰
         match self.make_get_request::<OpenAIModelsResponse>("/models").await {
@@ -337,7 +348,11 @@ impl AIProvider for OpenAIProvider {
     }
 
     async fn generate_text(&self, request: AIGenerationRequest) -> Result<AIGenerationResponse> {
-        log::info!("[OpenAIProvider] 開始生成文本，模型: {}", request.model);
+        // 🔒 安全驗證：檢查輸入參數
+        SecurityUtils::validate_generation_params(&request.params)?;
+        SecurityUtils::validate_prompt_content(&request.prompt, request.system_prompt.as_deref())?;
+        
+        log::info!("[OpenAIProvider] 開始生成文本，模型: {}, API金鑰: {}", request.model, SecurityUtils::mask_api_key(&self.api_key));
 
         // 構建訊息列表
         let mut messages = Vec::new();
@@ -474,15 +489,16 @@ impl AIProvider for OpenAIProvider {
     }
 
     async fn validate_api_key(&self, api_key: &str) -> Result<bool> {
-        log::info!("[OpenAIProvider] 驗證 API 金鑰...");
+        log::info!("[OpenAIProvider] 驗證 API 金鑰: {}...", SecurityUtils::mask_api_key(api_key));
         
         // 建立臨時客戶端來測試 API 金鑰
         let temp_client = Client::new();
         let url = format!("{}/models", self.endpoint);
+        let auth_header = format!("Bearer {}", api_key);
         
         let response = temp_client
             .get(&url)
-            .header("Authorization", format!("Bearer {}", api_key))
+            .header("Authorization", auth_header)
             .header("Content-Type", "application/json")
             .timeout(Duration::from_secs(30))
             .send()

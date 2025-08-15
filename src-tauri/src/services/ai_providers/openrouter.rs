@@ -9,6 +9,7 @@ use super::r#trait::{
     AIProvider, ProviderConfig, AIGenerationRequest, AIGenerationResponse, 
     AIGenerationParams, AIUsageInfo, ModelInfo, detect_model_characteristics, ResponseFormat
 };
+use super::security::SecurityUtils;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OpenRouterRequest {
@@ -121,6 +122,8 @@ impl OpenRouterProvider {
         T: for<'de> Deserialize<'de>,
     {
         let url = format!("{}{}", self.endpoint, endpoint);
+        log::debug!("[OpenRouterProvider] 發送GET請求到: {}, API金鑰: {}", url, SecurityUtils::mask_api_key(&self.api_key));
+        
         let response = self.client
             .get(&url)
             .header("Authorization", format!("Bearer {}", self.api_key))
@@ -145,6 +148,8 @@ impl OpenRouterProvider {
         T: for<'de> Deserialize<'de>,
     {
         let url = format!("{}{}", self.endpoint, endpoint);
+        log::debug!("[OpenRouterProvider] 發送POST請求到: {}, API金鑰: {}", url, SecurityUtils::mask_api_key(&self.api_key));
+        
         let response = self.client
             .post(&url)
             .header("Authorization", format!("Bearer {}", self.api_key))
@@ -279,7 +284,11 @@ impl AIProvider for OpenRouterProvider {
     }
 
     async fn generate_text(&self, request: AIGenerationRequest) -> Result<AIGenerationResponse> {
-        log::info!("[OpenRouterProvider] 開始生成文本，模型: {}", request.model);
+        // 🔒 安全驗證：檢查輸入參數
+        SecurityUtils::validate_generation_params(&request.params)?;
+        SecurityUtils::validate_prompt_content(&request.prompt, request.system_prompt.as_deref())?;
+        
+        log::info!("[OpenRouterProvider] 開始生成文本，模型: {}, API金鑰: {}", request.model, SecurityUtils::mask_api_key(&self.api_key));
 
         // 構建訊息列表
         let mut messages = Vec::new();

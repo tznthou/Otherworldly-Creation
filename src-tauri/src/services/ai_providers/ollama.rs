@@ -9,6 +9,7 @@ use super::r#trait::{
     AIProvider, ProviderConfig, AIGenerationRequest, AIGenerationResponse, 
     AIGenerationParams, AIUsageInfo, ModelInfo
 };
+use super::security::SecurityUtils;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OllamaModel {
@@ -300,6 +301,10 @@ impl AIProvider for OllamaProvider {
     }
 
     async fn generate_text(&self, request: AIGenerationRequest) -> Result<AIGenerationResponse> {
+        // 🔒 安全驗證：檢查輸入參數
+        SecurityUtils::validate_generation_params(&request.params)?;
+        SecurityUtils::validate_prompt_content(&request.prompt, request.system_prompt.as_deref())?;
+        
         log::info!("[OllamaProvider] 開始生成文本，模型: {}", request.model);
         log::info!("[OllamaProvider] 原始請求內容長度: {} 字符", request.prompt.len());
 

@@ -136,8 +136,13 @@
       "Bash(env)",
       "Bash(gh run list:*)",
       "Bash([ -d \"/Applications/genesis-chronicle.app\" ])",
-      "WebSearch"
+      "WebSearch",
+      "Bash(cargo test:*)",
+      "Bash(RELEASE_VERSION=1.0.5-test node scripts/sync-version.js)",
+      "Bash(RELEASE_VERSION=1.0.4 node scripts/sync-version.js)",
+      "Bash(scripts/test-release-flow.sh:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

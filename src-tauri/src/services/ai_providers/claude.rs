@@ -9,6 +9,7 @@ use super::r#trait::{
     AIProvider, ProviderConfig, AIGenerationRequest, AIGenerationResponse, 
     AIGenerationParams, AIUsageInfo, ModelInfo, detect_model_characteristics, ResponseFormat
 };
+use super::security::SecurityUtils;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ClaudeRequest {
@@ -72,6 +73,8 @@ impl ClaudeProvider {
             .as_ref()
             .ok_or_else(|| anyhow!("Claude 需要 API 金鑰"))?
             .clone();
+            
+        log::info!("[ClaudeProvider] 初始化提供者，API金鑰: {}", SecurityUtils::mask_api_key(&api_key));
 
         let client = Client::builder()
             .timeout(Duration::from_secs(300))
@@ -99,6 +102,8 @@ impl ClaudeProvider {
         T: for<'de> Deserialize<'de>,
     {
         let url = format!("{}{}", self.endpoint, endpoint);
+        log::debug!("[ClaudeProvider] 發送POST請求到: {}, API金鑰: {}", url, SecurityUtils::mask_api_key(&self.api_key));
+        
         let response = self.client
             .post(&url)
             .header("x-api-key", &self.api_key)
@@ -115,7 +120,8 @@ impl ClaudeProvider {
         } else {
             let status = response.status();
             let error_text = response.text().await.unwrap_or_default();
-            Err(anyhow!("Claude API 錯誤 {}: {}", status, error_text))
+            let sanitized_error = SecurityUtils::sanitize_error_message(&error_text, &self.api_key);
+            Err(anyhow!("Claude API 錯誤 {}: {}", status, sanitized_error))
         }
     }
 
@@ -177,7 +183,7 @@ impl AIProvider for ClaudeProvider {
     }
 
     async fn check_availability(&self) -> Result<bool> {
-        log::info!("[ClaudeProvider] 檢查 Claude API 可用性...");
+        log::info!("[ClaudeProvider] 檢查 Claude API 可用性，API金鑰: {}...", SecurityUtils::mask_api_key(&self.api_key));
         
         // 發送簡單的測試請求
         let test_request = ClaudeRequest {
@@ -215,7 +221,11 @@ impl AIProvider for ClaudeProvider {
     }
 
     async fn generate_text(&self, request: AIGenerationRequest) -> Result<AIGenerationResponse> {
-        log::info!("[ClaudeProvider] 開始生成文本，模型: {}", request.model);
+        // 🔒 安全驗證：檢查輸入參數
+        SecurityUtils::validate_generation_params(&request.params)?;
+        SecurityUtils::validate_prompt_content(&request.prompt, request.system_prompt.as_deref())?;
+        
+        log::info!("[ClaudeProvider] 開始生成文本，模型: {}, API金鑰: {}", request.model, SecurityUtils::mask_api_key(&self.api_key));
 
         // 構建消息列表
         let messages = vec![
@@ -288,7 +298,7 @@ impl AIProvider for ClaudeProvider {
     }
 
     async fn validate_api_key(&self, api_key: &str) -> Result<bool> {
-        log::info!("[ClaudeProvider] 驗證 API 金鑰...");
+        log::info!("[ClaudeProvider] 驗證 API 金鑰: {}...", SecurityUtils::mask_api_key(api_key));
         
         // 建立臨時客戶端來測試 API 金鑰
         let temp_client = Client::new();
@@ -308,6 +318,8 @@ impl AIProvider for ClaudeProvider {
             top_p: None,
             stop_sequences: None,
         };
+        
+        log::debug!("[ClaudeProvider] 驗證API金鑰，發送測試請求到: {}", url);
         
         let response = temp_client
             .post(&url)

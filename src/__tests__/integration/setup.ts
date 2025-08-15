@@ -149,9 +149,73 @@ const mockElectronAPI = {
   },
 };
 
+// 創建 mock 測試資料
+const createMockTauriProject = () => ({
+  id: 'test-project-1',
+  name: '測試專案',
+  description: '這是一個測試專案',
+  type: 'isekai',
+  novel_length: 'medium',
+  created_at: '2025-08-15T15:20:00Z',
+  updated_at: '2025-08-15T15:20:00Z',
+  settings: JSON.stringify({
+    aiModel: 'llama3',
+    aiParams: {
+      temperature: 0.7,
+      topP: 0.9,
+      maxTokens: 200,
+      presencePenalty: 0,
+      frequencyPenalty: 0,
+    },
+    templateSettings: {},
+  }),
+});
+
+const createMockTauriCharacter = () => ({
+  id: 'test-character-1',
+  project_id: 'test-project-1',
+  name: '主角',
+  description: '勇者主角',
+  age: 18,
+  gender: '男',
+  appearance: '黑髮黑眼，身材健壯',
+  personality: '勇敢正義，有時衝動',
+  background: '異世界召喚的高中生',
+  archetype: '勇者',
+  traits: JSON.stringify([]),
+  abilities: JSON.stringify([]),
+  relationships: JSON.stringify([]),
+  avatar_url: null,
+  created_at: '2025-08-15T15:20:00Z',
+  updated_at: '2025-08-15T15:20:00Z',
+});
+
 // 模擬 Tauri API
 const mockTauriAPI = {
-  invoke: jest.fn(),
+  invoke: jest.fn((command, args) => {
+    switch (command) {
+      case 'get_project_by_id':
+        return Promise.resolve(createMockTauriProject());
+      case 'get_characters_by_project_id':
+        return Promise.resolve([createMockTauriCharacter()]);
+      case 'create_character':
+        return Promise.resolve('new-character-id');
+      case 'update_character':
+        return Promise.resolve(undefined);
+      case 'delete_character':
+        return Promise.resolve(undefined);
+      case 'get_character_by_id':
+        return Promise.resolve(createMockTauriCharacter());
+      case 'get_character_relationships':
+        return Promise.resolve([]);
+      case 'check_ollama_service':
+        return Promise.resolve({ available: true, version: '0.11.4' });
+      case 'get_ai_providers':
+        return Promise.resolve([]);
+      default:
+        return Promise.resolve(undefined);
+    }
+  }),
 };
 
 // 設置全域 API

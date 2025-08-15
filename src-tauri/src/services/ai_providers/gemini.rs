@@ -9,6 +9,7 @@ use super::r#trait::{
     AIProvider, ProviderConfig, AIGenerationRequest, AIGenerationResponse, 
     AIGenerationParams, AIUsageInfo, ModelInfo, detect_model_characteristics, ResponseFormat
 };
+use super::security::SecurityUtils;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct GeminiRequest {
@@ -93,6 +94,8 @@ impl GeminiProvider {
             .as_ref()
             .ok_or_else(|| anyhow!("Gemini 需要 API 金鑰"))?
             .clone();
+            
+        log::info!("[GeminiProvider] 初始化提供者，API金鑰: {}", SecurityUtils::mask_api_key(&api_key));
 
         let client = Client::builder()
             .timeout(Duration::from_secs(300))
@@ -129,6 +132,8 @@ impl GeminiProvider {
         T: for<'de> Deserialize<'de>,
     {
         let url = format!("{}{}", self.endpoint, endpoint);
+        log::debug!("[GeminiProvider] 發送POST請求到: {}, API金鑰: {}", url, SecurityUtils::mask_api_key(&self.api_key));
+        
         let response = self.client
             .post(&url)
             .header("Content-Type", "application/json")
@@ -343,7 +348,11 @@ impl AIProvider for GeminiProvider {
     }
 
     async fn generate_text(&self, request: AIGenerationRequest) -> Result<AIGenerationResponse> {
-        log::info!("[GeminiProvider] 開始生成文本，模型: {}", request.model);
+        // 🔒 安全驗證：檢查輸入參數
+        SecurityUtils::validate_generation_params(&request.params)?;
+        SecurityUtils::validate_prompt_content(&request.prompt, request.system_prompt.as_deref())?;
+        
+        log::info!("[GeminiProvider] 開始生成文本，模型: {}, API金鑰: {}", request.model, SecurityUtils::mask_api_key(&self.api_key));
         
         // 🔍 檢查並推薦正確的模型名稱
         let recommended_models = vec![

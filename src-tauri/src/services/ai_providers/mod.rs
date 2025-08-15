@@ -1,5 +1,6 @@
 // AI 提供者模組
 pub mod r#trait;
+pub mod security;
 pub mod ollama;
 pub mod openai;
 pub mod gemini;
@@ -13,3 +14,6 @@ pub use r#trait::{
     AIGenerationRequest,
     AIGenerationParams,
 };
+
+// 重導出安全工具（僅導出實際使用的）
+// SecurityUtils, SecurityConstants, HttpSecurityConfig 僅在模組內部使用

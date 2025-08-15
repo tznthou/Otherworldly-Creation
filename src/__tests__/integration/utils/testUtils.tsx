@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import projectsReducer from '../../../renderer/src/store/slices/projectsSlice';
 import chaptersReducer from '../../../renderer/src/store/slices/chaptersSlice';
@@ -14,6 +14,7 @@ import editorReducer from '../../../renderer/src/store/slices/editorSlice';
 import { errorReducer, progressReducer } from '../../../renderer/src/store/slices/errorSlice';
 import notificationReducer from '../../../renderer/src/store/slices/notificationSlice';
 import settingsReducer from '../../../renderer/src/store/slices/settingsSlice';
+import { mockElectronAPI } from '../setup';
 
 // 創建測試用的 Redux store
 export function createTestStore(preloadedState?: any) {
@@ -46,6 +47,7 @@ export function createTestStore(preloadedState?: any) {
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   preloadedState?: any;
   store?: ReturnType<typeof createTestStore>;
+  initialEntries?: string[];
 }
 
 export function renderWithProviders(
@@ -53,15 +55,19 @@ export function renderWithProviders(
   {
     preloadedState = {},
     store = createTestStore(preloadedState),
+    initialEntries = ['/'],
     ...renderOptions
   }: CustomRenderOptions = {}
 ) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <Provider store={store}>
-        <BrowserRouter>
-          {children}
-        </BrowserRouter>
+        <MemoryRouter initialEntries={initialEntries}>
+          <Routes>
+            <Route path="/characters/:projectId" element={children} />
+            <Route path="*" element={children} />
+          </Routes>
+        </MemoryRouter>
       </Provider>
     );
   }
@@ -206,6 +212,9 @@ export const waitForLoadingToFinish = async (queryByTestId: any) => {
     expect(queryByTestId('loading-spinner')).not.toBeInTheDocument();
   });
 };
+
+// 重新導出 mockElectronAPI 供測試使用
+export { mockElectronAPI };
 
 // 簡單的測試來避免 Jest 錯誤
 describe('Test Utils', () => {
