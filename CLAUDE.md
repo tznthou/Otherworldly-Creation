@@ -70,6 +70,30 @@ node scripts/test-ai-history.js
 node scripts/test-ollama-service.js
 ```
 
+### 🎭 模板管理系統 (重要功能！)
+```bash
+# 模板快速開始
+設定 → 模板管理 → 匯入模板
+
+# 四大預設模板類型
+- 🏰 奇幻冒險: 經典魔法世界冒險故事
+- 💕 校園戀愛劇: 現代都市青春戀愛
+- ⚡ 異世界轉生: 熱門輕小說穿越題材
+- 🚀 科幻冒險: 未來科技太空探險
+
+# 模板功能特色
+- 完整世界觀設定和角色框架
+- 一鍵匯入，快速開始創作
+- 支援自定義模板匯入和管理
+- 新用戶降低創作門檻的最佳工具
+
+# 使用流程
+1. 設定頁面 → 點擊「模板管理」
+2. 點擊右上角「匯入模板」按鈕
+3. 選擇合適的模板類型
+4. 一鍵應用到新專案或現有專案
+```
+
 ### 版本管理系統 (新增！)
 ```bash
 # 版本統一同步腳本
@@ -80,23 +104,33 @@ RELEASE_VERSION=1.0.5 node scripts/sync-version.js  # 使用指定版本
 scripts/test-release-flow.sh                    # 完整發布流程驗證
 ```
 
-### macOS 雙軌安裝支援 (已升級！)
+### macOS 安裝支援
 
-#### DMG 格式 (推薦)
+#### DMG 格式 (主要推薦 🌟)
 ```bash
 # Tauri 自動生成 DMG，用戶只需拖放安裝
 cargo tauri build --target universal-apple-darwin
 # 輸出：src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+
+# 優勢：
+# - 用戶體驗最佳（直觀拖拉安裝）
+# - Tauri 原生支援，更穩定
+# - 不需要 sudo 權限
+# - 檔案更小巧
 ```
 
-#### PKG 格式 (企業級)
+#### PKG 格式 (Legacy Support)
 ```bash
-# 修復的 PKG 安裝程式
+# 修復的 PKG 安裝程式（保留給特殊需求用戶）
 chmod +x ./scripts/create-pkg.sh
 PKG_VERSION=1.0.5 ./scripts/create-pkg.sh <app_path> <output_pkg_path>
 
-# 測試 PKG 安裝（現已修復安裝路徑問題）
+# 測試 PKG 安裝
 sudo installer -pkg <pkg_file> -target /
+
+# 注意：PKG 格式已標記為 legacy support
+# 主要供企業環境或自動化部署使用
+# 一般用戶建議使用 DMG 格式
 ```
 
 ### GitHub Actions 自動發布 (完全重構！)
@@ -106,9 +140,9 @@ git tag v1.0.5 && git push origin v1.0.5
 
 # 自動執行：
 # 1. 版本同步到所有配置文件
-# 2. macOS: 生成 DMG + PKG 雙格式
+# 2. macOS: 生成 DMG (主要) + PKG (legacy support) 雙格式
 # 3. Windows: 生成 MSI 安裝程式
-# 4. 自動上傳到 GitHub Release
+# 4. 自動上傳到 GitHub Release，DMG 標示為推薦格式
 # 5. 生成詳細發布說明
 ```
 
@@ -207,7 +241,7 @@ const toggleCharacterSelection = (characterId: string) => {
 9. **PDF Fonts**: Verify Noto Sans TC integrity before compilation
 10. **Naming**: Use `#[allow(non_snake_case)]` for Tauri camelCase compatibility
 11. **macOS Icons**: Use `killall Dock && killall Finder` after icon updates
-12. **Distribution**: Use PKG format for macOS (bypasses quarantine)
+12. **Distribution**: DMG format preferred for macOS (best UX), PKG as legacy support
 13. **Modal System**: Use `dispatch(openModal('modalName'))` for modal opening, never direct navigation
 14. **Character Selection**: Preserve multi-character selection state with arrays, not single IDs
 15. **Component Remounting**: Use unique keys for components that need state reset (e.g., `key={editor-${id}}`)
@@ -218,8 +252,8 @@ const toggleCharacterSelection = (characterId: string) => {
 - **release-signed.yml**: Apple Developer ID signed versions
 - **test-build.yml**: Build validation without releasing
 
-**Platform Support**: Windows (MSI) + macOS (PKG/DMG) - Linux support removed by design decision.
-PKG generation automatically handles macOS quarantine attributes for seamless installation.
+**Platform Support**: Windows (MSI) + macOS (DMG/PKG) - Linux support removed by design decision.
+DMG format is now the primary macOS distribution method, providing the best user experience with drag-and-drop installation. PKG remains available as legacy support for enterprise environments.
 
 ## Known Issues & Solutions
 
@@ -244,8 +278,8 @@ PKG generation automatically handles macOS quarantine attributes for seamless in
 - OpenRouter: Use format `provider/model`
 
 ### macOS Distribution
-- Quarantine solved: PKG installer handles automatically
-- Implementation: `scripts/create-pkg.sh`
+- **DMG (推薦)**: Tauri 原生支援，最佳用戶體驗
+- **PKG (Legacy)**: 企業環境使用，`scripts/create-pkg.sh` 實現
 
 ### Performance
 - Startup: 300% faster than Electron
@@ -259,3 +293,10 @@ PKG generation automatically handles macOS quarantine attributes for seamless in
 ### Icon Cache
 - macOS caches aggressively: `killall Dock && killall Finder` or restart
 - Formats: PNG (multiple sizes), .icns (macOS), .ico (Windows)
+
+### 模板系統
+- **模板類型**: 奇幻冒險、校園戀愛劇、異世界轉生、科幻冒險
+- **組件**: TemplateManager.tsx (主介面), TemplateImportWizard.tsx (匯入精靈)
+- **位置**: 設定 → 模板管理 → 匯入模板 (右上角按鈕)
+- **內容**: 每個模板包含完整的世界觀設定、角色框架、劇情大綱
+- **新用戶友善**: 降低創作門檻，提供結構化創作起點
