@@ -12,7 +12,7 @@ import ModalContainer from './components/UI/ModalContainer';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import CosmicBackground from './components/UI/CosmicBackground';
 import { ErrorToastContainer } from './components/UI/ErrorToast';
-import { NotificationContainer } from './components/UI/NotificationSystem';
+import NotificationContainer from './components/UI/NotificationContainer';
 import ErrorFallback from './components/UI/ErrorFallback';
 import { SystemStatusPanel } from './components/UI/StatusIndicator';
 import TutorialOverlay, { useTutorial } from './components/Tutorial/TutorialOverlay';
@@ -24,7 +24,7 @@ import { useAppDispatch } from './hooks/redux';
 import { checkOllamaService, fetchModelsInfo } from './store/slices/aiSlice';
 import { ErrorHandler, withErrorBoundary } from './utils/errorUtils';
 import { NotificationService } from './components/UI/NotificationSystem';
-// import { useShortcuts } from './hooks/useSettings'; // Hook not found
+import { useShortcuts } from './hooks/useShortcuts';
 import { useI18n } from './hooks/useI18n';
 import AutoBackupService from './services/autoBackupService';
 import UpdateManager from './components/Update/UpdateManager';
@@ -62,7 +62,7 @@ const AppContent: React.FC = () => {
   
   
   // 全域快捷鍵
-  // useShortcuts(); // Hook not found
+  useShortcuts();
   
   // 國際化系統
   const { t } = useI18n();

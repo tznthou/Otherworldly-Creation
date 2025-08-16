@@ -13,12 +13,16 @@ const ChapterNotes: React.FC<ChapterNotesProps> = ({ chapter }) => {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  // 從章節的 content 中提取筆記（如果有的話）
+  // 從章節的 metadata 中提取筆記（如果有的話）
   useEffect(() => {
     try {
-      // 假設筆記存儲在章節的 metadata 中
-      const metadata = chapter.metadata || {};
-      setNotes(metadata.notes || '');
+      // metadata 是 JSON 字符串，需要解析
+      if (chapter.metadata) {
+        const parsedMetadata = JSON.parse(chapter.metadata);
+        setNotes(parsedMetadata.notes || '');
+      } else {
+        setNotes('');
+      }
     } catch (error) {
       console.error('讀取章節筆記失敗:', error);
       setNotes('');
@@ -29,13 +33,25 @@ const ChapterNotes: React.FC<ChapterNotesProps> = ({ chapter }) => {
     setIsSaving(true);
 
     try {
+      // 解析現有的 metadata（如果有的話）
+      let existingMetadata = {};
+      if (chapter.metadata) {
+        try {
+          existingMetadata = JSON.parse(chapter.metadata);
+        } catch (_e) {
+          console.warn('無法解析現有 metadata，使用空對象');
+        }
+      }
+      
       // 更新章節的 metadata
+      const newMetadata = {
+        ...existingMetadata,
+        notes,
+      };
+      
       const updatedChapter = {
         ...chapter,
-        metadata: {
-          ...(chapter.metadata || {}),
-          notes,
-        },
+        metadata: JSON.stringify(newMetadata),
       };
 
       await dispatch(updateChapter(updatedChapter)).unwrap();

@@ -10,7 +10,7 @@ pub async fn get_chapters_by_project_id(project_id: String) -> Result<Vec<Chapte
     let conn = db.lock().unwrap();
     
     let mut stmt = conn
-        .prepare("SELECT id, project_id, title, content, order_index, chapter_number, created_at, updated_at 
+        .prepare("SELECT id, project_id, title, content, order_index, chapter_number, metadata, created_at, updated_at 
                   FROM chapters WHERE project_id = ?1 ORDER BY order_index ASC")
         .map_err(|e| e.to_string())?;
     
@@ -23,8 +23,9 @@ pub async fn get_chapters_by_project_id(project_id: String) -> Result<Vec<Chapte
                 content: row.get(3)?,
                 order_index: row.get(4)?,
                 chapter_number: row.get(5)?,
-                created_at: row.get(6)?,
-                updated_at: row.get(7)?,
+                metadata: row.get(6)?,
+                created_at: row.get(7)?,
+                updated_at: row.get(8)?,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -43,7 +44,7 @@ pub async fn get_chapter_by_id(id: String) -> Result<Chapter, String> {
     let conn = db.lock().unwrap();
     
     let mut stmt = conn
-        .prepare("SELECT id, project_id, title, content, order_index, chapter_number, created_at, updated_at 
+        .prepare("SELECT id, project_id, title, content, order_index, chapter_number, metadata, created_at, updated_at 
                   FROM chapters WHERE id = ?1")
         .map_err(|e| e.to_string())?;
     
@@ -56,8 +57,9 @@ pub async fn get_chapter_by_id(id: String) -> Result<Chapter, String> {
                 content: row.get(3)?,
                 order_index: row.get(4)?,
                 chapter_number: row.get(5)?,
-                created_at: row.get(6)?,
-                updated_at: row.get(7)?,
+                metadata: row.get(6)?,
+                created_at: row.get(7)?,
+                updated_at: row.get(8)?,
             })
         })
         .map_err(|e| format!("章節不存在: {}", e))?;
@@ -146,6 +148,12 @@ pub async fn update_chapter(chapter: UpdateChapterRequest) -> Result<(), String>
         sql.push_str(", chapter_number = ?");
         sql.push_str(&(params.len() + 1).to_string());
         params.push(Box::new(chapter_number));
+    }
+    
+    if let Some(metadata) = chapter.metadata {
+        sql.push_str(", metadata = ?");
+        sql.push_str(&(params.len() + 1).to_string());
+        params.push(Box::new(metadata));
     }
     
     sql.push_str(" WHERE id = ?");

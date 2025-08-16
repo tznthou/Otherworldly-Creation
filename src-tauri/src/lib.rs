@@ -23,7 +23,7 @@ use commands::ai_providers::{
 };
 use commands::context::{build_context, compress_context, get_context_stats, build_separated_context, estimate_separated_context_tokens, analyze_text_purity, enhance_generation_parameters};
 use commands::settings::{get_setting, set_setting, get_all_settings, reset_settings};
-use commands::database::{backup_database, restore_database, run_database_maintenance, get_database_stats, health_check};
+use commands::database::{backup_database, restore_database, run_database_maintenance, get_database_stats, health_check, reindex_database, incremental_vacuum, get_wal_mode_status, set_wal_mode};
 use commands::ai_history::{create_ai_history, query_ai_history, mark_ai_history_selected, delete_ai_history, cleanup_ai_history};
 use commands::epub::{generate_epub, get_epub_exports, delete_epub_export};
 use commands::pdf::{generate_pdf, get_pdf_exports, delete_pdf_export};
@@ -49,6 +49,7 @@ use commands::batch_illustration::{
     cleanup_completed_tasks, get_all_batches_summary, retry_failed_tasks,
     pause_batch, resume_batch
 };
+use services::context::optimize_ultra_long_context_command;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -144,6 +145,10 @@ pub fn run() {
       run_database_maintenance,
       get_database_stats,
       health_check,
+      reindex_database,
+      incremental_vacuum,
+      get_wal_mode_status,
+      set_wal_mode,
       // AI History commands
       create_ai_history,
       query_ai_history,
@@ -199,6 +204,8 @@ pub fn run() {
       retry_failed_tasks,
       pause_batch,
       resume_batch,
+      // Context Optimization commands
+      optimize_ultra_long_context_command,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

@@ -60,11 +60,11 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         {/* 儲存按鈕 */}
         <button
           onClick={onSave}
-          disabled={isSaving}
+          disabled={isSaving || !hasUnsavedChanges}
           className={`w-full btn-primary ${
-            !hasUnsavedChanges ? 'opacity-75' : ''
+            !hasUnsavedChanges ? 'opacity-50 cursor-not-allowed' : ''
           }`}
-          title={`${t('settings.actions.save')} (Ctrl+S)`}
+          title={hasUnsavedChanges ? `${t('settings.actions.save')} (Ctrl+S)` : '沒有變更需要儲存'}
         >
           {isSaving ? (
             <span className="flex items-center justify-center">

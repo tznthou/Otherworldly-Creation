@@ -6,8 +6,8 @@ import { Badge } from '../../components/UI/Badge';
 import { Progress } from '../../components/UI/Progress';
 import { Alert, AlertDescription } from '../../components/UI/Alert';
 import ConfirmDialog from '../../components/UI/ConfirmDialog';
-// TODO: 修復 Tauri v2 dialog API 導入問題
-// import { save, open } from '@tauri-apps/api/dialog';
+// 🔥 Tauri v2 dialog API - 正確語法
+import { save, open } from '@tauri-apps/plugin-dialog';
 import { addNotification } from '../../store/slices/uiSlice';
 import { AppDispatch } from '../../store/store';
 import api from '../../api';
@@ -30,7 +30,10 @@ import {
   Upload,
   BarChart3,
   Settings,
-  FileText
+  FileText,
+  Zap,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 
 interface DatabaseIssue {
@@ -50,6 +53,8 @@ interface DatabaseStatistics {
   databaseSize: number;
   lastVacuum: string | null;
   fragmentationLevel: number;
+  journalMode?: string;
+  isWalMode?: boolean;
 }
 
 interface DatabaseCheckResult {
@@ -67,13 +72,33 @@ const DatabaseMaintenance: React.FC = () => {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isReindexing, setIsReindexing] = useState(false);
+  const [isIncrementalVacuuming, setIsIncrementalVacuuming] = useState(false);
+  const [isRunningMaintenance, setIsRunningMaintenance] = useState(false);
+  const [walModeStatus, setWalModeStatus] = useState<{
+    enabled: boolean;
+    is_wal_mode: boolean;
+    journal_mode: string;
+    synchronous: string;
+    wal_autocheckpoint: number;
+    wal_info?: {
+      bytes: number;
+      frames: number;
+    };
+    benefits?: string[];
+    recommendations?: string[];
+  } | null>(null);
+  const [_isLoadingWalStatus, setIsLoadingWalStatus] = useState(false);
+  const [isTogglingWalMode, setIsTogglingWalMode] = useState(false);
+  const [showWalWarning, setShowWalWarning] = useState(false);
   const [repairResult, setRepairResult] = useState<RepairResult | null>(null);
   const [errorReport, setErrorReport] = useState<string>('');
   const [confirmImport, setConfirmImport] = useState<{show: boolean; filePath: string | null}>({show: false, filePath: null});
 
   useEffect(() => {
-    // 頁面載入時自動執行健康檢查
+    // 頁面載入時自動執行健康檢查和載入 WAL 狀態
     performHealthCheck();
+    loadWalModeStatus();
   }, []);
 
   const performHealthCheck = async () => {
@@ -115,13 +140,131 @@ const DatabaseMaintenance: React.FC = () => {
     }
   };
 
+  const loadWalModeStatus = async () => {
+    setIsLoadingWalStatus(true);
+    try {
+      const status = await api.database.getWalModeStatus();
+      setWalModeStatus(status);
+    } catch (error) {
+      console.error('載入 WAL 模式狀態失敗:', error);
+      setWalModeStatus(null);
+    } finally {
+      setIsLoadingWalStatus(false);
+    }
+  };
+
+  // 檢查是否有其他操作正在進行
+  const hasActiveOperation = isRepairing || isOptimizing || isReindexing || 
+                             isIncrementalVacuuming || isRunningMaintenance || 
+                             isExporting || isImporting;
+
+  const toggleWalMode = async () => {
+    if (!walModeStatus) return;
+    
+    if (hasActiveOperation) {
+      dispatch(addNotification({
+        type: 'warning',
+        title: 'WAL 模式切換延遲',
+        message: '請等待當前資料庫操作完成後再嘗試切換 WAL 模式'
+      }));
+      return;
+    }
+
+    // 🔥 新增：啟用 WAL 模式前的警告檢查
+    const currentIsWal = walModeStatus.is_wal_mode;
+    const shouldShowWarning = !currentIsWal && !localStorage.getItem('dontShowWalWarning');
+    
+    if (shouldShowWarning) {
+      setShowWalWarning(true);
+      return; // 等待用戶確認
+    }
+    
+    // 直接執行切換（用戶已確認或是關閉 WAL）
+    await performWalModeToggle();
+  };
+
+  // 🔥 新增：實際執行 WAL 模式切換的函數
+  const performWalModeToggle = async () => {
+    if (!walModeStatus) return;
+    
+    setIsTogglingWalMode(true);
+    try {
+      const currentIsWal = walModeStatus.is_wal_mode;
+      const result = await api.database.setWalMode(!currentIsWal);
+      
+      dispatch(addNotification({
+        type: 'success',
+        title: `${!currentIsWal ? '啟用' : '停用'} WAL 模式成功`,
+        message: result
+      }));
+      
+      // 切換後重新載入狀態和健康檢查
+      await Promise.all([
+        loadWalModeStatus(),
+        performHealthCheck()
+      ]);
+      
+    } catch (error) {
+      console.error('切換 WAL 模式失敗:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      
+      // 🔥 根據錯誤類型提供不同的建議
+      if (errorMessage.includes('資料庫正在被其他操作使用')) {
+        const currentIsWal = walModeStatus.is_wal_mode;
+        dispatch(addNotification({
+          type: 'warning',
+          title: 'WAL 模式切換暫時無法執行',
+          message: currentIsWal 
+            ? 'WAL 模式啟用後很難在運行時關閉。建議重新啟動應用程式以釋放所有資料庫連接，然後再嘗試切換模式。'
+            : '請等待所有資料庫維護操作完成後再試。如果沒有其他操作在進行，可能需要重新啟動應用程式以釋放資料庫鎖定。',
+          autoClose: false
+        }));
+      } else {
+        dispatch(addNotification({
+          type: 'error',
+          title: 'WAL 模式切換失敗',
+          message: `切換失敗: ${errorMessage}`
+        }));
+      }
+    } finally {
+      setIsTogglingWalMode(false);
+    }
+  };
+
+  // 🔥 新增：WAL 警告對話框處理函數
+  const handleWalWarningConfirm = async (dontShowAgain: boolean = false) => {
+    if (dontShowAgain) {
+      localStorage.setItem('dontShowWalWarning', 'true');
+    }
+    setShowWalWarning(false);
+    await performWalModeToggle();
+  };
+
+  const handleWalWarningCancel = () => {
+    setShowWalWarning(false);
+  };
+
   const performAutoRepair = async () => {
-    if (!checkResult || !checkResult.issues.length) return;
+    console.log('performAutoRepair called, checkResult:', checkResult);
+    console.log('checkResult?.issues:', checkResult?.issues);
+    console.log('checkResult?.issues.length:', checkResult?.issues?.length);
+    
+    if (!checkResult || !checkResult.issues.length) {
+      console.log('Early return: no checkResult or no issues');
+      dispatch(addNotification({
+        type: 'warning',
+        title: '無法執行自動修復',
+        message: '沒有檢測到可修復的問題，請先執行健康檢查'
+      }));
+      return;
+    }
 
     setIsRepairing(true);
     try {
       // autoRepair 方法不存在，使用 runMaintenance 代替
       const result = await api.database.runMaintenance();
+      
+      console.log('API result:', result);
       
       // 將 String 結果轉換為 RepairResult 格式
       const repairResult: RepairResult = {
@@ -131,23 +274,24 @@ const DatabaseMaintenance: React.FC = () => {
       };
       setRepairResult(repairResult);
       
-      // 修復成功後重新檢查和通知
-      if (repairResult.success) {
-        await performHealthCheck();
-        dispatch(addNotification({
-          type: 'success',
-          title: '修復成功',
-          message: repairResult.message
-        }));
-      } else {
-        dispatch(addNotification({
-          type: 'error',
-          title: '修復失敗',
-          message: repairResult.message
-        }));
-      }
+      console.log('repairResult:', repairResult);
+      
+      // 🔥 簡化邏輯：API 成功就顯示成功通知
+      dispatch(addNotification({
+        type: 'success',
+        title: '資料庫自動修復成功',
+        message: `${repairResult.message}，已修復 ${repairResult.issuesFixed} 個問題`
+      }));
+      
+      // 修復後重新檢查健康狀態
+      await performHealthCheck();
     } catch (error) {
       console.error('自動修復失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '自動修復失敗',
+        message: `修復失敗: ${error instanceof Error ? error.message : '未知錯誤'}`
+      }));
     } finally {
       setIsRepairing(false);
     }
@@ -182,22 +326,116 @@ const DatabaseMaintenance: React.FC = () => {
     }
   };
 
+  const reindexDatabase = async () => {
+    setIsReindexing(true);
+    try {
+      // 🔥 執行 REINDEX 操作重建所有索引
+      const result = await api.database.reindex();
+      
+      dispatch(addNotification({
+        type: 'success',
+        title: '索引重建成功',
+        message: result || '所有資料庫索引已重建完成，查詢性能已提升'
+      }));
+      
+      // 重建索引後重新檢查資料庫健康狀態
+      await performHealthCheck();
+      
+    } catch (error) {
+      console.error('重建索引失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '索引重建失敗',
+        message: `重建索引失敗: ${error instanceof Error ? error.message : '未知錯誤'}`
+      }));
+    } finally {
+      setIsReindexing(false);
+    }
+  };
+
+  const incrementalVacuumDatabase = async () => {
+    setIsIncrementalVacuuming(true);
+    try {
+      // 🔥 執行 PRAGMA incremental_vacuum 漸進式清理
+      // 對於大型資料庫更友善，不會長時間鎖定資料庫
+      const result = await api.database.incrementalVacuum();
+      
+      dispatch(addNotification({
+        type: 'success',
+        title: '漸進式清理成功',
+        message: result || '資料庫漸進式清理已完成，碎片化程度已降低'
+      }));
+      
+      // 清理後重新檢查資料庫健康狀態
+      await performHealthCheck();
+      
+    } catch (error) {
+      console.error('漸進式清理失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '漸進式清理失敗',
+        message: `漸進式清理失敗: ${error instanceof Error ? error.message : '未知錯誤'}`
+      }));
+    } finally {
+      setIsIncrementalVacuuming(false);
+    }
+  };
+
+  const runMaintenanceDatabase = async () => {
+    setIsRunningMaintenance(true);
+    try {
+      // 🔥 執行完整的資料庫維護操作
+      // 包含 VACUUM、ANALYZE 和 PRAGMA optimize
+      const result = await api.database.runMaintenance();
+      
+      dispatch(addNotification({
+        type: 'success',
+        title: '資料庫整理成功',
+        message: result || '資料庫維護操作已完成，性能已優化'
+      }));
+      
+      // 整理後重新檢查資料庫健康狀態以顯示最新的碎片化程度
+      await performHealthCheck();
+      
+    } catch (error) {
+      console.error('資料庫整理失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '資料庫整理失敗',
+        message: `整理失敗: ${error instanceof Error ? error.message : '未知錯誤'}`
+      }));
+    } finally {
+      setIsRunningMaintenance(false);
+    }
+  };
+
   const exportDatabase = async () => {
     setIsExporting(true);
     try {
-      // TODO: 等待 Tauri v2 dialog API 修復後重新啟用文件選擇器
-      // 暫時使用預設路徑進行備份
+      // 🔥 使用 Tauri v2 dialog API 選擇備份位置
       const defaultFileName = `genesis-backup-${new Date().toISOString().split('T')[0]}.db`;
-      const backupPath = `~/Desktop/${defaultFileName}`;
       
-      // 執行備份操作
-      await api.database.backup(backupPath);
-      console.log('資料庫已成功備份至:', backupPath);
-      dispatch(addNotification({
-        type: 'success',
-        title: '備份成功',
-        message: `資料庫已成功備份至桌面: ${defaultFileName}`
-      }));
+      const filePath = await save({
+        defaultPath: defaultFileName,
+        filters: [{
+          name: 'Database',
+          extensions: ['db']
+        }]
+      });
+
+      if (filePath) {
+        // 執行備份操作
+        await api.database.backup(filePath);
+        console.log('資料庫已成功備份至:', filePath);
+        dispatch(addNotification({
+          type: 'success',
+          title: '備份成功',
+          message: `資料庫已成功備份至: ${filePath}`
+        }));
+      } else {
+        // 用戶取消了文件選擇
+        console.log('用戶取消了備份操作');
+      }
     } catch (error) {
       console.error('匯出資料庫失敗:', error);
       dispatch(addNotification({
@@ -211,13 +449,34 @@ const DatabaseMaintenance: React.FC = () => {
   };
 
   const importDatabase = async () => {
-    // TODO: 等待 Tauri v2 dialog API 修復後重新啟用文件選擇器
-    // 暫時顯示提示訊息
-    dispatch(addNotification({
-      type: 'info',
-      title: '功能暫時不可用',
-      message: '文件選擇功能正在修復中，請稍後再試。您可以手動將備份檔案放置到指定位置。'
-    }));
+    setIsImporting(true);
+    try {
+      // 🔥 使用 Tauri v2 dialog API 選擇還原檔案
+      const filePath = await open({
+        multiple: false,
+        filters: [{
+          name: 'Database',
+          extensions: ['db']
+        }]
+      });
+
+      if (filePath) {
+        // 顯示確認對話框
+        setConfirmImport({show: true, filePath: filePath as string});
+      } else {
+        // 用戶取消了文件選擇
+        console.log('用戶取消了還原操作');
+        setIsImporting(false);
+      }
+    } catch (error) {
+      console.error('選擇還原檔案失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '選擇檔案失敗',
+        message: `選擇還原檔案失敗: ${error instanceof Error ? error.message : '未知錯誤'}`
+      }));
+      setIsImporting(false);
+    }
   };
 
   const generateReport = async () => {
@@ -242,14 +501,34 @@ const DatabaseMaintenance: React.FC = () => {
     }
   };
 
-  // 確認匯入操作 (暫時禁用)
+  // 確認匯入操作
   const handleConfirmImport = async () => {
-    // TODO: 等待 Tauri v2 dialog API 修復後重新實現
-    dispatch(addNotification({
-      type: 'info',
-      title: '功能暫時不可用',
-      message: '匯入功能正在修復中'
-    }));
+    if (!confirmImport.filePath) return;
+    
+    try {
+      // 執行資料庫還原操作
+      await api.database.restore(confirmImport.filePath);
+      
+      dispatch(addNotification({
+        type: 'success',
+        title: '還原成功',
+        message: '資料庫已成功從備份還原'
+      }));
+      
+      // 還原成功後重新檢查資料庫健康狀態
+      await performHealthCheck();
+      
+    } catch (error) {
+      console.error('資料庫還原失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '還原失敗',
+        message: `資料庫還原失敗: ${error instanceof Error ? error.message : '未知錯誤'}`
+      }));
+    } finally {
+      setConfirmImport({show: false, filePath: null});
+      setIsImporting(false);
+    }
   };
 
   // 取消匯入操作
@@ -365,11 +644,21 @@ const DatabaseMaintenance: React.FC = () => {
                   />
                 </div>
                 
-                <div className="mt-2 text-sm text-gray-400">
-                  上次整理: {checkResult.statistics.lastVacuum ? 
-                    new Date(checkResult.statistics.lastVacuum).toLocaleString('zh-TW') : 
-                    '未知'
-                  }
+                <div className="mt-4 flex justify-between items-center">
+                  <div className="text-sm text-gray-400">
+                    上次整理: {checkResult.statistics.lastVacuum ? 
+                      new Date(checkResult.statistics.lastVacuum).toLocaleString('zh-TW') : 
+                      '未知'
+                    }
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    日誌模式: <span className={`font-medium ${
+                      checkResult.statistics.isWalMode ? 'text-green-400' : 'text-orange-400'
+                    }`}>
+                      {checkResult.statistics.journalMode || 'unknown'} 
+                      {checkResult.statistics.isWalMode && ' ⚡'}
+                    </span>
+                  </div>
                 </div>
               </>
             ) : (
@@ -379,6 +668,88 @@ const DatabaseMaintenance: React.FC = () => {
                 <p className="text-sm mt-2">請檢查資料庫連接狀態</p>
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* WAL 模式詳細資訊 */}
+      {walModeStatus && (
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              {walModeStatus.is_wal_mode ? (
+                <ToggleRight className="w-5 h-5 text-emerald-400" />
+              ) : (
+                <ToggleLeft className="w-5 h-5 text-slate-400" />
+              )}
+              <span className="text-white">
+                Write-Ahead Logging (WAL) 模式: {walModeStatus.is_wal_mode ? '已啟用' : '已停用'}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-white mb-3 font-semibold">當前設定</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">日誌模式:</span>
+                    <span className="text-white font-mono">{walModeStatus.journal_mode}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">同步級別:</span>
+                    <span className="text-white font-mono">{walModeStatus.synchronous}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">WAL 自動檢查點:</span>
+                    <span className="text-white font-mono">{walModeStatus.wal_autocheckpoint}</span>
+                  </div>
+                  {walModeStatus.is_wal_mode && walModeStatus.wal_info && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">WAL 檔案:</span>
+                      <span className="text-white">
+                        {walModeStatus.wal_info.wal_file_exists ? 
+                          `${(walModeStatus.wal_info.wal_file_size / 1024).toFixed(1)} KB` : 
+                          '不存在'
+                        }
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-white mb-3 font-semibold">模式優勢</h4>
+                <div className="space-y-2">
+                  {walModeStatus.is_wal_mode ? (
+                    walModeStatus.benefits?.wal?.map((benefit: string, index: number) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                        <span className="text-sm text-gray-300">{benefit}</span>
+                      </div>
+                    ))
+                  ) : (
+                    walModeStatus.benefits?.delete?.map((benefit: string, index: number) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                        <span className="text-sm text-gray-300">{benefit}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+                
+                <div className="mt-4">
+                  <div className="text-xs text-gray-400 bg-gray-700 p-3 rounded">
+                    💡 {walModeStatus.recommendations}
+                  </div>
+                  {walModeStatus.is_wal_mode && (
+                    <div className="text-xs text-amber-400 bg-amber-900/20 p-3 rounded mt-2 border border-amber-500/30">
+                      ⚠️ <strong>重要提醒：</strong>WAL 模式啟用後很難在運行時關閉。如需切換回 DELETE 模式，建議重新啟動應用程式以釋放所有資料庫連接。
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -456,7 +827,7 @@ const DatabaseMaintenance: React.FC = () => {
       )}
 
       {/* 操作按鈕 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3">
         <Button
           onClick={optimizeDatabase}
           disabled={isOptimizing}
@@ -465,6 +836,52 @@ const DatabaseMaintenance: React.FC = () => {
           <div className="text-center">
             <BarChart3 className={`w-6 h-6 mx-auto mb-1 ${isOptimizing ? 'animate-pulse' : ''}`} />
             <div>{isOptimizing ? '優化中...' : '優化資料庫'}</div>
+          </div>
+        </Button>
+        
+        <Button
+          onClick={reindexDatabase}
+          disabled={isReindexing}
+          className="bg-indigo-600 hover:bg-indigo-700 h-16"
+        >
+          <div className="text-center">
+            <Settings className={`w-6 h-6 mx-auto mb-1 ${isReindexing ? 'animate-spin' : ''}`} />
+            <div>{isReindexing ? '重建中...' : '重建索引'}</div>
+          </div>
+        </Button>
+        
+        <Button
+          onClick={incrementalVacuumDatabase}
+          disabled={isIncrementalVacuuming}
+          className="bg-teal-600 hover:bg-teal-700 h-16"
+        >
+          <div className="text-center">
+            <Zap className={`w-6 h-6 mx-auto mb-1 ${isIncrementalVacuuming ? 'animate-pulse' : ''}`} />
+            <div>{isIncrementalVacuuming ? '清理中...' : '漸進式清理'}</div>
+          </div>
+        </Button>
+        
+        <Button
+          onClick={toggleWalMode}
+          disabled={isTogglingWalMode || !walModeStatus || hasActiveOperation}
+          className={`h-16 ${
+            hasActiveOperation ? 'bg-gray-500 cursor-not-allowed' :
+            walModeStatus?.is_wal_mode 
+              ? 'bg-emerald-600 hover:bg-emerald-700' 
+              : 'bg-slate-600 hover:bg-slate-700'
+          }`}
+        >
+          <div className="text-center">
+            {walModeStatus?.is_wal_mode ? (
+              <ToggleRight className={`w-6 h-6 mx-auto mb-1 ${isTogglingWalMode ? 'animate-pulse' : ''}`} />
+            ) : (
+              <ToggleLeft className={`w-6 h-6 mx-auto mb-1 ${isTogglingWalMode ? 'animate-pulse' : ''}`} />
+            )}
+            <div className="text-xs">
+              {isTogglingWalMode ? '切換中...' : 
+               hasActiveOperation ? '等待操作完成' :
+                `WAL ${walModeStatus?.is_wal_mode ? '已啟用' : '已停用'}`}
+            </div>
           </div>
         </Button>
         
@@ -491,12 +908,13 @@ const DatabaseMaintenance: React.FC = () => {
         </Button>
         
         <Button
-          onClick={() => api.database.runMaintenance()}
+          onClick={runMaintenanceDatabase}
+          disabled={isRunningMaintenance}
           className="bg-green-600 hover:bg-green-700 h-16"
         >
           <div className="text-center">
-            <RefreshCw className="w-6 h-6 mx-auto mb-1" />
-            <div>整理資料庫</div>
+            <RefreshCw className={`w-6 h-6 mx-auto mb-1 ${isRunningMaintenance ? 'animate-spin' : ''}`} />
+            <div>{isRunningMaintenance ? '整理中...' : '整理資料庫'}</div>
           </div>
         </Button>
       </div>
@@ -526,6 +944,94 @@ const DatabaseMaintenance: React.FC = () => {
         onConfirm={handleConfirmImport}
         onCancel={handleCancelImport}
       />
+
+      {/* 🔥 新增：WAL 模式啟用警告對話框 */}
+      {showWalWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">啟用 WAL 模式</h3>
+                <p className="text-sm text-gray-400">請仔細閱讀以下資訊</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              {/* 優點說明 */}
+              <div>
+                <h4 className="flex items-center text-green-400 font-medium mb-2">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  性能優勢
+                </h4>
+                <ul className="text-sm text-gray-300 space-y-1 ml-6">
+                  <li>• 支援多個用戶同時讀取</li>
+                  <li>• 寫入操作不會阻塞讀取</li>
+                  <li>• 更好的容錯性和資料安全</li>
+                  <li>• 整體性能顯著提升</li>
+                </ul>
+              </div>
+
+              {/* 注意事項 */}
+              <div>
+                <h4 className="flex items-center text-amber-400 font-medium mb-2">
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  重要注意事項
+                </h4>
+                <ul className="text-sm text-gray-300 space-y-1 ml-6">
+                  <li>• 啟用後很難在運行時關閉</li>
+                  <li>• 會產生額外的 .wal 和 .shm 文件</li>
+                  <li>• 關閉模式需要重新啟動應用程式</li>
+                </ul>
+              </div>
+
+              {/* 建議 */}
+              <div className="bg-blue-900/30 border border-blue-500/30 rounded p-3">
+                <h4 className="flex items-center text-blue-400 font-medium mb-1">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  專業建議
+                </h4>
+                <p className="text-sm text-gray-300">
+                  建議啟用並保持 WAL 模式，它適合大多數使用情境，能顯著提升應用程式的響應速度和穩定性。
+                </p>
+              </div>
+            </div>
+
+            {/* 不再顯示選項 */}
+            <div className="mb-6">
+              <label className="flex items-center space-x-2 text-sm text-gray-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="dontShowWalWarning"
+                  className="rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                />
+                <span>不要再次顯示此警告</span>
+              </label>
+            </div>
+
+            {/* 按鈕 */}
+            <div className="flex space-x-3">
+              <Button
+                onClick={() => {
+                  const checkbox = document.getElementById('dontShowWalWarning') as HTMLInputElement;
+                  handleWalWarningConfirm(checkbox?.checked || false);
+                }}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                繼續啟用 WAL 模式
+              </Button>
+              <Button
+                onClick={handleWalWarningCancel}
+                className="flex-1 border border-gray-600 hover:bg-gray-700 bg-transparent"
+              >
+                取消
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

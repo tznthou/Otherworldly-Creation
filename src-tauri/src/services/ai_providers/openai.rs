@@ -99,6 +99,36 @@ fn is_new_api_model(model: &str) -> bool {
     model.contains("o1-") // OpenAI o1 系列也使用新格式
 }
 
+/// 驗證 OpenAI 模型 ID 是否有效
+fn is_valid_openai_model(model: &str) -> bool {
+    const VALID_MODELS: &[&str] = &[
+        "gpt-4o",
+        "gpt-4o-mini", 
+        "gpt-3.5-turbo",
+        "gpt-4-turbo",
+        "gpt-4",
+        "gpt-4-0613",
+        "gpt-4-32k",
+        "gpt-4-32k-0613",
+        "gpt-3.5-turbo-0613",
+        "gpt-3.5-turbo-16k",
+        "gpt-3.5-turbo-16k-0613",
+        "gpt-3.5-turbo-1106",
+        "gpt-3.5-turbo-0125",
+        // 新模型
+        "gpt-4-turbo-preview",
+        "gpt-4-0125-preview",
+        "gpt-4-1106-preview",
+        "gpt-4-vision-preview",
+        "gpt-4-1106-vision-preview",
+        // o1 系列
+        "o1-preview",
+        "o1-mini",
+    ];
+    
+    VALID_MODELS.contains(&model)
+}
+
 impl OpenAIProvider {
     pub fn new(config: &ProviderConfig) -> Result<Self> {
         let api_key = config.api_key
@@ -352,7 +382,12 @@ impl AIProvider for OpenAIProvider {
         SecurityUtils::validate_generation_params(&request.params)?;
         SecurityUtils::validate_prompt_content(&request.prompt, request.system_prompt.as_deref())?;
         
-        log::info!("[OpenAIProvider] 開始生成文本，模型: {}, API金鑰: {}", request.model, SecurityUtils::mask_api_key(&self.api_key));
+        // 🔥 新增：驗證模型 ID 是否有效
+        if !is_valid_openai_model(&request.model) {
+            return Err(anyhow!("無效的 OpenAI 模型 ID: {}。支援的模型: gpt-4o, gpt-4o-mini, gpt-3.5-turbo, gpt-4-turbo", request.model));
+        }
+        
+        log::info!("[OpenAIProvider] ✅ 開始生成文本，模型: {}, API金鑰: {}", request.model, SecurityUtils::mask_api_key(&self.api_key));
 
         // 構建訊息列表
         let mut messages = Vec::new();

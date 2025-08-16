@@ -98,7 +98,7 @@ pub async fn generate_epub(
         // 2. 獲取專案的所有章節
         let chapters = {
             let mut stmt = conn
-                .prepare("SELECT id, project_id, title, content, order_index, chapter_number, created_at, updated_at FROM chapters WHERE project_id = ?1 ORDER BY order_index")
+                .prepare("SELECT id, project_id, title, content, order_index, chapter_number, metadata, created_at, updated_at FROM chapters WHERE project_id = ?1 ORDER BY order_index")
                 .map_err(|e| format!("準備章節查詢失敗: {}", e))?;
             
             let chapter_iter = stmt.query_map([&projectId], |row| {
@@ -109,8 +109,9 @@ pub async fn generate_epub(
                     content: row.get::<_, Option<String>>(3)?,
                     order_index: row.get(4)?,
                     chapter_number: row.get::<_, Option<i32>>(5)?,
-                    created_at: row.get(6)?,
-                    updated_at: row.get(7)?,
+                    metadata: row.get::<_, Option<String>>(6)?,
+                    created_at: row.get(7)?,
+                    updated_at: row.get(8)?,
                 })
             }).map_err(|e| format!("查詢章節失敗: {}", e))?;
             

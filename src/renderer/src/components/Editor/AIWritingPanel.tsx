@@ -10,6 +10,10 @@ import { api } from '../../api';
 import { ErrorSeverity } from '../../types/error';
 import AIHistoryPanel from '../AI/AIHistoryPanel';
 import { analyzeWritingContext, generateSmartParams } from '../../services/aiWritingAssistant';
+import { isValidModelId, getModelInfo, recommendModelForTokens } from '../../config/modelWhitelist';
+import { useAppSelector as useAppSelectorTyped } from '../../hooks/redux';
+// 🧠 Phase 4: 導入章節筆記分析器
+import { analyzeChapterNotes } from '../../utils/chapterNotesAnalyzer';
 
 interface AIWritingPanelProps {
   projectId: string;
@@ -36,32 +40,32 @@ const filterThinkingTags = (text: string): string => {
     /<reflection[^>]*>[\s\S]*?<\/reflection>/gi,
     /<thinking[^>]*>[\s\S]*?<\/antml:thinking>/gi,
     
-    // 可能的單行或不完整標籤
-    /<think[^>]*>/gi,
-    /<\/think>/gi,
-    /<thinking[^>]*>/gi,
-    /<\/thinking>/gi,
+    // 處理未閉合的標籤
+    /<think[^>]*>[\s\S]*/gi,
+    /<thinking[^>]*>[\s\S]*/gi,
     
-    // Markdown 風格的思考標記
-    /```thinking[\s\S]*?```/gi,
-    /```think[\s\S]*?```/gi,
+    // Claude 特有的格式
+    /\[thinking\][\s\S]*?\[\/thinking\]/gi,
+    /\*thinking\*[\s\S]*?\*\/thinking\*/gi,
     
-    // 其他可能的思考標記
-    /\[THINKING\][\s\S]*?\[\/THINKING\]/gi,
-    /\[THINK\][\s\S]*?\[\/THINK\]/gi,
-    /\{\{thinking\}\}[\s\S]*?\{\{\/thinking\}\}/gi,
-    /\{\{think\}\}[\s\S]*?\{\{\/think\}\}/gi,
+    // 其他常見的思考格式
+    /\(thinking:[\s\S]*?\)/gi,
+    /思考：[\s\S]*?(?=\n|$)/gi,
+    /\*\*思考[\s\S]*?\*\*/gi,
+    
+    // 清理多餘的換行
+    /\n\s*\n\s*\n/g
   ];
   
-  let filteredText = text;
+  let cleaned = text;
   patterns.forEach(pattern => {
-    filteredText = filteredText.replace(pattern, '');
+    cleaned = cleaned.replace(pattern, '');
   });
   
-  // 清理多餘的空行
-  filteredText = filteredText.replace(/\n{3,}/g, '\n\n').trim();
+  // 清理首尾空白和多餘換行
+  cleaned = cleaned.trim().replace(/\n{3,}/g, '\n\n');
   
-  return filteredText;
+  return cleaned;
 };
 
 const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, editor }) => {
@@ -98,6 +102,31 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   const [frequencyPenalty, setFrequencyPenalty] = useState(0);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
   const [providerModels, setProviderModels] = useState<string[]>([]);
+  const [hasChapterNotes, setHasChapterNotes] = useState(false);
+  
+  // 獲取當前章節以檢查筆記
+  const currentChapter = useAppSelectorTyped(state => 
+    state.chapters.chapters.find(ch => ch.id === chapterId)
+  );
+  
+  // 檢查章節是否有筆記
+  useEffect(() => {
+    if (currentChapter && currentChapter.metadata) {
+      try {
+        const metadata = JSON.parse(currentChapter.metadata);
+        const notes = metadata.notes?.trim() || '';
+        setHasChapterNotes(notes.length > 0);
+        if (notes.length > 0) {
+          console.log('✅ 檢測到章節筆記，長度:', notes.length);
+        }
+      } catch (_e) {
+        console.warn('無法解析章節 metadata');
+        setHasChapterNotes(false);
+      }
+    } else {
+      setHasChapterNotes(false);
+    }
+  }, [currentChapter]);
   
   // 🔥 當模型改變時，自動調整生成數量
   useEffect(() => {
@@ -121,12 +150,12 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         console.log('[AIWritingPanel] 載入 AI 提供商...');
         await dispatch(fetchAIProviders());
         
-        // 優先使用當前設定的提供者
-        if (currentProviderId && !selectedProviderId) {
+        // 🔥 修復：只在初始化時自動設置提供者，避免覆蓋用戶的「重新選擇」操作
+        if (currentProviderId && selectedProviderId === null) {
           // 使用當前已設定的提供者
           setSelectedProviderId(currentProviderId);
           console.log('[AIWritingPanel] 使用當前提供者:', currentProviderId);
-        } else if (autoUseDefault && defaultProviderId && !currentProviderId) {
+        } else if (autoUseDefault && defaultProviderId && !currentProviderId && selectedProviderId === null) {
           // 如果沒有當前提供者但有預設提供者，使用預設
           setSelectedProviderId(defaultProviderId);
           console.log('[AIWritingPanel] 使用預設提供者:', defaultProviderId);
@@ -136,7 +165,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }
     };
     loadProviders();
-  }, [dispatch, currentProviderId, defaultProviderId, autoUseDefault, selectedProviderId]);
+  }, [dispatch, currentProviderId, defaultProviderId, autoUseDefault, selectedProviderId]); // 添加 selectedProviderId 依賴
 
   // 當選擇提供商時，載入該提供商的模型
   useEffect(() => {
@@ -228,6 +257,49 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }));
       return;
     }
+
+    // 🔥 新增：驗證模型 ID 是否有效
+    const currentProvider = providers.find(p => p.id === currentProviderId || p.id === selectedProviderId);
+    if (currentProvider && !isValidModelId(currentProvider.provider_type, currentModel)) {
+      console.error('❌ 無效的模型 ID:', { 
+        provider: currentProvider.provider_type, 
+        model: currentModel,
+        isValid: false
+      });
+      
+      // 嘗試推薦替代模型
+      const recommendedModel = recommendModelForTokens(currentProvider.provider_type, maxTokens);
+      const message = recommendedModel 
+        ? `模型 "${currentModel}" 無效。建議使用 "${recommendedModel.name}"`
+        : `模型 "${currentModel}" 無效。請在 AI 設定中選擇有效的模型`;
+      
+      dispatch(addNotification({
+        type: 'error',
+        title: '模型 ID 無效',
+        message,
+        duration: 5000,
+      }));
+      
+      // 如果有推薦模型，自動設置
+      if (recommendedModel) {
+        console.log('🔄 自動切換到推薦模型:', recommendedModel);
+        dispatch(setCurrentModel(recommendedModel.id));
+      }
+      return;
+    }
+
+    // 顯示模型資訊（如果可用）
+    if (currentProvider) {
+      const modelInfo = getModelInfo(currentProvider.provider_type, currentModel);
+      if (modelInfo) {
+        console.log('✅ 使用有效模型:', {
+          provider: currentProvider.provider_type,
+          model: modelInfo.name,
+          maxTokens: modelInfo.maxTokens,
+          contextWindow: modelInfo.contextWindow
+        });
+      }
+    }
     
     // 檢查是否有選擇位置
     if (!editor) {
@@ -291,13 +363,56 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
     }
     
     setProgressId(newProgressId);
-    
+
     try {
       dispatch(updateProgress({
         id: newProgressId,
         progress: 10,
         currentStep: '準備生成上下文...'
       }));
+      
+      // 🧠 Phase 4: 智慧續寫策略系統
+      console.log('🧠 開始智慧續寫策略分析...');
+      let chapterNotesAnalysis = null;
+      
+      // 分析章節筆記以制定寫作策略
+      if (hasChapterNotes && currentChapter?.metadata) {
+        console.log('📝 分析章節筆記以制定寫作策略...');
+        
+        dispatch(updateProgress({
+          id: newProgressId,
+          progress: 12,
+          currentStep: '分析章節筆記制定寫作策略...'
+        }));
+        
+        try {
+          const metadata = JSON.parse(currentChapter.metadata);
+          const notes = metadata.notes?.trim() || '';
+          if (notes) {
+            chapterNotesAnalysis = analyzeChapterNotes(notes);
+          }
+        } catch (_e) {
+          console.warn('無法解析章節 metadata 進行筆記分析');
+        }
+        
+        console.log('📊 章節筆記分析結果:', chapterNotesAnalysis);
+        
+        // 根據筆記分析調整生成參數
+        if (chapterNotesAnalysis.style.dialogue > 0.6) {
+          console.log('💬 檢測到對話重點，調整參數支持對話生成');
+          setTemperature(prev => Math.min(1.0, prev + 0.1)); // 稍微增加創意性
+        }
+        
+        if (chapterNotesAnalysis.style.action > 0.6) {
+          console.log('⚡ 檢測到動作場景，調整參數支持動作描述');
+          setMaxTokens(prev => Math.min(800, prev + 100)); // 增加輸出長度
+        }
+        
+        if (chapterNotesAnalysis.style.emotion > 0.7) {
+          console.log('💝 檢測到情感重點，調整參數支持情感表達');
+          setPresencePenalty(prev => Math.max(0, prev - 0.2)); // 降低重複懲罰
+        }
+      }
       
       // 🧠 NLP 智能分析當前文本
       console.log('🧠 開始 NLP 文本分析...');
@@ -328,13 +443,35 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
             adjustedMaxTokens = maxTokens + (i * 30); // 其他模型保持原有變化
           }
           
+          // 🧠 Phase 4: 根據章節筆記分析調整參數
+          if (chapterNotesAnalysis) {
+            // 基於筆記分析微調參數
+            const styleModifier = chapterNotesAnalysis.style;
+            const toneModifier = chapterNotesAnalysis.tone;
+            
+            // 根據寫作風格調整溫度
+            let tempAdjustment = 0;
+            if (styleModifier.dialogue > 0.6) tempAdjustment += 0.1; // 對話需要更多變化
+            if (styleModifier.action > 0.6) tempAdjustment += 0.05; // 動作場景需要適度變化
+            if (styleModifier.emotion > 0.7) tempAdjustment += 0.15; // 情感場景需要更多創意
+            
+            // 根據情感基調調整參數
+            if (toneModifier.dramatic > 0.6) {
+              adjustedMaxTokens = Math.min(adjustedMaxTokens + 100, 900); // 戲劇性場景需要更多描述
+            }
+            
+            console.log(`📝 章節筆記調整: 溫度+${tempAdjustment}, Token+${adjustedMaxTokens - maxTokens}`);
+          }
+          
           const variation = {
             temperature: Math.max(0.2, Math.min(1.2, temperature + (i - 1) * 0.2)), // 更大變化
             maxTokens: adjustedMaxTokens, // 🔥 使用調整後的值
             topP: Math.max(0.5, Math.min(1.0, topP + (i - 1) * 0.2)),
             presencePenalty: Math.max(0, Math.min(1.5, presencePenalty + (i * 0.3))),
             frequencyPenalty: Math.max(0, Math.min(1.5, frequencyPenalty + (i * 0.25))),
-            maxContextTokens: 2000
+            maxContextTokens: 2000,
+            // 🧠 Phase 4: 添加章節筆記提示
+            chapterNotes: chapterNotesAnalysis
           };
           variations.push(variation);
         }
@@ -372,6 +509,21 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               adjustedMaxTokens = smartParams.maxTokens + (i * 20);
             }
             
+            // 🧠 Phase 4: 結合章節筆記分析
+            if (chapterNotesAnalysis) {
+              // 根據筆記情感調整參數
+              const emotionLevel = chapterNotesAnalysis.tone.emotional;
+              if (emotionLevel > 0.7) {
+                adjustedMaxTokens += 50; // 情感豐富的場景需要更多描述
+              }
+              
+              // 根據情節重要性調整創意度
+              const plotImportance = chapterNotesAnalysis.content.plot;
+              if (plotImportance > 0.8) {
+                smartParams.temperature = Math.min(1.0, smartParams.temperature + 0.1); // 重要情節需要更多創意
+              }
+            }
+            
             const variation = {
               temperature: smartParams.temperature + (i - 1) * 0.15, // 更大的變化範圍
               maxTokens: adjustedMaxTokens, // 使用調整後的 token 數量
@@ -380,7 +532,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               frequencyPenalty: Math.max(0, Math.min(2.0, frequencyPenalty + (i * 0.15))), // 頻率懲罰變化
               maxContextTokens: 2000,
               style: smartParams.style, // 使用NLP分析的風格
-              contextHints: smartParams.contextHints // 使用NLP提取的上下文提示
+              contextHints: smartParams.contextHints, // 使用NLP提取的上下文提示
+              // 🧠 Phase 4: 添加章節筆記分析結果
+              chapterNotes: chapterNotesAnalysis
             };
             
             paramVariations.push(variation);
@@ -428,6 +582,49 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           
           const startTime = Date.now();
           const position = selection?.anchor.offset || 0;
+          
+          // 🧠 Phase 4: 構建智能系統提示
+          let systemPrompt = '你是一個專業的小說續寫助手。請直接輸出繁體中文的故事內容，不要包含任何英文說明、思考過程或指導語句。只輸出純粹的故事續寫內容。';
+          
+          // 根據章節筆記分析添加特定指導
+          if (chapterNotesAnalysis) {
+            const { style, tone, content } = chapterNotesAnalysis;
+            
+            let styleGuidance = '';
+            if (style.dialogue > 0.6) {
+              styleGuidance += '注重角色對話的自然性和個性表現。';
+            }
+            if (style.action > 0.6) {
+              styleGuidance += '描述動作場景時要生動有力，節奏明快。';
+            }
+            if (style.emotion > 0.7) {
+              styleGuidance += '深入刻畫角色內心情感和心理變化。';
+            }
+            
+            let toneGuidance = '';
+            if (tone.dramatic > 0.6) {
+              toneGuidance += '營造戲劇張力，突出情節轉折。';
+            }
+            if (tone.romantic > 0.6) {
+              toneGuidance += '注重浪漫氛圍的營造和情感細節。';
+            }
+            if (tone.humorous > 0.5) {
+              toneGuidance += '適當加入幽默元素，保持輕鬆愉快的氣氛。';
+            }
+            
+            if (styleGuidance || toneGuidance) {
+              systemPrompt += `\n\n根據當前章節筆記分析，請注意：${styleGuidance}${toneGuidance}`;
+            }
+            
+            // 添加內容焦點提示
+            if (content.plot > 0.7) {
+              systemPrompt += '重點推進主要情節發展。';
+            }
+            if (content.character > 0.7) {
+              systemPrompt += '著重角色發展和性格展現。';
+            }
+          }
+          
           // 使用多提供商 API 生成文本
           let result: string;
           if (selectedProviderId) {
@@ -446,7 +643,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                 presencePenalty: params.presencePenalty,
                 frequencyPenalty: params.frequencyPenalty,
               },
-              systemPrompt: '你是一個專業的小說續寫助手。請直接輸出繁體中文的故事內容，不要包含任何英文說明、思考過程或指導語句。只輸出純粹的故事續寫內容。'
+              systemPrompt // 🧠 Phase 4: 使用智能系統提示
             })).unwrap();
             result = genResult.result;
           } else {
@@ -543,10 +740,18 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       
       setGenerationOptions(validResults);
       
+      // 🧠 Phase 4: 根據章節筆記提供智能建議
+      let successMessage = `成功生成 ${validResults.length} 個版本，請選擇您喜歡的版本`;
+      if (chapterNotesAnalysis) {
+        const dominantStyle = Object.entries(chapterNotesAnalysis.style)
+          .sort(([,a], [,b]) => b - a)[0][0];
+        successMessage += `（已根據${dominantStyle}風格優化）`;
+      }
+      
       dispatch(addNotification({
         type: 'success',
         title: 'AI 續寫完成',
-        message: `成功生成 ${validResults.length} 個版本，請選擇您喜歡的版本`,
+        message: successMessage,
         duration: 3000,
       }));
       
@@ -767,6 +972,14 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         <p className="text-sm text-gray-400">
           使用 AI 協助您繼續寫作。請先將游標放在您希望 AI 續寫的位置。
         </p>
+        
+        {/* 🔥 新增：章節筆記狀態指示器 */}
+        {hasChapterNotes && (
+          <div className="flex items-center text-xs text-green-400 bg-green-900/20 border border-green-500/30 rounded-md px-2 py-1 mt-2">
+            <span className="mr-1">📝</span>
+            <span>已包含章節筆記 - AI 將參考您的創作筆記進行續寫</span>
+          </div>
+        )}
       </div>
       
       {/* 模型選擇和基本參數設置 */}
@@ -798,8 +1011,11 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               </div>
               <button
                 onClick={() => {
-                  // 切換到手動選擇模式
+                  // 🔥 修復：切換到手動選擇模式，同時清空模型選擇
+                  console.log('[AIWritingPanel] 用戶點擊重新選擇，清空提供者和模型選擇');
                   setSelectedProviderId(null);
+                  setProviderModels([]); // 清空模型列表
+                  dispatch(setCurrentModel(null)); // 清空當前模型選擇
                 }}
                 className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
                 title="重新選擇提供者"

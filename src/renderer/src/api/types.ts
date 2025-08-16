@@ -111,6 +111,7 @@ export interface API {
     buildContext: (projectId: string, chapterId: string, position: number) => Promise<string>;
     compressContext: (context: string, maxTokens: number) => Promise<string>;
     getContextStats: (projectId: string) => Promise<ContextStats>;
+    optimizeUltraLongContext: (params: UltraLongContextOptimizationParams) => Promise<OptimizedContextResult>;
   };
 
   // 設定管理
@@ -128,6 +129,10 @@ export interface API {
     runMaintenance: () => Promise<string>;
     getStats: () => Promise<DatabaseStats>;
     healthCheck: () => Promise<DatabaseHealth>;
+    reindex: () => Promise<string>;
+    incrementalVacuum: (pages?: number) => Promise<string>;
+    getWalModeStatus: () => Promise<{ journal_mode: string; is_wal_mode: boolean; synchronous: number; wal_autocheckpoint: number; wal_info: Record<string, unknown>; benefits: Record<string, string[]>; recommendations: string }>;
+    setWalMode: (enable: boolean) => Promise<string>;
   };
 
   // 系統功能
@@ -213,4 +218,37 @@ export interface API {
     calculateSimilarityMatrix: (projectId: string, characterIds: string[]) => Promise<{ success: boolean; character_ids?: string[]; similarity_matrix?: number[][]; message?: string }>;
     batchCheckConsistency: (projectId: string, strictMode: boolean, minScore: number) => Promise<{ success: boolean; reports?: { characterId: string; score: number; issues: string[] }[]; message?: string }>;
   };
+}
+
+// 超長上下文優化相關類型
+export interface UltraLongContextOptimizationParams {
+  originalContext: string;
+  maxTokens: number;
+  focusCharacters: string[];
+  currentPosition: number;
+}
+
+export interface OptimizedContextResult {
+  content: string;
+  originalTokenCount: number;
+  finalTokenCount: number;
+  compressionRatio: number;
+  compressionLevel: number;
+  qualityScore: number;
+  preservedElements: string[];
+  lostElements: string[];
+  optimizationStats: OptimizationStats;
+}
+
+export interface OptimizationStats {
+  blocksProcessed: number;
+  redundancyRemoved: number;
+  attentionApplied: boolean;
+  compressionStrategiesUsed: CompressionStrategy[];
+}
+
+export interface CompressionStrategy {
+  strategyType: string;
+  targetContent: string;
+  parameters: Record<string, number>;
 }

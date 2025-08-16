@@ -2,7 +2,49 @@ use crate::database::{get_db, models::*};
 use crate::utils::language_purity::LanguagePurityEnforcer;
 use rusqlite::Result as SqliteResult;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use tauri::command;
+
+/// 從章節內容中提取筆記
+fn extract_chapter_notes(content_json: &str) -> Option<String> {
+    // 嘗試解析章節內容的 JSON
+    if let Ok(content) = serde_json::from_str::<Value>(content_json) {
+        // 查找 metadata.notes
+        if let Some(obj) = content.as_object() {
+            if let Some(metadata) = obj.get("metadata") {
+                if let Some(notes) = metadata.get("notes") {
+                    if let Some(notes_str) = notes.as_str() {
+                        if !notes_str.trim().is_empty() {
+                            log::info!("✅ 找到章節筆記，長度: {} 字符", notes_str.len());
+                            return Some(notes_str.to_string());
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 如果是陣列格式，檢查每個元素
+        if let Some(array) = content.as_array() {
+            for item in array {
+                if let Some(obj) = item.as_object() {
+                    if let Some(metadata) = obj.get("metadata") {
+                        if let Some(notes) = metadata.get("notes") {
+                            if let Some(notes_str) = notes.as_str() {
+                                if !notes_str.trim().is_empty() {
+                                    log::info!("✅ 在陣列中找到章節筆記，長度: {} 字符", notes_str.len());
+                                    return Some(notes_str.to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    log::debug!("🔍 未找到章節筆記");
+    None
+}
 
 /// 字符清理函數 - 保留合法的文字字符，包括中文
 fn clean_text(text: &str) -> String {
@@ -279,7 +321,7 @@ pub async fn build_context(
     // 2. 獲取當前章節內容
     let chapter: Chapter = conn
         .query_row(
-            "SELECT id, project_id, title, content, order_index, chapter_number, created_at, updated_at FROM chapters WHERE id = ?",
+            "SELECT id, project_id, title, content, order_index, chapter_number, metadata, created_at, updated_at FROM chapters WHERE id = ?",
             [&chapter_id],
             |row| Ok(Chapter {
                 id: row.get(0)?,
@@ -288,8 +330,9 @@ pub async fn build_context(
                 content: row.get(3)?,
                 order_index: row.get(4)?,
                 chapter_number: row.get(5)?,
-                created_at: row.get(6)?,
-                updated_at: row.get(7)?,
+                metadata: row.get(6)?,
+                created_at: row.get(7)?,
+                updated_at: row.get(8)?,
             })
         )
         .map_err(|e| format!("獲取章節失敗: {}", e))?;
@@ -340,7 +383,14 @@ pub async fn build_context(
         .collect::<SqliteResult<Vec<_>>>()
         .map_err(|e| e.to_string())?;
     
-    // 5. 構建上下文
+    // 5. 提取章節筆記
+    let chapter_notes = if let Some(content) = &chapter.content {
+        extract_chapter_notes(content)
+    } else {
+        None
+    };
+    
+    // 6. 構建上下文
     let mut context = String::new();
     
     // 字符清理函數
@@ -511,6 +561,15 @@ pub async fn build_context(
                 context.push_str(&cleaned_after);
             }
         }
+    }
+    
+    // 🔥 新增：添加章節筆記到上下文
+    if let Some(notes) = chapter_notes {
+        context.push_str("\n\n【章節筆記】\n");
+        context.push_str("作者筆記：");
+        context.push_str(&clean_text(&notes));
+        context.push_str("\n");
+        log::info!("✅ 章節筆記已添加到上下文，長度: {} 字符", notes.len());
     }
     
     // 添加續寫指示
@@ -692,7 +751,7 @@ pub async fn build_separated_context(
     // 2. 獲取當前章節內容
     let chapter: Chapter = conn
         .query_row(
-            "SELECT id, project_id, title, content, order_index, chapter_number, created_at, updated_at FROM chapters WHERE id = ?",
+            "SELECT id, project_id, title, content, order_index, chapter_number, metadata, created_at, updated_at FROM chapters WHERE id = ?",
             [&chapter_id],
             |row| Ok(Chapter {
                 id: row.get(0)?,
@@ -701,8 +760,9 @@ pub async fn build_separated_context(
                 content: row.get(3)?,
                 order_index: row.get(4)?,
                 chapter_number: row.get(5)?,
-                created_at: row.get(6)?,
-                updated_at: row.get(7)?,
+                metadata: row.get(6)?,
+                created_at: row.get(7)?,
+                updated_at: row.get(8)?,
             })
         )
         .map_err(|e| format!("獲取章節失敗: {}", e))?;

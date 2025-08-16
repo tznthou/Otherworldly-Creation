@@ -63,6 +63,7 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/postcss": "^4.1.12",
     "@tauri-apps/api": "^2.7.0",
+    "@tauri-apps/plugin-dialog": "^2.3.2",
     "@types/uuid": "^9.0.7",
     "chart.js": "^4.5.0",
     "compromise": "^14.14.4",

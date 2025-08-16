@@ -31,11 +31,7 @@ export interface Chapter {
   createdAt: string;
   updatedAt: string;
   wordCount?: number;
-  metadata?: {
-    notes?: string;
-    status?: 'draft' | 'in_progress' | 'review' | 'completed';
-    [key: string]: unknown;
-  };
+  metadata?: string; // JSON 字符串格式的元數據
 }
 
 // 角色相關

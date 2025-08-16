@@ -1,10 +1,9 @@
 // 超長上下文處理優化器
-use crate::database::{get_db, models::*};
-use rusqlite::Result as SqliteResult;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, BinaryHeap, VecDeque};
+use std::collections::{HashMap, BinaryHeap, HashSet};
 use tauri::command;
 use std::cmp::Ordering;
+use anyhow::Result;
 
 /// 超長上下文優化器
 pub struct UltraLongContextOptimizer {
@@ -182,6 +181,22 @@ impl UltraLongContextOptimizer {
         }
     }
 
+    /// 獲取快取統計資訊
+    #[allow(dead_code)]
+    pub fn get_cache_stats(&self) -> (usize, usize) {
+        (self.context_cache.cache_entries.len(), self.context_cache.max_cache_size)
+    }
+
+    /// 獲取注意力權重
+    pub fn get_attention_weights(&self) -> &HashMap<String, f32> {
+        &self.attention_mechanism.attention_weights
+    }
+
+    /// 獲取焦點區域
+    pub fn get_focus_zones(&self) -> &Vec<FocusZone> {
+        &self.attention_mechanism.focus_zones
+    }
+
     /// 優化超長上下文
     pub async fn optimize_ultra_long_context(
         &mut self,
@@ -286,6 +301,16 @@ impl UltraLongContextOptimizer {
             let emotional_score = self.detect_emotional_beats(&block.content);
             importance += emotional_score * self.content_analyzer.importance_weights.emotional_beats;
             
+            // 使用語義分析器進行額外評分
+            let semantic_score = self.content_analyzer.analyze_semantic_similarity(&block.content);
+            importance += semantic_score * 0.1;
+            
+            // 檢查語義關係數量來調整重要性
+            let relationships_count = self.content_analyzer.check_context_relationships();
+            if relationships_count > 0 {
+                importance += 0.05;
+            }
+            
             block.importance_score = importance.min(1.0);
         }
         
@@ -297,6 +322,10 @@ impl UltraLongContextOptimizer {
         let mut deduplicated = Vec::new();
         let mut seen_concepts = HashSet::new();
         
+        // 檢查是否有冗餘模式可用
+        let patterns_count = self.content_analyzer.get_redundant_patterns().len();
+        let threshold_adjustment = if patterns_count > 0 { 0.1 } else { 0.0 };
+        
         for block in blocks {
             let block_concepts = self.extract_key_concepts(&block.content);
             let mut is_redundant = false;
@@ -305,7 +334,8 @@ impl UltraLongContextOptimizer {
             for concept in &block_concepts {
                 if seen_concepts.contains(concept) {
                     let similarity = self.calculate_semantic_similarity(&block, &deduplicated);
-                    if similarity > self.content_analyzer.redundancy_detector.similarity_threshold {
+                    let adjusted_threshold = self.content_analyzer.redundancy_detector.similarity_threshold + threshold_adjustment;
+                    if similarity > adjusted_threshold {
                         is_redundant = true;
                         break;
                     }
@@ -329,6 +359,10 @@ impl UltraLongContextOptimizer {
         mut blocks: Vec<ContentBlock>,
         current_position: usize,
     ) -> Result<Vec<ContentBlock>, String> {
+        // 使用注意力權重和焦點區域
+        let attention_weights = self.get_attention_weights();
+        let focus_zones = self.get_focus_zones();
+        
         for block in &mut blocks {
             let mut attention_weight = 1.0;
             
@@ -339,8 +373,21 @@ impl UltraLongContextOptimizer {
                 current_position - block.temporal_position
             };
             
-            let distance_decay = (-distance as f32 * self.attention_mechanism.attention_decay.temporal_decay).exp();
+            let distance_decay = (-(distance as f32) * self.attention_mechanism.attention_decay.temporal_decay).exp();
             attention_weight *= distance_decay;
+            
+            // 使用注意力權重調整
+            if let Some(weight) = attention_weights.get(&block.block_type) {
+                attention_weight *= weight;
+            }
+            
+            // 檢查是否在焦點區域內
+            for zone in focus_zones {
+                if zone.content_type == block.block_type {
+                    attention_weight *= zone.weight;
+                    break;
+                }
+            }
             
             // 重要性增強
             if block.importance_score > 0.7 {
@@ -447,7 +494,7 @@ impl UltraLongContextOptimizer {
     }
 
     fn calculate_compression_resistance(&self, content: &str) -> f32 {
-        let mut resistance = 0.0;
+        let mut resistance: f32 = 0.0;
         
         // 對話有較高的抗壓縮性
         if content.contains("「") {
@@ -477,7 +524,7 @@ impl UltraLongContextOptimizer {
     }
 
     fn calculate_character_relevance(&self, content: &str, focus_characters: &[String]) -> f32 {
-        let mut relevance = 0.0;
+        let mut relevance: f32 = 0.0;
         for character in focus_characters {
             if content.contains(character) {
                 relevance += 0.5;
@@ -507,8 +554,14 @@ impl UltraLongContextOptimizer {
     }
 
     fn extract_key_concepts(&self, _content: &str) -> Vec<String> {
-        // TODO: 提取關鍵概念
-        Vec::new()
+        // 使用內容分析器的概念群集來提取關鍵概念
+        let clusters = self.content_analyzer.get_concept_clusters();
+        if !clusters.is_empty() {
+            // 返回第一個群集作為示例
+            clusters.values().next().unwrap_or(&Vec::new()).clone()
+        } else {
+            Vec::new()
+        }
     }
 
     fn calculate_semantic_similarity(&self, _block: &ContentBlock, _others: &[ContentBlock]) -> f32 {
@@ -545,8 +598,27 @@ impl UltraLongContextOptimizer {
         Vec::new()
     }
 
-    async fn cache_optimized_context(&mut self, _context: &OptimizedContext) -> Result<(), String> {
-        // TODO: 快取優化結果
+    async fn cache_optimized_context(&mut self, context: &OptimizedContext) -> Result<(), String> {
+        // 檢查快取是否已滿
+        if self.context_cache.is_cache_full() {
+            log::info!("Context cache is full, current size: {}", self.context_cache.get_cache_size());
+            return Ok(());
+        }
+        
+        // 獲取訪問模式統計
+        let (freq_count, recency_count, prediction_count) = self.context_cache.get_access_pattern_stats();
+        log::debug!("Access pattern stats: freq={}, recency={}, prediction={}", freq_count, recency_count, prediction_count);
+        
+        // 檢查預測分數
+        let prediction_scores = self.context_cache.access_patterns.get_prediction_scores();
+        if !prediction_scores.is_empty() {
+            log::debug!("有 {} 個預測分數可用", prediction_scores.len());
+        }
+        
+        // 記錄快取訪問
+        let cache_key = format!("opt_context_{}", context.compression_level);
+        self.context_cache.access_patterns.record_access(&cache_key);
+        
         Ok(())
     }
 
@@ -608,6 +680,32 @@ impl ContentAnalyzer {
             redundancy_detector: RedundancyDetector::new(),
         }
     }
+
+    /// 分析語義相似性
+    pub fn analyze_semantic_similarity(&self, text: &str) -> f32 {
+        // 使用語義分析器的閾值作為基準
+        let threshold = self.semantic_analyzer.semantic_similarity_threshold;
+        if text.len() > 50 {
+            threshold
+        } else {
+            threshold * 0.5
+        }
+    }
+
+    /// 獲取概念群集
+    pub fn get_concept_clusters(&self) -> &HashMap<String, Vec<String>> {
+        &self.semantic_analyzer.concept_clusters
+    }
+
+    /// 獲取冗餘模式
+    pub fn get_redundant_patterns(&self) -> &Vec<RedundancyPattern> {
+        &self.redundancy_detector.redundant_patterns
+    }
+
+    /// 檢查語義關係
+    pub fn check_context_relationships(&self) -> usize {
+        self.semantic_analyzer.context_relationships.len()
+    }
 }
 
 impl Default for ImportanceWeights {
@@ -652,6 +750,25 @@ impl ContextCache {
             max_cache_size: 100,
         }
     }
+
+    /// 獲取快取項目數量
+    pub fn get_cache_size(&self) -> usize {
+        self.cache_entries.len()
+    }
+
+    /// 獲取訪問模式統計
+    pub fn get_access_pattern_stats(&self) -> (usize, usize, usize) {
+        (
+            self.access_patterns.access_frequency.len(),
+            self.access_patterns.access_recency.len(),
+            self.access_patterns.access_prediction.len(),
+        )
+    }
+
+    /// 檢查快取是否已滿
+    pub fn is_cache_full(&self) -> bool {
+        self.cache_entries.len() >= self.max_cache_size
+    }
 }
 
 impl AccessPatternTracker {
@@ -661,6 +778,20 @@ impl AccessPatternTracker {
             access_recency: HashMap::new(),
             access_prediction: HashMap::new(),
         }
+    }
+
+    /// 獲取預測訪問機率
+    pub fn get_prediction_scores(&self) -> &HashMap<String, f32> {
+        &self.access_prediction
+    }
+
+    /// 記錄訪問
+    pub fn record_access(&mut self, key: &str) {
+        let now = chrono::Utc::now();
+        self.access_recency.insert(key.to_string(), now);
+        
+        let freq = self.access_frequency.entry(key.to_string()).or_insert(0.0);
+        *freq += 1.0;
     }
 }
 
@@ -723,5 +854,3 @@ pub async fn optimize_ultra_long_context_command(
         current_position,
     ).await
 }
-
-use std::collections::HashSet;

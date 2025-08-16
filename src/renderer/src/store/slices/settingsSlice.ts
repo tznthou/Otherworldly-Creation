@@ -4,8 +4,6 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 export interface AppSettings {
   // 一般設定
   language: 'zh-TW' | 'zh-CN' | 'en' | 'ja';
-  autoSave: boolean;
-  autoSaveInterval: number; // 毫秒
   
   // AI 設定
   ai: {
@@ -70,8 +68,6 @@ export interface AppSettings {
 // 預設設定
 export const DEFAULT_SETTINGS: AppSettings = {
   language: 'zh-TW',
-  autoSave: true,
-  autoSaveInterval: 3000,
   
   ai: {
     defaultModel: '',

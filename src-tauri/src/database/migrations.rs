@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 13;
+const DB_VERSION: i32 = 14;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -98,6 +98,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v13(conn)?;
             update_version(conn, 13)?;
             log::info!("遷移到版本 13 完成");
+        }
+        
+        if current_version < 14 {
+            apply_migration_v14(conn)?;
+            update_version(conn, 14)?;
+            log::info!("遷移到版本 14 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -1492,6 +1498,47 @@ pub fn apply_migration_v13(conn: &Connection) -> Result<()> {
     // 批次生成任務索引 - 表格尚未實現，暫時跳過
     
     log::info!("版本 13 遷移完成：資料庫索引優化完成");
+    
+    Ok(())
+}
+
+/// 版本 14：添加章節 metadata 支援
+pub fn apply_migration_v14(conn: &Connection) -> Result<()> {
+    log::info!("執行版本 14 遷移：添加章節 metadata 支援");
+    
+    // 檢查 chapters 表是否已有 metadata 欄位
+    let has_metadata: bool = conn
+        .prepare("PRAGMA table_info(chapters)")?
+        .query_map([], |row| {
+            let column_name: String = row.get(1)?;
+            Ok(column_name)
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "metadata",
+            Err(_) => false,
+        });
+    
+    if !has_metadata {
+        log::info!("添加 metadata 欄位到 chapters 表");
+        
+        // 添加 metadata 欄位來儲存章節筆記和其他元數據
+        conn.execute(
+            "ALTER TABLE chapters ADD COLUMN metadata TEXT",
+            [],
+        )?;
+        
+        log::info!("成功添加 metadata 欄位");
+    } else {
+        log::info!("chapters 表已有 metadata 欄位，跳過添加");
+    }
+    
+    // 創建 metadata 查詢索引（用於快速查找有筆記的章節）
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_chapters_metadata ON chapters (metadata) WHERE metadata IS NOT NULL",
+        [],
+    )?;
+    
+    log::info!("版本 14 遷移完成：章節 metadata 支援已添加");
     
     Ok(())
 }

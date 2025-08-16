@@ -21,6 +21,7 @@ pub struct Chapter {
     pub content: Option<String>,
     pub order_index: i32,
     pub chapter_number: Option<i32>, // 章節編號
+    pub metadata: Option<String>, // JSON 格式的元數據（包含筆記等）
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -97,6 +98,7 @@ pub struct UpdateChapterRequest {
     pub content: Option<String>,
     pub order_index: Option<i32>,
     pub chapter_number: Option<i32>, // 章節編號
+    pub metadata: Option<String>, // JSON 格式的元數據（包含筆記等）
 }
 
 // 新增角色的請求結構

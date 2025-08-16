@@ -420,7 +420,8 @@ export const tauriAPI: API = {
         title: chapter.title,
         content: JSON.stringify(chapter.content),
         order_index: chapter.order,
-        chapter_number: chapter.chapterNumber
+        chapter_number: chapter.chapterNumber,
+        metadata: chapter.metadata  // 🔧 添加遺失的 metadata 欄位！
       }
     }),
     delete: (id) => safeInvoke('delete_chapter', { id }),
@@ -702,6 +703,13 @@ export const tauriAPI: API = {
     compressContext: (context, maxTokens) => 
       safeInvoke('compress_context', { context, maxTokens }),
     getContextStats: (projectId) => safeInvoke('get_context_stats', { projectId }),
+    optimizeUltraLongContext: (params) => 
+      safeInvoke('optimize_ultra_long_context_command', {
+        originalContext: params.originalContext,
+        maxTokens: params.maxTokens,
+        focusCharacters: params.focusCharacters,
+        currentPosition: params.currentPosition
+      }),
   },
 
   settings: {
@@ -748,6 +756,10 @@ export const tauriAPI: API = {
     runMaintenance: () => safeInvoke('run_database_maintenance'),
     getStats: () => safeInvoke('get_database_stats'),
     healthCheck: () => safeInvoke('health_check'),
+    reindex: () => safeInvoke('reindex_database'),
+    incrementalVacuum: (pages?: number) => safeInvoke('incremental_vacuum', { pages }),
+    getWalModeStatus: () => safeInvoke('get_wal_mode_status'),
+    setWalMode: (enable: boolean) => safeInvoke('set_wal_mode', { enable }),
   },
 
   system: {
