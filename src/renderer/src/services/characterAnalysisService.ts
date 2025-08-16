@@ -1,4 +1,5 @@
 // 角色分析服務
+import type { Descendant } from 'slate';
 import { analyzeChapterDialogues, ChapterDialogueAnalysis, DialogueExtraction } from '../utils/nlpUtils';
 import { api } from '../api';
 
@@ -65,7 +66,7 @@ class CharacterAnalysisService {
    * @returns 章節對話分析結果
    */
   async analyzeChapterDialogues(
-    chapterContent: any[],
+    chapterContent: Descendant[],
     chapterId: string, 
     projectId: string
   ): Promise<ChapterDialogueAnalysis> {

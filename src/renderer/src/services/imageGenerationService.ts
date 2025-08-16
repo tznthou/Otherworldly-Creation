@@ -1,5 +1,21 @@
 import { GoogleGenAI, SafetyFilterLevel } from '@google/genai';
 
+// Google Imagen API 回應類型定義
+interface ImageResponseItem {
+  image?: {
+    imageBytes: string;
+  };
+  enhancedPrompt?: string;
+  safetyAttributes?: ImageSafetyAttributes;
+  raiFilteredReason?: string;
+}
+
+interface ImageSafetyAttributes {
+  blocked: boolean;
+  categories: string[];
+  scores: number[];
+}
+
 interface ImageGenerationOptions {
   colorMode: 'color' | 'monochrome';  // 色彩模式
   aspectRatio: '1:1' | '3:4' | '4:3' | '9:16' | '16:9';
@@ -11,14 +27,14 @@ interface ImageGenerationOptions {
 interface ImageGenerationResult {
   imageData: string;  // base64 data URL
   enhancedPrompt?: string;
-  safetyAttributes?: any;
+  safetyAttributes?: ImageSafetyAttributes;
   raiFilteredReason?: string;
 }
 
 interface BatchResult {
   success: boolean;
   data?: ImageGenerationResult[];
-  error?: any;
+  error?: Error | string;
 }
 
 class ImageGenerationService {
@@ -59,44 +75,67 @@ class ImageGenerationService {
    * 生成單張圖像
    */
   async generateImage(
-    prompt: string,
-    options: ImageGenerationOptions,
-    apiKey?: string
+    request: ImageGenerationRequest,
+    projectId?: string,
+    onProgress?: (progress: number) => void
   ): Promise<ImageGenerationResult[]> {
-    // 如果提供新的 API 金鑰，重新初始化
-    if (!this.genAI && apiKey) {
-      this.initialize(apiKey);
-    }
+    console.log('🎨 開始生成圖像:', request);
     
-    if (!this.genAI) {
-      throw new Error('請先提供 API 金鑰初始化服務');
-    }
-
-    // 驗證輸入
-    if (!prompt || prompt.trim() === '') {
-      throw new Error('提示詞不能為空');
-    }
-
-    // 增強提示詞（加入色彩模式控制）
-    const enhancedPrompt = this.enhancePromptWithColorMode(prompt, options.colorMode);
-    
-    console.log(`🎨 開始生成圖像 - 模式: ${options.colorMode}, 長寬比: ${options.aspectRatio}`);
-    console.log(`📝 增強後提示詞: ${enhancedPrompt}`);
-
     try {
-      const response = await this.genAI.models.generateImages({
-        model: 'imagen-3.0-generate-002',
-        prompt: enhancedPrompt,
-        config: {
-          numberOfImages: options.numberOfImages,
-          aspectRatio: options.aspectRatio,
-          outputMimeType: 'image/jpeg',
-        }
+      // 建構 API 請求
+      const requestBody = {
+        model: 'imagegeneration@006',
+        prompt: request.sceneDescription,
+        aspectRatio: request.aspectRatio || '1:1',
+        safetyFilterLevel: request.safetyLevel || 'block_some',
+        personGeneration: 'allow_adult',
+        sampleCount: request.imageCount || 1,
+        includeRaiReason: true,
+        ...request.customSettings
+      };
+
+      // 設定 API URL 和 headers
+      const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${GCP_PROJECT_ID}/locations/us-central1/publishers/google/models/imagegeneration@006:predict`;
+      
+      onProgress?.(10);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${request.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          instances: [requestBody],
+          parameters: {
+            sampleCount: requestBody.sampleCount
+          }
+        })
       });
 
-      // 處理回應
-      if (response.generatedImages && response.generatedImages.length > 0) {
-        const results = response.generatedImages.map(img => ({
+      onProgress?.(50);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API 錯誤回應:', errorText);
+        throw new Error(`API 請求失敗 (${response.status}): ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('📦 API 回應:', JSON.stringify(data, null, 2));
+      
+      onProgress?.(80);
+
+      // 解析 API 回應
+      if (data.predictions && data.predictions.length > 0) {
+        const prediction = data.predictions[0];
+        
+        if (!prediction.bytesBase64Encoded || prediction.bytesBase64Encoded.length === 0) {
+          throw new Error('API 回應中沒有生成的圖像資料');
+        }
+
+        const results = prediction.bytesBase64Encoded.map((img: ImageResponseItem, index: number) => ({
+          id: `generated_${Date.now()}_${index}`,
           imageData: `data:image/jpeg;base64,${img.image?.imageBytes}`,
           enhancedPrompt: img.enhancedPrompt,
           safetyAttributes: img.safetyAttributes,
@@ -108,21 +147,26 @@ class ImageGenerationService {
       }
       
       throw new Error('API 回應中沒有生成的圖像');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ 圖像生成失敗:', error);
       
+      // 使用類型守衛安全存取錯誤屬性
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
       // 提供更詳細的錯誤訊息
-      if (error.message?.includes('API key')) {
+      if (errorMessage.includes('API key')) {
         throw new Error('API 金鑰無效或已過期');
-      } else if (error.message?.includes('billed users')) {
+      } else if (errorMessage.includes('billed users')) {
         throw new Error('Imagen API 需要啟用計費的 Google Cloud 帳戶。請在 Google Cloud Console 中設定付費方式');
-      } else if (error.message?.includes('quota')) {
+      } else if (errorMessage.includes('quota')) {
         throw new Error('API 配額不足，請檢查您的使用限制');
-      } else if (error.message?.includes('safety')) {
+      } else if (errorMessage.includes('safety')) {
         throw new Error('圖像內容被安全過濾器攔截，請調整提示詞');
       }
       
-      throw new Error(`圖像生成失敗: ${error.message || '未知錯誤'}`);
+      throw new Error(`圖像生成失敗: ${errorMessage}`);
+    } finally {
+      onProgress?.(100);
     }
   }
 

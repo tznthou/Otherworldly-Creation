@@ -249,12 +249,12 @@ export const selectWritingProgress = createSelector(
 /**
  * 搜索和過濾功能的統一選擇器
  */
-export const createFilteredSelector = <T>(
+export const createFilteredSelector = <T, F = unknown>(
   baseSelector: (state: RootState) => T[],
-  filterFn: (items: T[], filters: any) => T[]
+  filterFn: (items: T[], filters: F) => T[]
 ) => {
   return createSelector(
-    [baseSelector, (_: RootState, filters: any) => filters],
+    [baseSelector, (_: RootState, filters: F) => filters],
     filterFn
   );
 };
@@ -290,7 +290,7 @@ export const createPaginatedSelector = <T>(
 /**
  * 緩存優化的選擇器工廠
  */
-export const createCachedSelector = <T, Args extends any[], Result>(
+export const createCachedSelector = <T, Args extends unknown[], Result>(
   selectors: ((state: RootState, ...args: Args) => T)[],
   resultFunc: (...args: T[]) => Result
 ) => {

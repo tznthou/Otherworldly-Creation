@@ -46,7 +46,7 @@ const PERFORMANCE_BENCHMARKS = {
  * 性能基準測試類
  */
 export class PerformanceBenchmark {
-  private testResults: Map<string, any> = new Map();
+  private testResults: Map<string, unknown> = new Map();
   private startTime: number = 0;
 
   /**
@@ -79,7 +79,7 @@ export class PerformanceBenchmark {
   private setupTestEnvironment() {
     // 在控制台添加快捷指令
     if (typeof window !== 'undefined') {
-      (window as any).__BENCHMARK__ = {
+      (window as Window & { __BENCHMARK__?: unknown }).__BENCHMARK__ = {
         start: () => this.startBenchmark(),
         stop: () => this.stopBenchmark(),
         report: () => this.generateReport(),
@@ -149,9 +149,13 @@ export class PerformanceBenchmark {
   /**
    * 分析關鍵組件性能
    */
-  private analyzeCriticalComponents(metrics: any[]) {
+  private analyzeCriticalComponents(metrics: unknown[]) {
     return CRITICAL_COMPONENTS.map(componentName => {
-      const metric = metrics.find(m => m.componentName === componentName);
+      const metric = metrics.find(m => 
+        typeof m === 'object' && m !== null && 
+        'componentName' in m && 
+        (m as { componentName: unknown }).componentName === componentName
+      );
       
       if (!metric) {
         return {
@@ -203,15 +207,20 @@ export class PerformanceBenchmark {
   /**
    * 生成優化建議
    */
-  private generateRecommendations(metrics: any[], _issues: string[]) {
+  private generateRecommendations(metrics: unknown[], _issues: string[]) {
     const recommendations: Array<{priority: string; message: string}> = [];
     
     // 檢查慢組件
-    const slowComponents = metrics.filter(m => m.averageRenderTime > 16);
+    const slowComponents = metrics.filter(m => 
+      typeof m === 'object' && m !== null && 
+      'averageRenderTime' in m && 
+      typeof (m as { averageRenderTime: unknown }).averageRenderTime === 'number' &&
+      (m as { averageRenderTime: number }).averageRenderTime > 16
+    );
     if (slowComponents.length > 0) {
       recommendations.push({
         priority: 'high',
-        message: `優先優化渲染緩慢的組件: ${slowComponents.map(c => c.componentName).join(', ')}`
+        message: `優先優化渲染緩慢的組件: ${slowComponents.map(c => (c as { componentName: string }).componentName).join(', ')}`
       });
     }
     
@@ -258,18 +267,20 @@ export class PerformanceBenchmark {
    */
   private getMemoryUsage() {
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      const usedMB = memory.usedJSHeapSize / 1024 / 1024;
-      const totalMB = memory.totalJSHeapSize / 1024 / 1024;
-      const limitMB = memory.jsHeapSizeLimit / 1024 / 1024;
-      
-      return {
-        used: `${usedMB.toFixed(1)}MB`,
-        total: `${totalMB.toFixed(1)}MB`,
-        limit: `${limitMB.toFixed(1)}MB`,
-        usage: `${((usedMB / limitMB) * 100).toFixed(1)}%`,
-        rating: this.getRatingForMemoryUsage(usedMB)
-      };
+      const memory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+      if (memory) {
+        const usedMB = memory.usedJSHeapSize / 1024 / 1024;
+        const totalMB = memory.totalJSHeapSize / 1024 / 1024;
+        const limitMB = memory.jsHeapSizeLimit / 1024 / 1024;
+        
+        return {
+          used: `${usedMB.toFixed(1)}MB`,
+          total: `${totalMB.toFixed(1)}MB`,
+          limit: `${limitMB.toFixed(1)}MB`,
+          usage: `${((usedMB / limitMB) * 100).toFixed(1)}%`,
+          rating: this.getRatingForMemoryUsage(usedMB)
+        };
+      }
     }
     return null;
   }

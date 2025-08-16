@@ -314,7 +314,7 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
   
   const renderElement = useCallback((props: RenderElementProps) => (
     <ElementComponent {...props} />
-  ), []);
+  ), [ElementComponent]);
 
   // 優化的葉子節點組件
   const LeafComponent = React.memo<SlateRenderLeafProps>(({ leaf, attributes, children }) => {
@@ -343,7 +343,7 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
 
   const renderLeaf = useCallback((props: SlateRenderLeafProps) => (
     <LeafComponent {...props} />
-  ), []);
+  ), [LeafComponent]);
 
   // 優化的編輯器樣式計算
   const editorStyle = useMemo(() => ({

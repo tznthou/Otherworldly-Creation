@@ -136,7 +136,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }
     };
     loadProviders();
-  }, [dispatch, currentProviderId, defaultProviderId, autoUseDefault]);
+  }, [dispatch, currentProviderId, defaultProviderId, autoUseDefault, selectedProviderId]);
 
   // 當選擇提供商時，載入該提供商的模型
   useEffect(() => {
@@ -202,7 +202,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }
     }
     loadProviderModels();
-  }, [selectedProviderId, dispatch, currentModel, availableModels.length]);
+  }, [selectedProviderId, dispatch, currentModel, availableModels.length, currentProviderId]);
 
   // 清理效果：組件卸載時取消正在進行的請求
   useEffect(() => {
@@ -743,7 +743,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         duration: 3000,
       }));
     }
-  }, [generationOptions, currentModel, editor, projectId, chapterId, maxTokens, topP, presencePenalty, frequencyPenalty, dispatch]);
+  }, [generationOptions, currentModel, editor, projectId, chapterId, maxTokens, topP, presencePenalty, frequencyPenalty, dispatch, selectedProviderId]);
 
   // 清除所有選項
   const handleClearOptions = useCallback(() => {

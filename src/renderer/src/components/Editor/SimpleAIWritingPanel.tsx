@@ -130,7 +130,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     };
     
     checkOllama();
-  }, [dispatch]);
+  }, [dispatch, availableModels.length]);
 
   // 清理效果：組件卸載時取消正在進行的請求
   useEffect(() => {
@@ -204,7 +204,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     } finally {
       setIsAnalyzing(false);
     }
-  }, [chapterId, temperature, maxTokens, dispatch]);
+  }, [chapterId, temperature, maxTokens, dispatch, currentModel]);
 
   // 生成文本
   const handleGenerate = async () => {

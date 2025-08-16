@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
 import { addNotification } from '../../store/slices/uiSlice';
@@ -25,14 +25,7 @@ const EPubGenerationModal: React.FC = () => {
     warnings: string[];
   } | null>(null);
 
-  // 當選擇專案時進行驗證
-  useEffect(() => {
-    if (selectedProjectId) {
-      validateProject();
-    }
-  }, [selectedProjectId]); // validateProject 是內部函數，不需要作為依賴
-
-  const validateProject = async () => {
+  const validateProject = useCallback(async () => {
     if (!selectedProjectId) return;
     
     try {
@@ -41,7 +34,14 @@ const EPubGenerationModal: React.FC = () => {
     } catch (error) {
       console.error('專案驗證失敗:', error);
     }
-  };
+  }, [selectedProjectId]);
+
+  // 當選擇專案時進行驗證
+  useEffect(() => {
+    if (selectedProjectId) {
+      validateProject();
+    }
+  }, [selectedProjectId, validateProject]);
 
   const handleClose = () => {
     if (!generating) {

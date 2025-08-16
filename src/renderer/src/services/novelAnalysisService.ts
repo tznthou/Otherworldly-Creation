@@ -21,6 +21,16 @@ export interface AnalysisProgress {
   message: string;
 }
 
+// AI 角色分析回應類型
+interface AICharacterResponse {
+  name?: string;
+  role?: string;
+  personality?: string;
+  appearance?: string;
+  background?: string;
+  traits?: string[];
+}
+
 export interface DetailedAnalysis {
   worldSetting: WorldSetting;
   characters: CharacterArchetypeTemplate[];
@@ -358,7 +368,7 @@ export class NovelAnalysisService {
       const parsed = JSON.parse(jsonMatch[0]);
       const characters = parsed.characters || [];
 
-      return characters.map((char: any) => ({
+      return characters.map((char: AICharacterResponse) => ({
         name: char.name || '未命名角色',
         description: `${char.role || '角色'}：${char.personality || ''}`,
         personality: char.personality || '',
@@ -740,7 +750,7 @@ ${analysis.worldSetting.specialElements.length > 0
 
   // 輔助方法
 
-  private generateCharacterTags(character: any): string[] {
+  private generateCharacterTags(character: AICharacterResponse): string[] {
     const tags: string[] = [];
     
     if (character.role?.includes('主角')) tags.push('主角');

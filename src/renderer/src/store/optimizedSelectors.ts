@@ -7,6 +7,13 @@ import { createSelector, createSelectorCreator, lruMemoize } from 'reselect';
 import { RootState } from './store';
 // import { Character } from '../api/models';
 
+// 為帶有除錯功能的選擇器定義類型
+interface SelectorWithDebug<T> {
+  (...args: unknown[]): T;
+  recomputations?: () => number;
+  resetRecomputations?: () => void;
+}
+
 // 創建自定義選擇器創建器，使用 LRU 緩存
 const createLRUSelector = createSelectorCreator(
   lruMemoize,
@@ -157,9 +164,9 @@ export const makeSelectChapterById = () => createSelector(
 export const getSelectorsPerformanceInfo = () => {
   if (process.env.NODE_ENV === 'development') {
     return {
-      selectFilteredCharacters: (selectFilteredCharacters as any).recomputations?.() || 0,
-      selectProjectStatistics: (selectProjectStatistics as any).recomputations?.() || 0,
-      selectActiveModals: (selectActiveModals as any).recomputations?.() || 0,
+      selectFilteredCharacters: (selectFilteredCharacters as SelectorWithDebug<unknown>).recomputations?.() || 0,
+      selectProjectStatistics: (selectProjectStatistics as SelectorWithDebug<unknown>).recomputations?.() || 0,
+      selectActiveModals: (selectActiveModals as SelectorWithDebug<unknown>).recomputations?.() || 0,
     };
   }
   return null;

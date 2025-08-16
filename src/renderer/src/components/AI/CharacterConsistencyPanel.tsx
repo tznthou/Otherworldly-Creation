@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 // TODO: 需要完整重構此組件的類型定義，當前使用 any 類型作為臨時解決方案
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { api } from '../../api';
@@ -70,7 +70,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
   const selectedCharacter = characters.find(c => c.id === selectedCharacterId);
 
   // 載入角色視覺特徵
-  const loadVisualTraits = async () => {
+  const loadVisualTraits = useCallback(async () => {
     if (!selectedCharacterId) return;
 
     setIsProcessing(true);
@@ -87,7 +87,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [selectedCharacterId]);
 
   // 設定角色一致性
   const handleSetupConsistency = async () => {
@@ -352,7 +352,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
     if (selectedCharacterId) {
       loadVisualTraits();
     }
-  }, [selectedCharacterId, currentProject]);
+  }, [selectedCharacterId, currentProject, loadVisualTraits]);
 
   return (
     <div className={`character-consistency-panel ${className}`}>

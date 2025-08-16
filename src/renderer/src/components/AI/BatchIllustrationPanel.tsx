@@ -313,11 +313,11 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         throw new Error('所有圖像生成都失敗了');
       }
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ 批次生成失敗:', err);
       
       // 檢查是否為 Google Cloud 計費問題
-      const errorMessage = err.message || err.toString();
+      const errorMessage = err instanceof Error ? err.message : String(err);
       if (errorMessage.includes('billed users') || 
           errorMessage.includes('需要啟用計費') || 
           errorMessage.includes('Imagen API 需要啟用計費')) {
@@ -487,7 +487,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   useEffect(() => {
     // 只調用初始化，loadActiveBatches 會在初始化成功後自動調用
     initializeBatchManager();
-  }, []); // 只在組件掛載時運行一次
+  }, [initializeBatchManager]); // 包含依賴
 
   // 載入當前專案角色
   useEffect(() => {
@@ -568,7 +568,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       clearInterval(refreshInterval);
       setRefreshInterval(null);
     }
-  }, [activeTab, selectedBatchId]);
+  }, [activeTab, selectedBatchId, loadBatchDetails, refreshInterval]);
 
   return (
     <div className={`batch-illustration-panel ${className}`}>
@@ -589,7 +589,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'create' | 'monitor' | 'history')}
               className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === tab.id
                   ? 'bg-purple-600 text-white'
@@ -889,7 +889,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   ].map(type => (
                     <button
                       key={type.value}
-                      onClick={() => setSceneType(type.value as any)}
+                      onClick={() => setSceneType(type.value as 'portrait' | 'scene' | 'interaction')}
                       className={`flex-1 p-3 rounded-lg border-2 transition-all ${
                         sceneType === type.value
                           ? 'border-gold-500 bg-gold-500/10 text-gold-400'

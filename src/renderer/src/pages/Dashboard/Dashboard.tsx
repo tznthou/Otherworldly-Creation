@@ -76,6 +76,7 @@ const Dashboard: React.FC = () => {
       availableModels: availableModels.length,
       modelsInfo: modelsInfo?.success
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]); // 移除會頻繁變化的依賴項，避免無窮重繪
 
   if (loading) {

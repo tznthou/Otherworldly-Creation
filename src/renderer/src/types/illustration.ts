@@ -7,7 +7,7 @@ export interface IllustrationRequest {
   character_id?: string;
   scene_description: string;
   style_template_id?: string;
-  custom_style_params?: Record<string, any>;
+  custom_style_params?: Record<string, unknown>;
   use_reference_image: boolean;
   quality_preset: 'speed' | 'balanced' | 'quality';
   batch_size?: number;
@@ -271,7 +271,7 @@ export interface StyleTemplate {
   style_type: 'anime' | 'realistic' | 'fantasy' | 'chibi' | 'manga' | 'illustration';
   prompt_template: string;
   negative_prompt?: string;
-  api_params: Record<string, any>;
+  api_params: Record<string, unknown>;
   suitable_for: ('character' | 'scene' | 'cover' | 'background')[];
 }
 
@@ -445,7 +445,7 @@ export interface BatchSummary {
 }
 
 /** API 響應包裝器 */
-export interface APIResponse<T = any> {
+export interface APIResponse<T = unknown> {
   success: boolean;
   message?: string;
   error?: string;

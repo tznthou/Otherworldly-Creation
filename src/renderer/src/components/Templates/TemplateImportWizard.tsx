@@ -543,10 +543,10 @@ const OptionsStep: React.FC<{
             <label key={area.value} className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={options.focusAreas.includes(area.value as any)}
+                checked={options.focusAreas.includes(area.value as 'world' | 'character' | 'plot' | 'style')}
                 onChange={(e) => {
                   const newAreas = e.target.checked
-                    ? [...options.focusAreas, area.value as any]
+                    ? [...options.focusAreas, area.value as 'world' | 'character' | 'plot' | 'style']
                     : options.focusAreas.filter(a => a !== area.value);
                   onOptionsChange({ ...options, focusAreas: newAreas });
                 }}

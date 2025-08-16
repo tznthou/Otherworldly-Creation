@@ -58,6 +58,7 @@ const SettingsMain: React.FC = () => {
     return () => {
       mounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 移除 loadUserSettings 依賴，避免無限循環
 
   // 鍵盤快捷鍵支持

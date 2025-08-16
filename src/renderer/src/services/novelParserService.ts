@@ -2,6 +2,12 @@
 import nlp from 'compromise';
 import type { NovelTemplate, WorldSetting, CharacterArchetypeTemplate, PlotFramework } from '../types/template';
 
+// Compromise.js 人物實體類型
+interface CompromisePerson {
+  text: string;
+  [key: string]: unknown; // 其他 Compromise.js 屬性
+}
+
 export interface NovelParseResult {
   title?: string;
   content: string;
@@ -205,7 +211,7 @@ export class NovelParserService {
     const peopleData = doc.people().json();
     const characterMap = new Map<string, CharacterInfo>();
     
-    peopleData.forEach((person: any) => {
+    peopleData.forEach((person: CompromisePerson) => {
       const name = person.text;
       const normalizedName = name.toLowerCase();
       

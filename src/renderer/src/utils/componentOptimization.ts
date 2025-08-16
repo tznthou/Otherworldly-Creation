@@ -7,25 +7,29 @@ import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
 
 // 深度比較函數（僅用於必要時）
-export function deepEqual(a: any, b: any): boolean {
+export function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (a == null || b == null) return false;
   if (typeof a !== 'object' || typeof b !== 'object') return false;
 
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
+  // 安全類型斷言：已確認 a 和 b 都是非空對象
+  const objA = a as Record<string, unknown>;
+  const objB = b as Record<string, unknown>;
+  
+  const keysA = Object.keys(objA);
+  const keysB = Object.keys(objB);
   if (keysA.length !== keysB.length) return false;
 
   for (const key of keysA) {
     if (!keysB.includes(key)) return false;
-    if (!deepEqual(a[key], b[key])) return false;
+    if (!deepEqual(objA[key], objB[key])) return false;
   }
 
   return true;
 }
 
 // 智能記憶化比較函數
-export function smartMemoCompare<T extends Record<string, any>>(
+export function smartMemoCompare<T extends Record<string, unknown>>(
   prevProps: T, 
   nextProps: T
 ): boolean {
@@ -47,7 +51,7 @@ export function smartMemoCompare<T extends Record<string, any>>(
 }
 
 // HOC：智能記憶化組件
-export function withSmartMemo<P extends Record<string, any>>(
+export function withSmartMemo<P extends Record<string, unknown>>(
   Component: React.ComponentType<P>,
   customCompare?: (prevProps: P, nextProps: P) => boolean
 ) {
@@ -63,12 +67,12 @@ export function withSmartMemo<P extends Record<string, any>>(
 }
 
 // Hook：優化的 useSelector，使用淺比較
-export function useOptimizedSelector<T>(selector: (state: any) => T): T {
+export function useOptimizedSelector<TState, TResult>(selector: (state: TState) => TResult): TResult {
   return useSelector(selector, shallowEqual);
 }
 
 // Hook：穩定的回調函數
-export function useStableCallback<T extends (...args: any[]) => any>(
+export function useStableCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   deps: React.DependencyList
 ): T {
@@ -86,7 +90,7 @@ export function useStableCallback<T extends (...args: any[]) => any>(
     depsRef.current = deps;
   }
 
-  return useCallback((...args: any[]) => callbackRef.current(...args), []) as T;
+  return useCallback((...args: unknown[]) => callbackRef.current(...args), []) as T;
 }
 
 // Hook：防抖 Hook
@@ -107,20 +111,25 @@ export function useDebounce<T>(value: T, delay: number): T {
 }
 
 // Hook：節流 Hook
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
   const lastRun = useRef(Date.now());
+  const callbackRef = useRef(callback);
+  
+  // 更新回調引用
+  callbackRef.current = callback;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback(
     ((...args) => {
       if (Date.now() - lastRun.current >= delay) {
-        callback(...args);
+        callbackRef.current(...args);
         lastRun.current = Date.now();
       }
     }) as T,
-    [callback, delay]
+    [delay] // 只依賴 delay，callback 通過 ref 訪問
   );
 }
 
@@ -183,7 +192,7 @@ export function usePrevious<T>(value: T): T | undefined {
 }
 
 // 性能監控 HOC (簡化版)
-export function withPerformanceTracking<P extends Record<string, any>>(
+export function withPerformanceTracking<P extends Record<string, unknown>>(
   Component: React.ComponentType<P>,
   trackingName?: string
 ) {

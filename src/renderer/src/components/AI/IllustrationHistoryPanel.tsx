@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { 
@@ -52,8 +52,8 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(12);
 
-  // 模擬數據
-  const mockIllustrations: IllustrationGalleryItem[] = [
+  // 模擬數據 - 使用 useMemo 避免每次渲染重新創建
+  const mockIllustrations: IllustrationGalleryItem[] = useMemo(() => [
     {
       id: '1',
       image_url: '/api/placeholder/300/400',
@@ -162,13 +162,13 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
       },
       tags: ['城堡', '夕陽', '壯麗', '天空']
     }
-  ];
+  ], []); // 空依賴陣列，因為模擬數據不會變化
 
   // 獲取項目角色
   const projectCharacters = characters.filter(c => c.projectId === currentProject?.id);
 
   // 載入插畫歷史
-  const loadIllustrations = async () => {
+  const loadIllustrations = useCallback(async () => {
     setIsLoading(true);
     setError('');
 
@@ -254,7 +254,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [searchTerm, filter, characters, currentPage, itemsPerPage, mockIllustrations]);
 
   // 更新篩選
   const updateFilter = (key: keyof IllustrationFilter, value: string[] | [number, number] | [string, string] | string) => {
@@ -302,7 +302,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
     if (currentProject) {
       loadIllustrations();
     }
-  }, [currentProject, filter, searchTerm, currentPage]);
+  }, [currentProject, filter, searchTerm, currentPage, loadIllustrations]);
 
   return (
     <div className={`illustration-history-panel ${className}`}>

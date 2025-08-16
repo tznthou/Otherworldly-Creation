@@ -10,7 +10,7 @@ export interface PerformanceLog {
   category: 'rendering' | 'navigation' | 'user-interaction' | 'api' | 'database';
   event: string;
   duration?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   severity: 'info' | 'warning' | 'error';
 }
 
@@ -21,7 +21,7 @@ class PerformanceLogger {
   // 記錄性能事件
   log(category: PerformanceLog['category'], event: string, options?: {
     duration?: number;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
     severity?: PerformanceLog['severity'];
   }) {
     const log: PerformanceLog = {

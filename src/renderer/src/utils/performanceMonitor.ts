@@ -174,12 +174,14 @@ class PerformanceMonitor {
    */
   private getMemoryUsage() {
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      return {
-        usedJSHeapSize: memory.usedJSHeapSize,
-        totalJSHeapSize: memory.totalJSHeapSize,
-        jsHeapSizeLimit: memory.jsHeapSizeLimit
-      };
+      const memory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+      if (memory) {
+        return {
+          usedJSHeapSize: memory.usedJSHeapSize,
+          totalJSHeapSize: memory.totalJSHeapSize,
+          jsHeapSizeLimit: memory.jsHeapSizeLimit
+        };
+      }
     }
     return null;
   }
@@ -252,7 +254,7 @@ class PerformanceMonitor {
 export const performanceMonitor = new PerformanceMonitor();
 
 // React 組件性能監控 HOC (簡化版)
-export function withPerformanceMonitoring<T extends Record<string, any>>(
+export function withPerformanceMonitoring<T extends Record<string, unknown>>(
   WrappedComponent: React.ComponentType<T>,
   componentName: string
 ) {
@@ -274,7 +276,7 @@ export function withPerformanceMonitoring<T extends Record<string, any>>(
 
 // 導出到全局用於調試
 if (typeof window !== 'undefined') {
-  (window as any).__PERFORMANCE_MONITOR__ = performanceMonitor;
+  (window as Window & { __PERFORMANCE_MONITOR__?: unknown }).__PERFORMANCE_MONITOR__ = performanceMonitor;
   console.log('🔍 性能監控器已掛載到 window.__PERFORMANCE_MONITOR__');
 }
 

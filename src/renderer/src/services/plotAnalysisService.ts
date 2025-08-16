@@ -1,4 +1,5 @@
 // 劇情分析服務 - Phase 2: 進階 AI 功能
+import type { Descendant } from 'slate';
 import { 
   analyzePlot, 
   detectConflictPoints, 
@@ -18,7 +19,7 @@ export class PlotAnalysisService {
   /**
    * 分析單個章節的劇情
    */
-  static analyzeChapterPlot(chapterContent: any[]): PlotAnalysis {
+  static analyzeChapterPlot(chapterContent: Descendant[]): PlotAnalysis {
     console.log('📖 開始章節劇情分析...');
     
     // 將 Slate.js 內容轉換為純文字
@@ -36,7 +37,7 @@ export class PlotAnalysisService {
   /**
    * 分析專案整體劇情
    */
-  static analyzeProjectPlot(chapters: Array<{ content: any[] }>): PlotAnalysis {
+  static analyzeProjectPlot(chapters: Array<{ content: Descendant[] }>): PlotAnalysis {
     console.log('📚 開始專案整體劇情分析...');
     
     // 合併所有章節內容
@@ -78,7 +79,7 @@ export class PlotAnalysisService {
   /**
    * 批量分析多個章節的劇情趨勢
    */
-  static analyzeChapterTrends(chapters: Array<{ id: string; title: string; content: any[] }>): ChapterTrendAnalysis[] {
+  static analyzeChapterTrends(chapters: Array<{ id: string; title: string; content: Descendant[] }>): ChapterTrendAnalysis[] {
     console.log('📈 開始章節劇情趨勢分析...');
     
     return chapters.map((chapter, index) => {

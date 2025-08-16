@@ -18,6 +18,7 @@ import ChapterList from '../../components/Editor/ChapterList';
 import ChapterNotes from '../../components/Editor/ChapterNotes';
 import AIWritingPanel from '../../components/Editor/AIWritingPanel';
 import { PlotAnalysisPanel } from '../../components/AI/PlotAnalysisPanel';
+import type { PlotSuggestion } from '../../services/plotAnalysisService';
 import LazyCharacterAnalysisPanel from '../../components/AI/LazyCharacterAnalysisPanel';
 import AIStatusIndicator from '../../components/UI/AIStatusIndicator';
 import SaveStatusIndicator from '../../components/UI/SaveStatusIndicator';
@@ -74,10 +75,12 @@ const ProjectEditorContent: React.FC = () => {
   // 自動儲存回調函數（移除 notification 依賴項避免無限重新渲染）
   const handleAutoSaveSuccess = useCallback(() => {
     notification.success('儲存成功', '章節已自動儲存');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // notification 方法是穩定的，不需要作為依賴項
 
   const handleAutoSaveError = useCallback((error: Error) => {
     notification.error('儲存失敗', error.message);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // notification 方法是穩定的，不需要作為依賴項
 
   // 自動儲存
@@ -121,7 +124,7 @@ const ProjectEditorContent: React.FC = () => {
 
     loadProjectData();
     // 移除 notification 依賴項，避免因為 notification 對象變化導致重複載入
-  }, [id, dispatch, navigate]);
+  }, [id, dispatch, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 選擇章節：優先使用 currentChapter，否則選擇第一個章節
   useEffect(() => {
@@ -542,7 +545,7 @@ const ProjectEditorContent: React.FC = () => {
               _projectId={id}
               chapters={chapters}
               currentChapter={currentChapter}
-              _onSuggestionApply={(suggestion: any) => {
+              _onSuggestionApply={(suggestion: PlotSuggestion) => {
                 notification.info('建議應用', `正在應用建議：${suggestion.title}`);
                 // 這裡可以添加具體的建議應用邏輯
               }}
@@ -563,7 +566,7 @@ const ProjectEditorContent: React.FC = () => {
                 ...currentChapter,
                 content: JSON.stringify(currentChapter.content)
               } : null}
-              _onSuggestionApply={(suggestion: any) => {
+              _onSuggestionApply={(suggestion: string) => {
                 notification.info('建議應用', `正在應用建議：${suggestion}`);
                 // 這裡可以添加具體的建議應用邏輯
               }}

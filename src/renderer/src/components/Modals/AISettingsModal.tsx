@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, setCurrentProvider, setDefaultProvider, setDefaultModel } from '../../store/slices/aiSlice';
@@ -42,12 +42,7 @@ const AISettingsModal: React.FC = () => {
     provider: null
   });
 
-  useEffect(() => {
-    loadProviders();
-    loadSupportedTypes();
-  }, []);
-
-  const loadProviders = async () => {
+  const loadProviders = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await api.aiProviders.getAll();
@@ -71,16 +66,21 @@ const AISettingsModal: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dispatch]);
 
-  const loadSupportedTypes = async () => {
+  const loadSupportedTypes = useCallback(async () => {
     try {
       const types = await api.aiProviders.getSupportedTypes();
       setSupportedTypes(types);
     } catch (_error) {
       console.error('載入支援類型失敗:', _error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadProviders();
+    loadSupportedTypes();
+  }, [loadProviders, loadSupportedTypes]);
 
   const searchAvailableModels = async (providerType: string, apiKey?: string, endpoint?: string): Promise<Array<{id: string; name: string}>> => {
     try {

@@ -17,11 +17,16 @@ export const initReactScan = () => {
       // 記錄渲染到控制台（謹慎使用，可能會影響性能）
       log: false,
       // 當檢測到渲染時的回調
-      onRender: (fiber: any, renders: any) => {
+      onRender: (fiber: unknown, renders: unknown[]) => {
         // 記錄長時間渲染的組件
-        const renderTime = renders.reduce((total: number, render: any) => total + (render.time || 0), 0);
+        const renderTime = Array.isArray(renders) ? renders.reduce((total: number, render: unknown) => {
+          const time = typeof render === 'object' && render !== null && 'time' in render ? (render as { time: unknown }).time : 0;
+          return total + (typeof time === 'number' ? time : 0);
+        }, 0) : 0;
         if (renderTime > 16) { // 超過一個幀的時間（16ms）
-          console.warn(`⚠️ 組件 "${fiber.type?.name || 'Unknown'}" 渲染時間較長: ${renderTime.toFixed(2)}ms`);
+          const fiberType = typeof fiber === 'object' && fiber !== null && 'type' in fiber ? (fiber as { type: unknown }).type : null;
+          const componentName = typeof fiberType === 'object' && fiberType !== null && 'name' in fiberType ? (fiberType as { name: unknown }).name : 'Unknown';
+          console.warn(`⚠️ 組件 "${componentName}" 渲染時間較長: ${renderTime.toFixed(2)}ms`);
         }
       },
       // 當開始繪製輪廓時的回調
@@ -38,12 +43,14 @@ export const initReactScan = () => {
 };
 
 // 為特定組件添加性能監控
-export const monitorComponent = (Component: React.ComponentType<any>, componentName: string) => {
+export const monitorComponent = (Component: React.ComponentType<unknown>, componentName: string) => {
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { onRender } = require('react-scan');
-    onRender(Component, (fiber: any, render: any) => {
-      console.log(`📊 [${componentName}] 渲染時間: ${render.time ? render.time.toFixed(2) : '0'}ms`);
+    onRender(Component, (fiber: unknown, render: unknown) => {
+      const renderTime = typeof render === 'object' && render !== null && 'time' in render ? (render as { time: unknown }).time : null;
+      const timeMs = typeof renderTime === 'number' ? renderTime.toFixed(2) : '0';
+      console.log(`📊 [${componentName}] 渲染時間: ${timeMs}ms`);
       
       // 特別關注的組件
       const criticalComponents = [
