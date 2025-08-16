@@ -1,5 +1,6 @@
 // 劇情分析面板組件 - Phase 2: 進階 AI 功能
 import React, { useState } from 'react';
+import { Descendant } from 'slate';
 import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -39,13 +40,13 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
       
       if (analysisScope === 'current' && currentChapter) {
         // 分析當前章節
-        analysisResult = plotAnalysisService.analyzeChapterPlot(currentChapter.content);
+        analysisResult = plotAnalysisService.analyzeChapterPlot(currentChapter.content as Descendant[]);
       } else if (analysisScope === 'project' && chapters.length > 0) {
         // 分析整個專案
-        analysisResult = plotAnalysisService.analyzeProjectPlot(chapters);
+        analysisResult = plotAnalysisService.analyzeProjectPlot(chapters.map(ch => ({ content: ch.content as Descendant[] })));
         
         // 同時分析章節趨勢
-        const trends = plotAnalysisService.analyzeChapterTrends(chapters);
+        const trends = plotAnalysisService.analyzeChapterTrends(chapters.map(ch => ({ id: ch.id, title: ch.title, content: ch.content as Descendant[] })));
         setChapterTrends(trends);
       } else {
         throw new Error('沒有可用的內容進行分析');

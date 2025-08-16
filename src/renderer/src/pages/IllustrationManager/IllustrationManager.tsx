@@ -8,10 +8,10 @@ import {
   BatchIllustrationPanel,
   IllustrationHistoryPanel 
 } from '../../components/AI';
+import { DetailedGenerationResult } from '../../types/illustration';
 import { Card } from '../../components/UI/Card';
 import CosmicButton from '../../components/UI/CosmicButton';
 import { Alert } from '../../components/UI/Alert';
-import type { IllustrationGenerationResponse } from '../../types/illustration';
 
 // interface IllustrationManagerProps {}
 
@@ -65,7 +65,7 @@ const IllustrationManager: React.FC = () => {
     }
   ];
 
-  const handleGenerationComplete = (result: IllustrationGenerationResponse) => {
+  const handleGenerationComplete = (result: DetailedGenerationResult) => {
     console.log('插畫生成完成:', result);
     // 可以添加成功通知或自動切換到歷史頁面
     setActiveTab('history');

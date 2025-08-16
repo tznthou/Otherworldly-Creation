@@ -167,14 +167,22 @@ export class PerformanceBenchmark {
         };
       }
       
-      const rating = this.getRatingForRenderTime(metric.averageRenderTime);
-      const frequencyRating = this.getRatingForFrequency(metric.renderCount);
+      // 類型守衛確保 metric 具有必要的屬性
+      const averageRenderTime = typeof metric === 'object' && metric !== null && 'averageRenderTime' in metric && typeof (metric as { averageRenderTime: unknown }).averageRenderTime === 'number' 
+        ? (metric as { averageRenderTime: number }).averageRenderTime 
+        : 0;
+      const renderCount = typeof metric === 'object' && metric !== null && 'renderCount' in metric && typeof (metric as { renderCount: unknown }).renderCount === 'number' 
+        ? (metric as { renderCount: number }).renderCount 
+        : 0;
+      
+      const rating = this.getRatingForRenderTime(averageRenderTime);
+      const frequencyRating = this.getRatingForFrequency(renderCount);
       
       return {
         component: componentName,
         status: '已測試',
-        renderTime: `${metric.averageRenderTime.toFixed(2)}ms`,
-        renderCount: metric.renderCount,
+        renderTime: `${averageRenderTime.toFixed(2)}ms`,
+        renderCount: renderCount,
         rating,
         frequencyRating,
         needsOptimization: rating === 'poor' || frequencyRating === 'excessive'
@@ -225,17 +233,32 @@ export class PerformanceBenchmark {
     }
     
     // 檢查頻繁渲染
-    const frequentComponents = metrics.filter(m => m.renderCount > 50);
+    const frequentComponents = metrics.filter(m => 
+      typeof m === 'object' && m !== null && 
+      'renderCount' in m && 
+      typeof (m as { renderCount: unknown }).renderCount === 'number' &&
+      (m as { renderCount: number }).renderCount > 50
+    );
     if (frequentComponents.length > 0) {
       recommendations.push({
         priority: 'medium',
-        message: `考慮使用 React.memo 或 useMemo 優化頻繁渲染的組件: ${frequentComponents.map(c => c.componentName).join(', ')}`
+        message: `考慮使用 React.memo 或 useMemo 優化頻繁渲染的組件: ${frequentComponents.map(c => (c as { componentName: string }).componentName).join(', ')}`
       });
     }
     
     // 檢查圖表組件
-    const chartComponents = metrics.filter(m => m.componentName.includes('Chart'));
-    if (chartComponents.some(c => c.averageRenderTime > 32)) {
+    const chartComponents = metrics.filter(m => 
+      typeof m === 'object' && m !== null && 
+      'componentName' in m && 
+      typeof (m as { componentName: unknown }).componentName === 'string' &&
+      (m as { componentName: string }).componentName.includes('Chart')
+    );
+    if (chartComponents.some(c => 
+      typeof c === 'object' && c !== null && 
+      'averageRenderTime' in c && 
+      typeof (c as { averageRenderTime: unknown }).averageRenderTime === 'number' &&
+      (c as { averageRenderTime: number }).averageRenderTime > 32
+    )) {
       recommendations.push({
         priority: 'medium',
         message: '圖表組件渲染較慢，考慮實現資料虛擬化或延遲載入'
@@ -243,8 +266,16 @@ export class PerformanceBenchmark {
     }
     
     // 檢查編輯器組件
-    const editorMetric = metrics.find(m => m.componentName === 'SlateEditor');
-    if (editorMetric && editorMetric.averageRenderTime > 16) {
+    const editorMetric = metrics.find(m => 
+      typeof m === 'object' && m !== null && 
+      'componentName' in m && 
+      (m as { componentName: unknown }).componentName === 'SlateEditor'
+    );
+    if (editorMetric && 
+        typeof editorMetric === 'object' && editorMetric !== null &&
+        'averageRenderTime' in editorMetric && 
+        typeof (editorMetric as { averageRenderTime: unknown }).averageRenderTime === 'number' &&
+        (editorMetric as { averageRenderTime: number }).averageRenderTime > 16) {
       recommendations.push({
         priority: 'high',
         message: 'Slate.js 編輯器性能需要優化，考慮減少不必要的重新渲染'

@@ -757,7 +757,7 @@ ${analysis.worldSetting.specialElements.length > 0
     else if (character.role?.includes('配角')) tags.push('配角');
     else if (character.role?.includes('反派')) tags.push('反派');
     
-    if (character.traits?.length > 3) tags.push('複雜角色');
+    if (character.traits && character.traits.length > 3) tags.push('複雜角色');
     if (character.background) tags.push('有背景故事');
     
     return tags;

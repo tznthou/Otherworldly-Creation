@@ -15,7 +15,7 @@ import ConsistencyScoreChart from '../Charts/ConsistencyScoreChart';
 // 分析標籤類型
 type AnalysisTab = 'overview' | 'personality' | 'language' | 'emotion' | 'consistency' | 'suggestions';
 
-interface CharacterAnalysisPanelProps {
+interface CharacterAnalysisPanelProps extends Record<string, unknown> {
   projectId: string;
   chapters: Array<{
     id: string;

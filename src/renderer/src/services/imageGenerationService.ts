@@ -1,4 +1,5 @@
 import { GoogleGenAI, SafetyFilterLevel } from '@google/genai';
+import { IllustrationRequest } from '../types/illustration';
 
 // Google Imagen API 回應類型定義
 interface ImageResponseItem {
@@ -75,7 +76,7 @@ class ImageGenerationService {
    * 生成單張圖像
    */
   async generateImage(
-    request: ImageGenerationRequest,
+    request: IllustrationRequest,
     projectId?: string,
     onProgress?: (progress: number) => void
   ): Promise<ImageGenerationResult[]> {
@@ -85,24 +86,24 @@ class ImageGenerationService {
       // 建構 API 請求
       const requestBody = {
         model: 'imagegeneration@006',
-        prompt: request.sceneDescription,
-        aspectRatio: request.aspectRatio || '1:1',
-        safetyFilterLevel: request.safetyLevel || 'block_some',
+        prompt: request.scene_description,
+        aspectRatio: '1:1',
+        safetyFilterLevel: 'block_some',
         personGeneration: 'allow_adult',
-        sampleCount: request.imageCount || 1,
+        sampleCount: request.batch_size || 1,
         includeRaiReason: true,
-        ...request.customSettings
+        ...(request.custom_style_params || {})
       };
 
       // 設定 API URL 和 headers
-      const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${GCP_PROJECT_ID}/locations/us-central1/publishers/google/models/imagegeneration@006:predict`;
+      const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${process.env.GCP_PROJECT_ID || 'default-project'}/locations/us-central1/publishers/google/models/imagegeneration@006:predict`;
       
       onProgress?.(10);
 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${request.apiKey}`,
+          'Authorization': `Bearer ${process.env.GOOGLE_API_KEY || 'default-key'}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -200,10 +201,18 @@ class ImageGenerationService {
 
         console.log(`📝 處理第 ${i + 1}/${requests.length} 個請求`);
         
+        // 構建 IllustrationRequest 對象
+        const illustrationRequest: IllustrationRequest = {
+          project_id: 'batch-generation',
+          scene_description: request.prompt,
+          use_reference_image: false,
+          quality_preset: 'balanced',
+          batch_size: request.options.numberOfImages || 1
+        };
+        
         const result = await this.generateImage(
-          request.prompt,
-          request.options,
-          apiKey
+          illustrationRequest,
+          'batch-generation'
         );
         
         results.push({ success: true, data: result });
@@ -216,7 +225,7 @@ class ImageGenerationService {
         
       } catch (error) {
         console.error(`❌ 第 ${i + 1} 張圖像生成失敗:`, error);
-        results.push({ success: false, error });
+        results.push({ success: false, error: error instanceof Error ? error.message : String(error) });
       }
     }
     

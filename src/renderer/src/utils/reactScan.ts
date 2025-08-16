@@ -61,8 +61,9 @@ export const monitorComponent = (Component: React.ComponentType<unknown>, compon
         'EmotionTrendChart'
       ];
       
-      if (criticalComponents.includes(componentName) && render.time > 16) {
-        console.warn(`🚨 關鍵組件 ${componentName} 渲染時間過長: ${render.time.toFixed(2)}ms`);
+      const renderTimeNum = typeof renderTime === 'number' ? renderTime : 0;
+      if (criticalComponents.includes(componentName) && renderTimeNum > 16) {
+        console.warn(`🚨 關鍵組件 ${componentName} 渲染時間過長: ${renderTimeNum.toFixed(2)}ms`);
       }
     });
   }
