@@ -11,6 +11,8 @@ import {
 } from '../../store/slices/chaptersSlice';
 import { fetchProjectById } from '../../store/slices/projectsSlice';
 import { openModal } from '../../store/slices/uiSlice';
+import { updateEditorStats, setCurrentChapterTitle, setEditorActive } from '../../store/slices/editorStatsSlice';
+import { useEditorStats } from '../../hooks/useEditorStats';
 import SlateEditor from '../../components/Editor/SlateEditor';
 import EditorSettingsPanel from '../../components/Editor/EditorSettingsPanel';
 import ReadingModeOverlay from '../../components/Editor/ReadingModeOverlay';
@@ -52,6 +54,28 @@ const ProjectEditorContent: React.FC = () => {
   const [showSavePanel, setShowSavePanel] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [currentEditor, setCurrentEditor] = useState<Editor | undefined>(undefined); // 新增：存儲當前編輯器實例
+  
+  // 編輯器統計數據
+  const editorStats = useEditorStats(currentEditor, currentChapter?.content);
+  
+  // 同步編輯器統計數據到 Redux store
+  useEffect(() => {
+    dispatch(updateEditorStats(editorStats));
+  }, [dispatch, editorStats]);
+  
+  // 同步當前章節標題到 Redux store
+  useEffect(() => {
+    dispatch(setCurrentChapterTitle(currentChapter?.title));
+  }, [dispatch, currentChapter?.title]);
+  
+  // 設置編輯器活動狀態
+  useEffect(() => {
+    dispatch(setEditorActive(true));
+    
+    return () => {
+      dispatch(setEditorActive(false));
+    };
+  }, [dispatch]);
   
   // 教學系統
   const {
@@ -468,41 +492,44 @@ const ProjectEditorContent: React.FC = () => {
                 </div>
               </div>
 
-              {/* 編輯器 */}
-              <div className="flex-1 overflow-auto" style={{ maxHeight: '60vh' }} data-tutorial="writing-area">
-                {(() => {
-                  console.log('🔍 [ProjectEditor] 準備傳遞給 SlateEditor 的數據:', {
-                    chapterId: currentChapter.id,
-                    contentType: typeof currentChapter.content,
-                    isArray: Array.isArray(currentChapter.content),
-                    contentLength: currentChapter.content ? 
-                      (Array.isArray(currentChapter.content) ? currentChapter.content.length : 'not array') : 
-                      'null/undefined',
-                    rawContent: currentChapter.content
-                  });
+              {/* 編輯器區域 */}
+              <div className="flex-1 flex overflow-hidden" style={{ maxHeight: '60vh' }} data-tutorial="writing-area">
+                {/* 主編輯器 */}
+                <div className="flex-1 overflow-auto">
+                  {(() => {
+                    console.log('🔍 [ProjectEditor] 準備傳遞給 SlateEditor 的數據:', {
+                      chapterId: currentChapter.id,
+                      contentType: typeof currentChapter.content,
+                      isArray: Array.isArray(currentChapter.content),
+                      contentLength: currentChapter.content ? 
+                        (Array.isArray(currentChapter.content) ? currentChapter.content.length : 'not array') : 
+                        'null/undefined',
+                      rawContent: currentChapter.content
+                    });
+                    
+                    const editorValue = currentChapter.content || [{ type: 'paragraph', children: [{ text: '' }] }];
+                    console.log('🔍 [ProjectEditor] 處理後的 editorValue:', editorValue);
+                    
+                    return (
+                      <SlateEditor
+                        key={`editor-${currentChapter.id}`} // 強制重新渲染
+                        value={editorValue}
+                        onChange={handleEditorChange}
+                        placeholder="開始寫作..."
+                        onSave={saveNow}
+                        onAIWrite={handleAIWrite}
+                        onEditorReady={handleEditorReady}
+                        isSaving={isSaving}
+                        isGenerating={isGenerating}
+                        showToolbar={true}
+                      />
+                    );
+                  })()}
                   
-                  const editorValue = currentChapter.content || [{ type: 'paragraph', children: [{ text: '' }] }];
-                  console.log('🔍 [ProjectEditor] 處理後的 editorValue:', editorValue);
-                  
-                  return (
-                    <SlateEditor
-                      key={`editor-${currentChapter.id}`} // 強制重新渲染
-                      value={editorValue}
-                      onChange={handleEditorChange}
-                      placeholder="開始寫作..."
-                      onSave={saveNow}
-                      onAIWrite={handleAIWrite}
-                      onEditorReady={handleEditorReady}
-                      isSaving={isSaving}
-                      isGenerating={isGenerating}
-                      showToolbar={true}
-                    />
-                  );
-                })()}
-                
-                {/* 章節筆記 (可折疊) */}
-                <div className="p-4 border-t border-cosmic-700" data-tutorial="chapter-notes">
-                  <ChapterNotes chapter={currentChapter} />
+                  {/* 章節筆記 (可折疊) */}
+                  <div className="p-4 border-t border-cosmic-700" data-tutorial="chapter-notes">
+                    <ChapterNotes chapter={currentChapter} />
+                  </div>
                 </div>
               </div>
             </>

@@ -166,12 +166,12 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
       </div>
 
       {/* 一致性評分條形圖 */}
-      <div className="bg-cosmic-800/30 rounded-lg p-4 mb-4">
-        <h5 className="text-gold-300 font-medium text-xs mb-3 flex items-center">
+      <div className="bg-cosmic-800/30 rounded-lg p-5 mb-6">
+        <h5 className="text-gold-300 font-medium text-sm mb-4 flex items-center">
           <span className="mr-2">📊</span>
           各維度一致性評分
         </h5>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={350}>
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" strokeOpacity={0.5} />
             <XAxis 
@@ -201,23 +201,23 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
 
       {/* 問題標記列表 */}
       {issues.length > 0 && (
-        <div className="bg-cosmic-800/30 rounded-lg p-4 mb-4">
-          <h5 className="text-gold-300 font-medium text-xs mb-3 flex items-center">
+        <div className="bg-cosmic-800/30 rounded-lg p-5 mb-6">
+          <h5 className="text-gold-300 font-medium text-sm mb-4 flex items-center">
             <span className="mr-2">⚠️</span>
             發現的一致性問題
           </h5>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className="space-y-3 max-h-56 overflow-y-auto">
             {issues.map((issue, index) => (
               <div 
                 key={index}
-                className={`p-3 rounded-lg border-l-4 ${
+                className={`p-4 rounded-lg border-l-4 ${
                   issue.severity === 'high' ? 'bg-red-900/20 border-red-500' :
                   issue.severity === 'medium' ? 'bg-yellow-900/20 border-yellow-500' :
                   'bg-blue-900/20 border-blue-500'
                 }`}
               >
-                <div className="flex items-start justify-between mb-1">
-                  <span className={`text-xs font-medium ${
+                <div className="flex items-start justify-between mb-2">
+                  <span className={`text-sm font-medium ${
                     issue.severity === 'high' ? 'text-red-400' :
                     issue.severity === 'medium' ? 'text-yellow-400' :
                     'text-blue-400'
@@ -228,7 +228,7 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
                      issue.category === 'emotion' ? '情感問題' :
                      '關係問題'}
                   </span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     issue.severity === 'high' ? 'bg-red-600 text-white' :
                     issue.severity === 'medium' ? 'bg-yellow-600 text-white' :
                     'bg-blue-600 text-white'
@@ -237,10 +237,10 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
                      issue.severity === 'medium' ? '中等' : '輕微'}
                   </span>
                 </div>
-                <p className="text-gray-300 text-xs leading-relaxed mb-2">
+                <p className="text-gray-300 text-sm leading-relaxed mb-3">
                   {issue.description}
                 </p>
-                <div className="flex items-center text-xs text-gray-400">
+                <div className="flex items-center text-xs text-gray-400 pt-2 border-t border-cosmic-600/30">
                   <span className="mr-2">📍 涉及章節：</span>
                   <span>{issue.chapters.join(', ')}</span>
                 </div>
@@ -251,14 +251,14 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
       )}
 
       {/* 總體評估和建議 */}
-      <div className="p-3 bg-cosmic-700/20 rounded-lg border border-gold-600/20">
-        <div className="flex items-center mb-2">
-          <span className="text-gold-400 text-sm font-medium">📋 一致性總評</span>
+      <div className="p-5 bg-cosmic-700/20 rounded-lg border border-gold-600/20">
+        <div className="flex items-center mb-3">
+          <span className="text-gold-400 text-base font-medium">📋 一致性總評</span>
         </div>
-        <div className="space-y-2 text-xs">
+        <div className="space-y-3 text-sm">
           <div className="flex items-center justify-between">
             <span className="text-gray-400">整體評級：</span>
-            <span className={`font-medium ${
+            <span className={`font-medium text-lg ${
               overallScore >= 85 ? 'text-green-400' :
               overallScore >= 70 ? 'text-yellow-400' :
               overallScore >= 55 ? 'text-orange-400' : 'text-red-400'

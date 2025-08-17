@@ -7,6 +7,7 @@ import aiReducer from './slices/aiSlice'; // 重新啟用 AI slice
 import aiHistoryReducer from './slices/aiHistorySlice';
 import uiReducer from './slices/uiSlice';
 import editorReducer from './slices/editorSlice';
+import editorStatsReducer from './slices/editorStatsSlice';
 import { errorReducer, progressReducer } from './slices/errorSlice';
 import notificationReducer from './slices/notificationSlice';
 import settingsReducer from './slices/settingsSlice';
@@ -21,6 +22,7 @@ export const store = configureStore({
     aiHistory: aiHistoryReducer,
     ui: uiReducer,
     editor: editorReducer,
+    editorStats: editorStatsReducer,
     error: errorReducer,
     progress: progressReducer,
     notification: notificationReducer,

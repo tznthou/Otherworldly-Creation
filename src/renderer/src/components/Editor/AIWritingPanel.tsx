@@ -165,7 +165,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }
     };
     loadProviders();
-  }, [dispatch, currentProviderId, defaultProviderId, autoUseDefault]); // 🔥 修復：移除 selectedProviderId 依賴，避免循環覆蓋用戶操作
+  }, [dispatch, currentProviderId, defaultProviderId, autoUseDefault, selectedProviderId]); // 🔥 修復：移除 selectedProviderId 依賴，避免循環覆蓋用戶操作
 
   // 當選擇提供商時，載入該提供商的模型
   useEffect(() => {

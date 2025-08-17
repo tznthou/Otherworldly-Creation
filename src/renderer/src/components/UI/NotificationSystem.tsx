@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, store } from '../../store/store';
 import { removeNotification, addNotification, clearNotifications } from '../../store/slices/notificationSlice';
+import { soundManager } from '../../services/SoundManager';
 
 export interface Notification {
   id: string;
@@ -214,7 +215,17 @@ export const NotificationContainer: React.FC = () => {
 
 // 通知工具函數
 export class NotificationService {
+  private static isSoundEnabled(): boolean {
+    const state = store.getState();
+    return state.settings.settings.ui.soundEnabled;
+  }
+
   static success(title: string, message?: string, duration: number = 4000) {
+    // 檢查設定後播放成功音效
+    if (this.isSoundEnabled()) {
+      soundManager.playSuccessSound();
+    }
+    
     return this.show({
       type: 'success',
       title,
@@ -224,6 +235,11 @@ export class NotificationService {
   }
 
   static error(title: string, message?: string, duration: number = 6000) {
+    // 檢查設定後播放錯誤音效
+    if (this.isSoundEnabled()) {
+      soundManager.playErrorSound();
+    }
+    
     return this.show({
       type: 'error',
       title,
@@ -233,6 +249,11 @@ export class NotificationService {
   }
 
   static warning(title: string, message?: string, duration: number = 5000) {
+    // 檢查設定後播放通知音效
+    if (this.isSoundEnabled()) {
+      soundManager.playNotificationSound();
+    }
+    
     return this.show({
       type: 'warning',
       title,
@@ -242,6 +263,11 @@ export class NotificationService {
   }
 
   static info(title: string, message?: string, duration: number = 4000) {
+    // 檢查設定後播放通知音效
+    if (this.isSoundEnabled()) {
+      soundManager.playNotificationSound();
+    }
+    
     return this.show({
       type: 'info',
       title,

@@ -1,15 +1,29 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../hooks/redux';
+import StatusBar, { EditorStats } from './StatusBar';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  editorStats?: EditorStats;
+  currentChapterTitle?: string;
+}
+
+const Footer: React.FC<FooterProps> = ({ editorStats, currentChapterTitle }) => {
   const { currentProject } = useAppSelector(state => state.projects);
-  const { isOllamaConnected } = useAppSelector(state => state.ai); // 重新啟用 AI state
+  const { isOllamaConnected } = useAppSelector(state => state.ai);
+  const { showStatusBar } = useAppSelector(state => state.settings.settings.ui);
+  const location = useLocation();
+  
+  // 檢查是否在編輯器頁面
+  const isEditorPage = location.pathname.includes('/project/');
   
   return (
     <footer className="h-8 bg-cosmic-900/30 backdrop-blur-sm border-t border-cosmic-700 flex items-center justify-between px-6 text-xs text-gray-400">
-      {/* 左側：專案資訊 */}
+      {/* 左側：專案資訊或編輯器統計 */}
       <div className="flex items-center space-x-4">
-        {currentProject ? (
+        {isEditorPage && showStatusBar && editorStats ? (
+          <StatusBar stats={editorStats} currentChapterTitle={currentChapterTitle} />
+        ) : currentProject ? (
           <span>專案: {currentProject.name}</span>
         ) : (
           <span>創世紀元：異世界創作神器</span>

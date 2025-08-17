@@ -142,7 +142,10 @@
       "Bash(RELEASE_VERSION=1.0.4 node scripts/sync-version.js)",
       "Bash(scripts/test-release-flow.sh:*)",
       "Bash(git rm:*)",
-      "WebFetch(domain:openai.com)"
+      "WebFetch(domain:openai.com)",
+      "WebFetch(domain:openrouter.ai)",
+      "WebFetch(domain:platform.openai.com)",
+      "Bash(cloc:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

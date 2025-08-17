@@ -20,7 +20,7 @@ import HelpButton from './components/Help/HelpButton';
 
 import QuickHelp from './components/Help/QuickHelp';
 import { firstTimeTutorial } from './data/tutorialSteps';
-import { useAppDispatch } from './hooks/redux';
+import { useAppDispatch, useAppSelector } from './hooks/redux';
 import { checkOllamaService, fetchModelsInfo } from './store/slices/aiSlice';
 import { ErrorHandler, withErrorBoundary } from './utils/errorUtils';
 import { NotificationService } from './components/UI/NotificationSystem';
@@ -60,6 +60,8 @@ const AppContent: React.FC = () => {
   const dispatch = useAppDispatch();
   const [isInitialized, setIsInitialized] = useState(false);
   
+  // 從 Redux 獲取編輯器統計數據
+  const { stats: editorStats, currentChapterTitle, isActive: isEditorActive } = useAppSelector(state => state.editorStats);
   
   // 全域快捷鍵
   useShortcuts();
@@ -177,7 +179,10 @@ const AppContent: React.FC = () => {
           v7_relativeSplatPath: true,
         }}
       >
-        <Layout>
+        <Layout 
+          editorStats={isEditorActive && editorStats ? editorStats : undefined}
+          currentChapterTitle={isEditorActive ? currentChapterTitle : undefined}
+        >
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/settings" element={<Settings />} />

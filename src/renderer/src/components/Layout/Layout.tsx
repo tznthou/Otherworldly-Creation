@@ -5,12 +5,15 @@ import Header from './Header';
 import Footer from './Footer';
 import CosmicBackground from '../UI/CosmicBackground';
 import { useAppSelector } from '../../hooks/redux';
+import { EditorStats } from './StatusBar';
 
 interface LayoutProps {
   children: React.ReactNode;
+  editorStats?: EditorStats;
+  currentChapterTitle?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, editorStats, currentChapterTitle }) => {
   const { sidebarCollapsed } = useAppSelector(state => state.ui);
   const location = useLocation();
   
@@ -43,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </main>
         
         {/* 底部狀態欄 */}
-        <Footer />
+        <Footer editorStats={editorStats} currentChapterTitle={currentChapterTitle} />
       </div>
       
     </div>

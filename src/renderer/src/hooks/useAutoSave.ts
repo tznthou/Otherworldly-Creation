@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from './redux';
 import { updateChapter, setSaving, setLastSaved } from '../store/slices/chaptersSlice';
 import { addNotification } from '../store/slices/uiSlice';
 import { useSettings } from './useSettings';
+import { soundManager } from '../services/SoundManager';
 
 interface UseAutoSaveOptions {
   delay?: number; // 延遲時間（毫秒）
@@ -103,6 +104,11 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
         }));
       }
       
+      // 檢查設定後播放保存音效
+      if (settings.ui.soundEnabled) {
+        soundManager.playSaveSound();
+      }
+      
       onSave?.();
       return true;
       
@@ -142,7 +148,7 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
     } finally {
       dispatch(setSaving(false));
     }
-  }, [currentChapter, saving, dispatch, updateStatus, stopCountdown, onSave, onError]);
+  }, [currentChapter, saving, dispatch, updateStatus, stopCountdown, onSave, onError, settings.ui.soundEnabled]);
 
   // 檢查內容是否有變化
   const checkForChanges = useCallback(() => {

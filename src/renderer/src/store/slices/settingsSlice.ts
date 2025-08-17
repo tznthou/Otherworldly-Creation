@@ -38,7 +38,6 @@ export interface AppSettings {
   ui: {
     sidebarWidth: number;
     showStatusBar: boolean;
-    showMinimap: boolean;
     animationsEnabled: boolean;
     soundEnabled: boolean;
     notificationsEnabled: boolean;
@@ -98,7 +97,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ui: {
     sidebarWidth: 280,
     showStatusBar: true,
-    showMinimap: false,
     animationsEnabled: true,
     soundEnabled: true,
     notificationsEnabled: true,

@@ -617,66 +617,78 @@ function identifySpeaker(context: string, _dialoguePos: number, _fullText: strin
   speakerId?: string;
   attribution?: string;
 } {
-  
-  // 1. 嘗試前歸因模式
-  const preAttributionMatch = context.match(DIALOGUE_ATTRIBUTION_PATTERNS.preAttribution);
-  if (preAttributionMatch) {
-    const speakerText = preAttributionMatch[1].trim();
-    const verb = preAttributionMatch[2];
-    return {
-      speakerName: extractSpeakerName(speakerText),
-      attribution: `${speakerText}${verb}`
-    };
+  try {
+    // 1. 嘗試前歸因模式
+    const preAttributionMatch = context.match(DIALOGUE_ATTRIBUTION_PATTERNS.preAttribution);
+    if (preAttributionMatch) {
+      const speakerText = preAttributionMatch[1].trim();
+      const verb = preAttributionMatch[2];
+      return {
+        speakerName: extractSpeakerName(speakerText),
+        attribution: `${speakerText}${verb}`
+      };
+    }
+    
+    // 2. 嘗試後歸因模式
+    const postAttributionMatch = context.match(DIALOGUE_ATTRIBUTION_PATTERNS.postAttribution);
+    if (postAttributionMatch) {
+      const speakerText = postAttributionMatch[3].trim();
+      const verb = postAttributionMatch[4];
+      return {
+        speakerName: extractSpeakerName(speakerText),
+        attribution: `${speakerText}${verb}`
+      };
+    }
+    
+    // 3. 嘗試從前文推斷說話者
+    const inferredSpeaker = inferSpeakerFromContext(context, _dialoguePos);
+    
+    return inferredSpeaker;
+  } catch (error) {
+    console.warn('🚨 [對話分析] 識別說話者時發生錯誤:', error);
+    return {};
   }
-  
-  // 2. 嘗試後歸因模式
-  const postAttributionMatch = context.match(DIALOGUE_ATTRIBUTION_PATTERNS.postAttribution);
-  if (postAttributionMatch) {
-    const speakerText = postAttributionMatch[3].trim();
-    const verb = postAttributionMatch[4];
-    return {
-      speakerName: extractSpeakerName(speakerText),
-      attribution: `${speakerText}${verb}`
-    };
-  }
-  
-  // 3. 嘗試從前文推斷說話者
-  const inferredSpeaker = inferSpeakerFromContext(context, _dialoguePos);
-  
-  return inferredSpeaker;
 }
 
 /**
  * 從歸因文本中提取說話者姓名
  */
 function extractSpeakerName(speakerText: string): string | undefined {
-  // 移除常見的修飾詞和代詞
-  const cleanedSpeaker = speakerText
-    .replace(/[的地得]/g, '')
-    .replace(/[這那此]/g, '')
-    .replace(/[一個位名]/g, '')
-    .trim();
-  
-  // 檢查是否是人稱代詞
-  const pronouns = ['我', '你', '他', '她', '它', '您', '咱', '我們', '你們', '他們', '她們', '它們'];
-  if (pronouns.includes(cleanedSpeaker)) {
-    return cleanedSpeaker;
+  try {
+    // 移除常見的修飾詞和代詞
+    const cleanedSpeaker = speakerText
+      .replace(/[的地得]/g, '')
+      .replace(/[這那此]/g, '')
+      .replace(/[一個位名]/g, '')
+      .trim();
+    
+    // 檢查是否是人稱代詞
+    const pronouns = ['我', '你', '他', '她', '它', '您', '咱', '我們', '你們', '他們', '她們', '它們'];
+    if (pronouns.includes(cleanedSpeaker)) {
+      return cleanedSpeaker;
+    }
+    
+    // 使用 Compromise.js 嘗試識別人名
+    const doc = nlp(speakerText);
+    
+    if (doc.people && typeof doc.people === 'function') {
+      const people = doc.people().out('array');
+      
+      if (people && people.length > 0) {
+        return people[0];
+      }
+    }
+    
+    // 如果清理後的文本長度合理（1-10個中文字符），認為是潛在姓名
+    if (cleanedSpeaker.length >= 1 && cleanedSpeaker.length <= 10 && /[\u4e00-\u9fa5]/.test(cleanedSpeaker)) {
+      return cleanedSpeaker;
+    }
+    
+    return undefined;
+  } catch (error) {
+    console.warn('🚨 [對話分析] 提取說話者姓名時發生錯誤:', error);
+    return undefined;
   }
-  
-  // 使用 Compromise.js 嘗試識別人名
-  const doc = nlp(speakerText);
-  const people = doc.people().out('array');
-  
-  if (people.length > 0) {
-    return people[0];
-  }
-  
-  // 如果清理後的文本長度合理（1-10個中文字符），認為是潛在姓名
-  if (cleanedSpeaker.length >= 1 && cleanedSpeaker.length <= 10 && /[\u4e00-\u9fa5]/.test(cleanedSpeaker)) {
-    return cleanedSpeaker;
-  }
-  
-  return undefined;
 }
 
 /**
@@ -687,20 +699,28 @@ function inferSpeakerFromContext(context: string, _dialoguePos: number): {
   speakerId?: string;
   attribution?: string;
 } {
-  // 簡化實現：查找前文中最近提到的角色名
-  const sentences = context.split(/[。！？]/);
-  const beforeDialogue = sentences.slice(0, -1).join('');
-  
-  // 使用 NLP 提取人名
-  const doc = nlp(beforeDialogue);
-  const people = doc.people().out('array');
-  
-  if (people.length > 0) {
-    // 返回最後提到的人名
-    return {
-      speakerName: people[people.length - 1],
-      attribution: '推斷'
-    };
+  try {
+    // 簡化實現：查找前文中最近提到的角色名
+    const sentences = context.split(/[。！？]/);
+    const beforeDialogue = sentences.slice(0, -1).join('');
+    
+    // 使用 NLP 提取人名
+    const doc = nlp(beforeDialogue);
+    
+    // 檢查 people 方法是否存在
+    if (doc.people && typeof doc.people === 'function') {
+      const people = doc.people().out('array');
+      
+      if (people && people.length > 0) {
+        // 返回最後提到的人名
+        return {
+          speakerName: people[people.length - 1],
+          attribution: '推斷'
+        };
+      }
+    }
+  } catch (error) {
+    console.warn('🚨 [NLP] 推斷說話者時發生錯誤:', error);
   }
   
   return {};
@@ -809,16 +829,66 @@ function removeDuplicateDialogues(dialogues: DialogueExtraction[]): DialogueExtr
  * 將 Slate.js 內容轉換為純文本
  */
 export function slateToPlainText(nodes: Descendant[]): string {
-  return nodes
-    .map((node: Descendant) => {
-      if ((node as SlateElement).type === 'paragraph') {
-        return (node as SlateElement).children
-          .map((child: SlateText | SlateElement) => (child as SlateText).text || '')
-          .join('');
-      }
-      return '';
-    })
-    .join('\n');
+  try {
+    console.log('🔄 [文本轉換] 輸入節點:', nodes);
+    
+    if (!Array.isArray(nodes)) {
+      console.warn('⚠️ [文本轉換] 輸入不是數組，嘗試轉換:', typeof nodes);
+      // 如果不是數組，嘗試包裝成數組
+      nodes = [nodes as Descendant];
+    }
+    
+    const result = nodes
+      .map((node: Descendant, index) => {
+        console.log(`📝 [文本轉換] 處理節點 ${index}:`, node);
+        
+        if (!node) {
+          console.warn(`⚠️ [文本轉換] 節點 ${index} 為空`);
+          return '';
+        }
+        
+        // 處理段落類型
+        if ((node as SlateElement).type === 'paragraph') {
+          const element = node as SlateElement;
+          console.log(`📄 [文本轉換] 段落節點，子元素數量:`, element.children?.length || 0);
+          
+          if (!element.children || !Array.isArray(element.children)) {
+            console.warn(`⚠️ [文本轉換] 段落節點沒有有效的children`);
+            return '';
+          }
+          
+          return element.children
+            .map((child: SlateText | SlateElement, childIndex) => {
+              console.log(`  📝 [文本轉換] 子元素 ${childIndex}:`, child);
+              const text = (child as SlateText).text || '';
+              console.log(`  ✏️ [文本轉換] 提取文本: "${text}"`);
+              return text;
+            })
+            .join('');
+        }
+        
+        // 處理其他類型的節點
+        if ((node as SlateText).text) {
+          const text = (node as SlateText).text;
+          console.log(`📝 [文本轉換] 文本節點: "${text}"`);
+          return text;
+        }
+        
+        console.warn(`⚠️ [文本轉換] 未知節點類型:`, node);
+        return '';
+      })
+      .join('\n');
+    
+    console.log('✅ [文本轉換] 轉換完成，結果長度:', result.length);
+    console.log('📄 [文本轉換] 轉換結果預覽:', result.substring(0, 200));
+    
+    return result;
+    
+  } catch (error) {
+    console.error('💥 [文本轉換] 轉換失敗:', error);
+    console.error('💥 [文本轉換] 輸入數據:', nodes);
+    return '';
+  }
 }
 
 // =================== 劇情分析引擎 ===================

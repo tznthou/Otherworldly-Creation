@@ -108,8 +108,8 @@ const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = React.memo((
       </div>
 
       {/* 雷達圖 */}
-      <div className="bg-cosmic-800/30 rounded-lg p-4">
-        <ResponsiveContainer width="100%" height={300}>
+      <div className="bg-cosmic-800/30 rounded-lg p-5">
+        <ResponsiveContainer width="100%" height={350}>
           <RadarChart data={data} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
             <PolarGrid 
               stroke="#374151" 
@@ -156,21 +156,21 @@ const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = React.memo((
       </div>
 
       {/* 特徵解讀 */}
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+      <div className="mt-6 grid grid-cols-1 gap-3 text-sm">
         {data.map((item, index) => (
           <div 
             key={index}
-            className="flex items-center justify-between bg-cosmic-700/30 rounded px-3 py-2"
+            className="flex items-center justify-between bg-cosmic-700/30 rounded-lg px-4 py-3"
           >
-            <span className="text-gray-300">{item.trait}</span>
-            <div className="flex items-center space-x-2">
-              <div className={`w-12 h-1.5 bg-cosmic-600 rounded-full overflow-hidden`}>
+            <span className="text-gray-300 font-medium min-w-0 flex-shrink-0 mr-4">{item.trait}</span>
+            <div className="flex items-center space-x-3 flex-1">
+              <div className={`w-20 md:w-24 h-2 bg-cosmic-600 rounded-full overflow-hidden`}>
                 <div 
                   className="h-full bg-gradient-to-r from-gold-600 to-gold-400 transition-all duration-300"
                   style={{ width: `${item.score}%` }}
                 ></div>
               </div>
-              <span className={`font-medium w-8 text-right ${
+              <span className={`font-medium w-10 text-right ${
                 item.score >= 70 ? 'text-green-400' :
                 item.score >= 50 ? 'text-yellow-400' :
                 item.score >= 30 ? 'text-orange-400' : 'text-red-400'
@@ -183,11 +183,11 @@ const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = React.memo((
       </div>
 
       {/* 總體評估 */}
-      <div className="mt-4 p-3 bg-cosmic-700/20 rounded-lg border border-gold-600/20">
-        <div className="flex items-center mb-2">
-          <span className="text-gold-400 text-sm font-medium">📋 人格總結</span>
+      <div className="mt-6 p-4 bg-cosmic-700/20 rounded-lg border border-gold-600/20">
+        <div className="flex items-center mb-3">
+          <span className="text-gold-400 text-base font-medium">📋 人格總結</span>
         </div>
-        <p className="text-gray-300 text-xs leading-relaxed">
+        <p className="text-gray-300 text-sm leading-relaxed">
           {getPersonalitySummary(data)}
         </p>
       </div>

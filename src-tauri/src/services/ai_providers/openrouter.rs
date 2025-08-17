@@ -11,12 +11,28 @@ use super::r#trait::{
 };
 use super::security::SecurityUtils;
 
+/// 檢測是否為 GPT-5 系列模型（需要特殊參數處理）
+fn is_gpt5_model(model: &str) -> bool {
+    let model_lower = model.to_lowercase();
+    model_lower.contains("gpt-5") || 
+    model_lower.starts_with("openai/gpt-5") ||
+    model_lower.contains("gpt5")
+}
+
+/// 檢測是否需要使用 max_completion_tokens 而不是 max_tokens
+fn uses_completion_tokens_api(model: &str) -> bool {
+    is_gpt5_model(model)
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 struct OpenRouterRequest {
     model: String,
     messages: Vec<OpenRouterMessage>,
     temperature: f64,
-    max_tokens: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_tokens: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_completion_tokens: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     top_p: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -337,14 +353,21 @@ impl AIProvider for OpenRouterProvider {
             log::warn!("[OpenRouterProvider] ⚠️ max_tokens 過低 ({}), 提升至 200 避免空回應", request.params.max_tokens);
         }
         
-        // 檢測是否為 nano 或其他小型模型
-        let is_nano_model = model_lower.contains("nano") || model_lower.contains("mini");
+        // 🔥 修復：重新分類模型類型，特別處理 GPT-5 nano
+        let is_gpt5_nano = model_lower.contains("gpt-5") && model_lower.contains("nano");
+        let is_traditional_nano = (model_lower.contains("nano") || model_lower.contains("mini")) && !is_gpt5_nano;
         let is_large_model = model_lower.contains("4o") || model_lower.contains("claude") || model_lower.contains("gemini");
         
         // 根據模型類型和輸入長度調整策略
         if estimated_prompt_tokens > 300 {  // 降低觸發閾值
-            let (multiplier, max_limit) = if is_nano_model {
-                // Nano 模型：更保守的策略
+            let (multiplier, max_limit) = if is_gpt5_nano {
+                // 🔥 GPT-5 nano：特殊策略，比傳統 nano 模型更強大
+                let mult = if estimated_prompt_tokens > 2000 { 3.5 }
+                          else if estimated_prompt_tokens > 1000 { 2.5 }
+                          else { 2.0 };
+                (mult, 3000.0)  // 📈 提高上限到 3000
+            } else if is_traditional_nano {
+                // 傳統 Nano 模型：更保守的策略
                 let mult = if estimated_prompt_tokens > 1500 { 2.5 }
                           else if estimated_prompt_tokens > 800 { 2.0 }
                           else { 1.5 };
@@ -366,7 +389,10 @@ impl AIProvider for OpenRouterProvider {
             adjusted_max_tokens = (request.params.max_tokens as f64 * multiplier).min(max_limit) as i32;
             log::warn!("[OpenRouterProvider] ⚠️ 模型: {}, 提示詞較長 (~{} tokens)，調整max_tokens: {} -> {} (策略: {})", 
                 request.model, estimated_prompt_tokens, request.params.max_tokens, adjusted_max_tokens,
-                if is_nano_model { "nano保守" } else if is_large_model { "大型激進" } else { "標準平衡" });
+                if is_gpt5_nano { "GPT-5 nano增強" } 
+                else if is_traditional_nano { "傳統nano保守" } 
+                else if is_large_model { "大型激進" } 
+                else { "標準平衡" });
         }
         
         log::info!("[OpenRouterProvider] 📊 Token分配: 字符數={}, 預估輸入~{} tokens, 調整後輸出限制={} tokens", 
@@ -393,15 +419,35 @@ impl AIProvider for OpenRouterProvider {
         let formatted_model = Self::format_model_id(&request.model);
         log::info!("[OpenRouterProvider] 🔧 模型ID轉換: {} -> {}", request.model, formatted_model);
         
+        // 🔥 新增：GPT-5 模型特殊參數處理
+        let is_gpt5 = is_gpt5_model(&formatted_model);
+        let uses_completion_api = uses_completion_tokens_api(&formatted_model);
+        
+        let (final_temperature, final_top_p, final_presence_penalty, final_frequency_penalty, final_stop) = if is_gpt5 {
+            log::info!("[OpenRouterProvider] 🎯 GPT-5 模型：使用固定參數 (temperature=1.0)");
+            (1.0, None, None, None, None) // GPT-5 系列只接受預設值
+        } else {
+            (request.params.temperature, request.params.top_p, request.params.presence_penalty, request.params.frequency_penalty, request.params.stop)
+        };
+
+        let (max_tokens, max_completion_tokens) = if uses_completion_api {
+            log::info!("[OpenRouterProvider] 🆕 使用新API格式 (max_completion_tokens) 對模型: {}", formatted_model);
+            (None, Some(adjusted_max_tokens))
+        } else {
+            log::info!("[OpenRouterProvider] 📝 使用舊API格式 (max_tokens) 對模型: {}", formatted_model);
+            (Some(adjusted_max_tokens), None)
+        };
+        
         let openrouter_request = OpenRouterRequest {
             model: formatted_model.clone(),
             messages,
-            temperature: request.params.temperature,
-            max_tokens: adjusted_max_tokens, // 🔥 使用調整後的值
-            top_p: request.params.top_p,
-            presence_penalty: request.params.presence_penalty,
-            frequency_penalty: request.params.frequency_penalty,
-            stop: request.params.stop,
+            temperature: final_temperature,
+            max_tokens,
+            max_completion_tokens,
+            top_p: final_top_p,
+            presence_penalty: final_presence_penalty,
+            frequency_penalty: final_frequency_penalty,
+            stop: final_stop,
         };
 
         // 🔥 新增：記錄完整請求以便調試

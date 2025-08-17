@@ -122,7 +122,7 @@ const SettingsMain: React.FC = () => {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="p-8">
+        <div className="p-8 max-w-6xl mx-auto">
           {renderTabContent()}
         </div>
       </div>

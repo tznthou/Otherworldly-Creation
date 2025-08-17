@@ -1,7 +1,8 @@
 // 角色分析服務
 import type { Descendant } from 'slate';
-import { analyzeChapterDialogues, ChapterDialogueAnalysis, DialogueExtraction } from '../utils/nlpUtils';
+import { analyzeChapterDialogues, ChapterDialogueAnalysis, DialogueExtraction, slateToPlainText } from '../utils/nlpUtils';
 import { api } from '../api';
+import type { Character } from '../types/character';
 
 export interface CharacterPersonality {
   // Big Five 人格特徵
@@ -71,20 +72,48 @@ class CharacterAnalysisService {
     projectId: string
   ): Promise<ChapterDialogueAnalysis> {
     
-    // 1. 獲取專案中的所有角色
-    const characters = await api.characters.getByProjectId(projectId);
-    
-    // 2. 轉換角色格式，包含可能的別名
-    const knownCharacters = characters.map(char => ({
-      id: char.id,
-      name: char.name,
-      aliases: this.extractCharacterAliases(char.name, char.background || '')
-    }));
-    
-    // 3. 分析章節對話
-    const analysis = analyzeChapterDialogues(chapterContent, chapterId, knownCharacters);
-    
-    return analysis;
+    try {
+      console.log('📋 [對話分析] 開始分析章節對話');
+      console.log('📄 [對話分析] 章節內容:', chapterContent);
+      
+      // 1. 獲取專案中的所有角色
+      const characters = await api.characters.getByProjectId(projectId);
+      console.log('👥 [對話分析] 載入角色:', characters.length, '個');
+      
+      // 2. 轉換角色格式，包含可能的別名
+      const knownCharacters = characters.map(char => ({
+        id: char.id,
+        name: char.name,
+        aliases: this.extractCharacterAliases(char.name, char.background || '')
+      }));
+      
+      console.log('🔧 [對話分析] 處理後的角色列表:', knownCharacters);
+      
+      // 3. 分析章節對話
+      console.log('🔍 [對話分析] 開始提取對話...');
+      const analysis = analyzeChapterDialogues(chapterContent, chapterId, knownCharacters);
+      
+      console.log('✅ [對話分析] 對話分析完成:', {
+        總對話數: analysis.totalDialogues,
+        已分配: analysis.characterDialogues.size,
+        未分配: analysis.unassignedDialogues.length
+      });
+      
+      return analysis;
+      
+    } catch (error) {
+      console.error('💥 [對話分析] 對話分析失敗:', error);
+      console.error('💥 [對話分析] 錯誤詳情:', error instanceof Error ? error.stack : String(error));
+      
+      // 返回空的分析結果而不是拋出錯誤
+      return {
+        chapterId,
+        characterDialogues: new Map(),
+        totalDialogues: 0,
+        unassignedDialogues: [],
+        confidence: 0
+      };
+    }
   }
   
   /**
@@ -101,41 +130,103 @@ class CharacterAnalysisService {
   ): Promise<CharacterAnalysisResult | null> {
     
     try {
+      console.log(`🎭 [角色分析] 開始分析角色 ${characterId} 在章節 ${chapterId}`);
+      
       // 1. 獲取章節內容
       const chapter = await api.chapters.getById(chapterId);
       if (!chapter) {
+        console.error('❌ [角色分析] 章節不存在:', chapterId);
         throw new Error('章節不存在');
       }
       
-      // 2. 獲取角色信息
+      console.log(`📖 [角色分析] 章節載入成功: ${chapter.title || chapterId}`);
+      console.log(`📝 [角色分析] 原始章節內容類型:`, typeof chapter.content, '內容:', chapter.content);
+      
+      // 2. 【重要修復】解析章節內容
+      let chapterContent: Descendant[];
+      
+      if (typeof chapter.content === 'string') {
+        try {
+          console.log('🔧 [角色分析] 章節內容是字符串，嘗試JSON解析...');
+          chapterContent = JSON.parse(chapter.content);
+          console.log('✅ [角色分析] JSON解析成功，類型:', typeof chapterContent, '是否為陣列:', Array.isArray(chapterContent));
+        } catch (parseError) {
+          console.error('💥 [角色分析] JSON解析失敗:', parseError);
+          console.error('💥 [角色分析] 原始內容:', chapter.content);
+          throw new Error('章節內容JSON解析失敗');
+        }
+      } else if (Array.isArray(chapter.content)) {
+        console.log('✅ [角色分析] 章節內容已是陣列格式');
+        chapterContent = chapter.content;
+      } else {
+        console.error('❌ [角色分析] 未知的章節內容格式:', typeof chapter.content);
+        throw new Error('未知的章節內容格式');
+      }
+      
+      console.log(`📄 [角色分析] 解析後章節內容:`, chapterContent);
+      console.log(`📊 [角色分析] 章節內容陣列長度:`, chapterContent.length);
+      
+      // 3. 獲取角色信息
       const character = await api.characters.getById(characterId);
       if (!character) {
+        console.error('❌ [角色分析] 角色不存在:', characterId);
         throw new Error('角色不存在');
       }
       
-      // 3. 分析章節對話
+      console.log(`👤 [角色分析] 角色載入成功: ${character.name}`);
+      
+      // 4. 分析章節對話
+      console.log('🗣️ [角色分析] 開始分析章節對話...');
       const dialogueAnalysis = await this.analyzeChapterDialogues(
-        chapter.content, 
+        chapterContent, 
         chapterId, 
         projectId
       );
       
-      // 4. 提取該角色的對話
-      const characterDialogues = dialogueAnalysis.characterDialogues.get(characterId) || [];
+      console.log(`📊 [角色分析] 對話分析結果:`, {
+        總對話數: dialogueAnalysis.totalDialogues,
+        已分配對話: dialogueAnalysis.characterDialogues.size,
+        未分配對話: dialogueAnalysis.unassignedDialogues.length,
+        置信度: (dialogueAnalysis.confidence * 100).toFixed(1) + '%'
+      });
       
-      if (characterDialogues.length === 0) {
-        return null; // 該角色在此章節無對話
+      // 5. 提取該角色的對話（包含推斷對話）
+      const characterDialogues = dialogueAnalysis.characterDialogues.get(characterId) || [];
+      console.log(`💬 [角色分析] ${character.name} 的確定對話數:`, characterDialogues.length);
+      
+      // 6. 【新增】智能推斷可能屬於該角色的未分配對話
+      const possibleDialogues = this.inferCharacterDialogues(
+        dialogueAnalysis.unassignedDialogues,
+        character,
+        chapterContent
+      );
+      
+      console.log(`🔮 [角色分析] ${character.name} 的推斷對話數:`, possibleDialogues.length);
+      
+      // 合併確定的和推斷的對話
+      const allDialogues = [...characterDialogues, ...possibleDialogues];
+      console.log(`📈 [角色分析] ${character.name} 的總對話數:`, allDialogues.length);
+      
+      // 7. 【放寬限制】即使對話很少也嘗試分析
+      if (allDialogues.length === 0) {
+        console.log(`🔧 [角色分析] 沒有對話，嘗試基礎文本分析...`);
+        // 如果完全沒有對話，嘗試基於全文進行基礎分析
+        const basicResult = this.performBasicAnalysis(character, chapterContent, chapterId, projectId);
+        console.log(`✅ [角色分析] 基礎分析完成，置信度: ${(basicResult.confidence * 100).toFixed(1)}%`);
+        return basicResult;
       }
       
-      // 5. 分析角色特徵
-      const personality = this.analyzePersonality(characterDialogues);
-      const linguisticPattern = this.analyzeLinguisticPattern(characterDialogues);
-      const emotionalAnalysis = this.analyzeEmotionalPattern(characterDialogues);
-      const behaviorConsistency = this.calculateBehaviorConsistency(characterDialogues);
+      console.log(`🧠 [角色分析] 開始詳細特徵分析...`);
       
-      // 6. 計算整體置信度
+      // 8. 分析角色特徵
+      const personality = this.analyzePersonality(allDialogues);
+      const linguisticPattern = this.analyzeLinguisticPattern(allDialogues);
+      const emotionalAnalysis = this.analyzeEmotionalPattern(allDialogues);
+      const behaviorConsistency = this.calculateBehaviorConsistency(allDialogues);
+      
+      // 9. 計算整體置信度（調整算法）
       const confidence = this.calculateAnalysisConfidence(
-        characterDialogues,
+        allDialogues,
         personality,
         linguisticPattern
       );
@@ -145,22 +236,30 @@ class CharacterAnalysisService {
         characterName: character.name,
         chapterId,
         projectId,
-        dialogues: characterDialogues,
-        dialogueCount: characterDialogues.length,
+        dialogues: allDialogues,
+        dialogueCount: allDialogues.length,
         personality,
         linguisticPattern,
         emotionalTone: emotionalAnalysis.tone,
         emotionalIntensity: emotionalAnalysis.intensity,
         behaviorConsistency,
-        analysisVersion: '1.0',
+        analysisVersion: '1.1', // 版本升級
         confidence,
         analyzedAt: new Date()
       };
       
+      console.log(`🎯 [角色分析] ${character.name} 分析完成:`, {
+        對話數: result.dialogueCount,
+        置信度: (result.confidence * 100).toFixed(1) + '%',
+        情感色調: result.emotionalTone,
+        說話風格: result.linguisticPattern.speakingStyle
+      });
+      
       return result;
       
     } catch (error) {
-      console.error('角色分析失敗:', error);
+      console.error('💥 [角色分析] 分析失敗:', error);
+      console.error('💥 [角色分析] 錯誤堆棧:', error instanceof Error ? error.stack : String(error));
       return null;
     }
   }
@@ -172,38 +271,80 @@ class CharacterAnalysisService {
    */
   async analyzeProjectCharacters(projectId: string): Promise<ProjectCharacterAnalysis> {
     
+    console.log('🔍 [專案角色分析] 開始分析專案:', projectId);
+    
     // 1. 獲取專案的所有章節和角色
     const [chapters, characters] = await Promise.all([
       api.chapters.getByProjectId(projectId),
       api.characters.getByProjectId(projectId)
     ]);
     
+    console.log('📚 [專案角色分析] 找到章節:', chapters.length, '個');
+    console.log('👥 [專案角色分析] 找到角色:', characters.length, '個');
+    
+    if (characters.length === 0) {
+      console.warn('⚠️ [專案角色分析] 專案中沒有角色設定');
+      return {
+        projectId,
+        characterAnalyses: [],
+        overallConsistency: 0,
+        analysisDate: new Date()
+      };
+    }
+    
+    if (chapters.length === 0) {
+      console.warn('⚠️ [專案角色分析] 專案中沒有章節內容');
+      return {
+        projectId,
+        characterAnalyses: [],
+        overallConsistency: 0,
+        analysisDate: new Date()
+      };
+    }
+    
     const characterAnalyses: CharacterAnalysisResult[] = [];
     
     // 2. 為每個角色分析每個章節
     for (const character of characters) {
+      console.log(`🎭 [專案角色分析] 開始分析角色: ${character.name}`);
+      
       for (const chapter of chapters) {
-        const analysis = await this.analyzeCharacterInChapter(
-          character.id,
-          chapter.id,
-          projectId
-        );
+        console.log(`  📖 分析章節: ${chapter.title || chapter.id}`);
         
-        if (analysis) {
-          characterAnalyses.push(analysis);
+        try {
+          const analysis = await this.analyzeCharacterInChapter(
+            character.id,
+            chapter.id,
+            projectId
+          );
+          
+          if (analysis) {
+            console.log(`  ✅ 分析成功，對話數: ${analysis.dialogueCount}, 置信度: ${(analysis.confidence * 100).toFixed(1)}%`);
+            characterAnalyses.push(analysis);
+          } else {
+            console.log(`  ❌ 分析失敗，返回null`);
+          }
+        } catch (error) {
+          console.error(`  💥 分析異常:`, error);
         }
       }
     }
     
+    console.log(`🎯 [專案角色分析] 完成分析，總結果數: ${characterAnalyses.length}`);
+    
     // 3. 計算整體一致性
     const overallConsistency = this.calculateOverallConsistency(characterAnalyses);
     
-    return {
+    const result = {
       projectId,
       characterAnalyses,
       overallConsistency,
       analysisDate: new Date()
     };
+    
+    console.log('📊 [專案角色分析] 最終結果:', result);
+    
+    return result;
   }
   
   /**
@@ -423,26 +564,36 @@ class CharacterAnalysisService {
     _linguisticPattern: LinguisticPattern
   ): number {
     
-    let confidence = 0.3; // 基礎置信度
+    let confidence = 0.4; // 提高基礎置信度
     
-    // 對話數量影響置信度
-    if (dialogues.length >= 10) {
+    // 【改進】更寬鬆的對話數量要求
+    if (dialogues.length >= 8) {
       confidence += 0.3;
-    } else if (dialogues.length >= 5) {
-      confidence += 0.2;
+    } else if (dialogues.length >= 4) {
+      confidence += 0.25;
     } else if (dialogues.length >= 2) {
-      confidence += 0.1;
+      confidence += 0.15;
+    } else if (dialogues.length >= 1) {
+      confidence += 0.1; // 即使只有1個對話也給予基本置信度
     }
     
-    // 對話品質影響置信度
-    const avgConfidence = dialogues.reduce((sum, d) => sum + d.confidence, 0) / dialogues.length;
-    confidence += avgConfidence * 0.3;
+    // 對話品質影響置信度（處理空數組情況）
+    if (dialogues.length > 0) {
+      const avgConfidence = dialogues.reduce((sum, d) => sum + d.confidence, 0) / dialogues.length;
+      confidence += avgConfidence * 0.2; // 降低對話品質的權重
+    }
     
     // 分析完整性影響置信度
     const hasPersonality = Object.values(personality).every(v => v > 0);
     if (hasPersonality) confidence += 0.1;
     
-    return Math.min(1.0, confidence);
+    // 【新增】推斷對話的處理
+    const inferredDialogues = dialogues.filter(d => d.confidence < 0.8);
+    if (inferredDialogues.length > 0) {
+      confidence *= 0.9; // 稍微降低推斷對話的整體置信度
+    }
+    
+    return Math.min(1.0, Math.max(0.2, confidence)); // 保證最低20%的置信度
   }
   
   /**
@@ -488,6 +639,179 @@ class CharacterAnalysisService {
     
     // 返回所有角色的平均一致性
     return characterConsistencies.reduce((a, b) => a + b, 0) / characterConsistencies.length;
+  }
+
+  
+  /**
+   * 智能推斷可能屬於指定角色的對話
+   */
+  private inferCharacterDialogues(
+    unassignedDialogues: DialogueExtraction[],
+    character: Character,
+    chapterContent: Descendant[]
+  ): DialogueExtraction[] {
+    
+    const inferredDialogues: DialogueExtraction[] = [];
+    const plainText = slateToPlainText(chapterContent);
+    
+    // 創建角色名稱的各種變體
+    const nameVariants = this.generateNameVariants(character.name);
+    
+    unassignedDialogues.forEach(dialogue => {
+      // 檢查對話前後文本中是否提到該角色
+      const contextStart = Math.max(0, dialogue.position - 100);
+      const contextEnd = Math.min(plainText.length, dialogue.position + dialogue.dialogue.length + 100);
+      const surroundingText = plainText.slice(contextStart, contextEnd);
+      
+      // 如果上下文中出現角色名稱，推斷為該角色的對話
+      for (const variant of nameVariants) {
+        if (surroundingText.includes(variant)) {
+          dialogue.speakerId = character.id;
+          dialogue.speakerName = character.name;
+          dialogue.confidence = Math.min(dialogue.confidence, 0.7); // 降低推斷對話的置信度
+          inferredDialogues.push(dialogue);
+          break;
+        }
+      }
+    });
+    
+    return inferredDialogues;
+  }
+  
+  /**
+   * 生成角色名稱的各種變體
+   */
+  private generateNameVariants(fullName: string): string[] {
+    const variants = [fullName];
+    
+    // 如果是中文名字，生成常見變體
+    if (/[\u4e00-\u9fa5]/.test(fullName)) {
+      if (fullName.length >= 2) {
+        variants.push(fullName.substring(0, 1)); // 姓氏
+        variants.push(fullName.substring(1)); // 名字
+      }
+      if (fullName.length >= 3) {
+        variants.push(fullName.substring(0, 2)); // 姓+名的第一個字
+        variants.push(fullName.substring(fullName.length - 1)); // 最後一個字
+      }
+    }
+    
+    // 添加常見稱呼
+    variants.push(`小${fullName.substring(fullName.length - 1)}`);
+    variants.push(`老${fullName.substring(0, 1)}`);
+    
+    return [...new Set(variants)]; // 去重
+  }
+  
+  /**
+   * 當沒有對話時，基於全文進行基礎分析
+   */
+  private performBasicAnalysis(
+    character: Character,
+    chapterContent: Descendant[],
+    chapterId: string,
+    projectId: string
+  ): CharacterAnalysisResult {
+    
+    const plainText = slateToPlainText(chapterContent);
+    const nameVariants = this.generateNameVariants(character.name);
+    
+    // 統計角色在文中的出現次數
+    let mentionCount = 0;
+    nameVariants.forEach(variant => {
+      const matches = plainText.split(variant).length - 1;
+      mentionCount += matches;
+    });
+    
+    // 基於文本內容進行簡單的情感分析
+    const textAnalysis = this.analyzeTextContent(plainText, nameVariants);
+    
+    return {
+      characterId: character.id,
+      characterName: character.name,
+      chapterId,
+      projectId,
+      dialogues: [],
+      dialogueCount: 0,
+      personality: {
+        openness: 0.5,
+        conscientiousness: 0.5,
+        extraversion: mentionCount > 5 ? 0.6 : 0.4, // 出現頻率暗示活躍度
+        agreeableness: 0.5,
+        neuroticism: textAnalysis.stressLevel
+      },
+      linguisticPattern: {
+        vocabularyRichness: 0.5,
+        sentenceComplexity: 0.5,
+        averageDialogueLength: 0,
+        commonWords: [],
+        speakingStyle: '資料不足型：需要更多對話內容進行分析'
+      },
+      emotionalTone: textAnalysis.tone,
+      emotionalIntensity: textAnalysis.intensity,
+      behaviorConsistency: 0.5,
+      analysisVersion: '1.1-basic',
+      confidence: Math.min(0.3, mentionCount * 0.05), // 基於提及次數的低置信度
+      analyzedAt: new Date()
+    };
+  }
+  
+  /**
+   * 分析文本內容中與角色相關的情感
+   */
+  private analyzeTextContent(text: string, nameVariants: string[]): {
+    tone: 'positive' | 'negative' | 'neutral' | 'mixed';
+    intensity: number;
+    stressLevel: number;
+  } {
+    
+    // 在提到角色的句子中分析情感
+    const sentences = text.split(/[。！？]/).filter(s => s.length > 0);
+    const relevantSentences = sentences.filter(sentence => 
+      nameVariants.some(variant => sentence.includes(variant))
+    );
+    
+    if (relevantSentences.length === 0) {
+      return { tone: 'neutral', intensity: 0.1, stressLevel: 0.5 };
+    }
+    
+    // 簡單的情感詞統計
+    const positiveWords = ['好', '棒', '開心', '高興', '成功', '勝利', '笑', '幸福'];
+    const negativeWords = ['壞', '糟', '生氣', '難過', '失敗', '哭', '痛苦', '擔心'];
+    const stressWords = ['緊張', '焦慮', '害怕', '恐懼', '壓力', '煩惱'];
+    
+    let positiveCount = 0;
+    let negativeCount = 0;
+    let stressCount = 0;
+    
+    relevantSentences.forEach(sentence => {
+      positiveWords.forEach(word => {
+        positiveCount += (sentence.match(new RegExp(word, 'g')) || []).length;
+      });
+      negativeWords.forEach(word => {
+        negativeCount += (sentence.match(new RegExp(word, 'g')) || []).length;
+      });
+      stressWords.forEach(word => {
+        stressCount += (sentence.match(new RegExp(word, 'g')) || []).length;
+      });
+    });
+    
+    const totalEmotional = positiveCount + negativeCount;
+    const intensity = Math.min(1.0, totalEmotional / relevantSentences.length);
+    const stressLevel = Math.min(1.0, stressCount / relevantSentences.length + 0.2);
+    
+    let tone: 'positive' | 'negative' | 'neutral' | 'mixed';
+    if (positiveCount > negativeCount * 1.5) {
+      tone = 'positive';
+    } else if (negativeCount > positiveCount * 1.5) {
+      tone = 'negative';
+    } else if (totalEmotional > 0) {
+      tone = 'mixed';
+    } else {
+      tone = 'neutral';
+    }
+    
+    return { tone, intensity, stressLevel };
   }
   
   // Big Five 特徵分析的簡化實現
