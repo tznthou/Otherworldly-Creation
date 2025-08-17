@@ -695,6 +695,9 @@ export const tauriAPI: API = {
     getSupportedTypes: async () => {
       return await safeInvoke('get_supported_ai_provider_types');
     },
+    getAvailableModels: async (providerId) => {
+      return await safeInvoke('get_available_models', { providerId });
+    },
   },
 
   context: {

@@ -499,3 +499,94 @@ pub async fn generate_ai_text(request: AIGenerationRequestData) -> Result<AIGene
 pub async fn get_supported_ai_provider_types() -> Result<Vec<String>, String> {
     Ok(AIProviderFactory::supported_providers().iter().map(|s| s.to_string()).collect())
 }
+
+/// 獲取指定AI提供者的可用模型列表
+#[tauri::command]
+#[allow(non_snake_case)]
+pub async fn get_available_models(providerId: String) -> Result<AIProviderTestResult, String> {
+    log::info!("獲取AI提供者模型列表: {}", providerId);
+    
+    // 先從數據庫獲取提供者資訊，然後關閉連接
+    let (config, provider_type) = {
+        let conn = create_connection().map_err(|e| e.to_string())?;
+        
+        let mut stmt = conn.prepare(
+            "SELECT id, name, provider_type, api_key_encrypted, endpoint, model, 
+             is_enabled, settings_json, created_at, updated_at 
+             FROM ai_providers WHERE id = ?1"
+        ).map_err(|e| e.to_string())?;
+        
+        let provider = stmt.query_row(params![providerId], build_ai_provider_from_row)
+            .map_err(|e| format!("找不到AI提供者: {}", e))?;
+        
+        let config = provider_to_config(&provider).map_err(|e| e.to_string())?;
+        (config, provider.provider_type)
+    };
+    
+    // 創建提供者實例並獲取模型列表
+    match AIProviderFactory::create_provider(&config) {
+        Ok(provider_instance) => {
+            match provider_instance.check_availability().await {
+                Ok(true) => {
+                    // 🔥 核心功能：動態獲取模型列表
+                    match provider_instance.get_models().await {
+                        Ok(models) => {
+                            let model_json: Vec<serde_json::Value> = models.into_iter()
+                                .map(|model| serde_json::json!({
+                                    "id": model.id,
+                                    "name": model.name,
+                                    "description": model.description,
+                                    "max_tokens": model.max_tokens,
+                                    "supports_streaming": model.supports_streaming,
+                                    "cost_per_token": model.cost_per_token,
+                                }))
+                                .collect();
+                                
+                            log::info!("✅ 成功獲取 {} 個模型", model_json.len());
+                            
+                            Ok(AIProviderTestResult {
+                                success: true,
+                                provider_type: provider_type.clone(),
+                                models: Some(model_json),
+                                error: None,
+                            })
+                        }
+                        Err(e) => {
+                            log::warn!("❌ 獲取模型列表失敗: {}", e);
+                            Ok(AIProviderTestResult {
+                                success: false,
+                                provider_type: provider_type.clone(),
+                                models: None,
+                                error: Some(format!("無法獲取模型列表: {}", e)),
+                            })
+                        }
+                    }
+                }
+                Ok(false) => {
+                    Ok(AIProviderTestResult {
+                        success: false,
+                        provider_type: provider_type.clone(),
+                        models: None,
+                        error: Some("服務不可用".to_string()),
+                    })
+                }
+                Err(e) => {
+                    Ok(AIProviderTestResult {
+                        success: false,
+                        provider_type: provider_type.clone(),
+                        models: None,
+                        error: Some(e.to_string()),
+                    })
+                }
+            }
+        }
+        Err(e) => {
+            Ok(AIProviderTestResult {
+                success: false,
+                provider_type: provider_type,
+                models: None,
+                error: Some(format!("創建提供者實例失敗: {}", e)),
+            })
+        }
+    }
+}

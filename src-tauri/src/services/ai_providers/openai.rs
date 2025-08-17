@@ -101,32 +101,9 @@ fn is_new_api_model(model: &str) -> bool {
 
 /// 驗證 OpenAI 模型 ID 是否有效
 fn is_valid_openai_model(model: &str) -> bool {
-    const VALID_MODELS: &[&str] = &[
-        "gpt-4o",
-        "gpt-4o-mini", 
-        "gpt-3.5-turbo",
-        "gpt-4-turbo",
-        "gpt-4",
-        "gpt-4-0613",
-        "gpt-4-32k",
-        "gpt-4-32k-0613",
-        "gpt-3.5-turbo-0613",
-        "gpt-3.5-turbo-16k",
-        "gpt-3.5-turbo-16k-0613",
-        "gpt-3.5-turbo-1106",
-        "gpt-3.5-turbo-0125",
-        // 新模型
-        "gpt-4-turbo-preview",
-        "gpt-4-0125-preview",
-        "gpt-4-1106-preview",
-        "gpt-4-vision-preview",
-        "gpt-4-1106-vision-preview",
-        // o1 系列
-        "o1-preview",
-        "o1-mini",
-    ];
-    
-    VALID_MODELS.contains(&model)
+    // 🔥 修復：信任 API 提供的所有模型，移除硬編碼白名單限制
+    // 如果模型無效，OpenAI API 會返回錯誤，由錯誤處理機制處理
+    !model.is_empty()
 }
 
 impl OpenAIProvider {
@@ -382,9 +359,9 @@ impl AIProvider for OpenAIProvider {
         SecurityUtils::validate_generation_params(&request.params)?;
         SecurityUtils::validate_prompt_content(&request.prompt, request.system_prompt.as_deref())?;
         
-        // 🔥 新增：驗證模型 ID 是否有效
+        // 🔥 修復：基本模型 ID 驗證（非空檢查）
         if !is_valid_openai_model(&request.model) {
-            return Err(anyhow!("無效的 OpenAI 模型 ID: {}。支援的模型: gpt-4o, gpt-4o-mini, gpt-3.5-turbo, gpt-4-turbo", request.model));
+            return Err(anyhow!("無效的 OpenAI 模型 ID: {} (模型名稱不能為空)", request.model));
         }
         
         log::info!("[OpenAIProvider] ✅ 開始生成文本，模型: {}, API金鑰: {}", request.model, SecurityUtils::mask_api_key(&self.api_key));

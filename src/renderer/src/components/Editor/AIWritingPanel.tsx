@@ -165,7 +165,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }
     };
     loadProviders();
-  }, [dispatch, currentProviderId, defaultProviderId, autoUseDefault, selectedProviderId]); // 添加 selectedProviderId 依賴
+  }, [dispatch, currentProviderId, defaultProviderId, autoUseDefault]); // 🔥 修復：移除 selectedProviderId 依賴，避免循環覆蓋用戶操作
 
   // 當選擇提供商時，載入該提供商的模型
   useEffect(() => {
@@ -258,35 +258,14 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       return;
     }
 
-    // 🔥 新增：驗證模型 ID 是否有效
+    // 🔥 修復：移除模型 ID 白名單驗證，信任 API 返回的模型
+    // 如果模型無效，API 會返回錯誤，由錯誤處理機制處理
     const currentProvider = providers.find(p => p.id === currentProviderId || p.id === selectedProviderId);
-    if (currentProvider && !isValidModelId(currentProvider.provider_type, currentModel)) {
-      console.error('❌ 無效的模型 ID:', { 
-        provider: currentProvider.provider_type, 
-        model: currentModel,
-        isValid: false
-      });
-      
-      // 嘗試推薦替代模型
-      const recommendedModel = recommendModelForTokens(currentProvider.provider_type, maxTokens);
-      const message = recommendedModel 
-        ? `模型 "${currentModel}" 無效。建議使用 "${recommendedModel.name}"`
-        : `模型 "${currentModel}" 無效。請在 AI 設定中選擇有效的模型`;
-      
-      dispatch(addNotification({
-        type: 'error',
-        title: '模型 ID 無效',
-        message,
-        duration: 5000,
-      }));
-      
-      // 如果有推薦模型，自動設置
-      if (recommendedModel) {
-        console.log('🔄 自動切換到推薦模型:', recommendedModel);
-        dispatch(setCurrentModel(recommendedModel.id));
-      }
-      return;
-    }
+    console.log('🎯 使用模型:', { 
+      provider: currentProvider?.provider_type, 
+      model: currentModel,
+      note: 'API驅動模式，信任所有API返回的模型'
+    });
 
     // 顯示模型資訊（如果可用）
     if (currentProvider) {
@@ -627,11 +606,31 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           
           // 使用多提供商 API 生成文本
           let result: string;
-          if (selectedProviderId) {
+          const activeProviderId = selectedProviderId || currentProviderId;
+          
+          // 🔥 強制調試：打印詳細的路由信息
+          console.log('🔍 [DEBUG] 生成文本路徑選擇詳細信息:', { 
+            selectedProviderId, 
+            currentProviderId, 
+            activeProviderId, 
+            currentModel,
+            providers: providers?.map(p => ({id: p.id, name: p.name})),
+            willUseNewPath: !!activeProviderId,
+            fallbackToOldPath: !activeProviderId
+          });
+          
+          // 🔥 如果沒有 activeProviderId，強制報錯並提示用戶
+          if (!activeProviderId) {
+            console.error('❌ [DEBUG] activeProviderId 為空！無法使用多提供商 API');
+            console.error('❌ [DEBUG] 請確保：1) 選擇了 AI 提供商，2) 提供商已啟用，3) 已選擇模型');
+            throw new Error('請先在設定中選擇 AI 提供商和模型');
+          }
+          
+          if (activeProviderId) {
             // 使用選擇的提供商
             const genResult = await dispatch(generateTextWithProvider({
               prompt: `續寫位置: ${position}`,
-              providerId: selectedProviderId,
+              providerId: activeProviderId,
               model: currentModel,
               projectId: projectId,
               chapterId: chapterId,
@@ -870,11 +869,12 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       const startTime = Date.now();
       // 使用多提供商 API 重新生成文本
       let result: string;
-      if (selectedProviderId) {
+      const activeProviderId = selectedProviderId || currentProviderId;
+      if (activeProviderId) {
         // 使用選擇的提供商
         const genResult = await dispatch(generateTextWithProvider({
           prompt: `續寫位置: ${selection.anchor.offset}`,
-          providerId: selectedProviderId,
+          providerId: activeProviderId,
           model: currentModel,
           projectId: projectId,
           chapterId: chapterId,

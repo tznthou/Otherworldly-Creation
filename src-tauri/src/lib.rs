@@ -19,7 +19,7 @@ use commands::ai::{
 };
 use commands::ai_providers::{
     get_ai_providers, create_ai_provider, update_ai_provider, delete_ai_provider,
-    test_ai_provider, generate_ai_text, get_supported_ai_provider_types
+    test_ai_provider, generate_ai_text, get_supported_ai_provider_types, get_available_models
 };
 use commands::context::{build_context, compress_context, get_context_stats, build_separated_context, estimate_separated_context_tokens, analyze_text_purity, enhance_generation_parameters};
 use commands::settings::{get_setting, set_setting, get_all_settings, reset_settings};
@@ -126,6 +126,7 @@ pub fn run() {
       test_ai_provider,
       generate_ai_text,
       get_supported_ai_provider_types,
+      get_available_models,
       // Context commands
       build_context,
       compress_context,

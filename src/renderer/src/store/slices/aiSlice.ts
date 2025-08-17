@@ -241,12 +241,12 @@ export const setActiveProvider = createAsyncThunk(
     try {
       console.log('Redux: 設定活躍提供者:', providerId);
       
-      // 測試提供者連接
-      const testResult = await api.aiProviders.test(providerId);
+      // 🔥 修復：使用動態模型獲取而非測試連接
+      const modelsResult = await api.aiProviders.getAvailableModels(providerId);
       
-      if (testResult.success) {
-        // 獲取該提供者的可用模型
-        const models = testResult.models || [];
+      if (modelsResult.success) {
+        // 獲取該提供者的完整可用模型列表
+        const models = modelsResult.models || [];
         return {
           providerId,
           models: models.map((model: unknown) => {
@@ -257,7 +257,7 @@ export const setActiveProvider = createAsyncThunk(
           isConnected: true,
         };
       } else {
-        throw new Error(testResult.error || '提供者連接失敗');
+        throw new Error(modelsResult.error || '無法獲取模型列表');
       }
     } catch (error) {
       console.error('Redux: 設定活躍提供者失敗:', error);
@@ -265,7 +265,7 @@ export const setActiveProvider = createAsyncThunk(
         providerId,
         models: [],
         isConnected: false,
-        error: error instanceof Error ? error.message : '連接失敗',
+        error: error instanceof Error ? error.message : '獲取模型失敗',
       };
     }
   }

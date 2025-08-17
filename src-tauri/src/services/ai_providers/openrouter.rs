@@ -221,6 +221,31 @@ impl OpenRouterProvider {
     fn parse_pricing(pricing_str: &str) -> Option<f64> {
         pricing_str.trim_start_matches('$').parse::<f64>().ok()
     }
+
+    /// 🔥 關鍵修復：格式化模型ID為OpenRouter兼容格式
+    fn format_model_id(model_id: &str) -> String {
+        // 如果已經是正確格式（包含斜杠），直接返回
+        if model_id.contains('/') {
+            return model_id.to_string();
+        }
+        
+        // 根據模型名稱推斷提供商前綴
+        if model_id.starts_with("gpt-") || model_id.starts_with("o1-") {
+            format!("openai/{}", model_id)
+        } else if model_id.starts_with("claude-") {
+            format!("anthropic/{}", model_id)
+        } else if model_id.starts_with("gemini-") {
+            format!("google/{}", model_id)
+        } else if model_id.starts_with("llama") {
+            format!("meta-llama/{}", model_id)
+        } else if model_id.starts_with("mixtral") {
+            format!("mistralai/{}", model_id)
+        } else {
+            // 未知模型，嘗試推斷或保持原樣
+            log::warn!("[OpenRouterProvider] ⚠️ 未知模型格式，保持原樣: {}", model_id);
+            model_id.to_string()
+        }
+    }
 }
 
 #[async_trait]
@@ -288,7 +313,64 @@ impl AIProvider for OpenRouterProvider {
         SecurityUtils::validate_generation_params(&request.params)?;
         SecurityUtils::validate_prompt_content(&request.prompt, request.system_prompt.as_deref())?;
         
-        log::info!("[OpenRouterProvider] 開始生成文本，模型: {}, API金鑰: {}", request.model, SecurityUtils::mask_api_key(&self.api_key));
+        log::info!("[OpenRouterProvider] 🚀 開始生成文本，模型: {}, API金鑰: {}", request.model, SecurityUtils::mask_api_key(&self.api_key));
+        log::info!("[OpenRouterProvider] 🔍 請求參數: temperature={}, max_tokens={}, prompt長度={}", 
+            request.params.temperature, request.params.max_tokens, request.prompt.len());
+        
+        // 🔥 關鍵修復：智能調整max_tokens防止空回應
+        // 更精確的token估算：中文字符約2個字符=1token，英文約4個字符=1token
+        let char_count = request.prompt.chars().count();
+        let estimated_prompt_tokens = if char_count > 0 {
+            // 混合估算：假設50%中文50%英文
+            (char_count as f64 * 0.75) as usize  // 保守估算
+        } else {
+            0
+        };
+        
+        // 🎯 基於模型特性的智能調整策略
+        let mut adjusted_max_tokens = request.params.max_tokens;
+        let model_lower = request.model.to_lowercase();
+        
+        // 🔥 新增：確保 max_tokens 至少為 200，避免過低導致空回應
+        if adjusted_max_tokens < 200 {
+            adjusted_max_tokens = 200;
+            log::warn!("[OpenRouterProvider] ⚠️ max_tokens 過低 ({}), 提升至 200 避免空回應", request.params.max_tokens);
+        }
+        
+        // 檢測是否為 nano 或其他小型模型
+        let is_nano_model = model_lower.contains("nano") || model_lower.contains("mini");
+        let is_large_model = model_lower.contains("4o") || model_lower.contains("claude") || model_lower.contains("gemini");
+        
+        // 根據模型類型和輸入長度調整策略
+        if estimated_prompt_tokens > 300 {  // 降低觸發閾值
+            let (multiplier, max_limit) = if is_nano_model {
+                // Nano 模型：更保守的策略
+                let mult = if estimated_prompt_tokens > 1500 { 2.5 }
+                          else if estimated_prompt_tokens > 800 { 2.0 }
+                          else { 1.5 };
+                (mult, 1500.0)  // 更低的上限
+            } else if is_large_model {
+                // 大型模型：更激進的策略
+                let mult = if estimated_prompt_tokens > 2000 { 4.0 }
+                          else if estimated_prompt_tokens > 1000 { 3.0 }
+                          else { 2.0 };
+                (mult, 4000.0)
+            } else {
+                // 標準模型：平衡策略
+                let mult = if estimated_prompt_tokens > 1500 { 3.0 }
+                          else if estimated_prompt_tokens > 800 { 2.0 }
+                          else { 1.5 };
+                (mult, 2500.0)
+            };
+            
+            adjusted_max_tokens = (request.params.max_tokens as f64 * multiplier).min(max_limit) as i32;
+            log::warn!("[OpenRouterProvider] ⚠️ 模型: {}, 提示詞較長 (~{} tokens)，調整max_tokens: {} -> {} (策略: {})", 
+                request.model, estimated_prompt_tokens, request.params.max_tokens, adjusted_max_tokens,
+                if is_nano_model { "nano保守" } else if is_large_model { "大型激進" } else { "標準平衡" });
+        }
+        
+        log::info!("[OpenRouterProvider] 📊 Token分配: 字符數={}, 預估輸入~{} tokens, 調整後輸出限制={} tokens", 
+            char_count, estimated_prompt_tokens, adjusted_max_tokens);
 
         // 構建訊息列表
         let mut messages = Vec::new();
@@ -307,18 +389,37 @@ impl AIProvider for OpenRouterProvider {
             content: request.prompt,
         });
 
+        // 🔥 關鍵修復：確保模型ID格式正確
+        let formatted_model = Self::format_model_id(&request.model);
+        log::info!("[OpenRouterProvider] 🔧 模型ID轉換: {} -> {}", request.model, formatted_model);
+        
         let openrouter_request = OpenRouterRequest {
-            model: request.model.clone(),
+            model: formatted_model.clone(),
             messages,
             temperature: request.params.temperature,
-            max_tokens: request.params.max_tokens,
+            max_tokens: adjusted_max_tokens, // 🔥 使用調整後的值
             top_p: request.params.top_p,
             presence_penalty: request.params.presence_penalty,
             frequency_penalty: request.params.frequency_penalty,
             stop: request.params.stop,
         };
 
+        // 🔥 新增：記錄完整請求以便調試
+        log::debug!("[OpenRouterProvider] 📤 發送請求: {}", serde_json::to_string(&openrouter_request).unwrap_or_default());
+
         let response = self.make_post_request::<OpenRouterResponse>("/chat/completions", &openrouter_request).await?;
+        
+        // 🔍 調試：記錄完整響應
+        log::info!("[OpenRouterProvider] 🔍 API 響應: 模型={}, choices數量={}", 
+            response.model, response.choices.len());
+        if let Some(choice) = response.choices.first() {
+            log::info!("[OpenRouterProvider] 🔍 第一個choice: content長度={}, finish_reason={:?}", 
+                choice.message.content.len(), choice.finish_reason);
+            // 🔥 新增：如果內容為空，記錄詳細信息
+            if choice.message.content.trim().is_empty() {
+                log::error!("[OpenRouterProvider] ❌ 模型 {} 返回空內容！choice 詳情: {:?}", formatted_model, choice);
+            }
+        }
         
         // 🔥 使用階段一檢測邏輯處理響應格式差異
         let model_chars = detect_model_characteristics(&request.model);
@@ -361,7 +462,7 @@ impl AIProvider for OpenRouterProvider {
         };
         
         if !actual_text.trim().is_empty() {
-            log::info!("[OpenRouterProvider] 文本生成成功，長度: {} 字符", actual_text.len());
+            log::info!("[OpenRouterProvider] ✅ 文本生成成功，長度: {} 字符", actual_text.len());
             
             let usage = AIUsageInfo {
                 prompt_tokens: Some(response.usage.prompt_tokens),
@@ -377,7 +478,16 @@ impl AIProvider for OpenRouterProvider {
                     .and_then(|c| c.finish_reason.clone()),
             })
         } else {
-            Err(anyhow!("OpenRouter API 回應中沒有有效內容"))
+            // 🔥 新增：更詳細的錯誤信息，包含可能的解決方案
+            let error_details = if let Some(choice) = response.choices.first() {
+                format!("模型 {} 回應為空。finish_reason: {:?}, max_tokens: {}, 模型可能需要更多 tokens 或不同的提示格式。建議嘗試增加 max_tokens 或檢查模型是否支持此類型的請求。", 
+                    Self::format_model_id(&request.model), choice.finish_reason, adjusted_max_tokens)
+            } else {
+                format!("模型 {} 未返回任何 choices。請檢查模型 ID 是否正確或該模型是否可用。", Self::format_model_id(&request.model))
+            };
+            
+            log::error!("[OpenRouterProvider] ❌ {}", error_details);
+            Err(anyhow!("OpenRouter API 回應中沒有有效內容: {}", error_details))
         }
     }
 

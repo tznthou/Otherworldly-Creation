@@ -104,6 +104,7 @@ export interface API {
     test: (id: string) => Promise<AIProviderTestResult>;
     generateText: (request: AIGenerationRequestData) => Promise<AIGenerationResult>;
     getSupportedTypes: () => Promise<string[]>;
+    getAvailableModels: (providerId: string) => Promise<AIProviderTestResult>;
   };
 
   // 上下文管理

@@ -197,6 +197,50 @@ const AISettingsModal: React.FC = () => {
     }
   };
 
+  // 🔥 新增：測試動態模型獲取功能
+  const handleTestModels = async (providerId: string) => {
+    try {
+      dispatch(addNotification({
+        type: 'info',
+        title: '獲取模型',
+        message: '正在獲取可用模型列表...',
+        duration: 2000,
+      }));
+
+      const result = await api.aiProviders.getAvailableModels(providerId);
+      
+      if (result.success && result.models) {
+        console.log('🔥 動態模型獲取成功:', result.models);
+        dispatch(addNotification({
+          type: 'success',
+          title: '模型獲取成功',
+          message: `成功獲取 ${result.models.length} 個可用模型`,
+          duration: 3000,
+        }));
+        
+        // 記錄到控制台供檢查
+        result.models.forEach((model, index) => {
+          console.log(`模型 ${index + 1}:`, model);
+        });
+      } else {
+        dispatch(addNotification({
+          type: 'warning',
+          title: '模型獲取失敗',
+          message: result.error || '無法獲取模型列表',
+          duration: 3000,
+        }));
+      }
+    } catch (error) {
+      console.error('模型獲取錯誤:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '模型獲取失敗',
+        message: '獲取模型列表時發生錯誤',
+        duration: 3000,
+      }));
+    }
+  };
+
   const handleCreateProvider = async () => {
     try {
       setIsSubmitting(true);
@@ -710,6 +754,12 @@ const AISettingsModal: React.FC = () => {
                                 className="btn-secondary text-xs px-3 py-1"
                               >
                                 測試
+                              </button>
+                              <button
+                                onClick={() => handleTestModels(provider.id)}
+                                className="btn-secondary text-xs px-3 py-1 bg-blue-600 hover:bg-blue-500"
+                              >
+                                獲取模型
                               </button>
                               {provider.is_enabled && (
                                 <>
