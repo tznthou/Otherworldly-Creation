@@ -19,9 +19,14 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
   
   const [chapterTitle, setChapterTitle] = useState(chapter.title);
   const [chapterOrder, setChapterOrder] = useState(chapter.order);
-  const [chapterStatus, setChapterStatus] = useState<'draft' | 'in_progress' | 'review' | 'completed'>(
-    chapter.metadata?.status || 'draft'
-  );
+  const [chapterStatus, setChapterStatus] = useState<'draft' | 'in_progress' | 'review' | 'completed'>(() => {
+    try {
+      const metadata = chapter.metadata ? JSON.parse(chapter.metadata) : {};
+      return metadata.status || 'draft';
+    } catch {
+      return 'draft';
+    }
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [errors, setErrors] = useState<{
@@ -32,7 +37,12 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
   useEffect(() => {
     setChapterTitle(chapter.title);
     setChapterOrder(chapter.order);
-    setChapterStatus(chapter.metadata?.status || 'draft');
+    try {
+      const metadata = chapter.metadata ? JSON.parse(chapter.metadata) : {};
+      setChapterStatus(metadata.status || 'draft');
+    } catch {
+      setChapterStatus('draft');
+    }
   }, [chapter]);
 
   const handleClose = () => {
@@ -60,10 +70,10 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
         ...chapter,
         title: chapterTitle,
         order: chapterOrder,
-        metadata: {
-          ...(chapter.metadata || {}),
+        metadata: JSON.stringify({
+          ...(chapter.metadata ? JSON.parse(chapter.metadata) : {}),
           status: chapterStatus,
-        },
+        }),
       })).unwrap();
 
       // 如果順序變更，重新排序所有章節

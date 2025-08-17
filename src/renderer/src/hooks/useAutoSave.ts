@@ -25,8 +25,8 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
   const { currentChapter, saving, lastSaved } = useAppSelector(state => state.chapters);
   
   // 使用設定中的自動儲存配置
-  const autoSaveEnabled = optionsEnabled && settings.autoSave;
-  const autoSaveDelay = delay || settings.autoSaveInterval;
+  const autoSaveEnabled = optionsEnabled && settings.backup.autoBackup;
+  const autoSaveDelay = delay || (settings.backup.backupInterval * 1000); // 轉換為毫秒
   
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);

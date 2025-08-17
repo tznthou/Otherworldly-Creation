@@ -10,7 +10,7 @@ import { api } from '../../api';
 import { ErrorSeverity } from '../../types/error';
 import AIHistoryPanel from '../AI/AIHistoryPanel';
 import { analyzeWritingContext, generateSmartParams } from '../../services/aiWritingAssistant';
-import { isValidModelId, getModelInfo, recommendModelForTokens } from '../../config/modelWhitelist';
+import { getModelInfo } from '../../config/modelWhitelist';
 import { useAppSelector as useAppSelectorTyped } from '../../hooks/redux';
 // 🧠 Phase 4: 導入章節筆記分析器
 import { analyzeChapterNotes } from '../../utils/chapterNotesAnalyzer';
@@ -377,17 +377,17 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         console.log('📊 章節筆記分析結果:', chapterNotesAnalysis);
         
         // 根據筆記分析調整生成參數
-        if (chapterNotesAnalysis.style.dialogue > 0.6) {
+        if (chapterNotesAnalysis && chapterNotesAnalysis.style.dialogue > 0.6) {
           console.log('💬 檢測到對話重點，調整參數支持對話生成');
           setTemperature(prev => Math.min(1.0, prev + 0.1)); // 稍微增加創意性
         }
         
-        if (chapterNotesAnalysis.style.action > 0.6) {
+        if (chapterNotesAnalysis && chapterNotesAnalysis.style.action > 0.6) {
           console.log('⚡ 檢測到動作場景，調整參數支持動作描述');
           setMaxTokens(prev => Math.min(800, prev + 100)); // 增加輸出長度
         }
         
-        if (chapterNotesAnalysis.style.emotion > 0.7) {
+        if (chapterNotesAnalysis && chapterNotesAnalysis.style.emotion > 0.7) {
           console.log('💝 檢測到情感重點，調整參數支持情感表達');
           setPresencePenalty(prev => Math.max(0, prev - 0.2)); // 降低重複懲罰
         }
@@ -948,7 +948,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         duration: 3000,
       }));
     }
-  }, [generationOptions, currentModel, editor, projectId, chapterId, maxTokens, topP, presencePenalty, frequencyPenalty, dispatch, selectedProviderId]);
+  }, [generationOptions, currentModel, editor, projectId, chapterId, maxTokens, topP, presencePenalty, frequencyPenalty, dispatch, selectedProviderId, currentProviderId]);
 
   // 清除所有選項
   const handleClearOptions = useCallback(() => {

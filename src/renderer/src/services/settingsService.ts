@@ -172,8 +172,9 @@ export class SettingsService {
       if (typeof settingsObj.language === 'string' && ['zh-TW', 'zh-CN', 'en', 'ja'].includes(settingsObj.language)) {
         merged.language = settingsObj.language as Language;
       }
-      if (typeof settingsObj.autoSave === 'boolean') merged.autoSave = settingsObj.autoSave;
-      if (typeof settingsObj.autoSaveInterval === 'number') merged.autoSaveInterval = settingsObj.autoSaveInterval;
+      // 遷移舊的 autoSave 設定到 backup.autoBackup
+      if (typeof settingsObj.autoSave === 'boolean') merged.backup.autoBackup = settingsObj.autoSave;
+      if (typeof settingsObj.autoSaveInterval === 'number') merged.backup.backupInterval = Math.round(settingsObj.autoSaveInterval / 1000); // 轉換為小時
       
       // AI 設定
       if (settingsObj.ai && typeof settingsObj.ai === 'object') {

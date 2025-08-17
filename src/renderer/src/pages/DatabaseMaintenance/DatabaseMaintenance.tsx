@@ -144,7 +144,16 @@ const DatabaseMaintenance: React.FC = () => {
     setIsLoadingWalStatus(true);
     try {
       const status = await api.database.getWalModeStatus();
-      setWalModeStatus(status);
+      setWalModeStatus({
+        enabled: true,
+        is_wal_mode: status.is_wal_mode,
+        journal_mode: status.journal_mode,
+        synchronous: String(status.synchronous),
+        wal_autocheckpoint: status.wal_autocheckpoint,
+        wal_info: status.wal_info as { bytes: number; frames: number },
+        benefits: Array.isArray(status.benefits) ? status.benefits : (typeof status.benefits === 'object' ? Object.values(status.benefits || {}).flat() : []),
+        recommendations: Array.isArray(status.recommendations) ? [status.recommendations] : [status.recommendations || '']
+      });
     } catch (error) {
       console.error('載入 WAL 模式狀態失敗:', error);
       setWalModeStatus(null);
@@ -708,8 +717,8 @@ const DatabaseMaintenance: React.FC = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-400">WAL 檔案:</span>
                       <span className="text-white">
-                        {walModeStatus.wal_info.wal_file_exists ? 
-                          `${(walModeStatus.wal_info.wal_file_size / 1024).toFixed(1)} KB` : 
+                        {walModeStatus.wal_info.bytes ? 
+                          `${(walModeStatus.wal_info.bytes / 1024).toFixed(1)} KB` : 
                           '不存在'
                         }
                       </span>
@@ -722,14 +731,14 @@ const DatabaseMaintenance: React.FC = () => {
                 <h4 className="text-white mb-3 font-semibold">模式優勢</h4>
                 <div className="space-y-2">
                   {walModeStatus.is_wal_mode ? (
-                    walModeStatus.benefits?.wal?.map((benefit: string, index: number) => (
+                    walModeStatus.benefits?.map((benefit: string, index: number) => (
                       <div key={index} className="flex items-center space-x-2">
                         <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                         <span className="text-sm text-gray-300">{benefit}</span>
                       </div>
                     ))
                   ) : (
-                    walModeStatus.benefits?.delete?.map((benefit: string, index: number) => (
+                    walModeStatus.benefits?.map((benefit: string, index: number) => (
                       <div key={index} className="flex items-center space-x-2">
                         <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
                         <span className="text-sm text-gray-300">{benefit}</span>

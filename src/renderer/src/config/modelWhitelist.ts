@@ -191,7 +191,7 @@ export const MODEL_WHITELIST: ProviderModels = {
  * 驗證模型 ID 是否有效
  * 🔥 修復：信任API返回的模型，移除白名單限制
  */
-export function isValidModelId(providerId: string, modelId: string): boolean {
+export function isValidModelId(_providerId: string, _modelId: string): boolean {
   // 信任 API 返回的所有模型都是有效的
   // 如果模型無效，API 會返回錯誤，由錯誤處理機制處理
   return true;
@@ -432,24 +432,3 @@ function getGenericRecommendation(providerId: string, requiredTokens: number): M
   }
 }
 
-/**
- * 獲取所有有效的模型列表
- */
-export function getAllValidModels(providerType?: ProviderType): ModelInfo[] {
-  if (providerType) {
-    return whitelistedModels[providerType] || [];
-  }
-  
-  // 返回所有提供者的模型
-  const allModels: ModelInfo[] = [];
-  Object.entries(whitelistedModels).forEach(([provider, models]) => {
-    models.forEach(model => {
-      allModels.push({
-        ...model,
-        provider: provider as ProviderType
-      });
-    });
-  });
-  
-  return allModels;
-}
