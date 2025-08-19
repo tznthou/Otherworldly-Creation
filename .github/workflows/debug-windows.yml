@@ -1,0 +1,119 @@
+name: 🔍 Debug Windows MSI Build
+
+on:
+  push:
+    tags: ['debug-win-*']
+
+jobs:
+  debug-windows-only:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🏷️ Setup version environment
+        run: |
+          $VERSION = "${{ github.ref }}".Replace("refs/tags/debug-win-", "")
+          echo "RELEASE_VERSION=$VERSION" >> $env:GITHUB_ENV
+          echo "📦 Debug version: $VERSION"
+
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: 📦 Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: 🔧 Install Tauri CLI
+        run: |
+          if (!(Get-Command "cargo-tauri" -ErrorAction SilentlyContinue)) {
+            Write-Output "Installing Tauri CLI..."
+            cargo install tauri-cli --version "^2.0"
+          } else {
+            $version = cargo tauri --version
+            Write-Output "Tauri CLI already installed: $version"
+          }
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build frontend
+        run: npm run build:renderer
+
+      - name: 🔨 Build Tauri app (MSI)
+        run: |
+          echo "🚀 Building Tauri app for Windows..."
+          cd src-tauri
+          cargo tauri build --target x86_64-pc-windows-msvc
+          echo "✅ Tauri Windows build completed"
+
+      - name: 🔍 COMPLETE Debug - Find MSI files
+        run: |
+          echo "🔍 === COMPLETE WINDOWS BUILD DEBUG ==="
+          echo ""
+          echo "📁 ROOT directory contents:"
+          Get-ChildItem -Path "." -Name | Sort-Object
+          echo ""
+          echo "📁 src-tauri directory contents:"
+          Get-ChildItem -Path "src-tauri" -Name | Sort-Object
+          echo ""
+          echo "📁 COMPLETE src-tauri/target structure (all levels):"
+          Get-ChildItem -Path "src-tauri/target" -Recurse | Sort-Object FullName | ForEach-Object {
+            $indent = "  " * (($_.FullName.Split('\').Count) - 3)
+            $type = if ($_.PSIsContainer) { "[DIR]" } else { "[FILE] $([math]::Round($_.Length / 1KB, 1))KB" }
+            echo "$indent$type $($_.Name)"
+          }
+          echo ""
+          echo "🎯 === SEARCHING FOR MSI FILES ==="
+          $allMsiFiles = Get-ChildItem -Path "src-tauri/target" -Recurse -Include "*.msi" -ErrorAction SilentlyContinue
+          if ($allMsiFiles.Count -eq 0) {
+            echo "❌ NO MSI FILES FOUND ANYWHERE!"
+            echo ""
+            echo "🔍 Searching for other installer files:"
+            echo "EXE files:"
+            Get-ChildItem -Path "src-tauri/target" -Recurse -Include "*.exe" -ErrorAction SilentlyContinue | ForEach-Object {
+              echo "   EXE: $($_.FullName) ($([math]::Round($_.Length / 1MB, 1))MB)"
+            }
+            echo "Setup files:"
+            Get-ChildItem -Path "src-tauri/target" -Recurse -Include "*setup*" -ErrorAction SilentlyContinue | ForEach-Object {
+              echo "   SETUP: $($_.FullName)"
+            }
+            echo "Bundle directories:"
+            Get-ChildItem -Path "src-tauri/target" -Recurse -Directory -Include "*bundle*" -ErrorAction SilentlyContinue | ForEach-Object {
+              echo "   BUNDLE DIR: $($_.FullName)"
+              Get-ChildItem -Path $_.FullName -Recurse | ForEach-Object {
+                echo "     -> $($_.Name)"
+              }
+            }
+          } else {
+            echo "✅ FOUND $($allMsiFiles.Count) MSI FILE(S):"
+            $allMsiFiles | ForEach-Object {
+              $size = [math]::Round($_.Length / 1MB, 2)
+              echo "   ✅ FILE: $($_.Name) ($size MB)"
+              echo "      FULL PATH: $($_.FullName)"
+              echo "      RELATIVE: $($_.FullName.Replace($PWD.Path, '.'))"
+              echo ""
+            }
+          }
+          echo "=== DEBUG COMPLETE ==="
+
+      - name: 🎯 Test upload path (if MSI found)
+        run: |
+          $msiFiles = Get-ChildItem -Path "src-tauri/target" -Recurse -Include "*.msi" -ErrorAction SilentlyContinue
+          if ($msiFiles.Count -gt 0) {
+            echo "✅ Would upload these files:"
+            $msiFiles | ForEach-Object { echo "   -> $($_.FullName)" }
+          } else {
+            echo "❌ No MSI files to upload"
+          }
