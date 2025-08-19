@@ -200,3 +200,6 @@ optimized_context_example.txt
 
 # Coverage reports (may contain sensitive paths)
 coverage/
+
+# Claude Code project configuration (contains personal instructions)
+CLAUDE.md

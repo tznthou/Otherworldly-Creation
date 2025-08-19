@@ -222,7 +222,7 @@ export class NotificationService {
 
   static success(title: string, message?: string, duration: number = 4000) {
     // 檢查設定後播放成功音效
-    if (this.isSoundEnabled()) {
+    if (NotificationService.isSoundEnabled()) {
       soundManager.playSuccessSound();
     }
     
@@ -236,7 +236,7 @@ export class NotificationService {
 
   static error(title: string, message?: string, duration: number = 6000) {
     // 檢查設定後播放錯誤音效
-    if (this.isSoundEnabled()) {
+    if (NotificationService.isSoundEnabled()) {
       soundManager.playErrorSound();
     }
     
@@ -250,7 +250,7 @@ export class NotificationService {
 
   static warning(title: string, message?: string, duration: number = 5000) {
     // 檢查設定後播放通知音效
-    if (this.isSoundEnabled()) {
+    if (NotificationService.isSoundEnabled()) {
       soundManager.playNotificationSound();
     }
     
@@ -264,7 +264,7 @@ export class NotificationService {
 
   static info(title: string, message?: string, duration: number = 4000) {
     // 檢查設定後播放通知音效
-    if (this.isSoundEnabled()) {
+    if (NotificationService.isSoundEnabled()) {
       soundManager.playNotificationSound();
     }
     

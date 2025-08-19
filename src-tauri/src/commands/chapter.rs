@@ -125,6 +125,13 @@ pub async fn update_chapter(chapter: UpdateChapterRequest) -> Result<(), String>
     
     let now = Utc::now();
     
+    // 先獲取章節的 project_id，用於後續更新父專案的時間戳
+    let project_id: String = conn
+        .prepare("SELECT project_id FROM chapters WHERE id = ?1")
+        .map_err(|e| e.to_string())?
+        .query_row([&chapter.id], |row| row.get(0))
+        .map_err(|e| format!("章節不存在: {}", e))?;
+    
     // 構建更新語句，只更新有提供的欄位
     let mut sql = "UPDATE chapters SET title = ?1, updated_at = ?2".to_string();
     let mut params: Vec<Box<dyn rusqlite::ToSql>> = vec![
@@ -168,7 +175,13 @@ pub async fn update_chapter(chapter: UpdateChapterRequest) -> Result<(), String>
         return Err("章節不存在".to_string());
     }
     
-    log::info!("更新章節成功: ID {}", chapter.id);
+    // 同時更新父專案的 updated_at 時間戳，以反映專案內容的實際更新時間
+    conn.execute(
+        "UPDATE projects SET updated_at = ?1 WHERE id = ?2",
+        params![now, project_id],
+    ).map_err(|e| format!("更新專案時間戳失敗: {}", e))?;
+    
+    log::info!("更新章節成功: ID {} (專案 ID: {})", chapter.id, project_id);
     Ok(())
 }
 

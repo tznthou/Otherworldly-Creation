@@ -2,18 +2,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Editor, Transforms, Range } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
-import { setCurrentModel, fetchAvailableModels, checkOllamaService, fetchAIProviders, setActiveProvider, generateTextWithProvider } from '../../store/slices/aiSlice';
-import { createAIHistory } from '../../store/slices/aiHistorySlice';
-import { startProgress, updateProgress, completeProgress, failProgress } from '../../store/slices/errorSlice';
-import { store } from '../../store/store';
+import { setCurrentModel, fetchAvailableModels, checkOllamaService, fetchAIProviders, generateTextWithProvider } from '../../store/slices/aiSlice';
 import { api } from '../../api';
-import { ErrorSeverity } from '../../types/error';
 import AIHistoryPanel from '../AI/AIHistoryPanel';
-import { analyzeWritingContext, generateSmartParams } from '../../services/aiWritingAssistant';
-import { getModelInfo } from '../../config/modelWhitelist';
 import { useAppSelector as useAppSelectorTyped } from '../../hooks/redux';
-// 🧠 Phase 4: 導入章節筆記分析器
-import { analyzeChapterNotes } from '../../utils/chapterNotesAnalyzer';
 
 interface AIWritingPanelProps {
   projectId: string;
@@ -28,6 +20,273 @@ interface GenerationOption {
   timestamp: Date;
   selected?: boolean;
 }
+
+// 簡化的進度狀態管理
+interface GenerationProgress {
+  isActive: boolean;
+  currentStep: string;
+  totalVersions: number;
+  completedVersions: number;
+  failedVersions: number;
+  progress: number; // 0-100
+  errors: string[];
+}
+
+// 📚 參數說明配置
+interface ParameterConfig {
+  title: string;
+  description: string;
+  tips: string | { low: string; medium: string; high: string };
+  warning: string;
+  range: string;
+  safeRange: [number, number];
+  optimalRange: [number, number];
+}
+
+const parameterExplanations: Record<string, ParameterConfig> = {
+  generationCount: {
+    title: "生成數量",
+    description: "同時生成多個不同風格的版本供您選擇",
+    tips: "💡 初學者建議選 1 個，想要更多選擇可選 2-3 個",
+    warning: "⚠️ 數量越多等待時間越長，消耗 API 配額更多",
+    range: "1-3 個",
+    safeRange: [1, 3],
+    optimalRange: [1, 2]
+  },
+  maxTokens: {
+    title: "生成長度",
+    description: "控制每次生成文本的長度（以字符數計算）",
+    tips: "📝 短段落: 300-500 / 標準段落: 600-800 / 長段落: 800+",
+    warning: "⚠️ 太長可能超出模型限制導致生成中斷，太短可能內容不完整",
+    range: "300-1500 字符",
+    safeRange: [300, 1200],
+    optimalRange: [500, 800]
+  },
+  temperature: {
+    title: "創意度",
+    description: "控制文字的創新程度與隨機性",
+    tips: {
+      low: "🎯 保守穩重 (0.3-0.5)：適合正式文體、商業小說",
+      medium: "⚖️ 平衡創意 (0.6-0.8)：適合一般小說創作 ✨推薦",
+      high: "🌟 創意奔放 (0.9-1.2)：適合奇幻、科幻題材"
+    },
+    warning: "⚠️ 太高(>1.0)可能產生無意義或前後矛盾的內容，太低(<0.4)可能內容單調重複",
+    range: "0.3-1.2",
+    safeRange: [0.4, 1.0],
+    optimalRange: [0.6, 0.8]
+  },
+  topP: {
+    title: "多樣性控制",
+    description: "控制用詞的豐富程度和表達多樣性（核採樣參數）",
+    tips: "🎨 建議值: 0.8-0.9，在用詞豐富和準確性之間取得平衡",
+    warning: "⚠️ 太低(<0.6)用詞單調重複，太高(>0.95)可能選擇不當詞語",
+    range: "0.1-1.0",
+    safeRange: [0.6, 0.95],
+    optimalRange: [0.8, 0.9]
+  },
+  presencePenalty: {
+    title: "重複懲罰",
+    description: "防止內容和主題的重複出現，鼓勵談論新話題",
+    tips: "🔄 輕微懲罰 (0.2-0.4)：推薦值，避免重複又保持自然表達",
+    warning: "⚠️ 太高(>0.6)可能過度避免必要重複（如人名、地名、重要概念）",
+    range: "0.0-1.5",
+    safeRange: [0.0, 0.6],
+    optimalRange: [0.2, 0.4]
+  }
+};
+
+// 📊 快速預設配置
+interface PresetConfig {
+  name: string;
+  description: string;
+  emoji: string;
+  values: {
+    temperature: number;
+    topP: number;
+    presencePenalty: number;
+    maxTokens: number;
+    generationCount: number;
+  };
+}
+
+const quickPresets: Record<string, PresetConfig> = {
+  conservative: {
+    name: "保守穩重",
+    description: "適合正式文體、商業小說、歷史題材",
+    emoji: "🎯",
+    values: { temperature: 0.4, topP: 0.7, presencePenalty: 0.2, maxTokens: 600, generationCount: 1 }
+  },
+  balanced: {
+    name: "平衡創作",
+    description: "適合一般小說創作、日常題材",
+    emoji: "⚖️",
+    values: { temperature: 0.7, topP: 0.9, presencePenalty: 0.3, maxTokens: 650, generationCount: 2 }
+  },
+  creative: {
+    name: "創意奔放",
+    description: "適合奇幻、科幻、實驗性題材",
+    emoji: "🌟",
+    values: { temperature: 0.95, topP: 0.92, presencePenalty: 0.4, maxTokens: 700, generationCount: 2 }
+  }
+};
+
+// 📊 參數幫助組件
+const ParameterHelp: React.FC<{
+  parameterKey: keyof typeof parameterExplanations;
+  currentValue: number;
+  className?: string;
+}> = ({ parameterKey, currentValue, className = "" }) => {
+  const config = parameterExplanations[parameterKey];
+  
+  // 根據當前值顯示對應的建議
+  const getCurrentTip = () => {
+    if (parameterKey === 'temperature' && typeof config.tips === 'object') {
+      if (currentValue <= 0.5) return config.tips.low;
+      if (currentValue <= 0.8) return config.tips.medium;
+      return config.tips.high;
+    }
+    return typeof config.tips === 'string' ? config.tips : config.tips.medium;
+  };
+  
+  // 警告等級檢查
+  const getWarningLevel = (): 'safe' | 'warning' | 'danger' => {
+    const [safeMin, safeMax] = config.safeRange;
+    if (currentValue < safeMin || currentValue > safeMax) return 'danger';
+    
+    const [optimalMin, optimalMax] = config.optimalRange;
+    if (currentValue < optimalMin || currentValue > optimalMax) return 'warning';
+    
+    return 'safe';
+  };
+
+  const warningLevel = getWarningLevel();
+  
+  return (
+    <div className={`mt-1 text-xs ${className}`}>
+      {/* 描述 */}
+      <div className="text-gray-400 mb-1">{config.description}</div>
+      
+      {/* 當前建議 */}
+      <div className="text-blue-300 mb-1">{getCurrentTip()}</div>
+      
+      {/* 警告訊息 */}
+      {warningLevel !== 'safe' && (
+        <div className={`flex items-start ${warningLevel === 'danger' ? 'text-red-400' : 'text-orange-400'} mt-1`}>
+          <span className="mr-1 mt-0.5">⚠️</span>
+          <span className="flex-1">{config.warning}</span>
+        </div>
+      )}
+      
+      {/* 範圍提示 */}
+      <div className="text-gray-500 mt-1">
+        建議範圍: {config.range}
+      </div>
+    </div>
+  );
+};
+
+// 🚀 快速預設按鈕組件
+const QuickPresets: React.FC<{
+  onApplyPreset: (values: PresetConfig['values']) => void;
+  className?: string;
+}> = ({ onApplyPreset, className = "" }) => {
+  return (
+    <div className={`mb-4 ${className}`}>
+      <div className="text-sm text-gray-300 mb-2 flex items-center">
+        <span className="mr-2">🚀</span>
+        快速預設
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {Object.entries(quickPresets).map(([key, preset]) => (
+          <button
+            key={key}
+            onClick={() => onApplyPreset(preset.values)}
+            className="p-2 bg-cosmic-700 hover:bg-cosmic-600 rounded-lg text-xs transition-colors border border-cosmic-600 hover:border-cosmic-500"
+            title={preset.description}
+          >
+            <div className="text-center">
+              <div className="text-base mb-1">{preset.emoji}</div>
+              <div className="text-white font-medium">{preset.name}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+      <div className="text-xs text-gray-500 mt-2">
+        💡 點擊預設會自動調整所有參數到推薦值
+      </div>
+    </div>
+  );
+};
+
+// 📈 參數風險指示器
+const ParameterRiskIndicator: React.FC<{
+  temperature: number;
+  topP: number;
+  presencePenalty: number;
+  maxTokens: number;
+  generationCount: number;
+}> = ({ temperature, topP, presencePenalty, maxTokens, generationCount }) => {
+  const risks: string[] = [];
+  const warnings: string[] = [];
+  
+  // 檢查各項參數
+  if (temperature > 1.0) risks.push("創意度過高可能導致內容不連貫");
+  else if (temperature < 0.4) risks.push("創意度過低可能導致內容單調");
+  else if (temperature > 0.8) warnings.push("創意度較高，注意內容一致性");
+  
+  if (topP > 0.95) risks.push("多樣性過高可能產生不當用詞");
+  else if (topP < 0.6) warnings.push("多樣性較低，用詞可能單調");
+  
+  if (presencePenalty > 0.6) risks.push("重複懲罰過強可能影響正常表達");
+  
+  if (maxTokens > 1000) warnings.push("生成長度較長，可能增加等待時間");
+  else if (maxTokens < 400) warnings.push("生成長度較短，內容可能不完整");
+  
+  if (generationCount > 2) warnings.push("生成數量較多，將消耗更多 API 配額");
+  
+  if (risks.length === 0 && warnings.length === 0) {
+    return (
+      <div className="flex items-center text-green-400 text-sm bg-green-900/30 border border-green-700 rounded-lg p-3 mb-3">
+        <span className="mr-2">✅</span>
+        參數設定合理，可以開始生成
+      </div>
+    );
+  }
+  
+  return (
+    <div className="mb-3">
+      {/* 高風險警告 */}
+      {risks.length > 0 && (
+        <div className="bg-red-900/40 border border-red-700 rounded-lg p-3 mb-2">
+          <div className="text-red-400 text-sm font-medium mb-2 flex items-center">
+            <span className="mr-2">🚨</span>
+            參數風險警告
+          </div>
+          <ul className="text-red-300 text-xs space-y-1">
+            {risks.map((risk, index) => (
+              <li key={index}>• {risk}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
+      {/* 一般提醒 */}
+      {warnings.length > 0 && (
+        <div className="bg-orange-900/40 border border-orange-700 rounded-lg p-3">
+          <div className="text-orange-400 text-sm font-medium mb-2 flex items-center">
+            <span className="mr-2">⚠️</span>
+            參數調整建議
+          </div>
+          <ul className="text-orange-300 text-xs space-y-1">
+            {warnings.map((warning, index) => (
+              <li key={index}>• {warning}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // 過濾掉 AI 思考標籤的函數
 const filterThinkingTags = (text: string): string => {
@@ -75,22 +334,31 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   // 從 Redux store 獲取 AI 相關狀態
   const { 
     currentModel, 
-    availableModels, 
-    isOllamaConnected,
+    availableModels,
     providers,
     currentProviderId,
-    defaultProviderId,    // 新增：預設提供者
-    autoUseDefault       // 新增：是否自動使用預設
+    defaultProviderId: _defaultProviderId,    // 新增：預設提供者（保留供未來使用）
+    autoUseDefault: _autoUseDefault       // 新增：是否自動使用預設（保留供未來使用）
   } = useAppSelector(state => state.ai);
+  
+  // 🔧 恢復提供者特定的模型列表管理（必須在使用前聲明）
+  const [providerModels, setProviderModels] = useState<string[]>([]);
+  const [hasChapterNotes, setHasChapterNotes] = useState(false);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
-  const [progressId, setProgressId] = useState<string | null>(null);
   const [showAIHistory, setShowAIHistory] = useState(false);
   
-  // 從 Redux store 獲取進度狀態
-  const progressState = useAppSelector(state => state.progress);
-  const currentProgress = progressId ? progressState.indicators.find(p => p.id === progressId) : null;
+  // 📊 進度狀態管理
+  const [progress, setProgress] = useState<GenerationProgress>({
+    isActive: false,
+    currentStep: '',
+    totalVersions: 0,
+    completedVersions: 0,
+    failedVersions: 0,
+    progress: 0,
+    errors: []
+  });
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(600); // 🔥 增加到 600 tokens，適合中文小說段落
   // 🔥 根據模型類型自動調整生成數量（免費版 API 使用較少的數量）
@@ -99,10 +367,44 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [topP, setTopP] = useState(0.9);
   const [presencePenalty, setPresencePenalty] = useState(0);
-  const [frequencyPenalty, setFrequencyPenalty] = useState(0);
-  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
-  const [providerModels, setProviderModels] = useState<string[]>([]);
-  const [hasChapterNotes, setHasChapterNotes] = useState(false);
+  
+  // 🚀 快速預設應用函數
+  const handleApplyPreset = useCallback((presetValues: PresetConfig['values']) => {
+    setTemperature(presetValues.temperature);
+    setTopP(presetValues.topP);
+    setPresencePenalty(presetValues.presencePenalty);
+    setMaxTokens(presetValues.maxTokens);
+    setGenerationCount(presetValues.generationCount);
+    
+    dispatch(addNotification({
+      type: 'info',
+      title: '預設已應用',
+      message: '參數已調整到推薦設定',
+      duration: 2000,
+    }));
+  }, [dispatch]);
+  
+  // 獲取當前提供者的模型列表（現在 providerModels 已經聲明）
+  const getCurrentProviderModels = () => {
+    if (!currentProviderId) return availableModels; // 回退到 Ollama 模型
+    
+    const provider = providers.find(p => p.id === currentProviderId);
+    if (!provider) return [];
+    
+    switch (provider.provider_type) {
+      case 'ollama':
+        return availableModels;
+      case 'openrouter':
+      case 'openai':
+      case 'gemini':
+      case 'claude':
+        return providerModels;
+      default:
+        return [];
+    }
+  };
+  
+  const currentProviderModels = getCurrentProviderModels();
   
   // 獲取當前章節以檢查筆記
   const currentChapter = useAppSelectorTyped(state => 
@@ -149,140 +451,133 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       try {
         console.log('[AIWritingPanel] 載入 AI 提供商...');
         await dispatch(fetchAIProviders());
-        
-        // 🔥 修復：只在初始化時自動設置提供者，避免覆蓋用戶的「重新選擇」操作
-        if (currentProviderId && selectedProviderId === null) {
-          // 使用當前已設定的提供者
-          setSelectedProviderId(currentProviderId);
-          console.log('[AIWritingPanel] 使用當前提供者:', currentProviderId);
-        } else if (autoUseDefault && defaultProviderId && !currentProviderId && selectedProviderId === null) {
-          // 如果沒有當前提供者但有預設提供者，使用預設
-          setSelectedProviderId(defaultProviderId);
-          console.log('[AIWritingPanel] 使用預設提供者:', defaultProviderId);
-        }
       } catch (error) {
         console.error('[AIWritingPanel] 載入提供商失敗:', error);
       }
     };
     loadProviders();
-  }, [dispatch, currentProviderId, defaultProviderId, autoUseDefault, selectedProviderId]); // 🔥 修復：移除 selectedProviderId 依賴，避免循環覆蓋用戶操作
+  }, [dispatch]);
 
-  // 當選擇提供商時，載入該提供商的模型
+  // 🔧 修復：簡化 Ollama 兼容性檢查
   useEffect(() => {
-    const loadProviderModels = async () => {
-      if (selectedProviderId) {
+    // 如果沒有當前提供者但有可用的 Ollama 模型，檢查 Ollama 服務
+    if (!currentProviderId && availableModels.length === 0) {
+      const checkOllama = async () => {
         try {
-          console.log('[AIWritingPanel] 載入提供商模型:', selectedProviderId);
+          console.log('[AIWritingPanel] 檢查 Ollama 服務狀態...');
+          const result = await dispatch(checkOllamaService()).unwrap();
+          console.log('[AIWritingPanel] Ollama 服務檢查結果:', result);
           
-          // 🔥 關鍵修復：如果選擇的提供者就是當前提供者，重新載入模型列表確保UI正確
-          if (selectedProviderId === currentProviderId && currentModel) {
-            console.log('[AIWritingPanel] 提供者已是當前設定，但仍需載入模型列表以確保UI正確');
-            // 即使是相同提供者，也要重新載入模型列表確保UI顯示正確
-          }
-          
-          // 保存當前模型，防止被 setActiveProvider 覆蓋
-          const originalCurrentModel = currentModel;
-          console.log('[AIWritingPanel] 保存當前模型:', originalCurrentModel);
-          
-          const result = await dispatch(setActiveProvider(selectedProviderId)).unwrap();
-          console.log('[AIWritingPanel] setActiveProvider 結果:', result);
-          
-          if (result.models && result.models.length > 0) {
-            console.log('[AIWritingPanel] 設定提供商模型列表:', result.models);
-            setProviderModels(result.models);
-            
-            // 智能模型選擇：保持原本設定的模型
-            const modelList = result.models as string[]; // 明確類型轉換
-            
-            // 🔧 修復：只在原模型仍然可用時恢復，其他情況讓用戶手動選擇
-            if (originalCurrentModel && modelList.includes(originalCurrentModel)) {
-              console.log('[AIWritingPanel] 恢復原本設定的模型:', originalCurrentModel);
-              dispatch(setCurrentModel(originalCurrentModel));
-            } else {
-              // 🎯 關鍵修復：不自動選擇模型，讓用戶手動選擇
-              console.log('[AIWritingPanel] 清空模型選擇，讓用戶手動選擇');
-              dispatch(setCurrentModel(null));
-            }
-          } else {
-            console.warn('[AIWritingPanel] 提供商沒有可用模型或模型列表為空:', result);
-            setProviderModels([]);
+          if (result) {
+            console.log('[AIWritingPanel] 載入可用模型...');
+            await dispatch(fetchAvailableModels());
           }
         } catch (error) {
-          console.error('[AIWritingPanel] 載入模型失敗:', error);
-          setProviderModels([]);
+          console.error('[AIWritingPanel] Ollama 服務檢查失敗:', error);
         }
-      } else {
-        // 如果沒有選擇提供商，嘗試使用 Ollama（向後兼容）
-        const checkOllama = async () => {
-          try {
-            console.log('[AIWritingPanel] 檢查 Ollama 服務狀態...');
-            const result = await dispatch(checkOllamaService()).unwrap();
-            console.log('[AIWritingPanel] Ollama 服務檢查結果:', result);
-            
-            if (result && availableModels.length === 0) {
-              console.log('[AIWritingPanel] 載入可用模型...');
-              await dispatch(fetchAvailableModels());
-            }
-          } catch (error) {
-            console.error('[AIWritingPanel] Ollama 服務檢查失敗:', error);
-          }
-        };
-        checkOllama();
-      }
+      };
+      checkOllama();
     }
-    loadProviderModels();
-  }, [selectedProviderId, dispatch, currentModel, availableModels.length, currentProviderId]);
+  }, [currentProviderId, availableModels.length, dispatch]);
+
+  // 🔧 新增：當提供者改變時，獲取對應的模型列表
+  useEffect(() => {
+    const fetchProviderModels = async () => {
+      if (!currentProviderId) {
+        setProviderModels([]);
+        return;
+      }
+
+      const provider = providers.find(p => p.id === currentProviderId);
+      if (!provider) {
+        setProviderModels([]);
+        return;
+      }
+
+      try {
+        switch (provider.provider_type) {
+          case 'ollama':
+            // Ollama 使用 availableModels，不需要額外獲取
+            setProviderModels(availableModels);
+            break;
+          case 'openrouter':
+          case 'openai':
+          case 'gemini':
+          case 'claude': {
+            // 🔥 修復：動態獲取各提供者的模型列表，而非硬編碼
+            console.log(`[AIWritingPanel] 動態獲取 ${provider.provider_type} 提供者的模型列表...`);
+            const result = await api.aiProviders.getAvailableModels(provider.id);
+            console.log(`[AIWritingPanel] ${provider.provider_type} 模型列表結果:`, result);
+            
+            if (result.success && result.models) {
+              // 🔥 修復：處理模型對象格式，提取模型名稱
+              const modelList = result.models.map((model: unknown) => {
+                // 如果是字符串，直接返回
+                if (typeof model === 'string') {
+                  return model;
+                }
+                // 如果是對象，提取 id 或 name 字段
+                if (typeof model === 'object' && model !== null) {
+                  const modelObj = model as { id?: string; name?: string };
+                  return modelObj.id || modelObj.name || String(model);
+                }
+                // 其他情況轉換為字符串
+                return String(model);
+              });
+              
+              setProviderModels(modelList);
+              console.log(`[AIWritingPanel] 成功設置 ${modelList.length} 個模型:`, modelList.slice(0, 5)); // 只顯示前5個避免日誌過長
+            } else {
+              console.warn(`[AIWritingPanel] 獲取模型失敗:`, result.error);
+              setProviderModels([]);
+            }
+            break;
+          }
+          default:
+            setProviderModels([]);
+        }
+      } catch (error) {
+        console.error(`[AIWritingPanel] 獲取提供者 ${provider.provider_type} 的模型列表失敗:`, error);
+        // 發生錯誤時回退到空列表
+        setProviderModels([]);
+        
+        // 顯示友好的錯誤提示
+        dispatch(addNotification({
+          type: 'warning',
+          title: '模型列表獲取失敗',
+          message: `無法獲取 ${provider.name} 的模型列表，請檢查網路連接或 API 設定`,
+          duration: 5000,
+        }));
+      }
+    };
+
+    fetchProviderModels();
+  }, [currentProviderId, providers, availableModels, dispatch]);
 
   // 清理效果：組件卸載時取消正在進行的請求
   useEffect(() => {
+    const abortController = abortControllerRef.current;
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      if (abortController) {
+        abortController.abort();
       }
     };
   }, []);
   
 
-  // 生成文本
+  // 📊 多版本生成文本 with 進度追蹤
   const handleGenerate = async () => {
-    console.log('🚀 handleGenerate 被調用了！');
-    console.log('📊 當前狀態:', { currentModel, editor, isOllamaConnected, isGenerating });
-    
     if (!currentModel) {
       dispatch(addNotification({
         type: 'warning',
         title: '未選擇模型',
-        message: '請先在 AI 設定中選擇一個模型',
+        message: '請先選擇一個 AI 模型',
         duration: 3000,
       }));
       return;
     }
 
-    // 🔥 修復：移除模型 ID 白名單驗證，信任 API 返回的模型
-    // 如果模型無效，API 會返回錯誤，由錯誤處理機制處理
-    const currentProvider = providers.find(p => p.id === currentProviderId || p.id === selectedProviderId);
-    console.log('🎯 使用模型:', { 
-      provider: currentProvider?.provider_type, 
-      model: currentModel,
-      note: 'API驅動模式，信任所有API返回的模型'
-    });
-
-    // 顯示模型資訊（如果可用）
-    if (currentProvider) {
-      const modelInfo = getModelInfo(currentProvider.provider_type, currentModel);
-      if (modelInfo) {
-        console.log('✅ 使用有效模型:', {
-          provider: currentProvider.provider_type,
-          model: modelInfo.name,
-          maxTokens: modelInfo.maxTokens,
-          contextWindow: modelInfo.contextWindow
-        });
-      }
-    }
-    
-    // 檢查是否有選擇位置
     if (!editor) {
-      console.log('❌ editor 實例不存在！');
       dispatch(addNotification({
         type: 'error',
         title: '編輯器未準備好',
@@ -291,487 +586,172 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }));
       return;
     }
-    
-    console.log('✅ editor 實例存在:', editor);
+
     let { selection } = editor;
-    console.log('📍 selection 狀態:', selection);
     
     // 如果沒有選擇，自動設置到文檔末尾
     if (!selection) {
-      console.log('🎯 沒有選擇位置，自動移到文檔末尾');
       const end = Editor.end(editor, []);
       Transforms.select(editor, end);
       selection = editor.selection;
-      console.log('📍 新的 selection 狀態:', selection);
     }
     
     // 確保選擇是折疊的（游標位置）
     if (selection && !Range.isCollapsed(selection)) {
-      console.log('🎯 選擇不是游標位置，折疊到末尾');
       Transforms.collapse(editor, { edge: 'end' });
       selection = editor.selection;
-      console.log('📍 折疊後的 selection 狀態:', selection);
     }
     
+    // 🚀 初始化多版本生成狀態
     setIsGenerating(true);
     setGenerationOptions([]);
+    
+    // 📊 初始化進度狀態
+    setProgress({
+      isActive: true,
+      currentStep: '準備生成...',
+      totalVersions: generationCount,
+      completedVersions: 0,
+      failedVersions: 0,
+      progress: 0,
+      errors: []
+    });
+    
+    const position = selection?.anchor.offset || 0;
+    const activeProviderId = currentProviderId;
+    
+    if (!activeProviderId) {
+      setProgress(prev => ({ ...prev, isActive: false }));
+      setIsGenerating(false);
+      dispatch(addNotification({
+        type: 'error',
+        title: '設定錯誤',
+        message: '請先在設定中選擇 AI 提供商和模型',
+        duration: 5000,
+      }));
+      return;
+    }
+
+    // 🎯 多版本生成邏輯
+    const results: GenerationOption[] = [];
+    const errors: string[] = [];
     
     // 創建 AbortController 用於取消請求
     abortControllerRef.current = new AbortController();
     
-    // 開始進度追蹤
-    dispatch(startProgress({
-      title: 'AI 續寫',
-      description: `正在使用 ${currentModel} 模型生成文本`,
-      totalSteps: generationCount,
-      completedSteps: 0,
-      progress: 0
-    }));
-    
-    // 等待一小段時間以確保進度已創建
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
-    // 從 store 獲取最新的進度 ID
-    const progressState = store.getState().progress;
-    const latestProgress = progressState.indicators[progressState.indicators.length - 1];
-    const newProgressId = latestProgress?.id;
-    
-    if (!newProgressId) {
-      console.error('無法創建進度指示器');
-      return;
-    }
-    
-    setProgressId(newProgressId);
-
     try {
-      dispatch(updateProgress({
-        id: newProgressId,
-        progress: 10,
-        currentStep: '準備生成上下文...'
-      }));
-      
-      // 🧠 Phase 4: 智慧續寫策略系統
-      console.log('🧠 開始智慧續寫策略分析...');
-      let chapterNotesAnalysis = null;
-      
-      // 分析章節筆記以制定寫作策略
-      if (hasChapterNotes && currentChapter?.metadata) {
-        console.log('📝 分析章節筆記以制定寫作策略...');
-        
-        dispatch(updateProgress({
-          id: newProgressId,
-          progress: 12,
-          currentStep: '分析章節筆記制定寫作策略...'
+      for (let i = 0; i < generationCount; i++) {
+        // 📊 更新進度
+        setProgress(prev => ({
+          ...prev,
+          currentStep: `正在生成第 ${i + 1} 個版本...`,
+          progress: (i / generationCount) * 100
         }));
         
+        // 🎨 為每個版本創建略微不同的參數
+        const versionParams = {
+          temperature: Math.max(0.3, Math.min(1.2, temperature + (i - 1) * 0.15)),
+          maxTokens: maxTokens + (i * 50), // 每個版本稍微不同的長度
+          topP: Math.max(0.5, Math.min(1.0, topP + (i - 1) * 0.1)),
+          presencePenalty: Math.max(0, Math.min(1.5, presencePenalty + (i * 0.2))),
+        };
+        
         try {
-          const metadata = JSON.parse(currentChapter.metadata);
-          const notes = metadata.notes?.trim() || '';
-          if (notes) {
-            chapterNotesAnalysis = analyzeChapterNotes(notes);
-          }
-        } catch (_e) {
-          console.warn('無法解析章節 metadata 進行筆記分析');
-        }
-        
-        console.log('📊 章節筆記分析結果:', chapterNotesAnalysis);
-        
-        // 根據筆記分析調整生成參數
-        if (chapterNotesAnalysis && chapterNotesAnalysis.style.dialogue > 0.6) {
-          console.log('💬 檢測到對話重點，調整參數支持對話生成');
-          setTemperature(prev => Math.min(1.0, prev + 0.1)); // 稍微增加創意性
-        }
-        
-        if (chapterNotesAnalysis && chapterNotesAnalysis.style.action > 0.6) {
-          console.log('⚡ 檢測到動作場景，調整參數支持動作描述');
-          setMaxTokens(prev => Math.min(800, prev + 100)); // 增加輸出長度
-        }
-        
-        if (chapterNotesAnalysis && chapterNotesAnalysis.style.emotion > 0.7) {
-          console.log('💝 檢測到情感重點，調整參數支持情感表達');
-          setPresencePenalty(prev => Math.max(0, prev - 0.2)); // 降低重複懲罰
-        }
-      }
-      
-      // 🧠 NLP 智能分析當前文本
-      console.log('🧠 開始 NLP 文本分析...');
-      const editorText = Editor.string(editor, []);
-      console.log('📝 當前文本長度:', editorText.length);
-      
-      dispatch(updateProgress({
-        id: newProgressId,
-        progress: 15,
-        currentStep: '分析寫作風格...'
-      }));
-      
-      // 使用改進的傳統參數生成
-      const generateTraditionalParams = () => {
-        const variations = [];
-        for (let i = 0; i < generationCount; i++) {
-          // 🔥 更新：根據官方文檔調整各模型的 token 限制
-          let adjustedMaxTokens = maxTokens;
-          if (currentModel && currentModel.includes('gemini-2.5-flash')) {
-            // Gemini 2.5 Flash 提高到實用範圍
-            adjustedMaxTokens = Math.min(650, maxTokens + (i * 50)); // 🚀 基礎 650，符合 Gemini 2.5 Flash 官方規範
-            console.log(`🎯 Gemini 2.5 Flash 優化參數，使用 ${adjustedMaxTokens} tokens`);
-          } else if (currentModel && currentModel.includes('gemini-2.5-pro')) {
-            // Gemini 2.5 Pro 提高到更高範圍
-            adjustedMaxTokens = Math.min(1000, maxTokens + (i * 80)); // 🚀 基礎 1000，符合 Gemini 2.5 Pro 官方規範
-            console.log(`🧠 Gemini 2.5 Pro 優化參數，使用 ${adjustedMaxTokens} tokens`);
-          } else {
-            adjustedMaxTokens = maxTokens + (i * 30); // 其他模型保持原有變化
+          // 🔄 如果不是第一個請求，添加延遲避免 API 限制
+          if (i > 0) {
+            const isGeminiAPI = currentModel?.includes('gemini');
+            const delay = isGeminiAPI ? 2000 : 500; // Gemini 需要更長延遲
+            await new Promise(resolve => setTimeout(resolve, delay));
           }
           
-          // 🧠 Phase 4: 根據章節筆記分析調整參數
-          if (chapterNotesAnalysis) {
-            // 基於筆記分析微調參數
-            const styleModifier = chapterNotesAnalysis.style;
-            const toneModifier = chapterNotesAnalysis.tone;
-            
-            // 根據寫作風格調整溫度
-            let tempAdjustment = 0;
-            if (styleModifier.dialogue > 0.6) tempAdjustment += 0.1; // 對話需要更多變化
-            if (styleModifier.action > 0.6) tempAdjustment += 0.05; // 動作場景需要適度變化
-            if (styleModifier.emotion > 0.7) tempAdjustment += 0.15; // 情感場景需要更多創意
-            
-            // 根據情感基調調整參數
-            if (toneModifier.dramatic > 0.6) {
-              adjustedMaxTokens = Math.min(adjustedMaxTokens + 100, 900); // 戲劇性場景需要更多描述
-            }
-            
-            console.log(`📝 章節筆記調整: 溫度+${tempAdjustment}, Token+${adjustedMaxTokens - maxTokens}`);
-          }
-          
-          const variation = {
-            temperature: Math.max(0.2, Math.min(1.2, temperature + (i - 1) * 0.2)), // 更大變化
-            maxTokens: adjustedMaxTokens, // 🔥 使用調整後的值
-            topP: Math.max(0.5, Math.min(1.0, topP + (i - 1) * 0.2)),
-            presencePenalty: Math.max(0, Math.min(1.5, presencePenalty + (i * 0.3))),
-            frequencyPenalty: Math.max(0, Math.min(1.5, frequencyPenalty + (i * 0.25))),
-            maxContextTokens: 2000,
-            // 🧠 Phase 4: 添加章節筆記提示
-            chapterNotes: chapterNotesAnalysis
-          };
-          variations.push(variation);
-        }
-        return variations;
-      };
-      
-      let paramVariations = [];
-      
-      if (editorText.length > 50) {
-        // 有足夠文本進行NLP分析
-        try {
-          const context = analyzeWritingContext(editorText);
-          console.log('📊 NLP 分析結果:', context);
-          
-          dispatch(updateProgress({
-            id: newProgressId,
-            progress: 18,
-            currentStep: `檢測到${context.emotionalTone}風格，生成智能參數...`
-          }));
-          
-          // 使用智能參數生成
-          for (let i = 0; i < generationCount; i++) {
-            const smartParams = generateSmartParams(context, temperature, maxTokens, currentModel || '');
-            
-            // 為每個版本創建不同的變化 - 🔥 更新：使用更合理的 token 限制
-            let adjustedMaxTokens = smartParams.maxTokens;
-            if (currentModel && currentModel.includes('gemini-2.5-flash')) {
-              // Gemini 2.5 Flash 現在可以使用更高的 token 數
-              adjustedMaxTokens = smartParams.maxTokens + (i * 30); // 允許適度變化
-            } else if (currentModel && currentModel.includes('gemini-2.5-pro')) {
-              // Gemini 2.5 Pro 可以有更大的變化範圍
-              adjustedMaxTokens = smartParams.maxTokens + (i * 50); // 更大的變化幅度
-            } else {
-              // 其他模型保持原有的變化策略
-              adjustedMaxTokens = smartParams.maxTokens + (i * 20);
-            }
-            
-            // 🧠 Phase 4: 結合章節筆記分析
-            if (chapterNotesAnalysis) {
-              // 根據筆記情感調整參數
-              const emotionLevel = chapterNotesAnalysis.tone.emotional;
-              if (emotionLevel > 0.7) {
-                adjustedMaxTokens += 50; // 情感豐富的場景需要更多描述
-              }
-              
-              // 根據情節重要性調整創意度
-              const plotImportance = chapterNotesAnalysis.content.plot;
-              if (plotImportance > 0.8) {
-                smartParams.temperature = Math.min(1.0, smartParams.temperature + 0.1); // 重要情節需要更多創意
-              }
-            }
-            
-            const variation = {
-              temperature: smartParams.temperature + (i - 1) * 0.15, // 更大的變化範圍
-              maxTokens: adjustedMaxTokens, // 使用調整後的 token 數量
-              topP: Math.max(0.3, Math.min(1.0, topP + (i - 1) * 0.15)), // topP變化
-              presencePenalty: Math.max(0, Math.min(2.0, presencePenalty + (i * 0.2))), // 存在懲罰變化
-              frequencyPenalty: Math.max(0, Math.min(2.0, frequencyPenalty + (i * 0.15))), // 頻率懲罰變化
-              maxContextTokens: 2000,
-              style: smartParams.style, // 使用NLP分析的風格
-              contextHints: smartParams.contextHints, // 使用NLP提取的上下文提示
-              // 🧠 Phase 4: 添加章節筆記分析結果
-              chapterNotes: chapterNotesAnalysis
-            };
-            
-            paramVariations.push(variation);
-            console.log(`🎯 版本${i + 1}參數:`, variation);
-          }
-          
-        } catch (error) {
-          console.warn('⚠️ NLP分析失敗，使用傳統參數生成:', error);
-          // 回退到改進的傳統方法
-          paramVariations = generateTraditionalParams();
-        }
-      } else {
-        // 文本太短，使用改進的傳統參數生成
-        console.log('📝 文本較短，使用改進的傳統參數生成');
-        paramVariations = generateTraditionalParams();
-      }
-      
-      dispatch(updateProgress({
-        id: newProgressId,
-        progress: 20,
-        currentStep: `開始生成 ${generationCount} 個版本...`
-      }));
-      
-      // 🔥 改為串行生成以避免觸發 API 頻率限制（特別是免費版）
-      const results: (GenerationOption | null)[] = [];
-      
-      // 檢測是否使用 Gemini 免費版（需要更謹慎的請求策略）
-      const isGeminiFreeAPI = currentModel?.includes('gemini');
-      const delayBetweenRequests = isGeminiFreeAPI ? 3000 : 500; // Gemini 免費版延遲 3 秒
-      
-      for (let index = 0; index < paramVariations.length; index++) {
-        const params = paramVariations[index];
-        
-        // 如果不是第一個請求，添加延遲
-        if (index > 0) {
-          await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
-        }
-        try {
-          dispatch(updateProgress({
-            id: newProgressId,
-            progress: 20 + (index * 60 / generationCount),
-            currentStep: `生成第 ${index + 1} 個版本...`,
-            completedSteps: index
-          }));
-          
-          const startTime = Date.now();
-          const position = selection?.anchor.offset || 0;
-          
-          // 🧠 Phase 4: 構建智能系統提示
-          let systemPrompt = '你是一個專業的小說續寫助手。請直接輸出繁體中文的故事內容，不要包含任何英文說明、思考過程或指導語句。只輸出純粹的故事續寫內容。';
-          
-          // 根據章節筆記分析添加特定指導
-          if (chapterNotesAnalysis) {
-            const { style, tone, content } = chapterNotesAnalysis;
-            
-            let styleGuidance = '';
-            if (style.dialogue > 0.6) {
-              styleGuidance += '注重角色對話的自然性和個性表現。';
-            }
-            if (style.action > 0.6) {
-              styleGuidance += '描述動作場景時要生動有力，節奏明快。';
-            }
-            if (style.emotion > 0.7) {
-              styleGuidance += '深入刻畫角色內心情感和心理變化。';
-            }
-            
-            let toneGuidance = '';
-            if (tone.dramatic > 0.6) {
-              toneGuidance += '營造戲劇張力，突出情節轉折。';
-            }
-            if (tone.romantic > 0.6) {
-              toneGuidance += '注重浪漫氛圍的營造和情感細節。';
-            }
-            if (tone.humorous > 0.5) {
-              toneGuidance += '適當加入幽默元素，保持輕鬆愉快的氣氛。';
-            }
-            
-            if (styleGuidance || toneGuidance) {
-              systemPrompt += `\n\n根據當前章節筆記分析，請注意：${styleGuidance}${toneGuidance}`;
-            }
-            
-            // 添加內容焦點提示
-            if (content.plot > 0.7) {
-              systemPrompt += '重點推進主要情節發展。';
-            }
-            if (content.character > 0.7) {
-              systemPrompt += '著重角色發展和性格展現。';
-            }
-          }
-          
-          // 使用多提供商 API 生成文本
-          let result: string;
-          const activeProviderId = selectedProviderId || currentProviderId;
-          
-          // 🔥 強制調試：打印詳細的路由信息
-          console.log('🔍 [DEBUG] 生成文本路徑選擇詳細信息:', { 
-            selectedProviderId, 
-            currentProviderId, 
-            activeProviderId, 
-            currentModel,
-            providers: providers?.map(p => ({id: p.id, name: p.name})),
-            willUseNewPath: !!activeProviderId,
-            fallbackToOldPath: !activeProviderId
-          });
-          
-          // 🔥 如果沒有 activeProviderId，強制報錯並提示用戶
-          if (!activeProviderId) {
-            console.error('❌ [DEBUG] activeProviderId 為空！無法使用多提供商 API');
-            console.error('❌ [DEBUG] 請確保：1) 選擇了 AI 提供商，2) 提供商已啟用，3) 已選擇模型');
-            throw new Error('請先在設定中選擇 AI 提供商和模型');
-          }
-          
-          if (activeProviderId) {
-            // 使用選擇的提供商
-            const genResult = await dispatch(generateTextWithProvider({
-              prompt: `續寫位置: ${position}`,
-              providerId: activeProviderId,
-              model: currentModel,
-              projectId: projectId,
-              chapterId: chapterId,
-              position: position,  // 🔥 新增：傳遞位置參數給後端
-              aiParams: {
-                temperature: params.temperature,
-                maxTokens: params.maxTokens,
-                topP: params.topP,
-                presencePenalty: params.presencePenalty,
-                frequencyPenalty: params.frequencyPenalty,
-              },
-              systemPrompt // 🧠 Phase 4: 使用智能系統提示
-            })).unwrap();
-            result = genResult.result;
-          } else {
-            // 使用舊版 Ollama API（向後兼容）
-            result = await api.ai.generateWithContext(
-              projectId, 
-              chapterId, 
-              position, 
-              currentModel, 
-              params
-            );
-          }
-          const generationTime = Date.now() - startTime;
+          const genResult = await dispatch(generateTextWithProvider({
+            prompt: `續寫位置: ${position}`,
+            providerId: activeProviderId,
+            model: currentModel,
+            projectId: projectId,
+            chapterId: chapterId,
+            position: position,
+            aiParams: versionParams,
+            systemPrompt: '你是一個專業的小說續寫助手。請直接輸出繁體中文的故事內容，不要包含任何英文說明、思考過程或指導語句。只輸出純粹的故事續寫內容。'
+          })).unwrap();
           
           // 過濾思考標籤
-          const filteredText = filterThinkingTags(result);
+          const filteredText = filterThinkingTags(genResult.result);
           
-          // 保存到 AI 歷史記錄
-          try {
-            await dispatch(createAIHistory({
-              projectId,
-              chapterId,
-              model: currentModel,
-              prompt: `在位置 ${position} 進行 AI 續寫`,
-              generatedText: filteredText,
-              parameters: params,
-              languagePurity: undefined, // 稍後可以整合語言純度分析
-              tokenCount: undefined, // 稍後可以添加 token 計數
-              generationTimeMs: generationTime,
-              position: position,
-            })).unwrap();
-          } catch (historyError) {
-            console.error('保存 AI 歷史記錄失敗:', historyError);
-            // 不中斷主流程
-          }
-          
+          // ✅ 成功生成版本
           results.push({
-            id: `${Date.now()}-${index}`,
+            id: `${Date.now()}-${i}`,
             text: filteredText,
-            temperature: params.temperature,
+            temperature: versionParams.temperature,
             timestamp: new Date()
           });
-        } catch (error) {
-          console.error(`生成第 ${index + 1} 個版本失敗:`, error);
           
-          // 🔥 智能檢測配額錯誤並提供詳細建議
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          // 📊 更新成功計數
+          setProgress(prev => ({
+            ...prev,
+            completedVersions: prev.completedVersions + 1,
+            progress: ((i + 1) / generationCount) * 100
+          }));
+          
+        } catch (versionError) {
+          // ❌ 版本生成失敗
+          const errorMessage = versionError instanceof Error ? versionError.message : `第 ${i + 1} 版本生成失敗`;
+          errors.push(errorMessage);
+          
+          // 📊 更新失敗計數
+          setProgress(prev => ({
+            ...prev,
+            failedVersions: prev.failedVersions + 1,
+            errors: [...prev.errors, errorMessage]
+          }));
+          
+          console.error(`版本 ${i + 1} 生成失敗:`, versionError);
+          
+          // 🚫 如果是配額錯誤，停止後續生成
           if (errorMessage.includes('429') || errorMessage.includes('quota') || 
-              errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('免費版') ||
-              errorMessage.includes('配額已達上限') || errorMessage.includes('Too Many Requests')) {
+              errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('配額')) {
             console.warn('檢測到 API 配額限制，停止後續生成');
-            
-            // 檢查是否有詳細的錯誤信息（來自我們優化的後端）
-            const hasDetailedInfo = errorMessage.includes('建議等待時間') || errorMessage.includes('解決方案');
-            
-            let notificationMessage;
-            if (hasDetailedInfo) {
-              // 使用後端提供的詳細錯誤信息
-              notificationMessage = errorMessage;
-            } else {
-              // 提供通用的增強建議
-              notificationMessage = `🚫 API 配額已達上限\n\n🔧 建議解決方案：\n• 等待幾分鐘後再試（免費配額通常每分鐘重置）\n• 使用付費版 OpenRouter (google/gemini-2.5-flash)\n• 切換到本地 Ollama 模型\n• 或嘗試其他 AI 提供者`;
-            }
-            
-            dispatch(addNotification({
-              type: 'warning',
-              title: '⚠️ API 配額限制',
-              message: notificationMessage,
-              duration: 15000, // 延長顯示時間讓用戶閱讀建議
-            }));
-            break; // 停止後續請求
+            break;
           }
-          
-          results.push(null);
         }
       }
       
-      dispatch(updateProgress({
-        id: newProgressId,
-        progress: 90,
-        currentStep: '處理生成結果...',
-        completedSteps: generationCount
+      // 🎉 設置生成結果
+      setGenerationOptions(results);
+      
+      // 📊 最終進度更新
+      setProgress(prev => ({
+        ...prev,
+        isActive: false,
+        currentStep: `生成完成`,
+        progress: 100
       }));
       
-      // 過濾掉失敗的結果
-      const validResults = results.filter((result): result is GenerationOption => result !== null);
-      
-      if (validResults.length === 0) {
-        throw new Error('所有生成嘗試都失敗了');
-      }
-      
-      // 完成進度
-      dispatch(completeProgress(newProgressId));
-      
-      setGenerationOptions(validResults);
-      
-      // 🧠 Phase 4: 根據章節筆記提供智能建議
-      let successMessage = `成功生成 ${validResults.length} 個版本，請選擇您喜歡的版本`;
-      if (chapterNotesAnalysis) {
-        const dominantStyle = Object.entries(chapterNotesAnalysis.style)
-          .sort(([,a], [,b]) => b - a)[0][0];
-        successMessage += `（已根據${dominantStyle}風格優化）`;
-      }
-      
-      dispatch(addNotification({
-        type: 'success',
-        title: 'AI 續寫完成',
-        message: successMessage,
-        duration: 3000,
-      }));
-      
-    } catch (error) {
-      console.error('AI 續寫失敗:', error);
-      
-      // 標記進度失敗
-      if (newProgressId) {
-        dispatch(failProgress({
-          id: newProgressId,
-          error: {
-            id: Date.now().toString(),
-            code: 'AI_GENERATION_ERROR',
-            message: error instanceof Error ? error.message : '生成文本時發生錯誤',
-            severity: 'high' as ErrorSeverity,
-            category: 'ai',
-            timestamp: new Date(),
-            stack: error instanceof Error ? error.stack : undefined
-          }
+      // 📢 生成完成通知
+      if (results.length > 0) {
+        const successMessage = errors.length > 0 
+          ? `成功生成 ${results.length} 個版本，${errors.length} 個失敗`
+          : `成功生成 ${results.length} 個版本`;
+          
+        dispatch(addNotification({
+          type: results.length === generationCount ? 'success' : 'warning',
+          title: 'AI 續寫完成',
+          message: successMessage,
+          duration: 4000,
         }));
+      } else {
+        throw new Error('所有版本生成都失敗了');
       }
+
+    } catch (error) {
+      console.error('AI 續寫完全失敗:', error);
+      
+      // 📊 進度失敗狀態
+      setProgress(prev => ({
+        ...prev,
+        isActive: false,
+        currentStep: '生成失敗'
+      }));
       
       dispatch(addNotification({
         type: 'error',
@@ -781,7 +761,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }));
     } finally {
       setIsGenerating(false);
-      setProgressId(null);
+      // 清理 AbortController
       abortControllerRef.current = null;
     }
   };
@@ -802,7 +782,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       // 獲取當前選擇位置
       const { selection } = editor;
       if (selection) {
-        // 在當前位置插入文本（再次過濾確保安全）
+        // 在當前位置插入文本
         Transforms.insertText(editor, filterThinkingTags(option.text));
         
         // 標記選項為已選擇
@@ -816,7 +796,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         dispatch(addNotification({
           type: 'success',
           title: '已插入文本',
-          message: `已成功插入 AI 生成的文本（溫度: ${option.temperature.toFixed(1)}）`,
+          message: `已成功插入 AI 生成的文本`,
           duration: 3000,
         }));
         
@@ -843,7 +823,6 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
     }
     setGenerationOptions([]);
     setIsGenerating(false);
-    // 取消操作，暫時不更新進度
   }, []);
 
   // 重新生成特定選項
@@ -862,66 +841,26 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         maxTokens,
         topP,
         presencePenalty,
-        frequencyPenalty,
-        maxContextTokens: 2000,
       };
 
-      const startTime = Date.now();
-      // 使用多提供商 API 重新生成文本
-      let result: string;
-      const activeProviderId = selectedProviderId || currentProviderId;
-      if (activeProviderId) {
-        // 使用選擇的提供商
-        const genResult = await dispatch(generateTextWithProvider({
-          prompt: `續寫位置: ${selection.anchor.offset}`,
-          providerId: activeProviderId,
-          model: currentModel,
-          projectId: projectId,
-          chapterId: chapterId,
-          position: selection.anchor.offset,  // 🔥 新增：傳遞位置參數給後端
-          aiParams: {
-            temperature: params.temperature,
-            maxTokens: params.maxTokens,
-            topP: params.topP,
-            presencePenalty: params.presencePenalty,
-            frequencyPenalty: params.frequencyPenalty,
-          },
-          systemPrompt: '你是一個專業的小說續寫助手。請直接輸出繁體中文的故事內容，不要包含任何英文說明、思考過程或指導語句。只輸出純粹的故事續寫內容。'
-        })).unwrap();
-        result = genResult.result;
-      } else {
-        // 使用舊版 Ollama API（向後兼容）
-        result = await api.ai.generateWithContext(
-          projectId, 
-          chapterId, 
-          selection.anchor.offset, 
-          currentModel, 
-          params
-        );
+      const activeProviderId = currentProviderId;
+      if (!activeProviderId) {
+        throw new Error('請先在設定中選擇 AI 提供商和模型');
       }
-      const generationTime = Date.now() - startTime;
+
+      const genResult = await dispatch(generateTextWithProvider({
+        prompt: `續寫位置: ${selection.anchor.offset}`,
+        providerId: activeProviderId,
+        model: currentModel,
+        projectId: projectId,
+        chapterId: chapterId,
+        position: selection.anchor.offset,
+        aiParams: params,
+        systemPrompt: '你是一個專業的小說續寫助手。請直接輸出繁體中文的故事內容，不要包含任何英文說明、思考過程或指導語句。只輸出純粹的故事續寫內容。'
+      })).unwrap();
       
       // 過濾思考標籤
-      const filteredText = filterThinkingTags(result);
-      
-      // 保存到 AI 歷史記錄
-      try {
-        await dispatch(createAIHistory({
-          projectId,
-          chapterId,
-          model: currentModel,
-          prompt: `重新生成版本 - 在位置 ${selection.anchor.offset} 進行 AI 續寫`,
-          generatedText: filteredText,
-          parameters: params,
-          languagePurity: undefined,
-          tokenCount: undefined,
-          generationTimeMs: generationTime,
-          position: selection.anchor.offset,
-        })).unwrap();
-      } catch (historyError) {
-        console.error('保存 AI 歷史記錄失敗:', historyError);
-        // 不中斷主流程
-      }
+      const filteredText = filterThinkingTags(genResult.result);
 
       // 更新該選項
       setGenerationOptions(prev => 
@@ -948,12 +887,11 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         duration: 3000,
       }));
     }
-  }, [generationOptions, currentModel, editor, projectId, chapterId, maxTokens, topP, presencePenalty, frequencyPenalty, dispatch, selectedProviderId, currentProviderId]);
+  }, [generationOptions, currentModel, editor, projectId, chapterId, maxTokens, topP, presencePenalty, dispatch, currentProviderId]);
 
-  // 清除所有選項
+  // 清除所有選項（省略，保持原有代碼）
   const handleClearOptions = useCallback(() => {
     setGenerationOptions([]);
-    // 清除選項，暫時不更新進度
   }, []);
   
   return (
@@ -963,320 +901,257 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           <h3 className="text-lg font-medium text-gold-400">AI 續寫</h3>
           <button
             onClick={() => setShowAIHistory(!showAIHistory)}
-            className="text-xs text-blue-400 hover:text-blue-300 transition-colors px-2 py-1 border border-blue-500/30 rounded-md hover:border-blue-400/50"
-            title="查看 AI 生成歷程"
+            className="text-sm text-gray-400 hover:text-gold-400 transition-colors"
           >
-            📝 {showAIHistory ? '隱藏歷程' : '查看歷程'}
+            {showAIHistory ? '隱藏歷史' : '查看歷史'}
           </button>
         </div>
-        <p className="text-sm text-gray-400">
-          使用 AI 協助您繼續寫作。請先將游標放在您希望 AI 續寫的位置。
-        </p>
         
-        {/* 🔥 新增：章節筆記狀態指示器 */}
-        {hasChapterNotes && (
-          <div className="flex items-center text-xs text-green-400 bg-green-900/20 border border-green-500/30 rounded-md px-2 py-1 mt-2">
-            <span className="mr-1">📝</span>
-            <span>已包含章節筆記 - AI 將參考您的創作筆記進行續寫</span>
-          </div>
-        )}
-      </div>
-      
-      {/* 模型選擇和基本參數設置 */}
-      <div className="space-y-4 mb-4">
-        {/* 簡化的AI提供者顯示 */}
-        {selectedProviderId ? (
-          // 已選擇提供者：顯示當前使用的提供者
-          <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-gray-400">使用中：</span>
-                <span className="text-sm text-white font-medium">
-                  {(() => {
-                    const provider = providers.find(p => p.id === selectedProviderId);
-                    if (!provider) return '載入中...';
-                    const icon = {
-                      'ollama': '🦙',
-                      'openai': '🤖',
-                      'gemini': '✨',
-                      'claude': '🧠',
-                      'openrouter': '🔄'
-                    }[provider.provider_type] || '';
-                    return `${icon} ${provider.name}`;
-                  })()}
-                </span>
-                {currentModel && (
-                  <span className="text-xs text-gold-400">• {currentModel}</span>
-                )}
-              </div>
-              <button
-                onClick={() => {
-                  // 🔥 修復：切換到手動選擇模式，同時清空模型選擇
-                  console.log('[AIWritingPanel] 用戶點擊重新選擇，清空提供者和模型選擇');
-                  setSelectedProviderId(null);
-                  setProviderModels([]); // 清空模型列表
-                  dispatch(setCurrentModel(null)); // 清空當前模型選擇
-                }}
-                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                title="重新選擇提供者"
-              >
-                重新選擇
-              </button>
-            </div>
-          </div>
-        ) : (
-          // 手動選擇模式：顯示完整選擇器
-          <>
-            <div>
-              <label className="block text-sm text-gray-300 mb-1">
-                AI 提供商
-                {currentProviderId && (
-                  <button
-                    onClick={() => {
-                      setSelectedProviderId(currentProviderId);
-                    }}
-                    className="ml-2 text-xs text-gold-400 hover:text-gold-300"
-                  >
-                    (使用當前設定)
-                  </button>
-                )}
-              </label>
-              <select
-                value={selectedProviderId || ''}
-                onChange={(e) => {
-                  const providerId = e.target.value;
-                  console.log('[AIWritingPanel] 用戶選擇提供商:', providerId);
-                  setSelectedProviderId(providerId);
-                  dispatch(setCurrentModel(null)); // 重置模型選擇
-                }}
-                className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
-                disabled={isGenerating}
-              >
-                <option value="">選擇 AI 提供商...</option>
-                {providers.map(provider => (
-                  <option key={provider.id} value={provider.id}>
-                    {provider.provider_type === 'ollama' && '🦙 '}
-                    {provider.provider_type === 'openai' && '🤖 '}
-                    {provider.provider_type === 'gemini' && '✨ '}
-                    {provider.provider_type === 'claude' && '🧠 '}
-                    {provider.provider_type === 'openrouter' && '🔄 '}
-                    {provider.name}
-                    {provider.id === defaultProviderId && ' (預設)'}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="text-sm text-gray-400 mb-3">
+          使用 AI 協助您繼續寫作。請先將游標放置在想要 AI 續寫的位置。
+        </div>
 
-            {/* AI 模型選擇 */}
+        {/* 🔧 提供者和模型顯示 */}
+        <div className="mb-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700 space-y-3">
+          {/* 提供者狀態 */}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-300">使用</span>
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <span className="text-sm font-medium text-gold-400">
+                {currentProviderId ? 
+                  providers.find(p => p.id === currentProviderId)?.name || 'OpenRouter' : 
+                  'Ollama'
+                }
+              </span>
+            </div>
+            {currentProviderId && (
+              <span className="text-xs text-gray-500">已連線</span>
+            )}
+          </div>
+          
+          {/* 模型選擇 */}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-300 min-w-fit">AI 模型</span>
+            <select
+              value={currentModel || ''}
+              onChange={(e) => dispatch(setCurrentModel(e.target.value))}
+              className="flex-1 px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+            >
+              <option value="">選擇模型</option>
+              {currentProviderModels.map((model) => (
+                <option key={model} value={model}>{model}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 🚀 快速預設 */}
+        <div className="mb-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
+          <QuickPresets onApplyPreset={handleApplyPreset} />
+        </div>
+
+        {/* 📊 參數風險指示器 */}
+        <ParameterRiskIndicator 
+          temperature={temperature}
+          topP={topP}
+          presencePenalty={presencePenalty}
+          maxTokens={maxTokens}
+          generationCount={generationCount}
+        />
+
+        {/* 📈 智能參數控制 */}
+        <div className="mb-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
+          <div className="grid grid-cols-1 gap-4">
+            {/* 生成數量 */}
             <div>
-              <label className="block text-sm text-gray-300 mb-1">AI 模型</label>
-              <select
-                value={currentModel || ''}
-                onChange={(e) => dispatch(setCurrentModel(e.target.value))}
-                className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
-                disabled={isGenerating || (!selectedProviderId && availableModels.length === 0)}
-              >
-                <option value="">請選擇模型...</option>
-                {/* 如果有選擇提供商，顯示該提供商的模型 */}
-                {selectedProviderId && providerModels.map(model => (
-                  <option key={model} value={model}>{model}</option>
-                ))}
-                {/* 如果沒有選擇提供商，顯示 Ollama 模型（向後兼容） */}
-                {!selectedProviderId && availableModels.map(model => (
-                  <option key={model} value={model}>{model}</option>
-                ))}
-              </select>
-              {!selectedProviderId && !isOllamaConnected && (
-                <p className="text-xs text-red-400 mt-1">
-                  請選擇 AI 提供商或在 AI 設定中配置 Ollama 服務
-                </p>
-              )}
-              {selectedProviderId && providerModels.length === 0 && (
-                <p className="text-xs text-yellow-400 mt-1">
-                  正在載入模型列表或該提供商無可用模型
-                </p>
+              <label className="block text-xs text-gray-400 mb-1">
+                生成數量 ({generationCount})
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                value={generationCount}
+                onChange={(e) => setGenerationCount(Number(e.target.value))}
+                className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer"
+              />
+              <ParameterHelp parameterKey="generationCount" currentValue={generationCount} />
+            </div>
+            
+            {/* 生成長度 */}
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">
+                生成長度 ({maxTokens})
+              </label>
+              <input
+                type="range"
+                min="300"
+                max="1200"
+                step="50"
+                value={maxTokens}
+                onChange={(e) => setMaxTokens(Number(e.target.value))}
+                className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer"
+              />
+              <ParameterHelp parameterKey="maxTokens" currentValue={maxTokens} />
+            </div>
+            
+            {/* 創意度 */}
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">
+                創意度 ({temperature.toFixed(1)})
+              </label>
+              <input
+                type="range"
+                min="0.3"
+                max="1.2"
+                step="0.1"
+                value={temperature}
+                onChange={(e) => setTemperature(Number(e.target.value))}
+                className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer"
+              />
+              <ParameterHelp parameterKey="temperature" currentValue={temperature} />
+            </div>
+            
+            {/* 控制按鈕區域 */}
+            <div className="flex items-center justify-between pt-2 border-t border-cosmic-700">
+              <div>
+                <button
+                  onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center"
+                >
+                  <span className="mr-1">{showAdvancedSettings ? '🔽' : '▶️'}</span>
+                  {showAdvancedSettings ? '隱藏' : '顯示'}高級設置
+                </button>
+              </div>
+              
+              {hasChapterNotes && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                  <span className="text-xs text-purple-400">筆記優化</span>
+                </div>
               )}
             </div>
-          </>
-        )}
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">生成數量 ({generationCount})</label>
-            <p className="text-xs text-gray-400 mb-2">同時生成多個版本供您選擇，建議設置 3-5 個</p>
-            <input
-              type="range"
-              min="1"
-              max="5"
-              step="1"
-              value={generationCount}
-              onChange={(e) => setGenerationCount(parseInt(e.target.value))}
-              className="w-full"
-              disabled={isGenerating}
-            />
           </div>
           
-          <div>
-            <label className="block text-sm text-gray-300 mb-1">生成長度 ({maxTokens})</label>
-            <p className="text-xs text-gray-400 mb-2">約 {Math.round(maxTokens * 0.7)}-{Math.round(maxTokens * 1.2)} 字（思考式模型會扣除思考部分，實際內容更短）</p>
-            <input
-              type="range"
-              min="50"
-              max="1800"
-              step="10"
-              value={maxTokens}
-              onChange={(e) => setMaxTokens(parseInt(e.target.value))}
-              className="w-full"
-              disabled={isGenerating}
-            />
-          </div>
-        </div>
-        
-        <div>
-          <label className="block text-sm text-gray-300 mb-1">創意度 ({temperature.toFixed(1)})</label>
-          <p className="text-xs text-gray-400 mb-2">控制AI的創新程度：低值產生保守穩定的文本，高值產生更有創意但可能不穩定的內容</p>
-          <input
-            type="range"
-            min="0.1"
-            max="1.5"
-            step="0.1"
-            value={temperature}
-            onChange={(e) => setTemperature(parseFloat(e.target.value))}
-            className="w-full"
-            disabled={isGenerating}
-          />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
-            <span>保守</span>
-            <span>平衡</span>
-            <span>創意</span>
-          </div>
-        </div>
-        
-        {/* 進階設定 */}
-        <div>
-          <button
-            onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-            className="text-sm text-gold-400 hover:text-gold-300 transition-colors"
-            disabled={isGenerating}
-          >
-            {showAdvancedSettings ? '隱藏' : '顯示'}進階設定
-          </button>
-          
+          {/* 🔧 高級設置 */}
           {showAdvancedSettings && (
-            <div className="mt-3 space-y-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
+            <div className="mt-3 pt-3 border-t border-cosmic-700 space-y-4">
+              {/* 多樣性控制 (TopP) */}
               <div>
-                <label className="block text-sm text-gray-300 mb-1">Top-P ({topP.toFixed(1)})</label>
-                <p className="text-xs text-gray-400 mb-2">限制詞彙選擇範圍：低值選擇更安全的詞彙，高值允許更多樣的詞彙選擇</p>
+                <label className="block text-xs text-gray-400 mb-1">
+                  多樣性控制 - TopP ({topP.toFixed(1)})
+                </label>
                 <input
                   type="range"
                   min="0.1"
                   max="1.0"
-                  step="0.1"
+                  step="0.05"
                   value={topP}
-                  onChange={(e) => setTopP(parseFloat(e.target.value))}
-                  className="w-full"
-                  disabled={isGenerating}
+                  onChange={(e) => setTopP(Number(e.target.value))}
+                  className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer"
                 />
+                <ParameterHelp parameterKey="topP" currentValue={topP} />
               </div>
               
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm text-gray-300 mb-1">存在懲罰 ({presencePenalty.toFixed(1)})</label>
-                  <p className="text-xs text-gray-400 mb-2">避免重複話題：數值越高越避免重複已出現的內容主題</p>
-                  <input
-                    type="range"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value={presencePenalty}
-                    onChange={(e) => setPresencePenalty(parseFloat(e.target.value))}
-                    className="w-full"
-                    disabled={isGenerating}
-                  />
+              {/* 重複懲罰 */}
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">
+                  重複懲罰 ({presencePenalty.toFixed(1)})
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1.5"
+                  step="0.1"
+                  value={presencePenalty}
+                  onChange={(e) => setPresencePenalty(Number(e.target.value))}
+                  className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer"
+                />
+                <ParameterHelp parameterKey="presencePenalty" currentValue={presencePenalty} />
+              </div>
+              
+              {/* 高級設置說明 */}
+              <div className="bg-cosmic-900 border border-cosmic-600 rounded-lg p-3 mt-3">
+                <div className="text-xs text-gray-300 font-medium mb-2 flex items-center">
+                  <span className="mr-2">💡</span>
+                  高級參數說明
                 </div>
-                
-                <div>
-                  <label className="block text-sm text-gray-300 mb-1">頻率懲罰 ({frequencyPenalty.toFixed(1)})</label>
-                  <p className="text-xs text-gray-400 mb-2">避免重複用詞：數值越高越避免重複使用相同的詞語</p>
-                  <input
-                    type="range"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value={frequencyPenalty}
-                    onChange={(e) => setFrequencyPenalty(parseFloat(e.target.value))}
-                    className="w-full"
-                    disabled={isGenerating}
-                  />
+                <div className="text-xs text-gray-400 space-y-1">
+                  <div>• <strong>多樣性控制 (TopP)</strong>：核採樣參數，控制詞彙選擇範圍</div>
+                  <div>• <strong>重複懲罰</strong>：防止內容重複，鼓勵探討新話題</div>
+                  <div>• 建議新手使用快速預設，熟悉後再調整高級參數</div>
                 </div>
               </div>
             </div>
           )}
         </div>
-      </div>
-      
-      {/* 生成按鈕 */}
-      <div className="flex justify-center mb-4">
-        <button
-          onClick={handleGenerate}
-          disabled={isGenerating || !currentModel || (!selectedProviderId && !isOllamaConnected)}
-          className="btn-primary px-6 py-2"
-        >
-          {isGenerating ? '生成中...' : '開始 AI 續寫'}
-        </button>
-        
-        {isGenerating && (
+
+        {/* 生成按鈕 */}
+        {!isGenerating ? (
           <button
-            onClick={handleCancel}
-            className="btn-secondary ml-2"
+            onClick={handleGenerate}
+            disabled={!currentModel}
+            className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
+              !currentModel 
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 text-white shadow-lg'
+            }`}
           >
-            取消
+            {!currentModel ? '請先選擇模型' : `開始 AI 續寫 (${generationCount})`}
           </button>
+        ) : (
+          <div className="space-y-3">
+            <button
+              onClick={handleCancel}
+              className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+            >
+              取消生成
+            </button>
+            
+            {/* 📊 進度顯示組件 */}
+            {progress.isActive && (
+              <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-300">{progress.currentStep}</span>
+                  <span className="text-sm text-gold-400">{Math.round(progress.progress)}%</span>
+                </div>
+                
+                <div className="w-full bg-cosmic-900 rounded-full h-2 mb-3">
+                  <div 
+                    className="bg-gradient-to-r from-gold-500 to-gold-400 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${progress.progress}%` }}
+                  ></div>
+                </div>
+                
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>
+                    完成: {progress.completedVersions}/{progress.totalVersions}
+                  </span>
+                  {progress.failedVersions > 0 && (
+                    <span className="text-red-400">
+                      失敗: {progress.failedVersions}
+                    </span>
+                  )}
+                </div>
+                
+                {/* 錯誤列表 */}
+                {progress.errors.length > 0 && (
+                  <div className="mt-2 text-xs text-red-400">
+                    <div className="font-medium mb-1">錯誤詳情:</div>
+                    <ul className="list-disc list-inside space-y-1">
+                      {progress.errors.slice(-3).map((error, index) => (
+                        <li key={index} className="truncate">{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
-      
-      {/* 進度指示器 */}
-      {isGenerating && currentProgress && (
-        <div className="mb-4 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-300">{currentProgress.currentStep || currentProgress.description || currentProgress.title}</span>
-            <span className="text-sm text-gold-400">{currentProgress.progress}%</span>
-          </div>
-          
-          <div className="h-2 bg-cosmic-900 rounded-full overflow-hidden mb-2">
-            <div 
-              className={`h-full transition-all duration-500 ${
-                currentProgress.status === 'completed' ? 'bg-green-500' : 
-                currentProgress.status === 'running' ? 'bg-gold-500' : 
-                'bg-blue-500'
-              }`}
-              style={{ width: `${currentProgress.progress}%` }}
-            ></div>
-          </div>
-          
-          <div className="flex items-center justify-between text-xs text-gray-400">
-            <div className="flex items-center space-x-4">
-              <span className={`flex items-center ${currentProgress.status === 'pending' ? 'text-blue-400' : 'text-gray-500'}`}>
-                <div className={`w-2 h-2 rounded-full mr-1 ${currentProgress.status === 'pending' ? 'bg-blue-400 animate-pulse' : 'bg-gray-500'}`}></div>
-                準備
-              </span>
-              <span className={`flex items-center ${currentProgress.status === 'running' ? 'text-gold-400' : 'text-gray-500'}`}>
-                <div className={`w-2 h-2 rounded-full mr-1 ${currentProgress.status === 'running' ? 'bg-gold-400 animate-pulse' : 'bg-gray-500'}`}></div>
-                生成
-              </span>
-              <span className={`flex items-center ${currentProgress.status === 'running' && currentProgress.progress > 50 ? 'text-purple-400' : 'text-gray-500'}`}>
-                <div className={`w-2 h-2 rounded-full mr-1 ${currentProgress.status === 'running' && currentProgress.progress > 50 ? 'bg-purple-400 animate-pulse' : 'bg-gray-500'}`}></div>
-                處理
-              </span>
-              <span className={`flex items-center ${currentProgress.status === 'completed' ? 'text-green-400' : 'text-gray-500'}`}>
-                <div className={`w-2 h-2 rounded-full mr-1 ${currentProgress.status === 'completed' ? 'bg-green-400' : 'bg-gray-500'}`}></div>
-                完成
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-      
+
       {/* 生成結果 */}
       {generationOptions.length > 0 && (
         <div className="mt-4">
@@ -1365,27 +1240,16 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               </div>
             ))}
           </div>
-          
-          {/* 批量操作 */}
-          <div className="mt-3 pt-3 border-t border-cosmic-700">
-            <div className="flex justify-between items-center text-xs text-gray-400">
-              <span>提示：您可以重新生成任何版本或複製文本</span>
-              <button
-                onClick={handleGenerate}
-                className="text-gold-400 hover:text-gold-300 transition-colors"
-                disabled={isGenerating}
-              >
-                重新生成全部
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
-      {/* AI 歷程記錄面板 */}
+      {/* AI 歷史面板 */}
       {showAIHistory && (
-        <div className="mt-6 border-t border-cosmic-700 pt-4">
-          <AIHistoryPanel projectId={projectId} />
+        <div className="mt-4 border-t border-cosmic-700 pt-4">
+          <AIHistoryPanel 
+            projectId={projectId} 
+            chapterId={chapterId}
+          />
         </div>
       )}
     </div>

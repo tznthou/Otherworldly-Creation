@@ -245,6 +245,8 @@ const toggleCharacterSelection = (characterId: string) => {
 13. **Modal System**: Use `dispatch(openModal('modalName'))` for modal opening, never direct navigation
 14. **Character Selection**: Preserve multi-character selection state with arrays, not single IDs
 15. **Component Remounting**: Use unique keys for components that need state reset (e.g., `key={editor-${id}}`)
+16. **TypeScript Safety**: Use APIResponse<T> wrapper for all Tauri API responses, maintain 100% type safety in API layer
+17. **Progress Tracking**: Essential for UX - never remove progress indicators, especially for multi-version generation with partial failures
 
 ## GitHub Actions & CI/CD
 
@@ -269,13 +271,14 @@ DMG format is now the primary macOS distribution method, providing the best user
 - Ollama: Ensure service at `http://127.0.0.1:11434`
 - Empty responses: Check model-specific response format
 - Gemini `parts=None`: Falls back to `content.text` field
-- Token limits (Updated 2025-01-14):
+- Token limits (Updated 2025-01-15):
   - Gemini 2.5 Flash: 500 tokens (基礎值，可增加至 650)
   - Gemini 2.5 Pro: 800 tokens (基礎值，可增加至 1000)
   - Gemini 1.5 Pro: 1000 tokens
   - Claude models: 1500 tokens
   - GPT-4 models: 1200 tokens
 - OpenRouter: Use format `provider/model`
+- AI Parameter System: Comprehensive parameter explanation system with quick presets (保守/平衡/創意), real-time risk assessment (安全/注意/危險), and context-aware guidance for Chinese novel writing
 
 ### macOS Distribution
 - **DMG (推薦)**: Tauri 原生支援，最佳用戶體驗
@@ -300,3 +303,10 @@ DMG format is now the primary macOS distribution method, providing the best user
 - **位置**: 設定 → 模板管理 → 匯入模板 (右上角按鈕)
 - **內容**: 每個模板包含完整的世界觀設定、角色框架、劇情大綱
 - **新用戶友善**: 降低創作門檻，提供結構化創作起點
+
+### AI 參數說明系統 (2025-01-15 新增)
+- **組件**: ParameterHelp.tsx, QuickPresets.tsx, ParameterRiskIndicator.tsx
+- **預設模式**: 保守穩重 🎯, 平衡創作 ⚖️, 創意奔放 🌟
+- **風險評估**: 三級系統 (安全/注意/危險) 基於 OpenAI 官方文檔
+- **位置**: AI 續寫面板 → 高級設置
+- **特色**: 實時參數說明、預防性警告、針對中文小說創作優化
