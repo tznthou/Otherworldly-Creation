@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAppDispatch, useAppSelector } from './redux';
 import { updateChapter, setSaving, setLastSaved } from '../store/slices/chaptersSlice';
 import { addNotification } from '../store/slices/uiSlice';
+import { selectEditorSettings } from '../store/slices/editorSlice';
 import { useSettings } from './useSettings';
 import { soundManager } from '../services/SoundManager';
 
@@ -22,12 +23,13 @@ interface AutoSaveStatus {
 export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
   const { delay, enabled: optionsEnabled = true, onSave, onError } = options;
   const dispatch = useAppDispatch();
-  const { settings } = useSettings();
+  const { settings } = useSettings(); // 保留用於音效設定
+  const editorSettings = useAppSelector(selectEditorSettings);
   const { currentChapter, saving, lastSaved } = useAppSelector(state => state.chapters);
   
-  // 使用設定中的自動儲存配置
-  const autoSaveEnabled = optionsEnabled && settings.backup.autoBackup;
-  const autoSaveDelay = delay || (settings.backup.backupInterval * 1000); // 轉換為毫秒
+  // 使用編輯器設定中的自動儲存配置
+  const autoSaveEnabled = optionsEnabled && editorSettings.autoSave;
+  const autoSaveDelay = delay || editorSettings.autoSaveInterval;
   
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
@@ -214,7 +216,7 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
     }
   }, [currentChapter?.content, currentChapter?.title, currentChapter, triggerAutoSave]);
 
-  // 監聽設定變化
+  // 監聽編輯器設定變化
   useEffect(() => {
     if (!autoSaveEnabled) {
       // 如果自動儲存被禁用，清除定時器

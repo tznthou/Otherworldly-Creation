@@ -16,6 +16,7 @@ import { useEditorStats } from '../../hooks/useEditorStats';
 import SlateEditor from '../../components/Editor/SlateEditor';
 import EditorSettingsPanel from '../../components/Editor/EditorSettingsPanel';
 import ReadingModeOverlay from '../../components/Editor/ReadingModeOverlay';
+import FocusWritingModeOverlay from '../../components/Editor/FocusWritingModeOverlay';
 import ChapterList from '../../components/Editor/ChapterList';
 import ChapterNotes from '../../components/Editor/ChapterNotes';
 import AIWritingPanel from '../../components/Editor/AIWritingPanel';
@@ -26,7 +27,7 @@ import AIStatusIndicator from '../../components/UI/AIStatusIndicator';
 import SaveStatusIndicator from '../../components/UI/SaveStatusIndicator';
 import SaveStatusPanel from '../../components/UI/SaveStatusPanel';
 import { useAutoSave } from '../../hooks/useAutoSave';
-import { selectIsSettingsOpen, selectIsReadingMode } from '../../store/slices/editorSlice';
+import { selectIsSettingsOpen, selectIsReadingMode, selectIsFocusWritingMode } from '../../store/slices/editorSlice';
 import { ErrorHandler, withErrorBoundary } from '../../utils/errorUtils';
 import { useNotification } from '../../components/UI/NotificationSystem';
 import { OperationStatus } from '../../components/UI/StatusIndicator';
@@ -47,6 +48,7 @@ const ProjectEditorContent: React.FC = () => {
   const { generating: isGenerating } = useAppSelector(state => state.ai);
   const isSettingsOpen = useAppSelector(selectIsSettingsOpen);
   const _isReadingMode = useAppSelector(selectIsReadingMode);
+  const _isFocusWritingMode = useAppSelector(selectIsFocusWritingMode);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(currentChapter?.id || null);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showPlotAnalysisPanel, setShowPlotAnalysisPanel] = useState(false);
@@ -613,10 +615,19 @@ const ProjectEditorContent: React.FC = () => {
 
   return (
     <>
-      {/* 閱讀模式覆蓋層 */}
-      <ReadingModeOverlay>
-        {editorContent}
-      </ReadingModeOverlay>
+      {/* 專注寫作模式覆蓋層 */}
+      <FocusWritingModeOverlay 
+        currentChapter={currentChapter}
+        onSave={saveNow}
+        onEditorReady={handleEditorReady}
+        onEditorChange={handleEditorChange}
+        isSaving={isSaving}
+      >
+        {/* 閱讀模式覆蓋層 */}
+        <ReadingModeOverlay currentChapter={currentChapter}>
+          {editorContent}
+        </ReadingModeOverlay>
+      </FocusWritingModeOverlay>
 
       {/* 儲存狀態面板 */}
       <SaveStatusPanel 

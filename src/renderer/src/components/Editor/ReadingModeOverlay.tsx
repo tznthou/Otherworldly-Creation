@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { selectEditorSettings, selectIsReadingMode, toggleReadingMode } from '../../store/slices/editorSlice';
+import { Descendant } from 'slate';
 
 interface ReadingModeOverlayProps {
   children: React.ReactNode;
+  currentChapter?: {
+    id: string;
+    title: string;
+    content: Descendant[];
+    chapterNumber?: number;
+    order?: number;
+  } | null;
 }
 
-const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({ children }) => {
+const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({ children, currentChapter }) => {
   const dispatch = useAppDispatch();
   const settings = useAppSelector(selectEditorSettings);
   const isReadingMode = useAppSelector(selectIsReadingMode);
@@ -69,6 +77,31 @@ const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({ children }) => 
   
   console.log('ReadingModeOverlay: In reading mode, applying overlay');
 
+  // 渲染章節內容為純文字
+  const renderChapterContent = () => {
+    if (!currentChapter?.content || !Array.isArray(currentChapter.content)) {
+      return <p className="text-gray-400 italic">沒有內容可顯示</p>;
+    }
+
+    return currentChapter.content.map((node: Descendant, index) => {
+      if ('type' in node && node.type === 'paragraph' && 'children' in node) {
+        const text = node.children.map((child: Descendant) => {
+          if ('text' in child && typeof child.text === 'string') {
+            return child.text;
+          }
+          return '';
+        }).join('') || '';
+        
+        return text.trim() ? (
+          <p key={index} className="mb-4" style={{ textIndent: '2em' }}>
+            {text}
+          </p>
+        ) : <br key={index} />;
+      }
+      return null;
+    }).filter(Boolean);
+  };
+
   return (
     <div 
       className="fixed inset-0 z-50 bg-black transition-all duration-300"
@@ -90,6 +123,30 @@ const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({ children }) => 
           padding: '2rem'
         }}
       >
+        {/* 章節標題 */}
+        {currentChapter && (
+          <div className="mb-8 text-center border-b border-gray-600 pb-6">
+            <h1 
+              className="text-2xl font-bold mb-2"
+              style={{ 
+                color: settings.textColor,
+                fontFamily: settings.fontFamily 
+              }}
+            >
+              第 {currentChapter.chapterNumber || currentChapter.order || '1'} 章
+            </h1>
+            <h2 
+              className="text-xl"
+              style={{ 
+                color: settings.textColor,
+                fontFamily: settings.fontFamily 
+              }}
+            >
+              {currentChapter.title}
+            </h2>
+          </div>
+        )}
+        
         {/* 內容 */}
         <div 
           className="prose prose-lg max-w-none"
@@ -103,7 +160,7 @@ const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({ children }) => 
             color: settings.textColor
           }}
         >
-          {children}
+          {renderChapterContent()}
         </div>
       </div>
 

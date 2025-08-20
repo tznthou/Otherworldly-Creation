@@ -4,7 +4,7 @@ import { Slate, Editable, withReact, ReactEditor, RenderLeafProps as SlateRender
 import { withHistory } from 'slate-history';
 // import { useVirtualization } from '../../utils/componentOptimization';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { selectEditorSettings, toggleSettings, toggleReadingMode, selectIsReadingMode } from '../../store/slices/editorSlice';
+import { selectEditorSettings, toggleSettings, toggleReadingMode, selectIsReadingMode, toggleFocusWritingMode, selectIsFocusWritingMode } from '../../store/slices/editorSlice';
 import SaveStatusIndicator from '../UI/SaveStatusIndicator';
 
 // 定義編輯器節點類型
@@ -532,6 +532,7 @@ const InlineToolbar: React.FC<InlineToolbarProps> = ({
   const editor = useSlate(); // 現在可以安全使用，因為在 Slate 組件內部
   const dispatch = useAppDispatch();
   const isReadingMode = useAppSelector(selectIsReadingMode);
+  const isFocusWritingMode = useAppSelector(selectIsFocusWritingMode);
 
   return (
     <div className="border-b border-cosmic-700 p-4 flex items-center justify-between bg-cosmic-900">
@@ -627,6 +628,21 @@ const InlineToolbar: React.FC<InlineToolbarProps> = ({
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </button>
+
+        {/* 專注寫作模式按鈕 */}
+        <button
+          onClick={() => dispatch(toggleFocusWritingMode())}
+          className={`p-2 rounded-lg transition-colors ${
+            isFocusWritingMode 
+              ? 'bg-purple-500 text-white' 
+              : 'bg-cosmic-800 text-gray-300 hover:bg-cosmic-700 hover:text-white'
+          }`}
+          title="專注寫作模式"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
           </svg>
         </button>
 

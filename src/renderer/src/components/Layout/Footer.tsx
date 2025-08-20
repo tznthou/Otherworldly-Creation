@@ -43,7 +43,7 @@ const Footer: React.FC<FooterProps> = ({ editorStats, currentChapterTitle }) => 
 
       {/* 右側：版本資訊 */}
       <div className="flex items-center space-x-4">
-        <span>v0.4.11</span>
+        <span>v{__APP_VERSION__}</span>
         <span>© 2025 創世紀元</span>
       </div>
     </footer>

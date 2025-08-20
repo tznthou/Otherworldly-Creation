@@ -186,6 +186,7 @@ export interface EditorState {
   settings: EditorSettings;
   isSettingsOpen: boolean;
   isReadingMode: boolean;
+  isFocusWritingMode: boolean;
   currentTheme: ThemeOption;
   customThemes: CustomTheme[];
 }

@@ -11,6 +11,7 @@ const initialState: EditorState = {
   settings: DEFAULT_EDITOR_SETTINGS,
   isSettingsOpen: false,
   isReadingMode: false,
+  isFocusWritingMode: false,
   currentTheme: THEME_OPTIONS[0], // 預設為宇宙深藍主題
   customThemes: []
 };
@@ -41,6 +42,15 @@ const editorSlice = createSlice({
     toggleReadingMode: (state) => {
       state.isReadingMode = !state.isReadingMode;
       state.settings.readingMode = state.isReadingMode;
+    },
+    
+    toggleFocusWritingMode: (state) => {
+      state.isFocusWritingMode = !state.isFocusWritingMode;
+      // 專注模式時關閉其他模式
+      if (state.isFocusWritingMode) {
+        state.isReadingMode = false;
+        state.isSettingsOpen = false;
+      }
     },
     
     setTheme: (state, action: PayloadAction<string>) => {
@@ -134,6 +144,7 @@ export const {
   updateSettings,
   toggleSettings,
   toggleReadingMode,
+  toggleFocusWritingMode,
   setTheme,
   addCustomTheme,
   removeCustomTheme,
@@ -160,5 +171,6 @@ export default editorSlice.reducer;
 export const selectEditorSettings = (state: { editor: EditorState }) => state.editor.settings;
 export const selectIsSettingsOpen = (state: { editor: EditorState }) => state.editor.isSettingsOpen;
 export const selectIsReadingMode = (state: { editor: EditorState }) => state.editor.isReadingMode;
+export const selectIsFocusWritingMode = (state: { editor: EditorState }) => state.editor.isFocusWritingMode;
 export const selectCurrentTheme = (state: { editor: EditorState }) => state.editor.currentTheme;
 export const selectCustomThemes = (state: { editor: EditorState }) => state.editor.customThemes;

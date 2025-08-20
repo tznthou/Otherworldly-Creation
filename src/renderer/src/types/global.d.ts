@@ -5,6 +5,8 @@ declare global {
     electronAPI: ElectronAPI;
     __TAURI__?: Record<string, unknown>;
   }
+  
+  const __APP_VERSION__: string;
 }
 
 export {};

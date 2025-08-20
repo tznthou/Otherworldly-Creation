@@ -136,7 +136,7 @@ sudo installer -pkg <pkg_file> -target /
 ### GitHub Actions 自動發布 (完全重構！)
 ```bash
 # 觸發發布 - 單一指令完成所有平台建置
-git tag v1.0.5 && git push origin v1.0.5
+git tag v1.0.9 && git push origin v1.0.9
 
 # 自動執行：
 # 1. 版本同步到所有配置文件
@@ -144,6 +144,11 @@ git tag v1.0.5 && git push origin v1.0.5
 # 3. Windows: 生成 MSI 安裝程式
 # 4. 自動上傳到 GitHub Release，DMG 標示為推薦格式
 # 5. 生成詳細發布說明
+
+# ⚠️ CRITICAL: Tauri 配置檢查
+# 確保 src-tauri/tauri.conf.json 包含所有目標平台：
+# "targets": ["dmg", "app", "msi"]
+# 缺少 "msi" 會導致 Windows 建置沒有產生安裝檔案
 ```
 
 ## Core Architecture
@@ -247,6 +252,8 @@ const toggleCharacterSelection = (characterId: string) => {
 15. **Component Remounting**: Use unique keys for components that need state reset (e.g., `key={editor-${id}}`)
 16. **TypeScript Safety**: Use APIResponse<T> wrapper for all Tauri API responses, maintain 100% type safety in API layer
 17. **Progress Tracking**: Essential for UX - never remove progress indicators, especially for multi-version generation with partial failures
+18. **跨平台建置**: 確保 `src-tauri/tauri.conf.json` 的 `bundle.targets` 包含所有目標平台，避免安裝包缺失
+19. **版本發布檢查**: 每次發布前驗證 Tauri 配置，防止平台特定建置失敗
 
 ## GitHub Actions & CI/CD
 
@@ -258,6 +265,12 @@ const toggleCharacterSelection = (characterId: string) => {
 DMG format is now the primary macOS distribution method, providing the best user experience with drag-and-drop installation. PKG remains available as legacy support for enterprise environments.
 
 ## Known Issues & Solutions
+
+### GitHub Actions 疑難排解
+- **Windows MSI 未生成**: 檢查 `src-tauri/tauri.conf.json` 的 `bundle.targets` 必須包含 `"msi"`
+- **跨平台建置失敗**: 確認版本同步腳本正常執行，所有配置檔案版本號一致
+- **建置診斷順序**: 配置檢查 → 腳本分析 → 環境變數確認 → GitHub Actions 設定
+- **常見誤判**: 不是 .gitignore 或環境變數問題，通常是 Tauri 配置缺失
 
 ### UI Interaction
 - Button not clickable: Check `z-50` overlay blocking
