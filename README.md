@@ -1,7 +1,7 @@
 # 創世紀元：Genesis Chronicle
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
-![Version](https://img.shields.io/badge/version-v1.0.8-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange)
+![Version](https://img.shields.io/badge/version-v1.0.9-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange)
 
 ## 🌟 核心特色
 
@@ -34,7 +34,7 @@
 - **配置與腳本**: 3,683行（JavaScript工具腳本）
 - **代碼檔案數**: 326個核心程式檔案
 - **依賴包管理**: 550個第三方套件（node_modules，不計入統計）
-- **開發狀態**: 100%功能完成，v1.0.8 版本發布準備就緒
+- **開發狀態**: 100%功能完成，v1.0.9 版本發布準備就緒
 
 ### 🚀 技術優勢 (最新更新 2025-08-19)
 - **性能提升**: 啟動速度300%提升，記憶體使用70%減少
@@ -60,7 +60,7 @@
 #### 🍎 macOS（推薦）
 ```bash
 # 下載PKG安裝程式
-curl -L -o genesis-chronicle.pkg https://github.com/username/genesis-chronicle/releases/latest/download/genesis-chronicle_universal.pkg
+curl -L -o genesis-chronicle.pkg https://github.com/tznthou/Otherworldly-Creation/releases/latest/download/genesis-chronicle_universal.pkg
 
 # 安裝（自動繞過quarantine）
 sudo installer -pkg genesis-chronicle.pkg -target /
@@ -119,7 +119,7 @@ sudo installer -pkg genesis-chronicle.pkg -target /
 ### 一鍵開發環境設置
 ```bash
 # 克隆專案
-git clone https://github.com/username/genesis-chronicle.git
+git clone https://github.com/tznthou/Otherworldly-Creation.git
 cd genesis-chronicle
 
 # 安裝依賴並啟動
@@ -286,25 +286,25 @@ Genesis Chronicle (總計：73,083行核心程式碼，不含依賴包)
 
 ## 📋 版本記錄
 
-### v1.0.8 (2025-08-19) - 當前版本  
-**版本統一管理 + 發布流程完善**
-- 🔧 **版本統一更新**: 所有配置文件版本號統一為 v1.0.8（package.json、Cargo.toml、tauri.conf.json）
+### v1.0.9 (2025-08-20) - 當前版本  
+**Windows MSI 建置修復 + 跨平台發布完善**
+- 🔧 **Windows MSI 修復**: 修正 tauri.conf.json 缺少 MSI 目標配置，解決 GitHub Actions Windows 建置問題
+- 🚀 **跨平台建置完整**: 現在支援 macOS (DMG+APP) + Windows (MSI) 完整建置流程
+- ✅ **GitHub Actions 優化**: 自動建置三格式，Windows MSI 問題徹底解決
+- 📦 **版本統一管理**: 所有配置文件版本號統一為 v1.0.9
+- 🎯 **發布流程完善**: 建立穩定的自動化跨平台發布機制
+
+### v1.0.8 (2025-08-19) - 上一版本
+- 🔧 **版本統一更新**: 所有配置文件版本號統一為 v1.0.8
 - 🚀 **GitHub Actions 發布**: 自動建置 DMG (主推) + PKG (Legacy) + MSI 三格式
 - ✅ **TypeScript 類型安全維持**: 核心 API 層級 100% 類型安全
 - 📦 **分發策略優化**: DMG 格式成為 macOS 主要推薦，PKG 轉為企業 Legacy 支援
-- 🎯 **版本控制標準化**: 建立可重複、可靠的自動發布機制
 
-### v1.0.5-beta (2025-08-16) - 上一版本
-- 🔧 章節筆記存檔修復：API層metadata欄位傳遞問題解決
-- 📊 專案規模統計更新：總代碼行數88,462行精確統計
-- 🧹 TypeScript 類型安全化：95+ 個 `any` 類型警告修復
-- ⚡ ESLint 系統性優化：從 74 個警告減少到 0 個
-
-### v1.0.9 (計劃中)
+### v1.1.0 (計劃中)
 - ✅ 功能完整性驗證測試
 - 🚀 AI續寫引擎升級（1800 tokens上限）
 - ⚡ 性能優化系統框架
-- 🔧 PKG 安裝問題最終修復
+- 🎨 UI/UX 優化改進
 
 ## 🤝 貢獻指南
 
@@ -321,8 +321,8 @@ Genesis Chronicle (總計：73,083行核心程式碼，不含依賴包)
 
 ## 📞 支援與聯絡
 
-- **GitHub Issues**: [報告問題](https://github.com/username/genesis-chronicle/issues)
-- **討論區**: [GitHub Discussions](https://github.com/username/genesis-chronicle/discussions)
+- **GitHub Issues**: [報告問題](https://github.com/tznthou/Otherworldly-Creation/issues)
+- **討論區**: [GitHub Discussions](https://github.com/tznthou/Otherworldly-Creation/discussions)
 - **文檔**: [完整文檔](./CLAUDE.md)
 
 ## 📄 授權
@@ -331,24 +331,24 @@ MIT License - 詳見 [LICENSE](./LICENSE) 檔案
 
 ## 📈 Change Log
 
-### [2025-08-19 15:35:26] 最新更新
+### [2025-08-20 08:10:52] 最新更新
 - **核心程式碼**: 73,083行（純手寫代碼，不含依賴包）
 - **專案架構**: 前端51,616行（70.6%）+ 後端17,784行（24.3%）+ 腳本3,683行（5.1%）
 - **開發進度**: 持續優化中，最新修復包括 ESLint 和 TypeScript 類型安全問題
 - **核心改進**:
-  - 🔧 **版本統一管理**: 三個關鍵配置文件版本號完全同步為 v1.0.8
-  - 🚀 **自動化發布流程**: GitHub Actions 完整建置 DMG + PKG + MSI 三格式
-  - 📦 **分發策略最佳化**: DMG 格式主推，PKG 轉為 Legacy 企業支援
-  - ✅ **TypeScript 類型安全維持**: 核心API層級100%類型安全持續保持
-  - 🎯 **發布品質保證**: 版本同步腳本自動驗證，確保配置一致性
-  - 🏷️ **Git 標籤管理**: v1.0.8 標籤推送觸發自動建置流程
-  - 🧠 **開發知識累積**: 發布流程完整記錄在 Serena AI 知識庫
-  - 📊 **專案成熟度提升**: 建立標準化、可重複的版本發布機制
-- **技術成就**: 完整的跨平台自動化發布系統，支持所有主流AI模型
+  - 🔧 **Windows MSI 建置修復**: 修正 tauri.conf.json 配置，添加 MSI 目標，解決 GitHub Actions Windows 建置失敗問題
+  - 🚀 **跨平台發布完整**: GitHub Actions 現在成功建置 macOS (DMG+APP) + Windows (MSI) 全平台格式
+  - 📦 **版本統一管理**: 三個關鍵配置文件版本號完全同步為 v1.0.9
+  - ✅ **GitHub 連結修正**: 修正 README.md 中所有 GitHub 連結為正確的 repository 網址
+  - 🎯 **發布流程穩定**: 建立可靠的自動化跨平台發布機制
+  - 🏷️ **Git 標籤管理**: v1.0.9 標籤推送觸發自動建置流程
+  - 🧠 **問題解決累積**: MSI 建置問題診斷與修復經驗記錄
+  - 📊 **專案成熟度提升**: 跨平台發布系統完全穩定運行
+- **技術成就**: 完整的跨平台自動化發布系統，支持所有主流AI模型，Windows MSI 建置問題徹底解決
 
 ---
 
 **Genesis Chronicle** - 讓AI為你的創作插上翅膀 ✨
 
-*更新時間：2025年8月19日 15:35 CST*  
-*專案狀態：v1.0.8 版本統一發布完成，GitHub Actions 自動建置中，支持314個AI模型*
+*更新時間：2025年8月20日 08:10 CST*  
+*專案狀態：v1.0.9 版本發布完成，Windows MSI 建置修復，GitHub Actions 跨平台建置穩定運行，支持314個AI模型*
