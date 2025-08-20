@@ -1188,6 +1188,76 @@ export const tauriAPI: API = {
       return safeInvoke('resume_batch', {
         batchId: batchId
       });
+    },
+
+    // === 免費插畫生成 (Pollinations.AI) ===
+    generateFreeIllustration: async (
+      prompt: string,
+      width?: number,
+      height?: number,
+      model?: 'flux' | 'gptimage' | 'kontext' | 'sdxl',
+      seed?: number,
+      enhance?: boolean,
+      style?: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art',
+      projectId?: string,
+      characterId?: string
+    ) => {
+      return safeInvoke('generate_free_illustration', {
+        prompt: prompt,
+        width: width,
+        height: height,
+        model: model,
+        seed: seed,
+        enhance: enhance,
+        style: style,
+        projectId: projectId,
+        characterId: characterId
+      });
+    },
+
+    testPollinationsConnection: async () => {
+      return safeInvoke('test_pollinations_connection', {});
+    },
+
+    getFreeIllustrationModels: async () => {
+      return safeInvoke('get_free_illustration_models', {});
+    },
+
+    // === 臨時圖像預覽管理 ===
+    generateFreeIllustrationToTemp: async (
+      prompt: string,
+      width?: number,
+      height?: number,
+      model?: 'flux' | 'gptimage' | 'kontext' | 'sdxl',
+      seed?: number,
+      enhance?: boolean,
+      style?: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art',
+      projectId?: string,
+      characterId?: string
+    ) => {
+      return safeInvoke('generate_free_illustration_to_temp', {
+        prompt: prompt,
+        width: width,
+        height: height,
+        model: model,
+        seed: seed,
+        enhance: enhance,
+        style: style,
+        projectId: projectId,
+        characterId: characterId
+      });
+    },
+
+    confirmTempImageSave: async (tempImageData: any) => {
+      return safeInvoke('confirm_temp_image_save', { temp_image_data: tempImageData });
+    },
+
+    deleteTempImage: async (tempPath: string) => {
+      return safeInvoke('delete_temp_image', { temp_path: tempPath });
+    },
+
+    cleanupExpiredTempImages: async () => {
+      return safeInvoke('cleanup_expired_temp_images', {});
     }
   },
 };

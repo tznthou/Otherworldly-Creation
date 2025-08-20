@@ -33,7 +33,9 @@ use commands::illustration::{
     batch_check_project_consistency, generate_batch_seeds, generate_illustration,
     generate_enhanced_illustration, get_illustration_generation_status,
     cancel_illustration_generation, validate_imagen_api_connection,
-    generate_free_illustration, test_pollinations_connection, get_free_illustration_models
+    generate_free_illustration, test_pollinations_connection, get_free_illustration_models,
+    // 臨時圖像管理 API
+    generate_free_illustration_to_temp, confirm_temp_image_save, delete_temp_image, cleanup_expired_temp_images
 };
 use commands::translation::{
     translate_character_description, optimize_prompt, search_vocabulary, 
@@ -183,6 +185,11 @@ pub fn run() {
       generate_free_illustration,
       test_pollinations_connection,
       get_free_illustration_models,
+      // 臨時圖像預覽管理
+      generate_free_illustration_to_temp,
+      confirm_temp_image_save,
+      delete_temp_image,
+      cleanup_expired_temp_images,
       // Translation commands
       translate_character_description,
       optimize_prompt,

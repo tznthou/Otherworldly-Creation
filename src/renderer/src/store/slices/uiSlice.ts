@@ -28,6 +28,7 @@ interface UIState {
     epubGeneration: boolean; // EPUB 生成模態框
     pdfGeneration: boolean; // PDF 生成模態框
     aiIllustration: boolean; // AI 插畫生成模態框
+    imagePreview: boolean; // 圖像預覽模態框
   };
   loading: {
     global: boolean;
@@ -75,6 +76,7 @@ const initialState: UIState = {
     epubGeneration: false,
     pdfGeneration: false,
     aiIllustration: false,
+    imagePreview: false,
   },
   loading: {
     global: false,

@@ -533,6 +533,8 @@ pub async fn generate_free_illustration(
     seed: Option<u32>,
     enhance: Option<bool>,
     style: Option<String>,
+    projectId: Option<String>,
+    characterId: Option<String>,
 ) -> Result<Value, String> {
     log::info!("[IllustrationCommand] 免費插畫生成請求: {}", prompt);
     
@@ -554,17 +556,17 @@ pub async fn generate_free_illustration(
     };
 
     // 處理風格增強
-    let enhanced_prompt = if let Some(style_name) = style {
+    let enhanced_prompt = if let Some(ref style_name) = style {
         match style_name.as_str() {
             "anime" => format!("{}, 動漫風格, 高品質插畫, 精緻線條", prompt),
             "realistic" => format!("{}, 寫實風格, 專業攝影, 高解析度", prompt),
             "fantasy" => format!("{}, 奇幻風格, 魔法世界, 夢幻色彩", prompt),
             "watercolor" => format!("{}, 水彩風格, 柔和色調, 藝術繪畫", prompt),
             "digital_art" => format!("{}, 數位藝術, 現代風格, 精緻渲染", prompt),
-            _ => prompt,
+            _ => prompt.clone(),
         }
     } else {
-        prompt
+        prompt.clone()
     };
 
     // 構建請求
@@ -585,9 +587,34 @@ pub async fn generate_free_illustration(
         Ok(response) => {
             log::info!("[IllustrationCommand] 免費插畫生成成功，耗時: {}ms", response.generation_time_ms);
             
-            // 儲存圖像到本地（可選）
+            // 儲存圖像到本地
             let image_path = save_generated_image(&response.image_data, &response.id)
                 .map_err(|e| format!("圖像儲存失敗: {}", e))?;
+            
+            // 計算檔案大小
+            let file_size = response.image_data.len() as i64;
+            
+            // 保存生成歷史到數據庫
+            if let Err(e) = save_pollinations_history(
+                &response.id,
+                projectId.as_deref(),
+                characterId.as_deref(),
+                &prompt,
+                &response.prompt, // 使用回應中的實際提示詞
+                &response.parameters.model,
+                response.parameters.width as i32,
+                response.parameters.height as i32,
+                response.parameters.seed.map(|s| s as i32),
+                response.parameters.enhance,
+                style.as_deref(),
+                response.image_url.as_deref(),
+                &image_path,
+                file_size,
+                response.generation_time_ms as i32,
+            ) {
+                log::warn!("[IllustrationCommand] 保存生成歷史失敗: {}", e);
+                // 不阻斷主流程，只記錄警告
+            }
             
             Ok(serde_json::json!({
                 "success": true,
@@ -609,6 +636,26 @@ pub async fn generate_free_illustration(
         },
         Err(e) => {
             log::error!("[IllustrationCommand] 免費插畫生成失敗: {:?}", e);
+            
+            // 即使失敗也記錄到數據庫
+            let generation_id = uuid::Uuid::new_v4().to_string();
+            if let Err(save_err) = save_pollinations_history_failed(
+                &generation_id,
+                projectId.as_deref(),
+                characterId.as_deref(),
+                &prompt,
+                &prompt, // 失敗時使用原始提示詞
+                model.as_deref().unwrap_or("flux"),
+                width.unwrap_or(1024) as i32,
+                height.unwrap_or(1024) as i32,
+                seed.map(|s| s as i32),
+                enhance.unwrap_or(false),
+                style.as_deref(),
+                &format!("{:?}", e),
+            ) {
+                log::warn!("[IllustrationCommand] 保存失敗記錄失敗: {}", save_err);
+            }
+            
             Err(format!("免費插畫生成失敗: {:?}", e))
         }
     }
@@ -679,9 +726,11 @@ pub async fn get_free_illustration_models() -> Result<Value, String> {
 fn save_generated_image(image_data: &[u8], image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
     use std::fs;
     
-    // 確保圖像目錄存在
-    let images_dir = dirs::data_local_dir()
-        .unwrap_or_else(|| std::path::PathBuf::from("."))
+    // 確保圖像目錄存在（使用與EPUB/PDF相同的路徑）
+    let images_dir = dirs::home_dir()
+        .ok_or("無法獲取用戶目錄")?
+        .join("Library")
+        .join("Application Support")
         .join("genesis-chronicle")
         .join("generated-images");
     
@@ -695,4 +744,511 @@ fn save_generated_image(image_data: &[u8], image_id: &str) -> Result<String, Box
     fs::write(&file_path, image_data)?;
     
     Ok(file_path.to_string_lossy().to_string())
+}
+
+/// 保存成功的 Pollinations 生成歷史記錄
+fn save_pollinations_history(
+    id: &str,
+    project_id: Option<&str>,
+    character_id: Option<&str>,
+    original_prompt: &str,
+    enhanced_prompt: &str,
+    model: &str,
+    width: i32,
+    height: i32,
+    seed: Option<i32>,
+    enhance: bool,
+    style_applied: Option<&str>,
+    image_url: Option<&str>,
+    local_file_path: &str,
+    file_size_bytes: i64,
+    generation_time_ms: i32,
+) -> Result<(), String> {
+    use rusqlite::params;
+    
+    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
+    
+    conn.execute(
+        "INSERT INTO pollinations_generations (
+            id, project_id, character_id, original_prompt, enhanced_prompt,
+            model, width, height, seed, enhance, style_applied,
+            image_url, local_file_path, file_size_bytes, generation_time_ms,
+            status, created_at
+        ) VALUES (
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, 'completed', CURRENT_TIMESTAMP
+        )",
+        params![
+            id,
+            project_id,
+            character_id,
+            original_prompt,
+            enhanced_prompt,
+            model,
+            width,
+            height,
+            seed,
+            enhance,
+            style_applied,
+            image_url,
+            local_file_path,
+            file_size_bytes,
+            generation_time_ms
+        ],
+    ).map_err(|e| format!("插入生成歷史失敗: {}", e))?;
+    
+    // 更新使用統計
+    update_pollinations_stats(model, true, generation_time_ms as u64, file_size_bytes as u64)?;
+    
+    Ok(())
+}
+
+/// 保存失敗的 Pollinations 生成歷史記錄
+fn save_pollinations_history_failed(
+    id: &str,
+    project_id: Option<&str>,
+    character_id: Option<&str>,
+    original_prompt: &str,
+    enhanced_prompt: &str,
+    model: &str,
+    width: i32,
+    height: i32,
+    seed: Option<i32>,
+    enhance: bool,
+    style_applied: Option<&str>,
+    error_message: &str,
+) -> Result<(), String> {
+    use rusqlite::params;
+    
+    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
+    
+    conn.execute(
+        "INSERT INTO pollinations_generations (
+            id, project_id, character_id, original_prompt, enhanced_prompt,
+            model, width, height, seed, enhance, style_applied,
+            status, error_message, created_at
+        ) VALUES (
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 'failed', ?12, CURRENT_TIMESTAMP
+        )",
+        params![
+            id,
+            project_id,
+            character_id,
+            original_prompt,
+            enhanced_prompt,
+            model,
+            width,
+            height,
+            seed,
+            enhance,
+            style_applied,
+            error_message
+        ],
+    ).map_err(|e| format!("插入失敗記錄失敗: {}", e))?;
+    
+    // 更新使用統計（失敗記錄）
+    update_pollinations_stats(model, false, 0, 0)?;
+    
+    Ok(())
+}
+
+/// 更新 Pollinations 使用統計
+fn update_pollinations_stats(
+    model: &str,
+    success: bool,
+    generation_time_ms: u64,
+    file_size_bytes: u64,
+) -> Result<(), String> {
+    use rusqlite::params;
+    
+    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
+    
+    // 檢查是否需要重置每日計數
+    conn.execute(
+        "UPDATE pollinations_usage_stats 
+         SET daily_generation_count = 0, daily_reset_date = CURRENT_DATE
+         WHERE daily_reset_date < CURRENT_DATE",
+        [],
+    ).map_err(|e| format!("重置每日計數失敗: {}", e))?;
+    
+    // 確定模型計數欄位
+    let model_field = match model {
+        "flux" => "flux_usage",
+        "gptimage" => "gptimage_usage", 
+        "kontext" => "kontext_usage",
+        "sdxl" => "sdxl_usage",
+        _ => "flux_usage", // 預設
+    };
+    
+    let sql = if success {
+        format!(
+            "UPDATE pollinations_usage_stats SET
+                total_generations = total_generations + 1,
+                total_success = total_success + 1,
+                {} = {} + 1,
+                total_generation_time_ms = total_generation_time_ms + ?,
+                total_images_stored = total_images_stored + 1,
+                total_storage_bytes = total_storage_bytes + ?,
+                daily_generation_count = daily_generation_count + 1,
+                last_generation_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+             WHERE id = 'singleton'",
+            model_field, model_field
+        )
+    } else {
+        format!(
+            "UPDATE pollinations_usage_stats SET
+                total_generations = total_generations + 1,
+                total_failures = total_failures + 1,
+                daily_generation_count = daily_generation_count + 1,
+                updated_at = CURRENT_TIMESTAMP
+             WHERE id = 'singleton'",
+        )
+    };
+    
+    if success {
+        let time_ms = generation_time_ms as i64;
+        let size_bytes = file_size_bytes as i64;
+        conn.execute(
+            &sql,
+            params![time_ms, size_bytes],
+        ).map_err(|e| format!("更新統計失敗: {}", e))?;
+    } else {
+        conn.execute(
+            &sql,
+            params![],
+        ).map_err(|e| format!("更新統計失敗: {}", e))?;
+    }
+    
+    // 計算並更新平均生成時間
+    if success {
+        conn.execute(
+            "UPDATE pollinations_usage_stats SET
+                avg_generation_time_ms = CAST(total_generation_time_ms AS REAL) / total_success
+             WHERE id = 'singleton' AND total_success > 0",
+            [],
+        ).map_err(|e| format!("更新平均時間失敗: {}", e))?;
+    }
+    
+    Ok(())
+}
+
+// ========================= 臨時圖像預覽管理 =========================
+
+/// 免費插畫生成到臨時目錄 - 供預覽使用
+#[tauri::command]
+#[allow(non_snake_case)]
+pub async fn generate_free_illustration_to_temp(
+    prompt: String,
+    width: Option<u32>,
+    height: Option<u32>,
+    model: Option<String>,
+    seed: Option<u32>,
+    enhance: Option<bool>,
+    style: Option<String>,
+    projectId: Option<String>,
+    characterId: Option<String>,
+) -> Result<Value, String> {
+    log::info!("[IllustrationCommand] 免費插畫生成到臨時目錄: {}", prompt);
+    
+    if prompt.trim().is_empty() {
+        return Err("提示詞不能為空".to_string());
+    }
+
+    // 建立 Pollinations API 服務
+    let service = PollinationsApiService::new()
+        .map_err(|e| format!("Pollinations API 服務初始化失敗: {:?}", e))?;
+
+    // 解析模型
+    let pollinations_model = match model.as_deref().unwrap_or("flux") {
+        "flux" => PollinationsModel::Flux,
+        "gptimage" => PollinationsModel::GptImage,
+        "kontext" => PollinationsModel::Kontext,
+        "sdxl" => PollinationsModel::Sdxl,
+        _ => PollinationsModel::Flux,
+    };
+
+    // 處理風格增強
+    let enhanced_prompt = if let Some(ref style_name) = style {
+        match style_name.as_str() {
+            "anime" => format!("{}, 動漫風格, 高品質插畫, 精緻線條", prompt),
+            "realistic" => format!("{}, 寫實風格, 專業攝影, 高解析度", prompt),
+            "fantasy" => format!("{}, 奇幻風格, 魔法世界, 夢幻色彩", prompt),
+            "watercolor" => format!("{}, 水彩風格, 柔和色調, 藝術繪畫", prompt),
+            "digital_art" => format!("{}, 數位藝術, 現代風格, 精緻渲染", prompt),
+            _ => prompt.clone(),
+        }
+    } else {
+        prompt.clone()
+    };
+
+    // 構建請求
+    let request = PollinationsRequest {
+        prompt: enhanced_prompt,
+        width: width.or(Some(1024)),
+        height: height.or(Some(1024)),
+        model: Some(pollinations_model),
+        seed,
+        enhance: enhance.or(Some(false)),
+        nologo: Some(true),
+        transparent: Some(false),
+        ..Default::default()
+    };
+
+    // 生成圖像
+    match service.generate_image(request).await {
+        Ok(response) => {
+            log::info!("[IllustrationCommand] 免費插畫生成成功，耗時: {}ms", response.generation_time_ms);
+            
+            // 儲存圖像到臨時目錄
+            let temp_path = save_temp_generated_image(&response.image_data, &response.id)
+                .map_err(|e| format!("臨時圖像儲存失敗: {}", e))?;
+            
+            // 計算檔案大小
+            let file_size = response.image_data.len() as i64;
+            
+            Ok(serde_json::json!({
+                "success": true,
+                "id": response.id,
+                "prompt": response.prompt,
+                "temp_path": temp_path,
+                "image_url": response.image_url,
+                "parameters": {
+                    "model": response.parameters.model,
+                    "width": response.parameters.width,
+                    "height": response.parameters.height,
+                    "seed": response.parameters.seed,
+                    "enhance": response.parameters.enhance,
+                    "style": style
+                },
+                "file_size_bytes": file_size,
+                "generation_time_ms": response.generation_time_ms,
+                "provider": "pollinations",
+                "is_free": true,
+                "is_temp": true,
+                "project_id": projectId,
+                "character_id": characterId,
+                "original_prompt": prompt
+            }))
+        },
+        Err(e) => {
+            log::error!("[IllustrationCommand] 免費插畫生成失敗: {:?}", e);
+            Err(format!("免費插畫生成失敗: {:?}", e))
+        }
+    }
+}
+
+/// 確認保存臨時圖像到正式目錄
+#[tauri::command]
+pub async fn confirm_temp_image_save(
+    temp_image_data: Value
+) -> Result<Value, String> {
+    log::info!("[IllustrationCommand] 確認保存臨時圖像");
+    
+    // 解析臨時圖像數據
+    let temp_id = temp_image_data.get("id")
+        .and_then(|v| v.as_str())
+        .ok_or("缺少圖像 ID")?;
+    
+    let temp_path = temp_image_data.get("temp_path")
+        .and_then(|v| v.as_str())
+        .ok_or("缺少臨時路徑")?;
+    
+    let project_id = temp_image_data.get("project_id")
+        .and_then(|v| v.as_str());
+    
+    let character_id = temp_image_data.get("character_id")
+        .and_then(|v| v.as_str());
+    
+    let original_prompt = temp_image_data.get("original_prompt")
+        .and_then(|v| v.as_str())
+        .ok_or("缺少原始提示詞")?;
+    
+    let prompt = temp_image_data.get("prompt")
+        .and_then(|v| v.as_str())
+        .ok_or("缺少增強提示詞")?;
+    
+    let parameters = temp_image_data.get("parameters")
+        .ok_or("缺少生成參數")?;
+    
+    let model = parameters.get("model")
+        .and_then(|v| v.as_str())
+        .ok_or("缺少模型參數")?;
+    
+    let width = parameters.get("width")
+        .and_then(|v| v.as_i64())
+        .ok_or("缺少寬度參數")? as i32;
+    
+    let height = parameters.get("height")
+        .and_then(|v| v.as_i64())
+        .ok_or("缺少高度參數")? as i32;
+    
+    let seed = parameters.get("seed")
+        .and_then(|v| v.as_i64())
+        .map(|s| s as i32);
+    
+    let enhance = parameters.get("enhance")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    
+    let style = parameters.get("style")
+        .and_then(|v| v.as_str());
+    
+    let file_size = temp_image_data.get("file_size_bytes")
+        .and_then(|v| v.as_i64())
+        .ok_or("缺少檔案大小")?;
+    
+    let generation_time = temp_image_data.get("generation_time_ms")
+        .and_then(|v| v.as_i64())
+        .ok_or("缺少生成時間")? as i32;
+    
+    // 移動臨時圖像到正式目錄
+    let final_path = move_temp_to_final_image(temp_path, temp_id)
+        .map_err(|e| format!("移動圖像失敗: {}", e))?;
+    
+    // 保存生成歷史到數據庫
+    if let Err(e) = save_pollinations_history(
+        temp_id,
+        project_id,
+        character_id,
+        original_prompt,
+        prompt,
+        model,
+        width,
+        height,
+        seed,
+        enhance,
+        style,
+        temp_image_data.get("image_url").and_then(|v| v.as_str()),
+        &final_path,
+        file_size,
+        generation_time,
+    ) {
+        log::warn!("[IllustrationCommand] 保存生成歷史失敗: {}", e);
+        // 不阻斷主流程
+    }
+    
+    Ok(serde_json::json!({
+        "success": true,
+        "id": temp_id,
+        "final_path": final_path,
+        "message": "圖像已成功保存"
+    }))
+}
+
+/// 刪除臨時圖像
+#[tauri::command]
+pub async fn delete_temp_image(
+    temp_path: String
+) -> Result<Value, String> {
+    log::info!("[IllustrationCommand] 刪除臨時圖像: {}", temp_path);
+    
+    use std::fs;
+    
+    match fs::remove_file(&temp_path) {
+        Ok(_) => {
+            log::info!("[IllustrationCommand] 臨時圖像已刪除: {}", temp_path);
+            Ok(serde_json::json!({
+                "success": true,
+                "message": "臨時圖像已刪除"
+            }))
+        },
+        Err(e) => {
+            log::error!("[IllustrationCommand] 刪除臨時圖像失敗: {}", e);
+            Err(format!("刪除臨時圖像失敗: {}", e))
+        }
+    }
+}
+
+/// 清理過期的臨時圖像（超過24小時）
+#[tauri::command]
+pub async fn cleanup_expired_temp_images() -> Result<Value, String> {
+    log::info!("[IllustrationCommand] 清理過期的臨時圖像");
+    
+    use std::fs;
+    use std::time::{Duration, SystemTime};
+    
+    let temp_dir = get_temp_images_dir()
+        .map_err(|e| format!("獲取臨時目錄失敗: {}", e))?;
+    
+    let mut cleaned_count = 0;
+    let cutoff_time = SystemTime::now() - Duration::from_secs(24 * 60 * 60); // 24小時前
+    
+    if let Ok(entries) = fs::read_dir(&temp_dir) {
+        for entry in entries.flatten() {
+            if let Ok(metadata) = entry.metadata() {
+                if let Ok(created) = metadata.created() {
+                    if created < cutoff_time {
+                        if let Ok(_) = fs::remove_file(entry.path()) {
+                            cleaned_count += 1;
+                            log::info!("[IllustrationCommand] 已清理過期臨時圖像: {:?}", entry.path());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    log::info!("[IllustrationCommand] 清理完成，共清理 {} 個過期臨時圖像", cleaned_count);
+    
+    Ok(serde_json::json!({
+        "success": true,
+        "cleaned_count": cleaned_count,
+        "message": format!("已清理 {} 個過期臨時圖像", cleaned_count)
+    }))
+}
+
+// ========================= 臨時圖像輔助函數 =========================
+
+/// 獲取臨時圖像目錄
+fn get_temp_images_dir() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
+    let temp_dir = dirs::home_dir()
+        .ok_or("無法獲取用戶目錄")?
+        .join("Library")
+        .join("Application Support")
+        .join("genesis-chronicle")
+        .join("temp-images");
+    
+    std::fs::create_dir_all(&temp_dir)?;
+    Ok(temp_dir)
+}
+
+/// 儲存生成的圖像到臨時目錄
+fn save_temp_generated_image(image_data: &[u8], image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
+    use std::fs;
+    
+    let temp_dir = get_temp_images_dir()?;
+    
+    // 生成檔案路徑
+    let filename = format!("{}.jpg", image_id);
+    let file_path = temp_dir.join(&filename);
+    
+    // 寫入圖像數據
+    fs::write(&file_path, image_data)?;
+    
+    Ok(file_path.to_string_lossy().to_string())
+}
+
+/// 將臨時圖像移動到正式目錄
+fn move_temp_to_final_image(temp_path: &str, image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
+    use std::fs;
+    
+    // 確保正式圖像目錄存在
+    let images_dir = dirs::home_dir()
+        .ok_or("無法獲取用戶目錄")?
+        .join("Library")
+        .join("Application Support")
+        .join("genesis-chronicle")
+        .join("generated-images");
+    
+    fs::create_dir_all(&images_dir)?;
+    
+    // 生成最終檔案路徑
+    let filename = format!("{}.jpg", image_id);
+    let final_path = images_dir.join(&filename);
+    
+    // 移動檔案
+    fs::copy(temp_path, &final_path)?;
+    fs::remove_file(temp_path)?;
+    
+    Ok(final_path.to_string_lossy().to_string())
 }
