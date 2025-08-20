@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ImagePreviewModal from './VisualCreation/ImagePreviewModal';
-import { useSelector, useDispatch } from 'react-redux';
-import type { AppDispatch } from '../../store/store';
-import { fetchCharactersByProjectId } from '../../store/slices/charactersSlice';
+import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { api } from '../../api';
 import { 
@@ -22,6 +20,7 @@ import { Badge } from '../UI/Badge';
 import { imageGenerationService } from '../../services/imageGenerationService';
 import type { ImageGenerationOptions } from '../../services/imageGenerationService';
 import { SafetyFilterLevel } from '@google/genai';
+import { useBatchConfiguration, useCharacterSelection } from '../../hooks/illustration';
 
 interface BatchIllustrationPanelProps {
   className?: string;
@@ -40,7 +39,6 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   className = ''
 }) => {
   // Redux 狀態
-  const dispatch = useDispatch<AppDispatch>();
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
   const characters = useSelector((state: RootState) => state.characters.characters);
 
@@ -49,30 +47,36 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
-  // 批次創建狀態
-  const [batchName, setBatchName] = useState('');
-  const [batchDescription, setBatchDescription] = useState('');
-  const [batchPriority, setBatchPriority] = useState<TaskPriority>(TaskPriority.Normal);
-  const [maxParallel, setMaxParallel] = useState(2);
+  // 批次配置管理 Hook - 替換原有的分散式狀態管理
+  const batchConfig = useBatchConfiguration({
+    initialPriority: TaskPriority.Normal,
+    initialMaxParallel: 2,
+    autoValidate: true,
+  });
+
+  // 角色選擇管理 Hook
+  const {
+    selectedCharacters,
+    charactersLoading,
+    charactersError,
+    effectiveProjectCharacters,
+    toggleCharacterSelection,
+    loadCharactersDirectly,
+    getSelectedCharactersData,
+  } = useCharacterSelection({
+    projectId: currentProject?.id,
+    autoLoadOnMount: true,
+  });
+
+  // 批次請求列表（獨立於配置）
   const [requests, setRequests] = useState<BatchRequestItem[]>([]);
-  const [apiKey, setApiKey] = useState('');
   
-  // 新增：色彩模式和API金鑰來源狀態
-  const [globalColorMode, setGlobalColorMode] = useState<'color' | 'monochrome'>('color');
-  const [apiKeySource, setApiKeySource] = useState<'manual' | 'gemini' | 'openrouter'>('manual');
-  
-  // 新增：插畫服務選擇狀態
-  const [illustrationProvider, setIllustrationProvider] = useState<'pollinations' | 'imagen'>('pollinations');
-  const [pollinationsModel, setPollinationsModel] = useState<'flux' | 'gptimage' | 'kontext' | 'sdxl'>('flux');
-  const [pollinationsStyle, setPollinationsStyle] = useState<'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art'>('anime');
-  
-  // 新增：Google Cloud 計費模態狀態
+  // Google Cloud 計費模態狀態
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [billingErrorMessage, setBillingErrorMessage] = useState('');
   
 
-  // 角色選擇狀態
-  const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
+  // 場景類型狀態（保留，因為 useCharacterSelection 沒有包含這個）
   const [sceneType, setSceneType] = useState<'portrait' | 'scene' | 'interaction'>('portrait');
 
   // 監控狀態
@@ -88,8 +92,15 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   const [tempImages, setTempImages] = useState<any[]>([]);
   const [showImagePreview, setShowImagePreview] = useState(false);
 
-  // 獲取項目角色
-  const projectCharacters = characters.filter(c => c.projectId === currentProject?.id);
+  // 注：詳細調試資訊已移至 useCharacterSelection Hook
+  
+  // 優化計算：避免重複計算的值
+  const requestsCount = useMemo(() => requests.length, [requests.length]);
+  const hasRequests = useMemo(() => requests.length > 0, [requests.length]);
+  const canSubmit = useMemo(() => 
+    !isProcessing && hasRequests && batchConfig.isValidConfiguration,
+    [isProcessing, hasRequests, batchConfig.isValidConfiguration]
+  );
 
   // 載入活動批次
   const loadActiveBatches = useCallback(async () => {
@@ -134,17 +145,10 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     }
   }, [loadActiveBatches]);
 
-  // 角色選擇處理
-  const toggleCharacterSelection = (characterId: string) => {
-    setSelectedCharacters(prev => 
-      prev.includes(characterId) 
-        ? prev.filter(id => id !== characterId)
-        : [...prev, characterId]
-    );
-  };
+  // 注：角色選擇邏輯已移至 useCharacterSelection Hook
 
   // 生成智能場景描述
-  const generateSceneDescription = (characters: Character[], sceneType: string) => {
+  const generateSceneDescription = useCallback((characters: Character[], sceneType: string) => {
     if (characters.length === 0) return '';
     
     let description = '';
@@ -172,13 +176,11 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     }
     
     return description;
-  };
+  }, []);
 
   // 添加新請求 (基於選中角色)
-  const addRequest = () => {
-    const selectedChars = selectedCharacters.map(id => 
-      projectCharacters.find(c => c.id === id)
-    ).filter(Boolean) as Character[];
+  const addRequest = useCallback(() => {
+    const selectedChars = getSelectedCharactersData();
 
     const newRequest: BatchRequestItem = {
       id: Date.now().toString(),
@@ -188,20 +190,20 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       aspect_ratio: 'square',
       scene_type: sceneType
     };
-    setRequests([...requests, newRequest]);
-  };
+    setRequests(prev => [...prev, newRequest]);
+  }, [generateSceneDescription, getSelectedCharactersData, sceneType, selectedCharacters]);
 
   // 移除請求
-  const removeRequest = (id: string) => {
-    setRequests(requests.filter(req => req.id !== id));
-  };
+  const removeRequest = useCallback((id: string) => {
+    setRequests(requests => requests.filter(req => req.id !== id));
+  }, []);
 
   // 更新請求
-  const updateRequest = (id: string, field: keyof BatchRequestItem, value: string | string[]) => {
-    setRequests(requests.map(req => 
+  const updateRequest = useCallback((id: string, field: keyof BatchRequestItem, value: string | string[]) => {
+    setRequests(requests => requests.map(req => 
       req.id === id ? { ...req, [field]: value } : req
     ));
-  };
+  }, []);
 
   // 提交批次請求（整合圖像生成服務）
   const submitBatch = async () => {
@@ -210,18 +212,18 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       return;
     }
 
-    if (!batchName.trim()) {
+    if (!batchConfig.batchName.trim()) {
       setError('請輸入批次名稱');
       return;
     }
 
-    if (requests.length === 0) {
+    if (!hasRequests) {
       setError('請添加至少一個插畫請求');
       return;
     }
 
     // 只有選擇 Imagen 時才需要 API Key
-    if (illustrationProvider === 'imagen' && !apiKey.trim()) {
+    if (batchConfig.illustrationProvider === 'imagen' && !batchConfig.apiKey.trim()) {
       setError('Google Imagen 需要 API 金鑰，請輸入或切換到免費的 Pollinations.AI');
       return;
     }
@@ -237,22 +239,22 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     setError('');
 
     try {
-      console.log(`🚀 開始批次插畫生成：${batchName}`);
-      console.log(`🎨 色彩模式：${globalColorMode === 'color' ? '彩色' : '黑白'}`);
-      console.log(`🤖 使用服務：${illustrationProvider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}`);
-      console.log(`📋 共 ${requests.length} 個請求`);
+      console.log(`🚀 開始批次插畫生成：${batchConfig.batchName}`);
+      console.log(`🎨 色彩模式：${batchConfig.globalColorMode === 'color' ? '彩色' : '黑白'}`);
+      console.log(`🤖 使用服務：${batchConfig.illustrationProvider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}`);
+      console.log(`📋 共 ${requestsCount} 個請求`);
 
       let results: any[] = [];
 
-      if (illustrationProvider === 'pollinations') {
+      if (batchConfig.illustrationProvider === 'pollinations') {
         // === Pollinations.AI 免費生成 ===
-        console.log(`🌟 使用 Pollinations.AI，模型：${pollinationsModel}，風格：${pollinationsStyle}`);
+        console.log(`🌟 使用 Pollinations.AI，模型：${batchConfig.pollinationsModel}，風格：${batchConfig.pollinationsStyle}`);
         
         results = [];
         
-        for (let i = 0; i < requests.length; i++) {
+        for (let i = 0; i < requestsCount; i++) {
           const req = requests[i];
-          console.log(`🎨 生成進度: ${i + 1}/${requests.length} - ${req.scene_description.substring(0, 50)}...`);
+          console.log(`🎨 生成進度: ${i + 1}/${requestsCount} - ${req.scene_description.substring(0, 50)}...`);
           
           try {
             // 構建增強提示詞
@@ -261,7 +263,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
             // 加入角色資訊
             if (req.selectedCharacterIds.length > 0) {
               const characterNames = req.selectedCharacterIds.map(id => {
-                const char = projectCharacters.find(c => c.id === id);
+                const char = effectiveProjectCharacters.find(c => c.id === id);
                 return char?.name;
               }).filter(Boolean);
               
@@ -284,10 +286,10 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
               enhancedPrompt,
               1024, // width
               1024, // height
-              pollinationsModel,
+              batchConfig.pollinationsModel,
               undefined, // seed (auto-generated)
               true, // enhance
-              pollinationsStyle,
+              batchConfig.pollinationsStyle,
               currentProject?.id, // projectId
               req.selectedCharacterIds.length > 0 ? req.selectedCharacterIds[0] : undefined // characterId (主要角色)
             );
@@ -334,7 +336,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
           // 加入角色資訊
           if (req.selectedCharacterIds.length > 0) {
             const characterNames = req.selectedCharacterIds.map(id => {
-              const char = projectCharacters.find(c => c.id === id);
+              const char = effectiveProjectCharacters.find(c => c.id === id);
               return char?.name;
             }).filter(Boolean);
             
@@ -355,7 +357,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
           return {
             prompt: enhancedDescription,
             options: {
-              colorMode: globalColorMode,
+              colorMode: batchConfig.globalColorMode,
               aspectRatio: req.aspect_ratio as ImageGenerationOptions['aspectRatio'],
               numberOfImages: 1,
               sceneType: req.scene_type,
@@ -367,7 +369,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         // 執行批次生成
         results = await imageGenerationService.generateBatch(
           imageRequests,
-          apiKey,
+          batchConfig.apiKey,
           (current, total, currentPrompt) => {
             console.log(`🎨 生成進度: ${current}/${total} - ${currentPrompt?.substring(0, 50)}...`);
             // 可以在這裡更新 UI 顯示進度
@@ -574,37 +576,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     }
   };
 
-  // 處理預覽模態框的回調
-  const handleImagePreviewSave = (savedImages: any[]) => {
-    console.log(`✅ 用戶確認保存 ${savedImages.length} 張圖像`);
-    
-    // 重置表單
-    setBatchName('');
-    setBatchDescription('');
-    setRequests([]);
-    setSelectedCharacters([]);
-    
-    // 關閉預覽
-    setShowImagePreview(false);
-    setTempImages([]);
-    
-    // 切換到監控標籤或歷史標籤
-    setActiveTab('history');
-    
-    // 顯示成功消息
-    setError(`✅ 成功保存 ${savedImages.length} 張圖像到圖像庫`);
-  };
-
-  const handleImagePreviewDeleteAll = () => {
-    console.log('🗑️ 用戶刪除所有臨時圖像');
-    
-    // 關閉預覽
-    setShowImagePreview(false);
-    setTempImages([]);
-    
-    // 不重置表單，讓用戶可以重新生成
-    setError(''); // 清除錯誤消息
-  };
+  // 注：預覽模態框回調函數已移至 Redux 狀態管理
 
   // 組件初始化
   useEffect(() => {
@@ -612,12 +584,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     initializeBatchManager();
   }, [initializeBatchManager]); // 包含依賴
 
-  // 載入當前專案角色
-  useEffect(() => {
-    if (currentProject?.id) {
-      dispatch(fetchCharactersByProjectId(currentProject.id));
-    }
-  }, [currentProject?.id, dispatch]);
+  // 注：角色載入邏輯已移至 useCharacterSelection Hook
 
   // 新增：自動獲取API金鑰
   useEffect(() => {
@@ -636,8 +603,8 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
             // Base64 解碼 API 金鑰
             try {
               const decodedApiKey = atob(geminiProvider.api_key_encrypted);
-              setApiKey(decodedApiKey);
-              setApiKeySource('gemini');
+              batchConfig.setApiKey(decodedApiKey);
+              batchConfig.setApiKeySource('gemini');
               console.log('✅ 已自動載入並解碼 Gemini API 金鑰');
               return;
             } catch (error) {
@@ -656,8 +623,8 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
             if (modelName.toLowerCase().includes('imagen') || modelName.toLowerCase().includes('gemini')) {
               try {
                 const decodedApiKey = atob(openrouterProvider.api_key_encrypted);
-                setApiKey(decodedApiKey);
-                setApiKeySource('openrouter');
+                batchConfig.setApiKey(decodedApiKey);
+                batchConfig.setApiKeySource('openrouter');
                 console.log('✅ 已自動載入並解碼 OpenRouter API 金鑰');
               } catch (error) {
                 console.error('❌ 解碼 OpenRouter API 金鑰失敗:', error);
@@ -673,7 +640,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     if (currentProject) {
       loadApiKey();
     }
-  }, [currentProject]);
+  }, [currentProject, batchConfig]);
 
   // 自動刷新監控數據
   useEffect(() => {
@@ -736,7 +703,29 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
           <div className="space-y-6">
             {/* 基本設定 */}
             <div className="bg-gray-800 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold text-white mb-4">批次設定</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">批次設定</h3>
+                {/* 配置驗證狀態 */}
+                <div className="flex items-center space-x-2">
+                  {batchConfig.isValidConfiguration ? (
+                    <div className="flex items-center space-x-1 text-green-400">
+                      <span>✅</span>
+                      <span className="text-sm">配置有效</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-1 text-red-400">
+                      <span>❌</span>
+                      <span className="text-sm">{batchConfig.validation.errors.length} 個錯誤</span>
+                    </div>
+                  )}
+                  {batchConfig.validation.warnings.length > 0 && (
+                    <div className="flex items-center space-x-1 text-yellow-400">
+                      <span>⚠️</span>
+                      <span className="text-sm">{batchConfig.validation.warnings.length} 個警告</span>
+                    </div>
+                  )}
+                </div>
+              </div>
               
               {/* 色彩模式選擇 - 全局設定 */}
               <div className="mb-6">
@@ -745,9 +734,9 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => setGlobalColorMode('color')}
+                    onClick={() => batchConfig.setGlobalColorMode('color')}
                     className={`p-4 rounded-lg border-2 transition-all ${
-                      globalColorMode === 'color'
+                      batchConfig.globalColorMode === 'color'
                         ? 'border-purple-500 bg-gradient-to-br from-red-500/10 via-purple-500/10 to-blue-500/10'
                         : 'border-gray-600 bg-gray-700 hover:border-gray-500'
                     }`}
@@ -760,9 +749,9 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   </button>
                   
                   <button
-                    onClick={() => setGlobalColorMode('monochrome')}
+                    onClick={() => batchConfig.setGlobalColorMode('monochrome')}
                     className={`p-4 rounded-lg border-2 transition-all ${
-                      globalColorMode === 'monochrome'
+                      batchConfig.globalColorMode === 'monochrome'
                         ? 'border-gray-400 bg-gray-800'
                         : 'border-gray-600 bg-gray-700 hover:border-gray-500'
                     }`}
@@ -783,9 +772,9 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => setIllustrationProvider('pollinations')}
+                    onClick={() => batchConfig.setIllustrationProvider('pollinations')}
                     className={`p-4 rounded-lg border-2 transition-all ${
-                      illustrationProvider === 'pollinations'
+                      batchConfig.illustrationProvider === 'pollinations'
                         ? 'border-green-500 bg-gradient-to-br from-green-500/20 to-emerald-500/20'
                         : 'border-gray-600 bg-gray-700 hover:border-gray-500'
                     }`}
@@ -799,9 +788,9 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   </button>
                   
                   <button
-                    onClick={() => setIllustrationProvider('imagen')}
+                    onClick={() => batchConfig.setIllustrationProvider('imagen')}
                     className={`p-4 rounded-lg border-2 transition-all ${
-                      illustrationProvider === 'imagen'
+                      batchConfig.illustrationProvider === 'imagen'
                         ? 'border-blue-500 bg-gradient-to-br from-blue-500/20 to-cyan-500/20'
                         : 'border-gray-600 bg-gray-700 hover:border-gray-500'
                     }`}
@@ -817,7 +806,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
               </div>
 
               {/* Pollinations 模型和風格選擇 */}
-              {illustrationProvider === 'pollinations' && (
+              {batchConfig.illustrationProvider === 'pollinations' && (
                 <div className="mb-6 p-4 bg-green-900/20 border border-green-700 rounded-lg">
                   <h4 className="text-sm font-medium text-green-300 mb-4">🎨 Pollinations.AI 設定</h4>
                   
@@ -825,8 +814,8 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   <div className="mb-4">
                     <label className="block text-sm text-gray-300 mb-2">模型選擇</label>
                     <select
-                      value={pollinationsModel}
-                      onChange={(e) => setPollinationsModel(e.target.value as 'flux' | 'gptimage' | 'kontext' | 'sdxl')}
+                      value={batchConfig.pollinationsModel}
+                      onChange={(e) => batchConfig.setPollinationsModel(e.target.value as 'flux' | 'gptimage' | 'kontext' | 'sdxl')}
                       className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
                     >
                       <option value="flux">Flux - 高品質通用模型 (推薦)</option>
@@ -849,9 +838,9 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                       ].map(style => (
                         <button
                           key={style.id}
-                          onClick={() => setPollinationsStyle(style.id as typeof pollinationsStyle)}
+                          onClick={() => batchConfig.setPollinationsStyle(style.id as typeof batchConfig.pollinationsStyle)}
                           className={`p-2 rounded text-xs transition-colors ${
-                            pollinationsStyle === style.id
+                            batchConfig.pollinationsStyle === style.id
                               ? 'bg-green-600 text-white'
                               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                           }`}
@@ -871,10 +860,19 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                     批次名稱 <span className="text-red-400">*</span>
                   </label>
                   <CosmicInput
-                    value={batchName}
-                    onChange={(value) => setBatchName(value)}
+                    value={batchConfig.batchName}
+                    onChange={(value) => batchConfig.setBatchName(value)}
                     placeholder="例如：角色立繪批次01"
                   />
+                  {/* 驗證錯誤提示 */}
+                  {batchConfig.validation.errors
+                    .filter(error => error.field === 'batchName')
+                    .map((error, index) => (
+                      <div key={index} className="mt-1 text-sm text-red-400 flex items-center space-x-1">
+                        <span>⚠️</span>
+                        <span>{error.message}</span>
+                      </div>
+                    ))}
                 </div>
 
                 <div>
@@ -882,8 +880,8 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                     優先級
                   </label>
                   <select
-                    value={batchPriority}
-                    onChange={(e) => setBatchPriority(parseInt(e.target.value) as TaskPriority)}
+                    value={batchConfig.batchPriority}
+                    onChange={(e) => batchConfig.setBatchPriority(parseInt(e.target.value) as TaskPriority)}
                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value={TaskPriority.Low}>低</option>
@@ -900,18 +898,44 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   </label>
                   <CosmicInput
                     type="number"
-                    value={maxParallel.toString()}
-                    onChange={(value) => setMaxParallel(parseInt(value) || 1)}
+                    value={batchConfig.maxParallel.toString()}
+                    onChange={(value) => batchConfig.setMaxParallel(parseInt(value) || 1)}
                   />
-                  <p className="text-xs text-gray-400 mt-1">同時執行的任務數量</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-gray-400">同時執行的任務數量</p>
+                    <button
+                      type="button"
+                      onClick={() => batchConfig.setMaxParallel(batchConfig.getRecommendedMaxParallel())}
+                      className="text-xs text-purple-400 hover:text-purple-300 underline"
+                    >
+                      建議: {batchConfig.getRecommendedMaxParallel()}
+                    </button>
+                  </div>
+                  {/* 驗證錯誤和警告提示 */}
+                  {batchConfig.validation.errors
+                    .filter(error => error.field === 'maxParallel')
+                    .map((error, index) => (
+                      <div key={`error-${index}`} className="mt-1 text-sm text-red-400 flex items-center space-x-1">
+                        <span>⚠️</span>
+                        <span>{error.message}</span>
+                      </div>
+                    ))}
+                  {batchConfig.validation.warnings
+                    .filter(warning => warning.field === 'maxParallel')
+                    .map((warning, index) => (
+                      <div key={`warning-${index}`} className="mt-1 text-sm text-yellow-400 flex items-center space-x-1">
+                        <span>⚡</span>
+                        <span>{warning.message}</span>
+                      </div>
+                    ))}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     API 金鑰 
-                    {apiKeySource !== 'manual' ? (
+                    {batchConfig.apiKeySource !== 'manual' ? (
                       <span className="text-green-400 ml-2">
-                        ✅ 已從 {apiKeySource === 'gemini' ? 'Gemini' : 'OpenRouter'} 載入
+                        ✅ 已從 {batchConfig.apiKeySource === 'gemini' ? 'Gemini' : 'OpenRouter'} 載入
                       </span>
                     ) : (
                       <span className="text-red-400"> *</span>
@@ -919,22 +943,39 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   </label>
                   <CosmicInput
                     type="password"
-                    value={apiKey}
+                    value={batchConfig.apiKey}
                     onChange={(value) => {
-                      setApiKey(value);
-                      setApiKeySource('manual');
+                      batchConfig.setApiKey(value);
+                      batchConfig.setApiKeySource('manual');
                     }}
                     placeholder={
-                      apiKeySource !== 'manual' 
+                      batchConfig.apiKeySource !== 'manual' 
                         ? "已自動載入 (可覆寫)" 
                         : "輸入 Google Cloud API 金鑰"
                     }
                   />
-                  {apiKeySource !== 'manual' && (
+                  {batchConfig.apiKeySource !== 'manual' && (
                     <p className="text-xs text-gray-400 mt-1">
                       💡 已自動使用 AI 提供者管理中的金鑰，您也可以手動輸入覆寫
                     </p>
                   )}
+                  {/* API 金鑰驗證提示 */}
+                  {batchConfig.validation.errors
+                    .filter(error => error.field === 'apiKey')
+                    .map((error, index) => (
+                      <div key={`error-${index}`} className="mt-1 text-sm text-red-400 flex items-center space-x-1">
+                        <span>⚠️</span>
+                        <span>{error.message}</span>
+                      </div>
+                    ))}
+                  {batchConfig.validation.warnings
+                    .filter(warning => warning.field === 'apiKey')
+                    .map((warning, index) => (
+                      <div key={`warning-${index}`} className="mt-1 text-sm text-yellow-400 flex items-center space-x-1">
+                        <span>⚡</span>
+                        <span>{warning.message}</span>
+                      </div>
+                    ))}
                   <div className="mt-3 p-4 bg-gradient-to-r from-orange-900/40 to-red-900/40 border-2 border-orange-500/60 rounded-lg">
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0">
@@ -970,23 +1011,128 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   批次描述
                 </label>
                 <textarea
-                  value={batchDescription}
-                  onChange={(e) => setBatchDescription(e.target.value)}
+                  value={batchConfig.batchDescription}
+                  onChange={(e) => batchConfig.setBatchDescription(e.target.value)}
                   placeholder="可選：描述這個批次的用途"
                   rows={2}
                   className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                 />
               </div>
+
+              {/* 配置管理功能 */}
+              <div className="mt-6 p-4 bg-gray-750 rounded-lg border border-gray-600">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-300 font-medium">⚙️ 配置管理</span>
+                    <span className="text-xs text-gray-400">({batchConfig.getConfigurationSummary()})</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {/* 重置按鈕 */}
+                    <button
+                      onClick={() => {
+                        if (confirm('確定要重置為預設配置嗎？這會清除所有當前設定。')) {
+                          batchConfig.resetToDefaults();
+                        }
+                      }}
+                      className="px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-yellow-100 text-xs rounded transition-colors"
+                      title="重置為預設配置"
+                    >
+                      🔄 重置
+                    </button>
+                    
+                    {/* 匯出按鈕 */}
+                    <button
+                      onClick={() => {
+                        const config = batchConfig.exportConfiguration();
+                        const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `batch-config-${Date.now()}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="px-3 py-1 bg-green-600 hover:bg-green-500 text-green-100 text-xs rounded transition-colors"
+                      title="匯出配置到檔案"
+                    >
+                      📤 匯出
+                    </button>
+                    
+                    {/* 匯入按鈕 */}
+                    <button
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.json';
+                        input.onchange = (e: Event) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              try {
+                                const config = JSON.parse(event.target?.result as string);
+                                batchConfig.importConfiguration(config);
+                                alert('配置匯入成功！');
+                              } catch (_error) {
+                                alert('匯入失敗：無效的配置檔案格式');
+                              }
+                            };
+                            reader.readAsText(file);
+                          }
+                        };
+                        input.click();
+                      }}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-blue-100 text-xs rounded transition-colors"
+                      title="從檔案匯入配置"
+                    >
+                      📥 匯入
+                    </button>
+                  </div>
+                </div>
+                
+                {/* 配置摘要顯示 */}
+                <div className="text-xs text-gray-400 bg-gray-800 p-2 rounded">
+                  <strong>當前配置摘要：</strong> {batchConfig.getConfigurationSummary()}
+                </div>
+              </div>
             </div>
 
             {/* 角色選擇區域 */}
             <div className="bg-gray-800 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold text-white mb-4">
-                🎭 選擇角色 ({selectedCharacters.length} 已選擇)
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">
+                  🎭 選擇角色 ({selectedCharacters.length} 已選擇)
+                </h3>
+                <div className="flex items-center space-x-2">
+                  {charactersLoading && (
+                    <div className="text-blue-400 text-sm animate-pulse">載入中...</div>
+                  )}
+                  <button
+                    onClick={loadCharactersDirectly}
+                    disabled={charactersLoading}
+                    className="px-3 py-1 bg-cosmic-700 hover:bg-cosmic-600 disabled:opacity-50 text-cosmic-200 rounded text-sm transition-colors"
+                  >
+                    🔄 重新載入
+                  </button>
+                </div>
+              </div>
+              
+              {charactersError && (
+                <div className="mb-4 p-3 bg-red-900/30 border border-red-700/50 rounded text-red-300">
+                  <span className="font-medium">載入錯誤：</span> {charactersError}
+                </div>
+              )}
               
               <div className="character-grid flex flex-wrap gap-6 mb-6">
-                {projectCharacters.map((character) => {
+                {charactersLoading && (
+                  <div className="col-span-full text-center py-8 text-blue-400">
+                    <div className="text-6xl mb-4 animate-spin">🔄</div>
+                    <p>載入角色中...</p>
+                  </div>
+                )}
+                {effectiveProjectCharacters.map((character) => {
                   const isSelected = selectedCharacters.includes(character.id);
                   
                   // 獲取角色頭像
@@ -1080,10 +1226,19 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   );
                 })}
                 
-                {projectCharacters.length === 0 && (
+                {!charactersLoading && effectiveProjectCharacters.length === 0 && (
                   <div className="col-span-full text-center py-8 text-gray-400">
-                    <p>此專案還沒有角色</p>
-                    <p className="text-sm mt-2">請先到角色管理頁面創建角色</p>
+                    <div className="text-6xl mb-4">🎭</div>
+                    <p className="mb-2">此專案還沒有角色</p>
+                    <p className="text-sm mt-2 mb-4">請先到角色管理頁面創建角色</p>
+                    <div className="text-xs text-cosmic-500 bg-cosmic-900/50 p-3 rounded border border-cosmic-700">
+                      <p className="mb-2"><strong>調試信息：</strong></p>
+                      <p>專案ID: {currentProject?.id || '無'}</p>
+                      <p>角色總數: {characters.length}</p>
+                      <p>項目角色數: {effectiveProjectCharacters.length}</p>
+                      <p>載入狀態: {charactersLoading ? '載入中' : '已完成'}</p>
+                      {charactersError && <p className="text-red-400">錯誤: {charactersError}</p>}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1133,7 +1288,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                     onClick={() => {
                       // 為每個角色單獨生成肖像請求
                       selectedCharacters.forEach(charId => {
-                        const char = projectCharacters.find(c => c.id === charId);
+                        const char = effectiveProjectCharacters.find(c => c.id === charId);
                         if (char) {
                           const portraitRequest: BatchRequestItem = {
                             id: `${Date.now()}-${charId}`,
@@ -1189,7 +1344,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                         </label>
                         <div className="flex flex-wrap gap-2">
                           {request.selectedCharacterIds.map(charId => {
-                            const character = projectCharacters.find(c => c.id === charId);
+                            const character = effectiveProjectCharacters.find(c => c.id === charId);
                             return character ? (
                               <span key={charId} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gold-600/20 text-gold-300 border border-gold-600/30">
                                 <span className="mr-1">{character.archetype?.includes('魔法') ? '🧙' : '👤'}</span>
@@ -1264,7 +1419,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
             <div className="flex justify-center">
               <CosmicButton
                 onClick={submitBatch}
-                disabled={isProcessing || requests.length === 0 || !batchName.trim() || !apiKey.trim()}
+                disabled={!canSubmit}
                 size="large"
               >
                 {isProcessing ? (
@@ -1520,11 +1675,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
 
       {/* 圖像預覽模態框 */}
       {showImagePreview && tempImages.length > 0 && (
-        <ImagePreviewModal
-          tempImages={tempImages}
-          onSaveConfirmed={handleImagePreviewSave}
-          onDeleteAll={handleImagePreviewDeleteAll}
-        />
+        <ImagePreviewModal />
       )}
     </div>
   );

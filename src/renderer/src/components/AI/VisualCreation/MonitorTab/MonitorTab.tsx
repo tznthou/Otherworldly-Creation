@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../../store/store';
+import { api } from '../../../../api';
+import type { BatchListResponse, BatchStatusResponse } from '../../../../types/illustration';
 
 // Redux actions (如果需要的話)
 // import { ... } from '../../../../store/slices/visualCreationSlice';
@@ -21,16 +23,111 @@ const MonitorTab: React.FC<MonitorTabProps> = ({ className = '' }) => {
   } = useSelector((state: RootState) => state.visualCreation);
   
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
+  
+  // 本地狀態 - 後端批次數據
+  const [batchList, setBatchList] = useState<BatchListResponse | null>(null);
+  const [selectedBatchDetails, setSelectedBatchDetails] = useState<BatchStatusResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [_error, setError] = useState<string | null>(null);
+  const [autoRefresh, _setAutoRefresh] = useState(true);
 
-  // 獲取任務狀態統計
-  const getTaskStats = () => {
-    const total = generationQueue.length;
-    const pending = generationQueue.filter(task => task.status === 'pending').length;
-    const running = generationQueue.filter(task => task.status === 'running').length;
-    const completed = generationQueue.filter(task => task.status === 'completed').length;
-    const failed = generationQueue.filter(task => task.status === 'failed').length;
+  // 獲取所有批次概要
+  const fetchBatchList = useCallback(async () => {
+    if (loading) return;
     
-    return { total, pending, running, completed, failed };
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.illustration.getAllBatchesSummary();
+      setBatchList(response);
+    } catch (err) {
+      console.error('獲取批次列表失敗:', err);
+      setError(err instanceof Error ? err.message : '獲取批次列表失敗');
+    } finally {
+      setLoading(false);
+    }
+  }, [loading]);
+
+  // 獲取特定批次詳情
+  const fetchBatchDetails = async (batchId: string) => {
+    try {
+      const response = await api.illustration.getBatchStatus(batchId);
+      setSelectedBatchDetails(response);
+    } catch (err) {
+      console.error('獲取批次詳情失敗:', err);
+    }
+  };
+
+  // 初始化和自動刷新
+  useEffect(() => {
+    fetchBatchList();
+  }, [fetchBatchList]);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    
+    const interval = setInterval(() => {
+      fetchBatchList();
+      // 如果有選中的批次，也刷新其詳情
+      if (selectedBatchDetails?.success && selectedBatchDetails.batch?.batch_id) {
+        fetchBatchDetails(selectedBatchDetails.batch.batch_id);
+      }
+    }, 3000); // 每3秒刷新一次
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, selectedBatchDetails?.batch?.batch_id, fetchBatchList, selectedBatchDetails?.success]);
+
+  // 獲取任務狀態統計（結合前端隊列和後端批次數據）
+  const getTaskStats = () => {
+    // 來自Redux的隊列統計
+    const queueTotal = generationQueue.length;
+    const queuePending = generationQueue.filter(task => task.status === 'pending').length;
+    const queueRunning = generationQueue.filter(task => task.status === 'running').length;
+    const queueCompleted = generationQueue.filter(task => task.status === 'completed').length;
+    const queueFailed = generationQueue.filter(task => task.status === 'failed').length;
+    
+    // 來自後端批次的統計
+    let batchTotal = 0;
+    let batchPending = 0;
+    let batchRunning = 0;
+    let batchCompleted = 0;
+    let batchFailed = 0;
+    
+    if (batchList?.success && batchList.batches) {
+      batchTotal = batchList.batches.length;
+      batchList.batches.forEach(batch => {
+        switch (batch.status?.toLowerCase()) {
+          case 'pending':
+          case 'queued':
+            batchPending++;
+            break;
+          case 'running':
+          case 'processing':
+            batchRunning++;
+            break;
+          case 'completed':
+          case 'finished':
+            batchCompleted++;
+            break;
+          case 'failed':
+          case 'error':
+            batchFailed++;
+            break;
+        }
+      });
+    }
+    
+    return {
+      // 結合前端隊列和後端批次的總計
+      total: queueTotal + batchTotal,
+      pending: queuePending + batchPending,
+      running: queueRunning + batchRunning,
+      completed: queueCompleted + batchCompleted,
+      failed: queueFailed + batchFailed,
+      // 分別統計
+      queue: { total: queueTotal, pending: queuePending, running: queueRunning, completed: queueCompleted, failed: queueFailed },
+      batch: { total: batchTotal, pending: batchPending, running: batchRunning, completed: batchCompleted, failed: batchFailed }
+    };
   };
 
   const stats = getTaskStats();
