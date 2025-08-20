@@ -9,7 +9,11 @@
       "Bash(git add:*)",
       "Bash(git tag:*)",
       "Bash(git push:*)",
-      "mcp__serena__write_memory"
+      "mcp__serena__write_memory",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(git commit:*)",
+      "mcp__serena__list_dir",
+      "Bash(RELEASE_VERSION=1.0.9 node scripts/sync-version.js)"
     ],
     "deny": [],
     "ask": []
