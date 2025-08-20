@@ -11,8 +11,37 @@ const CharacterSelector: React.FC = () => {
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
   const characters = useSelector((state: RootState) => state.characters.characters);
   
-  // 獲取項目角色
-  const projectCharacters = characters.filter(c => c.projectId === currentProject?.id);
+  // 獲取項目角色 - 強化過濾邏輯
+  const projectCharacters = characters.filter(c => {
+    // 確保類型一致比較，處理string vs number的情況
+    const charProjectId = String(c.projectId);
+    const currentProjectId = String(currentProject?.id);
+    const match = charProjectId === currentProjectId;
+    
+    if (!match && characters.length > 0) {
+      console.log(`🎯 [CharacterSelector] 角色過濾: ${c.name} - 角色ProjectId: "${charProjectId}" (${typeof c.projectId}), 當前ProjectId: "${currentProjectId}" (${typeof currentProject?.id}), 匹配: ${match}`);
+    }
+    
+    return match;
+  });
+  
+  // 調試信息
+  console.log('🐛 [CharacterSelector Debug] =================');
+  console.log('📂 currentProject:', currentProject);
+  console.log('🔑 currentProject?.id:', currentProject?.id, '(類型:', typeof currentProject?.id, ')');
+  console.log('📊 Redux characters總數:', characters.length);
+  console.log('🎯 projectCharacters總數 (過濾後):', projectCharacters.length);
+  
+  if (characters.length > 0 && projectCharacters.length === 0) {
+    console.log('❌ 沒有找到匹配的角色！');
+    console.log('📋 所有角色詳情:', characters.map(c => ({ 
+      id: c.id, 
+      name: c.name, 
+      projectId: c.projectId, 
+      projectIdType: typeof c.projectId 
+    })));
+  }
+  console.log('========================================');
   
   // 處理角色選擇
   const handleCharacterToggle = (characterId: string) => {

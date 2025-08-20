@@ -692,6 +692,113 @@ pub async fn test_pollinations_connection() -> Result<Value, String> {
     }
 }
 
+/// 獲取插畫生成歷史
+#[tauri::command]
+#[allow(non_snake_case)]
+pub async fn get_illustration_history(
+    projectId: Option<String>,
+    characterId: Option<String>,
+    limit: Option<i32>,
+    offset: Option<i32>,
+) -> Result<Value, String> {
+    log::info!("[IllustrationCommand] 獲取插畫歷史，專案: {:?}, 角色: {:?}", projectId, characterId);
+    
+    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
+    
+    let mut query = String::from(
+        "SELECT 
+            id, project_id, character_id, original_prompt, enhanced_prompt,
+            model, width, height, seed, enhance, style_applied,
+            image_url, local_file_path, file_size_bytes, generation_time_ms,
+            status, error_message, created_at, batch_id, user_rating, is_favorite
+         FROM pollinations_generations"
+    );
+    
+    let mut conditions = Vec::new();
+    let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+    
+    if let Some(ref pid) = projectId {
+        conditions.push("project_id = ?");
+        params.push(Box::new(pid.clone()));
+    }
+    
+    if let Some(ref cid) = characterId {
+        conditions.push("character_id = ?");
+        params.push(Box::new(cid.clone()));
+    }
+    
+    if !conditions.is_empty() {
+        query.push_str(" WHERE ");
+        query.push_str(&conditions.join(" AND "));
+    }
+    
+    query.push_str(" ORDER BY created_at DESC");
+    
+    if let Some(limit_val) = limit {
+        query.push_str(" LIMIT ?");
+        params.push(Box::new(limit_val));
+    }
+    
+    if let Some(offset_val) = offset {
+        query.push_str(" OFFSET ?");
+        params.push(Box::new(offset_val));
+    }
+    
+    let mut stmt = conn.prepare(&query)
+        .map_err(|e| format!("SQL 準備失敗: {}", e))?;
+    
+    // 轉換參數為引用
+    let param_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+    
+    let rows = stmt.query_map(&param_refs[..], |row| {
+        Ok(serde_json::json!({
+            "id": row.get::<_, String>(0)?,
+            "project_id": row.get::<_, Option<String>>(1)?,
+            "character_id": row.get::<_, Option<String>>(2)?,
+            "original_prompt": row.get::<_, String>(3)?,
+            "enhanced_prompt": row.get::<_, String>(4)?,
+            "model": row.get::<_, String>(5)?,
+            "width": row.get::<_, i32>(6)?,
+            "height": row.get::<_, i32>(7)?,
+            "seed": row.get::<_, Option<i32>>(8)?,
+            "enhance": row.get::<_, bool>(9)?,
+            "style_applied": row.get::<_, Option<String>>(10)?,
+            "image_url": row.get::<_, Option<String>>(11)?,
+            "local_file_path": row.get::<_, Option<String>>(12)?,
+            "file_size_bytes": row.get::<_, Option<i64>>(13)?,
+            "generation_time_ms": row.get::<_, Option<i32>>(14)?,
+            "status": row.get::<_, String>(15)?,
+            "error_message": row.get::<_, Option<String>>(16)?,
+            "created_at": row.get::<_, String>(17)?,
+            "batch_id": row.get::<_, Option<String>>(18)?,
+            "user_rating": row.get::<_, Option<i32>>(19)?,
+            "is_favorite": row.get::<_, bool>(20)?,
+            "provider": "pollinations",
+            "is_free": true
+        }))
+    }).map_err(|e| format!("查詢執行失敗: {}", e))?;
+    
+    let mut illustrations = Vec::new();
+    for row in rows {
+        match row {
+            Ok(illustration) => illustrations.push(illustration),
+            Err(e) => {
+                log::warn!("[IllustrationCommand] 跳過無效記錄: {}", e);
+            }
+        }
+    }
+    
+    log::info!("[IllustrationCommand] 獲取插畫歷史成功，共 {} 條記錄", illustrations.len());
+    
+    Ok(serde_json::json!({
+        "success": true,
+        "illustrations": illustrations,
+        "total": illustrations.len(),
+        "project_id": projectId,
+        "character_id": characterId
+    }))
+}
+
 /// 取得支援的免費模型列表
 #[tauri::command]
 pub async fn get_free_illustration_models() -> Result<Value, String> {

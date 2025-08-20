@@ -332,20 +332,38 @@ export interface IllustrationFilter {
 /** 插畫歷史項目 */
 export interface IllustrationHistoryItem {
   id: string;
-  project_id: string;
+  project_id?: string;
   character_id?: string;
-  scene_description: string;
+  original_prompt: string;
+  enhanced_prompt?: string;
+  model: string;
+  width: number;
+  height: number;
+  seed?: number;
+  enhance: boolean;
+  style_applied?: string;
+  image_url?: string;
+  local_file_path?: string;
+  file_size_bytes?: number;
+  generation_time_ms?: number;
+  status: 'completed' | 'failed' | 'pending' | 'processing';
+  error_message?: string;
+  created_at: string;
+  batch_id?: string;
+  user_rating?: number;
+  is_favorite: boolean;
+  provider: string;
+  is_free: boolean;
+  
+  // Legacy fields for backward compatibility
+  scene_description?: string;
   generated_image_url?: string;
   thumbnail_url?: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
   translated_prompt?: string;
   seed_value?: number;
-  generation_time_ms?: number;
   quality_score?: number;
   consistency_score?: number;
   cost?: number;
-  error_message?: string;
-  created_at: string;
   style_template_id?: string;
   aspect_ratio?: string;
   safety_level?: string;

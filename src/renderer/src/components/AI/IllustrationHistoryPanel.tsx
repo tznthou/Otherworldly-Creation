@@ -12,6 +12,7 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 import { Alert } from '../UI/Alert';
 import { Card } from '../UI/Card';
 import { Badge } from '../UI/Badge';
+import { formatDateTime } from '../../utils/dateUtils';
 
 interface IllustrationHistoryPanelProps {
   className?: string;
@@ -277,15 +278,15 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
     setCurrentPage(1);
   };
 
-  // 格式化日期
+  // 格式化日期 - JavaScript 自動處理 UTC 到本地時區的轉換
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('zh-TW', {
+    return formatDateTime(dateString, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: false
     });
   };
 

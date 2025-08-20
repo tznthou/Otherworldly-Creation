@@ -378,6 +378,201 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
       )
     },
     {
+      id: 'ai-illustration',
+      title: '🎨 AI 插畫功能',
+      content: (
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-4">🎨 視覺創作中心</h3>
+            <p className="text-gray-300 mb-4">
+              AI插畫功能是創世紀元的創新特色，結合了多個AI圖像生成服務，為您的小說角色和場景提供視覺化支持。
+              透過統一的「幻想具現」界面，您可以輕鬆生成高品質的角色插畫和場景圖片。
+            </p>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">功能特色</h4>
+            <ul className="text-gray-300 space-y-2">
+              <li>• <strong>雙服務支持</strong>：整合Pollinations.AI（免費）和Google Imagen（付費）</li>
+              <li>• <strong>角色整合</strong>：直接連接角色管理系統，自動載入角色資料</li>
+              <li>• <strong>智能場景建構</strong>：根據選中角色自動生成場景描述</li>
+              <li>• <strong>批次生成管理</strong>：支持多任務並行處理和進度監控</li>
+              <li>• <strong>完整圖庫系統</strong>：歷史記錄管理和圖片預覽功能</li>
+              <li>• <strong>統一操作界面</strong>：三大功能標籤（創建、監控、圖庫）</li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">如何開始使用</h4>
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+              <h5 className="text-blue-400 font-semibold mb-2">兩種啟動方式</h5>
+              <div className="space-y-3 text-gray-300 text-sm">
+                <div>
+                  <p><strong>方式一：儀表板啟動</strong></p>
+                  <ol className="ml-4 space-y-1">
+                    <li>1. 在主儀表板找到「幻想具現」功能卡片</li>
+                    <li>2. 點擊卡片直接進入視覺創作中心</li>
+                  </ol>
+                </div>
+                <div>
+                  <p><strong>方式二：側邊欄啟動</strong></p>
+                  <ol className="ml-4 space-y-1">
+                    <li>1. 點擊左側邊欄的「🎨 AI 插畫」選項</li>
+                    <li>2. 系統會開啟模態視窗顯示視覺創作中心</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">創建標籤 - 核心功能</h4>
+            <div className="space-y-4">
+              <div className="bg-cosmic-800/50 p-4 rounded-lg">
+                <h5 className="text-white font-semibold mb-2">角色選擇系統</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• 自動載入當前專案的所有角色</li>
+                  <li>• 支持多選角色，適應不同場景需求</li>
+                  <li>• 提供全選/取消全選快捷操作</li>
+                  <li>• 視覺化選擇狀態，清楚顯示已選角色</li>
+                </ul>
+              </div>
+              
+              <div className="bg-cosmic-800/50 p-4 rounded-lg">
+                <h5 className="text-white font-semibold mb-2">場景建構器</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• <strong>肖像模式</strong>：單一角色的精美頭像或全身像</li>
+                  <li>• <strong>互動模式</strong>：多個角色的互動場景</li>
+                  <li>• <strong>場景模式</strong>：包含環境背景的完整場景</li>
+                  <li>• 智能描述生成：基於角色設定自動產生提示詞</li>
+                </ul>
+              </div>
+
+              <div className="bg-cosmic-800/50 p-4 rounded-lg">
+                <h5 className="text-white font-semibold mb-2">生成控制</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• 批次設定：為生成任務命名和添加描述</li>
+                  <li>• 快速添加：一鍵將當前設定加入生成佇列</li>
+                  <li>• 參數調整：風格模板、尺寸比例自定義</li>
+                  <li>• 批次執行：同時處理多個插畫請求</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">監控標籤 - 任務管理</h4>
+            <div className="bg-cosmic-800/50 p-4 rounded-lg">
+              <ul className="text-gray-300 space-y-2">
+                <li>• <strong>實時進度</strong>：顯示所有生成任務的當前狀態</li>
+                <li>• <strong>詳細信息</strong>：包含提示詞、參數、時間戳等</li>
+                <li>• <strong>錯誤處理</strong>：失敗任務的詳細錯誤信息</li>
+                <li>• <strong>操作控制</strong>：取消運行中的任務</li>
+                <li>• <strong>歷史查詢</strong>：查看已完成任務的詳細記錄</li>
+              </ul>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">圖庫標籤 - 成果管理</h4>
+            <div className="bg-cosmic-800/50 p-4 rounded-lg">
+              <ul className="text-gray-300 space-y-2">
+                <li>• <strong>虛擬化網格</strong>：高效能顯示大量圖片</li>
+                <li>• <strong>圖片預覽</strong>：全螢幕預覽模式，支援鍵盤導航</li>
+                <li>• <strong>一鍵保存</strong>：直接保存圖片到本地相簿</li>
+                <li>• <strong>批次管理</strong>：多選圖片進行批次操作</li>
+                <li>• <strong>搜索過濾</strong>：按角色、時間等條件篩選圖片</li>
+              </ul>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">服務商選擇指南</h4>
+            <div className="space-y-3">
+              <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                <h5 className="text-green-400 font-semibold mb-2">🆓 Pollinations.AI（推薦新手）</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• <strong>優點</strong>：完全免費、無需註冊、快速生成</li>
+                  <li>• <strong>適合</strong>：初學者、概念驗證、大量試驗</li>
+                  <li>• <strong>限制</strong>：品質可能不如付費服務</li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <h5 className="text-blue-400 font-semibold mb-2">💳 Google Imagen（專業級）</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• <strong>優點</strong>：頂級品質、精確控制、商用許可</li>
+                  <li>• <strong>適合</strong>：專業創作者、商業作品、高品質需求</li>
+                  <li>• <strong>注意</strong>：需要Google Cloud API設定和付費</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">最佳實踐建議</h4>
+            <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+              <ul className="text-gray-300 space-y-2 text-sm">
+                <li>• <strong>角色設定</strong>：在角色管理中詳細填寫外貌描述，提升生成準確度</li>
+                <li>• <strong>場景選擇</strong>：肖像選1個角色，互動選2-3個，場景可選多個</li>
+                <li>• <strong>批次策略</strong>：建議每批次3-5個請求，避免系統負載過重</li>
+                <li>• <strong>描述優化</strong>：生成前可手動調整場景描述，加入特定細節</li>
+                <li>• <strong>品質控制</strong>：先用免費服務測試，滿意後再用付費服務精製</li>
+                <li>• <strong>圖片管理</strong>：定期整理圖庫，刪除不滿意的結果節省空間</li>
+              </ul>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">常見問題與解決</h4>
+            <div className="space-y-3">
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+                <h5 className="text-red-400 font-semibold">問題：無法載入角色列表</h5>
+                <ul className="text-gray-300 text-sm mt-2 space-y-1">
+                  <li>• 確認已選擇專案且專案中存在角色</li>
+                  <li>• 嘗試重新開啟視覺創作中心</li>
+                  <li>• 檢查角色管理功能是否正常</li>
+                </ul>
+              </div>
+              
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+                <h5 className="text-red-400 font-semibold">問題：生成失敗或速度慢</h5>
+                <ul className="text-gray-300 text-sm mt-2 space-y-1">
+                  <li>• 檢查網路連線狀態</li>
+                  <li>• 嘗試切換到Pollinations.AI服務</li>
+                  <li>• 簡化場景描述，移除複雜元素</li>
+                  <li>• 確認Google Cloud API配置（使用Imagen時）</li>
+                </ul>
+              </div>
+
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+                <h5 className="text-red-400 font-semibold">問題：生成結果不理想</h5>
+                <ul className="text-gray-300 text-sm mt-2 space-y-1">
+                  <li>• 在角色管理中完善角色外貌描述</li>
+                  <li>• 嘗試不同的場景類型（肖像/互動/場景）</li>
+                  <li>• 手動編輯場景描述，添加關鍵詞</li>
+                  <li>• 多次生成，選擇最滿意的結果</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">快捷鍵與操作技巧</h4>
+            <div className="bg-cosmic-800/50 p-4 rounded-lg">
+              <ul className="text-gray-300 space-y-2 text-sm">
+                <li>• <strong>ESC鍵</strong>：關閉視覺創作中心模態視窗</li>
+                <li>• <strong>圖片預覽</strong>：左右箭頭鍵導航，ESC關閉</li>
+                <li>• <strong>批次選擇</strong>：Shift+點擊可連續選擇角色</li>
+                <li>• <strong>快速切換</strong>：數字鍵1-3快速切換功能標籤</li>
+                <li>• <strong>保存快捷</strong>：在預覽模式按S鍵快速保存</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'ai-assistant',
       title: 'AI 輔助功能',
       content: (

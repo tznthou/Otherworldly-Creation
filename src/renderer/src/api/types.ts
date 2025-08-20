@@ -242,6 +242,7 @@ export interface API {
         height: number;
         seed?: number;
         enhance: boolean;
+        style?: string;
       };
       generation_time_ms?: number;
       provider?: string;
@@ -266,6 +267,55 @@ export interface API {
       }>;
       provider?: string;
       total_count?: number;
+    }>;
+
+    // === 臨時圖像預覽管理 ===
+    generateFreeIllustrationToTemp: (
+      prompt: string,
+      width?: number,
+      height?: number,
+      model?: 'flux' | 'gptimage' | 'kontext' | 'sdxl',
+      seed?: number,
+      enhance?: boolean,
+      style?: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art',
+      projectId?: string,
+      characterId?: string
+    ) => Promise<{
+      success: boolean;
+      id?: string;
+      prompt?: string;
+      temp_path?: string;
+      temp_url?: string;
+      parameters?: {
+        model: string;
+        width: number;
+        height: number;
+        seed?: number;
+        enhance: boolean;
+      };
+      generation_time_ms?: number;
+      provider?: string;
+      is_temp?: boolean;
+      message?: string;
+    }>;
+
+    confirmTempImageSave: (tempImageData: any) => Promise<{
+      success: boolean;
+      id?: string;
+      permanent_path?: string;
+      permanent_url?: string;
+      message?: string;
+    }>;
+
+    deleteTempImage: (tempPath: string) => Promise<{
+      success: boolean;
+      message?: string;
+    }>;
+
+    cleanupExpiredTempImages: () => Promise<{
+      success: boolean;
+      cleaned_count?: number;
+      message?: string;
     }>;
   };
 }

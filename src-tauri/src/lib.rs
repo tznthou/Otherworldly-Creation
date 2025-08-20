@@ -34,6 +34,7 @@ use commands::illustration::{
     generate_enhanced_illustration, get_illustration_generation_status,
     cancel_illustration_generation, validate_imagen_api_connection,
     generate_free_illustration, test_pollinations_connection, get_free_illustration_models,
+    get_illustration_history,
     // 臨時圖像管理 API
     generate_free_illustration_to_temp, confirm_temp_image_save, delete_temp_image, cleanup_expired_temp_images
 };
@@ -185,6 +186,7 @@ pub fn run() {
       generate_free_illustration,
       test_pollinations_connection,
       get_free_illustration_models,
+      get_illustration_history,
       // 臨時圖像預覽管理
       generate_free_illustration_to_temp,
       confirm_temp_image_save,

@@ -45,6 +45,7 @@ export function safeParseDate(dateInput: string | Date | number | undefined | nu
 
 /**
  * 格式化日期為本地化字串
+ * JavaScript 會自動將 UTC 時間轉換為用戶的本地時區
  * @param dateInput - 日期輸入
  * @param options - Intl.DateTimeFormatOptions 選項
  * @returns 格式化的日期字串
@@ -56,7 +57,8 @@ export function formatDate(
   const date = safeParseDate(dateInput);
   
   try {
-    return date.toLocaleDateString('zh-TW', options);
+    // 使用 undefined 讓瀏覽器自動檢測用戶的語言和時區設定
+    return date.toLocaleDateString(undefined, options);
   } catch (error) {
     console.error('Date formatting error:', error);
     return '無效日期';
@@ -65,6 +67,7 @@ export function formatDate(
 
 /**
  * 格式化日期時間為本地化字串
+ * JavaScript 會自動將 UTC 時間轉換為用戶的本地時區
  * @param dateInput - 日期輸入
  * @param options - Intl.DateTimeFormatOptions 選項
  * @returns 格式化的日期時間字串
@@ -76,12 +79,15 @@ export function formatDateTime(
   const date = safeParseDate(dateInput);
   
   try {
-    return date.toLocaleString('zh-TW', options);
+    // 使用 undefined 讓瀏覽器自動檢測用戶的語言和時區設定
+    // JavaScript 會自動處理 UTC 到本地時區的轉換
+    return date.toLocaleString(undefined, options);
   } catch (error) {
     console.error('DateTime formatting error:', error);
     return '無效日期時間';
   }
 }
+
 
 /**
  * 計算相對時間（例如：3天前）

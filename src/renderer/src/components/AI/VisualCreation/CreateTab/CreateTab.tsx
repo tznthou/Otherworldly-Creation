@@ -51,8 +51,13 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
   const [pollinationsModel] = useState<'flux' | 'gptimage' | 'kontext' | 'sdxl'>('flux');
   const [pollinationsStyle] = useState<'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art'>('anime');
   
-  // 獲取項目角色
-  const projectCharacters = characters.filter(c => c.projectId === currentProject?.id);
+  // 獲取項目角色 - 強化過濾邏輯
+  const projectCharacters = characters.filter(c => {
+    // 確保類型一致比較，處理string vs number的情況
+    const charProjectId = String(c.projectId);
+    const currentProjectId = String(currentProject?.id);
+    return charProjectId === currentProjectId;
+  });
   
   // 生成智能場景描述
   const generateSceneDescription = useCallback((selectedIds: string[], sceneType: string) => {
@@ -255,17 +260,17 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       {/* 錯誤提示 */}
       {error && (
         <div className="flex-shrink-0 mt-4 p-3 bg-red-900/20 border border-red-700/50 rounded-lg">
-          <p className="text-red-300 text-sm">{error}</p>
+          <div className="text-red-300 text-sm">{error}</div>
         </div>
       )}
       
       {/* 載入狀態 */}
       {loading.generating && (
         <div className="flex-shrink-0 mt-4 p-3 bg-blue-900/20 border border-blue-700/50 rounded-lg">
-          <p className="text-blue-300 text-sm flex items-center">
+          <div className="text-blue-300 text-sm flex items-center">
             <div className="animate-spin w-4 h-4 border-2 border-blue-300 border-t-transparent rounded-full mr-2"></div>
             正在生成插畫...
-          </p>
+          </div>
         </div>
       )}
     </div>

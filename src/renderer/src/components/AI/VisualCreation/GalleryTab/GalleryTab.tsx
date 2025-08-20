@@ -1,33 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../../store/store';
+import type { IllustrationHistoryItem } from '../../../../types/illustration';
+import VirtualizedImageGrid from './VirtualizedImageGrid';
+import VirtualizedContainer from './VirtualizedContainer';
+import { api } from '../../../../api';
+import { formatDateTime } from '../../../../utils/dateUtils';
 
 // Redux actions (如果需要的話)
 // import { ... } from '../../../../store/slices/visualCreationSlice';
 
 interface GalleryTabProps {
   className?: string;
-}
-
-// 模擬的插畫歷史數據類型
-interface IllustrationHistoryItem {
-  id: string;
-  projectId: string;
-  imagePath: string;
-  thumbnailPath?: string;
-  prompt: string;
-  originalPrompt: string;
-  provider: 'pollinations' | 'imagen';
-  isFree: boolean;
-  createdAt: string;
-  characterIds: string[];
-  sceneType: 'portrait' | 'scene' | 'interaction';
-  parameters: {
-    model: string;
-    style?: string;
-    width: number;
-    height: number;
-  };
 }
 
 const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
@@ -41,42 +25,75 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filterProvider, setFilterProvider] = useState<'all' | 'pollinations' | 'imagen'>('all');
-  const [filterSceneType, setFilterSceneType] = useState<'all' | 'portrait' | 'scene' | 'interaction'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'failed'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'provider' | 'type'>('date');
   
-  // 模擬的插畫歷史數據（實際應該從API獲取）
-  const [illustrationHistory] = useState<IllustrationHistoryItem[]>([]);
+  // 插畫歷史數據（從API獲取）
+  const [illustrationHistory, setIllustrationHistory] = useState<IllustrationHistoryItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [_error, setError] = useState<string | null>(null);
 
   // 項目角色映射
   const projectCharacters = characters.filter(c => c.projectId === currentProject?.id);
 
+  // 獲取插畫歷史
+  const fetchIllustrationHistory = async () => {
+    if (!currentProject || loading) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const history = await api.illustration.getIllustrationHistory(
+        currentProject.id,
+        undefined, // characterId - 獲取所有角色的插畫
+        100, // limit - 獲取最近100張
+        0 // offset
+      );
+      
+      setIllustrationHistory(history);
+    } catch (err) {
+      console.error('獲取插畫歷史失敗:', err);
+      setError(err instanceof Error ? err.message : '獲取插畫歷史失敗');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 當專案變更時重新獲取數據
+  useEffect(() => {
+    if (currentProject) {
+      fetchIllustrationHistory();
+    } else {
+      setIllustrationHistory([]);
+    }
+  }, [currentProject?.id]);
+
   // 獲取角色名稱
-  const getCharacterNames = (characterIds: string[]) => {
-    return characterIds.map(id => {
-      const char = projectCharacters.find(c => c.id === id);
-      return char?.name || '未知角色';
-    }).join('、');
+  const getCharacterName = (characterId?: string) => {
+    if (!characterId) return '無角色';
+    const char = projectCharacters.find(c => c.id === characterId);
+    return char?.name || '未知角色';
   };
 
   // 過濾和排序插畫
   const getFilteredIllustrations = () => {
     const filtered = illustrationHistory.filter(item => {
       // 項目過濾
-      if (currentProject && item.projectId !== currentProject.id) return false;
+      if (currentProject && item.project_id !== currentProject.id) return false;
       
       // 提供商過濾
       if (filterProvider !== 'all' && item.provider !== filterProvider) return false;
       
-      // 場景類型過濾
-      if (filterSceneType !== 'all' && item.sceneType !== filterSceneType) return false;
+      // 狀態過濾
+      if (filterStatus !== 'all' && item.status !== filterStatus) return false;
       
       // 搜索過濾
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        if (!item.prompt.toLowerCase().includes(searchLower) &&
-            !item.originalPrompt.toLowerCase().includes(searchLower) &&
-            !getCharacterNames(item.characterIds).toLowerCase().includes(searchLower)) {
+        if (!item.original_prompt.toLowerCase().includes(searchLower) &&
+            !(item.enhanced_prompt && item.enhanced_prompt.toLowerCase().includes(searchLower))) {
           return false;
         }
       }
@@ -88,11 +105,11 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'date':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         case 'provider':
           return a.provider.localeCompare(b.provider);
         case 'type':
-          return a.sceneType.localeCompare(b.sceneType);
+          return a.model.localeCompare(b.model);
         default:
           return 0;
       }
@@ -103,21 +120,23 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
 
   const filteredIllustrations = getFilteredIllustrations();
 
-  // 場景類型圖標和名稱
-  const getSceneTypeIcon = (type: string) => {
-    switch (type) {
-      case 'portrait': return '👤';
-      case 'interaction': return '👥';
-      case 'scene': return '🏞️';
-      default: return '🎨';
+  // 獲取狀態圖標和名稱
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return '✅';
+      case 'failed': return '❌';
+      case 'pending': return '⏳';
+      case 'processing': return '🔄';
+      default: return '❓';
     }
   };
 
-  const getSceneTypeName = (type: string) => {
-    switch (type) {
-      case 'portrait': return '肖像';
-      case 'interaction': return '互動';
-      case 'scene': return '場景';
+  const getStatusName = (status: string) => {
+    switch (status) {
+      case 'completed': return '完成';
+      case 'failed': return '失敗';
+      case 'pending': return '等待';
+      case 'processing': return '處理中';
       default: return '未知';
     }
   };
@@ -142,10 +161,17 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     }
   };
 
-  // 格式化日期
+  // 格式化日期 - JavaScript 自動處理 UTC 到本地時區的轉換
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('zh-TW') + ' ' + date.toLocaleTimeString('zh-TW');
+    return formatDateTime(dateString, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
   };
 
   return (
@@ -179,14 +205,13 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
               </select>
               
               <select
-                value={filterSceneType}
-                onChange={(e) => setFilterSceneType(e.target.value as 'all' | 'portrait' | 'scene' | 'interaction')}
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as 'all' | 'completed' | 'failed')}
                 className="px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
               >
-                <option value="all">所有類型</option>
-                <option value="portrait">肖像</option>
-                <option value="interaction">互動</option>
-                <option value="scene">場景</option>
+                <option value="all">所有狀態</option>
+                <option value="completed">已完成</option>
+                <option value="failed">失敗</option>
               </select>
               
               <select
@@ -196,7 +221,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
               >
                 <option value="date">按日期排序</option>
                 <option value="provider">按服務排序</option>
-                <option value="type">按類型排序</option>
+                <option value="type">按模型排序</option>
               </select>
             </div>
           </div>
@@ -287,69 +312,18 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
         ) : (
           <div className="h-full overflow-y-auto">
             {viewMode === 'grid' ? (
-              // 網格視圖
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-4">
-                {filteredIllustrations.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`
-                      relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all
-                      ${selectedImages.has(item.id) 
-                        ? 'border-gold-500 ring-2 ring-gold-500/50' 
-                        : 'border-cosmic-600 hover:border-cosmic-500'
-                      }
-                    `}
-                    onClick={() => toggleImageSelection(item.id)}
-                  >
-                    {/* 圖像縮略圖 */}
-                    <div className="aspect-square bg-cosmic-700 flex items-center justify-center">
-                      {item.thumbnailPath || item.imagePath ? (
-                        <img
-                          src={`file://${item.thumbnailPath || item.imagePath}`}
-                          alt={item.prompt}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="text-cosmic-400 text-xl">
-                          {getSceneTypeIcon(item.sceneType)}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* 選擇指示器 */}
-                    <div className={`
-                      absolute top-2 left-2 w-5 h-5 rounded-full border flex items-center justify-center text-xs transition-all
-                      ${selectedImages.has(item.id)
-                        ? 'bg-gold-500 border-gold-500 text-white'
-                        : 'bg-black/50 border-white/50 text-white opacity-0 group-hover:opacity-100'
-                      }
-                    `}>
-                      {selectedImages.has(item.id) && '✓'}
-                    </div>
-                    
-                    {/* 服務標籤 */}
-                    <div className={`
-                      absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity
-                      ${item.isFree 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-blue-600 text-white'
-                      }
-                    `}>
-                      {item.isFree ? '免費' : '付費'}
-                    </div>
-                    
-                    {/* 懸停信息 */}
-                    <div className="absolute inset-x-0 bottom-0 bg-black/70 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-xs truncate font-medium">
-                        {getSceneTypeName(item.sceneType)}
-                      </p>
-                      <p className="text-xs truncate text-gray-300">
-                        {formatDate(item.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              // 虛擬化網格視圖
+              <VirtualizedContainer>
+                {({ width, height }) => (
+                  <VirtualizedImageGrid
+                    illustrations={filteredIllustrations}
+                    selectedImages={selectedImages}
+                    onToggleSelection={toggleImageSelection}
+                    containerWidth={width}
+                    containerHeight={height}
+                  />
+                )}
+              </VirtualizedContainer>
             ) : (
               // 列表視圖
               <div className="divide-y divide-cosmic-700">
@@ -375,15 +349,15 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
                     
                     {/* 縮略圖 */}
                     <div className="flex-shrink-0 w-16 h-16 bg-cosmic-700 rounded overflow-hidden">
-                      {item.thumbnailPath || item.imagePath ? (
+                      {item.image_url || item.local_file_path ? (
                         <img
-                          src={`file://${item.thumbnailPath || item.imagePath}`}
-                          alt={item.prompt}
+                          src={item.image_url || `file://${item.local_file_path}`}
+                          alt={item.original_prompt}
                           className="w-full h-full object-cover"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-cosmic-400 text-xl">
-                          {getSceneTypeIcon(item.sceneType)}
+                          {getStatusIcon(item.status)}
                         </div>
                       )}
                     </div>
@@ -392,23 +366,23 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
                         <h4 className="font-medium text-white truncate">
-                          {getSceneTypeName(item.sceneType)} - {item.parameters.model}
+                          {getStatusName(item.status)} - {item.model}
                         </h4>
                         <span className={`
                           px-2 py-0.5 rounded-full text-xs
-                          ${item.isFree ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'}
+                          ${item.is_free ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'}
                         `}>
                           {item.provider === 'pollinations' ? 'Pollinations' : 'Imagen'}
                         </span>
                       </div>
                       <p className="text-sm text-cosmic-300 truncate mb-1">
-                        {item.prompt}
+                        {item.enhanced_prompt || item.original_prompt}
                       </p>
                       <div className="flex items-center space-x-4 text-xs text-cosmic-400">
-                        <span>{formatDate(item.createdAt)}</span>
-                        <span>{item.parameters.width}×{item.parameters.height}</span>
-                        {item.characterIds.length > 0 && (
-                          <span>角色: {getCharacterNames(item.characterIds)}</span>
+                        <span>{formatDate(item.created_at)}</span>
+                        <span>{item.width}×{item.height}</span>
+                        {item.character_id && (
+                          <span>角色: {getCharacterName(item.character_id)}</span>
                         )}
                       </div>
                     </div>

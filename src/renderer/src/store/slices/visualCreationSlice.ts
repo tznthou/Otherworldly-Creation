@@ -166,7 +166,7 @@ export const generateIllustration = createAsyncThunk(
     provider: 'pollinations' | 'imagen';
   }) => {
     if (params.provider === 'pollinations') {
-      return await api.illustration.generateFreeIllustrationToTemp(
+      return await api.illustration.generateFreeIllustration(
         params.prompt,
         params.width,
         params.height,
@@ -364,7 +364,7 @@ export const visualCreationSlice = createSlice({
               height: action.payload.parameters?.height || 1024,
               seed: action.payload.parameters?.seed,
               enhance: action.payload.parameters?.enhance || false,
-              style: action.payload.parameters?.style,
+              style: action.payload.parameters?.style || undefined,
             },
             file_size_bytes: 0,
             generation_time_ms: action.payload.generation_time_ms || 0,

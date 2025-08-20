@@ -39,12 +39,17 @@
       "Bash(grep:*)",
       "Bash(npm run build:renderer:*)",
       "Bash(sed:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(git branch:*)",
+      "Bash(npm install:*)",
+      "mcp__serena__think_about_task_adherence",
+      "Bash(timeout 30s npm run dev:renderer)"
     ],
     "deny": [],
     "ask": [],
     "additionalDirectories": [
-      "/Users/tznthou/Library/Application Support/genesis-chronicle/generated-images"
+      "/Users/tznthou/Library/Application Support/genesis-chronicle/generated-images",
+      "/Users/tznthou/Library"
     ]
   }
 }

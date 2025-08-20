@@ -10,6 +10,7 @@ import {
   initializeVisualCreation,
   clearError,
 } from '../../../store/slices/visualCreationSlice';
+import { fetchCharactersByProjectId } from '../../../store/slices/charactersSlice';
 
 // 導入子組件
 import { CreateTab } from './CreateTab';
@@ -29,6 +30,7 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
+  const characters = useSelector((state: RootState) => state.characters.characters);
   
   // Redux 狀態
   const {
@@ -38,13 +40,36 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
     loading,
   } = useSelector((state: RootState) => state.visualCreation);
 
-  // 初始化組件
+  // 初始化組件 - 同時載入角色
   useEffect(() => {
     if (currentProject) {
+      console.log('🎨 [VisualCreationCenter] 初始化，專案ID:', currentProject.id);
       dispatch(clearError());
       dispatch(initializeVisualCreation(currentProject.id));
+      
+      // 載入角色資料到 Redux
+      console.log('📊 [VisualCreationCenter] 載入角色資料...');
+      dispatch(fetchCharactersByProjectId(currentProject.id));
     }
   }, [currentProject, dispatch]);
+
+  // 調試：監控角色狀態變化
+  useEffect(() => {
+    console.log('🎨 [VisualCreationCenter] 角色狀態更新:');
+    console.log('   📊 角色總數:', characters.length);
+    if (characters.length > 0) {
+      console.log('   🎭 角色列表:', characters.map(c => ({
+        id: c.id,
+        name: c.name,
+        projectId: c.projectId
+      })));
+    }
+    
+    if (currentProject) {
+      const projectCharacters = characters.filter(c => String(c.projectId) === String(currentProject.id));
+      console.log('   🎯 專案角色數:', projectCharacters.length);
+    }
+  }, [characters, currentProject]);
 
   // 供應商切換處理
   const handleProviderChange = useCallback((provider: IllustrationProvider) => {
