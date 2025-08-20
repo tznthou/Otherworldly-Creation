@@ -17,7 +17,12 @@ const EPubGenerationModal: React.FC = () => {
     include_cover: true,
     font_family: 'Noto Sans TC',
     chapter_break_style: 'page-break',
-    author: ''
+    author: '',
+    // AI 插畫預設選項
+    include_illustrations: true,
+    illustration_layout: 'gallery',
+    illustration_quality: 'original',
+    character_filter: undefined
   });
   const [validation, setValidation] = useState<{
     valid: boolean;

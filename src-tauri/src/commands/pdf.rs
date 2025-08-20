@@ -2,9 +2,22 @@ use crate::database::{get_db, models::*};
 use serde::{Deserialize, Serialize};
 use printpdf::*;
 use std::io::BufWriter;
+use std::fs;
+use std::path::PathBuf;
 
 // 嵌入中文字體
 const CHINESE_FONT_DATA: &[u8] = include_bytes!("../../assets/fonts/NotoSansTC-Regular.ttf");
+
+/// 插畫文件信息
+#[derive(Debug, Clone)]
+struct IllustrationFile {
+    #[allow(dead_code)]
+    pub file_path: PathBuf,
+    pub file_name: String,
+    pub character_name: Option<String>,
+    #[allow(dead_code)]
+    pub file_size: u64,
+}
 
 /// PDF生成選項
 #[derive(Debug, Serialize, Deserialize)]
@@ -20,6 +33,11 @@ pub struct PDFGenerationOptions {
     pub include_cover: bool,      // 是否包含封面
     pub chapter_break_style: String, // "new_page" | "section_break"
     pub author: Option<String>,   // 作者名稱
+    // === AI 插畫整合選項 ===
+    pub include_illustrations: bool,  // 是否包含AI生成的插畫
+    pub illustration_layout: String,  // "gallery", "inline", "chapter_start"
+    pub illustration_quality: String, // "original", "compressed"
+    pub character_filter: Option<Vec<String>>, // 特定角色篩選
 }
 
 impl Default for PDFGenerationOptions {
@@ -36,6 +54,11 @@ impl Default for PDFGenerationOptions {
             include_cover: true,
             chapter_break_style: "new_page".to_string(),
             author: None,
+            // AI 插畫預設選項
+            include_illustrations: true,
+            illustration_layout: "gallery".to_string(),
+            illustration_quality: "original".to_string(),
+            character_filter: None,
         }
     }
 }
@@ -153,6 +176,17 @@ pub async fn generate_pdf(
     // 2. 轉換章節內容為文本
     let text_chapters = convert_chapters_to_text(&chapters)?;
     
+    // 2.5. 掃描AI生成的插畫（如果啟用）
+    let illustrations = if options.include_illustrations {
+        scan_ai_illustrations(&projectId, &options.character_filter)?
+    } else {
+        Vec::new()
+    };
+    
+    if !illustrations.is_empty() {
+        println!("找到 {} 個AI插畫文件", illustrations.len());
+    }
+    
     // 3. 準備 PDF 生成參數
     let pdf_title = project.name.clone();
     let pdf_author = options.author.clone()
@@ -163,6 +197,7 @@ pub async fn generate_pdf(
         &pdf_title,
         &pdf_author,
         &text_chapters,
+        &illustrations,
         &options,
     ).await?;
     
@@ -186,6 +221,91 @@ pub async fn delete_pdf_export(_export_id: String) -> Result<(), String> {
 }
 
 // ============ 輔助函數 ============
+
+/// 掃描AI生成的插畫文件
+fn scan_ai_illustrations(
+    project_id: &str,
+    character_filter: &Option<Vec<String>>
+) -> Result<Vec<IllustrationFile>, String> {
+    println!("🎨 掃描專案 {} 的AI插畫文件", project_id);
+    
+    // 獲取插畫存儲目錄
+    let home_dir = dirs::home_dir().ok_or("無法獲取用戶目錄")?;
+    let illustrations_dir = home_dir
+        .join("Library")
+        .join("Application Support")
+        .join("genesis-chronicle")
+        .join("generated-images");
+    
+    if !illustrations_dir.exists() {
+        println!("插畫目錄不存在: {}", illustrations_dir.display());
+        return Ok(Vec::new());
+    }
+    
+    let mut illustrations = Vec::new();
+    let entries = fs::read_dir(&illustrations_dir)
+        .map_err(|e| format!("無法讀取插畫目錄: {}", e))?;
+    
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("讀取目錄項目失敗: {}", e))?;
+        let path = entry.path();
+        
+        // 只處理圖片文件
+        if let Some(extension) = path.extension() {
+            let ext = extension.to_string_lossy().to_lowercase();
+            if matches!(ext.as_str(), "png" | "jpg" | "jpeg" | "webp" | "gif") {
+                let file_name = entry.file_name().to_string_lossy().to_string();
+                
+                // 檢查是否屬於當前專案（通過文件名判斷）
+                if file_name.contains(project_id) {
+                    // 提取角色名稱（如果有）
+                    let character_name = extract_character_name(&file_name);
+                    
+                    // 應用角色篩選
+                    if let Some(filter) = character_filter {
+                        if let Some(char_name) = &character_name {
+                            if !filter.iter().any(|f| char_name.contains(f)) {
+                                continue; // 跳過不匹配的角色
+                            }
+                        }
+                    }
+                    
+                    let file_size = entry.metadata()
+                        .map_err(|e| format!("無法獲取文件元數據: {}", e))?
+                        .len();
+                    
+                    illustrations.push(IllustrationFile {
+                        file_path: path.clone(),
+                        file_name,
+                        character_name,
+                        file_size,
+                    });
+                    
+                    println!("發現插畫: {}", path.display());
+                }
+            }
+        }
+    }
+    
+    // 按文件名排序
+    illustrations.sort_by(|a, b| a.file_name.cmp(&b.file_name));
+    
+    println!("掃描完成，找到 {} 個插畫文件", illustrations.len());
+    Ok(illustrations)
+}
+
+/// 從文件名提取角色名稱
+fn extract_character_name(file_name: &str) -> Option<String> {
+    // 嘗試從文件名中提取角色名稱
+    // 假設格式類似: "project_id_character_name_timestamp.png"
+    let parts: Vec<&str> = file_name.split('_').collect();
+    if parts.len() >= 3 {
+        // 取第三部分作為角色名稱（跳過project_id和可能的前綴）
+        Some(parts[2].to_string())
+    } else {
+        None
+    }
+}
 
 /// 獲取頁面尺寸（以mm為單位）
 fn get_page_size(page_size: &str) -> (Mm, Mm) {
@@ -329,6 +449,7 @@ async fn generate_pdf_file(
     title: &str,
     author: &str,
     chapters: &[(String, String)],
+    illustrations: &[IllustrationFile],
     options: &PDFGenerationOptions,
 ) -> Result<PDFResult, String> {
     println!("開始生成真實 PDF 文件: {}", title);
@@ -387,6 +508,33 @@ async fn generate_pdf_file(
         current_y = current_y - Mm(line_height * 3.0);
     }
     
+    // 添加插畫畫廊（如果選擇gallery佈局）
+    if options.illustration_layout == "gallery" && !illustrations.is_empty() {
+        // 在內容開始前添加插畫畫廊
+        current_layer.use_text("🎨 插畫集錦", font_size * 1.4, current_x, current_y, &font);
+        current_y = current_y - Mm(line_height * 2.0);
+        
+        // 添加插畫說明文字
+        for illustration in illustrations {
+            let info_text = if let Some(char_name) = &illustration.character_name {
+                format!("• {} (角色: {})", illustration.file_name, char_name)
+            } else {
+                format!("• {}", illustration.file_name)
+            };
+            current_layer.use_text(&info_text, font_size * 0.9, current_x, current_y, &font);
+            current_y = current_y - Mm(line_height);
+        }
+        
+        // 插畫畫廊結束，準備開始新頁面內容
+        // current_y = current_y - Mm(line_height * 2.0); // 預留空間（新頁面會重置位置）
+        
+        // 新頁面開始正文內容
+        let (new_page, layer_id) = doc.add_page(page_width, page_height, "Layer 1");
+        current_layer = doc.get_page(new_page).get_layer(layer_id);
+        current_y = page_height - margin_top;
+        page_count += 1;
+    }
+
     // 添加章節內容
     for (chapter_index, (chapter_title, chapter_content)) in chapters.iter().enumerate() {
         println!("處理章節 {}: {}", chapter_index + 1, chapter_title);
@@ -397,6 +545,36 @@ async fn generate_pdf_file(
             current_layer = doc.get_page(new_page).get_layer(layer_id);
             current_y = page_height - margin_top;
             page_count += 1;
+        }
+        
+        // 在章節開始時添加插畫（如果選擇chapter_start佈局）
+        if options.illustration_layout == "chapter_start" && !illustrations.is_empty() {
+            // 尋找與當前章節相關的插畫
+            let chapter_illustrations: Vec<_> = illustrations.iter()
+                .filter(|ill| {
+                    // 簡單匹配：文件名包含章節標題的關鍵字
+                    chapter_title.split_whitespace().any(|word| 
+                        word.len() > 1 && ill.file_name.contains(word)
+                    )
+                })
+                .collect();
+            
+            if !chapter_illustrations.is_empty() {
+                current_layer.use_text("📸 本章插畫:", font_size, current_x, current_y, &font);
+                current_y = current_y - Mm(line_height);
+                
+                for illustration in chapter_illustrations {
+                    let info_text = if let Some(char_name) = &illustration.character_name {
+                        format!("  • {} (角色: {})", illustration.file_name, char_name)
+                    } else {
+                        format!("  • {}", illustration.file_name)
+                    };
+                    current_layer.use_text(&info_text, font_size * 0.85, current_x, current_y, &font);
+                    current_y = current_y - Mm(line_height * 0.8);
+                }
+                
+                current_y = current_y - Mm(line_height);
+            }
         }
         
         // 添加章節標題

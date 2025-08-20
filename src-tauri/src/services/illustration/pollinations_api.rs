@@ -183,6 +183,7 @@ impl PollinationsApiService {
     }
 
     /// 批次生成圖像
+    #[allow(dead_code)]
     pub async fn generate_batch(&self, requests: Vec<PollinationsRequest>) -> Result<Vec<Result<PollinationsResponse>>> {
         let mut results = Vec::new();
         
@@ -293,6 +294,7 @@ impl PollinationsApiService {
     }
 
     /// 驗證請求參數
+    #[allow(dead_code)]
     fn validate_request(&self, request: &PollinationsRequest) -> Result<()> {
         // 檢查提示詞
         if request.prompt.trim().is_empty() {
@@ -334,6 +336,7 @@ impl Default for PollinationsApiService {
 }
 
 /// 便利函數：快速生成圖像
+#[allow(dead_code)]
 pub async fn quick_generate(
     prompt: &str,
     width: Option<u32>,
@@ -353,6 +356,7 @@ pub async fn quick_generate(
 }
 
 /// 便利函數：為角色生成插畫
+#[allow(dead_code)]
 pub async fn generate_character_illustration(
     character_name: &str,
     character_description: &str,

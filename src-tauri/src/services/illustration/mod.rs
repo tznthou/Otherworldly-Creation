@@ -24,9 +24,7 @@ pub use imagen_api::{
     ImageGenerationConfig, AspectRatio, SafetyLevel, PersonGeneration
 };
 pub use pollinations_api::{
-    PollinationsApiService, PollinationsRequest, PollinationsResponse,
-    PollinationsModel, PollinationsParameters, quick_generate, 
-    generate_character_illustration
+    PollinationsApiService, PollinationsRequest, PollinationsModel
 };
 pub use illustration_manager::{
     IllustrationManager, EnhancedIllustrationRequest

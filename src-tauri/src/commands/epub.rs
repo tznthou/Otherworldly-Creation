@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use zip::{ZipWriter, CompressionMethod};
 use tempfile::NamedTempFile;
+use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EPubGenerationOptions {
@@ -11,6 +12,11 @@ pub struct EPubGenerationOptions {
     pub font_family: String,
     pub chapter_break_style: String,
     pub author: Option<String>,
+    // === AI 插畫整合選項 ===
+    pub include_illustrations: bool,
+    pub illustration_layout: String, // "gallery", "inline", "chapter_start"
+    pub illustration_quality: String, // "original", "compressed"
+    pub character_filter: Option<Vec<String>>, // 特定角色篩選
 }
 
 impl Default for EPubGenerationOptions {
@@ -21,6 +27,11 @@ impl Default for EPubGenerationOptions {
             font_family: "Noto Sans TC".to_string(),
             chapter_break_style: "page-break".to_string(),
             author: None,
+            // AI 插畫預設選項
+            include_illustrations: true,
+            illustration_layout: "gallery".to_string(),
+            illustration_quality: "original".to_string(),
+            character_filter: None,
         }
     }
 }
@@ -47,6 +58,168 @@ pub struct EPubExportRecord {
     pub export_status: String,
     pub created_at: String,
     pub downloaded_at: Option<String>,
+}
+
+// === AI 插畫相關結構 ===
+
+#[derive(Debug, Clone)]
+pub struct IllustrationFile {
+    pub file_path: PathBuf,
+    pub filename: String,
+    #[allow(dead_code)]
+    pub character_names: Vec<String>,
+    #[allow(dead_code)]
+    pub generation_time: Option<String>,
+}
+
+/// 掃描專案相關的 AI 插畫檔案
+fn scan_project_illustrations(_project_id: &str) -> Result<Vec<IllustrationFile>, String> {
+    // 取得插畫儲存目錄
+    let data_dir = dirs::data_local_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."));
+    let illustrations_dir = data_dir.join("genesis-chronicle").join("generated-images");
+    
+    if !illustrations_dir.exists() {
+        println!("插畫目錄不存在: {:?}", illustrations_dir);
+        return Ok(Vec::new());
+    }
+    
+    let mut illustrations = Vec::new();
+    
+    // 遍歷插畫目錄
+    if let Ok(entries) = std::fs::read_dir(&illustrations_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            
+            // 只處理圖片檔案
+            if let Some(extension) = path.extension() {
+                let ext_str = extension.to_string_lossy().to_lowercase();
+                if matches!(ext_str.as_str(), "jpg" | "jpeg" | "png" | "webp") {
+                    if let Some(filename) = path.file_name() {
+                        let filename_str = filename.to_string_lossy().to_string();
+                        
+                        // 簡單的檔名解析（可以後續改進）
+                        // 假設檔名包含角色資訊或專案 ID
+                        let illustration = IllustrationFile {
+                            file_path: path.clone(),
+                            filename: filename_str,
+                            character_names: Vec::new(), // 暫時為空，後續可以從檔名或元資料解析
+                            generation_time: None,
+                        };
+                        
+                        illustrations.push(illustration);
+                    }
+                }
+            }
+        }
+    }
+    
+    println!("掃描到 {} 張插畫檔案", illustrations.len());
+    Ok(illustrations)
+}
+
+/// 將插畫檔案複製到 EPUB 中並回傳檔名列表
+fn add_illustrations_to_epub<W: Write + std::io::Seek>(
+    zip: &mut ZipWriter<W>,
+    illustrations: &[IllustrationFile],
+    options: &EPubGenerationOptions,
+) -> Result<Vec<String>, String> {
+    let zip_options = zip::write::FileOptions::default()
+        .compression_method(CompressionMethod::Deflated);
+    
+    let mut added_files = Vec::new();
+    
+    for (index, illustration) in illustrations.iter().enumerate() {
+        // 讀取圖片檔案
+        let image_data = std::fs::read(&illustration.file_path)
+            .map_err(|e| format!("讀取插畫檔案失敗 {}: {}", illustration.filename, e))?;
+        
+        // 決定檔名（確保在 EPUB 中是唯一的）
+        let epub_filename = if illustration.filename.len() > 50 {
+            // 如果檔名太長，使用索引
+            format!("illustration_{:03}.jpg", index + 1)
+        } else {
+            illustration.filename.clone()
+        };
+        
+        let epub_path = format!("OEBPS/images/{}", epub_filename);
+        
+        // 將圖片加入到 ZIP
+        zip.start_file(&epub_path, zip_options)
+            .map_err(|e| format!("創建插畫檔案失敗 {}: {}", epub_filename, e))?;
+        
+        // 根據品質設定決定是否壓縮
+        let final_data = if options.illustration_quality == "compressed" && image_data.len() > 500_000 {
+            // TODO: 實際的圖片壓縮邏輯
+            // 目前直接使用原圖
+            image_data
+        } else {
+            image_data
+        };
+        
+        zip.write_all(&final_data)
+            .map_err(|e| format!("寫入插畫檔案失敗 {}: {}", epub_filename, e))?;
+        
+        added_files.push(epub_filename.clone());
+        
+        println!("已加入插畫: {} ({} bytes)", epub_filename, final_data.len());
+    }
+    
+    Ok(added_files)
+}
+
+/// 生成插畫集錦頁面 XHTML
+fn generate_illustrations_gallery_xhtml(illustrations: &[String]) -> String {
+    let mut html = String::from(r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-TW">
+<head>
+    <title>插畫集錦</title>
+    <link rel="stylesheet" href="styles.css" type="text/css"/>
+    <style type="text/css">
+        .illustration-gallery {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .illustration-item {
+            page-break-inside: avoid;
+            margin-bottom: 40px;
+        }
+        .illustration-image {
+            max-width: 100%;
+            max-height: 80vh;
+            height: auto;
+        }
+        .illustration-caption {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="chapter">
+        <h1>🎨 插畫集錦</h1>
+        <div class="illustration-gallery">
+"#);
+
+    for (index, filename) in illustrations.iter().enumerate() {
+        html.push_str(&format!(r#"
+            <div class="illustration-item">
+                <img src="images/{}" alt="插畫 {}" class="illustration-image"/>
+                <div class="illustration-caption">插畫 {} - {}</div>
+            </div>
+"#, filename, index + 1, index + 1, filename));
+    }
+
+    html.push_str(r#"
+        </div>
+    </div>
+</body>
+</html>"#);
+
+    html
 }
 
 /// 生成 EPUB 電子書
@@ -333,10 +506,37 @@ async fn generate_epub_file(
     zip.write_all(container_xml.as_bytes())
         .map_err(|e| format!("寫入 container.xml 失敗: {}", e))?;
     
-    // 3. 添加 OEBPS/content.opf
+    // 3. 預處理 AI 插畫（掃描檔案但先不加入 ZIP）
+    let mut illustration_files = Vec::new();
+    let mut has_illustrations_page = false;
+    if options.include_illustrations {
+        println!("🎨 開始掃描 AI 插畫檔案...");
+        let illustrations = scan_project_illustrations("dummy_project_id")?; // TODO: 使用實際 project_id
+        if !illustrations.is_empty() {
+            // 暫存插畫資訊，稍後處理
+            for (index, illustration) in illustrations.iter().enumerate() {
+                let epub_filename = if illustration.filename.len() > 50 {
+                    format!("illustration_{:03}.jpg", index + 1)
+                } else {
+                    illustration.filename.clone()
+                };
+                illustration_files.push(epub_filename);
+            }
+            has_illustrations_page = true;
+            println!("📋 預計包含 {} 張插畫", illustration_files.len());
+        }
+    }
+    
+    // 4. 添加 OEBPS/content.opf（根據是否包含插畫選擇不同版本）
     zip.start_file("OEBPS/content.opf", options_zip)
         .map_err(|e| format!("創建 content.opf 失敗: {}", e))?;
-    let content_opf = generate_content_opf(title, author, chapters);
+    
+    let content_opf = if has_illustrations_page {
+        generate_content_opf_with_illustrations(title, author, chapters, &illustration_files, true)
+    } else {
+        generate_content_opf(title, author, chapters)
+    };
+    
     zip.write_all(content_opf.as_bytes())
         .map_err(|e| format!("寫入 content.opf 失敗: {}", e))?;
     
@@ -363,7 +563,66 @@ async fn generate_epub_file(
             .map_err(|e| format!("寫入 cover.xhtml 失敗: {}", e))?;
     }
     
-    // 7. 添加章節內容
+    // 7. 實際處理 AI 插畫檔案（加入到 EPUB）
+    if has_illustrations_page {
+        println!("🎨 開始將插畫檔案加入到 EPUB...");
+        
+        // 重新掃描插畫檔案進行實際處理
+        let illustrations = scan_project_illustrations("dummy_project_id")?;
+        
+        if !illustrations.is_empty() {
+            // 將插畫檔案實際加入到 EPUB ZIP
+            let _added_files = add_illustrations_to_epub(&mut zip, &illustrations, options)?;
+            
+            // 根據佈局模式生成插畫頁面
+            match options.illustration_layout.as_str() {
+                "gallery" => {
+                    // 生成插畫集錦頁面
+                    zip.start_file("OEBPS/illustrations.xhtml", options_zip)
+                        .map_err(|e| format!("創建插畫集錦頁面失敗: {}", e))?;
+                    let gallery_html = generate_illustrations_gallery_xhtml(&illustration_files);
+                    zip.write_all(gallery_html.as_bytes())
+                        .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
+                    
+                    println!("✅ 已生成插畫集錦頁面，包含 {} 張插畫", illustration_files.len());
+                }
+                "inline" => {
+                    // TODO: 實現內嵌模式（將插畫嵌入到章節中）
+                    println!("📝 內嵌模式暫未實現，使用集錦模式");
+                    
+                    // 暫時生成集錦頁面
+                    zip.start_file("OEBPS/illustrations.xhtml", options_zip)
+                        .map_err(|e| format!("創建插畫集錦頁面失敗: {}", e))?;
+                    let gallery_html = generate_illustrations_gallery_xhtml(&illustration_files);
+                    zip.write_all(gallery_html.as_bytes())
+                        .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
+                }
+                "chapter_start" => {
+                    // TODO: 實現章節開頭模式
+                    println!("📝 章節開頭模式暫未實現，使用集錦模式");
+                    
+                    // 暫時生成集錦頁面
+                    zip.start_file("OEBPS/illustrations.xhtml", options_zip)
+                        .map_err(|e| format!("創建插畫集錦頁面失敗: {}", e))?;
+                    let gallery_html = generate_illustrations_gallery_xhtml(&illustration_files);
+                    zip.write_all(gallery_html.as_bytes())
+                        .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
+                }
+                _ => {
+                    println!("⚠️ 未知的插畫佈局模式: {}，使用集錦模式", options.illustration_layout);
+                    
+                    // 預設生成集錦頁面
+                    zip.start_file("OEBPS/illustrations.xhtml", options_zip)
+                        .map_err(|e| format!("創建插畫集錦頁面失敗: {}", e))?;
+                    let gallery_html = generate_illustrations_gallery_xhtml(&illustration_files);
+                    zip.write_all(gallery_html.as_bytes())
+                        .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
+                }
+            }
+        }
+    }
+    
+    // 8. 添加章節內容
     for (index, (chapter_title, chapter_content)) in chapters.iter().enumerate() {
         let filename = format!("OEBPS/chapter{}.xhtml", index + 1);
         zip.start_file(&filename, options_zip)
@@ -533,6 +792,78 @@ fn generate_content_opf(title: &str, author: &str, chapters: &[(String, String)]
     }
 
     content.push_str("  </manifest>\n  <spine toc=\"ncx\">\n    <itemref idref=\"cover\"/>\n");
+
+    // 添加章節到 spine
+    for i in 0..chapters.len() {
+        content.push_str(&format!("    <itemref idref=\"chapter{}\"/>\n", i + 1));
+    }
+
+    content.push_str("  </spine>\n</package>");
+    content
+}
+
+/// 生成包含插畫的 content.opf
+fn generate_content_opf_with_illustrations(
+    title: &str, 
+    author: &str, 
+    chapters: &[(String, String)],
+    illustration_files: &[String],
+    include_illustrations_page: bool
+) -> String {
+    let mut content = format!(r#"<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:title>{}</dc:title>
+    <dc:creator opf:role="aut">{}</dc:creator>
+    <dc:language>zh-TW</dc:language>
+    <dc:identifier id="BookId" opf:scheme="UUID">{}</dc:identifier>
+    <dc:publisher>創世紀元 AI 智能創作</dc:publisher>
+    <meta name="cover" content="cover"/>
+  </metadata>
+  <manifest>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="css" href="styles.css" media-type="text/css"/>
+    <item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>
+"#, title, author, uuid::Uuid::new_v4());
+
+    // 如果包含插畫集錦頁面，加入到 manifest
+    if include_illustrations_page && !illustration_files.is_empty() {
+        content.push_str("    <item id=\"illustrations\" href=\"illustrations.xhtml\" media-type=\"application/xhtml+xml\"/>\n");
+    }
+
+    // 添加章節到 manifest
+    for i in 0..chapters.len() {
+        content.push_str(&format!(
+            "    <item id=\"chapter{}\" href=\"chapter{}.xhtml\" media-type=\"application/xhtml+xml\"/>\n",
+            i + 1, i + 1
+        ));
+    }
+
+    // 添加插畫檔案到 manifest
+    for (index, filename) in illustration_files.iter().enumerate() {
+        // 根據檔案副檔名決定 media-type
+        let media_type = if filename.to_lowercase().ends_with(".png") {
+            "image/png"
+        } else if filename.to_lowercase().ends_with(".jpg") || filename.to_lowercase().ends_with(".jpeg") {
+            "image/jpeg"
+        } else if filename.to_lowercase().ends_with(".webp") {
+            "image/webp"
+        } else {
+            "image/jpeg" // 預設
+        };
+
+        content.push_str(&format!(
+            "    <item id=\"illustration{}\" href=\"images/{}\" media-type=\"{}\"/>\n",
+            index + 1, filename, media_type
+        ));
+    }
+
+    content.push_str("  </manifest>\n  <spine toc=\"ncx\">\n    <itemref idref=\"cover\"/>\n");
+
+    // 如果包含插畫集錦，將其加入到 spine（在章節之前）
+    if include_illustrations_page && !illustration_files.is_empty() {
+        content.push_str("    <itemref idref=\"illustrations\"/>\n");
+    }
 
     // 添加章節到 spine
     for i in 0..chapters.len() {
