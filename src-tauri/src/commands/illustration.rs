@@ -2,7 +2,8 @@ use serde_json::Value;
 use crate::services::illustration::{
     CharacterConsistencyManager, SeedManager, VisualTraitsManager,
     IllustrationManager, EnhancedIllustrationRequest,
-    IllustrationRequest
+    IllustrationRequest, PollinationsApiService, PollinationsRequest,
+    PollinationsModel
 };
 use crate::database::connection::create_connection;
 use std::sync::{Arc, Mutex};
@@ -517,4 +518,181 @@ pub async fn validate_imagen_api_connection(
             }))
         }
     }
+}
+
+// ========================= 免費插畫生成功能 =========================
+
+/// 免費插畫生成 - 使用 Pollinations.AI
+#[tauri::command]
+#[allow(non_snake_case)]
+pub async fn generate_free_illustration(
+    prompt: String,
+    width: Option<u32>,
+    height: Option<u32>,
+    model: Option<String>,
+    seed: Option<u32>,
+    enhance: Option<bool>,
+    style: Option<String>,
+) -> Result<Value, String> {
+    log::info!("[IllustrationCommand] 免費插畫生成請求: {}", prompt);
+    
+    if prompt.trim().is_empty() {
+        return Err("提示詞不能為空".to_string());
+    }
+
+    // 建立 Pollinations API 服務
+    let service = PollinationsApiService::new()
+        .map_err(|e| format!("Pollinations API 服務初始化失敗: {:?}", e))?;
+
+    // 解析模型
+    let pollinations_model = match model.as_deref().unwrap_or("flux") {
+        "flux" => PollinationsModel::Flux,
+        "gptimage" => PollinationsModel::GptImage,
+        "kontext" => PollinationsModel::Kontext,
+        "sdxl" => PollinationsModel::Sdxl,
+        _ => PollinationsModel::Flux, // 預設使用 Flux
+    };
+
+    // 處理風格增強
+    let enhanced_prompt = if let Some(style_name) = style {
+        match style_name.as_str() {
+            "anime" => format!("{}, 動漫風格, 高品質插畫, 精緻線條", prompt),
+            "realistic" => format!("{}, 寫實風格, 專業攝影, 高解析度", prompt),
+            "fantasy" => format!("{}, 奇幻風格, 魔法世界, 夢幻色彩", prompt),
+            "watercolor" => format!("{}, 水彩風格, 柔和色調, 藝術繪畫", prompt),
+            "digital_art" => format!("{}, 數位藝術, 現代風格, 精緻渲染", prompt),
+            _ => prompt,
+        }
+    } else {
+        prompt
+    };
+
+    // 構建請求
+    let request = PollinationsRequest {
+        prompt: enhanced_prompt,
+        width: width.or(Some(1024)),
+        height: height.or(Some(1024)),
+        model: Some(pollinations_model),
+        seed,
+        enhance: enhance.or(Some(false)),
+        nologo: Some(true),
+        transparent: Some(false),
+        ..Default::default()
+    };
+
+    // 生成圖像
+    match service.generate_image(request).await {
+        Ok(response) => {
+            log::info!("[IllustrationCommand] 免費插畫生成成功，耗時: {}ms", response.generation_time_ms);
+            
+            // 儲存圖像到本地（可選）
+            let image_path = save_generated_image(&response.image_data, &response.id)
+                .map_err(|e| format!("圖像儲存失敗: {}", e))?;
+            
+            Ok(serde_json::json!({
+                "success": true,
+                "id": response.id,
+                "prompt": response.prompt,
+                "image_path": image_path,
+                "image_url": response.image_url,
+                "parameters": {
+                    "model": response.parameters.model,
+                    "width": response.parameters.width,
+                    "height": response.parameters.height,
+                    "seed": response.parameters.seed,
+                    "enhance": response.parameters.enhance
+                },
+                "generation_time_ms": response.generation_time_ms,
+                "provider": "pollinations",
+                "is_free": true
+            }))
+        },
+        Err(e) => {
+            log::error!("[IllustrationCommand] 免費插畫生成失敗: {:?}", e);
+            Err(format!("免費插畫生成失敗: {:?}", e))
+        }
+    }
+}
+
+/// 測試 Pollinations API 連接
+#[tauri::command]
+pub async fn test_pollinations_connection() -> Result<Value, String> {
+    log::info!("[IllustrationCommand] 測試 Pollinations API 連接");
+    
+    let service = PollinationsApiService::new()
+        .map_err(|e| format!("Pollinations API 服務初始化失敗: {:?}", e))?;
+
+    match service.test_connection().await {
+        Ok(is_connected) => {
+            log::info!("[IllustrationCommand] Pollinations API 連接測試結果: {}", is_connected);
+            
+            Ok(serde_json::json!({
+                "success": true,
+                "connected": is_connected,
+                "message": if is_connected { 
+                    "Pollinations API 連接正常" 
+                } else { 
+                    "Pollinations API 連接失敗" 
+                },
+                "provider": "pollinations",
+                "is_free": true
+            }))
+        },
+        Err(e) => {
+            log::error!("[IllustrationCommand] Pollinations API 連接測試失敗: {:?}", e);
+            Err(format!("API 連接測試失敗: {:?}", e))
+        }
+    }
+}
+
+/// 取得支援的免費模型列表
+#[tauri::command]
+pub async fn get_free_illustration_models() -> Result<Value, String> {
+    log::info!("[IllustrationCommand] 取得免費插畫模型列表");
+    
+    let service = PollinationsApiService::new()
+        .map_err(|e| format!("Pollinations API 服務初始化失敗: {:?}", e))?;
+
+    let models = service.get_supported_models();
+    
+    let model_list: Vec<_> = models.into_iter().map(|(model, name, description)| {
+        serde_json::json!({
+            "id": format!("{:?}", model).to_lowercase(),
+            "name": name,
+            "description": description,
+            "is_free": true,
+            "provider": "pollinations"
+        })
+    }).collect();
+
+    Ok(serde_json::json!({
+        "success": true,
+        "models": model_list,
+        "provider": "pollinations",
+        "total_count": model_list.len()
+    }))
+}
+
+// ========================= 輔助函數 =========================
+
+/// 儲存生成的圖像到本地
+fn save_generated_image(image_data: &[u8], image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
+    use std::fs;
+    
+    // 確保圖像目錄存在
+    let images_dir = dirs::data_local_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("genesis-chronicle")
+        .join("generated-images");
+    
+    fs::create_dir_all(&images_dir)?;
+    
+    // 生成檔案路徑
+    let filename = format!("{}.jpg", image_id);
+    let file_path = images_dir.join(&filename);
+    
+    // 寫入圖像數據
+    fs::write(&file_path, image_data)?;
+    
+    Ok(file_path.to_string_lossy().to_string())
 }

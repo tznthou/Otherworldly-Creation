@@ -12,6 +12,7 @@ pub mod character_consistency;
 pub mod seed_manager;
 pub mod visual_traits;
 pub mod imagen_api;
+pub mod pollinations_api;
 pub mod illustration_manager;
 pub mod batch_manager;
 
@@ -21,6 +22,11 @@ pub use visual_traits::{VisualTraits, VisualTraitsManager};
 pub use imagen_api::{
     ImagenApiService, ImageGenerationRequest, ImageGenerationResponse, 
     ImageGenerationConfig, AspectRatio, SafetyLevel, PersonGeneration
+};
+pub use pollinations_api::{
+    PollinationsApiService, PollinationsRequest, PollinationsResponse,
+    PollinationsModel, PollinationsParameters, quick_generate, 
+    generate_character_illustration
 };
 pub use illustration_manager::{
     IllustrationManager, EnhancedIllustrationRequest

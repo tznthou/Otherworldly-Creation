@@ -32,7 +32,8 @@ use commands::illustration::{
     add_reference_image, get_character_visual_traits, calculate_character_similarity_matrix,
     batch_check_project_consistency, generate_batch_seeds, generate_illustration,
     generate_enhanced_illustration, get_illustration_generation_status,
-    cancel_illustration_generation, validate_imagen_api_connection
+    cancel_illustration_generation, validate_imagen_api_connection,
+    generate_free_illustration, test_pollinations_connection, get_free_illustration_models
 };
 use commands::translation::{
     translate_character_description, optimize_prompt, search_vocabulary, 
@@ -178,6 +179,10 @@ pub fn run() {
       get_illustration_generation_status,
       cancel_illustration_generation,
       validate_imagen_api_connection,
+      // Free Illustration commands (Pollinations.AI)
+      generate_free_illustration,
+      test_pollinations_connection,
+      get_free_illustration_models,
       // Translation commands
       translate_character_description,
       optimize_prompt,
