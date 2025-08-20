@@ -218,6 +218,55 @@ export interface API {
     // 相似度分析
     calculateSimilarityMatrix: (projectId: string, characterIds: string[]) => Promise<{ success: boolean; character_ids?: string[]; similarity_matrix?: number[][]; message?: string }>;
     batchCheckConsistency: (projectId: string, strictMode: boolean, minScore: number) => Promise<{ success: boolean; reports?: { characterId: string; score: number; issues: string[] }[]; message?: string }>;
+
+    // === 免費插畫生成 (Pollinations.AI) ===
+    generateFreeIllustration: (
+      prompt: string,
+      width?: number,
+      height?: number,
+      model?: 'flux' | 'gptimage' | 'kontext' | 'sdxl',
+      seed?: number,
+      enhance?: boolean,
+      style?: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art',
+      projectId?: string,
+      characterId?: string
+    ) => Promise<{
+      success: boolean;
+      id?: string;
+      prompt?: string;
+      image_path?: string;
+      image_url?: string;
+      parameters?: {
+        model: string;
+        width: number;
+        height: number;
+        seed?: number;
+        enhance: boolean;
+      };
+      generation_time_ms?: number;
+      provider?: string;
+      is_free?: boolean;
+      message?: string;
+    }>;
+    testPollinationsConnection: () => Promise<{
+      success: boolean;
+      connected?: boolean;
+      message?: string;
+      provider?: string;
+      is_free?: boolean;
+    }>;
+    getFreeIllustrationModels: () => Promise<{
+      success: boolean;
+      models?: Array<{
+        id: string;
+        name: string;
+        description: string;
+        is_free: boolean;
+        provider: string;
+      }>;
+      provider?: string;
+      total_count?: number;
+    }>;
   };
 }
 

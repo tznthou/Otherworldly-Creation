@@ -315,6 +315,11 @@ export interface EPubGenerationOptions {
   font_family: string;
   chapter_break_style: string;
   author?: string;
+  // === AI 插畫整合選項 ===
+  include_illustrations: boolean;
+  illustration_layout: 'gallery' | 'inline' | 'chapter_start';
+  illustration_quality: 'original' | 'compressed';
+  character_filter?: string[]; // 特定角色篩選
 }
 
 export interface EPubResult {
@@ -352,6 +357,11 @@ export interface PDFGenerationOptions {
   include_cover: boolean;   // 是否包含封面
   chapter_break_style: string; // "new_page" | "section_break"
   author?: string;          // 作者名稱
+  // === AI 插畫整合選項 ===
+  include_illustrations: boolean;
+  illustration_layout: 'gallery' | 'inline' | 'chapter_start';
+  illustration_quality: 'original' | 'compressed';
+  character_filter?: string[]; // 特定角色篩選
 }
 
 export interface PDFResult {

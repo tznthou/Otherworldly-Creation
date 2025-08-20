@@ -35,6 +35,11 @@ export class EPubService {
         font_family: 'Noto Sans TC',
         chapter_break_style: 'page-break',
         custom_css: this.getDefaultCSS(),
+        // AI 插畫預設選項
+        include_illustrations: options?.include_illustrations ?? true,
+        illustration_layout: options?.illustration_layout ?? 'gallery',
+        illustration_quality: options?.illustration_quality ?? 'original',
+        character_filter: options?.character_filter,
         ...options
       };
 

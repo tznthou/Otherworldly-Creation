@@ -25,9 +25,26 @@
       "Bash(cloc:*)",
       "mcp__context7__resolve-library-id",
       "mcp__context7__get-library-docs",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(git checkout:*)",
+      "Bash(cargo check:*)",
+      "Bash(cd:*)",
+      "mcp__serena__think_about_collected_information",
+      "Bash(sqlite3:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout 30s npm run dev)",
+      "Bash(true)",
+      "Bash(gtimeout:*)",
+      "Bash(grep:*)",
+      "Bash(npm run build:renderer:*)",
+      "Bash(sed:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "/Users/tznthou/Library/Application Support/genesis-chronicle/generated-images"
+    ]
   }
 }

@@ -31,7 +31,12 @@ const PDFGenerationModal: React.FC = () => {
     margin_right: 20,
     include_cover: true,
     chapter_break_style: 'new_page',
-    author: ''
+    author: '',
+    // AI 插畫預設選項
+    include_illustrations: true,
+    illustration_layout: 'gallery',
+    illustration_quality: 'original',
+    character_filter: undefined
   });
   const [validation, setValidation] = useState<{
     valid: boolean;
@@ -395,6 +400,63 @@ const PDFGenerationModal: React.FC = () => {
                     placeholder="留空將使用「創世紀元用戶」"
                     className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white focus:outline-none focus:border-gold-500"
                   />
+                </div>
+              </div>
+              
+              {/* AI 插畫整合選項 */}
+              <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg">
+                <h4 className="text-md font-cosmic text-purple-400 mb-3 flex items-center">
+                  🎨 AI 插畫整合設定
+                </h4>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={options.include_illustrations}
+                        onChange={(e) => setOptions(prev => ({ ...prev, include_illustrations: e.target.checked }))}
+                        disabled={generating}
+                        className="mr-2 w-4 h-4 text-purple-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-purple-500"
+                      />
+                      <span className="text-sm text-gray-300">包含AI生成的插畫</span>
+                    </label>
+                  </div>
+                  
+                  {options.include_illustrations && (
+                    <>
+                      <div>
+                        <label className="block text-sm text-gray-300 mb-1">插畫佈局方式</label>
+                        <select
+                          value={options.illustration_layout}
+                          onChange={(e) => setOptions(prev => ({ ...prev, illustration_layout: e.target.value as 'gallery' | 'inline' | 'chapter_start' }))}
+                          disabled={generating}
+                          className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+                        >
+                          <option value="gallery">插畫集錦頁 (在開頭集中展示)</option>
+                          <option value="chapter_start">章節開始 (在每章標題下顯示相關插畫)</option>
+                          <option value="inline">內嵌模式 (文字中插入，未完全實現)</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm text-gray-300 mb-1">插畫品質</label>
+                        <select
+                          value={options.illustration_quality}
+                          onChange={(e) => setOptions(prev => ({ ...prev, illustration_quality: e.target.value as 'original' | 'compressed' }))}
+                          disabled={generating}
+                          className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+                        >
+                          <option value="original">原始品質 (檔案較大)</option>
+                          <option value="compressed">壓縮品質 (檔案較小)</option>
+                        </select>
+                      </div>
+                      
+                      <div className="text-xs text-gray-400 bg-cosmic-700/50 p-2 rounded">
+                        💡 插畫功能說明：PDF 目前僅支援插畫資訊的文字顯示，包含文件名稱和角色資訊。實際圖片嵌入功能正在開發中。
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

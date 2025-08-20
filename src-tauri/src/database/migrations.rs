@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 14;
+const DB_VERSION: i32 = 15;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -104,6 +104,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v14(conn)?;
             update_version(conn, 14)?;
             log::info!("遷移到版本 14 完成");
+        }
+        
+        if current_version < 15 {
+            apply_migration_v15(conn)?;
+            update_version(conn, 15)?;
+            log::info!("遷移到版本 15 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -1539,6 +1545,196 @@ pub fn apply_migration_v14(conn: &Connection) -> Result<()> {
     )?;
     
     log::info!("版本 14 遷移完成：章節 metadata 支援已添加");
+    
+    Ok(())
+}
+
+/// 版本 15：添加 Pollinations.AI 免費插畫生成歷史記錄表
+pub fn apply_migration_v15(conn: &Connection) -> Result<()> {
+    log::info!("執行版本 15 遷移：添加 Pollinations.AI 免費插畫生成支援");
+    
+    // 創建 Pollinations 生成歷史記錄表
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS pollinations_generations (
+            id TEXT PRIMARY KEY,
+            project_id TEXT,                 -- 關聯專案（可選）
+            character_id TEXT,               -- 關聯角色（可選）
+            
+            -- 生成請求資訊
+            original_prompt TEXT NOT NULL,   -- 原始提示詞（中文/英文皆可）
+            enhanced_prompt TEXT,            -- 風格增強後的提示詞
+            negative_prompt TEXT,            -- 負面提示詞
+            
+            -- Pollinations 參數
+            model TEXT NOT NULL DEFAULT 'flux', -- flux, gptimage, kontext, sdxl
+            width INTEGER DEFAULT 1024,      -- 圖像寬度
+            height INTEGER DEFAULT 1024,     -- 圖像高度
+            seed INTEGER,                    -- 種子值（可重現結果）
+            enhance BOOLEAN DEFAULT 0,       -- 是否增強提示詞
+            style_applied TEXT,              -- 應用的風格（anime, realistic, fantasy等）
+            
+            -- 生成結果
+            image_url TEXT,                  -- 原始 Pollinations API URL
+            local_file_path TEXT,            -- 本地儲存路徑
+            file_size_bytes INTEGER,         -- 檔案大小
+            
+            -- 生成統計
+            generation_time_ms INTEGER,      -- 生成耗時（毫秒）
+            
+            -- 品質和用戶反饋
+            user_rating INTEGER,             -- 用戶評分 (1-5)
+            user_feedback TEXT,              -- 用戶反饋
+            is_favorite BOOLEAN DEFAULT 0,   -- 是否收藏
+            is_deleted BOOLEAN DEFAULT 0,    -- 軟刪除標記
+            
+            -- 使用狀態
+            status TEXT DEFAULT 'completed', -- pending, processing, completed, failed
+            error_message TEXT,              -- 錯誤訊息（如果失敗）
+            retry_count INTEGER DEFAULT 0,   -- 重試次數
+            
+            -- 批次資訊
+            batch_id TEXT,                   -- 批次生成ID（如果是批次操作）
+            generation_index INTEGER,        -- 在批次中的索引
+            
+            -- 元數據
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            downloaded_at TIMESTAMP,         -- 首次下載時間
+            last_accessed TIMESTAMP,         -- 最後訪問時間
+            
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE SET NULL,
+            FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE SET NULL
+        )",
+        [],
+    )?;
+    
+    // 創建 Pollinations 生成記錄索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_project ON pollinations_generations (project_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_character ON pollinations_generations (character_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_model ON pollinations_generations (model)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_status ON pollinations_generations (status)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_created ON pollinations_generations (created_at DESC)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_batch ON pollinations_generations (batch_id)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_seed ON pollinations_generations (seed)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_rating ON pollinations_generations (user_rating DESC)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_favorites ON pollinations_generations (is_favorite DESC)",
+        [],
+    )?;
+    
+    log::info!("Pollinations 生成歷史記錄表和索引創建完成");
+    
+    // 創建 Pollinations 使用統計表（追蹤總體使用情況）
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS pollinations_usage_stats (
+            id TEXT PRIMARY KEY DEFAULT 'singleton', -- 單例記錄
+            
+            -- 總體統計
+            total_generations INTEGER DEFAULT 0,      -- 總生成次數
+            total_success INTEGER DEFAULT 0,          -- 成功次數
+            total_failures INTEGER DEFAULT 0,         -- 失敗次數
+            
+            -- 模型使用統計
+            flux_usage INTEGER DEFAULT 0,             -- Flux 模型使用次數
+            gptimage_usage INTEGER DEFAULT 0,         -- GPTImage 模型使用次數
+            kontext_usage INTEGER DEFAULT 0,          -- Kontext 模型使用次數
+            sdxl_usage INTEGER DEFAULT 0,             -- SDXL 模型使用次數
+            
+            -- 時間統計
+            total_generation_time_ms INTEGER DEFAULT 0, -- 總耗時
+            avg_generation_time_ms INTEGER DEFAULT 0,   -- 平均耗時
+            
+            -- 存儲統計
+            total_images_stored INTEGER DEFAULT 0,      -- 總存儲圖片數
+            total_storage_bytes INTEGER DEFAULT 0,      -- 總存儲大小
+            
+            -- 最後更新時間
+            last_generation_at TIMESTAMP,              -- 最後生成時間
+            daily_generation_count INTEGER DEFAULT 0,   -- 今日生成次數
+            daily_reset_date DATE DEFAULT CURRENT_DATE, -- 每日計數重置日期
+            
+            -- 元數據
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )",
+        [],
+    )?;
+    
+    // 插入初始統計記錄
+    conn.execute(
+        "INSERT OR IGNORE INTO pollinations_usage_stats (id) VALUES ('singleton')",
+        [],
+    )?;
+    
+    log::info!("Pollinations 使用統計表創建完成");
+    
+    // 創建自動清理任務表（管理舊圖像清理）
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS pollinations_cleanup_tasks (
+            id TEXT PRIMARY KEY,
+            task_type TEXT NOT NULL,         -- 'daily_cleanup', 'storage_limit', 'manual'
+            
+            -- 清理條件
+            older_than_days INTEGER,         -- 清理多少天前的圖像
+            max_storage_mb INTEGER,          -- 最大存儲限制
+            
+            -- 執行狀態
+            status TEXT DEFAULT 'pending',   -- pending, running, completed, failed
+            
+            -- 清理結果
+            files_deleted INTEGER DEFAULT 0, -- 刪除檔案數
+            space_freed_bytes INTEGER DEFAULT 0, -- 釋放空間大小
+            
+            -- 執行時間
+            scheduled_at TIMESTAMP,          -- 計劃執行時間
+            started_at TIMESTAMP,            -- 開始執行時間
+            completed_at TIMESTAMP,          -- 完成時間
+            
+            -- 錯誤處理
+            error_message TEXT,              -- 錯誤訊息
+            retry_count INTEGER DEFAULT 0,   -- 重試次數
+            
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )",
+        [],
+    )?;
+    
+    // 創建清理任務索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_cleanup_status ON pollinations_cleanup_tasks (status)",
+        [],
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_cleanup_scheduled ON pollinations_cleanup_tasks (scheduled_at)",
+        [],
+    )?;
+    
+    log::info!("Pollinations 清理任務表創建完成");
+    log::info!("版本 15 遷移完成：Pollinations.AI 免費插畫生成功能已準備就緒");
     
     Ok(())
 }

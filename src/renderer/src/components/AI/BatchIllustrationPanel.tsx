@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import ImagePreviewModal from './VisualCreation/ImagePreviewModal';
 import { useSelector, useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../store/store';
 import { fetchCharactersByProjectId } from '../../store/slices/charactersSlice';
@@ -60,6 +61,11 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   const [globalColorMode, setGlobalColorMode] = useState<'color' | 'monochrome'>('color');
   const [apiKeySource, setApiKeySource] = useState<'manual' | 'gemini' | 'openrouter'>('manual');
   
+  // 新增：插畫服務選擇狀態
+  const [illustrationProvider, setIllustrationProvider] = useState<'pollinations' | 'imagen'>('pollinations');
+  const [pollinationsModel, setPollinationsModel] = useState<'flux' | 'gptimage' | 'kontext' | 'sdxl'>('flux');
+  const [pollinationsStyle, setPollinationsStyle] = useState<'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art'>('anime');
+  
   // 新增：Google Cloud 計費模態狀態
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [billingErrorMessage, setBillingErrorMessage] = useState('');
@@ -77,6 +83,10 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
 
   // 歷史狀態
   const [_batchHistory, _setBatchHistory] = useState<BatchStatusReport[]>([]);
+
+  // 臨時圖像預覽狀態
+  const [tempImages, setTempImages] = useState<any[]>([]);
+  const [showImagePreview, setShowImagePreview] = useState(false);
 
   // 獲取項目角色
   const projectCharacters = characters.filter(c => c.projectId === currentProject?.id);
@@ -210,8 +220,9 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       return;
     }
 
-    if (!apiKey.trim()) {
-      setError('請輸入 API 金鑰');
+    // 只有選擇 Imagen 時才需要 API Key
+    if (illustrationProvider === 'imagen' && !apiKey.trim()) {
+      setError('Google Imagen 需要 API 金鑰，請輸入或切換到免費的 Pollinations.AI');
       return;
     }
 
@@ -228,82 +239,162 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     try {
       console.log(`🚀 開始批次插畫生成：${batchName}`);
       console.log(`🎨 色彩模式：${globalColorMode === 'color' ? '彩色' : '黑白'}`);
+      console.log(`🤖 使用服務：${illustrationProvider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}`);
       console.log(`📋 共 ${requests.length} 個請求`);
 
-      // 準備圖像生成請求
-      const imageRequests = requests.map(req => {
-        // 根據角色信息增強場景描述
-        let enhancedDescription = req.scene_description;
-        
-        // 加入角色資訊
-        if (req.selectedCharacterIds.length > 0) {
-          const characterNames = req.selectedCharacterIds.map(id => {
-            const char = projectCharacters.find(c => c.id === id);
-            return char?.name;
-          }).filter(Boolean);
-          
-          if (characterNames.length > 0) {
-            enhancedDescription = `${enhancedDescription}，featuring ${characterNames.join(' and ')}`;
-          }
-        }
-        
-        // 根據場景類型調整
-        if (req.scene_type === 'portrait') {
-          enhancedDescription += ', detailed character portrait';
-        } else if (req.scene_type === 'interaction') {
-          enhancedDescription += ', character interaction scene';
-        } else if (req.scene_type === 'scene') {
-          enhancedDescription += ', environmental scene with characters';
-        }
-        
-        return {
-          prompt: enhancedDescription,
-          options: {
-            colorMode: globalColorMode,
-            aspectRatio: req.aspect_ratio as ImageGenerationOptions['aspectRatio'],
-            numberOfImages: 1,
-            sceneType: req.scene_type,
-            safetyLevel: SafetyFilterLevel.BLOCK_MEDIUM_AND_ABOVE
-          }
-        };
-      });
+      let results: any[] = [];
 
-      // 執行批次生成
-      const results = await imageGenerationService.generateBatch(
-        imageRequests,
-        apiKey,
-        (current, total, currentPrompt) => {
-          console.log(`🎨 生成進度: ${current}/${total} - ${currentPrompt?.substring(0, 50)}...`);
-          // 可以在這裡更新 UI 顯示進度
+      if (illustrationProvider === 'pollinations') {
+        // === Pollinations.AI 免費生成 ===
+        console.log(`🌟 使用 Pollinations.AI，模型：${pollinationsModel}，風格：${pollinationsStyle}`);
+        
+        results = [];
+        
+        for (let i = 0; i < requests.length; i++) {
+          const req = requests[i];
+          console.log(`🎨 生成進度: ${i + 1}/${requests.length} - ${req.scene_description.substring(0, 50)}...`);
+          
+          try {
+            // 構建增強提示詞
+            let enhancedPrompt = req.scene_description;
+            
+            // 加入角色資訊
+            if (req.selectedCharacterIds.length > 0) {
+              const characterNames = req.selectedCharacterIds.map(id => {
+                const char = projectCharacters.find(c => c.id === id);
+                return char?.name;
+              }).filter(Boolean);
+              
+              if (characterNames.length > 0) {
+                enhancedPrompt = `${enhancedPrompt}, featuring ${characterNames.join(' and ')}`;
+              }
+            }
+            
+            // 根據場景類型調整
+            if (req.scene_type === 'portrait') {
+              enhancedPrompt += ', detailed character portrait';
+            } else if (req.scene_type === 'interaction') {
+              enhancedPrompt += ', character interaction scene';
+            } else if (req.scene_type === 'scene') {
+              enhancedPrompt += ', environmental scene with characters';
+            }
+
+            // 調用 Pollinations.AI 臨時生成 API
+            const result = await api.illustration.generateFreeIllustrationToTemp(
+              enhancedPrompt,
+              1024, // width
+              1024, // height
+              pollinationsModel,
+              undefined, // seed (auto-generated)
+              true, // enhance
+              pollinationsStyle,
+              currentProject?.id, // projectId
+              req.selectedCharacterIds.length > 0 ? req.selectedCharacterIds[0] : undefined // characterId (主要角色)
+            );
+
+            if (result.success) {
+              // 存儲臨時圖像數據
+              results.push({
+                success: true,
+                tempImageData: result, // 存儲完整的臨時圖像數據
+                request: req
+              });
+              console.log(`✅ 第 ${i + 1} 張圖像生成成功（臨時）`);
+            } else {
+              results.push({
+                success: false,
+                error: result.message || '生成失敗',
+                request: req
+              });
+              console.error(`❌ 第 ${i + 1} 張圖像生成失敗:`, result.message);
+            }
+          } catch (error) {
+            results.push({
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+              request: req
+            });
+            console.error(`❌ 第 ${i + 1} 張圖像生成異常:`, error);
+          }
+
+          // 避免過於頻繁的請求，每個請求間隔1秒
+          if (i < requests.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
-      );
+      } else {
+        // === Google Imagen 付費生成 ===
+        console.log('🔷 使用 Google Imagen');
+        
+        // 準備圖像生成請求
+        const imageRequests = requests.map(req => {
+          // 根據角色信息增強場景描述
+          let enhancedDescription = req.scene_description;
+          
+          // 加入角色資訊
+          if (req.selectedCharacterIds.length > 0) {
+            const characterNames = req.selectedCharacterIds.map(id => {
+              const char = projectCharacters.find(c => c.id === id);
+              return char?.name;
+            }).filter(Boolean);
+            
+            if (characterNames.length > 0) {
+              enhancedDescription = `${enhancedDescription}，featuring ${characterNames.join(' and ')}`;
+            }
+          }
+          
+          // 根據場景類型調整
+          if (req.scene_type === 'portrait') {
+            enhancedDescription += ', detailed character portrait';
+          } else if (req.scene_type === 'interaction') {
+            enhancedDescription += ', character interaction scene';
+          } else if (req.scene_type === 'scene') {
+            enhancedDescription += ', environmental scene with characters';
+          }
+          
+          return {
+            prompt: enhancedDescription,
+            options: {
+              colorMode: globalColorMode,
+              aspectRatio: req.aspect_ratio as ImageGenerationOptions['aspectRatio'],
+              numberOfImages: 1,
+              sceneType: req.scene_type,
+              safetyLevel: SafetyFilterLevel.BLOCK_MEDIUM_AND_ABOVE
+            }
+          };
+        });
+
+        // 執行批次生成
+        results = await imageGenerationService.generateBatch(
+          imageRequests,
+          apiKey,
+          (current, total, currentPrompt) => {
+            console.log(`🎨 生成進度: ${current}/${total} - ${currentPrompt?.substring(0, 50)}...`);
+            // 可以在這裡更新 UI 顯示進度
+          }
+        );
+      }
 
       // 統計結果
       const successCount = results.filter(r => r.success).length;
       const failCount = results.filter(r => !r.success).length;
       
       if (successCount > 0) {
-        console.log(`✅ 成功生成 ${successCount} 張圖像`);
+        console.log(`✅ 成功生成 ${successCount} 張圖像（臨時）`);
         
-        // 保存成功的圖像結果到本地狀態或資料庫
-        const successfulResults = results.filter(r => r.success);
-        console.log('生成的圖像數據:', successfulResults.map(r => ({
-          success: r.success,
-          imageCount: r.data?.length || 0,
-          hasData: !!r.data
-        })));
+        // 收集所有成功的臨時圖像數據
+        const successfulTempImages = results
+          .filter(r => r.success && r.tempImageData)
+          .map(r => r.tempImageData);
         
-        // 重置表單
-        setBatchName('');
-        setBatchDescription('');
-        setRequests([]);
-        setSelectedCharacters([]);
+        console.log('生成的臨時圖像數據:', successfulTempImages.length, '張');
         
-        // 顯示成功消息
+        // 設置臨時圖像並顯示預覽
+        setTempImages(successfulTempImages);
+        setShowImagePreview(true);
+        
+        // 暫時不重置表單，等用戶確認後再重置
         setError(''); // 清除錯誤
-        
-        // 切換到監控標籤
-        setActiveTab('monitor');
         
         if (failCount > 0) {
           console.warn(`⚠️ ${failCount} 張圖像生成失敗`);
@@ -483,6 +574,38 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     }
   };
 
+  // 處理預覽模態框的回調
+  const handleImagePreviewSave = (savedImages: any[]) => {
+    console.log(`✅ 用戶確認保存 ${savedImages.length} 張圖像`);
+    
+    // 重置表單
+    setBatchName('');
+    setBatchDescription('');
+    setRequests([]);
+    setSelectedCharacters([]);
+    
+    // 關閉預覽
+    setShowImagePreview(false);
+    setTempImages([]);
+    
+    // 切換到監控標籤或歷史標籤
+    setActiveTab('history');
+    
+    // 顯示成功消息
+    setError(`✅ 成功保存 ${savedImages.length} 張圖像到圖像庫`);
+  };
+
+  const handleImagePreviewDeleteAll = () => {
+    console.log('🗑️ 用戶刪除所有臨時圖像');
+    
+    // 關閉預覽
+    setShowImagePreview(false);
+    setTempImages([]);
+    
+    // 不重置表單，讓用戶可以重新生成
+    setError(''); // 清除錯誤消息
+  };
+
   // 組件初始化
   useEffect(() => {
     // 只調用初始化，loadActiveBatches 會在初始化成功後自動調用
@@ -652,6 +775,95 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   </button>
                 </div>
               </div>
+
+              {/* 插畫服務選擇器 */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  🤖 插畫服務 <span className="text-gray-400">(選擇生成服務)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setIllustrationProvider('pollinations')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      illustrationProvider === 'pollinations'
+                        ? 'border-green-500 bg-gradient-to-br from-green-500/20 to-emerald-500/20'
+                        : 'border-gray-600 bg-gray-700 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">🆓</div>
+                      <div className="font-medium text-white">Pollinations.AI</div>
+                      <div className="text-xs text-green-400 mt-1">完全免費・無需API Key</div>
+                      <div className="text-xs text-gray-400 mt-1">支援多種風格模型</div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setIllustrationProvider('imagen')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      illustrationProvider === 'imagen'
+                        ? 'border-blue-500 bg-gradient-to-br from-blue-500/20 to-cyan-500/20'
+                        : 'border-gray-600 bg-gray-700 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-3xl mb-2">💎</div>
+                      <div className="font-medium text-white">Google Imagen</div>
+                      <div className="text-xs text-blue-400 mt-1">高品質專業級</div>
+                      <div className="text-xs text-gray-400 mt-1">需要 API Key</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Pollinations 模型和風格選擇 */}
+              {illustrationProvider === 'pollinations' && (
+                <div className="mb-6 p-4 bg-green-900/20 border border-green-700 rounded-lg">
+                  <h4 className="text-sm font-medium text-green-300 mb-4">🎨 Pollinations.AI 設定</h4>
+                  
+                  {/* 模型選擇 */}
+                  <div className="mb-4">
+                    <label className="block text-sm text-gray-300 mb-2">模型選擇</label>
+                    <select
+                      value={pollinationsModel}
+                      onChange={(e) => setPollinationsModel(e.target.value as 'flux' | 'gptimage' | 'kontext' | 'sdxl')}
+                      className="w-full p-2 bg-gray-800 border border-gray-600 rounded text-white"
+                    >
+                      <option value="flux">Flux - 高品質通用模型 (推薦)</option>
+                      <option value="gptimage">GPT Image - 支援透明背景</option>
+                      <option value="kontext">Kontext - 圖像轉換</option>
+                      <option value="sdxl">Stable Diffusion XL - 經典模型</option>
+                    </select>
+                  </div>
+
+                  {/* 風格選擇 */}
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-2">風格選擇</label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {[
+                        { id: 'anime', label: '動漫', emoji: '🌸' },
+                        { id: 'realistic', label: '寫實', emoji: '📷' },
+                        { id: 'fantasy', label: '奇幻', emoji: '🧙‍♂️' },
+                        { id: 'watercolor', label: '水彩', emoji: '🎨' },
+                        { id: 'digital_art', label: '數位', emoji: '💻' }
+                      ].map(style => (
+                        <button
+                          key={style.id}
+                          onClick={() => setPollinationsStyle(style.id as typeof pollinationsStyle)}
+                          className={`p-2 rounded text-xs transition-colors ${
+                            pollinationsStyle === style.id
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          }`}
+                        >
+                          <div>{style.emoji}</div>
+                          <div>{style.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -1305,6 +1517,15 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         }}
         errorMessage={billingErrorMessage}
       />
+
+      {/* 圖像預覽模態框 */}
+      {showImagePreview && tempImages.length > 0 && (
+        <ImagePreviewModal
+          tempImages={tempImages}
+          onSaveConfirmed={handleImagePreviewSave}
+          onDeleteAll={handleImagePreviewDeleteAll}
+        />
+      )}
     </div>
   );
 };
