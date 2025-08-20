@@ -1,115 +1,109 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useAppDispatch } from '../../hooks/redux';
-import { closeModal } from '../../store/slices/uiSlice';
-import { api } from '../../api';
-// import { convertFileSrc } from '@tauri-apps/api/core';
+import React, { useEffect, useRef, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState, AppDispatch } from '../../../store/store';
 
-interface TempImageData {
-  id: string;
-  prompt: string;
-  temp_path: string;
-  image_url?: string;
-  parameters: {
-    model: string;
-    width: number;
-    height: number;
-    seed?: number;
-    enhance: boolean;
-    style?: string;
-  };
-  file_size_bytes: number;
-  generation_time_ms: number;
-  provider: string;
-  is_free: boolean;
-  is_temp: boolean;
-  project_id?: string;
-  character_id?: string;
-  original_prompt: string;
-}
+// Redux actions
+import {
+  closeImagePreview,
+  setCurrentImageIndex,
+  setShowImageDetails,
+  toggleImageSelection,
+  selectAllImages,
+  deselectAllImages,
+  saveSelectedImages,
+  clearTempImages,
+} from '../../../store/slices/visualCreationSlice';
 
-interface ImagePreviewModalProps {
-  tempImages: TempImageData[];
-  onSaveConfirmed: (savedImages: TempImageData[]) => void;
-  onDeleteAll: () => void;
-}
-
-const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
-  tempImages,
-  onSaveConfirmed,
-  onDeleteAll,
-}) => {
-  const dispatch = useAppDispatch();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
-  const [showDetails, setShowDetails] = useState(false);
+const ImagePreviewModal: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const imageRef = useRef<HTMLImageElement>(null);
 
+  // Redux 狀態
+  const {
+    tempImages,
+    showImagePreview,
+    selectedImageIds,
+    currentImageIndex,
+    showImageDetails,
+    loading,
+  } = useSelector((state: RootState) => state.visualCreation);
+
+  // 關閉模態框
   const handleClose = useCallback(() => {
-    dispatch(closeModal('imagePreview'));
+    dispatch(closeImagePreview());
   }, [dispatch]);
 
-  const handleSaveSelected = useCallback(async () => {
-    if (selectedImages.size === 0) {
+  // 保存選中的圖像
+  const handleSaveSelected = useCallback(() => {
+    if (selectedImageIds.length === 0) {
       return;
     }
+    dispatch(saveSelectedImages(selectedImageIds));
+  }, [selectedImageIds, dispatch]);
 
-    setIsLoading(true);
-    try {
-      const selectedImagesData = tempImages.filter(img => selectedImages.has(img.id));
-      const savedImages: TempImageData[] = [];
+  // 刪除所有臨時圖像
+  const handleDeleteAll = useCallback(() => {
+    dispatch(clearTempImages());
+    dispatch(closeImagePreview());
+  }, [dispatch]);
 
-      for (const imageData of selectedImagesData) {
-        try {
-          const result = await api.illustration.confirmTempImageSave(imageData);
-          if (result.success) {
-            savedImages.push(imageData);
-            console.log(`✅ 成功保存圖像: ${imageData.id}`);
-          } else {
-            console.error(`❌ 保存圖像失敗: ${imageData.id}`, result.message);
-          }
-        } catch (error) {
-          console.error(`❌ 保存圖像異常: ${imageData.id}`, error);
-        }
-      }
+  // 重新生成（關閉預覽返回創建面板）
+  const handleRegenerate = useCallback(() => {
+    dispatch(closeImagePreview());
+  }, [dispatch]);
 
-      // 刪除未選中的臨時圖像
-      const unselectedImages = tempImages.filter(img => !selectedImages.has(img.id));
-      for (const imageData of unselectedImages) {
-        try {
-          await api.illustration.deleteTempImage(imageData.temp_path);
-          console.log(`🗑️ 成功刪除未選中的臨時圖像: ${imageData.id}`);
-        } catch (error) {
-          console.error(`❌ 刪除臨時圖像失敗: ${imageData.id}`, error);
-        }
-      }
+  // 切換圖像選擇狀態
+  const toggleImageSelectionLocal = useCallback((imageId: string) => {
+    dispatch(toggleImageSelection(imageId));
+  }, [dispatch]);
 
-      onSaveConfirmed(savedImages);
-      handleClose();
-    } catch (error) {
-      console.error('保存選中圖像失敗:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedImages, tempImages, onSaveConfirmed, handleClose]);
+  // 全選
+  const selectAll = useCallback(() => {
+    dispatch(selectAllImages());
+  }, [dispatch]);
 
-  // 初始化時全選
-  useEffect(() => {
-    setSelectedImages(new Set(tempImages.map(img => img.id)));
-  }, [tempImages]);
+  // 取消全選
+  const deselectAll = useCallback(() => {
+    dispatch(deselectAllImages());
+  }, [dispatch]);
+
+  // 設置當前圖像索引
+  const setCurrentIndex = useCallback((index: number) => {
+    dispatch(setCurrentImageIndex(index));
+  }, [dispatch]);
+
+  // 切換詳情顯示
+  const toggleDetails = useCallback(() => {
+    dispatch(setShowImageDetails(!showImageDetails));
+  }, [showImageDetails, dispatch]);
+
+  // 格式化檔案大小
+  const formatFileSize = useCallback((bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }, []);
+
+  // 格式化時間
+  const formatTime = useCallback((ms: number) => {
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+  }, []);
 
   // 鍵盤快捷鍵
   useEffect(() => {
+    if (!showImagePreview) return;
+
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'Escape':
           handleClose();
           break;
         case 'ArrowLeft':
-          setCurrentIndex(prev => prev > 0 ? prev - 1 : tempImages.length - 1);
+          setCurrentIndex(currentImageIndex > 0 ? currentImageIndex - 1 : tempImages.length - 1);
           break;
         case 'ArrowRight':
-          setCurrentIndex(prev => prev < tempImages.length - 1 ? prev + 1 : 0);
+          setCurrentIndex(currentImageIndex < tempImages.length - 1 ? currentImageIndex + 1 : 0);
           break;
         case 'Enter':
           if (event.ctrlKey || event.metaKey) {
@@ -119,7 +113,9 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
         case 'd':
           if (event.ctrlKey || event.metaKey) {
             event.preventDefault();
-            toggleImageSelection(tempImages[currentIndex].id);
+            if (tempImages[currentImageIndex]) {
+              toggleImageSelectionLocal(tempImages[currentImageIndex].id);
+            }
           }
           break;
       }
@@ -127,66 +123,14 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, tempImages]);
+  }, [showImagePreview, currentImageIndex, tempImages, handleClose, setCurrentIndex, handleSaveSelected, toggleImageSelectionLocal]);
 
-  const currentImage = tempImages[currentIndex];
+  // 如果沒有顯示預覽或沒有圖像，不渲染
+  if (!showImagePreview || tempImages.length === 0) {
+    return null;
+  }
 
-  const toggleImageSelection = (imageId: string) => {
-    setSelectedImages(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(imageId)) {
-        newSet.delete(imageId);
-      } else {
-        newSet.add(imageId);
-      }
-      return newSet;
-    });
-  };
-
-  const selectAll = () => {
-    setSelectedImages(new Set(tempImages.map(img => img.id)));
-  };
-
-  const deselectAll = () => {
-    setSelectedImages(new Set());
-  };
-
-  const handleDeleteAll = async () => {
-    setIsLoading(true);
-    try {
-      for (const imageData of tempImages) {
-        try {
-          await api.illustration.deleteTempImage(imageData.temp_path);
-          console.log(`🗑️ 成功刪除臨時圖像: ${imageData.id}`);
-        } catch (error) {
-          console.error(`❌ 刪除臨時圖像失敗: ${imageData.id}`, error);
-        }
-      }
-
-      onDeleteAll();
-      handleClose();
-    } catch (error) {
-      console.error('刪除所有臨時圖像失敗:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegenerate = () => {
-    // 關閉預覽模態框，返回生成面板
-    handleClose();
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  const formatTime = (ms: number) => {
-    if (ms < 1000) return `${ms}ms`;
-    return `${(ms / 1000).toFixed(1)}s`;
-  };
+  const currentImage = tempImages[currentImageIndex];
 
   if (!currentImage) {
     return null;
@@ -199,18 +143,18 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
         <div className="p-4 border-b border-cosmic-700 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h2 className="text-xl font-cosmic text-gold-500">
-              🎨 圖像預覽 ({currentIndex + 1}/{tempImages.length})
+              🎨 圖像預覽 ({currentImageIndex + 1}/{tempImages.length})
             </h2>
             <span className="text-sm text-gray-400">
-              已選擇 {selectedImages.size}/{tempImages.length} 張
+              已選擇 {selectedImageIds.length}/{tempImages.length} 張
             </span>
           </div>
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setShowDetails(!showDetails)}
+              onClick={toggleDetails}
               className="px-3 py-1 bg-cosmic-800 hover:bg-cosmic-700 text-gray-300 rounded-md transition-colors text-sm"
             >
-              {showDetails ? '隱藏詳情' : '顯示詳情'}
+              {showImageDetails ? '隱藏詳情' : '顯示詳情'}
             </button>
             <button
               onClick={handleClose}
@@ -230,13 +174,13 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
               {tempImages.length > 1 && (
                 <>
                   <button
-                    onClick={() => setCurrentIndex(prev => prev > 0 ? prev - 1 : tempImages.length - 1)}
+                    onClick={() => setCurrentIndex(currentImageIndex > 0 ? currentImageIndex - 1 : tempImages.length - 1)}
                     className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-colors z-10"
                   >
                     ←
                   </button>
                   <button
-                    onClick={() => setCurrentIndex(prev => prev < tempImages.length - 1 ? prev + 1 : 0)}
+                    onClick={() => setCurrentIndex(currentImageIndex < tempImages.length - 1 ? currentImageIndex + 1 : 0)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-colors z-10"
                   >
                     →
@@ -256,13 +200,13 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
               {/* 選擇指示器 */}
               <div 
                 className={`absolute top-4 left-4 w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors ${
-                  selectedImages.has(currentImage.id) 
+                  selectedImageIds.includes(currentImage.id)
                     ? 'bg-gold-500 border-gold-500 text-white' 
                     : 'bg-transparent border-gray-400 hover:border-gold-400'
                 }`}
-                onClick={() => toggleImageSelection(currentImage.id)}
+                onClick={() => toggleImageSelectionLocal(currentImage.id)}
               >
-                {selectedImages.has(currentImage.id) && '✓'}
+                {selectedImageIds.includes(currentImage.id) && '✓'}
               </div>
             </div>
 
@@ -274,7 +218,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
                     <div
                       key={image.id}
                       className={`relative flex-shrink-0 cursor-pointer ${
-                        index === currentIndex ? 'ring-2 ring-gold-500' : ''
+                        index === currentImageIndex ? 'ring-2 ring-gold-500' : ''
                       }`}
                       onClick={() => setCurrentIndex(index)}
                     >
@@ -283,7 +227,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
                         alt={`Image ${index + 1}`}
                         className="w-16 h-16 object-cover rounded border border-cosmic-600"
                       />
-                      {selectedImages.has(image.id) && (
+                      {selectedImageIds.includes(image.id) && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-gold-500 rounded-full flex items-center justify-center text-xs text-white">
                           ✓
                         </div>
@@ -296,13 +240,13 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
           </div>
 
           {/* 側邊詳情面板 */}
-          {showDetails && (
+          {showImageDetails && (
             <div className="w-80 border-l border-cosmic-700 bg-cosmic-800/50 p-4 overflow-y-auto">
               <h3 className="font-medium text-gold-400 mb-4">圖像詳情</h3>
               
               <div className="space-y-3 text-sm">
                 <div>
-                  <label className="text-gray-400 block">提示詞</label>
+                  <label className="text-gray-400 block">原始提示詞</label>
                   <p className="text-white bg-cosmic-900 p-2 rounded text-xs max-h-20 overflow-y-auto">
                     {currentImage.original_prompt}
                   </p>
@@ -366,14 +310,14 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
             <button
               onClick={selectAll}
               className="px-3 py-1 bg-cosmic-800 hover:bg-cosmic-700 text-gray-300 rounded-md transition-colors text-sm"
-              disabled={selectedImages.size === tempImages.length}
+              disabled={selectedImageIds.length === tempImages.length}
             >
               全選
             </button>
             <button
               onClick={deselectAll}
               className="px-3 py-1 bg-cosmic-800 hover:bg-cosmic-700 text-gray-300 rounded-md transition-colors text-sm"
-              disabled={selectedImages.size === 0}
+              disabled={selectedImageIds.length === 0}
             >
               取消全選
             </button>
@@ -386,23 +330,23 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
             <button
               onClick={handleRegenerate}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
-              disabled={isLoading}
+              disabled={loading.savingImages}
             >
               🔄 重新生成
             </button>
             <button
               onClick={handleDeleteAll}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
-              disabled={isLoading}
+              disabled={loading.savingImages}
             >
               🗑️ 全部刪除
             </button>
             <button
               onClick={handleSaveSelected}
               className="px-6 py-2 bg-gold-600 hover:bg-gold-700 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
-              disabled={isLoading || selectedImages.size === 0}
+              disabled={loading.savingImages || selectedImageIds.length === 0}
             >
-              {isLoading ? '保存中...' : `💾 保存選中 (${selectedImages.size})`}
+              {loading.savingImages ? '保存中...' : `💾 保存選中 (${selectedImageIds.length})`}
             </button>
           </div>
         </div>

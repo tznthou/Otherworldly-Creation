@@ -1,0 +1,1 @@
+export { default as GalleryTab } from './GalleryTab';

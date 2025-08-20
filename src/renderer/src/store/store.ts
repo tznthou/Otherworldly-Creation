@@ -11,6 +11,7 @@ import editorStatsReducer from './slices/editorStatsSlice';
 import { errorReducer, progressReducer } from './slices/errorSlice';
 import notificationReducer from './slices/notificationSlice';
 import settingsReducer from './slices/settingsSlice';
+import visualCreationReducer from './slices/visualCreationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -27,6 +28,7 @@ export const store = configureStore({
     progress: progressReducer,
     notification: notificationReducer,
     settings: settingsReducer,
+    visualCreation: visualCreationReducer, // 新增視覺創作狀態管理
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

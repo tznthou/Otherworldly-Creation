@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import ImagePreviewModal from '../Modals/ImagePreviewModal';
+import ImagePreviewModal from './VisualCreation/ImagePreviewModal';
 import { useSelector, useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../store/store';
 import { fetchCharactersByProjectId } from '../../store/slices/charactersSlice';
