@@ -24,7 +24,8 @@
       "mcp__serena__replace_symbol_body",
       "Bash(cloc:*)",
       "mcp__context7__resolve-library-id",
-      "mcp__context7__get-library-docs"
+      "mcp__context7__get-library-docs",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []
