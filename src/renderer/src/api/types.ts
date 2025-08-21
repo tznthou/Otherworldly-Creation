@@ -142,6 +142,7 @@ export interface API {
     openExternal: (url: string) => Promise<void>;
     showSaveDialog: (options: SaveDialogOptions) => Promise<DialogResult>;
     showOpenDialog: (options: OpenDialogOptions) => Promise<DialogResult>;
+    selectDirectory: (title?: string) => Promise<string>;
     quitApp: () => Promise<void>;
     reloadApp: () => Promise<void>;
   };
@@ -315,6 +316,39 @@ export interface API {
     cleanupExpiredTempImages: () => Promise<{
       success: boolean;
       cleaned_count?: number;
+      message?: string;
+    }>;
+
+    // === 批次導出功能 ===
+    exportImage: (exportParams: {
+      imagePath: string;
+      outputPath: string;
+      format: 'png' | 'jpg' | 'webp';
+      quality: number;
+      includeMetadata: boolean;
+      metadata?: {
+        prompt: string;
+        parameters: any;
+        provider: string;
+        generationTime: number;
+      };
+    }) => Promise<{
+      success: boolean;
+      outputPath?: string;
+      message?: string;
+    }>;
+
+    exportMultipleImages: (exports: Array<{
+      imagePath: string;
+      outputPath: string;
+      format: 'png' | 'jpg' | 'webp';
+      quality: number;
+      includeMetadata: boolean;
+      metadata?: any;
+    }>) => Promise<{
+      success: boolean;
+      exportedFiles: string[];
+      failedFiles: string[];
       message?: string;
     }>;
   };

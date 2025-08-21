@@ -43,7 +43,8 @@
       "Bash(git branch:*)",
       "Bash(npm install:*)",
       "mcp__serena__think_about_task_adherence",
-      "Bash(timeout 30s npm run dev:renderer)"
+      "Bash(timeout 30s npm run dev:renderer)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": [],

@@ -1,5 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../../api';
+import { createVersion } from './versionManagementSlice';
+import { tempImageToVersion, generateNextVersionNumber } from '../../utils/versionUtils';
+import type { AppDispatch, RootState } from '../store';
 
 // 類型定義
 export interface TempImageData {
@@ -47,10 +50,32 @@ export interface GenerationHistory {
   images: TempImageData[];
 }
 
+// 導出格式選項
+export type ExportFormat = 'png' | 'jpg' | 'webp';
+
+// 導出設定介面
+export interface ExportSettings {
+  format: ExportFormat;
+  quality: number; // 1-100，僅適用於 JPG/WebP
+  prefix: string; // 檔名前綴
+  includeMetadata: boolean; // 是否包含生成參數
+}
+
+// 導出任務介面
+export interface ExportTask {
+  id: string;
+  imageIds: string[];
+  settings: ExportSettings;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  exportedFiles: string[];
+  error?: string;
+}
+
 // 狀態介面
 export interface VisualCreationState {
   // UI 狀態
-  activeTab: 'create' | 'monitor' | 'gallery';
+  activeTab: 'create' | 'monitor' | 'gallery' | 'templates' | 'versions';
   currentProvider: 'pollinations' | 'imagen';
   
   // 創建狀態
@@ -70,8 +95,25 @@ export interface VisualCreationState {
   currentImageIndex: number;
   showImageDetails: boolean;
   
+  // 導出狀態
+  exportSettings: ExportSettings;
+  isExporting: boolean;
+  exportProgress: number;
+  exportTask: ExportTask | null;
+  showExportPanel: boolean;
+  
   // 歷史記錄
   generationHistory: GenerationHistory[];
+  
+  // 版本管理整合
+  versionManagement: {
+    currentImageId: string | null; // 當前查看版本的圖片ID
+    showVersionPanel: boolean; // 顯示版本管理面板
+    selectedImageForVersioning: TempImageData | null; // 選中要進行版本管理的圖片
+    autoCreateVersions: boolean; // 自動為生成的圖片創建版本
+    pendingVersionCreation: string[]; // 待創建版本的圖片ID列表
+    lastGeneratedImageId: string | null; // 最後生成的圖片ID
+  };
   
   // 錯誤處理
   error: string | null;
@@ -82,6 +124,7 @@ export interface VisualCreationState {
     generating: boolean;
     loadingHistory: boolean;
     savingImages: boolean;
+    exporting: boolean;
   };
 }
 
@@ -108,8 +151,30 @@ const initialState: VisualCreationState = {
   currentImageIndex: 0,
   showImageDetails: false,
   
+  // 導出狀態
+  exportSettings: {
+    format: 'png',
+    quality: 90,
+    prefix: 'illustration',
+    includeMetadata: true,
+  },
+  isExporting: false,
+  exportProgress: 0,
+  exportTask: null,
+  showExportPanel: false,
+  
   // 歷史記錄
   generationHistory: [],
+  
+  // 版本管理整合
+  versionManagement: {
+    currentImageId: null,
+    showVersionPanel: false,
+    selectedImageForVersioning: null,
+    autoCreateVersions: true,
+    pendingVersionCreation: [],
+    lastGeneratedImageId: null,
+  },
   
   // 錯誤處理
   error: null,
@@ -120,6 +185,7 @@ const initialState: VisualCreationState = {
     generating: false,
     loadingHistory: false,
     savingImages: false,
+    exporting: false,
   },
 };
 
@@ -222,6 +288,108 @@ export const saveSelectedImages = createAsyncThunk(
   }
 );
 
+export const exportSelectedImages = createAsyncThunk(
+  'visualCreation/exportImages',
+  async (
+    { selectedImageIds, exportPath }: { selectedImageIds: string[]; exportPath?: string },
+    { getState, dispatch }
+  ) => {
+    const state = getState() as { visualCreation: VisualCreationState };
+    const { tempImages, exportSettings } = state.visualCreation;
+    
+    const selectedImages = tempImages.filter(img => selectedImageIds.includes(img.id));
+    
+    if (selectedImages.length === 0) {
+      throw new Error('沒有選中的圖像可以導出');
+    }
+
+    // 創建導出任務
+    const exportTask: ExportTask = {
+      id: Date.now().toString(),
+      imageIds: selectedImageIds,
+      settings: exportSettings,
+      status: 'processing',
+      progress: 0,
+      exportedFiles: [],
+    };
+
+    dispatch(setExportTask(exportTask));
+
+    const exportedFiles: string[] = [];
+    let processedCount = 0;
+
+    try {
+      // 如果沒有指定導出路徑，使用系統對話框選擇
+      const finalExportPath = exportPath || await api.system.selectDirectory();
+      
+      if (!finalExportPath) {
+        throw new Error('未選擇導出路徑');
+      }
+
+      for (const [index, imageData] of selectedImages.entries()) {
+        try {
+          // 生成檔名
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+          const fileName = `${exportSettings.prefix}-${timestamp}-${index + 1}.${exportSettings.format}`;
+          
+          // 調用後端導出 API（需要在 Tauri 後端實現）
+          const result = await api.illustration.exportImage({
+            imagePath: imageData.temp_path,
+            outputPath: `${finalExportPath}/${fileName}`,
+            format: exportSettings.format,
+            quality: exportSettings.quality,
+            includeMetadata: exportSettings.includeMetadata,
+            metadata: exportSettings.includeMetadata ? {
+              prompt: imageData.prompt,
+              parameters: imageData.parameters,
+              provider: imageData.provider,
+              generationTime: imageData.generation_time_ms,
+            } : undefined,
+          });
+
+          if (result.success) {
+            exportedFiles.push(result.outputPath || fileName);
+          }
+        } catch (error) {
+          console.error(`導出圖像失敗: ${imageData.id}`, error);
+        }
+
+        processedCount++;
+        const progress = Math.round((processedCount / selectedImages.length) * 100);
+        
+        // 更新進度
+        dispatch(setExportProgress(progress));
+      }
+
+      const updatedTask: ExportTask = {
+        ...exportTask,
+        status: 'completed',
+        progress: 100,
+        exportedFiles,
+      };
+
+      dispatch(setExportTask(updatedTask));
+      
+      return {
+        success: true,
+        exportedCount: exportedFiles.length,
+        totalCount: selectedImages.length,
+        exportPath: finalExportPath,
+        exportedFiles,
+      };
+    } catch (error) {
+      const failedTask: ExportTask = {
+        ...exportTask,
+        status: 'failed',
+        error: error instanceof Error ? error.message : '導出失敗',
+      };
+
+      dispatch(setExportTask(failedTask));
+      throw error;
+    }
+  }
+);
+
 // Slice
 export const visualCreationSlice = createSlice({
   name: 'visualCreation',
@@ -304,6 +472,87 @@ export const visualCreationSlice = createSlice({
       state.showImageDetails = false;
     },
     
+    // 導出狀態管理
+    setExportSettings: (state, action: PayloadAction<Partial<ExportSettings>>) => {
+      state.exportSettings = { ...state.exportSettings, ...action.payload };
+    },
+    
+    setShowExportPanel: (state, action: PayloadAction<boolean>) => {
+      state.showExportPanel = action.payload;
+    },
+    
+    setExportProgress: (state, action: PayloadAction<number>) => {
+      state.exportProgress = action.payload;
+    },
+    
+    setExportTask: (state, action: PayloadAction<ExportTask | null>) => {
+      state.exportTask = action.payload;
+      if (action.payload) {
+        state.isExporting = action.payload.status === 'processing';
+        state.exportProgress = action.payload.progress;
+      } else {
+        state.isExporting = false;
+        state.exportProgress = 0;
+      }
+    },
+    
+    clearExportTask: (state) => {
+      state.exportTask = null;
+      state.isExporting = false;
+      state.exportProgress = 0;
+      state.showExportPanel = false;
+    },
+    
+    // 版本管理整合
+    setVersionCurrentImageId: (state, action: PayloadAction<string | null>) => {
+      state.versionManagement.currentImageId = action.payload;
+    },
+    
+    setShowVersionPanel: (state, action: PayloadAction<boolean>) => {
+      state.versionManagement.showVersionPanel = action.payload;
+    },
+    
+    setSelectedImageForVersioning: (state, action: PayloadAction<TempImageData | null>) => {
+      state.versionManagement.selectedImageForVersioning = action.payload;
+    },
+    
+    setAutoCreateVersions: (state, action: PayloadAction<boolean>) => {
+      state.versionManagement.autoCreateVersions = action.payload;
+    },
+    
+    // 版本創建狀態管理
+    addPendingVersionCreation: (state, action: PayloadAction<string>) => {
+      if (!state.versionManagement.pendingVersionCreation.includes(action.payload)) {
+        state.versionManagement.pendingVersionCreation.push(action.payload);
+      }
+    },
+    
+    removePendingVersionCreation: (state, action: PayloadAction<string>) => {
+      state.versionManagement.pendingVersionCreation = state.versionManagement.pendingVersionCreation
+        .filter(id => id !== action.payload);
+    },
+    
+    clearPendingVersionCreation: (state) => {
+      state.versionManagement.pendingVersionCreation = [];
+    },
+    
+    setLastGeneratedImageId: (state, action: PayloadAction<string | null>) => {
+      state.versionManagement.lastGeneratedImageId = action.payload;
+    },
+    
+    openVersionPanel: (state, action: PayloadAction<TempImageData>) => {
+      state.versionManagement.selectedImageForVersioning = action.payload;
+      state.versionManagement.currentImageId = action.payload.id;
+      state.versionManagement.showVersionPanel = true;
+      state.activeTab = 'versions';
+    },
+    
+    closeVersionPanel: (state) => {
+      state.versionManagement.showVersionPanel = false;
+      state.versionManagement.selectedImageForVersioning = null;
+      state.versionManagement.currentImageId = null;
+    },
+    
     // 錯誤處理
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
@@ -380,6 +629,12 @@ export const visualCreationSlice = createSlice({
           // 自動選中新生成的圖像
           state.selectedImageIds.push(newImage.id);
           state.showImagePreview = true;
+          
+          // 版本管理整合：標記新圖像需要創建版本
+          if (state.versionManagement.autoCreateVersions) {
+            state.versionManagement.pendingVersionCreation.push(newImage.id);
+            state.versionManagement.lastGeneratedImageId = newImage.id;
+          }
         }
       })
       .addCase(generateIllustration.rejected, (state, action) => {
@@ -411,6 +666,29 @@ export const visualCreationSlice = createSlice({
         state.loading.savingImages = false;
         state.error = action.error.message || '保存圖像失敗';
       });
+    
+    // 導出圖像
+    builder
+      .addCase(exportSelectedImages.pending, (state) => {
+        state.loading.exporting = true;
+        state.isExporting = true;
+        state.error = null;
+        state.exportProgress = 0;
+      })
+      .addCase(exportSelectedImages.fulfilled, (state, action) => {
+        state.loading.exporting = false;
+        state.isExporting = false;
+        state.exportProgress = 100;
+        
+        // 顯示成功訊息
+        console.log(`成功導出 ${action.payload.exportedCount}/${action.payload.totalCount} 張圖像到 ${action.payload.exportPath}`);
+      })
+      .addCase(exportSelectedImages.rejected, (state, action) => {
+        state.loading.exporting = false;
+        state.isExporting = false;
+        state.exportProgress = 0;
+        state.error = action.error.message || '導出圖像失敗';
+      });
   },
 });
 
@@ -431,6 +709,21 @@ export const {
   setCurrentImageIndex,
   setShowImageDetails,
   closeImagePreview,
+  setExportSettings,
+  setShowExportPanel,
+  setExportProgress,
+  setExportTask,
+  clearExportTask,
+  setVersionCurrentImageId,
+  setShowVersionPanel,
+  setSelectedImageForVersioning,
+  setAutoCreateVersions,
+  addPendingVersionCreation,
+  removePendingVersionCreation,
+  clearPendingVersionCreation,
+  setLastGeneratedImageId,
+  openVersionPanel,
+  closeVersionPanel,
   setError,
   clearError,
   setLoading,

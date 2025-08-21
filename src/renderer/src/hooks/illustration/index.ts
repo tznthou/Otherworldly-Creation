@@ -29,6 +29,46 @@ export {
   type ValidationRule,
 } from './useBatchConfiguration';
 
+export {
+  useStyleTemplates,
+  type UseStyleTemplatesOptions,
+  type UseStyleTemplatesReturn,
+} from './useStyleTemplates';
+
+export {
+  useSmartPrompts,
+  type UseSmartPromptsOptions,
+  type UseSmartPromptsReturn,
+  type PromptSuggestion,
+  type PromptCategory,
+  type SmartPromptAnalysis,
+} from './useSmartPrompts';
+
+// 版本管理系統 Hooks
+export {
+  useVersionManager,
+  type UseVersionManagerReturn,
+} from './useVersionManager';
+
+export {
+  useVersionComparison,
+  type UseVersionComparisonReturn,
+} from './useVersionComparison';
+
+export {
+  useVersionHistory,
+  type UseVersionHistoryReturn,
+} from './useVersionHistory';
+
+export {
+  useVersionBranching,
+  type UseVersionBranchingReturn,
+} from './useVersionBranching';
+
+export {
+  useAutoVersionCreation,
+} from './useAutoVersionCreation';
+
 // TODO: 待實作的其他 hooks
 // export { useBatchRequests } from './useBatchRequests';
 // export { useBatchProgress } from './useBatchProgress';

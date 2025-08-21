@@ -355,6 +355,18 @@ export interface IllustrationHistoryItem {
   provider: string;
   is_free: boolean;
   
+  // Version Management Integration (Phase 4.3)
+  versionId?: string; // 對應的版本管理 ID
+  versionNumber?: number; // 版本號 (1.0, 2.1 等)
+  parentVersionId?: string; // 父版本 ID
+  rootVersionId?: string; // 根版本 ID  
+  versionType?: 'original' | 'revision' | 'branch' | 'merge'; // 版本類型
+  versionStatus?: 'active' | 'archived' | 'deleted' | 'draft'; // 版本狀態
+  isLatestVersion?: boolean; // 是否為最新版本
+  totalVersions?: number; // 該圖片的總版本數
+  branchName?: string; // 分支名稱
+  versionTags?: string[]; // 版本標籤
+  
   // Legacy fields for backward compatibility
   scene_description?: string;
   generated_image_url?: string;

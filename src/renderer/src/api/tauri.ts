@@ -779,6 +779,10 @@ export const tauriAPI: API = {
       // 在 Tauri v2 中，對話框功能需要通過 invoke 調用後端
       return await safeInvoke('show_open_dialog', { options });
     },
+    selectDirectory: async (title?: string) => {
+      // 選擇目錄對話框
+      return await safeInvoke('select_directory', { title: title || '選擇導出目錄' });
+    },
     quitApp: () => safeInvoke('quit_app'),
     reloadApp: () => safeInvoke('reload_app'),
   },
@@ -1259,6 +1263,41 @@ export const tauriAPI: API = {
 
     cleanupExpiredTempImages: async () => {
       return safeInvoke('cleanup_expired_temp_images', {});
+    },
+
+    // === 批次導出功能 ===
+    exportImage: async (exportParams: {
+      imagePath: string;
+      outputPath: string;
+      format: 'png' | 'jpg' | 'webp';
+      quality: number;
+      includeMetadata: boolean;
+      metadata?: {
+        prompt: string;
+        parameters: any;
+        provider: string;
+        generationTime: number;
+      };
+    }) => {
+      return safeInvoke('export_image', {
+        image_path: exportParams.imagePath,
+        output_path: exportParams.outputPath,
+        format: exportParams.format,
+        quality: exportParams.quality,
+        include_metadata: exportParams.includeMetadata,
+        metadata: exportParams.metadata
+      });
+    },
+
+    exportMultipleImages: async (exports: Array<{
+      imagePath: string;
+      outputPath: string;
+      format: 'png' | 'jpg' | 'webp';
+      quality: number;
+      includeMetadata: boolean;
+      metadata?: any;
+    }>) => {
+      return safeInvoke('export_multiple_images', { exports });
     }
   },
 };

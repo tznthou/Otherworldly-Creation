@@ -1,5 +1,16 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { TaskPriority } from '../../types/illustration';
+import type { 
+  StyleTemplate, 
+  StyleCategory,
+  StyleTemplateFilter,
+  StyleTemplateSortBy,
+  CreateStyleTemplateRequest,
+  UpdateStyleTemplateRequest,
+  BUILT_IN_TEMPLATES,
+  STYLE_CATEGORIES
+} from '../../types/styleTemplate';
+import { useStyleTemplates } from './useStyleTemplates';
 
 // 批次配置選項介面
 export interface UseBatchConfigurationOptions {
@@ -43,6 +54,18 @@ export interface UseBatchConfigurationReturn {
   /** API 金鑰 */
   apiKey: string;
   
+  // === 風格模板系統 ===
+  /** 當前選中的風格模板 */
+  selectedStyleTemplate: StyleTemplate | null;
+  /** 所有可用的風格模板 */
+  availableTemplates: StyleTemplate[];
+  /** 已過濾的模板列表 */
+  filteredTemplates: StyleTemplate[];
+  /** 模板搜索過濾器 */
+  templateFilter: StyleTemplateFilter;
+  /** 模板排序方式 */
+  templateSortBy: StyleTemplateSortBy;
+  
   // === 配置函數 ===
   /** 設置批次名稱 */
   setBatchName: (name: string) => void;
@@ -64,6 +87,28 @@ export interface UseBatchConfigurationReturn {
   setPollinationsStyle: (style: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art') => void;
   /** 設置 API 金鑰 */
   setApiKey: (key: string) => void;
+  
+  // === 風格模板管理函數 ===
+  /** 選擇風格模板 */
+  selectStyleTemplate: (template: StyleTemplate | null) => void;
+  /** 應用模板到當前配置 */
+  applyTemplate: (template: StyleTemplate) => void;
+  /** 設置模板過濾器 */
+  setTemplateFilter: (filter: StyleTemplateFilter) => void;
+  /** 設置模板排序方式 */
+  setTemplateSortBy: (sortBy: StyleTemplateSortBy) => void;
+  /** 創建新的風格模板 */
+  createTemplate: (template: CreateStyleTemplateRequest) => Promise<StyleTemplate>;
+  /** 更新風格模板 */
+  updateTemplate: (template: UpdateStyleTemplateRequest) => Promise<StyleTemplate>;
+  /** 刪除風格模板 */
+  deleteTemplate: (templateId: string) => Promise<void>;
+  /** 複製風格模板 */
+  duplicateTemplate: (templateId: string, newName: string) => Promise<StyleTemplate>;
+  /** 從當前配置創建模板 */
+  createTemplateFromCurrentConfig: (name: string, description: string, category: StyleCategory) => Promise<StyleTemplate>;
+  /** 重置模板過濾器 */
+  resetTemplateFilter: () => void;
   
   // === 驗證和實用功能 ===
   /** 配置驗證結果 */
@@ -122,6 +167,12 @@ export interface BatchConfiguration {
   pollinationsModel: 'flux' | 'gptimage' | 'kontext' | 'sdxl';
   pollinationsStyle: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art';
   apiKey: string;
+  
+  // 風格模板相關
+  selectedStyleTemplateId?: string;
+  useStyleTemplate: boolean;
+  customPositivePrompts: string[];
+  customNegativePrompts: string[];
 }
 
 // 預設配置常數
@@ -136,6 +187,12 @@ const DEFAULT_CONFIGURATION: BatchConfiguration = {
   pollinationsModel: 'flux',
   pollinationsStyle: 'anime',
   apiKey: '',
+  
+  // 風格模板預設值
+  selectedStyleTemplateId: undefined,
+  useStyleTemplate: false,
+  customPositivePrompts: [],
+  customNegativePrompts: [],
 };
 
 // 預設驗證規則
@@ -240,6 +297,17 @@ export const useBatchConfiguration = (
   const [pollinationsStyle, setPollinationsStyle] = useState<'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art'>('anime');
   const [apiKey, setApiKey] = useState<string>('');
 
+  // === 風格模板狀態 ===
+  const [selectedStyleTemplateId, setSelectedStyleTemplateId] = useState<string | undefined>(undefined);
+  const [useStyleTemplate, setUseStyleTemplate] = useState<boolean>(false);
+  const [customPositivePrompts, setCustomPositivePrompts] = useState<string[]>([]);
+  const [customNegativePrompts, setCustomNegativePrompts] = useState<string[]>([]);
+
+  // === 風格模板系統整合 ===
+  const styleTemplatesHook = useStyleTemplates({
+    loadBuiltInTemplates: true
+  });
+
   // === 當前配置物件 ===
   const currentConfiguration: BatchConfiguration = useMemo(() => ({
     batchName,
@@ -252,10 +320,17 @@ export const useBatchConfiguration = (
     pollinationsModel,
     pollinationsStyle,
     apiKey,
+    
+    // 風格模板相關
+    selectedStyleTemplateId,
+    useStyleTemplate,
+    customPositivePrompts,
+    customNegativePrompts,
   }), [
     batchName, batchDescription, batchPriority, maxParallel,
     globalColorMode, apiKeySource, illustrationProvider,
-    pollinationsModel, pollinationsStyle, apiKey
+    pollinationsModel, pollinationsStyle, apiKey,
+    selectedStyleTemplateId, useStyleTemplate, customPositivePrompts, customNegativePrompts
   ]);
 
   // === 驗證邏輯 ===
@@ -351,6 +426,67 @@ export const useBatchConfiguration = (
     return RECOMMENDED_MAX_PARALLEL[illustrationProvider] || DEFAULT_CONFIGURATION.maxParallel;
   }, [illustrationProvider]);
 
+  // === 風格模板相關方法 ===
+  
+  // 獲取當前選中的風格模板
+  const selectedStyleTemplate = useMemo(() => {
+    if (!selectedStyleTemplateId) return null;
+    return styleTemplatesHook.templates.find(t => t.id === selectedStyleTemplateId) || null;
+  }, [selectedStyleTemplateId, styleTemplatesHook.templates]);
+
+  // 選擇風格模板
+  const selectStyleTemplate = useCallback((template: StyleTemplate | null) => {
+    setSelectedStyleTemplateId(template?.id);
+    styleTemplatesHook.selectTemplate(template);
+  }, [styleTemplatesHook]);
+
+  // 應用模板到當前配置
+  const applyTemplate = useCallback((template: StyleTemplate) => {
+    setSelectedStyleTemplateId(template.id);
+    setUseStyleTemplate(true);
+    
+    // 應用模板的正面和負面提示詞
+    if (template.parameters.positivePrompts) {
+      setCustomPositivePrompts(template.parameters.positivePrompts);
+    }
+    if (template.parameters.negativePrompts) {
+      setCustomNegativePrompts(template.parameters.negativePrompts);
+    }
+    
+    // 如果模板有支援的提供商設定，應用第一個
+    if (template.supportedProviders && template.supportedProviders.length > 0) {
+      const recommendedProvider = template.supportedProviders[0];
+      if (recommendedProvider === 'pollinations' || recommendedProvider === 'imagen') {
+        setIllustrationProvider(recommendedProvider);
+      }
+    }
+    
+    console.log('🎨 [useBatchConfiguration] 已應用風格模板:', template.name);
+  }, []);
+
+  // 從當前配置創建模板
+  const createTemplateFromCurrentConfig = useCallback(async (
+    name: string, 
+    description: string, 
+    category: StyleCategory
+  ): Promise<StyleTemplate> => {
+    const templateRequest: CreateStyleTemplateRequest = {
+      name,
+      description,
+      category,
+      parameters: {
+        positivePrompts: customPositivePrompts,
+        negativePrompts: customNegativePrompts,
+        pollinationsModel: illustrationProvider === 'pollinations' ? pollinationsModel : undefined,
+        pollinationsStyle: illustrationProvider === 'pollinations' ? pollinationsStyle : undefined,
+      },
+      tags: [category, illustrationProvider, globalColorMode],
+      supportedProviders: [illustrationProvider]
+    };
+    
+    return await styleTemplatesHook.createTemplate(templateRequest);
+  }, [customPositivePrompts, customNegativePrompts, illustrationProvider, pollinationsModel, pollinationsStyle, globalColorMode, styleTemplatesHook]);
+
   // === 自動調整邏輯 ===
   // 當 provider 變更時自動調整建議的最大並行數
   useEffect(() => {
@@ -399,6 +535,13 @@ export const useBatchConfiguration = (
     pollinationsStyle,
     apiKey,
     
+    // === 風格模板系統 ===
+    selectedStyleTemplate,
+    availableTemplates: styleTemplatesHook.templates,
+    filteredTemplates: styleTemplatesHook.filteredTemplates,
+    templateFilter: styleTemplatesHook.filter,
+    templateSortBy: styleTemplatesHook.sortBy,
+    
     // === 配置函數 ===
     setBatchName,
     setBatchDescription,
@@ -410,6 +553,18 @@ export const useBatchConfiguration = (
     setPollinationsModel,
     setPollinationsStyle,
     setApiKey,
+    
+    // === 風格模板管理函數 ===
+    selectStyleTemplate,
+    applyTemplate,
+    setTemplateFilter: styleTemplatesHook.setFilter,
+    setTemplateSortBy: styleTemplatesHook.setSortBy,
+    createTemplate: styleTemplatesHook.createTemplate,
+    updateTemplate: styleTemplatesHook.updateTemplate,
+    deleteTemplate: styleTemplatesHook.deleteTemplate,
+    duplicateTemplate: styleTemplatesHook.duplicateTemplate,
+    createTemplateFromCurrentConfig,
+    resetTemplateFilter: styleTemplatesHook.resetFilter,
     
     // === 驗證和實用功能 ===
     validation,
