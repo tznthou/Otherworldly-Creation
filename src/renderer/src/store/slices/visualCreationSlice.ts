@@ -1,8 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../../api';
-import { createVersion } from './versionManagementSlice';
-import { tempImageToVersion, generateNextVersionNumber } from '../../utils/versionUtils';
-import type { AppDispatch, RootState } from '../store';
 
 // 類型定義
 export interface TempImageData {

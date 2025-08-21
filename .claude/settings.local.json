@@ -44,7 +44,8 @@
       "Bash(npm install:*)",
       "mcp__serena__think_about_task_adherence",
       "Bash(timeout 30s npm run dev:renderer)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": [],
