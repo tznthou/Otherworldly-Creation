@@ -47,7 +47,7 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
   showDifferences = true,
   showSimilarity = true,
   showReport = true,
-  _minPanelWidth = VERSION_MANAGEMENT_CONSTANTS.COMPARISON_CONFIG.minPanelWidth,
+  minPanelWidth: _minPanelWidth = VERSION_MANAGEMENT_CONSTANTS.COMPARISON_CONFIG.minPanelWidth,
   splitRatio = VERSION_MANAGEMENT_CONSTANTS.COMPARISON_CONFIG.splitRatio,
   onVersionChange,
   onComparisonSave,

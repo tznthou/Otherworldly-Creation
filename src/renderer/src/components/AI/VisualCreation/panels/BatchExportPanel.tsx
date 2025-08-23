@@ -22,7 +22,6 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
 
   const {
     state,
-    _addImageToExport,
     addMultipleImages,
     removeTask,
     processCurrentQueue,

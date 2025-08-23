@@ -72,7 +72,7 @@ const VersionTimeline: React.FC<VersionTimelineProps> = ({
   onVersionSelect,
   onVersionCompare,
   onNodeExpand,
-  _onBranchCreate,
+  onBranchCreate: _onBranchCreate,
   className = '',
   style,
 }) => {

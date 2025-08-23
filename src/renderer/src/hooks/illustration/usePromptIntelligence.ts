@@ -284,11 +284,11 @@ export function usePromptIntelligence(
   options: UsePromptIntelligenceOptions = {}
 ): UsePromptIntelligenceReturn {
   const {
-    _enableAutoSuggestions = true,
+    enableAutoSuggestions: _enableAutoSuggestions = true,
     enablePromptHistory = true,
     maxHistorySize = 100,
-    _debounceDelay = 500,
-    _apiEndpoint = '/api/prompt-intelligence'
+    debounceDelay: _debounceDelay = 500,
+    apiEndpoint: _apiEndpoint = '/api/prompt-intelligence'
   } = options;
 
   const [state, setState] = useState<PromptIntelligenceState>(initialState);

@@ -45,7 +45,7 @@ const VersionDetailsPanel: React.FC<VersionDetailsPanelProps> = ({
   activeTab = 'overview',
   showFullImage = true,
   showStatistics = true,
-  _showActions = true,
+  showActions: _showActions = true,
   allowEdit = true,
   onVersionUpdate,
   onVersionDelete,

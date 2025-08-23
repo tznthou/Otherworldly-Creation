@@ -206,8 +206,9 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
 
   // 應用篩選
   const applyFilter = useCallback((filterOptions: VersionFilter) => {
-    dispatch(setFilter(filterOptions));
-  }, [dispatch]);
+    // TODO: 實現篩選功能
+    console.log('Apply filter:', filterOptions);
+  }, []);
 
   // 清除篩選
   const clearFilterAction = useCallback(() => {

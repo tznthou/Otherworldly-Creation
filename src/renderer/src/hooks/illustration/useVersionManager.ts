@@ -246,7 +246,7 @@ export const useVersionManager = (): UseVersionManagerReturn => {
         id: undefined, // 讓後端生成新ID
         parentVersionId: sourceVersion.parentVersionId, // 保持相同的父版本
         childVersionIds: [], // 新版本沒有子版本
-        type: 'branch' as VersionType,
+        type: 'branch' as const,
         metadata: {
           ...sourceVersion.metadata,
           title: `${sourceVersion.metadata.title} (副本)`,
