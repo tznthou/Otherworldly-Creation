@@ -15,6 +15,7 @@ import { errorReducer, progressReducer } from '../../../renderer/src/store/slice
 import notificationReducer from '../../../renderer/src/store/slices/notificationSlice';
 import settingsReducer from '../../../renderer/src/store/slices/settingsSlice';
 import { mockElectronAPI } from '../setup';
+import ModalContainer from '../../../renderer/src/components/UI/ModalContainer';
 
 // 創建測試用的 Redux store
 export function createTestStore(preloadedState?: any) {
@@ -63,10 +64,8 @@ export function renderWithProviders(
     return (
       <Provider store={store}>
         <MemoryRouter initialEntries={initialEntries}>
-          <Routes>
-            <Route path="/characters/:projectId" element={children} />
-            <Route path="*" element={children} />
-          </Routes>
+          {children}
+          <ModalContainer />
         </MemoryRouter>
       </Provider>
     );

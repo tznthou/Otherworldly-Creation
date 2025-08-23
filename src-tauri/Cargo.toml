@@ -1,6 +1,6 @@
 [package]
 name = "genesis-chronicle"
-version = "1.0.9"
+version = "1.0.10"
 description = "創世紀元：異世界創作神器 - Tauri 版本"
 authors = ["Genesis Chronicle Team"]
 license = "MIT"

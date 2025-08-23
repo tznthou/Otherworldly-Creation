@@ -1,0 +1,27 @@
+{
+  "version": "1.0.10",
+  "timestamp": "2025-08-23T16:27:21.432Z",
+  "results": {
+    "passed": [
+      "版本號一致性檢查",
+      "分支檢查",
+      "TypeScript 類型檢查",
+      "Rust 編譯檢查",
+      "npm 安全審計",
+      "前端構建檢查",
+      "Rust 構建檢查",
+      "關鍵文件檢查"
+    ],
+    "failed": [
+      "測試失敗"
+    ],
+    "warnings": [
+      "存在未提交的變更",
+      "ESLint 警告"
+    ]
+  },
+  "criticalErrors": [
+    "測試失敗"
+  ],
+  "readyForRelease": false
+}

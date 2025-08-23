@@ -25,7 +25,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
   isOpen, 
   onClose, 
   onStartTutorial,
-  onCreateProject
+  _onCreateProject
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);

@@ -156,7 +156,7 @@ export function batchTempImagesToVersions(
 ): Partial<ImageVersion>[] {
   const {
     batchName = 'Batch Generation',
-    batchDescription = '批量生成的插畫',
+    _batchDescription = '批量生成的插畫',
     parentVersionId,
     startVersionNumber = 1
   } = options;

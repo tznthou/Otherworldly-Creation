@@ -31,8 +31,9 @@ const VirtualizedContainer: React.FC<VirtualizedContainerProps> = ({
 
     // 清理
     return () => {
-      if (containerRef.current) {
-        resizeObserver.unobserve(containerRef.current);
+      const container = containerRef.current;
+      if (container) {
+        resizeObserver.unobserve(container);
       }
       resizeObserver.disconnect();
     };

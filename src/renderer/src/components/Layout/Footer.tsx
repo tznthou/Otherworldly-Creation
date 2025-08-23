@@ -10,12 +10,18 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ editorStats, currentChapterTitle }) => {
   const { currentProject } = useAppSelector(state => state.projects);
-  const { isOllamaConnected } = useAppSelector(state => state.ai);
+  const { isOllamaConnected, availableModels, currentProviderId, providers } = useAppSelector(state => state.ai);
   const { showStatusBar } = useAppSelector(state => state.settings.settings.ui);
   const location = useLocation();
   
   // 檢查是否在編輯器頁面
   const isEditorPage = location.pathname.includes('/project/');
+
+  // 🔧 修復：使用統一的當前提供者狀態邏輯（與Dashboard和Sidebar一致）
+  const _currentProvider = providers.find(p => p.id === currentProviderId);
+  const isCurrentProviderConnected = currentProviderId 
+    ? (currentProviderId === 'ollama' ? isOllamaConnected : availableModels.length > 0)
+    : false;
   
   return (
     <footer className="h-8 bg-cosmic-900/30 backdrop-blur-sm border-t border-cosmic-700 flex items-center justify-between px-6 text-xs text-gray-400">
@@ -35,9 +41,9 @@ const Footer: React.FC<FooterProps> = ({ editorStats, currentChapterTitle }) => 
         {/* AI 服務狀態 */}
         <div className="flex items-center space-x-1">
           <div className={`w-2 h-2 rounded-full ${
-            isOllamaConnected ? 'bg-green-400' : 'bg-red-400'
+            isCurrentProviderConnected ? 'bg-green-400' : 'bg-red-400'
           }`} />
-          <span>AI: {isOllamaConnected ? '已連接' : '未連接'}</span>
+          <span>AI: {isCurrentProviderConnected ? '已連接' : '未連接'}</span>
         </div>
       </div>
 
@@ -45,6 +51,8 @@ const Footer: React.FC<FooterProps> = ({ editorStats, currentChapterTitle }) => 
       <div className="flex items-center space-x-4">
         <span>v{__APP_VERSION__}</span>
         <span>© 2025 創世紀元</span>
+        <span>•</span>
+        <span>Made by <a href="mailto:tznthou@gmail.com" className="text-gold-400 hover:text-gold-300 transition-colors underline">tznthou</a></span>
       </div>
     </footer>
   );

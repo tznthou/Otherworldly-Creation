@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 15;
+const DB_VERSION: i32 = 16;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -110,6 +110,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v15(conn)?;
             update_version(conn, 15)?;
             log::info!("遷移到版本 15 完成");
+        }
+        
+        if current_version < 16 {
+            apply_migration_v16(conn)?;
+            update_version(conn, 16)?;
+            log::info!("遷移到版本 16 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -1735,6 +1741,90 @@ pub fn apply_migration_v15(conn: &Connection) -> Result<()> {
     
     log::info!("Pollinations 清理任務表創建完成");
     log::info!("版本 15 遷移完成：Pollinations.AI 免費插畫生成功能已準備就緒");
+    
+    Ok(())
+}
+
+/// 版本 16：添加章節狀態管理功能
+pub fn apply_migration_v16(conn: &Connection) -> Result<()> {
+    log::info!("執行版本 16 遷移：添加章節狀態管理功能");
+    
+    // 檢查 chapters 表是否已有 status 欄位
+    let has_status: bool = conn
+        .prepare("PRAGMA table_info(chapters)")?
+        .query_map([], |row| {
+            let column_name: String = row.get(1)?;
+            Ok(column_name)
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "status",
+            Err(_) => false,
+        });
+    
+    if !has_status {
+        log::info!("添加 status 欄位到 chapters 表");
+        
+        // 添加 status 欄位來支援章節狀態管理
+        // 可能的值：'draft', 'writing', 'reviewing', 'completed'
+        conn.execute(
+            "ALTER TABLE chapters ADD COLUMN status TEXT DEFAULT 'draft'",
+            [],
+        )?;
+        
+        log::info!("成功添加 status 欄位，預設值為 'draft'");
+        
+        // 根據現有章節內容智能設置初始狀態
+        // 如果章節有內容且字數 > 100，設為 'writing'
+        // 如果章節有內容且字數 > 1000，設為 'reviewing'
+        conn.execute(
+            "UPDATE chapters 
+             SET status = CASE 
+                 WHEN content IS NULL OR length(content) = 0 THEN 'draft'
+                 WHEN length(content) > 1000 THEN 'reviewing'
+                 WHEN length(content) > 100 THEN 'writing'
+                 ELSE 'draft'
+             END
+             WHERE status = 'draft'",
+            [],
+        )?;
+        
+        log::info!("根據章節內容長度智能設置初始狀態");
+        
+    } else {
+        log::info!("chapters 表已有 status 欄位，跳過添加");
+    }
+    
+    // 創建 status 查詢索引（用於快速篩選特定狀態的章節）
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_chapters_status ON chapters (status)",
+        [],
+    )?;
+    
+    // 創建複合索引用於專案內的狀態篩選
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_chapters_project_status ON chapters (project_id, status)",
+        [],
+    )?;
+    
+    // 創建狀態統計視圖（可選，用於快速查詢統計）
+    conn.execute(
+        "CREATE VIEW IF NOT EXISTS chapter_status_stats AS
+         SELECT 
+             project_id,
+             status,
+             COUNT(*) as count,
+             COUNT(*) * 100.0 / (
+                 SELECT COUNT(*) 
+                 FROM chapters c2 
+                 WHERE c2.project_id = chapters.project_id
+             ) as percentage
+         FROM chapters 
+         GROUP BY project_id, status",
+        [],
+    )?;
+    
+    log::info!("章節狀態索引和統計視圖創建完成");
+    log::info!("版本 16 遷移完成：章節狀態管理功能已準備就緒");
     
     Ok(())
 }

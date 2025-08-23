@@ -60,13 +60,20 @@
       "Bash(python3:*)",
       "Bash(cargo doc:*)",
       "Bash(rustc:*)",
-      "Bash(cargo test:*)"
+      "Bash(cargo test:*)",
+      "mcp__serena__think_about_whether_you_are_done",
+      "Bash(timeout 10s npx tsc --noEmit)",
+      "Bash(chmod:*)",
+      "Bash(npm test)",
+      "Bash(npm test:*)",
+      "Bash(timeout 30s npm test:*)"
     ],
     "deny": [],
     "ask": [],
     "additionalDirectories": [
       "/Users/tznthou/Library/Application Support/genesis-chronicle/generated-images",
-      "/Users/tznthou/Library"
+      "/Users/tznthou/Library",
+      "/tmp"
     ]
   }
 }

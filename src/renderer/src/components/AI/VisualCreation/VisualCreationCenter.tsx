@@ -56,8 +56,8 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
     currentVersionId,
     selectedVersionIds,
     versionTrees,
-    loading: versionLoading,
-    error: versionError,
+    loading: _versionLoading,
+    error: _versionError,
   } = useSelector((state: RootState) => state.versionManagement);
 
   // 穩定化版本樹引用，避免無限循環

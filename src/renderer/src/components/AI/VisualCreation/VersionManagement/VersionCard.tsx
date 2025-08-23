@@ -51,16 +51,16 @@ const VersionCard: React.FC<VersionCardProps> = ({
   isLoading = false,
   onSelect,
   onEdit,
-  onDelete,
-  onDuplicate,
+  _onDelete,
+  _onDuplicate,
   onCompare,
   onPreview,
-  onExport,
+  _onExport,
   className = '',
   style,
 }) => {
   // 本地狀態
-  const [isHovered, setIsHovered] = useState(false);
+  const [_isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { ImageVersion, VersionComparison, VersionDifference } from '../../../../types/versionManagement';
+import { ImageVersion, VersionComparison } from '../../../../types/versionManagement';
 import { useVersionComparison } from '../../../../hooks/illustration';
 import { VERSION_MANAGEMENT_CONSTANTS } from './index';
 
@@ -47,7 +47,7 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
   showDifferences = true,
   showSimilarity = true,
   showReport = true,
-  minPanelWidth = VERSION_MANAGEMENT_CONSTANTS.COMPARISON_CONFIG.minPanelWidth,
+  _minPanelWidth = VERSION_MANAGEMENT_CONSTANTS.COMPARISON_CONFIG.minPanelWidth,
   splitRatio = VERSION_MANAGEMENT_CONSTANTS.COMPARISON_CONFIG.splitRatio,
   onVersionChange,
   onComparisonSave,
@@ -71,10 +71,10 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
   const splitterRef = useRef<HTMLDivElement>(null);
 
   // 本地狀態
-  const [currentSplitRatio, setCurrentSplitRatio] = useState(splitRatio);
+  const [_currentSplitRatio, setCurrentSplitRatio] = useState(splitRatio);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedDiffType, setSelectedDiffType] = useState<string>('all');
-  const [showReportModal, setShowReportModal] = useState(false);
+  const [_showReportModal, setShowReportModal] = useState(false);
 
   // 計算當前比較
   const currentComparison = useMemo(() => {
@@ -158,7 +158,7 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
   const handleGenerateReport = useCallback(() => {
     if (!currentComparison) return;
     
-    const report = generateComparisonReport(currentComparison);
+    const _report = generateComparisonReport(currentComparison);
     setShowReportModal(true);
     onReportGenerate?.(currentComparison);
   }, [currentComparison, generateComparisonReport, onReportGenerate]);
@@ -449,7 +449,7 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
           
           <select
             value={mode}
-            onChange={(e) => {/* TODO: 處理模式切換 */}}
+            onChange={(_e) => {/* TODO: 處理模式切換 */}}
             className="px-3 py-1 border border-gray-300 rounded text-sm"
           >
             <option value="all">完整比較</option>
@@ -460,7 +460,7 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
           
           <select
             value={layout}
-            onChange={(e) => {/* TODO: 處理布局切換 */}}
+            onChange={(_e) => {/* TODO: 處理布局切換 */}}
             className="px-3 py-1 border border-gray-300 rounded text-sm"
           >
             <option value="side-by-side">並排顯示</option>

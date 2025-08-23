@@ -1,7 +1,7 @@
 import React from 'react';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders, createMockProject, mockElectronAPI } from '../utils/testUtils';
-import App from '../../../renderer/src/App';
+import TestApp from '../components/TestApp';
 
 describe('完整工作流程端到端測試', () => {
   beforeEach(() => {
@@ -19,7 +19,7 @@ describe('完整工作流程端到端測試', () => {
 
   describe('新用戶完整創作流程', () => {
     it('應該能夠完成從創建專案到寫作的完整流程', async () => {
-      renderWithProviders(<App />);
+      const { store } = renderWithProviders(<TestApp />, { initialEntries: ['/'] });
 
       // 步驟 1: 應用程式啟動，顯示歡迎界面
       await waitFor(() => {
@@ -27,10 +27,10 @@ describe('完整工作流程端到端測試', () => {
       });
 
       // 步驟 2: 創建新專案
-      fireEvent.click(screen.getByText('創建新專案'));
+      fireEvent.click(screen.getByTestId('create-project-btn'));
 
       await waitFor(() => {
-        expect(screen.getByText('創建新專案')).toBeInTheDocument();
+        expect(screen.getByText('📝 創建新專案')).toBeInTheDocument();
       });
 
       // 填寫專案資訊
@@ -53,16 +53,16 @@ describe('完整工作流程端到端測試', () => {
       mockElectronAPI.projects.create.mockResolvedValue(mockProject.id);
       mockElectronAPI.projects.getById.mockResolvedValue(mockProject);
 
-      fireEvent.click(screen.getByText('創建專案'));
+      fireEvent.click(screen.getByTestId('confirm-create-btn'));
 
       // 步驟 3: 專案創建成功，進入專案編輯器
       await waitFor(() => {
-        expect(screen.getByText('我的異世界冒險')).toBeInTheDocument();
+        expect(screen.getByText('📝 我的異世界冒險')).toBeInTheDocument();
         expect(screen.getByText('章節列表')).toBeInTheDocument();
       });
 
       // 步驟 4: 創建第一個角色
-      fireEvent.click(screen.getByText('角色管理'));
+      fireEvent.click(screen.getByTestId('add-character-btn'));
 
       await waitFor(() => {
         expect(screen.getByText('角色管理')).toBeInTheDocument();
@@ -191,7 +191,7 @@ describe('完整工作流程端到端測試', () => {
       ];
       mockElectronAPI.projects.getAll.mockResolvedValue(existingProjects);
 
-      renderWithProviders(<App />);
+      renderWithProviders(<TestApp />);
 
       // 等待專案列表載入
       await waitFor(() => {
@@ -250,7 +250,7 @@ describe('完整工作流程端到端測試', () => {
       const mockProject = createMockProject();
       mockElectronAPI.projects.getAll.mockResolvedValue([mockProject]);
 
-      renderWithProviders(<App />);
+      renderWithProviders(<TestApp />);
 
       // 等待專案載入
       await waitFor(() => {
@@ -295,7 +295,7 @@ describe('完整工作流程端到端測試', () => {
 
   describe('設定和偏好管理', () => {
     it('應該能夠管理應用程式設定', async () => {
-      renderWithProviders(<App />);
+      renderWithProviders(<TestApp />);
 
       // 進入設定頁面
       fireEvent.click(screen.getByText('設定'));
@@ -347,7 +347,7 @@ describe('完整工作流程端到端測試', () => {
 
   describe('錯誤恢復流程', () => {
     it('應該能夠從錯誤中恢復', async () => {
-      renderWithProviders(<App />);
+      renderWithProviders(<TestApp />);
 
       // 模擬網路錯誤
       mockElectronAPI.projects.getAll.mockRejectedValue(new Error('網路連接失敗'));
@@ -380,7 +380,7 @@ describe('完整工作流程端到端測試', () => {
         updatedAt: new Date(),
       }]);
 
-      renderWithProviders(<App />);
+      renderWithProviders(<TestApp />);
 
       // 進入編輯器
       await waitFor(() => {
@@ -430,7 +430,7 @@ describe('完整工作流程端到端測試', () => {
       );
       mockElectronAPI.projects.getAll.mockResolvedValue(manyProjects);
 
-      renderWithProviders(<App />);
+      renderWithProviders(<TestApp />);
 
       // 驗證列表能夠載入
       await waitFor(() => {

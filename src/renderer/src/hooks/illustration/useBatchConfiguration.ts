@@ -7,8 +7,6 @@ import type {
   StyleTemplateSortBy,
   CreateStyleTemplateRequest,
   UpdateStyleTemplateRequest,
-  BUILT_IN_TEMPLATES,
-  STYLE_CATEGORIES
 } from '../../types/styleTemplate';
 import { useStyleTemplates } from './useStyleTemplates';
 

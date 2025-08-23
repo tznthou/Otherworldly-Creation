@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 // 提示詞類型
 export type PromptCategory = 'character' | 'scene' | 'style' | 'mood' | 'lighting' | 'composition' | 'quality';
@@ -284,16 +284,16 @@ export function usePromptIntelligence(
   options: UsePromptIntelligenceOptions = {}
 ): UsePromptIntelligenceReturn {
   const {
-    enableAutoSuggestions = true,
+    _enableAutoSuggestions = true,
     enablePromptHistory = true,
     maxHistorySize = 100,
-    debounceDelay = 500,
-    apiEndpoint = '/api/prompt-intelligence'
+    _debounceDelay = 500,
+    _apiEndpoint = '/api/prompt-intelligence'
   } = options;
 
   const [state, setState] = useState<PromptIntelligenceState>(initialState);
-  const debounceRef = useRef<NodeJS.Timeout>();
-  const requestCounterRef = useRef<number>(0);
+  const _debounceRef = useRef<NodeJS.Timeout>();
+  const _requestCounterRef = useRef<number>(0);
 
   // 生成建議
   const generateSuggestions = useCallback(async (

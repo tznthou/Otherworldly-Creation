@@ -88,8 +88,8 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
     }
 
     // 年齡驗證
-    if (formData.age !== undefined) {
-      if (formData.age < 0 || formData.age > 1000) {
+    if (formData.age !== undefined && formData.age !== null) {
+      if (typeof formData.age === 'number' && (formData.age < 0 || formData.age > 1000)) {
         newErrors.age = '年齡必須在 0-1000 之間';
       }
     }

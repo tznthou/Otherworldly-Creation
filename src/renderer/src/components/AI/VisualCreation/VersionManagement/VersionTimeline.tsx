@@ -72,7 +72,7 @@ const VersionTimeline: React.FC<VersionTimelineProps> = ({
   onVersionSelect,
   onVersionCompare,
   onNodeExpand,
-  onBranchCreate,
+  _onBranchCreate,
   className = '',
   style,
 }) => {
@@ -141,7 +141,7 @@ const VersionTimeline: React.FC<VersionTimelineProps> = ({
       versions: ImageVersion[],
       layout: TimelineLayout,
       levelSpacing: number,
-      nodeSpacing: number
+      _nodeSpacing: number
     ): TimelineNode[] => {
       // 按創建時間排序
       const sortedVersions = [...versions].sort((a, b) => {

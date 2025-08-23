@@ -1,0 +1,20 @@
+{
+  "totalCode": 92835,
+  "breakdown": {
+    "TypeScript": {
+      "lines": 67703,
+      "files": 297,
+      "percentage": 72.9
+    },
+    "Rust": {
+      "lines": 19399,
+      "files": 58,
+      "percentage": 20.9
+    },
+    "JavaScript": {
+      "lines": 5733,
+      "files": 45,
+      "percentage": 6.2
+    }
+  }
+}

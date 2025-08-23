@@ -1,6 +1,6 @@
 {
   "name": "genesis-chronicle",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "創世紀元：異世界創作神器 - 基於 AI 的輕小說創作工具 (Tauri 版本)",
   "private": true,
   "scripts": {
@@ -20,7 +20,14 @@
     "optimize": "node scripts/optimize-resources.js",
     "release": "node scripts/release.js",
     "setup": "node scripts/quick-install.js",
-    "diagnostic": "node scripts/diagnostic.js"
+    "diagnostic": "node scripts/diagnostic.js",
+    "version:check": "node scripts/version-sync.js",
+    "version:sync": "node scripts/version-sync.js",
+    "stats": "node scripts/code-stats.js",
+    "stats:verbose": "node scripts/code-stats.js --verbose",
+    "readme:update": "node scripts/readme-updater.js",
+    "pre-release": "node scripts/pre-release-check.js",
+    "release-ready": "npm run stats && npm run readme:update && npm run pre-release"
   },
   "keywords": [
     "tauri",

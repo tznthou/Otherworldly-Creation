@@ -38,7 +38,6 @@ export interface UseVersionBranchingReturn {
 import {
   createBranch as createBranchAsync,
   setCurrentBranch,
-  setError,
   clearError,
 } from '../../store/slices/versionManagementSlice';
 
@@ -397,12 +396,12 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
   }, [allBranches]);
 
   // 獲取活躍分支
-  const getActiveBranches = useCallback((): VersionBranch[] => {
+  const _getActiveBranches = useCallback((): VersionBranch[] => {
     return allBranches.filter(b => b.isActive);
   }, [allBranches]);
 
   // 獲取分支歷史
-  const getBranchHistory = useCallback((branchId: string): ImageVersion[] => {
+  const _getBranchHistory = useCallback((branchId: string): ImageVersion[] => {
     const branch = allBranches.find(b => b.id === branchId);
     if (!branch) return [];
 
@@ -456,7 +455,7 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
     resolveConflict: () => {}, // TODO: 實現衝突解決
     
     // 分支管理
-    setBranchColor: (branchId: string, color: string) => {
+    setBranchColor: (_branchId: string, _color: string) => {
       // TODO: 實現分支顏色設置
     },
     
@@ -465,7 +464,7 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
     getBranchByName: (name: string) => {
       return allBranches.find(b => b.name === name);
     },
-    getVersionsInBranch: (branchId: string) => {
+    getVersionsInBranch: (_branchId: string) => {
       // TODO: 實現獲取分支中的版本
       return [];
     },

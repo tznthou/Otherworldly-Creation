@@ -226,7 +226,38 @@ global.window = Object.assign(global.window || {}, {
 
 // 模擬 @tauri-apps/api/core
 jest.mock('@tauri-apps/api/core', () => ({
-  invoke: jest.fn().mockResolvedValue({}),
+  invoke: jest.fn().mockImplementation((command: string, args?: any) => {
+    console.log('Mock Tauri invoke called:', command, args);
+    
+    switch (command) {
+      case 'get_all_projects':
+        return Promise.resolve([]);
+      case 'get_chapters_by_project_id':
+        return Promise.resolve([]);
+      case 'get_characters_by_project_id':
+        return Promise.resolve([]);
+      case 'create_project':
+        return Promise.resolve('test-project-id');
+      case 'health_check':
+        return Promise.resolve({
+          isHealthy: true,
+          issues: [],
+          statistics: {
+            totalProjects: 0,
+            totalChapters: 0,
+            totalCharacters: 0,
+            totalTemplates: 4,
+            databaseSize: 1024,
+            lastVacuum: null,
+            fragmentationLevel: 0,
+          },
+          timestamp: new Date().toISOString(),
+        });
+      default:
+        console.warn('Unhandled Tauri command in mock:', command);
+        return Promise.resolve(null);
+    }
+  }),
 }));
 
 // 導出 mock 以供測試使用

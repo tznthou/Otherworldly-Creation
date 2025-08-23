@@ -32,6 +32,7 @@ export interface Chapter {
   updatedAt: string;
   wordCount?: number;
   metadata?: string; // JSON 字符串格式的元數據
+  status?: 'draft' | 'writing' | 'reviewing' | 'completed'; // 章節狀態
 }
 
 // 角色相關

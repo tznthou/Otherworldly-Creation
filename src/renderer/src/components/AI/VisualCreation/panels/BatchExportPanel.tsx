@@ -1,6 +1,6 @@
-import React, { memo, useCallback, useState, useMemo } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { useBatchExportProcessor } from '../../../../hooks/illustration/useBatchExportProcessor';
-import type { ExportFormat, ExportTask, ExportTaskStatus } from '../../../../hooks/illustration/useExportManager';
+import type { ExportFormat, ExportTaskStatus } from '../../../../hooks/illustration/useExportManager';
 
 interface BatchExportPanelProps {
   className?: string;
@@ -18,11 +18,11 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
   availableImages = []
 }) => {
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('png');
+  const [_selectedFormat, _setSelectedFormat] = useState<ExportFormat>('png');
 
   const {
     state,
-    addImageToExport,
+    _addImageToExport,
     addMultipleImages,
     removeTask,
     processCurrentQueue,

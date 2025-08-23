@@ -17,7 +17,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="h-16 bg-cosmic-900/50 backdrop-blur-sm border-b border-cosmic-700 flex items-center justify-between px-6">
+    <header className="h-16 bg-cosmic-900/90 backdrop-blur-sm border-b border-cosmic-700 flex items-center justify-between px-6 relative z-10">
       {/* 左側：頁面標題 */}
       <div className="flex items-center space-x-4">
         <h2 className="text-xl font-cosmic text-gold-500">{getPageTitle()}</h2>

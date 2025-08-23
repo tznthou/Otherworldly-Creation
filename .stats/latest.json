@@ -1,0 +1,78 @@
+{
+  "stats": {
+    "languages": {
+      "TypeScript": {
+        "files": 297,
+        "blank": 8496,
+        "comment": 4966,
+        "code": 67703
+      },
+      "Rust": {
+        "files": 58,
+        "blank": 3216,
+        "comment": 2051,
+        "code": 19399
+      },
+      "JavaScript": {
+        "files": 45,
+        "blank": 1134,
+        "comment": 781,
+        "code": 5733
+      }
+    },
+    "totals": {
+      "files": 400,
+      "blank": 12846,
+      "comment": 7798,
+      "code": 92835
+    },
+    "raw": "github.com/AlDanial/cloc v 2.06  T=0.32 s (1244.0 files/s, 352912.3 lines/s)\n-------------------------------------------------------------------------------\nLanguage                     files          blank        comment           code\n-------------------------------------------------------------------------------\nTypeScript                     297           8496           4966          67703\nRust                            58           3216           2051          19399\nJavaScript                      45           1134            781           5733\n-------------------------------------------------------------------------------\nSUM:                           400          12846           7798          92835\n-------------------------------------------------------------------------------\n",
+    "timestamp": "2025-08-23T16:47:08.045Z"
+  },
+  "analysis": {
+    "summary": {
+      "totalLines": 92835,
+      "totalFiles": 400,
+      "languages": 3,
+      "commentRatio": "8.4%",
+      "avgLinesPerFile": 232
+    },
+    "breakdown": [
+      {
+        "language": "TypeScript",
+        "lines": 67703,
+        "files": 297,
+        "percentage": "72.9%",
+        "avgLinesPerFile": 228,
+        "commentRatio": "7.3%"
+      },
+      {
+        "language": "Rust",
+        "lines": 19399,
+        "files": 58,
+        "percentage": "20.9%",
+        "avgLinesPerFile": 334,
+        "commentRatio": "10.6%"
+      },
+      {
+        "language": "JavaScript",
+        "lines": 5733,
+        "files": 45,
+        "percentage": "6.2%",
+        "avgLinesPerFile": 127,
+        "commentRatio": "13.6%"
+      }
+    ],
+    "trends": {
+      "totalGrowth": 105,
+      "fileGrowth": 1,
+      "daysSince": 1,
+      "avgGrowthPerDay": 105,
+      "growthPercentage": "0.11%"
+    },
+    "recommendations": [
+      "✅ 注釋比例良好（5-20%）",
+      "✅ 平均文件行數適中（100-300行）"
+    ]
+  }
+}

@@ -9,10 +9,6 @@ import {
   VersionExportOptions,
   VersionImportOptions,
   VersionTreeNode,
-  VersionBranch,
-  VersionStatus,
-  VersionType,
-  VersionMetadata,
 } from '../../types/versionManagement';
 
 // 返回類型定義
@@ -60,9 +56,6 @@ import {
   importVersions as importVersionsAsync,
   createBranch,
   setCurrentVersion,
-  setSelectedVersionIds,
-  setFilter,
-  setError,
   clearError,
 } from '../../store/slices/versionManagementSlice';
 
@@ -79,8 +72,8 @@ export const useVersionManager = (): UseVersionManagerReturn => {
     currentVersionId,
     versionTrees,
     branches,
-    currentBranchId,
-    filter,
+    currentBranchId: _currentBranchId,
+    filter: _filter,
     loading,
     error,
   } = useSelector((state: RootState) => state.versionManagement);
@@ -94,7 +87,7 @@ export const useVersionManager = (): UseVersionManagerReturn => {
   }, [versions, currentVersionId]);
 
   // 計算當前版本樹
-  const versionTree = useMemo(() => {
+  const _versionTree = useMemo(() => {
     if (!currentVersion) return undefined;
     return versionTrees[currentVersion.rootVersionId];
   }, [versionTrees, currentVersion]);
@@ -354,7 +347,7 @@ export const useVersionManager = (): UseVersionManagerReturn => {
   }, [dispatch, branches]);
 
   // 合併分支（簡化版）
-  const mergeBranch = useCallback(async (sourceBranchId: string, targetBranchId: string): Promise<VersionOperationResult> => {
+  const mergeBranch = useCallback(async (_sourceBranchId: string, _targetBranchId: string): Promise<VersionOperationResult> => {
     try {
       setLocalError(null);
       

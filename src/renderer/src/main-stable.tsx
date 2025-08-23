@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { store } from './store/store';
 import { useAppDispatch } from './hooks/redux';
-import { checkOllamaService, fetchModelsInfo } from './store/slices/aiSlice';
+import { checkOllamaService, fetchModelsInfo, fetchAIProviders, setActiveProvider } from './store/slices/aiSlice';
 import { fetchProjects } from './store/slices/projectsSlice';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
@@ -13,6 +13,7 @@ import Settings from './pages/Settings/Settings';
 import DatabaseMaintenanceSimple from './pages/DatabaseMaintenance/DatabaseMaintenanceSimple';
 import ProjectEditor from './pages/ProjectEditor/ProjectEditor';
 import Statistics from './pages/Statistics/Statistics';
+import { ChapterStatusPage } from './pages/ChapterStatus';
 import ModalContainer from './components/UI/ModalContainer';
 import { NotificationContainer } from './components/UI/NotificationSystem';
 import SimpleErrorBoundary from './components/UI/SimpleErrorBoundary';
@@ -129,20 +130,55 @@ const SimpleApp: React.FC = () => {
           }
         }, 100);
         
-        // 背景初始化 AI 服務（不阻塞 UI）
+        // 背景初始化 AI 服務（多提供者支援）
         setTimeout(async () => {
           try {
-            console.log('🤖 檢查 AI 服務...');
-            const isConnected = await dispatch(checkOllamaService()).unwrap();
-            if (isConnected) {
-              console.log('✅ AI 服務可用，載入模型資訊...');
-              await dispatch(fetchModelsInfo()).unwrap();
-              console.log('✅ AI 模型資訊載入完成');
-            } else {
-              console.log('ℹ️  AI 服務暫不可用');
+            console.log('🤖 初始化 AI 提供者系統...');
+            
+            // 1. 載入 AI 提供者列表
+            const providers = await dispatch(fetchAIProviders()).unwrap();
+            console.log('✅ AI 提供者列表載入完成，數量:', providers.length);
+            
+            // 2. 從 localStorage 獲取當前選中的提供者
+            const savedProvider = localStorage.getItem('ai_default_provider');
+            const currentProvider = savedProvider || (providers.find(p => p.is_enabled)?.id);
+            
+            console.log('🎯 當前提供者:', currentProvider);
+            
+            if (currentProvider) {
+              // 3. 載入當前提供者的模型列表 - 關鍵修復！
+              console.log('📡 載入提供者模型:', currentProvider);
+              await dispatch(setActiveProvider(currentProvider)).unwrap();
+              console.log('✅ 提供者模型載入完成');
             }
+            
+            // 4. 向後兼容：也檢查 Ollama 服務（如果是 Ollama 提供者）
+            if (currentProvider === 'ollama') {
+              try {
+                const isOllamaConnected = await dispatch(checkOllamaService()).unwrap();
+                if (isOllamaConnected) {
+                  console.log('✅ Ollama 服務額外驗證通過');
+                  await dispatch(fetchModelsInfo()).unwrap();
+                  console.log('✅ Ollama 詳細模型資訊載入完成');
+                }
+              } catch (error) {
+                console.warn('⚠️  Ollama 服務額外檢查失敗:', error);
+              }
+            }
+            
           } catch (error) {
-            console.warn('⚠️  AI 服務初始化失敗:', error);
+            console.warn('⚠️  AI 系統初始化失敗:', error);
+            // 降級處理：如果多提供者初始化失敗，回退到 Ollama 單一檢查
+            try {
+              console.log('🔄 降級到 Ollama 單一檢查...');
+              const isConnected = await dispatch(checkOllamaService()).unwrap();
+              if (isConnected) {
+                await dispatch(fetchModelsInfo()).unwrap();
+                console.log('✅ Ollama 降級初始化完成');
+              }
+            } catch (fallbackError) {
+              console.warn('⚠️  Ollama 降級初始化也失敗:', fallbackError);
+            }
           }
         }, 1000);
         
@@ -243,6 +279,13 @@ const SimpleApp: React.FC = () => {
                   <SimpleErrorBoundary context="統計資訊">
                     <Layout>
                       <Statistics />
+                    </Layout>
+                  </SimpleErrorBoundary>
+                } />
+                <Route path="/chapter-status/:projectId" element={
+                  <SimpleErrorBoundary context="章節管理">
+                    <Layout>
+                      <ChapterStatusPage />
                     </Layout>
                   </SimpleErrorBoundary>
                 } />

@@ -37,10 +37,8 @@ export interface UseVersionHistoryReturn {
 }
 import {
   loadStatistics,
-  setFilter,
   setSearchKeyword,
   clearFilter,
-  setError,
   clearError,
 } from '../../store/slices/versionManagementSlice';
 
@@ -57,9 +55,9 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
     histories,
     currentHistoryId,
     statistics,
-    filter,
-    searchKeyword,
-    filteredVersionIds,
+    filter: _filter,
+    searchKeyword: _searchKeyword,
+    filteredVersionIds: _filteredVersionIds,
     loading,
     error,
   } = useSelector((state: RootState) => state.versionManagement);
@@ -147,7 +145,7 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
   }, [dispatch, versions]);
 
   // 更新歷史記錄
-  const updateHistory = useCallback(async (imageId: string, data: Partial<VersionHistory>): Promise<VersionOperationResult> => {
+  const _updateHistory = useCallback(async (imageId: string, data: Partial<VersionHistory>): Promise<VersionOperationResult> => {
     try {
       setLocalError(null);
       
@@ -178,7 +176,7 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
   }, []);
 
   // 清除歷史記錄
-  const clearHistory = useCallback(async (imageId: string): Promise<VersionOperationResult> => {
+  const _clearHistory = useCallback(async (imageId: string): Promise<VersionOperationResult> => {
     try {
       setLocalError(null);
       
@@ -330,7 +328,7 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
   }, [versions]);
 
   // 導出統計資訊
-  const exportStatistics = useCallback(async (format: 'json' | 'csv'): Promise<string> => {
+  const _exportStatistics = useCallback(async (format: 'json' | 'csv'): Promise<string> => {
     try {
       setLocalError(null);
       
@@ -420,7 +418,7 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
     
     // 操作
     loadHistory,
-    createHistoryEntry: async (imageId: string, versionId: string, action: string) => {
+    createHistoryEntry: async (_imageId: string, _versionId: string, _action: string) => {
       // TODO: 實現歷史記錄創建
     },
     
@@ -430,17 +428,17 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
     clearFilter: clearFilterAction,
     
     // 統計功能
-    getStatistics: async (imageId?: string) => {
+    getStatistics: async (_imageId?: string) => {
       // TODO: 實現統計獲取
       return generateStatistics();
     },
-    getCreationFrequency: (period: 'daily' | 'weekly' | 'monthly') => {
+    getCreationFrequency: (_period: 'daily' | 'weekly' | 'monthly') => {
       // TODO: 實現創建頻率統計
       return [];
     },
     
     // 導出功能
-    exportHistory: async (imageId: string, format: 'json' | 'csv') => {
+    exportHistory: async (_imageId: string, _format: 'json' | 'csv') => {
       // TODO: 實現歷史導出
       return '';
     },

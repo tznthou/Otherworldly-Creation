@@ -148,7 +148,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
   };
 
   // 獲取插畫歷史
-  const fetchIllustrationHistory = async () => {
+  const fetchIllustrationHistory = useCallback(async () => {
     if (!currentProject || loading) return;
     
     try {
@@ -172,7 +172,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentProject, loading]);
 
   // 當專案變更時重新獲取數據
   useEffect(() => {
@@ -181,7 +181,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     } else {
       setIllustrationHistory([]);
     }
-  }, [currentProject?.id, versions]); // 添加 versions 依賴
+  }, [currentProject, fetchIllustrationHistory, versions]); // 添加缺失的依賴
 
   // 獲取角色名稱
   const getCharacterName = (characterId?: string) => {

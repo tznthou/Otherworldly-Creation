@@ -262,6 +262,13 @@ export const tauriAPI: API = {
   projects: {
     getAll: async () => {
       const projects = await enhancedSafeInvoke<TauriProject[]>('get_all_projects');
+      
+      // 檢查返回值是否為有效陣列
+      if (!Array.isArray(projects)) {
+        console.warn('getAll projects: API 返回無效資料，使用空陣列', projects);
+        return [];
+      }
+      
       // 轉換 Tauri 後端格式到前端格式
       return projects.map((project) => ({
         id: project.id,

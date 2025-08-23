@@ -6,7 +6,6 @@ import {
   VersionComparison,
   VersionDifference,
   VersionOperationResult,
-  DifferenceType,
 } from '../../types/versionManagement';
 
 // 返回類型定義
@@ -35,7 +34,6 @@ import {
   setComparisonVersions,
   setShowComparisonPanel,
   clearComparison,
-  setError,
   clearError,
 } from '../../store/slices/versionManagementSlice';
 
@@ -52,8 +50,8 @@ export const useVersionComparison = (): UseVersionComparisonReturn => {
     comparisons,
     currentComparisonId,
     isComparing,
-    comparisonVersionIds,
-    showComparisonPanel,
+    comparisonVersionIds: _comparisonVersionIds,
+    showComparisonPanel: _showComparisonPanel,
     loading,
     error,
   } = useSelector((state: RootState) => state.versionManagement);
@@ -100,7 +98,7 @@ export const useVersionComparison = (): UseVersionComparisonReturn => {
   }, [dispatch, versions]);
 
   // 儲存比較結果
-  const saveComparison = useCallback(async (comparison: VersionComparison): Promise<VersionOperationResult> => {
+  const saveComparison = useCallback(async (_comparison: VersionComparison): Promise<VersionOperationResult> => {
     try {
       setLocalError(null);
       
@@ -131,7 +129,7 @@ export const useVersionComparison = (): UseVersionComparisonReturn => {
   }, []);
 
   // 刪除比較記錄
-  const deleteComparison = useCallback(async (comparisonId: string): Promise<VersionOperationResult> => {
+  const deleteComparison = useCallback(async (_comparisonId: string): Promise<VersionOperationResult> => {
     try {
       setLocalError(null);
       
@@ -497,7 +495,7 @@ export const useVersionComparison = (): UseVersionComparisonReturn => {
     compareVersions,
     saveComparison,
     deleteComparison,
-    setCurrentComparison: (comparisonId: string | null) => {
+    setCurrentComparison: (_comparisonId: string | null) => {
       // TODO: 實現設置當前比較
     },
     clearComparison: () => {

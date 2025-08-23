@@ -25,6 +25,11 @@ const StarField: React.FC<StarFieldProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // 在測試環境中跳過 Canvas API
+    if (typeof window !== 'undefined' && window.navigator?.userAgent?.includes('jsdom')) {
+      return;
+    }
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 

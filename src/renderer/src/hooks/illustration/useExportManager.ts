@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useMemo } from 'react';
+import { useReducer, useCallback } from 'react';
 
 // 導出格式類型
 export type ExportFormat = 'png' | 'jpg' | 'webp';
