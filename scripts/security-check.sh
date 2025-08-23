@@ -40,7 +40,7 @@ fi
 
 echo ""
 echo "📝 檢查 3: 是否有個人小說內容..."
-NOVEL_CONTENT=$(find . -name "*.md" -o -name "*.txt" | grep -v README | grep -v CHANGELOG | grep -v RELEASE_CHECKLIST | grep -v node_modules | grep -v .serena | grep -v .specstory | grep -v coverage | xargs grep -l "第.*章\|故事\|主角\|劇情" 2>/dev/null || true)
+NOVEL_CONTENT=$(find . -name "*.md" -o -name "*.txt" | grep -v README | grep -v CHANGELOG | grep -v RELEASE_CHECKLIST | grep -v CLAUDE.md | grep -v node_modules | grep -v .serena | grep -v .specstory | grep -v coverage | xargs grep -l "第.*章\|故事\|主角\|劇情" 2>/dev/null || true)
 if [ -n "$NOVEL_CONTENT" ]; then
     echo "⚠️  發現疑似小說內容檔案："
     echo "$NOVEL_CONTENT"

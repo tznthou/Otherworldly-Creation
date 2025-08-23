@@ -45,8 +45,8 @@ html-escape = "0.2"
 zip = "0.6"
 tempfile = "3.8"
 mime_guess = "2.0"
-# PDF generation dependencies
-printpdf = "0.7"
+# PDF generation dependencies - 全部移除，現在使用Chrome Headless
+# printpdf, lopdf, image 等依賴已刪除 - Chrome Headless不需要這些庫
 
 # 最佳化 release profile 配置
 [profile.release]

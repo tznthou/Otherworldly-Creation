@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
 import { addNotification } from '../../store/slices/uiSlice';
 import { api } from '../../api';
-import type { PDFGenerationOptions } from '../../api/models';
+import type { PDFGenerationOptions, PageSizeType } from '../../api/models';
 
 interface PDFGenerationProgress {
   stage: 'preparing' | 'converting' | 'font-loading' | 'generating' | 'complete' | 'error';
@@ -21,22 +21,41 @@ const PDFGenerationModal: React.FC = () => {
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState<PDFGenerationProgress | null>(null);
   const [options, setOptions] = useState<PDFGenerationOptions>({
+    // === 基本設定 ===
     page_size: 'A4',
-    font_family: 'Helvetica',
+    font_family: 'Noto Sans TC',
     font_size: 12,
-    line_height: 1.5,
-    margin_top: 20,
-    margin_bottom: 20,
+    line_height: 1.6,
+    
+    // === 邊距設定 ===
+    margin_top: 25,
+    margin_bottom: 25,
     margin_left: 20,
     margin_right: 20,
+    
+    // === 內容設定 ===
     include_cover: true,
-    chapter_break_style: 'new_page',
+    chapter_break_style: 'NewPage',
     author: '',
-    // AI 插畫預設選項
+    
+    // === AI 插畫預設選項 ===
     include_illustrations: true,
-    illustration_layout: 'gallery',
-    illustration_quality: 'original',
-    character_filter: undefined
+    illustration_layout: 'Gallery',
+    illustration_quality: 'Original',
+    character_filter: undefined,
+    
+    // === 進階功能 (預設啟用) ===
+    enable_bookmarks: true,
+    enable_toc: true,
+    text_alignment: 'Left',
+    paragraph_spacing: 6.0,
+    chapter_title_size: 18.0,
+    
+    // === 排版進階設定 (中文優化) ===
+    prevent_orphans: true,
+    prevent_widows: true,
+    smart_punctuation: true,
+    optimize_line_breaks: true
   });
   const [validation, setValidation] = useState<{
     valid: boolean;
@@ -163,8 +182,21 @@ const PDFGenerationModal: React.FC = () => {
         }
       }
 
-      // 開始實際的PDF生成
-      const result = await api.pdf.generate(selectedProjectId, options);
+      // 開始實際的PDF生成，顯示不確定進度
+      setProgress({
+        stage: 'generating',
+        progress: 90,
+        totalChapters: 0,
+        message: '⚔️ 正在進行真理銘刻，請稍候...'
+      });
+
+      // 添加超時保護機制 - 延長到10分鐘以便調試字體處理問題
+      const pdfGenerationPromise = api.pdf.generate(selectedProjectId, options);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('PDF生成超時（超過10分鐘），可能字體處理遇到問題，請檢查後端日誌')), 600000)
+      );
+
+      const result = await Promise.race([pdfGenerationPromise, timeoutPromise]) as any;
 
       // 完成狀態
       setProgress({
@@ -241,6 +273,10 @@ const PDFGenerationModal: React.FC = () => {
 
   const getProgressBarWidth = () => {
     return progress ? `${progress.progress}%` : '0%';
+  };
+
+  const isIndeterminateProgress = () => {
+    return progress && progress.stage === 'generating' && progress.progress >= 90;
   };
 
   const getStageText = () => {
@@ -340,8 +376,8 @@ const PDFGenerationModal: React.FC = () => {
                 <div>
                   <label className="block text-sm text-gray-300 mb-1">頁面大小</label>
                   <select
-                    value={options.page_size}
-                    onChange={(e) => setOptions(prev => ({ ...prev, page_size: e.target.value }))}
+                    value={options.page_size as string}
+                    onChange={(e) => setOptions(prev => ({ ...prev, page_size: e.target.value as PageSizeType }))}
                     disabled={generating}
                     className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
                   >
@@ -381,12 +417,13 @@ const PDFGenerationModal: React.FC = () => {
                   <label className="block text-sm text-gray-300 mb-1">章節分頁</label>
                   <select
                     value={options.chapter_break_style}
-                    onChange={(e) => setOptions(prev => ({ ...prev, chapter_break_style: e.target.value }))}
+                    onChange={(e) => setOptions(prev => ({ ...prev, chapter_break_style: e.target.value as 'NewPage' | 'SectionBreak' | 'Continuous' }))}
                     disabled={generating}
                     className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
                   >
-                    <option value="new_page">每章新頁面</option>
-                    <option value="section_break">章節間距</option>
+                    <option value="NewPage">每章新頁面</option>
+                    <option value="SectionBreak">章節間距</option>
+                    <option value="Continuous">連續不分頁</option>
                   </select>
                 </div>
 
@@ -429,13 +466,14 @@ const PDFGenerationModal: React.FC = () => {
                         <label className="block text-sm text-gray-300 mb-1">插畫佈局方式</label>
                         <select
                           value={options.illustration_layout}
-                          onChange={(e) => setOptions(prev => ({ ...prev, illustration_layout: e.target.value as 'gallery' | 'inline' | 'chapter_start' }))}
+                          onChange={(e) => setOptions(prev => ({ ...prev, illustration_layout: e.target.value as 'Gallery' | 'Inline' | 'ChapterStart' | 'ChapterEnd' }))}
                           disabled={generating}
                           className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
                         >
-                          <option value="gallery">插畫集錦頁 (在開頭集中展示)</option>
-                          <option value="chapter_start">章節開始 (在每章標題下顯示相關插畫)</option>
-                          <option value="inline">內嵌模式 (文字中插入，未完全實現)</option>
+                          <option value="Gallery">插畫集錦頁 (在開頭集中展示)</option>
+                          <option value="ChapterStart">章節開始 (在每章標題下顯示相關插畫)</option>
+                          <option value="ChapterEnd">章節結尾 (在每章結尾顯示相關插畫)</option>
+                          <option value="Inline">內嵌模式 (文字中插入，開發中)</option>
                         </select>
                       </div>
                       
@@ -443,12 +481,14 @@ const PDFGenerationModal: React.FC = () => {
                         <label className="block text-sm text-gray-300 mb-1">插畫品質</label>
                         <select
                           value={options.illustration_quality}
-                          onChange={(e) => setOptions(prev => ({ ...prev, illustration_quality: e.target.value as 'original' | 'compressed' }))}
+                          onChange={(e) => setOptions(prev => ({ ...prev, illustration_quality: e.target.value as 'Original' | 'High' | 'Medium' | 'Compressed' }))}
                           disabled={generating}
                           className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
                         >
-                          <option value="original">原始品質 (檔案較大)</option>
-                          <option value="compressed">壓縮品質 (檔案較小)</option>
+                          <option value="Original">原始品質 (檔案最大)</option>
+                          <option value="High">高品質 (輕微壓縮)</option>
+                          <option value="Medium">中等品質 (平衡大小)</option>
+                          <option value="Compressed">壓縮品質 (檔案較小)</option>
                         </select>
                       </div>
                       
@@ -477,10 +517,17 @@ const PDFGenerationModal: React.FC = () => {
               
               <div className="w-full bg-cosmic-600 rounded-full h-3 mb-3 overflow-hidden">
                 <div 
-                  className="bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 h-3 rounded-full transition-all duration-500 ease-out relative"
+                  className={`bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 h-3 rounded-full transition-all duration-500 ease-out relative ${
+                    isIndeterminateProgress() ? 'animate-pulse' : ''
+                  }`}
                   style={{ width: getProgressBarWidth() }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                  <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent ${
+                    isIndeterminateProgress() ? 'animate-ping' : 'animate-pulse'
+                  }`}></div>
+                  {isIndeterminateProgress() && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gold-300/50 to-transparent animate-bounce"></div>
+                  )}
                 </div>
               </div>
               
@@ -507,6 +554,65 @@ const PDFGenerationModal: React.FC = () => {
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {generating ? '生成中...' : '取消'}
+            </button>
+
+            <button
+              onClick={async () => {
+                if (!selectedProjectId) {
+                  dispatch(addNotification({
+                    type: 'warning',
+                    title: '請選擇專案',
+                    message: '請先選擇要測試的專案'
+                  }));
+                  return;
+                }
+
+                try {
+                  setGenerating(true);
+                  setProgress({
+                    stage: 'preparing',
+                    progress: 50,
+                    totalChapters: 0,
+                    message: '🧪 準備測試PDF生成...'
+                  });
+
+                  // 使用基本選項進行測試
+                  const testOptions: PDFGenerationOptions = {
+                    ...options,
+                    include_illustrations: false, // 測試時關閉插畫
+                  };
+
+                  const result = await api.pdf.generate(selectedProjectId, testOptions);
+                  console.log('✅ 測試PDF生成成功:', result);
+                  
+                  setProgress({
+                    stage: 'complete',
+                    progress: 100,
+                    totalChapters: 0,
+                    message: '✅ 測試PDF生成完成！'
+                  });
+
+                  dispatch(addNotification({
+                    type: 'success',
+                    title: '測試完成',
+                    message: 'PDF 測試生成成功！'
+                  }));
+                } catch (error: any) {
+                  console.error('❌ 測試PDF生成失敗:', error);
+                  setProgress({
+                    stage: 'error',
+                    progress: 0,
+                    totalChapters: 0,
+                    message: '❌ 測試失敗: ' + error.message
+                  });
+                } finally {
+                  setGenerating(false);
+                }
+              }}
+              disabled={!selectedProjectId || generating}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              🧪 測試
             </button>
             
             <button

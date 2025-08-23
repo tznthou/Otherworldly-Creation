@@ -115,10 +115,10 @@ const QuickActions: React.FC = () => {
     {
       id: 'pdf-generation',
       title: '⚔️ 絕對文書・完全具現化', 
-      description: '真理銘刻・最終形態解放（檔案較大）',
+      description: '真理銘刻・最終形態解放（模組化架構重構完成！）',
       icon: '📄',
       color: 'from-orange-500 to-red-600',
-      isPlanned: false, // 功能已實現
+      isPlanned: false, // 功能已重構完成！
       action: () => {
         dispatch(openModal('pdfGeneration'));
       },

@@ -151,11 +151,13 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
       action: {
         label: '開始創建專案',
         onClick: () => {
-          if (onCreateProject) {
-            onCreateProject();
-          } else {
-            console.warn('onCreateProject callback not provided');
+          // 在快速入門教學中，直接進入下一步而不是真正創建專案
+          // 這避免了流程中斷的問題
+          const currentStepId = steps[currentStep].id;
+          if (!completedSteps.includes(currentStepId)) {
+            setCompletedSteps([...completedSteps, currentStepId]);
           }
+          setCurrentStep(currentStep + 1);
         }
       }
     },
@@ -479,7 +481,12 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
       action: {
         label: '學習 AI 輔助',
         onClick: () => {
-          onStartTutorial?.('ai');
+          // 在快速入門教學中，直接進入下一步
+          const currentStepId = steps[currentStep].id;
+          if (!completedSteps.includes(currentStepId)) {
+            setCompletedSteps([...completedSteps, currentStepId]);
+          }
+          setCurrentStep(currentStep + 1);
         }
       }
     },

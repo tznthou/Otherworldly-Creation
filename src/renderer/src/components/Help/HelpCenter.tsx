@@ -196,6 +196,11 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
                   <p className="text-gray-400 text-sm">選擇適合的電子書格式和使用建議</p>
                 </div>
                 <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                  <div className="text-3xl mb-3">🎨</div>
+                  <h4 className="text-white font-semibold mb-2">AI 插畫系統</h4>
+                  <p className="text-gray-400 text-sm">使用AI生成角色插畫和場景圖片</p>
+                </div>
+                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
                   <div className="text-3xl mb-3">🔧</div>
                   <h4 className="text-white font-semibold mb-2">故障排除</h4>
                   <p className="text-gray-400 text-sm">解決常見問題和技術支援</p>

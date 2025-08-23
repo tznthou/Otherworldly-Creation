@@ -991,7 +991,7 @@ export const tauriAPI: API = {
     }
   },
 
-  // PDF 文檔生成
+  // PDF 文檔生成 - Chrome Headless 最新方案
   pdf: {
     generate: async (projectId, options) => {
       // 參數驗證
@@ -999,36 +999,59 @@ export const tauriAPI: API = {
         throw new Error('無效的專案 ID：專案 ID 不能為空');
       }
 
-      console.log('📄 API 調用 generate_pdf，專案 ID:', projectId);
+      console.log('🌐 API 調用 generate_pdf_chrome (Chrome Headless 新方案)，專案 ID:', projectId);
       
-      return safeInvoke('generate_pdf', {
-        projectId: projectId.trim(),
-        options: options || {
-          page_size: 'A4',
-          font_family: 'Helvetica',
-          font_size: 12.0,
-          line_height: 1.5,
-          margin_top: 20.0,
-          margin_bottom: 20.0,
-          margin_left: 20.0,
-          margin_right: 20.0,
-          include_cover: true,
-          chapter_break_style: 'new_page',
-          author: null
-        }
-      });
+      try {
+        // 首先嘗試Chrome Headless方案
+        return await safeInvoke('generate_pdf_chrome', {
+          projectId: projectId.trim(),
+          options: options || {
+            page_size: 'A4',
+            font_size: 12.0,
+            margins: '20mm',
+            include_cover: true
+          }
+        });
+      } catch (chromeError) {
+        console.warn('⚠️ Chrome Headless PDF生成失敗，嘗試lopdf fallback:', chromeError);
+        
+        // Fallback到lopdf方案
+        console.log('📄 API Fallback調用 generate_pdf_v2 (lopdf 版本)，專案 ID:', projectId);
+        return safeInvoke('generate_pdf_v2', {
+          projectId: projectId.trim(),
+          options: options || {
+            page_size: 'A4',
+            font_family: 'Noto Sans TC',
+            font_size: 12.0,
+            line_height: 1.6,
+            margin_top: 25.0,
+            margin_bottom: 25.0,
+            margin_left: 20.0,
+            margin_right: 20.0,
+            include_cover: true,
+            chapter_break_style: 'new_page',
+            include_illustrations: true,
+            illustration_layout: 'chapter_start',
+            illustration_quality: 'original',
+            enable_bookmarks: true,
+            enable_toc: true,
+            text_alignment: 'left',
+            paragraph_spacing: 6.0,
+            chapter_title_size: 1.8
+          }
+        });
+      }
     },
 
-    getExports: async (projectId) => {
-      return safeInvoke('get_pdf_exports', {
-        project_id: projectId
-      });
+
+    getExports: async (_projectId) => {
+      // 注意：PDF V2 系統未來會支援匯出管理功能
+      throw new Error('PDF V2 匯出管理功能尚未實現，敬請期待');
     },
 
-    deleteExport: async (exportId) => {
-      return safeInvoke('delete_pdf_export', {
-        export_id: exportId
-      });
+    deleteExport: async (_exportId) => {
+      // 注意：PDF V2 系統未來會支援匯出管理功能  
+      throw new Error('PDF V2 匯出刪除功能尚未實現，敬請期待');
     }
   },
 

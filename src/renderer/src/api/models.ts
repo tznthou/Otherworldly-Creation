@@ -344,24 +344,46 @@ export interface EPubExportRecord {
   downloaded_at?: string;
 }
 
-// PDF 相關類型
+// PDF 頁面尺寸類型
+export type PageSizeType = 'A4' | 'Letter' | 'Legal' | { Custom: { width: number; height: number } };
+
+// PDF 相關類型 - 與後端 PdfOptionsV2 匹配
 export interface PDFGenerationOptions {
-  page_size: string;        // "A4", "Letter", "Legal"
+  // === 基本設定 ===
+  page_size: PageSizeType;  // 頁面尺寸
   font_family: string;      // 字體名稱
   font_size: number;        // 字體大小
   line_height: number;      // 行高
-  margin_top: number;       // 上邊距 (mm)
-  margin_bottom: number;    // 下邊距 (mm)
-  margin_left: number;      // 左邊距 (mm)
-  margin_right: number;     // 右邊距 (mm)
+  
+  // === 邊距設定 (mm) ===
+  margin_top: number;       // 上邊距
+  margin_bottom: number;    // 下邊距
+  margin_left: number;      // 左邊距
+  margin_right: number;     // 右邊距
+  
+  // === 內容設定 ===
   include_cover: boolean;   // 是否包含封面
-  chapter_break_style: string; // "new_page" | "section_break"
   author?: string;          // 作者名稱
-  // === AI 插畫整合選項 ===
+  chapter_break_style: 'NewPage' | 'SectionBreak' | 'Continuous'; // 章節分頁樣式
+  
+  // === AI 插畫整合 ===
   include_illustrations: boolean;
-  illustration_layout: 'gallery' | 'inline' | 'chapter_start';
-  illustration_quality: 'original' | 'compressed';
-  character_filter?: string[]; // 特定角色篩選
+  illustration_layout: 'Gallery' | 'Inline' | 'ChapterStart' | 'ChapterEnd';
+  illustration_quality: 'Original' | 'High' | 'Medium' | 'Compressed';
+  character_filter?: string[];
+  
+  // === 進階功能 ===
+  enable_bookmarks?: boolean;      // 啟用書籤
+  enable_toc?: boolean;           // 啟用目錄
+  text_alignment?: 'Left' | 'Center' | 'Right' | 'Justify';
+  paragraph_spacing?: number;      // 段落間距
+  chapter_title_size?: number;    // 章節標題大小
+  
+  // === 排版進階設定 ===
+  prevent_orphans?: boolean;       // 避免孤行
+  prevent_widows?: boolean;        // 避免寡字
+  smart_punctuation?: boolean;     // 智能標點處理
+  optimize_line_breaks?: boolean;  // 優化斷行
 }
 
 export interface PDFResult {

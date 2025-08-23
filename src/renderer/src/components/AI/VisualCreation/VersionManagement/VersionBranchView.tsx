@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ImageVersion, VersionTree } from '../../../../types/versionManagement';
 import { VERSION_MANAGEMENT_CONSTANTS } from './index';
 
@@ -45,24 +45,24 @@ const VersionBranchView: React.FC<VersionBranchViewProps> = ({
   versionTree,
   versions = [],
   mode = 'tree',
-  layout = 'horizontal',
+  layout: _layout = 'horizontal',
   showLabels = true,
-  showBranchColors = true,
-  showMergeLines = true,
-  branchHeight = VERSION_MANAGEMENT_CONSTANTS.BRANCH_CONFIG.branchHeight,
+  showBranchColors: _showBranchColors = true,
+  showMergeLines: _showMergeLines = true,
+  branchHeight: _branchHeight = VERSION_MANAGEMENT_CONSTANTS.BRANCH_CONFIG.branchHeight,
   nodeRadius = VERSION_MANAGEMENT_CONSTANTS.BRANCH_CONFIG.nodeRadius,
-  levelSpacing = VERSION_MANAGEMENT_CONSTANTS.BRANCH_CONFIG.levelSpacing,
+  levelSpacing: _levelSpacing = VERSION_MANAGEMENT_CONSTANTS.BRANCH_CONFIG.levelSpacing,
   selectedVersionId,
-  selectedBranchId,
+  selectedBranchId: _selectedBranchId,
   onVersionSelect,
-  onBranchSelect,
-  onBranchCreate,
-  onBranchMerge,
+  onBranchSelect: _onBranchSelect,
+  onBranchCreate: _onBranchCreate,
+  onBranchMerge: _onBranchMerge,
   className = '',
   style,
 }) => {
   // 本地狀態
-  const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 800, height: 600 });
+  const [viewBox] = useState({ x: 0, y: 0, width: 800, height: 600 });
   const [scale, setScale] = useState(1);
 
   // 處理版本選擇
@@ -72,12 +72,12 @@ const VersionBranchView: React.FC<VersionBranchViewProps> = ({
     }
   }, [onVersionSelect]);
 
-  // 處理分支選擇
-  const handleBranchSelect = useCallback((branchId: string) => {
-    if (onBranchSelect) {
-      onBranchSelect(branchId);
+  // 處理分支選擇 (未使用，保留供未來使用)
+  const _handleBranchSelect = useCallback((branchId: string) => {
+    if (_onBranchSelect) {
+      _onBranchSelect(branchId);
     }
-  }, [onBranchSelect]);
+  }, [_onBranchSelect]);
 
   // 渲染分支圖表
   const renderBranchChart = () => {
@@ -191,7 +191,7 @@ const VersionBranchView: React.FC<VersionBranchViewProps> = ({
       <div className="absolute top-4 left-4 z-10 flex gap-2">
         <select
           value={mode}
-          onChange={(e) => {/* TODO: 處理模式切換 */}}
+          onChange={(_e) => {/* TODO: 處理模式切換 */}}
           className="px-3 py-1 bg-white shadow-sm border border-gray-200 rounded text-sm"
         >
           <option value="tree">樹狀視圖</option>

@@ -387,7 +387,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
       {/* 刪除確認對話框 */}
       {showDeleteConfirm && selectedTemplate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10001]" style={{ isolation: 'isolate' }}>
           <div className="bg-cosmic-900 border border-cosmic-700 rounded-lg shadow-xl w-full max-w-md">
             <div className="p-6">
               <div className="flex items-center mb-4">

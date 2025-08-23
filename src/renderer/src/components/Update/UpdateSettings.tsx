@@ -124,27 +124,30 @@ const UpdateSettings: React.FC = () => {
         </h3>
 
         {/* 自動檢查更新 */}
-        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg opacity-60">
           <div className="flex items-center">
             <RefreshCw className="w-5 h-5 text-gold-500 mr-3" />
             <div>
-              <h4 className="font-medium text-white">自動檢查更新</h4>
-              <p className="text-sm text-gray-300">定期檢查是否有新版本可用</p>
+              <div className="flex items-center gap-2">
+                <h4 className="font-medium text-white">自動檢查更新</h4>
+                <span className="text-xs bg-yellow-600 text-yellow-100 px-2 py-1 rounded">開發中</span>
+              </div>
+              <p className="text-sm text-gray-300">定期檢查是否有新版本可用 - 此功能正在開發中</p>
             </div>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-not-allowed">
             <input
               type="checkbox"
-              checked={settings.autoCheck}
-              onChange={(e) => handleSettingChange('autoCheck', e.target.checked)}
+              checked={false}
+              disabled={true}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-cosmic-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-cosmic-900 after:border-cosmic-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
           </label>
         </div>
 
-        {/* 檢查間隔 */}
-        {settings.autoCheck && (
+        {/* 檢查間隔 - 暫時隱藏因為自動檢查功能正在開發中 */}
+        {false && (
           <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg">
             <div>
               <h4 className="font-medium text-white">檢查間隔</h4>
@@ -188,19 +191,22 @@ const UpdateSettings: React.FC = () => {
         </div>
 
         {/* 更新通知 */}
-        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg opacity-60">
           <div className="flex items-center">
             <Bell className="w-5 h-5 text-yellow-400 mr-3" />
             <div>
-              <h4 className="font-medium text-white">更新通知</h4>
-              <p className="text-sm text-gray-300">發現更新時顯示通知</p>
+              <div className="flex items-center gap-2">
+                <h4 className="font-medium text-white">更新通知</h4>
+                <span className="text-xs bg-yellow-600 text-yellow-100 px-2 py-1 rounded">開發中</span>
+              </div>
+              <p className="text-sm text-gray-300">發現更新時顯示通知 - 此功能正在開發中</p>
             </div>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-not-allowed">
             <input
               type="checkbox"
-              checked={settings.notifyOnUpdate}
-              onChange={(e) => handleSettingChange('notifyOnUpdate', e.target.checked)}
+              checked={false}
+              disabled={true}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-cosmic-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-cosmic-900 after:border-cosmic-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
@@ -235,10 +241,11 @@ const UpdateSettings: React.FC = () => {
       <div className="bg-cosmic-800 border border-gold-600/30 rounded-lg p-4">
         <h4 className="font-medium text-gold-400 mb-2">關於自動更新</h4>
         <ul className="text-sm text-gray-300 space-y-1">
-          <li>• 自動檢查更新功能已完全實現，可正常使用</li>
-          <li>• 自動下載更新和預發布版本功能正在開發中</li>
-          <li>• 更新通知功能已實現，可正常使用</li>
-          <li>• 手動檢查更新功能正常，會模擬檢查過程</li>
+          <li>• 自動檢查更新功能正在開發中</li>
+          <li>• 自動下載更新功能正在開發中</li>
+          <li>• 更新通知功能正在開發中</li>
+          <li>• 預發布版本功能正在開發中</li>
+          <li>• 已確認技術方案：GitHub Releases + Tauri Updater 插件</li>
           <li>• 建議定期備份您的創作內容</li>
         </ul>
       </div>

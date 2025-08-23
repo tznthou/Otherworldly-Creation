@@ -242,11 +242,12 @@ export class ExportService {
         outputPath += '/characters/character_name'; // TODO: 實際角色名稱
         break;
         
-      case 'by_date':
+      case 'by_date': {
         // 按日期分類
         const date = new Date().toISOString().split('T')[0];
         outputPath += `/dates/${date}`;
         break;
+      }
         
       case 'by_project':
         // 按專案分類
@@ -372,14 +373,16 @@ export class ExportService {
       case 'png':
         // PNG 通常是 3-4 bytes per pixel（無損壓縮）
         return pixels * 3.5;
-      case 'jpg':
+      case 'jpg': {
         // JPEG 根據品質變化，大約 0.5-2 bytes per pixel
         const factor = (quality / 100) * 1.5 + 0.5;
         return pixels * factor;
-      case 'webp':
+      }
+      case 'webp': {
         // WebP 通常比 JPEG 小 25-35%
         const jpegSize = pixels * ((quality / 100) * 1.5 + 0.5);
         return jpegSize * 0.7;
+      }
       default:
         return pixels * 2; // 預設估算
     }

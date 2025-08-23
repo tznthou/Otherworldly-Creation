@@ -52,7 +52,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     versions,
     createVersion,
     loading: versionLoading,
-    error: versionError
+    error: _versionError
   } = useVersionManager();
   
   // 本地狀態（從 Redux 中獲取選中的圖像）
@@ -269,11 +269,12 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
             return a.provider.localeCompare(b.provider);
           case 'type':
             return a.model.localeCompare(b.model);
-          case 'version': // Phase 4.3 新增
+          case 'version': { // Phase 4.3 新增
             // 先按版本數量排序，再按版本號排序
             const versionCountDiff = (b.totalVersions || 0) - (a.totalVersions || 0);
             if (versionCountDiff !== 0) return versionCountDiff;
             return (b.versionNumber || 0) - (a.versionNumber || 0);
+          }
           default:
             return 0;
         }
@@ -445,8 +446,8 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     }
   };
 
-  // 開啟導出設定面板
-  const handleOpenExportSettings = () => {
+  // 開啟導出設定面板 - 未使用，保留供未來使用
+  const _handleOpenExportSettings = () => {
     dispatch(setShowExportPanel(true));
   };
 

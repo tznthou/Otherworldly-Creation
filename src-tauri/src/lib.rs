@@ -26,7 +26,8 @@ use commands::settings::{get_setting, set_setting, get_all_settings, reset_setti
 use commands::database::{backup_database, restore_database, run_database_maintenance, get_database_stats, health_check, reindex_database, incremental_vacuum, get_wal_mode_status, set_wal_mode};
 use commands::ai_history::{create_ai_history, query_ai_history, mark_ai_history_selected, delete_ai_history, cleanup_ai_history};
 use commands::epub::{generate_epub, get_epub_exports, delete_epub_export};
-use commands::pdf::{generate_pdf, get_pdf_exports, delete_pdf_export};
+// 所有舊PDF命令已刪除 - 現在只使用Chrome Headless實現
+use commands::pdf_chrome::{generate_pdf_chrome}; // Chrome Headless PDF 命令 - 最新解決方案
 use commands::illustration::{
     setup_character_consistency, generate_consistency_report, set_character_seed,
     add_reference_image, get_character_visual_traits, calculate_character_similarity_matrix,
@@ -164,10 +165,8 @@ pub fn run() {
       generate_epub,
       get_epub_exports,
       delete_epub_export,
-      // PDF commands
-      generate_pdf,
-      get_pdf_exports,
-      delete_pdf_export,
+      // 所有舊PDF命令已刪除 - 僅保留Chrome Headless實現
+      generate_pdf_chrome,
       // Illustration commands
       setup_character_consistency,
       generate_consistency_report,

@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Serena MCP Integration (重要！)
+
+**CRITICAL**: This project uses Serena MCP for enhanced development capabilities. You MUST wake up Serena MCP functionality at the start of any session:
+
+- **Auto-Onboarding**: Always call `mcp__serena__check_onboarding_performed()` first
+- **Memory System**: 120+ project memories available via `mcp__serena__list_memories()`
+- **Intelligent Code Search**: Use `mcp__serena__find_symbol()`, `mcp__serena__search_for_pattern()` 
+- **Architectural Overview**: Access via `mcp__serena__get_symbols_overview()`
+- **Context-Aware Edits**: Use `mcp__serena__replace_symbol_body()`, `mcp__serena__insert_after_symbol()`
+- **Memory Management**: Read/write project knowledge with `mcp__serena__read_memory()`, `mcp__serena__write_memory()`
+
+**Workflow**: Check onboarding → List relevant memories → Use semantic search → Apply targeted edits
+
 ## Project Overview
 
 **Genesis Chronicle** - AI-powered novel writing application built with Tauri v2, supporting 5 major AI providers for Chinese light novel creation.
@@ -10,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **AI Providers**: Ollama (local), OpenAI, Google Gemini, Anthropic Claude, OpenRouter
 - **Database**: SQLite v11 with rusqlite
 - **Editor**: Slate.js with 2-second auto-save
-- **Export**: EPUB 3.0 + PDF with embedded Chinese fonts
+- **Export**: EPUB 3.0 + PDF via Chrome Headless
 
 ## Essential Commands
 
@@ -157,7 +170,7 @@ git tag v1.0.9 && git push origin v1.0.9
 Frontend (`src/renderer/src/api/tauri.ts`) → Tauri IPC → Rust handlers (`src-tauri/src/commands/`)
 
 - **Registration**: `src-tauri/src/lib.rs` `invoke_handler![]` macro
-- **Modules**: `system`, `project`, `chapter`, `character`, `ai_providers`, `epub`, `pdf`
+- **Modules**: `system`, `project`, `chapter`, `character`, `ai_providers`, `epub`, `pdf_chrome`
 - **Frontend Access**: Always use `import { api } from './api'` - never direct `invoke()`
 
 ### AI Provider Architecture
@@ -200,10 +213,11 @@ Frontend (`src/renderer/src/api/tauri.ts`) → Tauri IPC → Rust handlers (`src
 
 ### Export System
 - **EPUB**: `src-tauri/src/commands/epub.rs` - Slate.js to XHTML, ZIP structure
-- **PDF**: `src-tauri/src/commands/pdf.rs` - Embedded Noto Sans TC font (7.1MB)
+- **PDF**: `src-tauri/src/commands/pdf_chrome.rs` - Chrome Headless HTML-to-PDF generation
   ```rust
-  // PDF text wrapping: Chinese = font_size * 1.0, ASCII = font_size * 0.6
-  fn wrap_text(text: &str, font: &IndirectFontRef, font_size: f32, max_width: Mm)
+  // Chrome Headless generates PDF from HTML with native font rendering
+  // Supports AI illustration embedding and professional typography
+  pub async fn generate_pdf_chrome(project_id: String, options: Option<PdfOptionsChrome>)
   ```
 
 ### Redux/TypeScript Patterns
@@ -233,6 +247,32 @@ const toggleCharacterSelection = (characterId: string) => {
 };
 ```
 
+## 程式碼統計標準 (2025-08-23 修正)
+
+**標準統計命令**:
+```bash
+# 正確的統計方式（排除依賴包和生成文件）
+cloc . --exclude-dir=node_modules,target,.git --include-lang=TypeScript,Rust,JavaScript
+
+# 當前標準結果 (2025-08-23)：
+# TypeScript: 67,142行 (293個檔案) - 73.8%
+# Rust: 19,333行 (58個檔案) - 21.2%  
+# JavaScript: 4,521行 (41個檔案) - 5.0%
+# 總計: 90,996行核心程式碼
+```
+
+**統計原則**:
+- ✅ 只計算手寫核心代碼（TypeScript, Rust, JavaScript）
+- ❌ 排除依賴包（node_modules目錄）
+- ❌ 排除編譯產物（target目錄）
+- ❌ 排除版本控制（.git目錄）
+- 📊 使用cloc專業工具，不使用wc或find命令
+
+**防止錯誤更新**:
+- README.md更新時必須使用上述標準命令驗證
+- 定期（每月）重新統計並同步文檔
+- 所有手動輸入的數字都要用cloc驗證
+
 ## Critical Development Rules
 
 1. **API Layer**: Always use `import { api } from './api'`
@@ -243,7 +283,7 @@ const toggleCharacterSelection = (characterId: string) => {
 6. **Model Selection**: Preserve user's choice across provider switches
 7. **Token Management**: Use `generateSmartParams()` for model-specific limits
 8. **Character Analysis**: Use Compromise.js for Chinese NLP
-9. **PDF Fonts**: Verify Noto Sans TC integrity before compilation
+9. **PDF Generation**: Chrome Headless uses system fonts - no embedding required
 10. **Naming**: Use `#[allow(non_snake_case)]` for Tauri camelCase compatibility
 11. **macOS Icons**: Use `killall Dock && killall Finder` after icon updates
 12. **Distribution**: DMG format preferred for macOS (best UX), PKG as legacy support
@@ -303,8 +343,8 @@ DMG format is now the primary macOS distribution method, providing the best user
 - Bundle: 90% smaller
 
 ### Export Issues
-- PDF size: Large due to embedded 7.1MB Chinese font
-- Text wrapping: Handles Chinese/ASCII width differences
+- PDF generation: Chrome Headless required - auto-detects Chrome installation paths
+- Chinese text: System fonts provide native Chinese rendering support
 
 ### Icon Cache
 - macOS caches aggressively: `killall Dock && killall Finder` or restart

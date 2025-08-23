@@ -52,7 +52,7 @@ const TemplateManagerModal: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[10001] p-4" style={{ isolation: 'isolate' }}>
         <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl p-8">
           <div className="flex items-center space-x-3">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gold-500"></div>
@@ -64,7 +64,7 @@ const TemplateManagerModal: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[10001] p-4" style={{ isolation: 'isolate' }}>
       <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
         {/* 標題 */}
         <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">

@@ -2,14 +2,15 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import {
   ImageVersion,
   VersionTree,
+  VersionTreeNode,
   VersionComparison,
   VersionHistory,
   VersionBranch,
   VersionFilter,
   VersionOperationResult,
   VersionStatistics,
-  VersionStatus,
-  VersionType,
+  // VersionStatus,
+  // VersionType,
   VersionExportOptions,
   VersionImportOptions,
 } from '../../types/versionManagement';
@@ -154,7 +155,7 @@ const initialState: VersionManagementState = {
 // 載入版本列表
 export const loadVersions = createAsyncThunk(
   'versionManagement/loadVersions',
-  async (imageId: string) => {
+  async (_imageId: string) => {
     // TODO: 實際實現時需要呼叫 API
     // const response = await api.versions.getByImageId(imageId);
     // return response;
@@ -171,7 +172,7 @@ export const loadVersions = createAsyncThunk(
 // 創建新版本
 export const createVersion = createAsyncThunk(
   'versionManagement/createVersion',
-  async (versionData: Partial<ImageVersion>) => {
+  async (_versionData: Partial<ImageVersion>) => {
     // TODO: 實際實現時需要呼叫 API
     // const response = await api.versions.create(versionData);
     // return response;
@@ -192,7 +193,7 @@ export const createVersion = createAsyncThunk(
 // 更新版本
 export const updateVersion = createAsyncThunk(
   'versionManagement/updateVersion',
-  async ({ versionId, data }: { versionId: string; data: Partial<ImageVersion> }) => {
+  async ({ versionId, data: _data }: { versionId: string; data: Partial<ImageVersion> }) => {
     // TODO: 實際實現時需要呼叫 API
     // const response = await api.versions.update(versionId, data);
     // return response;
@@ -234,7 +235,7 @@ export const deleteVersion = createAsyncThunk(
 // 載入版本樹
 export const loadVersionTree = createAsyncThunk(
   'versionManagement/loadVersionTree',
-  async (rootVersionId: string) => {
+  async (_rootVersionId: string) => {
     // TODO: 實際實現時需要呼叫 API
     // const response = await api.versions.getTree(rootVersionId);
     // return response;
@@ -245,7 +246,7 @@ export const loadVersionTree = createAsyncThunk(
         // 建立模擬版本樹
         const mockTree: VersionTree = {
           rootVersion: {} as ImageVersion,
-          tree: {} as any,
+          tree: {} as VersionTreeNode,
           branches: [],
           totalVersions: 0,
           maxDepth: 0,
@@ -259,7 +260,7 @@ export const loadVersionTree = createAsyncThunk(
 // 比較版本
 export const compareVersions = createAsyncThunk(
   'versionManagement/compareVersions',
-  async ({ version1Id, version2Id }: { version1Id: string; version2Id: string }) => {
+  async ({ version1Id: _version1Id, version2Id: _version2Id }: { version1Id: string; version2Id: string }) => {
     // TODO: 實際實現時需要呼叫 API
     // const response = await api.versions.compare(version1Id, version2Id);
     // return response;
@@ -285,7 +286,7 @@ export const compareVersions = createAsyncThunk(
 // 載入統計資訊
 export const loadStatistics = createAsyncThunk(
   'versionManagement/loadStatistics',
-  async (imageId?: string) => {
+  async (_imageId?: string) => {
     // TODO: 實際實現時需要呼叫 API
     // const response = await api.versions.getStatistics(imageId);
     // return response;
@@ -324,7 +325,7 @@ export const loadStatistics = createAsyncThunk(
 // 導出版本
 export const exportVersions = createAsyncThunk(
   'versionManagement/exportVersions',
-  async (options: VersionExportOptions) => {
+  async (_options: VersionExportOptions) => {
     // TODO: 實際實現時需要呼叫 API
     // const response = await api.versions.export(options);
     // return response;
@@ -341,7 +342,7 @@ export const exportVersions = createAsyncThunk(
 // 匯入版本
 export const importVersions = createAsyncThunk(
   'versionManagement/importVersions',
-  async (options: VersionImportOptions) => {
+  async (_options: VersionImportOptions) => {
     // TODO: 實際實現時需要呼叫 API
     // const response = await api.versions.import(options);
     // return response;
@@ -361,7 +362,7 @@ export const importVersions = createAsyncThunk(
 // 創建分支
 export const createBranch = createAsyncThunk(
   'versionManagement/createBranch',
-  async ({ name, sourceVersionId }: { name: string; sourceVersionId: string }) => {
+  async ({ name: _name, sourceVersionId: _sourceVersionId }: { name: string; sourceVersionId: string }) => {
     // TODO: 實際實現時需要呼叫 API
     // const response = await api.branches.create({ name, sourceVersionId });
     // return response;
