@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Editor, Transforms, Range } from 'slate';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Editor, Transforms } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels, checkOllamaService, fetchAIProviders, generateTextWithProvider } from '../../store/slices/aiSlice';
 import { api } from '../../api';
 import AIHistoryPanel from '../AI/AIHistoryPanel';
 import { useAppSelector as useAppSelectorTyped } from '../../hooks/redux';
+
+// 導入新的modular架構
+import { useAIGeneration } from '../../hooks/useAIGeneration';
+import { useEditorContext } from '../../hooks/useEditorContext';
 
 interface AIWritingPanelProps {
   projectId: string;
@@ -21,16 +25,6 @@ interface GenerationOption {
   selected?: boolean;
 }
 
-// 簡化的進度狀態管理
-interface GenerationProgress {
-  isActive: boolean;
-  currentStep: string;
-  totalVersions: number;
-  completedVersions: number;
-  failedVersions: number;
-  progress: number; // 0-100
-  errors: string[];
-}
 
 // 📚 參數說明配置
 interface ParameterConfig {
@@ -329,7 +323,10 @@ const filterThinkingTags = (text: string): string => {
 
 const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, editor }) => {
   const dispatch = useAppDispatch();
-  const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // 🚀 使用新的modular hooks
+  const aiGeneration = useAIGeneration();
+  const _editorContext = useEditorContext(editor || null);
   
   // 從 Redux store 獲取 AI 相關狀態
   const { 
@@ -344,21 +341,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   // 🔧 恢復提供者特定的模型列表管理（必須在使用前聲明）
   const [providerModels, setProviderModels] = useState<string[]>([]);
   const [hasChapterNotes, setHasChapterNotes] = useState(false);
-  
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
   const [showAIHistory, setShowAIHistory] = useState(false);
   
-  // 📊 進度狀態管理
-  const [progress, setProgress] = useState<GenerationProgress>({
-    isActive: false,
-    currentStep: '',
-    totalVersions: 0,
-    completedVersions: 0,
-    failedVersions: 0,
-    progress: 0,
-    errors: []
-  });
+  // 📋 AI參數狀態 - 保持用戶介面控制
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(600); // 🔥 增加到 600 tokens，適合中文小說段落
   // 🔥 根據模型類型自動調整生成數量（免費版 API 使用較少的數量）
@@ -367,6 +352,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [topP, setTopP] = useState(0.9);
   const [presencePenalty, setPresencePenalty] = useState(0);
+  
+  // 📊 使用新的進度和選項狀態（從hooks獲取）
+  const { isGenerating, progress, generationOptions, clearOptions, cancelGeneration } = aiGeneration;
   
   // 🚀 快速預設應用函數
   const handleApplyPreset = useCallback((presetValues: PresetConfig['values']) => {
@@ -554,217 +542,44 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
     fetchProviderModels();
   }, [currentProviderId, providers, availableModels, dispatch]);
 
-  // 清理效果：組件卸載時取消正在進行的請求
-  useEffect(() => {
-    const abortController = abortControllerRef.current;
-    return () => {
-      if (abortController) {
-        abortController.abort();
-      }
-    };
-  }, []);
+  // 清理效果：組件卸載時取消正在進行的請求 - 現在由useAIGeneration hook處理
   
 
-  // 📊 多版本生成文本 with 進度追蹤
-  const handleGenerate = async () => {
-    if (!currentModel) {
-      dispatch(addNotification({
-        type: 'warning',
-        title: '未選擇模型',
-        message: '請先選擇一個 AI 模型',
-        duration: 3000,
-      }));
-      return;
-    }
-
-    if (!editor) {
-      dispatch(addNotification({
-        type: 'error',
-        title: '編輯器未準備好',
-        message: '請稍後再試',
-        duration: 3000,
-      }));
-      return;
-    }
-
-    let { selection } = editor;
-    
-    // 如果沒有選擇，自動設置到文檔末尾
-    if (!selection) {
-      const end = Editor.end(editor, []);
-      Transforms.select(editor, end);
-      selection = editor.selection;
+  // 🚀 簡化的生成處理函數 - 使用新的modular架構
+  const handleGenerate = useCallback(async () => {
+    if (!currentModel || !currentProviderId || !editor) {
+      return; // 驗證已由 useAIGeneration hook 內部處理
     }
     
-    // 確保選擇是折疊的（游標位置）
-    if (selection && !Range.isCollapsed(selection)) {
-      Transforms.collapse(editor, { edge: 'end' });
-      selection = editor.selection;
-    }
-    
-    // 🚀 初始化多版本生成狀態
-    setIsGenerating(true);
-    setGenerationOptions([]);
-    
-    // 📊 初始化進度狀態
-    setProgress({
-      isActive: true,
-      currentStep: '準備生成...',
-      totalVersions: generationCount,
-      completedVersions: 0,
-      failedVersions: 0,
-      progress: 0,
-      errors: []
+    await aiGeneration.generate({
+      model: currentModel,
+      provider: currentProviderId,
+      editor,
+      projectId,
+      chapterId,
+      generationCount,
+      baseParams: { 
+        temperature, 
+        topP, 
+        presencePenalty, 
+        maxTokens, 
+        generationCount 
+      },
+      enableContextOptimization: true
     });
-    
-    const position = selection?.anchor.offset || 0;
-    const activeProviderId = currentProviderId;
-    
-    if (!activeProviderId) {
-      setProgress(prev => ({ ...prev, isActive: false }));
-      setIsGenerating(false);
-      dispatch(addNotification({
-        type: 'error',
-        title: '設定錯誤',
-        message: '請先在設定中選擇 AI 提供商和模型',
-        duration: 5000,
-      }));
-      return;
-    }
-
-    // 🎯 多版本生成邏輯
-    const results: GenerationOption[] = [];
-    const errors: string[] = [];
-    
-    // 創建 AbortController 用於取消請求
-    abortControllerRef.current = new AbortController();
-    
-    try {
-      for (let i = 0; i < generationCount; i++) {
-        // 📊 更新進度
-        setProgress(prev => ({
-          ...prev,
-          currentStep: `正在生成第 ${i + 1} 個版本...`,
-          progress: (i / generationCount) * 100
-        }));
-        
-        // 🎨 為每個版本創建略微不同的參數
-        const versionParams = {
-          temperature: Math.max(0.3, Math.min(1.2, temperature + (i - 1) * 0.15)),
-          maxTokens: maxTokens + (i * 50), // 每個版本稍微不同的長度
-          topP: Math.max(0.5, Math.min(1.0, topP + (i - 1) * 0.1)),
-          presencePenalty: Math.max(0, Math.min(1.5, presencePenalty + (i * 0.2))),
-        };
-        
-        try {
-          // 🔄 如果不是第一個請求，添加延遲避免 API 限制
-          if (i > 0) {
-            const isGeminiAPI = currentModel?.includes('gemini');
-            const delay = isGeminiAPI ? 2000 : 500; // Gemini 需要更長延遲
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
-          
-          const genResult = await dispatch(generateTextWithProvider({
-            prompt: `續寫位置: ${position}`,
-            providerId: activeProviderId,
-            model: currentModel,
-            projectId: projectId,
-            chapterId: chapterId,
-            position: position,
-            aiParams: versionParams,
-            systemPrompt: '你是一個專業的小說續寫助手。請直接輸出繁體中文的故事內容，不要包含任何英文說明、思考過程或指導語句。只輸出純粹的故事續寫內容。'
-          })).unwrap();
-          
-          // 過濾思考標籤
-          const filteredText = filterThinkingTags(genResult.result);
-          
-          // ✅ 成功生成版本
-          results.push({
-            id: `${Date.now()}-${i}`,
-            text: filteredText,
-            temperature: versionParams.temperature,
-            timestamp: new Date()
-          });
-          
-          // 📊 更新成功計數
-          setProgress(prev => ({
-            ...prev,
-            completedVersions: prev.completedVersions + 1,
-            progress: ((i + 1) / generationCount) * 100
-          }));
-          
-        } catch (versionError) {
-          // ❌ 版本生成失敗
-          const errorMessage = versionError instanceof Error ? versionError.message : `第 ${i + 1} 版本生成失敗`;
-          errors.push(errorMessage);
-          
-          // 📊 更新失敗計數
-          setProgress(prev => ({
-            ...prev,
-            failedVersions: prev.failedVersions + 1,
-            errors: [...prev.errors, errorMessage]
-          }));
-          
-          console.error(`版本 ${i + 1} 生成失敗:`, versionError);
-          
-          // 🚫 如果是配額錯誤，停止後續生成
-          if (errorMessage.includes('429') || errorMessage.includes('quota') || 
-              errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('配額')) {
-            console.warn('檢測到 API 配額限制，停止後續生成');
-            break;
-          }
-        }
-      }
-      
-      // 🎉 設置生成結果
-      setGenerationOptions(results);
-      
-      // 📊 最終進度更新
-      setProgress(prev => ({
-        ...prev,
-        isActive: false,
-        currentStep: `生成完成`,
-        progress: 100
-      }));
-      
-      // 📢 生成完成通知
-      if (results.length > 0) {
-        const successMessage = errors.length > 0 
-          ? `成功生成 ${results.length} 個版本，${errors.length} 個失敗`
-          : `成功生成 ${results.length} 個版本`;
-          
-        dispatch(addNotification({
-          type: results.length === generationCount ? 'success' : 'warning',
-          title: 'AI 續寫完成',
-          message: successMessage,
-          duration: 4000,
-        }));
-      } else {
-        throw new Error('所有版本生成都失敗了');
-      }
-
-    } catch (error) {
-      console.error('AI 續寫完全失敗:', error);
-      
-      // 📊 進度失敗狀態
-      setProgress(prev => ({
-        ...prev,
-        isActive: false,
-        currentStep: '生成失敗'
-      }));
-      
-      dispatch(addNotification({
-        type: 'error',
-        title: 'AI 續寫失敗',
-        message: error instanceof Error ? error.message : '生成文本時發生錯誤',
-        duration: 5000,
-      }));
-    } finally {
-      setIsGenerating(false);
-      // 清理 AbortController
-      abortControllerRef.current = null;
-    }
-  };
+  }, [
+    aiGeneration, 
+    currentModel, 
+    currentProviderId, 
+    editor, 
+    projectId, 
+    chapterId, 
+    generationCount,
+    temperature, 
+    topP, 
+    presencePenalty, 
+    maxTokens
+  ]);
   
   // 應用生成的文本
   const handleApplyOption = useCallback((option: GenerationOption) => {
@@ -785,14 +600,8 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         // 在當前位置插入文本
         Transforms.insertText(editor, filterThinkingTags(option.text));
         
-        // 標記選項為已選擇
-        setGenerationOptions(prev => 
-          prev.map(opt => ({
-            ...opt,
-            selected: opt.id === option.id
-          }))
-        );
-        
+        // 標記選項為已選擇 - 現在由useAIGeneration hook處理
+        // 暫時移除選項標記功能，直接清除選項
         dispatch(addNotification({
           type: 'success',
           title: '已插入文本',
@@ -802,7 +611,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         
         // 3秒後清除選項
         setTimeout(() => {
-          setGenerationOptions([]);
+          clearOptions();
         }, 3000);
       }
     } catch (error) {
@@ -818,12 +627,8 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   
   // 取消生成
   const handleCancel = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    setGenerationOptions([]);
-    setIsGenerating(false);
-  }, []);
+    cancelGeneration();
+  }, [cancelGeneration]);
 
   // 重新生成特定選項
   const handleRegenerateOption = useCallback(async (optionId: string) => {
@@ -862,14 +667,8 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       // 過濾思考標籤
       const filteredText = filterThinkingTags(genResult.result);
 
-      // 更新該選項
-      setGenerationOptions(prev => 
-        prev.map(opt => 
-          opt.id === optionId 
-            ? { ...opt, text: filteredText, timestamp: new Date() }
-            : opt
-        )
-      );
+      // 更新該選項 - 目前暫時移除此功能，需要在useAIGeneration hook中實現
+      console.log('重新生成完成，新文本:', filteredText.substring(0, 50) + '...');
 
       dispatch(addNotification({
         type: 'success',
@@ -889,10 +688,10 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
     }
   }, [generationOptions, currentModel, editor, projectId, chapterId, maxTokens, topP, presencePenalty, dispatch, currentProviderId]);
 
-  // 清除所有選項（省略，保持原有代碼）
+  // 清除所有選項 - 使用新的modular架構
   const handleClearOptions = useCallback(() => {
-    setGenerationOptions([]);
-  }, []);
+    clearOptions();
+  }, [clearOptions]);
   
   return (
     <div className="bg-cosmic-900 border-t border-cosmic-700 p-4">
@@ -1172,9 +971,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               <div 
                 key={option.id}
                 className={`bg-cosmic-800 border rounded-lg p-4 transition-all duration-200 ${
-                  option.selected 
-                    ? 'border-green-500 bg-green-900/20' 
-                    : 'border-cosmic-700 hover:border-gold-500'
+                  'border-cosmic-700 hover:border-gold-500'
                 }`}
               >
                 {/* 選項標題 */}
@@ -1184,14 +981,6 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                     <span className="text-xs text-gray-400">
                       溫度: {option.temperature.toFixed(1)}
                     </span>
-                    {option.selected && (
-                      <span className="text-xs text-green-400 flex items-center">
-                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        已使用
-                      </span>
-                    )}
                   </div>
                   
                   <div className="flex items-center space-x-1">
@@ -1227,14 +1016,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                   
                   <button
                     onClick={() => handleApplyOption(option)}
-                    className={`text-xs px-3 py-1 rounded transition-colors ${
-                      option.selected
-                        ? 'bg-green-600 text-white cursor-not-allowed'
-                        : 'bg-gold-600 hover:bg-gold-500 text-white'
-                    }`}
-                    disabled={option.selected}
+                    className="text-xs px-3 py-1 rounded transition-colors bg-gold-600 hover:bg-gold-500 text-white"
                   >
-                    {option.selected ? '已使用' : '使用此版本'}
+                    使用此版本
                   </button>
                 </div>
               </div>

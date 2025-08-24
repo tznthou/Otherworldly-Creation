@@ -66,7 +66,8 @@
       "Bash(chmod:*)",
       "Bash(npm test)",
       "Bash(npm test:*)",
-      "Bash(timeout 30s npm test:*)"
+      "Bash(timeout 30s npm test:*)",
+      "mcp__serena__insert_before_symbol"
     ],
     "deny": [],
     "ask": [],
