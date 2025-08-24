@@ -67,7 +67,9 @@
       "Bash(npm test)",
       "Bash(npm test:*)",
       "Bash(timeout 30s npm test:*)",
-      "mcp__serena__insert_before_symbol"
+      "mcp__serena__insert_before_symbol",
+      "mcp__serena__delete_memory",
+      "Bash(RELEASE_VERSION=1.1.0 node scripts/sync-version.js)"
     ],
     "deny": [],
     "ask": [],

@@ -39,7 +39,7 @@ import EbookIntegrationPanel from '../EbookIntegration/EbookIntegrationPanel';
 import { createPortal } from 'react-dom';
 import DeleteConfirmationModal from '../DeleteConfirmation/DeleteConfirmationModal';
 import type { BatchRenameOperation, EbookExportConfig } from '../../../../types/imageMetadata';
-import type { DeleteIllustrationRequest, DeleteIllustrationResponse } from '../../../../api/types';
+import type { DeleteIllustrationRequest } from '../../../../api/types';
 
 interface GalleryTabProps {
   className?: string;
@@ -444,45 +444,25 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     try {
       console.log('執行刪除操作:', request);
       
-      // TODO: 實現真正的 API 調用
-      // const response = await api.illustration.deleteIllustrations(request);
+      // 調用真正的API
+      const response = await api.illustration.deleteIllustrations(request);
       
-      // 模擬 API 調用
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const mockResponse: DeleteIllustrationResponse = {
-        success: true,
-        deletedCount: request.imageIds.length,
-        failedCount: 0,
-        totalRequested: request.imageIds.length,
-        deletedImageIds: request.imageIds,
-        failedImageIds: [],
-        deletedToPath: request.deleteType === 'soft' 
-          ? '~/Library/Application Support/genesis-chronicle/deleted-images/' 
-          : undefined,
-        message: `成功${request.deleteType === 'soft' ? '移至垃圾桶' : '永久刪除'} ${request.imageIds.length} 張圖片`
-      };
-
-      if (mockResponse.success) {
+      if (response.success) {
         // 從本地狀態中移除已刪除的圖片
         setIllustrationHistory(prev => 
-          prev.filter(item => !mockResponse.deletedImageIds.includes(item.id))
+          prev.filter(item => !response.deletedImageIds.includes(item.id))
         );
         
         // 清空選擇
         dispatch(setSelectedImageIds([]));
         
         // 顯示成功訊息
-        const successMessage = `✅ ${mockResponse.message}
-${mockResponse.deletedToPath ? `位置: ${mockResponse.deletedToPath}` : ''}
-${mockResponse.failedCount > 0 ? `\n失敗: ${mockResponse.failedCount} 張` : ''}
-
-⚠️ 這是模擬實現，實際功能需要後端支援`;
+        const successMessage = `✅ ${response.message}\n${response.deletedToPath ? `位置: ${response.deletedToPath}` : ''}\n${response.failedCount > 0 ? `\n失敗: ${response.failedCount} 張` : ''}`;
 
         alert(successMessage);
         setShowDeleteConfirmation(false);
       } else {
-        alert('刪除失敗: ' + (mockResponse.message || '未知錯誤'));
+        alert('刪除失敗: ' + (response.message || '未知錯誤'));
       }
     } catch (error) {
       console.error('刪除圖片失敗:', error);

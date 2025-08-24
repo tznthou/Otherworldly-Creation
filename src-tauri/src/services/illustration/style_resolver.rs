@@ -45,6 +45,7 @@ impl StyleResolver {
     /// 
     /// # 返回值
     /// 返回所有支援的標準風格字串列表，不包括自定義風格
+    #[allow(dead_code)] // 用於測試和未來擴展
     pub fn get_supported_styles() -> Vec<&'static str> {
         vec!["anime", "realistic", "concept_art", "comic"]
     }
@@ -56,6 +57,7 @@ impl StyleResolver {
     /// 
     /// # 返回值
     /// 如果是支援的標準風格返回 true，否則返回 false
+    #[allow(dead_code)] // 用於測試和未來擴展
     pub fn is_standard_style(style_str: &str) -> bool {
         Self::get_supported_styles().contains(&style_str)
     }

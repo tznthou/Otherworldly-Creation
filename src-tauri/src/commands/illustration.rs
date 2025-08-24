@@ -1364,15 +1364,16 @@ fn move_temp_to_final_image(temp_path: &str, image_id: &str) -> Result<String, B
 
 /// 刪除插畫（支援軟刪除和永久刪除）
 #[tauri::command]
+#[allow(non_snake_case)] // Tauri 需要駝峰式參數名
 pub async fn delete_illustrations(
-    image_ids: Vec<String>,
-    delete_type: String, // "soft" 或 "permanent"
-    preserve_metadata: Option<bool>,
+    imageIds: Vec<String>,        // 改為駝峰式，匹配其他函數
+    deleteType: String,           // 改為駝峰式
+    preserveMetadata: Option<bool>, // 改為駝峰式
     reason: Option<String>,
 ) -> Result<Value, String> {
-    log::info!("[IllustrationCommand] 刪除插畫: {} 張，類型: {}", image_ids.len(), delete_type);
+    log::info!("[IllustrationCommand] 刪除插畫: {} 張，類型: {}", imageIds.len(), deleteType);
     
-    let preserve_metadata = preserve_metadata.unwrap_or(true);
+    let preserve_metadata = preserveMetadata.unwrap_or(true);
     let mut deleted_count = 0;
     let mut failed_count = 0;
     let mut deleted_image_ids = Vec::new();
@@ -1383,7 +1384,7 @@ pub async fn delete_illustrations(
     let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
     
     // 準備垃圾桶目錄（僅軟刪除需要）
-    let deleted_images_dir = if delete_type == "soft" {
+    let deleted_images_dir = if deleteType == "soft" {
         let dir = get_deleted_images_dir()
             .map_err(|e| format!("建立垃圾桶目錄失敗: {}", e))?;
         Some(dir)
@@ -1391,11 +1392,11 @@ pub async fn delete_illustrations(
         None
     };
     
-    for image_id in image_ids.iter() {
+    for image_id in imageIds.iter() {
         match process_single_image_deletion(
             &conn,
             image_id,
-            &delete_type,
+            &deleteType,
             preserve_metadata,
             reason.as_deref(),
             deleted_images_dir.as_deref(),
@@ -1404,7 +1405,7 @@ pub async fn delete_illustrations(
                 deleted_count += 1;
                 deleted_image_ids.push(image_id.clone());
                 log::info!("[IllustrationCommand] 成功{}圖片: {}", 
-                    if delete_type == "soft" { "軟刪除" } else { "永久刪除" }, image_id);
+                    if deleteType == "soft" { "軟刪除" } else { "永久刪除" }, image_id);
             }
             Err(e) => {
                 failed_count += 1;
@@ -1415,7 +1416,7 @@ pub async fn delete_illustrations(
         }
     }
     
-    let deleted_to_path = if delete_type == "soft" {
+    let deleted_to_path = if deleteType == "soft" {
         deleted_images_dir.map(|p| p.to_string_lossy().to_string())
     } else {
         None
@@ -1425,13 +1426,13 @@ pub async fn delete_illustrations(
         "success": true,
         "deletedCount": deleted_count,
         "failedCount": failed_count,
-        "totalRequested": image_ids.len(),
+        "totalRequested": imageIds.len(),
         "deletedImageIds": deleted_image_ids,
         "failedImageIds": failed_image_ids,
         "errors": if errors.is_empty() { None } else { Some(errors) },
         "deletedToPath": deleted_to_path,
         "message": format!("成功{} {} 張圖片{}",
-            if delete_type == "soft" { "移至垃圾桶" } else { "永久刪除" },
+            if deleteType == "soft" { "移至垃圾桶" } else { "永久刪除" },
             deleted_count,
             if failed_count > 0 { format!("，{} 張失敗", failed_count) } else { String::new() }
         )
@@ -1440,17 +1441,18 @@ pub async fn delete_illustrations(
 
 /// 恢復軟刪除的插畫
 #[tauri::command]
+#[allow(non_snake_case)] // Tauri 需要駝峰式參數名
 pub async fn restore_illustrations(
-    image_ids: Vec<String>
+    imageIds: Vec<String>
 ) -> Result<Value, String> {
-    log::info!("[IllustrationCommand] 恢復軟刪除插畫: {} 張", image_ids.len());
+    log::info!("[IllustrationCommand] 恢復軟刪除插畫: {} 張", imageIds.len());
     
     let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
     let mut restored_count = 0;
     let mut failed_count = 0;
     let mut errors = Vec::new();
     
-    for image_id in image_ids.iter() {
+    for image_id in imageIds.iter() {
         match restore_single_image(&conn, image_id) {
             Ok(_) => {
                 restored_count += 1;
@@ -1468,9 +1470,9 @@ pub async fn restore_illustrations(
         "success": true,
         "deletedCount": restored_count,
         "failedCount": failed_count,
-        "totalRequested": image_ids.len(),
-        "deletedImageIds": image_ids.iter().take(restored_count).cloned().collect::<Vec<_>>(),
-        "failedImageIds": image_ids.iter().skip(restored_count).cloned().collect::<Vec<_>>(),
+        "totalRequested": imageIds.len(),
+        "deletedImageIds": imageIds.iter().take(restored_count).cloned().collect::<Vec<_>>(),
+        "failedImageIds": imageIds.iter().skip(restored_count).cloned().collect::<Vec<_>>(),
         "errors": if errors.is_empty() { None } else { Some(errors) },
         "message": format!("成功恢復 {} 張圖片{}", 
             restored_count,
@@ -1547,13 +1549,14 @@ pub async fn get_deleted_illustrations(
 
 /// 永久刪除插畫（直接刪除，不可恢復）
 #[tauri::command]
+#[allow(non_snake_case)] // Tauri 需要駝峰式參數名
 pub async fn permanent_delete_illustrations(
-    image_ids: Vec<String>
+    imageIds: Vec<String>
 ) -> Result<Value, String> {
-    log::info!("[IllustrationCommand] 永久刪除插畫: {} 張", image_ids.len());
+    log::info!("[IllustrationCommand] 永久刪除插畫: {} 張", imageIds.len());
     
     // 直接調用 delete_illustrations 並指定永久刪除
-    delete_illustrations(image_ids, "permanent".to_string(), Some(false), Some("永久清理".to_string())).await
+    delete_illustrations(imageIds, "permanent".to_string(), Some(false), Some("永久清理".to_string())).await
 }
 
 // ========================= 刪除功能輔助函數 =========================
@@ -1572,10 +1575,11 @@ fn get_deleted_images_dir() -> Result<std::path::PathBuf, Box<dyn std::error::Er
 }
 
 /// 處理單個圖片的刪除操作
+#[allow(non_snake_case)] // 保持與調用函數的參數名一致
 fn process_single_image_deletion(
     conn: &rusqlite::Connection,
     image_id: &str,
-    delete_type: &str,
+    deleteType: &str,
     preserve_metadata: bool,
     reason: Option<&str>,
     deleted_images_dir: Option<&std::path::Path>,
@@ -1585,7 +1589,7 @@ fn process_single_image_deletion(
     // 首先查詢圖片信息（檢查 pollinations_generations 和 illustration_history）
     let image_info = get_image_info(conn, image_id)?;
     
-    if delete_type == "soft" {
+    if deleteType == "soft" {
         // 軟刪除：移動檔案到垃圾桶並更新資料庫標記
         if let Some(file_path) = &image_info.local_file_path {
             if let Some(deleted_dir) = deleted_images_dir {

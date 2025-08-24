@@ -1338,9 +1338,9 @@ export const tauriAPI: API = {
       reason?: string;
     }) => {
       return safeInvoke('delete_illustrations', {
-        image_ids: request.imageIds,
-        delete_type: request.deleteType,
-        preserve_metadata: request.preserveMetadata,
+        imageIds: request.imageIds,              // ✅ 駝峰式匹配後端
+        deleteType: request.deleteType,          // ✅ 駝峰式匹配後端
+        preserveMetadata: request.preserveMetadata, // ✅ 駝峰式匹配後端
         reason: request.reason
       });
     },
