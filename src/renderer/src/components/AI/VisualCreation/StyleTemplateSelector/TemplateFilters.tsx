@@ -84,7 +84,7 @@ export const TemplateFilters = memo<TemplateFiltersProps>(({
       {/* 搜索欄 */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5 text-cosmic-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
@@ -93,7 +93,7 @@ export const TemplateFilters = memo<TemplateFiltersProps>(({
           placeholder="搜索模板名稱或描述..."
           value={filter.searchTerm || ''}
           onChange={handleSearchChange}
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+          className="block w-full pl-10 pr-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 placeholder-cosmic-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
         />
       </div>
 
@@ -101,7 +101,7 @@ export const TemplateFilters = memo<TemplateFiltersProps>(({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* 類別過濾 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-cosmic-300 mb-2">
             類別
           </label>
           <div className="flex flex-wrap gap-2">
@@ -110,7 +110,7 @@ export const TemplateFilters = memo<TemplateFiltersProps>(({
               className={`px-3 py-1 rounded-full text-sm transition-colors ${
                 !filter.category 
                   ? 'bg-gold-600 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600'
               }`}
             >
               全部
@@ -122,7 +122,7 @@ export const TemplateFilters = memo<TemplateFiltersProps>(({
                 className={`px-3 py-1 rounded-full text-sm transition-colors flex items-center space-x-1 ${
                   filter.category === category.id
                     ? 'bg-gold-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600'
                 }`}
               >
                 <span>{category.icon}</span>
@@ -134,13 +134,13 @@ export const TemplateFilters = memo<TemplateFiltersProps>(({
 
         {/* 提供商過濾 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-cosmic-300 mb-2">
             提供商
           </label>
           <select
             value={filter.provider || 'all'}
             onChange={(e) => handleProviderChange(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+            className="block w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
           >
             {providerOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -152,13 +152,13 @@ export const TemplateFilters = memo<TemplateFiltersProps>(({
 
         {/* 模板類型過濾 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-cosmic-300 mb-2">
             模板類型
           </label>
           <select
             value={filter.isBuiltIn === undefined ? 'all' : filter.isBuiltIn ? 'builtin' : 'custom'}
             onChange={(e) => handleBuiltInChange(e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+            className="block w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
           >
             {builtInOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -173,13 +173,13 @@ export const TemplateFilters = memo<TemplateFiltersProps>(({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         {/* 排序選項 */}
         <div className="flex items-center space-x-3">
-          <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+          <label className="text-sm font-medium text-cosmic-300 whitespace-nowrap">
             排序方式:
           </label>
           <select
             value={sortBy}
             onChange={handleSortChange}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+            className="px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
           >
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>

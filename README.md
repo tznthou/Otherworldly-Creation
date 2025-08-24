@@ -137,8 +137,12 @@ sudo installer -pkg genesis-chronicle.pkg -target /
 - **視覺化**: Recharts 3.1.2專業圖表，雷達圖+趨勢線+條形圖
 - **NLP引擎**: Compromise.js中文特化，智能對話提取
 
-### 🎨 視覺創作中心系統 (2025年8月全面重構完成！)
+### 🎨 視覺創作中心系統 (2025年8月24日 StyleResolver模組新增！)
 - **技術實現**: 32個組件(8,032行) + 14個Hooks(4,134行) + 完整Redux狀態管理
+- **🆕 StyleResolver模組**: 新增124行風格解析器，解決風格選擇無效問題
+  - 支援動態風格切換：真實風格、動漫風格、概念藝術、漫畫風格
+  - 8個單元測試確保功能正確性和穩定性
+  - 取代原本的硬編碼動漫風格，實現真正的用戶選擇風格
 - **架構設計**: 模組化組件系統，支援標籤式介面 (Create/Monitor/Gallery)
 - **核心功能**:
   - **創建系統**: 角色選擇、場景建構、生成控制完整工作流
@@ -365,8 +369,8 @@ npm run version:check
 
 ### 完整專案架構
 ```
-Genesis Chronicle (總計：92,835行核心程式碼，不含依賴包)
-├── 🦀 src-tauri/               # Rust後端 (19,399行)
+Genesis Chronicle (總計：96,568行核心程式碼，不含依賴包)
+├── 🦀 src-tauri/               # Rust後端 (20,040行)
 │   ├── src/commands/          # Tauri命令層 (15個模組)
 │   │   ├── ai.rs             # AI服務接口
 │   │   ├── ai_providers.rs   # 多AI供應商管理
@@ -390,6 +394,12 @@ Genesis Chronicle (總計：92,835行核心程式碼，不含依賴包)
 │   │   │   ├── character_consistency.rs # 角色一致性
 │   │   │   ├── batch_manager.rs      # 批量生成管理
 │   │   │   └── visual_traits.rs     # 視覺特徵管理
+│   │   ├── illustration/     # AI插畫系統 (2,800+行)
+│   │   │   ├── style_resolver.rs      # 🆕 風格解析器（124行）
+│   │   │   ├── imagen_api.rs        # Gemini Imagen API
+│   │   │   ├── character_consistency.rs # 角色一致性
+│   │   │   ├── batch_manager.rs      # 批量生成管理
+│   │   │   └── visual_traits.rs     # 視覺特徵管理
 │   │   └── translation/      # 翻譯引擎
 │   │       ├── translation_engine.rs # 中英翻譯
 │   │       ├── prompt_optimizer.rs  # 提示詞優化
@@ -399,7 +409,7 @@ Genesis Chronicle (總計：92,835行核心程式碼，不含依賴包)
 │       ├── migrations.rs    # 版本遷移系統
 │       └── connection.rs    # 連接管理
 │
-├── ⚛️ src/renderer/           # React前端 (67,703行)
+├── ⚛️ src/renderer/           # React前端 (70,795行)
 │   ├── components/           # UI組件系統
 │   │   ├── Templates/       # 模板管理系統 (5個組件)
 │   │   │   ├── TemplateManager.tsx      # 模板管理主介面
@@ -513,7 +523,7 @@ Genesis Chronicle (總計：92,835行核心程式碼，不含依賴包)
 │   │   └── e2e/              # 端到端測試
 │   └── src/renderer/src/components/__tests__/ # 組件單元測試
 │
-├── 📜 scripts/               # 自動化腳本 (4,521行 JavaScript)
+├── 📜 scripts/               # 自動化腳本 (5,733行 JavaScript)
 │   ├── create-pkg.sh        # macOS PKG創建
 │   ├── security-check.sh    # 安全檢查
 │   ├── diagnostic.js        # 系統診斷工具
@@ -560,7 +570,20 @@ Genesis Chronicle (總計：92,835行核心程式碼，不含依賴包)
 
 ## 📋 版本記錄
 
-### v1.0.10 (2025-08-24) - AI續寫系統模組化重構 🌟 **技術里程碑**
+### v1.0.10 (2025-08-24 17:13) - StyleResolver模組與UI層級修復 🌟 **最新更新**
+**插畫風格系統模組化 + React Portal z-index修復**
+- 🎨 **StyleResolver模組新增**: 124行Rust代碼，8個單元測試，解決插畫風格選擇問題
+  - 支援動態風格切換（真實/動漫/概念藝術/漫畫風格）
+  - 模組化架構設計，易於擴展新風格
+  - 完整測試覆蓋，確保風格解析正確性
+- 🔧 **UI層級問題修復**: 使用React Portal解決EbookIntegrationPanel z-index覆蓋問題
+  - 識別Sidebar的transform stacking context問題
+  - 實現Portal渲染方案，z-index: 9999確保顯示優先級
+  - 提升用戶介面互動體驗
+- 📊 **程式碼統計更新**: 96,568行（+2,703行），415個檔案（+8檔案）
+- ✅ **品質保證**: 所有新增代碼通過TypeScript類型檢查和單元測試
+
+### v1.0.9 (2025-08-24) - AI續寫系統模組化重構 🌟 **技術里程碑**
 **200行巨型函數→7個專業服務模組，代碼品質大幅提升**
 - 🔥 **重大架構重構**: AI續寫引擎完全模組化，實現Clean Code架構
 - 📊 **代碼度量改善**: handleGenerate函數從200行→34行（減少83%），圈複雜度從15→3（降低80%）
@@ -681,6 +704,6 @@ MIT License - 詳見 [LICENSE](./LICENSE) 檔案
 
 **Genesis Chronicle** - 讓AI為你的創作插上翅膀 ✨
 
-*更新時間：2025年8月24日 00:23 CST*  
-*專案狀態：v1.0.10 版本功能實現確認，七大核心功能全面完成，支持314個AI模型，性能監控系統建立完成*  
-*技術里程碑：v1.1.0計劃功能提前實現，91,518行核心程式碼，完整測試基礎設施與性能優化框架* 🎉
+*更新時間：2025年8月24日 17:13 CST*  
+*專案狀態：v1.0.10 StyleResolver模組與UI層級修復完成，七大核心功能全面完成，支持314個AI模型*  
+*技術里程碁：96,568行核心程式碼，插畫風格系統模組化，React Portal UI修復，415個核心檔案* 🎉

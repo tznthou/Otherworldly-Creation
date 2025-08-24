@@ -15,6 +15,7 @@ pub mod imagen_api;
 pub mod pollinations_api;
 pub mod illustration_manager;
 pub mod batch_manager;
+pub mod style_resolver;
 
 pub use character_consistency::CharacterConsistencyManager;
 pub use seed_manager::SeedManager;
@@ -32,6 +33,7 @@ pub use illustration_manager::{
 pub use batch_manager::{
     BatchManager, BatchRequest, TaskPriority
 };
+pub use style_resolver::StyleResolver;
 
 /// 插畫生成請求結構
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

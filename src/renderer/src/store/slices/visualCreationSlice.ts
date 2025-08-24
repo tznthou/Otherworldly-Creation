@@ -72,7 +72,7 @@ export interface ExportTask {
 // 狀態介面
 export interface VisualCreationState {
   // UI 狀態
-  activeTab: 'create' | 'monitor' | 'gallery' | 'templates' | 'versions';
+  activeTab: 'create' | 'gallery' | 'templates' | 'versions';
   currentProvider: 'pollinations' | 'imagen';
   
   // 創建狀態

@@ -319,6 +319,12 @@ export interface API {
       message?: string;
     }>;
 
+    // === 圖片刪除管理 ===
+    deleteIllustrations: (request: DeleteIllustrationRequest) => Promise<DeleteIllustrationResponse>;
+    restoreIllustrations: (imageIds: string[]) => Promise<DeleteIllustrationResponse>;
+    getDeletedIllustrations: (projectId: string) => Promise<IllustrationHistoryItem[]>;
+    permanentDeleteIllustrations: (imageIds: string[]) => Promise<DeleteIllustrationResponse>;
+
     // === 批次導出功能 ===
     exportImage: (exportParams: {
       imagePath: string;
@@ -385,4 +391,32 @@ export interface CompressionStrategy {
   strategyType: string;
   targetContent: string;
   parameters: Record<string, number>;
+}
+
+// 圖片刪除管理相關類型
+export interface DeleteIllustrationRequest {
+  imageIds: string[];
+  deleteType: 'soft' | 'permanent';
+  preserveMetadata?: boolean;
+  reason?: string;
+}
+
+export interface DeleteIllustrationResponse {
+  success: boolean;
+  deletedCount: number;
+  failedCount: number;
+  totalRequested: number;
+  deletedImageIds: string[];
+  failedImageIds: string[];
+  errors?: string[];
+  deletedToPath?: string;
+  message?: string;
+}
+
+export interface DeletedImageInfo extends IllustrationHistoryItem {
+  deletedAt: string;
+  deletedReason?: string;
+  originalPath: string;
+  deletedPath: string;
+  canRestore: boolean;
 }

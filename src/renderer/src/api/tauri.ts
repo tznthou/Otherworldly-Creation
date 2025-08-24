@@ -1328,6 +1328,33 @@ export const tauriAPI: API = {
       metadata?: any;
     }>) => {
       return safeInvoke('export_multiple_images', { exports });
+    },
+
+    // === 圖片刪除管理 ===
+    deleteIllustrations: async (request: {
+      imageIds: string[];
+      deleteType: 'soft' | 'permanent';
+      preserveMetadata?: boolean;
+      reason?: string;
+    }) => {
+      return safeInvoke('delete_illustrations', {
+        image_ids: request.imageIds,
+        delete_type: request.deleteType,
+        preserve_metadata: request.preserveMetadata,
+        reason: request.reason
+      });
+    },
+
+    restoreIllustrations: async (imageIds: string[]) => {
+      return safeInvoke('restore_illustrations', { image_ids: imageIds });
+    },
+
+    getDeletedIllustrations: async (projectId: string) => {
+      return safeInvoke('get_deleted_illustrations', { project_id: projectId });
+    },
+
+    permanentDeleteIllustrations: async (imageIds: string[]) => {
+      return safeInvoke('permanent_delete_illustrations', { image_ids: imageIds });
     }
   },
 };

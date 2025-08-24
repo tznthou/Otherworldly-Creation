@@ -34,6 +34,12 @@ import {
   setSelectedVersionIds as setVersionSelectedIds 
 } from '../../../../store/slices/versionManagementSlice';
 import BatchExportPanel from '../panels/BatchExportPanel';
+import ImageNamingPanel from '../ImageNaming/ImageNamingPanel';
+import EbookIntegrationPanel from '../EbookIntegration/EbookIntegrationPanel';
+import { createPortal } from 'react-dom';
+import DeleteConfirmationModal from '../DeleteConfirmation/DeleteConfirmationModal';
+import type { BatchRenameOperation, EbookExportConfig } from '../../../../types/imageMetadata';
+import type { DeleteIllustrationRequest, DeleteIllustrationResponse } from '../../../../api/types';
 
 interface GalleryTabProps {
   className?: string;
@@ -74,6 +80,16 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
   
   // 批次導出模態框狀態 (Phase 5 新增)
   const [showBatchExportModal, setShowBatchExportModal] = useState(false);
+  
+  // 圖片命名面板狀態
+  const [showImageNamingPanel, setShowImageNamingPanel] = useState(false);
+  
+  // 電子書整合面板狀態
+  const [showEbookIntegrationPanel, setShowEbookIntegrationPanel] = useState(false);
+  
+  // 刪除確認對話框狀態
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // 插畫歷史數據（從API獲取）
   const [illustrationHistory, setIllustrationHistory] = useState<IllustrationHistoryItem[]>([]);
@@ -413,6 +429,76 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     }
   };
 
+  // 刪除選中的圖片
+  const handleDeleteSelected = () => {
+    if (selectedImages.size === 0) {
+      alert('請先選擇要刪除的圖片');
+      return;
+    }
+    setShowDeleteConfirmation(true);
+  };
+
+  // 處理刪除確認
+  const handleConfirmDelete = async (request: DeleteIllustrationRequest) => {
+    setIsDeleting(true);
+    try {
+      console.log('執行刪除操作:', request);
+      
+      // TODO: 實現真正的 API 調用
+      // const response = await api.illustration.deleteIllustrations(request);
+      
+      // 模擬 API 調用
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const mockResponse: DeleteIllustrationResponse = {
+        success: true,
+        deletedCount: request.imageIds.length,
+        failedCount: 0,
+        totalRequested: request.imageIds.length,
+        deletedImageIds: request.imageIds,
+        failedImageIds: [],
+        deletedToPath: request.deleteType === 'soft' 
+          ? '~/Library/Application Support/genesis-chronicle/deleted-images/' 
+          : undefined,
+        message: `成功${request.deleteType === 'soft' ? '移至垃圾桶' : '永久刪除'} ${request.imageIds.length} 張圖片`
+      };
+
+      if (mockResponse.success) {
+        // 從本地狀態中移除已刪除的圖片
+        setIllustrationHistory(prev => 
+          prev.filter(item => !mockResponse.deletedImageIds.includes(item.id))
+        );
+        
+        // 清空選擇
+        dispatch(setSelectedImageIds([]));
+        
+        // 顯示成功訊息
+        const successMessage = `✅ ${mockResponse.message}
+${mockResponse.deletedToPath ? `位置: ${mockResponse.deletedToPath}` : ''}
+${mockResponse.failedCount > 0 ? `\n失敗: ${mockResponse.failedCount} 張` : ''}
+
+⚠️ 這是模擬實現，實際功能需要後端支援`;
+
+        alert(successMessage);
+        setShowDeleteConfirmation(false);
+      } else {
+        alert('刪除失敗: ' + (mockResponse.message || '未知錯誤'));
+      }
+    } catch (error) {
+      console.error('刪除圖片失敗:', error);
+      alert('刪除失敗，請稍後再試');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // 關閉刪除確認對話框
+  const handleCloseDeleteConfirmation = () => {
+    if (!isDeleting) {
+      setShowDeleteConfirmation(false);
+    }
+  };
+
   // 拖拽結束處理
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -569,6 +655,73 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     setShowBatchExportModal(false);
   };
 
+  // 打開圖片命名面板
+  const handleOpenImageNaming = () => {
+    if (selectedImages.size === 0) {
+      alert('請先選擇要重命名的圖片');
+      return;
+    }
+    setShowImageNamingPanel(true);
+  };
+
+  // 關閉圖片命名面板
+  const handleCloseImageNaming = () => {
+    setShowImageNamingPanel(false);
+  };
+
+  // 應用批次重命名
+  const handleApplyRename = async (operation: BatchRenameOperation) => {
+    try {
+      console.log('應用批次重命名:', operation);
+      // TODO: 實現實際的重命名邏輯
+      // await api.imageMetadata.batchRename(operation);
+      
+      // 臨時實現：顯示成功訊息
+      alert(`🎉 重命名預覽完成！\n\n將會重命名 ${operation.imageIds.length} 張圖片\n\n⚠️ 實際重命名功能需要後端API支援`);
+      
+      setShowImageNamingPanel(false);
+    } catch (error) {
+      console.error('批次重命名失敗:', error);
+      alert('重命名失敗，請稍後再試');
+    }
+  };
+
+  // 打開電子書整合面板
+  const handleOpenEbookIntegration = () => {
+    if (!currentProject) {
+      alert('請先選擇一個專案');
+      return;
+    }
+    setShowEbookIntegrationPanel(true);
+  };
+
+  // 關閉電子書整合面板
+  const handleCloseEbookIntegration = () => {
+    setShowEbookIntegrationPanel(false);
+  };
+
+  // 匯出到電子書
+  const handleExportToEbook = async (config: EbookExportConfig) => {
+    try {
+      console.log('匯出到電子書:', config);
+      // TODO: 實現實際的電子書整合邏輯
+      // await api.ebook.integrateImages(currentProject.id, config);
+      
+      // 臨時實現：顯示配置摘要
+      const enabledPlacements = Object.entries(config.imagePlacementRules)
+        .filter(([_, rule]) => rule.enabled)
+        .map(([placement]) => placement)
+        .join(', ');
+      
+      alert(`📚 電子書整合配置已保存！\n\n品質: ${config.imageQuality}%\n最大尺寸: ${config.maxImageWidth}x${config.maxImageHeight}\n啟用位置: ${enabledPlacements}\n\n⚠️ 實際整合功能需要EPUB/PDF模組支援`);
+      
+      setShowEbookIntegrationPanel(false);
+    } catch (error) {
+      console.error('電子書整合失敗:', error);
+      alert('電子書整合失敗，請稍後再試');
+    }
+  };
+
   return (
     <div className={`gallery-tab flex flex-col h-full ${className}`}>
       {/* 頂部控制欄 */}
@@ -691,27 +844,63 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
           </div>
           
           {selectedImages.size > 0 && (
-            <div className="flex items-center space-x-2">
-              <button 
-                onClick={handleOpenBatchExport}
-                className="px-3 py-1 bg-gold-600 hover:bg-gold-700 text-white rounded text-sm transition-colors flex items-center gap-2"
-              >
-                📦 批次導出 ({selectedImages.size})
-              </button>
-              <button 
-                onClick={handleExportSelected}
-                disabled={isExporting}
-                className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded text-sm transition-colors"
-              >
-                {isExporting ? (
-                  <>📤 導出中... ({exportProgress}%)</>
-                ) : (
-                  <>📁 快速導出</>
-                )}
-              </button>
-              <button className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors">
-                🗑️ 刪除選中
-              </button>
+            <div className="flex items-center space-x-3">
+              {/* 導出說明 */}
+              <div className="flex items-center text-xs text-cosmic-400">
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                導出位置：手動選擇資料夾
+              </div>
+              
+              {/* 導出按鈕群組 */}
+              <div className="flex items-center space-x-2">
+                {/* 圖片管理功能 */}
+                <div className="flex items-center space-x-2 mr-2 pr-2 border-r border-cosmic-600">
+                  <button 
+                    onClick={handleOpenImageNaming}
+                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm transition-colors flex items-center gap-1"
+                    title="批次重命名選中的圖片，支援智能命名模板"
+                  >
+                    🏷️ 重命名 ({selectedImages.size})
+                  </button>
+                  <button 
+                    onClick={handleOpenEbookIntegration}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors flex items-center gap-1"
+                    title="配置圖片在電子書中的整合設定"
+                  >
+                    📚 電子書整合
+                  </button>
+                </div>
+                
+                {/* 導出功能 */}
+                <button 
+                  onClick={handleOpenBatchExport}
+                  className="px-3 py-1 bg-gold-600 hover:bg-gold-700 text-white rounded text-sm transition-colors flex items-center gap-2"
+                  title="進入高級導出設定面板，自訂格式、品質、檔名等選項"
+                >
+                  📦 批次導出 ({selectedImages.size})
+                </button>
+                <button 
+                  onClick={handleExportSelected}
+                  disabled={isExporting}
+                  className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded text-sm transition-colors"
+                  title="點擊後會彈出資料夾選擇對話框"
+                >
+                  {isExporting ? (
+                    <>📤 導出中... ({exportProgress}%)</>
+                  ) : (
+                    <>📁 快速導出</>
+                  )}
+                </button>
+                <button 
+                  onClick={handleDeleteSelected}
+                  className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
+                  title="永久刪除選中的圖片，此操作無法復原"
+                >
+                  🗑️ 刪除選中
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1111,6 +1300,57 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
           </div>
         </div>
       )}
+      
+      {/* 圖片命名面板 */}
+      {showImageNamingPanel && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={handleCloseImageNaming}
+        >
+          <div 
+            className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ImageNamingPanel
+              selectedImageIds={selectedImageIdsArray}
+              onClose={handleCloseImageNaming}
+              onApply={handleApplyRename}
+              className="w-full h-full"
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* 電子書整合面板 - 使用 Portal 確保在最頂層 */}
+      {showEbookIntegrationPanel && currentProject && createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          style={{ zIndex: 9999 }}
+          onClick={handleCloseEbookIntegration}
+        >
+          <div 
+            className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <EbookIntegrationPanel
+              projectId={currentProject.id}
+              onClose={handleCloseEbookIntegration}
+              onExportToEbook={handleExportToEbook}
+              className="w-full h-full"
+            />
+          </div>
+        </div>,
+        document.body
+      )}
+      
+      {/* 刪除確認對話框 */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteConfirmation}
+        selectedImages={filteredIllustrations.filter(img => selectedImages.has(img.id))}
+        onClose={handleCloseDeleteConfirmation}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 };

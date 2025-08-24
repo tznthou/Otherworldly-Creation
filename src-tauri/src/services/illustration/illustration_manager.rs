@@ -8,7 +8,7 @@ use super::{
     Result, IllustrationError, IllustrationRequest, IllustrationResponse,
     ImagenApiService, ImageGenerationRequest, ImageGenerationConfig,
     CharacterConsistencyManager, SeedManager, VisualTraitsManager,
-    AspectRatio, SafetyLevel, PersonGeneration
+    AspectRatio, SafetyLevel, PersonGeneration, StyleResolver
 };
 use super::imagen_api::{GeneratedImage, SafetyProbability};
 use base64::Engine;
@@ -330,7 +330,9 @@ impl IllustrationManager {
             let translation_request = crate::services::translation::TranslationRequest {
                 chinese_description: request.basic_request.scene_description.clone(),
                 character_name: None,
-                target_style: crate::services::translation::TranslationStyle::Anime,
+                target_style: StyleResolver::resolve_translation_style(
+                    request.translation_style.as_deref()
+                ),
                 quality_level: crate::services::translation::QualityLevel::High,
                 context_hints: Vec::new(),
                 preserve_original: false,

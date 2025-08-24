@@ -18,7 +18,6 @@ import {
 
 // 導入子組件
 import { CreateTab } from './CreateTab';
-import { MonitorTab } from './MonitorTab';
 import { GalleryTab } from './GalleryTab';
 import ImagePreviewModal from './ImagePreviewModal';
 import ExportSettingsPanel from './panels/ExportSettingsPanel';
@@ -31,7 +30,7 @@ interface VisualCreationCenterProps {
   className?: string;
 }
 
-type ActiveTab = 'create' | 'monitor' | 'gallery' | 'templates' | 'versions';
+type ActiveTab = 'create' | 'gallery' | 'templates' | 'versions';
 type IllustrationProvider = 'pollinations' | 'imagen';
 
 const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
@@ -135,13 +134,6 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
         return (
           <div className="p-6 h-full">
             <CreateTab className="h-full" />
-          </div>
-        );
-        
-      case 'monitor':
-        return (
-          <div className="p-6 h-full">
-            <MonitorTab className="h-full" />
           </div>
         );
         
@@ -366,7 +358,6 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
           {[
             { id: 'create' as ActiveTab, label: '創建', icon: '✨', description: '生成新的插畫' },
             { id: 'templates' as ActiveTab, label: '模板', icon: '🎨', description: '風格模板管理' },
-            { id: 'monitor' as ActiveTab, label: '監控', icon: '📊', description: '批次任務監控' },
             { id: 'gallery' as ActiveTab, label: '圖庫', icon: '🖼️', description: '插畫歷史管理' },
             { id: 'versions' as ActiveTab, label: '版本', icon: '🕒', description: '版本管理與比較' }
           ].map((tab) => (

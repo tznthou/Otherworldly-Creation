@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 16;
+const DB_VERSION: i32 = 17;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -116,6 +116,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v16(conn)?;
             update_version(conn, 16)?;
             log::info!("遷移到版本 16 完成");
+        }
+        
+        if current_version < 17 {
+            apply_migration_v17(conn)?;
+            update_version(conn, 17)?;
+            log::info!("遷移到版本 17 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -1825,6 +1831,214 @@ pub fn apply_migration_v16(conn: &Connection) -> Result<()> {
     
     log::info!("章節狀態索引和統計視圖創建完成");
     log::info!("版本 16 遷移完成：章節狀態管理功能已準備就緒");
+    
+    Ok(())
+}
+
+/// 版本 17：添加圖片刪除管理功能
+pub fn apply_migration_v17(conn: &Connection) -> Result<()> {
+    log::info!("執行版本 17 遷移：添加圖片刪除管理功能");
+    
+    // 為 pollinations_generations 表添加刪除相關欄位
+    log::info!("更新 pollinations_generations 表結構");
+    
+    // 檢查並添加 deleted_at 欄位
+    let has_deleted_at_pollinations: bool = conn
+        .prepare("PRAGMA table_info(pollinations_generations)")?
+        .query_map([], |row| {
+            let column_name: String = row.get(1)?;
+            Ok(column_name)
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "deleted_at",
+            Err(_) => false,
+        });
+    
+    if !has_deleted_at_pollinations {
+        conn.execute(
+            "ALTER TABLE pollinations_generations ADD COLUMN deleted_at TIMESTAMP",
+            [],
+        )?;
+        log::info!("已添加 deleted_at 欄位到 pollinations_generations 表");
+    }
+    
+    // 檢查並添加 deleted_reason 欄位
+    let has_deleted_reason_pollinations: bool = conn
+        .prepare("PRAGMA table_info(pollinations_generations)")?
+        .query_map([], |row| {
+            let column_name: String = row.get(1)?;
+            Ok(column_name)
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "deleted_reason",
+            Err(_) => false,
+        });
+    
+    if !has_deleted_reason_pollinations {
+        conn.execute(
+            "ALTER TABLE pollinations_generations ADD COLUMN deleted_reason TEXT",
+            [],
+        )?;
+        log::info!("已添加 deleted_reason 欄位到 pollinations_generations 表");
+    }
+    
+    // 檢查並添加 deleted_file_path 欄位
+    let has_deleted_file_path_pollinations: bool = conn
+        .prepare("PRAGMA table_info(pollinations_generations)")?
+        .query_map([], |row| {
+            let column_name: String = row.get(1)?;
+            Ok(column_name)
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "deleted_file_path",
+            Err(_) => false,
+        });
+    
+    if !has_deleted_file_path_pollinations {
+        conn.execute(
+            "ALTER TABLE pollinations_generations ADD COLUMN deleted_file_path TEXT",
+            [],
+        )?;
+        log::info!("已添加 deleted_file_path 欄位到 pollinations_generations 表");
+    }
+    
+    // 檢查並添加 is_permanently_deleted 欄位
+    let has_is_permanently_deleted_pollinations: bool = conn
+        .prepare("PRAGMA table_info(pollinations_generations)")?
+        .query_map([], |row| {
+            let column_name: String = row.get(1)?;
+            Ok(column_name)
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "is_permanently_deleted",
+            Err(_) => false,
+        });
+    
+    if !has_is_permanently_deleted_pollinations {
+        conn.execute(
+            "ALTER TABLE pollinations_generations ADD COLUMN is_permanently_deleted BOOLEAN DEFAULT 0",
+            [],
+        )?;
+        log::info!("已添加 is_permanently_deleted 欄位到 pollinations_generations 表");
+    }
+    
+    // 為 illustration_generations 表添加相同的刪除相關欄位
+    log::info!("更新 illustration_generations 表結構");
+    
+    // 檢查並添加 deleted_at 欄位
+    let has_deleted_at_illustrations: bool = conn
+        .prepare("PRAGMA table_info(illustration_generations)")?
+        .query_map([], |row| {
+            let column_name: String = row.get(1)?;
+            Ok(column_name)
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "deleted_at",
+            Err(_) => false,
+        });
+    
+    if !has_deleted_at_illustrations {
+        conn.execute(
+            "ALTER TABLE illustration_generations ADD COLUMN deleted_at TIMESTAMP",
+            [],
+        )?;
+        log::info!("已添加 deleted_at 欄位到 illustration_generations 表");
+    }
+    
+    // 檢查並添加 deleted_reason 欄位
+    let has_deleted_reason_illustrations: bool = conn
+        .prepare("PRAGMA table_info(illustration_generations)")?
+        .query_map([], |row| {
+            let column_name: String = row.get(1)?;
+            Ok(column_name)
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "deleted_reason",
+            Err(_) => false,
+        });
+    
+    if !has_deleted_reason_illustrations {
+        conn.execute(
+            "ALTER TABLE illustration_generations ADD COLUMN deleted_reason TEXT",
+            [],
+        )?;
+        log::info!("已添加 deleted_reason 欄位到 illustration_generations 表");
+    }
+    
+    // 檢查並添加 deleted_file_path 欄位
+    let has_deleted_file_path_illustrations: bool = conn
+        .prepare("PRAGMA table_info(illustration_generations)")?
+        .query_map([], |row| {
+            let column_name: String = row.get(1)?;
+            Ok(column_name)
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "deleted_file_path",
+            Err(_) => false,
+        });
+    
+    if !has_deleted_file_path_illustrations {
+        conn.execute(
+            "ALTER TABLE illustration_generations ADD COLUMN deleted_file_path TEXT",
+            [],
+        )?;
+        log::info!("已添加 deleted_file_path 欄位到 illustration_generations 表");
+    }
+    
+    // 檢查並添加 is_permanently_deleted 欄位
+    let has_is_permanently_deleted_illustrations: bool = conn
+        .prepare("PRAGMA table_info(illustration_generations)")?
+        .query_map([], |row| {
+            let column_name: String = row.get(1)?;
+            Ok(column_name)
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "is_permanently_deleted",
+            Err(_) => false,
+        });
+    
+    if !has_is_permanently_deleted_illustrations {
+        conn.execute(
+            "ALTER TABLE illustration_generations ADD COLUMN is_permanently_deleted BOOLEAN DEFAULT 0",
+            [],
+        )?;
+        log::info!("已添加 is_permanently_deleted 欄位到 illustration_generations 表");
+    }
+    
+    // 創建刪除相關的索引以提升查詢效能
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_deleted_at ON pollinations_generations (deleted_at)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_is_permanently_deleted ON pollinations_generations (is_permanently_deleted)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustrations_deleted_at ON illustration_generations (deleted_at)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustrations_is_permanently_deleted ON illustration_generations (is_permanently_deleted)",
+        [],
+    )?;
+    
+    // 創建軟刪除查詢的複合索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_project_deleted ON pollinations_generations (project_id, deleted_at, is_permanently_deleted)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustrations_project_deleted ON illustration_generations (project_id, deleted_at, is_permanently_deleted)",
+        [],
+    )?;
+    
+    log::info!("刪除管理相關索引創建完成");
+    log::info!("版本 17 遷移完成：圖片刪除管理功能已準備就緒");
     
     Ok(())
 }

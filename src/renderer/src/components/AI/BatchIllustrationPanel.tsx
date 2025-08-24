@@ -13,10 +13,8 @@ import CosmicButton from '../UI/CosmicButton';
 import CosmicInput from '../UI/CosmicInput';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { GoogleCloudBillingModal } from '../Modals/GoogleCloudBillingModal';
-import { Progress } from '../UI/Progress';
 import { Alert } from '../UI/Alert';
 import { Card } from '../UI/Card';
-import { Badge } from '../UI/Badge';
 import { imageGenerationService } from '../../services/imageGenerationService';
 import type { ImageGenerationOptions } from '../../services/imageGenerationService';
 import { SafetyFilterLevel } from '@google/genai';
@@ -43,7 +41,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   const characters = useSelector((state: RootState) => state.characters.characters);
 
   // 組件狀態
-  const [activeTab, setActiveTab] = useState<'create' | 'monitor' | 'history'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
@@ -81,9 +79,9 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
 
   // 監控狀態
   const [_activeBatches, setActiveBatches] = useState<BatchStatusReport[]>([]);
-  const [selectedBatchId, setSelectedBatchId] = useState('');
-  const [batchDetails, setBatchDetails] = useState<BatchStatusReport | null>(null);
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
+  const [_selectedBatchId, _setSelectedBatchId] = useState('');
+  const [_batchDetails, _setBatchDetails] = useState<BatchStatusReport | null>(null);
+  const [_refreshInterval, _setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
   // 歷史狀態
   const [_batchHistory, _setBatchHistory] = useState<BatchStatusReport[]>([]);
@@ -498,7 +496,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
             }
           ]
         };
-        setBatchDetails(mockBatchDetails);
+        _setBatchDetails(mockBatchDetails);
       }
     } catch (err) {
       console.error('載入批次詳情失敗:', err);
@@ -506,7 +504,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   }, []);
 
   // 取消批次
-  const cancelBatch = async (batchId: string) => {
+  const _cancelBatch = async (batchId: string) => {
     try {
       const result = await api.illustration.cancelBatch(batchId);
       if (result.success) {
@@ -521,7 +519,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   };
 
   // 重試失敗任務
-  const retryFailedTasks = async (batchId: string) => {
+  const _retryFailedTasks = async (batchId: string) => {
     try {
       const result = await api.illustration.retryFailedTasks(batchId);
       if (result.success) {
@@ -561,7 +559,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   };
 
   // 獲取狀態中文
-  const getStatusText = (status: TaskStatus) => {
+  const _getStatusText = (status: TaskStatus) => {
     switch (status) {
       case TaskStatus.Completed: return '已完成';
       case TaskStatus.Running: return '執行中';
@@ -642,23 +640,6 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     }
   }, [currentProject, batchConfig]);
 
-  // 自動刷新監控數據
-  useEffect(() => {
-    if (activeTab === 'monitor' && selectedBatchId) {
-      if (refreshInterval) clearInterval(refreshInterval);
-      
-      const interval = setInterval(() => {
-        loadBatchDetails(selectedBatchId);
-      }, 5000); // 每5秒刷新
-      
-      setRefreshInterval(interval);
-      
-      return () => clearInterval(interval);
-    } else if (refreshInterval) {
-      clearInterval(refreshInterval);
-      setRefreshInterval(null);
-    }
-  }, [activeTab, selectedBatchId, loadBatchDetails, refreshInterval]);
 
   return (
     <div className={`batch-illustration-panel ${className}`}>
@@ -674,12 +655,11 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         <div className="flex space-x-1 mb-6 bg-gray-800 rounded-lg p-1">
           {[
             { id: 'create', label: '創建批次', icon: '➕' },
-            { id: 'monitor', label: '監控進度', icon: '📊' },
             { id: 'history', label: '歷史記錄', icon: '📋' }
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'create' | 'monitor' | 'history')}
+              onClick={() => setActiveTab(tab.id as 'create' | 'history')}
               className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === tab.id
                   ? 'bg-purple-600 text-white'
@@ -1435,221 +1415,6 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
           </div>
         )}
 
-        {/* 監控進度 */}
-        {activeTab === 'monitor' && (
-          <div className="space-y-6">
-            {/* 提示信息 - 當沒有選中批次ID時顯示 */}
-            {!selectedBatchId && (
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-6 text-center">
-                <div className="text-4xl mb-4">🎉</div>
-                <h3 className="text-xl font-semibold text-blue-400 mb-2">批次提交成功！</h3>
-                <p className="text-gray-300 mb-4">
-                  您的插畫生成批次已提交。批次 ID 會自動填入下方，您也可以手動輸入其他批次 ID 進行監控。
-                </p>
-                <p className="text-sm text-gray-400">
-                  💡 提示：提交新批次後會自動切換到此頁面並顯示進度
-                </p>
-              </div>
-            )}
-            
-            {/* 批次查詢區域 */}
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">🔍 批次查詢</h3>
-                {selectedBatchId && (
-                  <div className="text-sm text-gray-400">
-                    當前批次：<span className="text-gold-400 font-mono">{selectedBatchId}</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex space-x-3">
-                <CosmicInput
-                  value={selectedBatchId}
-                  onChange={(value) => setSelectedBatchId(value)}
-                  placeholder="輸入批次 ID（例如：batch_abc123）"
-                  className="flex-1"
-                />
-                <CosmicButton
-                  onClick={() => loadBatchDetails(selectedBatchId)}
-                  disabled={!selectedBatchId.trim()}
-                  variant="secondary"
-                >
-                  🔍 查詢
-                </CosmicButton>
-              </div>
-              
-              <div className="mt-3 text-sm text-gray-400">
-                <p>💡 批次 ID 會在提交時顯示在控制台，格式通常為 "batch_" 開頭的字符串</p>
-              </div>
-            </div>
-
-            {/* 批次詳情 */}
-            {batchDetails && (
-              <div className="space-y-6">
-                {/* 批次概覽 */}
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white flex items-center">
-                      <span className="mr-2">📊</span>
-                      批次 {batchDetails.batch_id} 概覽
-                    </h3>
-                    <div className="flex space-x-2">
-                      <CosmicButton
-                        onClick={() => retryFailedTasks(batchDetails.batch_id)}
-                        variant="secondary"
-                        size="small"
-                        disabled={batchDetails.failed_tasks === 0}
-                      >
-                        🔄 重試失敗
-                      </CosmicButton>
-                      <CosmicButton
-                        onClick={() => cancelBatch(batchDetails.batch_id)}
-                        variant="danger"
-                        size="small"
-                      >
-                        ❌ 取消批次
-                      </CosmicButton>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-400">{batchDetails.total_tasks}</div>
-                      <div className="text-sm text-gray-400">總任務</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-400">{batchDetails.completed_tasks}</div>
-                      <div className="text-sm text-gray-400">已完成</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-yellow-400">{batchDetails.running_tasks}</div>
-                      <div className="text-sm text-gray-400">執行中</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-red-400">{batchDetails.failed_tasks}</div>
-                      <div className="text-sm text-gray-400">失敗</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-400">{batchDetails.queued_tasks}</div>
-                      <div className="text-sm text-gray-400">排隊</div>
-                    </div>
-                  </div>
-
-                  <div className="mb-2">
-                    <div className="flex justify-between text-sm text-gray-400">
-                      <span>總進度</span>
-                      <span>{(batchDetails.overall_progress * 100).toFixed(1)}%</span>
-                    </div>
-                    <Progress value={batchDetails.overall_progress * 100} className="h-2" />
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-400">平均執行時間：</span>
-                      <span className="text-white">
-                        {(batchDetails.statistics.average_execution_time_ms / 1000).toFixed(1)}s
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">總費用：</span>
-                      <span className="text-white">${batchDetails.statistics.total_api_costs.toFixed(3)}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">錯誤率：</span>
-                      <span className="text-white">
-                        {(batchDetails.statistics.error_rate * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">吞吐量：</span>
-                      <span className="text-white">
-                        {batchDetails.statistics.throughput_per_hour.toFixed(1)}/h
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 任務詳情 */}
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                    <span className="mr-2">📋</span>
-                    任務詳情 ({batchDetails.task_details.length} 項任務)
-                  </h3>
-                  <div className="space-y-3">
-                    {batchDetails.task_details.map((task, index) => (
-                      <div key={task.task_id} className="bg-gray-700 p-3 rounded">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-white">
-                            任務 {index + 1} - {task.task_id}
-                          </span>
-                          <Badge variant={
-                            task.status === TaskStatus.Completed ? 'default' :
-                            task.status === TaskStatus.Failed ? 'destructive' :
-                            task.status === TaskStatus.Running ? 'outline' : 'secondary'
-                          }>
-                            {getStatusText(task.status)}
-                          </Badge>
-                        </div>
-                        
-                        <div className="text-sm text-gray-300 mb-2">
-                          當前步驟: {task.current_step}
-                        </div>
-                        
-                        {task.status === TaskStatus.Running && (
-                          <div className="mb-2">
-                            <div className="flex justify-between text-xs text-gray-400 mb-1">
-                              <span>進度</span>
-                              <span>{task.progress}%</span>
-                            </div>
-                            <Progress value={task.progress} className="h-2" />
-                          </div>
-                        )}
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-400">
-                          <div>
-                            執行時間: {(task.performance_metrics.execution_time_ms / 1000).toFixed(1)}s
-                          </div>
-                          <div>
-                            重試次數: {task.retry_count}
-                          </div>
-                          <div>
-                            費用: ${task.performance_metrics.total_cost.toFixed(3)}
-                          </div>
-                          <div>
-                            記憶體: {task.performance_metrics.memory_usage_mb}MB
-                          </div>
-                        </div>
-                        
-                        {task.error_message && (
-                          <div className="text-red-400 text-sm mt-2 p-2 bg-red-900/20 rounded">
-                            <span className="font-semibold">錯誤:</span> {task.error_message}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* 如果查詢了批次但沒有詳情，顯示說明 */}
-            {selectedBatchId && !batchDetails && (
-              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-6 text-center">
-                <div className="text-4xl mb-4">⚠️</div>
-                <h3 className="text-xl font-semibold text-yellow-400 mb-2">找不到批次詳情</h3>
-                <p className="text-gray-300 mb-4">
-                  批次 ID "<span className="font-mono text-yellow-400">{selectedBatchId}</span>" 可能不存在或尚未開始處理。
-                </p>
-                <div className="text-sm text-gray-400 space-y-1">
-                  <p>• 請確認批次 ID 是否正確</p>
-                  <p>• 剛提交的批次可能需要幾秒鐘才能開始處理</p>
-                  <p>• 可以點擊「🔍 查詢」按鈕重新獲取狀態</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* 歷史記錄 */}
         {activeTab === 'history' && (
