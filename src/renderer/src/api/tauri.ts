@@ -1197,13 +1197,12 @@ export const tauriAPI: API = {
     },
 
     getIllustrationHistory: async (projectId: string, characterId?: string, limit?: number, offset?: number) => {
-      const response = await safeInvoke<{success: boolean, illustrations: any[]}>('get_illustration_history', {
+      return safeInvoke('get_illustration_history', {
         projectId: projectId,
         characterId: characterId,
         limit: limit,
         offset: offset
       });
-      return response.success ? response.illustrations : [];
     },
 
     getAllBatchesSummary: async () => {
