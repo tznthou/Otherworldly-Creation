@@ -29,6 +29,7 @@ interface TauriChapter {
   content?: string;
   order_index: number;
   chapter_number?: number;
+  metadata?: string;
   created_at: string;
   updated_at: string;
 }
@@ -384,6 +385,7 @@ export const tauriAPI: API = {
           content: content,
           order: chapter.order_index,
           chapterNumber: chapter.chapter_number,
+          metadata: chapter.metadata, // 🔧 添加遺失的 metadata 欄位！
           createdAt: chapter.created_at,
           updatedAt: chapter.updated_at
         };
@@ -466,6 +468,7 @@ export const tauriAPI: API = {
         content: content,
         order: chapter.order_index,
         chapterNumber: chapter.chapter_number,
+        metadata: chapter.metadata, // 🔧 添加遺失的 metadata 欄位！
         createdAt: chapter.created_at,
         updatedAt: chapter.updated_at
       };

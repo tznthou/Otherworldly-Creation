@@ -52,12 +52,34 @@ const Dashboard: React.FC = () => {
       const { api } = await import('../../api');
       const { chapterStatusService } = await import('../../services/chapterStatusService');
       
-      // 獲取所有專案的章節
+      // 獲取所有專案的章節並統一狀態解析
       let allChapters: any[] = [];
       for (const project of projects) {
         try {
           const chapters = await api.chapters.getByProjectId(project.id);
-          allChapters = [...allChapters, ...chapters];
+          
+          // 🔄 統一狀態解析：確保與 ChapterStatusPage 一致
+          const chaptersWithStatus = chapters.map(chapter => {
+            let status = 'draft'; // 預設狀態
+            try {
+              if (chapter.metadata) {
+                const metadata = JSON.parse(chapter.metadata);
+                status = metadata.status || chapter.status || 'draft';
+              } else if (chapter.status) {
+                status = chapter.status;
+              }
+            } catch (error) {
+              console.warn(`Dashboard: 章節 ${chapter.title} metadata 解析失敗:`, error);
+              status = chapter.status || 'draft';
+            }
+            
+            return {
+              ...chapter,
+              status // 確保狀態正確設定
+            };
+          });
+          
+          allChapters = [...allChapters, ...chaptersWithStatus];
         } catch (error) {
           console.warn(`無法載入專案 ${project.name} 的章節:`, error);
         }
@@ -81,10 +103,22 @@ const Dashboard: React.FC = () => {
         }
       });
       
+      // 🔍 調試：顯示章節狀態解析結果
+      const statusBreakdown = allChapters.reduce((acc, chapter) => {
+        acc[chapter.status] = (acc[chapter.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
       console.log('Dashboard: 章節統計計算完成', {
         totalChapters,
         completedCount,
-        completionRate
+        completionRate,
+        statusBreakdown, // 顯示各狀態的章節數量
+        sampleChapters: allChapters.slice(0, 3).map(c => ({ 
+          title: c.title, 
+          status: c.status,
+          hasMetadata: !!c.metadata 
+        })) // 顯示前3個章節的狀態信息
       });
     } catch (error) {
       console.error('Dashboard: 章節統計計算失敗:', error);
@@ -175,6 +209,23 @@ const Dashboard: React.FC = () => {
     if (projects.length > 0) {
       calculateChapterStats();
     }
+  }, [projects, calculateChapterStats]);
+
+  // 🔄 監聽全局統計更新通知
+  useEffect(() => {
+    const handleStatsRefresh = () => {
+      console.log('📊 [Dashboard] 收到全局統計更新通知，重新計算統計...');
+      if (projects.length > 0) {
+        calculateChapterStats();
+      }
+    };
+
+    // 使用自定義事件來實現跨組件通信
+    window.addEventListener('refreshGlobalStats', handleStatsRefresh);
+
+    return () => {
+      window.removeEventListener('refreshGlobalStats', handleStatsRefresh);
+    };
   }, [projects, calculateChapterStats]);
 
   if (loading) {

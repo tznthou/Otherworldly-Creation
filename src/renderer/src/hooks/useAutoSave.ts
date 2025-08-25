@@ -11,6 +11,8 @@ interface UseAutoSaveOptions {
   enabled?: boolean; // 是否啟用自動儲存
   onSave?: () => void; // 儲存成功回調
   onError?: (error: Error) => void; // 儲存失敗回調
+  onBeforeSave?: () => void; // 儲存前回調（用於保存selection）
+  onAfterSave?: () => void; // 儲存後回調（用於恢復selection）
 }
 
 interface AutoSaveStatus {
@@ -21,7 +23,7 @@ interface AutoSaveStatus {
 }
 
 export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
-  const { delay, enabled: optionsEnabled = true, onSave, onError } = options;
+  const { delay, enabled: optionsEnabled = true, onSave, onError, onBeforeSave, onAfterSave } = options;
   const dispatch = useAppDispatch();
   const { settings } = useSettings(); // 保留用於音效設定
   const editorSettings = useAppSelector(selectEditorSettings);
@@ -83,6 +85,9 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
       updateStatus({ status: 'saving', error: null });
       stopCountdown();
       
+      // 儲存前回調（保存selection狀態）
+      onBeforeSave?.();
+      
       dispatch(setSaving(true));
       await dispatch(updateChapter(currentChapter)).unwrap();
       
@@ -112,6 +117,13 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
       }
       
       onSave?.();
+      
+      // 儲存後回調（恢復selection狀態）
+      // 使用setTimeout確保在DOM更新後執行
+      setTimeout(() => {
+        onAfterSave?.();
+      }, 50);
+      
       return true;
       
     } catch (error) {

@@ -67,6 +67,53 @@ const withPerformance = (editor: Editor) => {
   return editor;
 };
 
+// 自定義Hook：Selection狀態持久化管理
+const useSelectionPersist = (editor: Editor) => {
+  const selectionRef = useRef<Range | null>(null);
+  const isRestoring = useRef(false);
+  const lastSaveTime = useRef<number>(0);
+
+  // 監聽selection變化並保存（但避免在恢復過程中重複保存）
+  useEffect(() => {
+    if (!isRestoring.current && editor.selection) {
+      selectionRef.current = editor.selection;
+    }
+  }, [editor.selection]);
+
+  // 恢復selection的方法
+  const restoreSelection = useCallback(() => {
+    if (selectionRef.current && !isRestoring.current) {
+      isRestoring.current = true;
+      try {
+        // 使用setTimeout確保在DOM更新後執行
+        setTimeout(() => {
+          if (selectionRef.current) {
+            Transforms.select(editor, selectionRef.current);
+          }
+          isRestoring.current = false;
+        }, 0);
+      } catch (error) {
+        console.warn('[SelectionPersist] Failed to restore selection:', error);
+        isRestoring.current = false;
+      }
+    }
+  }, [editor]);
+
+  // 保存當前selection（在自動保存前調用）
+  const saveCurrentSelection = useCallback(() => {
+    if (editor.selection && !isRestoring.current) {
+      selectionRef.current = editor.selection;
+      lastSaveTime.current = Date.now();
+    }
+  }, [editor]);
+
+  return {
+    restoreSelection,
+    saveCurrentSelection,
+    hasStoredSelection: () => selectionRef.current !== null
+  };
+};
+
 interface SlateEditorProps {
   value: Descendant[];
   onChange: (value: Descendant[]) => void;
@@ -74,7 +121,11 @@ interface SlateEditorProps {
   autoFocus?: boolean;
   onSave?: () => void;
   onAIWrite?: () => void;
-  onEditorReady?: (editor: Editor) => void; // 新增：編輯器就緒回調
+  onEditorReady?: (editor: Editor, selectionMethods?: {
+    saveCurrentSelection: () => void;
+    restoreSelection: () => void;
+    hasStoredSelection: () => boolean;
+  }) => void; // 更新：編輯器就緒回調支援selection管理
   isSaving?: boolean;
   isGenerating?: boolean;
   showToolbar?: boolean;
@@ -192,27 +243,38 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
 
   const settings = useAppSelector(selectEditorSettings);
   
+  // Selection持久化管理
+  const { restoreSelection, saveCurrentSelection, hasStoredSelection } = useSelectionPersist(editor);
+  const lastChangeRef = useRef<string>('');
+  
   // 直接處理 onChange 事件（移除防抖避免錯誤）
   const lastValueRef = useRef<Descendant[]>(safeValue);
 
-  // 通知父組件編輯器已準備好
+  // 通知父組件編輯器已準備好（傳遞selection管理方法）
   useEffect(() => {
     if (onEditorReady) {
-      onEditorReady(editor);
+      onEditorReady(editor, {
+        saveCurrentSelection,
+        restoreSelection,
+        hasStoredSelection
+      });
     }
-  }, [editor, onEditorReady]);
+  }, [editor, onEditorReady, saveCurrentSelection, restoreSelection, hasStoredSelection]);
 
-  // 優化的 onChange 處理（直接調用，無防抖）
+  // 優化的 onChange 處理（添加selection保存邏輯）
   const handleChange = useCallback((newValue: Descendant[]) => {
     // 只在內容實際變化時才觸發回調
     const newValueStr = JSON.stringify(newValue);
     const lastValueStr = JSON.stringify(lastValueRef.current);
     
     if (newValueStr !== lastValueStr) {
+      // 在內容變化時保存當前selection
+      saveCurrentSelection();
       lastValueRef.current = newValue;
+      lastChangeRef.current = newValueStr;
       onChange(newValue);
     }
-  }, [onChange]);
+  }, [onChange, saveCurrentSelection]);
 
   // 處理鍵盤快捷鍵
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
@@ -237,7 +299,15 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
         case 's':
           event.preventDefault();
           if (onSave) {
+            // 在手動保存前保存selection
+            saveCurrentSelection();
             onSave();
+            // 保存後稍後恢復selection
+            setTimeout(() => {
+              if (hasStoredSelection()) {
+                restoreSelection();
+              }
+            }, 100);
           }
           break;
       }

@@ -170,6 +170,12 @@ const chaptersSlice = createSlice({
     setLastSaved: (state, action: PayloadAction<string>) => {
       state.lastSaved = action.payload;
     },
+    // 🔄 新增：觸發全局統計重新計算的通知
+    triggerGlobalStatsRefresh: (_state) => {
+      // 這是一個純粹的通知action，不修改state
+      // Dashboard會監聽這個action來重新計算全局統計
+      console.log('📊 [Redux] 觸發全局統計重新計算通知');
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -288,6 +294,7 @@ export const {
   clearError,
   setSaving,
   setLastSaved,
+  triggerGlobalStatsRefresh,
 } = chaptersSlice.actions;
 
 export default chaptersSlice.reducer;

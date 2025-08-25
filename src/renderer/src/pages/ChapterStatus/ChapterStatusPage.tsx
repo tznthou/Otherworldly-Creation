@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAppDispatch } from '../../hooks/redux';
+import { addNotification } from '../../store/slices/uiSlice';
 import { Card, CardContent } from '../../components/UI/Card';
 import { chapterStatusService, ChapterStatus } from '../../services/chapterStatusService';
 import { Chapter } from '../../api/models';
@@ -7,6 +9,7 @@ import { Chapter } from '../../api/models';
 const ChapterStatusPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,12 +58,22 @@ const ChapterStatusPage: React.FC = () => {
           try {
             if (chapter.metadata) {
               const metadata = JSON.parse(chapter.metadata);
-              status = (metadata.status as ChapterStatus) || (chapter.status as ChapterStatus) || ChapterStatus.DRAFT;
+              console.log(`🔍 [狀態解析] 章節 ${chapter.title}:`, {
+                metadata: metadata,
+                metadataStatus: metadata.status,
+                chapterStatus: chapter.status,
+                finalStatus: metadata.status || chapter.status || ChapterStatus.DRAFT
+              });
+              // 優先使用 metadata 中的狀態，只有當它不存在時才使用 chapter.status
+              status = metadata.status as ChapterStatus || chapter.status as ChapterStatus || ChapterStatus.DRAFT;
             } else if (chapter.status) {
+              console.log(`🔍 [狀態解析] 章節 ${chapter.title} 無 metadata，使用 chapter.status:`, chapter.status);
               status = chapter.status as ChapterStatus;
+            } else {
+              console.log(`🔍 [狀態解析] 章節 ${chapter.title} 無狀態信息，使用預設草稿狀態`);
             }
           } catch (error) {
-            console.warn('解析章節 metadata 失敗:', error);
+            console.warn(`❌ [狀態解析] 章節 ${chapter.title} metadata 解析失敗:`, error, 'Raw metadata:', chapter.metadata);
             status = (chapter.status as ChapterStatus) || ChapterStatus.DRAFT;
           }
 
@@ -122,29 +135,53 @@ const ChapterStatusPage: React.FC = () => {
     return chapterStatusService.getStatusLabel(status as ChapterStatus);
   };
 
-  // 更新章節狀態
+  // 🔧 修復：使用 Redux updateChapter action 來更新章節狀態
   const updateChapterStatus = async (chapterId: string, newStatus: ChapterStatus) => {
     try {
       const chapter = chapters.find(c => c.id === chapterId);
       if (!chapter) return;
 
-      const { api } = await import('../../api');
+      // 使用現有的 metadata，添加狀態
+      const oldMetadata = chapter.metadata ? JSON.parse(chapter.metadata) : {};
+      const newMetadata = { 
+        ...oldMetadata,
+        status: newStatus  // 確保 status 覆蓋舊值
+      };
       
-      // 使用現有的 update API，添加狀態到 metadata
       const updatedChapter = {
         ...chapter,
-        metadata: JSON.stringify({ 
-          status: newStatus,
-          ...JSON.parse(chapter.metadata || '{}')
-        })
+        status: newStatus, // 同時更新直接的 status 屬性
+        metadata: JSON.stringify(newMetadata)
       };
 
-      await api.chapters.update(updatedChapter);
+      console.log(`🔧 [Redux更新請求] 章節 ${chapter.title} 狀態更新:`, {
+        chapterId: chapter.id,
+        oldStatus: oldMetadata.status,
+        newStatus: newStatus,
+        oldMetadata: oldMetadata,
+        newMetadata: newMetadata,
+        finalMetadataString: updatedChapter.metadata
+      });
+
+      // 🚀 使用 Redux updateChapter action，這會自動通知所有依賴組件
+      const { updateChapter } = await import('../../store/slices/chaptersSlice');
+      await dispatch(updateChapter(updatedChapter)).unwrap();
+      
+      // 驗證數據庫更新 - 立即重新獲取章節數據
+      console.log(`🔍 [驗證] 立即重新查詢章節 ${chapter.title} 數據...`);
+      const { api } = await import('../../api');
+      const verifyChapter = await api.chapters.getById(chapter.id);
+      console.log(`🔍 [驗證] 數據庫中的實際數據:`, {
+        chapterId: verifyChapter.id,
+        title: verifyChapter.title,
+        metadata: verifyChapter.metadata,
+        parsedMetadata: verifyChapter.metadata ? JSON.parse(verifyChapter.metadata) : null
+      });
 
       // 更新本地狀態
       const updatedChapters = chapters.map(c => 
         c.id === chapterId 
-          ? { ...c, status: newStatus }
+          ? { ...c, status: newStatus, metadata: JSON.stringify(newMetadata) }
           : c
       );
       
@@ -168,10 +205,39 @@ const ChapterStatusPage: React.FC = () => {
         }
       });
 
-      console.log(`章節 ${chapter.title} 狀態已更新為: ${newStatus}`);
+      console.log(`✅ [Redux成功] 章節 ${chapter.title} 狀態已通過Redux更新為: ${newStatus}`);
+      
+      // 顯示成功通知
+      dispatch(addNotification({
+        type: 'success',
+        title: '狀態更新成功',
+        message: `章節「${chapter.title}」狀態已更新為「${chapterStatusService.getStatusLabel(newStatus)}」`,
+        duration: 3000,
+      }));
+      
+      // 🔄 觸發全局統計重計算通知
+      console.log('📊 [全局通知] 章節狀態已更新，Dashboard等組件將自動重新計算統計');
+      
+      // 發送自定義事件通知Dashboard重新計算統計
+      window.dispatchEvent(new CustomEvent('refreshGlobalStats', {
+        detail: { 
+          chapterId: chapter.id, 
+          newStatus: newStatus,
+          timestamp: new Date().toISOString()
+        }
+      }));
+      
     } catch (error) {
       console.error('更新章節狀態失敗:', error);
-      // 這裡可以添加錯誤提示
+      
+      // 顯示錯誤通知
+      const chapter = chapters.find(c => c.id === chapterId);
+      dispatch(addNotification({
+        type: 'error',
+        title: '狀態更新失敗',
+        message: `無法更新章節「${chapter?.title || ''}」的狀態，請稍後再試`,
+        duration: 5000,
+      }));
     }
   };
 

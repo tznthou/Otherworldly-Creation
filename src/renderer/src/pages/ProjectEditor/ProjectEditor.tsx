@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Descendant, Editor } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
@@ -109,6 +109,13 @@ const ProjectEditorContent: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // notification 方法是穩定的，不需要作為依賴項
 
+  // Editor selection 狀態管理
+  const editorSelectionRef = useRef<{
+    saveCurrentSelection?: () => void;
+    restoreSelection?: () => void;
+    hasStoredSelection?: () => boolean;
+  }>({});
+  
   // 自動儲存
   const { 
     saveNow, 
@@ -119,7 +126,17 @@ const ProjectEditorContent: React.FC = () => {
     lastSaved: _lastSaved 
   } = useAutoSave({
     onSave: handleAutoSaveSuccess,
-    onError: handleAutoSaveError
+    onError: handleAutoSaveError,
+    onBeforeSave: () => {
+      // 在自動保存前保存selection狀態
+      editorSelectionRef.current.saveCurrentSelection?.();
+    },
+    onAfterSave: () => {
+      // 在自動保存後恢復selection狀態
+      if (editorSelectionRef.current.hasStoredSelection?.()) {
+        editorSelectionRef.current.restoreSelection?.();
+      }
+    }
   });
 
   // 載入專案和章節資料
@@ -256,8 +273,16 @@ const ProjectEditorContent: React.FC = () => {
   }, [dispatch]);
 
   // 處理編輯器就緒回調
-  const handleEditorReady = useCallback((editor: Editor) => {
+  const handleEditorReady = useCallback((editor: Editor, selectionMethods?: {
+    saveCurrentSelection: () => void;
+    restoreSelection: () => void;
+    hasStoredSelection: () => boolean;
+  }) => {
     setCurrentEditor(editor);
+    // 保存selection管理方法的引用
+    if (selectionMethods) {
+      editorSelectionRef.current = selectionMethods;
+    }
     console.log('編輯器已準備好:', editor);
   }, []);
 

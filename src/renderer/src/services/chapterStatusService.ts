@@ -50,7 +50,7 @@ export class ChapterStatusService {
     if (!Array.isArray(chapters)) {
       return 0;
     }
-    return chapters.filter(chapter => chapter.status === ChapterStatus.COMPLETED).length;
+    return chapters.filter(chapter => this.parseChapterStatus(chapter) === ChapterStatus.COMPLETED).length;
   }
 
   /**
@@ -87,8 +87,9 @@ export class ChapterStatusService {
     };
 
     chapters.forEach(chapter => {
-      if (chapter.status && Object.prototype.hasOwnProperty.call(distribution, chapter.status)) {
-        distribution[chapter.status as ChapterStatus]++;
+      const status = this.parseChapterStatus(chapter);
+      if (Object.prototype.hasOwnProperty.call(distribution, status)) {
+        distribution[status]++;
       }
     });
 
@@ -188,9 +189,10 @@ export class ChapterStatusService {
       const wordCount = chapter.wordCount || 0;
       totalWords += wordCount;
       
-      if (chapter.status === ChapterStatus.COMPLETED) {
+      const status = this.parseChapterStatus(chapter);
+      if (status === ChapterStatus.COMPLETED) {
         completedWords += wordCount;
-      } else if (chapter.status === ChapterStatus.DRAFT) {
+      } else if (status === ChapterStatus.DRAFT) {
         draftWords += wordCount;
       }
     });
@@ -201,6 +203,32 @@ export class ChapterStatusService {
       completedWords,
       draftWords
     };
+  }
+  
+  /**
+   * 🔄 統一狀態解析邏輯：優先從metadata解析，回退到直接status字段
+   */
+  private parseChapterStatus(chapter: Chapter): ChapterStatus {
+    try {
+      // 優先從 metadata 中讀取狀態（與 ChapterStatusPage 一致）
+      if (chapter.metadata) {
+        const metadata = JSON.parse(chapter.metadata);
+        if (metadata.status) {
+          return metadata.status as ChapterStatus;
+        }
+      }
+      
+      // 回退到直接的 status 字段
+      if (chapter.status) {
+        return chapter.status as ChapterStatus;
+      }
+      
+      // 預設為草稿狀態
+      return ChapterStatus.DRAFT;
+    } catch (_error) {
+      // metadata 解析失敗時，回退到直接 status 或預設值
+      return (chapter.status as ChapterStatus) || ChapterStatus.DRAFT;
+    }
   }
 }
 
