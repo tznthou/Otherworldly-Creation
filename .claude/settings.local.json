@@ -74,7 +74,8 @@
       "Bash(npm run type-check:*)",
       "Bash(RELEASE_VERSION=1.1.2 node scripts/sync-version.js)",
       "Bash(git rm:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(RELEASE_VERSION=1.1.3 node scripts/sync-version.js)"
     ],
     "deny": [],
     "ask": [],
