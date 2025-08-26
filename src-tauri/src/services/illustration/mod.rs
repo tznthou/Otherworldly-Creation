@@ -24,9 +24,7 @@ pub use imagen_api::{
     ImagenApiService, ImageGenerationRequest, ImageGenerationResponse, 
     ImageGenerationConfig, AspectRatio, SafetyLevel, PersonGeneration
 };
-pub use pollinations_api::{
-    PollinationsApiService, PollinationsRequest, PollinationsModel
-};
+// PollinationsApi types are now imported directly from pollinations_api module
 pub use illustration_manager::{
     IllustrationManager, EnhancedIllustrationRequest
 };

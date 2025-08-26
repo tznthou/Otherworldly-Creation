@@ -1,5 +1,5 @@
 use serde_json::Value;
-use crate::services::illustration::{
+use crate::services::illustration::pollinations_api::{
     PollinationsApiService, PollinationsRequest, PollinationsModel
 };
 use crate::database::connection::create_connection;
