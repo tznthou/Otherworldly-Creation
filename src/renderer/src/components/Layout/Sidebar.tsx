@@ -7,8 +7,9 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
-  const { sidebarCollapsed } = useAppSelector(state => state.ui);
+  const { sidebarCollapsed, modals: _modals } = useAppSelector(state => state.ui);
   const { currentProject } = useAppSelector(state => state.projects);
+  
 
   interface MenuItem {
     id: string;
@@ -24,7 +25,6 @@ const Sidebar: React.FC = () => {
     if (!currentProject) return null;
     
     const projectId = currentProject.id;
-    console.log('Sidebar: 原始專案 ID:', projectId);
     
     // 如果 projectId 是路徑格式，提取真正的 UUID
     if (typeof projectId === 'string') {
@@ -36,26 +36,22 @@ const Sidebar: React.FC = () => {
         
         for (const part of parts) {
           if (uuidPattern.test(part)) {
-            console.log('Sidebar: 找到 UUID 格式的專案 ID:', part);
             return part;
           }
         }
         
         // 如果沒找到 UUID，使用最後一部分
         const lastPart = parts[parts.length - 1];
-        console.log('Sidebar: 使用最後一部分作為專案 ID:', lastPart);
         return lastPart;
       }
       
       // 直接檢查是否為 UUID 格式
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (uuidPattern.test(projectId)) {
-        console.log('Sidebar: 專案 ID 已是標準 UUID 格式:', projectId);
         return projectId;
       }
     }
     
-    console.log('Sidebar: 無法解析專案 ID，返回原值:', projectId);
     return projectId;
   };
 
@@ -111,25 +107,18 @@ const Sidebar: React.FC = () => {
   ];
 
   const handleNavigation = (path: string | null) => {
-    console.log('Sidebar: 嘗試導航到:', path);
-    console.log('Sidebar: 當前專案:', currentProject);
-    
     if (path) {
       try {
         // 確保路徑格式正確
         const cleanPath = path.startsWith('/') ? path : `/${path}`;
-        console.log('Sidebar: 清理後的路徑:', cleanPath);
         
         // 使用 setTimeout 確保事件處理完成
         setTimeout(() => {
           navigate(cleanPath);
-          console.log('Sidebar: 導航成功到:', cleanPath);
         }, 0);
       } catch (error) {
         console.error('Sidebar: 導航失敗:', error);
       }
-    } else {
-      console.warn('Sidebar: 路徑為空，無法導航');
     }
   };
 
@@ -202,12 +191,6 @@ const Sidebar: React.FC = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log(`Sidebar: 點擊了 ${item.label}，路徑:`, item.path, '禁用狀態:', item.disabled);
-                    console.log('Sidebar: 當前專案詳情:', {
-                      currentProject,
-                      safeProjectId,
-                      originalId: currentProject?.id
-                    });
                     
                     if (!item.disabled) {
                       if (item.isModal && item.id === 'illustrations') {
@@ -221,11 +204,7 @@ const Sidebar: React.FC = () => {
                           return;
                         }
                         handleNavigation(item.path);
-                      } else {
-                        console.warn('Sidebar: 路徑為空');
                       }
-                    } else {
-                      console.log(`Sidebar: ${item.label} 被禁用，無法導航`);
                     }
                   }}
                   disabled={item.disabled}

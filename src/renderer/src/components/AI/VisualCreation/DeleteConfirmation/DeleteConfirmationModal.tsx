@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { IllustrationHistoryItem } from '../../../../types/illustration';
+import { SafeImage } from '../../../UI/SafeImage';
 import { DeleteIllustrationRequest } from '../../../../api/types';
 
 interface DeleteConfirmationModalProps {
@@ -138,10 +139,12 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
                 <div key={image.id} className="relative group">
                   <div className="w-16 h-16 bg-cosmic-700 rounded overflow-hidden relative">
                     {image.image_url || image.local_file_path ? (
-                      <img
-                        src={image.image_url || `file://${image.local_file_path}`}
+                      <SafeImage
+                        imageUrl={image.image_url}
+                        localFilePath={image.local_file_path}
                         alt={image.original_prompt}
                         className="w-full h-full object-cover"
+                        fallbackIcon="🗑️"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-cosmic-400 text-xs">

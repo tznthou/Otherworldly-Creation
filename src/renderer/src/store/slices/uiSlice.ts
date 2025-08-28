@@ -124,7 +124,17 @@ const uiSlice = createSlice({
     
     // 模態框管理
     openModal: (state, action: PayloadAction<keyof UIState['modals']>) => {
+      console.log('🔄 [uiSlice] openModal reducer 被調用:', {
+        modalName: action.payload,
+        currentState: state.modals[action.payload],
+        allModals: { ...state.modals }
+      });
       state.modals[action.payload] = true;
+      console.log('🔄 [uiSlice] openModal reducer 完成:', {
+        modalName: action.payload,
+        newState: state.modals[action.payload],
+        allModals: { ...state.modals }
+      });
     },
     closeModal: (state, action: PayloadAction<keyof UIState['modals']>) => {
       state.modals[action.payload] = false;

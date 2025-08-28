@@ -491,22 +491,27 @@ impl IllustrationManager {
     
     /// 保存圖像到本地
     async fn save_image_to_local(&self, image_data: &str, image_id: &str) -> Result<String> {
-        use std::path::Path;
+        use std::env;
+        
+        // 獲取當前工作目錄並創建絕對路徑
+        let current_dir = env::current_dir()
+            .map_err(|e| IllustrationError::Unknown(format!("無法獲取當前工作目錄: {}", e)))?;
+        let save_dir = current_dir.join("generated_images");
         
         // 創建保存目錄
-        let save_dir = Path::new("generated_images");
         if !save_dir.exists() {
-            std::fs::create_dir_all(save_dir)?;
+            std::fs::create_dir_all(&save_dir)?;
         }
         
         // 解碼 Base64 圖像
         let image_bytes = base64::engine::general_purpose::STANDARD.decode(image_data)
             .map_err(|e| IllustrationError::Unknown(format!("Base64 解碼失敗: {}", e)))?;
         
-        // 保存到文件
+        // 保存到文件（使用絕對路徑）
         let file_path = save_dir.join(format!("{}.png", image_id));
         std::fs::write(&file_path, image_bytes)?;
         
+        log::info!("圖像已保存到絕對路徑: {}", file_path.display());
         Ok(file_path.to_string_lossy().to_string())
     }
     

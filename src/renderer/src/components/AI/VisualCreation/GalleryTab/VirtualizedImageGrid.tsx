@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { FixedSizeGrid as Grid, GridChildComponentProps } from 'react-window';
 import { IllustrationHistoryItem } from '../../../../types/illustration';
+import { SafeImage } from '../../../UI/SafeImage';
 import { formatDateTime } from '../../../../utils/dateUtils';
 
 interface VirtualizedImageGridProps {
@@ -102,11 +103,13 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = ({
         {/* 圖像縮略圖 */}
         <div className="w-full h-full bg-cosmic-700 flex items-center justify-center">
           {item.image_url || item.local_file_path ? (
-            <img
-              src={item.image_url || `file://${item.local_file_path}`}
+            <SafeImage
+              imageUrl={item.image_url}
+              localFilePath={item.local_file_path}
               alt={item.original_prompt}
               className="w-full h-full object-cover"
-              loading="lazy" // 添加延遲載入
+              loading="lazy"
+              fallbackIcon="🎨"
             />
           ) : (
             <div className="text-cosmic-400 text-xl">

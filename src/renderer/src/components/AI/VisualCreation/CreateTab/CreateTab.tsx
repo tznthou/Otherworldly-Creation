@@ -4,11 +4,13 @@ import type { RootState, AppDispatch } from '../../../../store/store';
 
 // Redux actions
 import {
-  generateIllustration,
   setError,
-  setAutoCreateVersions,
   openVersionPanel,
+  addTempImage,
 } from '../../../../store/slices/visualCreationSlice';
+
+// API
+import { api } from '../../../../api/tauri';
 
 // Custom Hooks
 import { useAutoVersionCreation } from '../../../../hooks/illustration';
@@ -16,9 +18,13 @@ import { useAutoVersionCreation } from '../../../../hooks/illustration';
 // UI Components
 import CharacterSelector from './CharacterSelector';
 import SceneBuilder from './SceneBuilder';
-import GenerationControls from './GenerationControls';
-import TempImageVersionCard from './TempImageVersionCard';
 import PromptSuggestionPanel from '../panels/PromptSuggestionPanel';
+
+// Shared Components
+import WorkflowSteps from '../shared/WorkflowSteps';
+import GuidanceCard from '../shared/GuidanceCard';
+import Tooltip from '../../../UI/Tooltip';
+import { GUIDANCE_TEXTS } from '../shared/guidanceTexts';
 
 interface CreateTabProps {
   className?: string;
@@ -27,6 +33,7 @@ interface CreateTabProps {
 interface BatchRequest {
   id: string;
   scene_description: string;
+  enriched_prompt: string;
   selectedCharacterIds: string[];
   scene_type: 'portrait' | 'scene' | 'interaction';
   style_template: string;
@@ -41,457 +48,659 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     currentProvider,
     selectedCharacters,
     sceneType,
-    isGenerating,
-    error,
+    artStyle,
     loading,
-    versionManagement: { autoCreateVersions, pendingVersionCreation, lastGeneratedImageId },
+    error,
     tempImages,
+    isGenerating,
   } = useSelector((state: RootState) => state.visualCreation);
   
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
   const characters = useSelector((state: RootState) => state.characters.characters);
   
-  // 版本管理 Hook
-  const {
-    hasPendingVersions,
-    pendingCount,
-    manuallyCreateVersion,
-    clearAllPendingVersions,
-  } = useAutoVersionCreation();
-  
-  // 本地狀態 (批次生成相關)
-  const [requests, setRequests] = useState<BatchRequest[]>([]);
-  const [batchName, setBatchName] = useState('');
-  const [batchDescription, setBatchDescription] = useState('');
-  const [currentPrompt, setCurrentPrompt] = useState('');
-  
-  // Pollinations 特定設定
-  const [pollinationsModel] = useState<'flux' | 'gptimage' | 'kontext' | 'sdxl'>('flux');
-  const [pollinationsStyle] = useState<'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art'>('anime');
-  
-  // 獲取項目角色 - 強化過濾邏輯
+  // 獲取專案角色
   const projectCharacters = characters.filter(c => {
-    // 確保類型一致比較，處理string vs number的情況
     const charProjectId = String(c.projectId);
     const currentProjectId = String(currentProject?.id);
     return charProjectId === currentProjectId;
   });
-  
-  // 生成智能場景描述
-  const generateSceneDescription = useCallback((selectedIds: string[], sceneType: string) => {
-    const selectedChars = selectedIds.map(id => 
-      projectCharacters.find(c => c.id === id)
-    ).filter((char): char is NonNullable<typeof char> => Boolean(char));
+
+  // 本地狀態
+  const [sceneDescription, setSceneDescription] = useState('');
+  const [batchRequests, setBatchRequests] = useState<BatchRequest[]>([]);
+
+  // 快速模板預設
+  const quickTemplates = [
+    {
+      id: 'isekai',
+      name: '🌟 異世界轉生',
+      sceneType: 'scene' as const,
+      artStyle: 'anime',
+      sampleScenes: [
+        '在魔法學院的教室中',
+        '在異世界的森林探險',
+        '在王都的冒險者公會',
+        '在龍穴中的最終決戰'
+      ]
+    },
+    {
+      id: 'school',
+      name: '🏫 校園戀愛',
+      sceneType: 'interaction' as const,
+      artStyle: 'anime',
+      sampleScenes: [
+        '在櫻花樹下的告白場景',
+        '在校園屋頂的午餐時光',
+        '在圖書館的偶遇',
+        '在文化祭的浪漫時刻'
+      ]
+    },
+    {
+      id: 'fantasy',
+      name: '⚔️ 奇幻冒險',
+      sceneType: 'scene' as const,
+      artStyle: 'fantasy',
+      sampleScenes: [
+        '在古老城堡的大廳',
+        '與巨龍的史詩對決',
+        '在魔法森林的神秘遺跡',
+        '在矮人王國的鍛造工坊'
+      ]
+    },
+    {
+      id: 'scifi',
+      name: '🚀 科幻冒險',
+      sceneType: 'scene' as const,
+      artStyle: 'digital_art',
+      sampleScenes: [
+        '在太空站的指揮中心',
+        '在外星球的探索任務',
+        '在未來都市的高樓大廈',
+        '在機甲格納庫的準備場景'
+      ]
+    }
+  ];
+
+  const [selectedQuickTemplate, setSelectedQuickTemplate] = useState<string | null>(null);
+
+  // 應用快速模板
+  const applyQuickTemplate = useCallback((templateId: string, sampleSceneIndex?: number) => {
+    const template = quickTemplates.find(t => t.id === templateId);
+    if (!template) return;
+
+    // 應用模板設置到 Redux 狀態
+    // 這裡需要調用相關的 Redux actions
+    // dispatch(setSceneType(template.sceneType));
+    // dispatch(setArtStyle(template.artStyle));
     
-    if (selectedChars.length === 0) return '';
-    
-    let description = '';
-    
-    switch (sceneType) {
-      case 'portrait': {
-        const char = selectedChars[0];
-        if (char) {
-          description = `${char.name}的精美肖像，`;
-          if (char.appearance) description += `${char.appearance}，`;
-          if (char.personality) description += `展現${char.personality}的特質`;
-        }
-        break;
-      }
-        
-      case 'interaction':
-        description = `${selectedChars.map(c => c?.name).filter(Boolean).join('和')}的互動場景，`;
-        description += '自然的對話氛圍，細膩的表情刻畫';
-        break;
-        
-      case 'scene':
-        description = `${selectedChars.map(c => c?.name).filter(Boolean).join('、')}在環境中的場景，`;
-        description += '豐富的背景細節，氛圍營造';
-        break;
+    // 如果選擇了示例場景，自動填充場景描述
+    if (sampleSceneIndex !== undefined && template.sampleScenes[sampleSceneIndex]) {
+      setSceneDescription(template.sampleScenes[sampleSceneIndex]);
     }
     
-    return description;
+    setSelectedQuickTemplate(templateId);
+    console.log(`🎨 [CreateTab] 已應用快速模板: ${template.name}`);
+  }, [quickTemplates]);
+
+  // 自動版本創建 Hook  
+  const { createVersionForImage } = useAutoVersionCreation();
+
+  // 生成增強的 prompt，整合角色背景資訊
+  const buildEnrichedPrompt = useCallback((sceneDesc: string, characterIds: string[]) => {
+    const selectedChars = projectCharacters.filter(char => characterIds.includes(char.id));
+    
+    if (selectedChars.length === 0) {
+      return sceneDesc;
+    }
+
+    // 構建角色詳細資訊
+    const characterDetails = selectedChars.map(char => {
+      const details = [];
+      if (char.name) details.push(`名稱: ${char.name}`);
+      if (char.appearance) details.push(`外觀: ${char.appearance}`);
+      if (char.personality) details.push(`個性: ${char.personality}`);
+      if (char.background) details.push(`背景: ${char.background}`);
+      if (char.age) details.push(`年齡: ${char.age}`);
+      if (char.gender) details.push(`性別: ${char.gender}`);
+      
+      return details.length > 0 ? details.join(', ') : char.name;
+    }).filter(Boolean);
+
+    // 組合最終 prompt
+    if (characterDetails.length > 0) {
+      return `${sceneDesc}\n\n[角色詳細資訊]\n${characterDetails.join('\n')}\n\n請確保生成的圖像準確反映上述角色特徵和場景描述。`;
+    }
+    
+    return sceneDesc;
   }, [projectCharacters]);
 
-  // 處理提示詞選擇
-  const handlePromptSelect = useCallback((prompt: string) => {
-    setCurrentPrompt(prompt);
-  }, []);
+  // 計算當前工作流程步驟
+  const getCurrentStep = () => {
+    if (selectedCharacters.length === 0) return 0;
+    if (!sceneType) return 1; 
+    if (!sceneDescription.trim()) return 2;
+    return 3;
+  };
 
-  // 處理提示詞優化
-  const handlePromptOptimize = useCallback((optimizedPrompt: string) => {
-    setCurrentPrompt(optimizedPrompt);
-  }, []);
-
-  // 版本管理相關處理函數
-  const handleToggleAutoVersions = useCallback(() => {
-    dispatch(setAutoCreateVersions(!autoCreateVersions));
-  }, [dispatch, autoCreateVersions]);
-
-  const handleManualCreateVersion = useCallback(async (imageId: string) => {
-    try {
-      const versionId = await manuallyCreateVersion(imageId, { status: 'active' });
-      console.log(`✅ 手動創建版本成功：${versionId}`);
-    } catch (error) {
-      dispatch(setError(error instanceof Error ? error.message : '創建版本失敗'));
-    }
-  }, [manuallyCreateVersion, dispatch]);
-
-  const handleCreateVariant = useCallback(async (imageId: string) => {
-    const tempImage = tempImages.find(img => img.id === imageId);
-    if (!tempImage) return;
-
-    try {
-      // 使用相同參數但隨機種子生成變體
-      await dispatch(generateIllustration({
-        prompt: tempImage.prompt,
-        width: tempImage.parameters.width,
-        height: tempImage.parameters.height,
-        model: tempImage.parameters.model as any,
-        seed: Math.floor(Math.random() * 1000000), // 隨機種子
-        enhance: tempImage.parameters.enhance,
-        style: tempImage.parameters.style as any,
-        projectId: tempImage.project_id,
-        characterId: tempImage.character_id,
-        provider: currentProvider,
-      })).unwrap();
-    } catch (error) {
-      dispatch(setError(error instanceof Error ? error.message : '生成變體失敗'));
-    }
-  }, [dispatch, tempImages, currentProvider]);
-
-  const handleBatchCreateVersions = useCallback(async () => {
-    try {
-      const selectedImages = tempImages.filter(img => pendingVersionCreation.includes(img.id));
-      for (const image of selectedImages) {
-        await manuallyCreateVersion(image.id, { status: 'active' });
-      }
-      console.log(`✅ 批量創建 ${selectedImages.length} 個版本成功`);
-    } catch (error) {
-      dispatch(setError(error instanceof Error ? error.message : '批量創建版本失敗'));
-    }
-  }, [tempImages, pendingVersionCreation, manuallyCreateVersion, dispatch]);
-
-  const handleViewVersionPanel = useCallback((imageId: string) => {
-    const tempImage = tempImages.find(img => img.id === imageId);
-    if (tempImage) {
-      dispatch(openVersionPanel(tempImage));
-    }
-  }, [dispatch, tempImages]);
-  
-  // 添加新請求
-  const addRequest = useCallback(() => {
-    // 優先使用當前提示詞，否則使用自動生成的描述
-    const description = currentPrompt.trim() || generateSceneDescription(selectedCharacters, sceneType);
-    if (!description) {
-      dispatch(setError('請先選擇角色或輸入提示詞'));
+  // 添加請求到批次
+  const handleAddToBatch = useCallback(() => {
+    if (selectedCharacters.length === 0) {
+      dispatch(setError('請先選擇角色'));
       return;
     }
     
-    const newRequest: BatchRequest = {
-      id: Date.now().toString(),
-      scene_description: description,
+    if (!sceneType) {
+      dispatch(setError('請選擇場景類型'));
+      return;
+    }
+    
+    if (!sceneDescription.trim()) {
+      dispatch(setError('請輸入場景描述'));
+      return;
+    }
+
+    // 生成增強的 prompt
+    const enrichedPrompt = buildEnrichedPrompt(sceneDescription.trim(), selectedCharacters);
+
+    const request: BatchRequest = {
+      id: `batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      scene_description: sceneDescription.trim(),
+      enriched_prompt: enrichedPrompt,
       selectedCharacterIds: [...selectedCharacters],
       scene_type: sceneType,
-      style_template: sceneType === 'portrait' ? 'anime-portrait' : 'fantasy-scene',
-      aspect_ratio: 'square',
+      style_template: artStyle,
+      aspect_ratio: '1:1', // 默認比例
     };
+
+    setBatchRequests([...batchRequests, request]);
     
-    setRequests([...requests, newRequest]);
-    dispatch(setError(null));
-  }, [currentPrompt, selectedCharacters, sceneType, generateSceneDescription, dispatch, requests]);
-  
-  // 移除請求
-  const removeRequest = useCallback((id: string) => {
-    setRequests(requests.filter(req => req.id !== id));
-  }, [requests]);
-  
-  // 更新請求
-  const updateRequest = useCallback((id: string, field: keyof BatchRequest, value: string | string[]) => {
-    setRequests(requests.map(req => 
-      req.id === id ? { ...req, [field]: value } : req
-    ));
-  }, [requests]);
-  
-  // 提交生成請求
-  const handleGenerate = useCallback(async () => {
+    // 清空場景描述，但保留角色和場景類型選擇
+    setSceneDescription('');
+    
+    console.log('📋 [CreateTab] 已添加批次請求:', request);
+  }, [selectedCharacters, sceneType, sceneDescription, artStyle, batchRequests, dispatch]);
+
+  // 執行批次生成
+  const handleBatchGenerate = useCallback(async () => {
+    if (batchRequests.length === 0) {
+      dispatch(setError('請先添加至少一個生成請求'));
+      return;
+    }
+
     if (!currentProject) {
-      dispatch(setError('請選擇專案'));
+      dispatch(setError('請先選擇專案'));
       return;
     }
-    
-    if (requests.length === 0) {
-      dispatch(setError('請添加至少一個插畫請求'));
-      return;
-    }
-    
-    console.log(`🚀 開始批次插畫生成：${requests.length} 個請求`);
-    
+
     try {
-      // 批次生成所有請求
-      for (const request of requests) {
-        await dispatch(generateIllustration({
-          prompt: request.scene_description,
-          width: request.aspect_ratio === 'portrait' ? 768 : request.aspect_ratio === 'landscape' ? 1024 : 1024,
-          height: request.aspect_ratio === 'portrait' ? 1024 : request.aspect_ratio === 'landscape' ? 768 : 1024,
-          model: pollinationsModel,
-          style: pollinationsStyle,
-          projectId: currentProject.id,
-          characterId: request.selectedCharacterIds[0], // 使用第一個角色ID
-          provider: currentProvider,
-        })).unwrap();
+      console.log('🚀 [CreateTab] 開始批次生成，請求數量:', batchRequests.length);
+      
+      for (const request of batchRequests) {
+        console.log(`🎯 [CreateTab] 處理請求: ${request.id}`);
+        
+        // 為每個請求生成插畫，使用增強的 prompt（新的優化API）
+        const result = await api.illustration.generateFreeIllustrationToTemp(
+          request.enriched_prompt,
+          1024,   // width
+          1024,   // height
+          'flux', // model
+          undefined, // seed
+          false,  // enhance
+          artStyle as any, // style
+          currentProject.id,
+          request.selectedCharacterIds[0] // 使用第一個選中的角色ID
+        );
+        
+        console.log(`✅ [CreateTab] 請求 ${request.id} 完成:`, result);
+        
+        // 將生成的圖片添加到臨時圖片列表
+        if (result.success) {
+          const tempImage = {
+            id: result.id || '',
+            temp_path: result.temp_path || '',
+            image_url: result.image_url,
+            prompt: result.prompt || request.enriched_prompt,
+            original_prompt: result.original_prompt || request.enriched_prompt,
+            parameters: result.parameters || {
+              model: 'flux',
+              width: 512,
+              height: 512,
+              enhance: false
+            },
+            file_size_bytes: result.file_size_bytes || 0,
+            generation_time_ms: result.generation_time_ms || 0,
+            provider: result.provider || 'pollinations',
+            is_free: true,
+            is_temp: true,
+            project_id: result.project_id,
+            character_id: result.character_id
+          };
+          
+          dispatch(addTempImage(tempImage));
+        }
       }
       
-      // 重置表單
-      setBatchName('');
-      setBatchDescription('');
-      setRequests([]);
+      // 批次完成後的後續處理
+      console.log('🎉 [CreateTab] 所有批次請求完成');
+      
+      // 可選：清空批次請求
+      // dispatch(generateBatchRequests([]));
       
     } catch (error) {
-      dispatch(setError(error instanceof Error ? error.message : '生成失敗'));
+      console.error('❌ [CreateTab] 批次生成失敗:', error);
+      dispatch(setError(error instanceof Error ? error.message : '批次生成失敗'));
     }
-  }, [currentProject, requests, dispatch, pollinationsModel, pollinationsStyle, currentProvider]);
-  
+  }, [batchRequests, currentProject, dispatch, currentProvider]);
+
+  // 移除批次請求
+  const handleRemoveBatchRequest = useCallback((requestId: string) => {
+    const updatedRequests = batchRequests.filter((req: BatchRequest) => req.id !== requestId);
+    setBatchRequests(updatedRequests);
+    console.log('🗑️ [CreateTab] 已移除批次請求:', requestId);
+  }, [batchRequests]);
+
+  // 清空所有批次請求
+  const handleClearBatch = useCallback(() => {
+    setBatchRequests([]);
+    console.log('🧹 [CreateTab] 已清空所有批次請求');
+  }, []);
+
   return (
     <div className={`create-tab flex flex-col h-full ${className}`}>
-      {/* 頂部控制區域 */}
-      <div className="flex-shrink-0 bg-cosmic-800/30 rounded-lg p-4 mb-4 border border-cosmic-700">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* 批次設定 */}
-          <div>
-            <h3 className="text-sm font-medium text-gold-500 mb-2">📋 批次設定</h3>
-            <div className="space-y-2">
-              <input
-                type="text"
-                value={batchName}
-                onChange={(e) => setBatchName(e.target.value)}
-                placeholder="批次名稱"
-                className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white placeholder-cosmic-400 text-sm"
-              />
-              <textarea
-                value={batchDescription}
-                onChange={(e) => setBatchDescription(e.target.value)}
-                placeholder="批次描述（選填）"
-                className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white placeholder-cosmic-400 text-sm resize-none"
-                rows={2}
-              />
-            </div>
+      {/* 歡迎引導 */}
+      <GuidanceCard
+        title={GUIDANCE_TEXTS.workflow.welcome}
+        description={GUIDANCE_TEXTS.workflow.stepByStep}
+        variant="primary"
+        className="mb-4 flex-shrink-0"
+      />
+
+      {/* 工作流程指示器 */}
+      <WorkflowSteps
+        currentStep={getCurrentStep()}
+        className="mb-4 flex-shrink-0"
+      />
+
+      {/* 🎯 第一步：角色選擇 - 最優先顯示 */}
+      <div className="flex-shrink-0 mb-4">
+        {/* 角色選擇引導 */}
+        <GuidanceCard
+          title={GUIDANCE_TEXTS.characterSelection.title}
+          description={GUIDANCE_TEXTS.characterSelection.description}
+          tips={[
+            GUIDANCE_TEXTS.characterSelection.multiSelectTip,
+            '選擇 1-3 個角色可獲得最佳效果',
+            '角色背景資訊將自動整合到生成提示中'
+          ]}
+          variant="primary"
+          className="mb-4"
+        />
+
+        {/* 角色選擇器 */}
+        <div className="bg-gradient-to-r from-blue-900/20 to-cosmic-800/30 rounded-lg p-4 border border-blue-500/30">
+          <div className="flex items-center mb-3">
+            <h3 className="text-lg font-semibold text-blue-400 flex items-center gap-2">
+              👥 選擇角色
+            </h3>
+            <span className="ml-2 text-xs px-2 py-1 bg-blue-600/20 text-blue-300 rounded">
+              步驟 1/4
+            </span>
           </div>
-          
-          {/* 生成控制 */}
-          <div>
-            <h3 className="text-sm font-medium text-gold-500 mb-2">⚡ 快速生成</h3>
-            <div className="space-y-2">
-              <button
-                onClick={addRequest}
-                disabled={selectedCharacters.length === 0}
-                className="w-full px-3 py-2 bg-gold-600 hover:bg-gold-700 disabled:bg-cosmic-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
-              >
-                添加請求
-              </button>
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating || requests.length === 0}
-                className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-cosmic-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
-              >
-                {isGenerating ? '生成中...' : `生成 ${requests.length} 張插畫`}
-              </button>
-            </div>
-          </div>
-          
-          {/* 狀態顯示 */}
-          <div>
-            <h3 className="text-sm font-medium text-cosmic-300 mb-2">📊 狀態</h3>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-cosmic-400">服務:</span>
-                <span className={currentProvider === 'pollinations' ? 'text-green-400' : 'text-blue-400'}>
-                  {currentProvider === 'pollinations' ? '🆓 Pollinations' : '💳 Imagen'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-cosmic-400">選中角色:</span>
-                <span className="text-cosmic-200">{selectedCharacters.length} 個</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-cosmic-400">場景類型:</span>
-                <span className="text-cosmic-200">
-                  {sceneType === 'portrait' ? '👤 肖像' : 
-                   sceneType === 'interaction' ? '👥 互動' : '🏞️ 場景'}
-                </span>
-              </div>
-              
-              {/* 版本管理狀態 */}
-              <div className="border-t border-cosmic-600 pt-2 mt-2">
-                <div className="flex justify-between">
-                  <span className="text-cosmic-400">自動版本:</span>
-                  <button
-                    onClick={handleToggleAutoVersions}
-                    className={`text-xs px-2 py-1 rounded ${
-                      autoCreateVersions 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-cosmic-600 text-cosmic-300'
-                    }`}
-                  >
-                    {autoCreateVersions ? '✅ 啟用' : '❌ 停用'}
-                  </button>
-                </div>
-                {hasPendingVersions && (
-                  <div className="flex justify-between mt-1">
-                    <span className="text-cosmic-400">待創建:</span>
-                    <span className="text-orange-400">{pendingCount} 個版本</span>
-                  </div>
-                )}
-                {lastGeneratedImageId && (
-                  <div className="flex justify-between mt-1">
-                    <span className="text-cosmic-400">最新圖片:</span>
-                    <span className="text-green-400">已生成 ✨</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* 主要內容區域 */}
-      <div className="flex-1 grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-4 overflow-hidden">
-        {/* 左側：角色選擇和場景建構 */}
-        <div className="space-y-4 overflow-y-auto">
           <CharacterSelector />
-          <SceneBuilder />
-          
-          {/* 當前提示詞輸入 */}
-          <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
-            <h3 className="text-sm font-medium text-gold-500 mb-2">✏️ 當前提示詞</h3>
-            <textarea
-              value={currentPrompt}
-              onChange={(e) => setCurrentPrompt(e.target.value)}
-              placeholder="在此輸入或編輯提示詞，留空將使用自動生成的場景描述..."
-              className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white placeholder-cosmic-400 text-sm resize-none"
-              rows={4}
-            />
-            <div className="text-xs text-cosmic-400 mt-2">
-              提示：選擇角色後可使用智能助手獲得 AI 建議
+        </div>
+      </div>
+
+      {/* 創作狀態總覽 */}
+      <div className="flex-shrink-0 bg-cosmic-800/30 rounded-lg p-3 mb-4 border border-cosmic-700">
+        <div className="flex items-center justify-between">
+          {/* 左側：當前狀態 */}
+          <div className="flex items-center space-x-4 text-sm">
+            <div className="flex items-center space-x-2 text-cosmic-300">
+              <span>👥 角色:</span>
+              <span className={`px-2 py-1 rounded text-xs ${
+                selectedCharacters.length > 0 ? 'bg-green-600 text-white' : 'bg-cosmic-600 text-cosmic-300'
+              }`}>
+                {selectedCharacters.length > 0 ? `${selectedCharacters.length} 已選` : '未選擇'}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2 text-cosmic-300">
+              <span>📋 請求:</span>
+              <span className="px-2 py-1 bg-cosmic-600 rounded text-xs">{batchRequests.length}</span>
+            </div>
+            <div className="text-xs text-cosmic-400">
+              服務: {currentProvider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}
             </div>
           </div>
-        </div>
-        
-        {/* 中間：智能提示詞助手（在大螢幕上顯示） */}
-        <div className="hidden xl:block space-y-4 overflow-y-auto">
-          <PromptSuggestionPanel
-            selectedCharacters={projectCharacters.filter(char => 
-              selectedCharacters.includes(char.id)
-            )}
-            sceneType={sceneType}
-            currentPrompt={currentPrompt}
-            onPromptSelect={handlePromptSelect}
-            onPromptOptimize={handlePromptOptimize}
-          />
-        </div>
-        
-        {/* 右側：生成控制和請求列表 */}
-        <div className="space-y-4 overflow-y-auto">
-          <GenerationControls 
-            requests={requests}
-            onRemoveRequest={removeRequest}
-            onUpdateRequest={updateRequest}
-          />
-          
-          {/* 在小螢幕上顯示智能提示詞助手 */}
-          <div className="xl:hidden">
-            <PromptSuggestionPanel
-              selectedCharacters={projectCharacters.filter(char => 
-                selectedCharacters.includes(char.id)
-              )}
-              sceneType={sceneType}
-              currentPrompt={currentPrompt}
-              onPromptSelect={handlePromptSelect}
-              onPromptOptimize={handlePromptOptimize}
-            />
+
+          {/* 右側：操作按鈕 */}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleAddToBatch}
+              disabled={selectedCharacters.length === 0 || !sceneType || !sceneDescription.trim()}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-cosmic-600 disabled:opacity-50 text-white text-sm rounded-lg transition-colors flex items-center space-x-2"
+              title="先選擇角色，設定場景，再添加到批次請求"
+            >
+              <span>➕</span>
+              <span>添加請求</span>
+            </button>
+            <button
+              onClick={handleBatchGenerate}
+              disabled={batchRequests.length === 0 || loading.generating || isGenerating}
+              className="px-4 py-2 bg-gold-600 hover:bg-gold-700 disabled:bg-cosmic-600 disabled:opacity-50 text-white text-sm rounded-lg transition-colors flex items-center space-x-2"
+            >
+              <span>🚀</span>
+              <span>{loading.generating || isGenerating ? '生成中...' : `生成 ${batchRequests.length} 張圖片`}</span>
+            </button>
           </div>
         </div>
       </div>
       
-      {/* 生成結果區域 */}
-      {tempImages.length > 0 && (
-        <div className="flex-shrink-0 mt-4">
-          {/* 批量操作面板 */}
-          {hasPendingVersions && (
-            <div className="mb-4 p-4 bg-orange-900/20 border border-orange-700/50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-orange-300 text-sm">
-                    ⏳ 有 {pendingCount} 個圖片待創建正式版本
-                  </span>
+      {/* 主要內容區域 - 修復滾動問題 */}
+      <div className="flex-1 min-h-0">
+        <div className="h-full grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-4">
+          {/* 左側：場景設定和模板輔助 */}
+          <div className="flex flex-col space-y-4 h-full">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+              
+              {/* 場景建構引導 */}
+              <GuidanceCard
+                title={GUIDANCE_TEXTS.sceneBuilder.title}
+                description={GUIDANCE_TEXTS.sceneBuilder.description}
+                tips={[...GUIDANCE_TEXTS.sceneBuilder.tips]}
+                examples={GUIDANCE_TEXTS.sceneBuilder.examples?.slice(0, 2) || []}
+                variant="info"
+                className="flex-shrink-0"
+              />
+
+              {/* 場景建構器 */}
+              <SceneBuilder />
+
+              {/* 場景描述 */}
+              <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-cosmic text-gold-500">📝 場景描述</h3>
+                  <Tooltip content="描述角色在場景中的具體情況、動作和表情">
+                    <div className="text-cosmic-400 text-sm">❓</div>
+                  </Tooltip>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleBatchCreateVersions}
-                    className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded transition-colors"
-                  >
-                    💾 批量保存為正式版本
-                  </button>
-                  <button
-                    onClick={clearAllPendingVersions}
-                    className="px-3 py-1 bg-cosmic-600 hover:bg-cosmic-700 text-white text-sm rounded transition-colors"
-                  >
-                    ❌ 清空待創建列表
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* 臨時圖片網格 */}
-          <div className="bg-cosmic-800/30 rounded-lg border border-cosmic-700 p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gold-500">🎨 生成結果</h3>
-              <span className="text-sm text-cosmic-400">共 {tempImages.length} 張圖片</span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {tempImages.map((tempImage) => (
-                <TempImageVersionCard
-                  key={tempImage.id}
-                  tempImage={tempImage}
-                  isPendingVersion={pendingVersionCreation.includes(tempImage.id)}
-                  isLastGenerated={tempImage.id === lastGeneratedImageId}
-                  onCreateVersion={handleManualCreateVersion}
-                  onCreateVariant={handleCreateVariant}
-                  onViewVersionPanel={handleViewVersionPanel}
+
+                <textarea
+                  value={sceneDescription}
+                  onChange={(e) => setSceneDescription(e.target.value)}
+                  placeholder="描述角色的具體情況、動作、表情和環境... 例如：角色站在櫻花樹下，微笑著向前伸手，夕陽西下的溫暖光線"
+                  className="w-full h-32 p-3 bg-cosmic-900/50 border border-cosmic-600 rounded-lg text-white placeholder-cosmic-400 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 transition-colors resize-none"
+                  maxLength={500}
                 />
-              ))}
+                
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-xs text-cosmic-500">
+                    {sceneDescription.length}/500 字
+                  </span>
+                  <div className="text-xs text-cosmic-400">
+                    💡 詳細描述能獲得更好的生成效果
+                  </div>
+                </div>
+              </div>
+
+              {/* 快速模板輔助工具 - 收折到底部 */}
+              <details className="group bg-cosmic-800/20 rounded-lg border border-cosmic-700">
+                <summary className="cursor-pointer p-3 hover:bg-cosmic-700/30 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-cosmic-400 flex items-center gap-2">
+                      🎨 快速模板輔助
+                      <span className="text-xs opacity-60">(可選)</span>
+                    </span>
+                    <svg className="w-4 h-4 text-cosmic-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m19 9-7 7-7-7" />
+                    </svg>
+                  </div>
+                </summary>
+                <div className="p-3 pt-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {quickTemplates.map((template) => (
+                      <div key={template.id} className="relative">
+                        <button
+                          onClick={() => applyQuickTemplate(template.id)}
+                          className={`w-full p-3 rounded-lg border transition-all text-left ${
+                            selectedQuickTemplate === template.id
+                              ? 'border-gold-500 bg-gold-900/30 text-gold-200'
+                              : 'border-cosmic-600 bg-cosmic-800/50 text-cosmic-300 hover:border-gold-600'
+                          }`}
+                        >
+                          <div className="text-sm font-medium mb-1">{template.name}</div>
+                          <div className="text-xs text-cosmic-400">
+                            {template.sceneType === 'interaction' ? '互動' : '場景'} • {template.artStyle}
+                          </div>
+                          {selectedQuickTemplate === template.id && (
+                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-gold-500 rounded-full"></div>
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {selectedQuickTemplate && (
+                    <div className="mt-3 pt-3 border-t border-cosmic-600">
+                      <div className="text-xs text-cosmic-400 mb-2">示例場景 (點擊應用):</div>
+                      <div className="grid gap-1">
+                        {quickTemplates.find(t => t.id === selectedQuickTemplate)?.sampleScenes.map((scene, index) => (
+                          <button
+                            key={index}
+                            onClick={() => applyQuickTemplate(selectedQuickTemplate, index)}
+                            className="text-left text-xs p-2 rounded bg-cosmic-700/50 hover:bg-cosmic-600 text-cosmic-300 hover:text-white transition-colors"
+                          >
+                            {scene}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedQuickTemplate(null);
+                          setSceneDescription('');
+                        }}
+                        className="mt-2 text-xs px-2 py-1 bg-red-600/20 border border-red-500/30 text-red-300 rounded hover:bg-red-600/30 transition-colors"
+                      >
+                        清除模板
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </details>
             </div>
-            
-            {/* 統計信息 */}
-            <div className="mt-4 pt-4 border-t border-cosmic-600 flex justify-between text-xs text-cosmic-400">
-              <div className="flex gap-4">
-                <span>總數: {tempImages.length}</span>
-                <span>待版本化: {pendingCount}</span>
-                <span>免費生成: {tempImages.filter(img => img.is_free).length}</span>
+          </div>
+        
+          {/* 中間：智能提示詞助手（在大螢幕上顯示） */}
+          <div className="hidden xl:flex xl:flex-col xl:space-y-4 xl:h-full">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+              <PromptSuggestionPanel
+                selectedCharacters={projectCharacters.filter(char => 
+                  selectedCharacters.includes(char.id)
+                )}
+                sceneType={sceneType}
+                currentPrompt={sceneDescription}
+                onPromptSelect={(prompt: string) => setSceneDescription(prompt)}
+                onPromptOptimize={(prompt: string) => setSceneDescription(prompt)}
+                className="h-full"
+              />
+            </div>
+          </div>
+        
+          {/* 右側：生成控制和請求列表 */}
+          <div className="flex flex-col space-y-4 h-full">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+              {/* 批次生成引導 */}
+              <GuidanceCard
+                title={GUIDANCE_TEXTS.generation.title}
+                description={GUIDANCE_TEXTS.generation.batchMode || '批次模式可以一次性生成多張插畫'}
+                tips={[
+                  '設定完成後點擊「添加請求」',
+                  '可以添加多個不同的場景設定',
+                  '最後點擊「生成」開始批次創作'
+                ]}
+                variant="success"
+                className="flex-shrink-0"
+              />
+
+              {/* 生成控制 */}
+              <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
+                <h3 className="text-lg font-cosmic text-gold-500 mb-3">⚡ 生成控制</h3>
+                <p className="text-cosmic-300 text-sm">
+                  設定完成後，點擊上方的「添加請求」和「生成」按鈕開始創作。
+                </p>
               </div>
-              <div>
-                總生成時間: {(tempImages.reduce((sum, img) => sum + img.generation_time_ms, 0) / 1000).toFixed(1)}s
-              </div>
+
+              {/* 批次請求列表 */}
+              {batchRequests.length > 0 && (
+                <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-cosmic text-gold-500">📋 批次請求</h3>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-cosmic-400">
+                        {batchRequests.length} 個請求
+                      </span>
+                      <button
+                        onClick={handleClearBatch}
+                        className="text-xs px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                      >
+                        清空
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {batchRequests.map((request: BatchRequest, index: number) => (
+                      <div
+                        key={request.id}
+                        className="p-3 bg-cosmic-700/50 rounded border border-cosmic-600"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <span className="text-sm font-medium text-white">
+                                #{index + 1}
+                              </span>
+                              <span className="text-xs px-2 py-1 bg-gold-600 text-white rounded">
+                                {request.scene_type === 'portrait' ? '肖像' : request.scene_type === 'interaction' ? '互動' : '場景'}
+                              </span>
+                              <span className="text-xs text-cosmic-400">
+                                {request.selectedCharacterIds.length} 個角色
+                              </span>
+                            </div>
+                            <p className="text-sm text-cosmic-300 line-clamp-2 mb-2">
+                              {request.scene_description}
+                            </p>
+                            
+                            {/* 角色資訊提示 */}
+                            {request.selectedCharacterIds.length > 0 && (
+                              <div className="text-xs text-green-400 mb-1">
+                                ✨ 已整合 {request.selectedCharacterIds.length} 個角色的背景資訊
+                              </div>
+                            )}
+                            
+                            <div className="text-xs text-cosmic-500">
+                              {request.style_template} • {request.aspect_ratio}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveBatchRequest(request.id)}
+                            className="ml-2 text-red-400 hover:text-red-300 transition-colors"
+                            title="移除此請求"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 臨時圖片版本 */}
+              {tempImages.length > 0 && (
+                <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-cosmic text-gold-500">🖼️ 最新生成</h3>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => {
+                          tempImages.forEach(image => createVersionForImage(image.id));
+                        }}
+                        className="text-xs px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                      >
+                        保存到圖庫
+                      </button>
+                      <button
+                        onClick={() => {
+                          // TODO: 實現變體創建邏輯
+                          console.log('創建變體功能');
+                        }}
+                        className="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                      >
+                        創建變體
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {tempImages.slice(-4).map((image: any, _index: number) => (
+                      <div key={image.id} className="aspect-square bg-cosmic-700/50 rounded border border-cosmic-600 p-2">
+                        <div className="w-full h-full flex items-center justify-center bg-cosmic-600 rounded">
+                          <div className="text-center text-cosmic-300">
+                            <div className="text-2xl mb-2">🎨</div>
+                            <div className="text-xs">圖片生成成功</div>
+                            <div className="text-xs text-cosmic-500">{image.id.slice(-8)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 快速動作面板 */}
+                  <div className="mt-4 p-3 bg-gold-900/20 border border-gold-700/50 rounded-lg">
+                    <p className="text-gold-300 text-sm font-medium mb-2">
+                      🚀 下一步操作建議
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <button
+                        onClick={() => {
+                          // 繼續為其他角色生成
+                          console.log('為其他角色生成');
+                        }}
+                        className="px-3 py-2 bg-cosmic-700 hover:bg-cosmic-600 text-white text-xs rounded transition-colors"
+                      >
+                        🎭 切換角色
+                      </button>
+                      <button
+                        onClick={() => {
+                          // 嘗試不同場景
+                          setSceneDescription('');
+                        }}
+                        className="px-3 py-2 bg-cosmic-700 hover:bg-cosmic-600 text-white text-xs rounded transition-colors"
+                      >
+                        🎬 新場景
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (tempImages.length > 0) {
+                            dispatch(openVersionPanel(tempImages[0]));
+                          }
+                        }}
+                        className="px-3 py-2 bg-cosmic-700 hover:bg-cosmic-600 text-white text-xs rounded transition-colors"
+                      >
+                        📚 管理版本
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      )}
-      
+      </div>
+
       {/* 錯誤提示 */}
       {error && (
-        <div className="flex-shrink-0 mt-4 p-3 bg-red-900/20 border border-red-700/50 rounded-lg">
-          <div className="text-red-300 text-sm">{error}</div>
-        </div>
-      )}
-      
-      {/* 載入狀態 */}
-      {loading.generating && (
-        <div className="flex-shrink-0 mt-4 p-3 bg-blue-900/20 border border-blue-700/50 rounded-lg">
-          <div className="text-blue-300 text-sm flex items-center">
-            <div className="animate-spin w-4 h-4 border-2 border-blue-300 border-t-transparent rounded-full mr-2"></div>
-            正在生成插畫...
-          </div>
+        <div className="flex-shrink-0 mt-4 p-3 bg-red-900/30 border border-red-700/50 rounded-lg">
+          <p className="text-red-300 text-sm">{error}</p>
         </div>
       )}
     </div>

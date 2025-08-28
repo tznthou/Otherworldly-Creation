@@ -78,6 +78,7 @@ export interface VisualCreationState {
   // 創建狀態
   selectedCharacters: string[];
   sceneType: 'portrait' | 'scene' | 'interaction';
+  artStyle: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art';
   
   // 生成狀態
   isGenerating: boolean;
@@ -134,6 +135,7 @@ const initialState: VisualCreationState = {
   // 創建狀態
   selectedCharacters: [],
   sceneType: 'portrait',
+  artStyle: 'realistic',
   
   // 生成狀態
   isGenerating: false,
@@ -420,9 +422,23 @@ export const visualCreationSlice = createSlice({
       state.sceneType = action.payload;
     },
     
+    setArtStyle: (state, action: PayloadAction<VisualCreationState['artStyle']>) => {
+      state.artStyle = action.payload;
+    },
+    
     // 預覽狀態管理
     setTempImages: (state, action: PayloadAction<TempImageData[]>) => {
       state.tempImages = action.payload;
+    },
+    
+    addTempImage: (state, action: PayloadAction<TempImageData>) => {
+      state.tempImages.push(action.payload);
+      // 自動選中新添加的圖片
+      if (!state.selectedImageIds.includes(action.payload.id)) {
+        state.selectedImageIds.push(action.payload.id);
+      }
+      // 顯示預覽
+      state.showImagePreview = true;
     },
     
     clearTempImages: (state) => {
@@ -445,6 +461,13 @@ export const visualCreationSlice = createSlice({
       } else {
         state.selectedImageIds.splice(index, 1);
       }
+    },
+
+    removeTempImages: (state, action: PayloadAction<string[]>) => {
+      const imageIdsToRemove = action.payload;
+      state.tempImages = state.tempImages.filter(img => !imageIdsToRemove.includes(img.id));
+      // 同時清理選中狀態中相關的ID
+      state.selectedImageIds = state.selectedImageIds.filter(id => !imageIdsToRemove.includes(id));
     },
     
     selectAllImages: (state) => {
@@ -696,11 +719,14 @@ export const {
   setSelectedCharacters,
   toggleCharacterSelection,
   setSceneType,
+  setArtStyle,
   setTempImages,
+  addTempImage,
   clearTempImages,
   setShowImagePreview,
   setSelectedImageIds,
   toggleImageSelection,
+  removeTempImages,
   selectAllImages,
   deselectAllImages,
   setCurrentImageIndex,

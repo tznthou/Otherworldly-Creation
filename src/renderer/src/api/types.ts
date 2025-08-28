@@ -285,8 +285,10 @@ export interface API {
       success: boolean;
       id?: string;
       prompt?: string;
+      original_prompt?: string;
       temp_path?: string;
       temp_url?: string;
+      image_url?: string;
       parameters?: {
         model: string;
         width: number;
@@ -295,8 +297,11 @@ export interface API {
         enhance: boolean;
       };
       generation_time_ms?: number;
+      file_size_bytes?: number;
       provider?: string;
       is_temp?: boolean;
+      project_id?: string;
+      character_id?: string;
       message?: string;
     }>;
 
@@ -358,6 +363,9 @@ export interface API {
       message?: string;
     }>;
   };
+
+  // 通用 Tauri 調用方法
+  invoke: <T = unknown>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
 }
 
 // 超長上下文優化相關類型

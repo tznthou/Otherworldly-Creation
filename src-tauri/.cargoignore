@@ -1,0 +1,20 @@
+# Exclude generated images from cargo file watcher to prevent hot reload
+generated-images/
+*.jpg
+*.png
+*.jpeg
+*.gif
+*.webp
+
+# Database files
+*.db
+*.db-shm 
+*.db-wal
+*.sqlite*
+
+# Logs
+*.log
+
+# Temporary files  
+*.tmp
+*.temp

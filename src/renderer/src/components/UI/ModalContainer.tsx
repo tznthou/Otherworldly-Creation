@@ -25,6 +25,7 @@ const ModalContainer: React.FC = () => {
   const { currentProject } = useAppSelector(state => state.projects);
   const { currentChapter, chapters } = useAppSelector(state => state.chapters);
 
+
   // 章節重新排序處理函數（使用 useCallback 避免無限重新渲染）
   const handleReorderChapters = useCallback(async (reorderedChapters: Chapter[]) => {
     try {

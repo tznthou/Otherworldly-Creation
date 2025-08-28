@@ -346,11 +346,15 @@ window.addEventListener('error', (event) => {
     return false;
   }
   
-  console.error('🚨 全域錯誤:', event.error);
+  // 安全地記錄錯誤
+  const safeErrorLog = event.error ? event.error : 'Unknown error event';
+  console.error('🚨 全域錯誤:', safeErrorLog);
   
-  // 記錄錯誤
+  // 記錄錯誤詳情
   if (event.error) {
     console.error('全域錯誤處理器:', event.error);
+  } else {
+    console.warn('全域錯誤處理器: 接收到未定義的錯誤事件');
   }
   
   event.preventDefault();

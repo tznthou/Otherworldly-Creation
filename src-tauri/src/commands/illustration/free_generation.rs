@@ -194,9 +194,10 @@ pub async fn get_illustration_history(
             id, project_id, character_id, original_prompt, enhanced_prompt,
             model, width, height, seed, enhance, style_applied,
             image_url, local_file_path, file_size_bytes, generation_time_ms,
-            status, error_message, created_at, batch_id, user_rating, is_favorite
+            status, error_message, created_at, batch_id, user_rating, is_favorite,
+            is_confirmed
          FROM pollinations_generations
-         WHERE deleted_at IS NULL"
+         WHERE deleted_at IS NULL AND (is_confirmed IS NULL OR is_confirmed = 1)"
     );
     
     let mut conditions = Vec::new();

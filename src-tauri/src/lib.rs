@@ -38,6 +38,8 @@ use commands::illustration::{
     get_illustration_history,
     // 臨時圖像管理 API
     generate_free_illustration_to_temp, confirm_temp_image_save, delete_temp_image, cleanup_expired_temp_images,
+    // 優化的圖像管理 API
+    generate_illustration_optimized, confirm_illustrations,
     // 圖片刪除管理 API
     delete_illustrations, restore_illustrations, get_deleted_illustrations, permanent_delete_illustrations
 };
@@ -193,6 +195,9 @@ pub fn run() {
       confirm_temp_image_save,
       delete_temp_image,
       cleanup_expired_temp_images,
+      // 優化的圖像管理
+      generate_illustration_optimized,
+      confirm_illustrations,
       // 圖片刪除管理 commands
       delete_illustrations,
       restore_illustrations,

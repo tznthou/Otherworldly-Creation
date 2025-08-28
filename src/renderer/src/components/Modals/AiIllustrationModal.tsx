@@ -10,6 +10,9 @@ const AiIllustrationModal: React.FC = () => {
     dispatch(closeModal('aiIllustration'));
   };
 
+  // 調試：確認組件渲染
+  console.log('🎨 [AiIllustrationModal] 組件正在渲染');
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-[calc(100vw-320px)] max-w-6xl max-h-[95vh] overflow-hidden ml-64 mr-4 my-4">

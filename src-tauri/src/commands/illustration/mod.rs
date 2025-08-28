@@ -44,6 +44,9 @@ pub use temp_image_manager::{
     confirm_temp_image_save,
     delete_temp_image,
     cleanup_expired_temp_images,
+    // 優化的圖像管理
+    generate_illustration_optimized,
+    confirm_illustrations,
 };
 
 // ========================= 圖像刪除管理 =========================

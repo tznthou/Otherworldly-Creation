@@ -1,131 +1,64 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../../../store/store';
+import React from 'react';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '../../../store/store';
 import LoadingSpinner from '../../UI/LoadingSpinner';
 
 // 導入 Redux actions
-import {
-  setActiveTab,
-  setCurrentProvider,
-  initializeVisualCreation,
-  clearError,
-} from '../../../store/slices/visualCreationSlice';
-import { fetchCharactersByProjectId } from '../../../store/slices/charactersSlice';
+import { clearError, initializeVisualCreation } from '../../../store/slices/visualCreationSlice';
+
+// 導入自定義 hooks
 import { 
-  loadVersions,
-  resetVersionManagement 
-} from '../../../store/slices/versionManagementSlice';
+  useTutorialManager, 
+  useVisualCreationData, 
+  useVisualCreationHandlers 
+} from '../../../hooks/visual-creation';
+// 版本管理已簡化，不再需要複雜的狀態管理
 
 // 導入子組件
 import { CreateTab } from './CreateTab';
 import { GalleryTab } from './GalleryTab';
 import ImagePreviewModal from './ImagePreviewModal';
 import ExportSettingsPanel from './panels/ExportSettingsPanel';
-import { StyleTemplateSelector } from './StyleTemplateSelector';
+// import { StyleTemplateSelector } from './StyleTemplateSelector';
+import TutorialOverlay from './shared/TutorialOverlay';
 
-// 導入版本管理組件
-import { VersionTimeline, VersionDetailsPanel, VersionComparisonView } from './VersionManagement';
+// 版本管理組件已移除，功能簡化
 
 interface VisualCreationCenterProps {
   className?: string;
 }
 
-type ActiveTab = 'create' | 'gallery' | 'templates' | 'versions';
-type IllustrationProvider = 'pollinations' | 'imagen';
+type ActiveTab = 'create' | 'gallery';
+// type IllustrationProvider = 'pollinations' | 'imagen';
 
 const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
   className = ''
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const currentProject = useSelector((state: RootState) => state.projects.currentProject);
-  const characters = useSelector((state: RootState) => state.characters.characters);
   
-  // Redux 狀態
+  // 使用自定義 hooks 來管理狀態和邏輯
+  const { 
+    currentProject, 
+    characters: _characters, 
+    activeTab, 
+    currentProvider, 
+    error, 
+    loading, 
+    selectedImageIds 
+  } = useVisualCreationData();
+  
   const {
-    activeTab,
-    currentProvider,
-    error,
-    loading,
-    selectedImageIds,
-  } = useSelector((state: RootState) => state.visualCreation);
-
-  // 版本管理狀態
+    showTutorial,
+    handleTutorialComplete,
+    handleTutorialSkip,
+    resetTutorial
+  } = useTutorialManager(currentProject);
+  
   const {
-    versions,
-    currentVersionId,
-    selectedVersionIds,
-    versionTrees,
-    loading: _versionLoading,
-    error: _versionError,
-  } = useSelector((state: RootState) => state.versionManagement);
-
-  // 穩定化版本樹引用，避免無限循環
-  const firstVersionTree = useMemo(() => {
-    const trees = Object.values(versionTrees);
-    return trees.length > 0 ? trees[0] : undefined;
-  }, [versionTrees]);
-
-  // 穩定化版本比較數據
-  const comparisonVersions = useMemo(() => {
-    if (selectedVersionIds.length < 2) return [];
-    return selectedVersionIds
-      .slice(0, 2)
-      .map(id => versions.find(v => v.id === id))
-      .filter(Boolean);
-  }, [selectedVersionIds, versions]);
-
-  // 穩定化當前版本
-  const currentVersion = useMemo(() => {
-    return currentVersionId ? versions.find(v => v.id === currentVersionId) : undefined;
-  }, [currentVersionId, versions]);
-
-  // 初始化組件 - 同時載入角色和版本管理
-  useEffect(() => {
-    if (currentProject) {
-      console.log('🎨 [VisualCreationCenter] 初始化，專案ID:', currentProject.id);
-      dispatch(clearError());
-      dispatch(initializeVisualCreation(currentProject.id));
-      
-      // 載入角色資料到 Redux
-      console.log('📊 [VisualCreationCenter] 載入角色資料...');
-      dispatch(fetchCharactersByProjectId(currentProject.id));
-      
-      // 初始化版本管理系統
-      console.log('🕒 [VisualCreationCenter] 初始化版本管理系統...');
-      dispatch(resetVersionManagement());
-      dispatch(loadVersions(currentProject.id));
-    }
-  }, [currentProject, dispatch]);
-
-  // 調試：監控角色狀態變化
-  useEffect(() => {
-    console.log('🎨 [VisualCreationCenter] 角色狀態更新:');
-    console.log('   📊 角色總數:', characters.length);
-    if (characters.length > 0) {
-      console.log('   🎭 角色列表:', characters.map(c => ({
-        id: c.id,
-        name: c.name,
-        projectId: c.projectId
-      })));
-    }
-    
-    if (currentProject) {
-      const projectCharacters = characters.filter(c => String(c.projectId) === String(currentProject.id));
-      console.log('   🎯 專案角色數:', projectCharacters.length);
-    }
-  }, [characters, currentProject]);
-
-  // 供應商切換處理
-  const handleProviderChange = useCallback((provider: IllustrationProvider) => {
-    dispatch(setCurrentProvider(provider));
-    console.log(`🔄 插畫服務切換至: ${provider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}`);
-  }, [dispatch]);
-
-  // 標籤切換處理
-  const handleTabChange = useCallback((tab: ActiveTab) => {
-    dispatch(setActiveTab(tab));
-    console.log(`🎯 切換至標籤頁: ${tab}`);
-  }, [dispatch]);
+    handleProviderChange,
+    handleTabChange,
+    handleSaveSelectedImages
+  } = useVisualCreationHandlers();
 
   // 渲染標籤頁內容
   const renderTabContent = () => {
@@ -144,109 +77,12 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
           </div>
         );
         
-      case 'templates':
-        return (
-          <div className="p-6 h-full">
-            <StyleTemplateSelector 
-              className="h-full" 
-              onTemplateApply={(template) => {
-                console.log('🎨 [VisualCreationCenter] 應用風格模板:', template.name);
-                // TODO: 將模板應用到當前的創作配置中
-              }}
-            />
-          </div>
-        );
-
-      case 'versions':
-        return (
-          <div className="p-6 h-full">
-            <div className="h-full flex flex-col space-y-6">
-              {/* 版本管理主標題 */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="text-2xl">🕒</div>
-                  <div>
-                    <h2 className="text-xl font-cosmic text-gold-500">版本管理</h2>
-                    <p className="text-sm text-cosmic-400">追踪插畫版本歷史，比較差異與管理分支</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* 版本管理內容區域 */}
-              <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
-                {/* 版本時間線 (左側) */}
-                <div className="lg:col-span-2 bg-cosmic-800/30 border border-cosmic-700 rounded-lg">
-                  <div className="p-4 border-b border-cosmic-700">
-                    <h3 className="text-lg font-medium text-cosmic-100 flex items-center space-x-2">
-                      <span>📈</span>
-                      <span>版本時間線</span>
-                    </h3>
-                    <p className="text-sm text-cosmic-400 mt-1">
-                      視覺化顯示插畫版本的演進歷史
-                    </p>
-                  </div>
-                  <div className="h-96">
-                    <VersionTimeline
-                      versions={versions}
-                      versionTree={firstVersionTree}
-                      layout="vertical"
-                      showBranches={true}
-                      showLabels={true}
-                      showMiniCards={true}
-                      selectedVersionId={currentVersionId || undefined}
-                      className="h-full"
-                    />
-                  </div>
-                </div>
-
-                {/* 版本詳細資訊 (右側) */}
-                <div className="bg-cosmic-800/30 border border-cosmic-700 rounded-lg">
-                  <div className="p-4 border-b border-cosmic-700">
-                    <h3 className="text-lg font-medium text-cosmic-100 flex items-center space-x-2">
-                      <span>📋</span>
-                      <span>版本詳情</span>
-                    </h3>
-                    <p className="text-sm text-cosmic-400 mt-1">
-                      查看所選版本的詳細資訊
-                    </p>
-                  </div>
-                  <div className="h-96">
-                    <VersionDetailsPanel 
-                      version={currentVersion}
-                      className="h-full" 
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 版本比較區域 (底部) */}
-              <div className="bg-cosmic-800/30 border border-cosmic-700 rounded-lg">
-                <div className="p-4 border-b border-cosmic-700">
-                  <h3 className="text-lg font-medium text-cosmic-100 flex items-center space-x-2">
-                    <span>🔄</span>
-                    <span>版本比較</span>
-                  </h3>
-                  <p className="text-sm text-cosmic-400 mt-1">
-                    並排比較不同版本之間的差異
-                  </p>
-                </div>
-                <div className="h-64">
-                  <VersionComparisonView
-                    version1={comparisonVersions[0]}
-                    version2={comparisonVersions[1]}
-                    mode="visual"
-                    layout="side-by-side"
-                    showDifferences={true}
-                    className="h-full"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-        
       default:
-        return null;
+        return (
+          <div className="p-6 h-full">
+            <CreateTab className="h-full" />
+          </div>
+        );
     }
   };
 
@@ -356,10 +192,8 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
       <div className="flex-shrink-0 bg-cosmic-900/80 border-b border-cosmic-700">
         <nav className="flex px-6">
           {[
-            { id: 'create' as ActiveTab, label: '創建', icon: '✨', description: '生成新的插畫' },
-            { id: 'templates' as ActiveTab, label: '模板', icon: '🎨', description: '風格模板管理' },
-            { id: 'gallery' as ActiveTab, label: '圖庫', icon: '🖼️', description: '插畫歷史管理' },
-            { id: 'versions' as ActiveTab, label: '版本', icon: '🕒', description: '版本管理與比較' }
+            { id: 'create' as ActiveTab, label: '創建', icon: '✨', description: '生成新的插畫（已整合模板功能）' },
+            { id: 'gallery' as ActiveTab, label: '圖庫', icon: '🖼️', description: '插畫歷史管理' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -399,12 +233,30 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
       </div>
 
       {/* 圖像預覽模態框 */}
-      <ImagePreviewModal />
+      <ImagePreviewModal onSaveSelected={handleSaveSelectedImages} />
       
       {/* 導出設定面板 */}
       <ExportSettingsPanel 
         selectedImageIds={selectedImageIds}
       />
+
+      {/* 教學覆蓋層 */}
+      <TutorialOverlay
+        isVisible={showTutorial}
+        onComplete={handleTutorialComplete}
+        onSkip={handleTutorialSkip}
+      />
+
+      {/* 重新查看教學按鈕（開發用） */}
+      {process.env.NODE_ENV === 'development' && (
+        <button
+          onClick={resetTutorial}
+          className="fixed bottom-4 left-4 z-50 px-3 py-2 bg-cosmic-700 hover:bg-cosmic-600 text-cosmic-300 text-xs rounded border border-cosmic-600"
+          title="重新顯示教學（僅開發模式）"
+        >
+          🎓 教學
+        </button>
+      )}
     </div>
   );
 };

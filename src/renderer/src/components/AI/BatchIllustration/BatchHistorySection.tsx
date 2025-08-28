@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { convertFileSrc } from '@tauri-apps/api/core';
 import { RootState } from '../../../store/store';
 import { api } from '../../../api';
 
@@ -119,35 +120,14 @@ const BatchHistorySection: React.FC<BatchHistorySectionProps> = ({
             <div className="aspect-square bg-gray-900 rounded-lg mb-3 overflow-hidden">
               {item.local_file_path ? (
                 <img
-                  src={`asset://localhost/${item.local_file_path}`}
+                  src={convertFileSrc(item.local_file_path)}
                   alt={item.original_prompt}
                   className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
                   onError={(e) => {
-                    console.error('[BatchHistorySection] 圖片載入失敗:', item.local_file_path);
-                    // 嘗試使用不同的協議
                     const target = e.currentTarget as HTMLImageElement;
-                    if (target.src.includes('asset://')) {
-                      // 如果 asset:// 失敗，嘗試 convertFileSrc
-                      try {
-                        // 動態導入 Tauri API
-                        import('@tauri-apps/api/core').then(({ convertFileSrc }) => {
-                          if (item.local_file_path) {
-                            target.src = convertFileSrc(item.local_file_path);
-                          }
-                        }).catch(() => {
-                          // 如果都失敗了，顯示佔位符
-                          target.style.display = 'none';
-                          target.nextElementSibling?.classList.remove('hidden');
-                        });
-                      } catch (_err) {
-                        target.style.display = 'none';
-                        target.nextElementSibling?.classList.remove('hidden');
-                      }
-                    } else {
-                      // 最終載入失敗，顯示佔位符
-                      target.style.display = 'none';
-                      target.nextElementSibling?.classList.remove('hidden');
-                    }
+                    // 如果載入失敗，顯示佔位符
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
                   }}
                 />
               ) : null}

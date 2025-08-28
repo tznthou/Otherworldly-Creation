@@ -1359,4 +1359,12 @@ export const tauriAPI: API = {
       return safeInvoke('permanent_delete_illustrations', { image_ids: imageIds });
     }
   },
+
+  // 通用 Tauri 調用方法
+  invoke: <T = unknown>(cmd: string, args?: Record<string, unknown>) => {
+    return safeInvoke<T>(cmd, args);
+  },
 };
+
+// 匯出為 api，供其他檔案使用
+export const api = tauriAPI;

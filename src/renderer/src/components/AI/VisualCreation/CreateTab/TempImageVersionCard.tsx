@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SafeImage } from '../../../UI/SafeImage';
 import { TempImageData } from '../../../../store/slices/visualCreationSlice';
 
 interface TempImageVersionCardProps {
@@ -47,28 +48,16 @@ const TempImageVersionCard: React.FC<TempImageVersionCardProps> = ({
     }
   };
 
-  // 獲取圖片顯示路徑
-  const getImageSrc = () => {
-    if (tempImage.image_url) {
-      return tempImage.image_url;
-    }
-    // 如果是本地路徑，需要轉換為可訪問的 URL
-    return `file://${tempImage.temp_path}`;
-  };
-
   return (
     <div className={`bg-cosmic-800/30 rounded-lg border border-cosmic-700 overflow-hidden ${className}`}>
       {/* 圖片區域 */}
       <div className="relative aspect-square bg-cosmic-900">
-        <img
-          src={getImageSrc()}
+        <SafeImage
+          imageUrl={tempImage.image_url}
+          localFilePath={tempImage.temp_path}
           alt={tempImage.prompt}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            // 圖片載入失敗時的處理
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-          }}
+          fallbackIcon="🎨"
         />
         
         {/* 狀態徽章 */}

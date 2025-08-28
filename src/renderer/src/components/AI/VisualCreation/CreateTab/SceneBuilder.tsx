@@ -2,6 +2,8 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../../../store/store';
 import { setSceneType } from '../../../../store/slices/visualCreationSlice';
+import Tooltip from '../../../UI/Tooltip';
+import { GUIDANCE_TEXTS } from '../shared/guidanceTexts';
 
 const SceneBuilder: React.FC = () => {
   const dispatch = useDispatch();
@@ -55,28 +57,52 @@ const SceneBuilder: React.FC = () => {
   
   return (
     <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
-      <h3 className="text-lg font-cosmic text-gold-500 mb-3">🎬 場景類型</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-cosmic text-gold-500">🎬 場景類型</h3>
+        <Tooltip content="選擇合適的場景類型以獲得最佳生成效果">
+          <div className="text-cosmic-400 text-sm">❓</div>
+        </Tooltip>
+      </div>
       
-      <div className="space-y-3">
+      {selectedCharacters.length === 0 ? (
+        <div className="text-center py-6">
+          <div className="text-3xl mb-2">👥</div>
+          <p className="text-cosmic-400 text-sm mb-2">請先選擇角色</p>
+          <p className="text-cosmic-500 text-xs">
+            選擇角色後將顯示適合的場景類型
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="text-xs text-cosmic-400 mb-3 p-2 bg-cosmic-900/30 rounded">
+            💡 {GUIDANCE_TEXTS.sceneBuilder.description}
+          </div>
+          
+          <div className="space-y-3">
         {sceneTypes.map((type) => {
           const isSelected = sceneType === type.id;
           const charStatus = getCharacterCountStatus(type.minCharacters, type.maxCharacters);
           const isDisabled = selectedCharacters.length < type.minCharacters || selectedCharacters.length > type.maxCharacters;
           
           return (
-            <div
+            <Tooltip
               key={type.id}
-              onClick={() => !isDisabled && handleSceneTypeChange(type.id)}
-              className={`
-                cursor-pointer p-3 rounded-lg border transition-all duration-200
-                ${isSelected 
-                  ? 'bg-gold-900/30 border-gold-500 ring-2 ring-gold-500/50' 
-                  : isDisabled
-                  ? 'bg-cosmic-800/20 border-cosmic-700 opacity-50 cursor-not-allowed'
-                  : 'bg-cosmic-700/50 border-cosmic-600 hover:border-cosmic-500 hover:bg-cosmic-700/70'
-                }
-              `}
+              content={isDisabled ? charStatus.message : `${type.recommendation} (支援 ${type.minCharacters}-${type.maxCharacters} 個角色)`}
+              disabled={isDisabled}
+              position="right"
             >
+              <div
+                onClick={() => !isDisabled && handleSceneTypeChange(type.id)}
+                className={`
+                  cursor-pointer p-3 rounded-lg border transition-all duration-200
+                  ${isSelected 
+                    ? 'bg-gold-900/30 border-gold-500 ring-2 ring-gold-500/50' 
+                    : isDisabled
+                    ? 'bg-cosmic-800/20 border-cosmic-700 opacity-50 cursor-not-allowed'
+                    : 'bg-cosmic-700/50 border-cosmic-600 hover:border-cosmic-500 hover:bg-cosmic-700/70'
+                  }
+                `}
+              >
               <div className="flex items-start space-x-3">
                 {/* 場景圖標 */}
                 <div className={`
@@ -136,9 +162,12 @@ const SceneBuilder: React.FC = () => {
                 </div>
               </div>
             </div>
+          </Tooltip>
           );
         })}
       </div>
+        </>
+      )}
       
       {/* 當前選擇摘要 */}
       {sceneType && (

@@ -2,6 +2,8 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../../../../store/store';
 import { toggleCharacterSelection, setSelectedCharacters } from '../../../../store/slices/visualCreationSlice';
+import Tooltip from '../../../UI/Tooltip';
+import { GUIDANCE_TEXTS } from '../shared/guidanceTexts';
 
 const CharacterSelector: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -61,7 +63,13 @@ const CharacterSelector: React.FC = () => {
     return (
       <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
         <h3 className="text-lg font-cosmic text-gold-500 mb-2">👥 角色選擇</h3>
-        <p className="text-cosmic-400 text-sm">請先選擇專案</p>
+        <div className="text-center py-8">
+          <div className="text-4xl mb-3">📁</div>
+          <p className="text-cosmic-400 text-sm mb-2">請先選擇專案</p>
+          <p className="text-cosmic-500 text-xs">
+            選擇專案後即可看到可用角色
+          </p>
+        </div>
       </div>
     );
   }
@@ -70,10 +78,18 @@ const CharacterSelector: React.FC = () => {
     return (
       <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
         <h3 className="text-lg font-cosmic text-gold-500 mb-2">👥 角色選擇</h3>
-        <p className="text-cosmic-400 text-sm">此專案尚無角色</p>
-        <p className="text-cosmic-500 text-xs mt-1">
-          前往角色管理頁面創建角色後即可在此選擇
-        </p>
+        <div className="text-center py-8">
+          <div className="text-4xl mb-3">👥</div>
+          <p className="text-cosmic-400 text-sm mb-2">{GUIDANCE_TEXTS.characterSelection.emptyState}</p>
+          <p className="text-cosmic-500 text-xs mb-3">
+            角色是創作插畫的核心，快去創建您的第一個角色吧！
+          </p>
+          <Tooltip content="前往角色管理頁面創建新角色">
+            <button className="px-4 py-2 bg-gold-600 hover:bg-gold-700 text-white text-sm rounded transition-colors">
+              ➕ 創建角色
+            </button>
+          </Tooltip>
+        </div>
       </div>
     );
   }
@@ -100,17 +116,21 @@ const CharacterSelector: React.FC = () => {
           const isSelected = selectedCharacters.includes(character.id);
           
           return (
-            <div
+            <Tooltip
               key={character.id}
-              onClick={() => handleCharacterToggle(character.id)}
-              className={`
-                cursor-pointer p-3 rounded-lg border transition-all duration-200
-                ${isSelected 
-                  ? 'bg-gold-900/30 border-gold-500 ring-2 ring-gold-500/50' 
-                  : 'bg-cosmic-700/50 border-cosmic-600 hover:border-cosmic-500 hover:bg-cosmic-700/70'
-                }
-              `}
+              content={isSelected ? '點擊取消選擇' : GUIDANCE_TEXTS.characterSelection.tooltip}
+              position="top"
             >
+              <div
+                onClick={() => handleCharacterToggle(character.id)}
+                className={`
+                  cursor-pointer p-3 rounded-lg border transition-all duration-200
+                  ${isSelected 
+                    ? 'bg-gold-900/30 border-gold-500 ring-2 ring-gold-500/50' 
+                    : 'bg-cosmic-700/50 border-cosmic-600 hover:border-cosmic-500 hover:bg-cosmic-700/70'
+                  }
+                `}
+              >
               <div className="flex items-start space-x-3">
                 {/* 角色頭像或圖標 */}
                 <div className={`
@@ -159,6 +179,7 @@ const CharacterSelector: React.FC = () => {
                 ${isSelected ? 'bg-gold-500' : 'bg-cosmic-600'}
               `} />
             </div>
+          </Tooltip>
           );
         })}
       </div>

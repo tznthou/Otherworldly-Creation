@@ -1,143 +1,170 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { SafeImage } from '../../UI/SafeImage';
 import type { RootState, AppDispatch } from '../../../store/store';
 
 // Redux actions
 import {
-  closeImagePreview,
+  setShowImagePreview,
   setCurrentImageIndex,
   setShowImageDetails,
   toggleImageSelection,
-  selectAllImages,
-  deselectAllImages,
-  saveSelectedImages,
-  clearTempImages,
+  setSelectedImageIds,
 } from '../../../store/slices/visualCreationSlice';
 
-const ImagePreviewModal: React.FC = () => {
+interface ImagePreviewModalProps {
+  onClose?: () => void;
+  onSaveSelected?: (imageIds: string[]) => Promise<void>;
+  onDeleteAll?: () => void;
+  onRegenerate?: () => void;
+}
+
+const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
+  onClose,
+  onSaveSelected,
+  onDeleteAll,
+  onRegenerate,
+}) => {
   const dispatch = useDispatch<AppDispatch>();
-  const imageRef = useRef<HTMLImageElement>(null);
+  const _imageRef = useRef<HTMLImageElement>(null);
 
-  // Redux 狀態
-  const {
-    tempImages,
-    showImagePreview,
-    selectedImageIds,
-    currentImageIndex,
-    showImageDetails,
-    loading,
-  } = useSelector((state: RootState) => state.visualCreation);
+  // Redux state
+  const { tempImages, showImagePreview, selectedImageIds, currentImageIndex, loading, showImageDetails } = useSelector((state: RootState) => state.visualCreation);
 
-  // 關閉模態框
-  const handleClose = useCallback(() => {
-    dispatch(closeImagePreview());
-  }, [dispatch]);
-
-  // 保存選中的圖像
-  const handleSaveSelected = useCallback(() => {
-    if (selectedImageIds.length === 0) {
-      return;
+  // 初始化當前圖片索引
+  useEffect(() => {
+    if (showImagePreview && currentImageIndex === -1 && tempImages.length > 0) {
+      dispatch(setCurrentImageIndex(0));
     }
-    dispatch(saveSelectedImages(selectedImageIds));
-  }, [selectedImageIds, dispatch]);
+  }, [dispatch, showImagePreview, currentImageIndex, tempImages.length]);
 
-  // 刪除所有臨時圖像
+  const handleClose = useCallback(() => {
+    dispatch(setShowImagePreview(false));
+    onClose?.();
+  }, [dispatch, onClose]);
+
+  const handleSaveSelected = useCallback(async () => {
+    if (selectedImageIds.length > 0) {
+      await onSaveSelected?.(selectedImageIds);
+      dispatch(setSelectedImageIds([])); // 清空選中狀態
+    }
+  }, [selectedImageIds, onSaveSelected, dispatch]);
+
   const handleDeleteAll = useCallback(() => {
-    dispatch(clearTempImages());
-    dispatch(closeImagePreview());
-  }, [dispatch]);
+    onDeleteAll?.();
+    handleClose();
+  }, [onDeleteAll, handleClose]);
 
-  // 重新生成（關閉預覽返回創建面板）
   const handleRegenerate = useCallback(() => {
-    dispatch(closeImagePreview());
-  }, [dispatch]);
+    onRegenerate?.();
+    handleClose();
+  }, [onRegenerate, handleClose]);
 
-  // 切換圖像選擇狀態
   const toggleImageSelectionLocal = useCallback((imageId: string) => {
     dispatch(toggleImageSelection(imageId));
   }, [dispatch]);
 
-  // 全選
   const selectAll = useCallback(() => {
-    dispatch(selectAllImages());
-  }, [dispatch]);
+    dispatch(setSelectedImageIds(tempImages.map(img => img.id)));
+  }, [dispatch, tempImages.length]);
 
-  // 取消全選
   const deselectAll = useCallback(() => {
-    dispatch(deselectAllImages());
+    dispatch(setSelectedImageIds([]));
   }, [dispatch]);
 
-  // 設置當前圖像索引
   const setCurrentIndex = useCallback((index: number) => {
     dispatch(setCurrentImageIndex(index));
   }, [dispatch]);
 
-  // 切換詳情顯示
   const toggleDetails = useCallback(() => {
     dispatch(setShowImageDetails(!showImageDetails));
-  }, [showImageDetails, dispatch]);
+  }, [dispatch, showImageDetails]);
 
-  // 格式化檔案大小
-  const formatFileSize = useCallback((bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  // 格式化文件大小
+  const formatFileSize = useCallback((bytes?: number): string => {
+    if (!bytes) return 'Unknown';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   }, []);
 
   // 格式化時間
-  const formatTime = useCallback((ms: number) => {
-    if (ms < 1000) return `${ms}ms`;
-    return `${(ms / 1000).toFixed(1)}s`;
+  const _formatTime = useCallback((dateString?: string): string => {
+    if (!dateString) return 'Unknown';
+    return new Date(dateString).toLocaleString();
   }, []);
 
-  // 鍵盤快捷鍵
-  useEffect(() => {
-    if (!showImagePreview) return;
+  // 格式化生成時間（毫秒）
+  const formatGenerationTime = useCallback((timeMs?: number): string => {
+    if (!timeMs) return 'Unknown';
+    return `${(timeMs / 1000).toFixed(1)}s`;
+  }, []);
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      switch (event.key) {
+  // 鍵盤事件處理
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (!showImagePreview) return;
+      
+      switch (e.key) {
         case 'Escape':
           handleClose();
           break;
         case 'ArrowLeft':
-          setCurrentIndex(currentImageIndex > 0 ? currentImageIndex - 1 : tempImages.length - 1);
+          if (currentImageIndex > 0) {
+            setCurrentIndex(currentImageIndex - 1);
+          }
           break;
         case 'ArrowRight':
-          setCurrentIndex(currentImageIndex < tempImages.length - 1 ? currentImageIndex + 1 : 0);
+          if (currentImageIndex < tempImages.length - 1) {
+            setCurrentIndex(currentImageIndex + 1);
+          }
           break;
-        case 'Enter':
-          if (event.ctrlKey || event.metaKey) {
-            handleSaveSelected();
+        case ' ':
+          e.preventDefault();
+          if (tempImages[currentImageIndex]) {
+            toggleImageSelectionLocal(tempImages[currentImageIndex].id);
+          }
+          break;
+        case 'a':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            selectAll();
           }
           break;
         case 'd':
-          if (event.ctrlKey || event.metaKey) {
-            event.preventDefault();
-            if (tempImages[currentImageIndex]) {
-              toggleImageSelectionLocal(tempImages[currentImageIndex].id);
-            }
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            deselectAll();
           }
           break;
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showImagePreview, currentImageIndex, tempImages, handleClose, setCurrentIndex, handleSaveSelected, toggleImageSelectionLocal]);
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [showImagePreview, currentImageIndex, tempImages.length, handleClose, setCurrentIndex, toggleImageSelectionLocal, selectAll, deselectAll]);
 
-  // 如果沒有顯示預覽或沒有圖像，不渲染
-  if (!showImagePreview || tempImages.length === 0) {
+  if (!showImagePreview || tempImages.length === 0 || currentImageIndex === -1) {
     return null;
   }
 
   const currentImage = tempImages[currentImageIndex];
+  if (!currentImage) return null;
 
-  if (!currentImage) {
-    return null;
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+  return createPortal(
+    <div 
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+      style={{
+        zIndex: 9999,
+        position: 'fixed',
+        isolation: 'isolate',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh'
+      }}
+    >
       <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-[calc(100vw-160px)] max-w-6xl max-h-[95vh] overflow-hidden ml-32 mr-8 my-4">
         {/* 標題欄 */}
         <div className="p-4 border-b border-cosmic-700 flex items-center justify-between">
@@ -188,13 +215,12 @@ const ImagePreviewModal: React.FC = () => {
                 </>
               )}
 
-              {/* 圖像 */}
-              <img
-                ref={imageRef}
-                src={`file://${currentImage.temp_path}`}
+              {/* 圖像 - 使用 SafeImage 組件 */}
+              <SafeImage
+                localFilePath={currentImage.temp_path}
                 alt={currentImage.prompt}
                 className="max-w-full max-h-full object-contain"
-                style={{ maxHeight: 'calc(100vh - 200px)' }}
+                fallbackIcon="🎨"
               />
 
               {/* 選擇指示器 */}
@@ -222,10 +248,11 @@ const ImagePreviewModal: React.FC = () => {
                       }`}
                       onClick={() => setCurrentIndex(index)}
                     >
-                      <img
-                        src={`file://${image.temp_path}`}
+                      <SafeImage
+                        localFilePath={image.temp_path}
                         alt={`Image ${index + 1}`}
                         className="w-16 h-16 object-cover rounded border border-cosmic-600"
+                        fallbackIcon="🎨"
                       />
                       {selectedImageIds.includes(image.id) && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-gold-500 rounded-full flex items-center justify-center text-xs text-white">
@@ -284,7 +311,7 @@ const ImagePreviewModal: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-gray-400 block">生成時間</label>
-                    <p className="text-white">{formatTime(currentImage.generation_time_ms)}</p>
+                    <p className="text-white">{formatGenerationTime(currentImage.generation_time_ms)}</p>
                   </div>
                   <div>
                     <label className="text-gray-400 block">種子值</label>
@@ -322,7 +349,7 @@ const ImagePreviewModal: React.FC = () => {
               取消全選
             </button>
             <span className="text-xs text-gray-500">
-              提示：Ctrl+D 切換當前圖像選擇
+              提示：Ctrl+A 全選，Ctrl+D 取消選擇
             </span>
           </div>
 
@@ -353,10 +380,11 @@ const ImagePreviewModal: React.FC = () => {
 
         {/* 快捷鍵說明 */}
         <div className="px-4 py-2 bg-cosmic-800/30 border-t border-cosmic-700/50 text-xs text-gray-500">
-          快捷鍵：ESC 關閉 | ← → 切換圖像 | Ctrl+Enter 保存選中 | Ctrl+D 切換選擇
+          快捷鍵：ESC 關閉 | ← → 切換圖像 | Space 切換選擇 | Ctrl+A 全選 | Ctrl+D 取消全選
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

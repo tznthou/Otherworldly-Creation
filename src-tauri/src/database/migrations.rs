@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 17;
+const DB_VERSION: i32 = 18;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -122,6 +122,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v17(conn)?;
             update_version(conn, 17)?;
             log::info!("遷移到版本 17 完成");
+        }
+        
+        if current_version < 18 {
+            apply_migration_v18(conn)?;
+            update_version(conn, 18)?;
+            log::info!("遷移到版本 18 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -2039,6 +2045,123 @@ pub fn apply_migration_v17(conn: &Connection) -> Result<()> {
     
     log::info!("刪除管理相關索引創建完成");
     log::info!("版本 17 遷移完成：圖片刪除管理功能已準備就緒");
+    
+    Ok(())
+}
+
+/// 版本 18 遷移：添加 is_confirmed 欄位實現圖片確認標記系統
+pub fn apply_migration_v18(conn: &Connection) -> Result<()> {
+    log::info!("開始版本 18 遷移：添加圖片確認標記系統");
+    
+    // 檢查 pollinations_generations 是否已有 is_confirmed 欄位
+    let has_is_confirmed_pollinations = conn
+        .prepare("PRAGMA table_info(pollinations_generations)")?
+        .query_map([], |row| {
+            Ok(row.get::<_, String>(1)?) // column name
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "is_confirmed",
+            Err(_) => false,
+        });
+    
+    if !has_is_confirmed_pollinations {
+        conn.execute(
+            "ALTER TABLE pollinations_generations ADD COLUMN is_confirmed BOOLEAN DEFAULT 1",
+            [],
+        )?;
+        log::info!("已添加 is_confirmed 欄位到 pollinations_generations 表（預設為已確認）");
+    }
+    
+    // 檢查 illustration_generations 是否已有 is_confirmed 欄位
+    let has_is_confirmed_illustrations = conn
+        .prepare("PRAGMA table_info(illustration_generations)")?
+        .query_map([], |row| {
+            Ok(row.get::<_, String>(1)?) // column name
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "is_confirmed",
+            Err(_) => false,
+        });
+    
+    if !has_is_confirmed_illustrations {
+        conn.execute(
+            "ALTER TABLE illustration_generations ADD COLUMN is_confirmed BOOLEAN DEFAULT 1",
+            [],
+        )?;
+        log::info!("已添加 is_confirmed 欄位到 illustration_generations 表（預設為已確認）");
+    }
+    
+    // 添加 created_timestamp 欄位用於TTL清理（如果不存在）
+    let has_created_timestamp_pollinations = conn
+        .prepare("PRAGMA table_info(pollinations_generations)")?
+        .query_map([], |row| {
+            Ok(row.get::<_, String>(1)?) // column name
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "created_timestamp",
+            Err(_) => false,
+        });
+    
+    if !has_created_timestamp_pollinations {
+        conn.execute(
+            "ALTER TABLE pollinations_generations ADD COLUMN created_timestamp INTEGER",
+            [],
+        )?;
+        // 為現有記錄設定 created_timestamp（使用 created_at 轉換為 Unix 時間戳）
+        conn.execute(
+            "UPDATE pollinations_generations SET created_timestamp = strftime('%s', created_at) WHERE created_timestamp IS NULL",
+            [],
+        )?;
+        log::info!("已添加 created_timestamp 欄位到 pollinations_generations 表");
+    }
+    
+    let has_created_timestamp_illustrations = conn
+        .prepare("PRAGMA table_info(illustration_generations)")?
+        .query_map([], |row| {
+            Ok(row.get::<_, String>(1)?) // column name
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "created_timestamp",
+            Err(_) => false,
+        });
+    
+    if !has_created_timestamp_illustrations {
+        conn.execute(
+            "ALTER TABLE illustration_generations ADD COLUMN created_timestamp INTEGER",
+            [],
+        )?;
+        // 為現有記錄設定 created_timestamp
+        conn.execute(
+            "UPDATE illustration_generations SET created_timestamp = strftime('%s', created_at) WHERE created_timestamp IS NULL",
+            [],
+        )?;
+        log::info!("已添加 created_timestamp 欄位到 illustration_generations 表");
+    }
+    
+    // 創建確認狀態查詢的索引以提升效能
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_is_confirmed ON pollinations_generations (is_confirmed)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustrations_is_confirmed ON illustration_generations (is_confirmed)",
+        [],
+    )?;
+    
+    // 創建 TTL 清理查詢的索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_confirmed_timestamp ON pollinations_generations (is_confirmed, created_timestamp)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustrations_confirmed_timestamp ON illustration_generations (is_confirmed, created_timestamp)",
+        [],
+    )?;
+    
+    log::info!("圖片確認標記系統相關索引創建完成");
+    log::info!("版本 18 遷移完成：圖片確認標記系統已準備就緒");
     
     Ok(())
 }

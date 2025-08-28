@@ -114,6 +114,15 @@ genesis-chronicle.db*
 **/*.db
 **/*.sqlite*
 
+# Generated AI Images - prevent hot reload triggers
+src-tauri/generated-images/
+**/generated-images/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+
 # Temporary files
 tmp/
 temp/
