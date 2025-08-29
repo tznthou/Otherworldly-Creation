@@ -262,18 +262,16 @@ pub async fn cleanup_expired_temp_images() -> Result<Value, String> {
 
 /// 獲取臨時圖像目錄
 pub fn get_temp_images_dir() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
-    // 檢查是否為開發環境
+    // 使用與資料庫相同的路徑策略
     let temp_dir = if is_development_environment() {
-        // 開發環境：使用項目根目錄下的 generated-images（避免觸發熱重載）
-        std::env::current_dir()?.parent()
-            .ok_or("無法獲取父目錄")?
-            .join("generated-images")
+        // 開發環境：使用項目根目錄下的 generated-images
+        std::env::current_dir()?.join("generated-images")
     } else {
-        // 生產環境：使用跨平台的應用資料目錄
-        dirs::data_local_dir()
-            .ok_or("無法獲取應用資料目錄")?
+        // 生產環境：使用與資料庫相同的 dirs::data_dir()
+        dirs::data_dir()
+            .ok_or("無法獲取用戶資料目錄")?
             .join("genesis-chronicle")
-            .join("generated-images")
+            .join("images")
     };
     
     std::fs::create_dir_all(&temp_dir)?;
@@ -314,18 +312,16 @@ pub fn save_temp_generated_image(image_data: &[u8], image_id: &str) -> Result<St
 pub fn move_temp_to_final_image(temp_path: &str, image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
     use std::fs;
     
-    // 使用與臨時圖片相同的目錄邏輯
+    // 使用與資料庫相同的路徑策略
     let images_dir = if is_development_environment() {
-        // 開發環境：使用專案根目錄下的 generated-images（與臨時圖片一致）
-        std::env::current_dir()?.parent()
-            .ok_or("無法獲取父目錄")?
-            .join("generated-images")
+        // 開發環境：使用項目根目錄下的 generated-images
+        std::env::current_dir()?.join("generated-images")
     } else {
-        // 生產環境：使用跨平台的應用資料目錄
-        dirs::data_local_dir()
-            .ok_or("無法獲取應用資料目錄")?
+        // 生產環境：使用與資料庫相同的 dirs::data_dir()
+        dirs::data_dir()
+            .ok_or("無法獲取用戶資料目錄")?
             .join("genesis-chronicle")
-            .join("generated-images")
+            .join("images")
     };
     
     fs::create_dir_all(&images_dir)?;
@@ -471,20 +467,235 @@ pub async fn confirm_illustrations(image_ids: Vec<String>) -> Result<Value, Stri
     }))
 }
 
+/// 加入收藏：將圖片加入收藏並標記為永久保存
+/// 如果圖片還是臨時狀態，會先自動確認保存到資料庫
+#[tauri::command]
+#[allow(non_snake_case)]
+pub async fn add_to_collection(imageIds: Vec<String>) -> Result<Value, String> {
+    log::info!("[Collection] 加入收藏: {:?}", imageIds);
+    
+    if imageIds.is_empty() {
+        return Err("沒有提供圖片ID".to_string());
+    }
+
+    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {:?}", e))?;
+    
+    let mut total_collected = 0;
+    let mut newly_confirmed = 0;
+    
+    for image_id in &imageIds {
+        // 檢查圖片是否已存在於資料庫中
+        let exists: i32 = conn.query_row(
+            "SELECT COUNT(*) FROM pollinations_generations WHERE id = ?",
+            [image_id],
+            |row| row.get(0)
+        ).unwrap_or(0);
+        
+        if exists == 0 {
+            // 圖片不在資料庫中，嘗試從臨時檔案確認保存
+            log::info!("[Collection] 圖片 {} 不在資料庫中，嘗試從臨時檔案確認保存", image_id);
+            
+            // 尋找臨時檔案
+            let temp_dir = get_temp_images_dir()
+                .map_err(|e| format!("無法獲取臨時目錄: {}", e))?;
+            let temp_file = temp_dir.join(format!("{}.jpg", image_id));
+            
+            if temp_file.exists() {
+                // 讀取臨時檔案
+                let image_data = std::fs::read(&temp_file)
+                    .map_err(|e| format!("讀取臨時檔案失敗: {}", e))?;
+                
+                // 保存到最終目錄
+                let final_path = save_to_final_directory(&image_data, image_id)
+                    .map_err(|e| format!("保存到最終目錄失敗: {}", e))?;
+                
+                let file_size = image_data.len() as i64;
+                
+                // 插入資料庫記錄（使用基本資訊）
+                if let Err(e) = save_pollinations_history_unconfirmed(
+                    image_id,
+                    None, // project_id
+                    None, // character_id
+                    "Generated image", // original_prompt
+                    "Generated image", // enhanced_prompt
+                    "flux", // model
+                    1024, // width
+                    1024, // height
+                    None, // seed
+                    false, // enhance
+                    None, // style_applied
+                    None, // image_url
+                    &final_path,
+                    file_size,
+                    0, // generation_time_ms
+                ) {
+                    log::warn!("[Collection] 保存圖片記錄失敗: {}", e);
+                    continue;
+                }
+                
+                newly_confirmed += 1;
+                log::info!("[Collection] 已確認保存臨時圖片: {}", image_id);
+                
+                // 刪除臨時檔案
+                let _ = std::fs::remove_file(&temp_file);
+            } else {
+                log::warn!("[Collection] 圖片 {} 既不在資料庫中，臨時檔案也不存在", image_id);
+                continue;
+            }
+        }
+        
+        // 更新為收藏狀態
+        let updated = conn.execute(
+            "UPDATE pollinations_generations 
+             SET in_collection = 1, 
+                 collected_at = CURRENT_TIMESTAMP, 
+                 is_confirmed = 1 
+             WHERE id = ?",
+            [image_id]
+        ).map_err(|e| format!("更新收藏狀態失敗: {}", e))?;
+        
+        if updated > 0 {
+            total_collected += 1;
+        }
+    }
+    
+    log::info!("[Collection] 完成收藏: {} 張圖片收藏, {} 張新確認", total_collected, newly_confirmed);
+
+    Ok(serde_json::json!({
+        "success": true,
+        "collected_count": total_collected,
+        "newly_confirmed_count": newly_confirmed,
+        "message": format!("已加入收藏 {} 張圖片{}", 
+            total_collected,
+            if newly_confirmed > 0 { format!("（其中 {} 張為新確認）", newly_confirmed) } else { String::new() }
+        )
+    }))
+}
+
+/// 帶完整資料的收藏功能：處理臨時圖片並保留原始上下文
+#[tauri::command]
+#[allow(non_snake_case)]
+pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value, String> {
+    log::info!("[Collection] 帶資料的收藏請求: {} 張圖片", imageData.len());
+    
+    if imageData.is_empty() {
+        return Err("沒有提供圖片資料".to_string());
+    }
+
+    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {:?}", e))?;
+    
+    let mut total_collected = 0;
+    let mut newly_confirmed = 0;
+    
+    for image_data in &imageData {
+        let image_id = image_data.get("id")
+            .and_then(|v| v.as_str())
+            .ok_or("圖片ID缺失")?;
+        
+        let project_id = image_data.get("project_id").and_then(|v| v.as_str());
+        let character_id = image_data.get("character_id").and_then(|v| v.as_str());
+        let original_prompt = image_data.get("original_prompt").and_then(|v| v.as_str()).unwrap_or("Generated image");
+        
+        // 檢查圖片是否已存在於資料庫中
+        let exists: i32 = conn.query_row(
+            "SELECT COUNT(*) FROM pollinations_generations WHERE id = ?",
+            [image_id],
+            |row| row.get(0)
+        ).unwrap_or(0);
+        
+        if exists == 0 {
+            // 圖片不在資料庫中，嘗試從臨時檔案確認保存
+            log::info!("[Collection] 圖片 {} 不在資料庫中，嘗試從臨時檔案確認保存", image_id);
+            
+            // 尋找臨時檔案
+            let temp_dir = get_temp_images_dir()
+                .map_err(|e| format!("無法獲取臨時目錄: {}", e))?;
+            let temp_file = temp_dir.join(format!("{}.jpg", image_id));
+            
+            if temp_file.exists() {
+                // 讀取臨時檔案
+                let image_bytes = std::fs::read(&temp_file)
+                    .map_err(|e| format!("讀取臨時檔案失敗: {}", e))?;
+                
+                // 保存到最終目錄
+                let final_path = save_to_final_directory(&image_bytes, image_id)
+                    .map_err(|e| format!("保存到最終目錄失敗: {}", e))?;
+                
+                let file_size = image_bytes.len() as i64;
+                
+                // 插入資料庫記錄（保留原始上下文）
+                if let Err(e) = save_pollinations_history_unconfirmed(
+                    image_id,
+                    project_id,
+                    character_id,
+                    original_prompt,
+                    original_prompt,
+                    "flux",
+                    1024,
+                    1024,
+                    None,
+                    false,
+                    None,
+                    None,
+                    &final_path,
+                    file_size,
+                    0,
+                ) {
+                    log::warn!("[Collection] 保存圖片記錄失敗: {}", e);
+                    continue;
+                }
+                
+                newly_confirmed += 1;
+                log::info!("[Collection] 已確認保存臨時圖片: {} (專案: {:?})", image_id, project_id);
+                
+                // 刪除臨時檔案
+                let _ = std::fs::remove_file(&temp_file);
+            } else {
+                log::warn!("[Collection] 圖片 {} 既不在資料庫中，臨時檔案也不存在", image_id);
+                continue;
+            }
+        }
+        
+        // 更新為收藏狀態
+        let updated = conn.execute(
+            "UPDATE pollinations_generations 
+             SET in_collection = 1, 
+                 collected_at = CURRENT_TIMESTAMP, 
+                 is_confirmed = 1 
+             WHERE id = ?",
+            [image_id]
+        ).map_err(|e| format!("更新收藏狀態失敗: {}", e))?;
+        
+        if updated > 0 {
+            total_collected += 1;
+        }
+    }
+    
+    log::info!("[Collection] 完成帶資料收藏: {} 張圖片收藏, {} 張新確認", total_collected, newly_confirmed);
+
+    Ok(serde_json::json!({
+        "success": true,
+        "collected_count": total_collected,
+        "newly_confirmed_count": newly_confirmed,
+        "message": format!("已加入收藏 {} 張圖片{}", 
+            total_collected,
+            if newly_confirmed > 0 { format!("（其中 {} 張為新確認）", newly_confirmed) } else { String::new() }
+        )
+    }))
+}
+
 /// 儲存圖片到最終目錄
 pub fn save_to_final_directory(image_data: &[u8], image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
-    // 使用與臨時圖片相同的目錄邏輯
+    // 使用與資料庫相同的路徑策略
     let images_dir = if is_development_environment() {
-        // 開發環境：使用專案根目錄下的 generated-images（與臨時圖片一致）
-        std::env::current_dir()?.parent()
-            .ok_or("無法獲取父目錄")?
-            .join("generated-images")
+        // 開發環境：使用項目根目錄下的 generated-images
+        std::env::current_dir()?.join("generated-images")
     } else {
-        // 生產環境：使用跨平台的應用資料目錄
-        dirs::data_local_dir()
-            .ok_or("無法獲取應用資料目錄")?
+        // 生產環境：使用與資料庫相同的 dirs::data_dir()
+        dirs::data_dir()
+            .ok_or("無法獲取用戶資料目錄")?
             .join("genesis-chronicle")
-            .join("generated-images")
+            .join("images")
     };
     
     fs::create_dir_all(&images_dir)?;

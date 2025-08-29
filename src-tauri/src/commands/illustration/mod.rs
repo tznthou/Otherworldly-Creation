@@ -47,6 +47,9 @@ pub use temp_image_manager::{
     // 優化的圖像管理
     generate_illustration_optimized,
     confirm_illustrations,
+    // 收藏功能
+    add_to_collection,
+    add_to_collection_with_data,
 };
 
 // ========================= 圖像刪除管理 =========================

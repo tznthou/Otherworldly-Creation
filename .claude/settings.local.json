@@ -81,7 +81,9 @@
       "Bash(RELEASE_VERSION=1.1.4 node scripts/sync-version.js)",
       "Bash(gh run list:*)",
       "Bash(gh workflow:*)",
-      "Bash(RELEASE_VERSION=1.1.5 node scripts/sync-version.js)"
+      "Bash(RELEASE_VERSION=1.1.5 node scripts/sync-version.js)",
+      "Read(/Users/tznthou/Documents/Practice/**)",
+      "Bash(RELEASE_VERSION=1.1.6 node scripts/sync-version.js)"
     ],
     "deny": [],
     "ask": [],

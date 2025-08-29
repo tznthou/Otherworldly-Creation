@@ -7,13 +7,14 @@ import {
   setError,
   openVersionPanel,
   addTempImage,
+  type TempImageData,
 } from '../../../../store/slices/visualCreationSlice';
 
 // API
 import { api } from '../../../../api/tauri';
 
 // Custom Hooks
-import { useAutoVersionCreation } from '../../../../hooks/illustration';
+// import { useAutoVersionCreation } from '../../../../hooks/illustration'; // 已改用收藏功能替代
 
 // UI Components
 import CharacterSelector from './CharacterSelector';
@@ -142,8 +143,8 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     console.log(`🎨 [CreateTab] 已應用快速模板: ${template.name}`);
   }, [quickTemplates]);
 
-  // 自動版本創建 Hook  
-  const { createVersionForImage } = useAutoVersionCreation();
+  // 自動版本創建 Hook - 現已改用收藏功能替代
+  // const { createVersionForImage } = useAutoVersionCreation();
 
   // 生成增強的 prompt，整合角色背景資訊
   const buildEnrichedPrompt = useCallback((sceneDesc: string, characterIds: string[]) => {
@@ -246,7 +247,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
           'flux', // model
           undefined, // seed
           false,  // enhance
-          artStyle as any, // style
+          artStyle, // style
           currentProject.id,
           request.selectedCharacterIds[0] // 使用第一個選中的角色ID
         );
@@ -621,12 +622,27 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                     <h3 className="text-lg font-cosmic text-gold-500">🖼️ 最新生成</h3>
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => {
-                          tempImages.forEach(image => createVersionForImage(image.id));
+                        onClick={async () => {
+                          try {
+                            // 傳遞完整的臨時圖片資料而不只是ID
+                            const imageData = tempImages.map(image => ({
+                              id: image.id,
+                              project_id: image.project_id,
+                              character_id: image.character_id,
+                              original_prompt: image.original_prompt
+                            }));
+                            const result = await api.illustration.addToCollectionWithData(imageData);
+                            
+                            if (result.success) {
+                              console.log(`✅ 已加入收藏 ${result.collected_count} 張圖片`);
+                            }
+                          } catch (error) {
+                            console.error('❌ 加入收藏失敗:', error);
+                          }
                         }}
-                        className="text-xs px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                        className="text-xs px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors"
                       >
-                        保存到圖庫
+                        加入收藏
                       </button>
                       <button
                         onClick={() => {
@@ -641,7 +657,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {tempImages.slice(-4).map((image: any, _index: number) => (
+                    {tempImages.slice(-4).map((image: TempImageData, _index: number) => (
                       <div key={image.id} className="aspect-square bg-cosmic-700/50 rounded border border-cosmic-600 p-2">
                         <div className="w-full h-full flex items-center justify-center bg-cosmic-600 rounded">
                           <div className="text-center text-cosmic-300">

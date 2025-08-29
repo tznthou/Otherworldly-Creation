@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 18;
+const DB_VERSION: i32 = 19;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -128,6 +128,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v18(conn)?;
             update_version(conn, 18)?;
             log::info!("遷移到版本 18 完成");
+        }
+        
+        if current_version < 19 {
+            apply_migration_v19(conn)?;
+            update_version(conn, 19)?;
+            log::info!("遷移到版本 19 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -2162,6 +2168,114 @@ pub fn apply_migration_v18(conn: &Connection) -> Result<()> {
     
     log::info!("圖片確認標記系統相關索引創建完成");
     log::info!("版本 18 遷移完成：圖片確認標記系統已準備就緒");
+    
+    Ok(())
+}
+
+/// 版本 19 遷移：添加圖片收藏系統
+pub fn apply_migration_v19(conn: &Connection) -> Result<()> {
+    log::info!("開始版本 19 遷移：添加圖片收藏系統");
+    
+    // 檢查 pollinations_generations 是否已有 in_collection 欄位
+    let has_in_collection = conn
+        .prepare("PRAGMA table_info(pollinations_generations)")?
+        .query_map([], |row| {
+            Ok(row.get::<_, String>(1)?) // column name
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "in_collection",
+            Err(_) => false,
+        });
+    
+    if !has_in_collection {
+        conn.execute(
+            "ALTER TABLE pollinations_generations ADD COLUMN in_collection BOOLEAN DEFAULT 0",
+            [],
+        )?;
+        log::info!("已添加 in_collection 欄位到 pollinations_generations 表");
+    }
+    
+    // 檢查 pollinations_generations 是否已有 collected_at 欄位
+    let has_collected_at = conn
+        .prepare("PRAGMA table_info(pollinations_generations)")?
+        .query_map([], |row| {
+            Ok(row.get::<_, String>(1)?) // column name
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "collected_at",
+            Err(_) => false,
+        });
+    
+    if !has_collected_at {
+        conn.execute(
+            "ALTER TABLE pollinations_generations ADD COLUMN collected_at TIMESTAMP",
+            [],
+        )?;
+        log::info!("已添加 collected_at 欄位到 pollinations_generations 表");
+    }
+    
+    // 檢查 illustration_generations 是否已有 in_collection 欄位
+    let has_in_collection_illustrations = conn
+        .prepare("PRAGMA table_info(illustration_generations)")?
+        .query_map([], |row| {
+            Ok(row.get::<_, String>(1)?) // column name
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "in_collection",
+            Err(_) => false,
+        });
+    
+    if !has_in_collection_illustrations {
+        conn.execute(
+            "ALTER TABLE illustration_generations ADD COLUMN in_collection BOOLEAN DEFAULT 0",
+            [],
+        )?;
+        log::info!("已添加 in_collection 欄位到 illustration_generations 表");
+    }
+    
+    // 檢查 illustration_generations 是否已有 collected_at 欄位
+    let has_collected_at_illustrations = conn
+        .prepare("PRAGMA table_info(illustration_generations)")?
+        .query_map([], |row| {
+            Ok(row.get::<_, String>(1)?) // column name
+        })?
+        .any(|result| match result {
+            Ok(name) => name == "collected_at",
+            Err(_) => false,
+        });
+    
+    if !has_collected_at_illustrations {
+        conn.execute(
+            "ALTER TABLE illustration_generations ADD COLUMN collected_at TIMESTAMP",
+            [],
+        )?;
+        log::info!("已添加 collected_at 欄位到 illustration_generations 表");
+    }
+    
+    // 創建收藏狀態查詢的索引以提升效能
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_in_collection ON pollinations_generations (in_collection)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustrations_in_collection ON illustration_generations (in_collection)",
+        [],
+    )?;
+    
+    // 創建收藏時間排序的索引
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_collected_at ON pollinations_generations (collected_at DESC)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_illustrations_collected_at ON illustration_generations (collected_at DESC)",
+        [],
+    )?;
+    
+    log::info!("圖片收藏系統相關索引創建完成");
+    log::info!("版本 19 遷移完成：圖片收藏系統已準備就緒");
     
     Ok(())
 }

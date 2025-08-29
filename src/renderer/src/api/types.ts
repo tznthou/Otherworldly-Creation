@@ -305,7 +305,17 @@ export interface API {
       message?: string;
     }>;
 
-    confirmTempImageSave: (tempImageData: any) => Promise<{
+    confirmTempImageSave: (tempImageData: {
+      temp_path: string;
+      prompt: string;
+      project_id?: string;
+      character_id?: string;
+      generation_time?: string;
+      width?: number;
+      height?: number;
+      file_size_bytes?: number;
+      provider?: string;
+    }) => Promise<{
       success: boolean;
       id?: string;
       permanent_path?: string;
@@ -339,7 +349,7 @@ export interface API {
       includeMetadata: boolean;
       metadata?: {
         prompt: string;
-        parameters: any;
+        parameters: Record<string, unknown>;
         provider: string;
         generationTime: number;
       };
@@ -355,11 +365,25 @@ export interface API {
       format: 'png' | 'jpg' | 'webp';
       quality: number;
       includeMetadata: boolean;
-      metadata?: any;
+      metadata?: Record<string, unknown>;
     }>) => Promise<{
       success: boolean;
       exportedFiles: string[];
       failedFiles: string[];
+      message?: string;
+    }>;
+
+    // === 收藏管理 ===
+    addToCollection: (imageIds: string[]) => Promise<{
+      success: boolean;
+      collected_count?: number;
+      message?: string;
+    }>;
+    
+    addToCollectionWithData: (imageData: Array<{id: string, project_id?: string, character_id?: string, original_prompt?: string}>) => Promise<{
+      success: boolean;
+      collected_count?: number;
+      newly_confirmed_count?: number;
       message?: string;
     }>;
   };

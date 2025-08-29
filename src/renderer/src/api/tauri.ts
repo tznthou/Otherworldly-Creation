@@ -1285,7 +1285,17 @@ export const tauriAPI: API = {
       });
     },
 
-    confirmTempImageSave: async (tempImageData: any) => {
+    confirmTempImageSave: async (tempImageData: {
+      temp_path: string;
+      prompt: string;
+      project_id?: string;
+      character_id?: string;
+      generation_time?: string;
+      width?: number;
+      height?: number;
+      file_size_bytes?: number;
+      provider?: string;
+    }) => {
       return safeInvoke('confirm_temp_image_save', { temp_image_data: tempImageData });
     },
 
@@ -1306,7 +1316,7 @@ export const tauriAPI: API = {
       includeMetadata: boolean;
       metadata?: {
         prompt: string;
-        parameters: any;
+        parameters: Record<string, unknown>;
         provider: string;
         generationTime: number;
       };
@@ -1327,7 +1337,7 @@ export const tauriAPI: API = {
       format: 'png' | 'jpg' | 'webp';
       quality: number;
       includeMetadata: boolean;
-      metadata?: any;
+      metadata?: Record<string, unknown>;
     }>) => {
       return safeInvoke('export_multiple_images', { exports });
     },
@@ -1357,6 +1367,15 @@ export const tauriAPI: API = {
 
     permanentDeleteIllustrations: async (imageIds: string[]) => {
       return safeInvoke('permanent_delete_illustrations', { image_ids: imageIds });
+    },
+
+    // === 收藏管理 ===
+    addToCollection: async (imageIds: string[]) => {
+      return safeInvoke('add_to_collection', { imageIds });
+    },
+    
+    addToCollectionWithData: async (imageData: Array<{id: string, project_id?: string, character_id?: string, original_prompt?: string}>) => {
+      return safeInvoke('add_to_collection_with_data', { imageData });
     }
   },
 

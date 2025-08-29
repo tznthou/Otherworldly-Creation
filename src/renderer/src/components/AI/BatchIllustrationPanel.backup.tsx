@@ -4,7 +4,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store/store';
 import { 
   setTempImages as setReduxTempImages, 
-  setShowImagePreview as setReduxShowImagePreview 
+  setShowImagePreview as setReduxShowImagePreview,
+  TempImageData
 } from '../../store/slices/visualCreationSlice';
 import { api } from '../../api';
 import { 
@@ -92,7 +93,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   const [_batchHistory, _setBatchHistory] = useState<BatchStatusReport[]>([]);
 
   // 臨時圖像預覽狀態
-  const [tempImages, setTempImages] = useState<any[]>([]);
+  const [tempImages, setTempImages] = useState<Record<string, unknown>[]>([]);
   const [showImagePreview, setShowImagePreview] = useState(false);
 
   // 注：詳細調試資訊已移至 useCharacterSelection Hook
@@ -247,7 +248,12 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       console.log(`🤖 使用服務：${batchConfig.illustrationProvider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}`);
       console.log(`📋 共 ${requestsCount} 個請求`);
 
-      let results: any[] = [];
+      let results: Array<{
+        success: boolean;
+        tempImageData?: Record<string, unknown>;
+        request: BatchRequestItem;
+        error?: string;
+      }> = [];
 
       if (batchConfig.illustrationProvider === 'pollinations') {
         // === Pollinations.AI 免費生成 ===
@@ -370,7 +376,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         });
 
         // 執行批次生成
-        results = await imageGenerationService.generateBatch(
+        const batchResults = await imageGenerationService.generateBatch(
           imageRequests,
           batchConfig.apiKey,
           (current, total, currentPrompt) => {
@@ -378,6 +384,14 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
             // 可以在這裡更新 UI 顯示進度
           }
         );
+
+        // 轉換 BatchResult 到預期的格式  
+        results = batchResults.map((batchResult, index) => ({
+          success: batchResult.success,
+          tempImageData: batchResult.success && batchResult.data?.[0] ? (batchResult.data[0] as unknown as Record<string, unknown>) : undefined,
+          request: requests[index],
+          error: batchResult.error ? String(batchResult.error) : undefined
+        }));
       }
 
       // 統計結果
@@ -390,7 +404,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         // 收集所有成功的臨時圖像數據
         const successfulTempImages = results
           .filter(r => r.success && r.tempImageData)
-          .map(r => r.tempImageData);
+          .map(r => r.tempImageData!);
         
         console.log('生成的臨時圖像數據:', successfulTempImages.length, '張');
         
@@ -399,7 +413,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         setShowImagePreview(true);
         
         // 同步到 Redux 狀態以供 ImagePreviewModal 使用
-        dispatch(setReduxTempImages(successfulTempImages));
+        dispatch(setReduxTempImages(successfulTempImages as unknown as TempImageData[]));
         dispatch(setReduxShowImagePreview(true));
         
         // 暫時不重置表單，等用戶確認後再重置

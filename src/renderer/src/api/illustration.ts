@@ -87,7 +87,17 @@ export const illustrationAPI = {
   /**
    * 確認臨時圖片（保留向後兼容）
    */
-  confirmTemp: async (tempImageData: any) => {
+  confirmTemp: async (tempImageData: {
+    temp_path: string;
+    prompt: string;
+    project_id?: string;
+    character_id?: string;
+    generation_time?: string;
+    width?: number;
+    height?: number;
+    file_size_bytes?: number;
+    provider?: string;
+  }) => {
     return api.invoke('confirm_temp_image_save', { tempImageData });
   }
 };

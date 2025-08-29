@@ -89,8 +89,8 @@ export interface ImageVersion {
 export interface VersionDifference {
   type: DifferenceType;
   field: string;
-  oldValue: any;
-  newValue: any;
+  oldValue: unknown;
+  newValue: unknown;
   description: string;
 }
 

@@ -1,14 +1,12 @@
-/// 儲存生成的圖像到本地
+/// 儲存生成的圖像到本地（統一使用與資料庫相同的路徑策略）
 pub fn save_generated_image(image_data: &[u8], image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
     use std::fs;
     
-    // 確保圖像目錄存在（使用與EPUB/PDF相同的路徑）
-    let images_dir = dirs::home_dir()
-        .ok_or("無法獲取用戶目錄")?
-        .join("Library")
-        .join("Application Support")
+    // 使用與資料庫相同的路徑策略
+    let images_dir = dirs::data_dir()
+        .ok_or("無法獲取用戶資料目錄")?
         .join("genesis-chronicle")
-        .join("generated-images");
+        .join("images");
     
     fs::create_dir_all(&images_dir)?;
     
