@@ -202,10 +202,8 @@ pub async fn permanent_delete_illustrations(
 
 /// 獲取垃圾桶目錄
 pub fn get_deleted_images_dir() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
-    let deleted_dir = dirs::home_dir()
-        .ok_or("無法獲取用戶目錄")?
-        .join("Library")
-        .join("Application Support")
+    let deleted_dir = dirs::data_local_dir()
+        .ok_or("無法獲取應用資料目錄")?
         .join("genesis-chronicle")
         .join("deleted-images");
     

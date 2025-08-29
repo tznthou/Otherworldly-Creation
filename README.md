@@ -1,11 +1,11 @@
-# 創世紀元：Genesis Chronicle v1.1.4
+# 創世紀元：Genesis Chronicle v1.1.5
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
-![Version](https://img.shields.io/badge/version-v1.1.4-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange)
+![Version](https://img.shields.io/badge/version-v1.1.5-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange)
 
 ## 🌟 核心特色
 
-### 💡 創新功能 (2025年8月29日v1.1.4最新更新)
+### 💡 創新功能 (2025年8月29日v1.1.5最新更新)
 - **🎨 AI插圖預覽系統** 🌟 **v1.1.4 重磅更新！** - 革命性的圖片生成預覽體驗
   - **即時預覽選擇**: 批量生成後即時預覽，告別「盲選」時代
   - **智能管理工具**: 版本對比、品質篩選、一鍵應用到作品
@@ -32,7 +32,19 @@
 
 ## 🏆 專案成就
 
-### 🆕 最近重大更新 (v1.1.4)
+### 🆕 最近重大更新 (v1.1.5)
+
+#### 2025年8月29日 - Windows 版本圖片路徑修復 🔧 **跨平台完善更新**
+- **🔧 Windows 圖片問題修復**: 徹底解決 Windows 版本無法顯示圖片預覽和圖庫的根本問題
+  - **路徑架構優化**: 修復硬編碼 macOS 路徑導致的跨平台兼容性問題
+  - **標準化目錄結構**: 採用 Rust dirs crate 標準，符合各平台最佳實踐
+  - **Windows 正確路徑**: `AppData\Local\genesis-chronicle\generated-images\`
+  - **無縫跨平台**: macOS 和 Linux 用戶體驗完全不受影響
+- **🎯 技術改進**: 
+  - 資料庫使用 `data_dir()` (支援同步)
+  - 圖片檔案使用 `data_local_dir()` (本地快取，節省頻寬)
+  - 統一垃圾桶和匯出功能的路徑邏輯
+- **📈 用戶體驗**: Windows 用戶現在可以正常查看 AI 生成的圖片預覽和管理圖庫
 
 #### 2025年8月29日 - AI插圖預覽系統完整實現 🌟 **里程碑更新**
 - **🎨 預覽體驗革命**: 完成AI插圖預覽功能的完整實現，用戶體驗質變提升

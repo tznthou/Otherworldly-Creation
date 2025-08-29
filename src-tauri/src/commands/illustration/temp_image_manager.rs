@@ -269,11 +269,9 @@ pub fn get_temp_images_dir() -> Result<std::path::PathBuf, Box<dyn std::error::E
             .ok_or("無法獲取父目錄")?
             .join("generated-images")
     } else {
-        // 生產環境：使用 Application Support
-        dirs::home_dir()
-            .ok_or("無法獲取用戶目錄")?
-            .join("Library")
-            .join("Application Support")
+        // 生產環境：使用跨平台的應用資料目錄
+        dirs::data_local_dir()
+            .ok_or("無法獲取應用資料目錄")?
             .join("genesis-chronicle")
             .join("generated-images")
     };
@@ -323,11 +321,9 @@ pub fn move_temp_to_final_image(temp_path: &str, image_id: &str) -> Result<Strin
             .ok_or("無法獲取父目錄")?
             .join("generated-images")
     } else {
-        // 生產環境：使用 Application Support
-        dirs::home_dir()
-            .ok_or("無法獲取用戶目錄")?
-            .join("Library")
-            .join("Application Support")
+        // 生產環境：使用跨平台的應用資料目錄
+        dirs::data_local_dir()
+            .ok_or("無法獲取應用資料目錄")?
             .join("genesis-chronicle")
             .join("generated-images")
     };
@@ -484,11 +480,9 @@ pub fn save_to_final_directory(image_data: &[u8], image_id: &str) -> Result<Stri
             .ok_or("無法獲取父目錄")?
             .join("generated-images")
     } else {
-        // 生產環境：使用 Application Support
-        dirs::home_dir()
-            .ok_or("無法獲取用戶目錄")?
-            .join("Library")
-            .join("Application Support")
+        // 生產環境：使用跨平台的應用資料目錄
+        dirs::data_local_dir()
+            .ok_or("無法獲取應用資料目錄")?
             .join("genesis-chronicle")
             .join("generated-images")
     };
