@@ -91,7 +91,7 @@ jobs:
   build-macos:
     needs: create-release
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     
     steps:
       - name: 📥 Checkout repository
@@ -116,6 +116,8 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: 🔧 Install Tauri CLI
         run: |
@@ -212,7 +214,7 @@ jobs:
   build-windows:
     needs: create-release
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     
     steps:
       - name: 📥 Checkout repository
@@ -236,6 +238,8 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: 🔧 Install Tauri CLI
         run: |
