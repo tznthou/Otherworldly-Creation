@@ -21,6 +21,8 @@ import ImagePreviewModal from './ImagePreviewModal';
 import ExportSettingsPanel from './panels/ExportSettingsPanel';
 // import { StyleTemplateSelector } from './StyleTemplateSelector';
 import TutorialOverlay from './shared/TutorialOverlay';
+import PollinationsAuthStatus from '../PollinationsAuthStatus';
+import PollinationsAuthGuide from '../PollinationsAuthGuide';
 
 // 版本管理組件已移除，功能簡化
 
@@ -35,6 +37,8 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
   className = ''
 }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const [showAuthGuide, setShowAuthGuide] = React.useState(false);
+  const [authStatusKey, setAuthStatusKey] = React.useState(0); // 用於強制重新渲染認證狀態
   
   // 使用自定義 hooks 來管理狀態和邏輯
   const { 
@@ -59,6 +63,15 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
     handleTabChange,
     handleSaveSelectedImages
   } = useVisualCreationHandlers();
+  
+  // 認證相關處理
+  const handleAuthStatusClick = () => {
+    setShowAuthGuide(true);
+  };
+  
+  const handleAuthUpdate = () => {
+    setAuthStatusKey(prev => prev + 1); // 強制重新渲染認證狀態
+  };
 
   // 渲染標籤頁內容
   const renderTabContent = () => {
@@ -153,7 +166,7 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
             </div>
           </div>
 
-          {/* 供應商選擇器 */}
+          {/* 供應商選擇器和認證狀態 */}
           <div className="flex items-center space-x-4">
             <span className="text-sm text-cosmic-400">插畫服務:</span>
             <div className="flex bg-cosmic-800 rounded-lg p-1 border border-cosmic-700">
@@ -184,6 +197,18 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
                 </div>
               </button>
             </div>
+            
+            {/* Pollinations 認證狀態 */}
+            {currentProvider === 'pollinations' && (
+              <div className="border-l border-cosmic-600 pl-4">
+                <PollinationsAuthStatus
+                  key={authStatusKey}
+                  onClick={handleAuthStatusClick}
+                  showDetails={false}
+                  className="cursor-pointer hover:bg-cosmic-800/30 rounded-lg p-2 transition-colors"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -245,6 +270,13 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
         isVisible={showTutorial}
         onComplete={handleTutorialComplete}
         onSkip={handleTutorialSkip}
+      />
+
+      {/* Pollinations 認證指南 */}
+      <PollinationsAuthGuide
+        isOpen={showAuthGuide}
+        onClose={() => setShowAuthGuide(false)}
+        onAuthUpdate={handleAuthUpdate}
       />
 
       {/* 重新查看教學按鈕（開發用） */}

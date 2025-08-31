@@ -74,13 +74,19 @@ pub struct IllustrationFile {
 
 /// 掃描專案相關的 AI 插畫檔案
 fn scan_project_illustrations(_project_id: &str) -> Result<Vec<IllustrationFile>, String> {
-    // 取得插畫儲存目錄
-    let data_dir = dirs::data_local_dir()
-        .unwrap_or_else(|| std::path::PathBuf::from("."));
-    let illustrations_dir = data_dir.join("genesis-chronicle").join("generated-images");
+    // === 舊邏輯（註解保留）===
+    // let data_dir = dirs::data_local_dir()
+    //     .unwrap_or_else(|| std::path::PathBuf::from("."));
+    // let illustrations_dir = data_dir.join("genesis-chronicle").join("generated-images");
+    
+    // === 新邏輯：使用 PathManager 統一路徑管理 ===
+    let illustrations_dir = crate::utils::PathManager::get_images_dir()
+        .map_err(|e| format!("無法獲取圖片目錄: {}", e))?;
+    
+    log::info!("EPUB 掃描插畫目錄: {:?}", illustrations_dir);
     
     if !illustrations_dir.exists() {
-        println!("插畫目錄不存在: {:?}", illustrations_dir);
+        log::warn!("插畫目錄不存在: {:?}", illustrations_dir);
         return Ok(Vec::new());
     }
     
@@ -476,9 +482,13 @@ async fn generate_epub_file(
 ) -> Result<EPubResult, String> {
     println!("開始生成真實 EPUB 文件: {}", title);
     
-    // 生成最終文件路徑
-    let downloads_dir = dirs::download_dir()
-        .ok_or("無法獲取下載資料夾")?;
+    // === 舊邏輯（註解保留）===
+    // let downloads_dir = dirs::download_dir()
+    //     .ok_or("無法獲取下載資料夾")?;
+    
+    // === 新邏輯：使用 PathManager 統一路徑管理 ===
+    let downloads_dir = crate::utils::PathManager::get_downloads_dir()
+        .map_err(|e| format!("無法獲取下載目錄: {}", e))?;
     
     let safe_title = title.replace(&['/', '\\', ':', '*', '?', '"', '<', '>', '|'][..], "_");
     let final_path = downloads_dir.join(format!("{}.epub", safe_title));

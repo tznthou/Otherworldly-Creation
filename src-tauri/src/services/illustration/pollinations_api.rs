@@ -19,10 +19,11 @@ use super::{Result, IllustrationError};
 pub struct PollinationsApiService {
     client: Client,
     base_url: String,
+    api_token: Option<String>, // 新增：可選的 API token
 }
 
 /// 支援的模型類型
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum PollinationsModel {
     /// Flux 模型 - 主推薦，高品質通用模型
     Flux,
@@ -115,7 +116,7 @@ pub struct PollinationsParameters {
 }
 
 impl PollinationsApiService {
-    /// 建立新的Pollinations API服務實例
+    /// 建立新的Pollinations API服務實例（無認證）
     pub fn new() -> Result<Self> {
         let client = Client::builder()
             .timeout(std::time::Duration::from_secs(300)) // 5分鐘超時
@@ -125,6 +126,21 @@ impl PollinationsApiService {
         Ok(Self {
             client,
             base_url: "https://image.pollinations.ai".to_string(),
+            api_token: None,
+        })
+    }
+
+    /// 建立帶API token的Pollinations API服務實例（支援認證）
+    pub fn with_token(token: String) -> Result<Self> {
+        let client = Client::builder()
+            .timeout(std::time::Duration::from_secs(300)) // 5分鐘超時
+            .build()
+            .map_err(|e| IllustrationError::AIApi(format!("HTTP客戶端建立失敗: {}", e)))?;
+
+        Ok(Self {
+            client,
+            base_url: "https://image.pollinations.ai".to_string(),
+            api_token: Some(token),
         })
     }
 
@@ -138,9 +154,19 @@ impl PollinationsApiService {
         
         log::info!("Pollinations生成請求: {}", url);
 
-        // 發送請求
-        let response = self.client
+        // 發送請求 - 添加 referrer header 以符合新的 API 存取政策
+        let mut request_builder = self.client
             .get(&url)
+            .header("Referer", "https://pollinations.ai/")
+            .header("User-Agent", "Genesis-Chronicle/1.1.6 (Desktop App; Rust)");
+            
+        // 如果有API token，添加Authorization header以獲得更高層級存取權限
+        if let Some(ref token) = self.api_token {
+            request_builder = request_builder.header("Authorization", format!("Bearer {}", token));
+            log::info!("使用API token進行認證請求，可存取Seed/Flower/Nectar層級模型");
+        }
+        
+        let response = request_builder
             .send()
             .await
             .map_err(|e| IllustrationError::AIApi(format!("API請求失敗: {}", e)))?;

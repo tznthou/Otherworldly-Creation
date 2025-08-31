@@ -14,6 +14,7 @@ pub mod free_generation;
 pub mod temp_image_manager;
 pub mod image_deletion;
 pub mod enhanced_generation;
+pub mod image_rename;
 pub mod utils;
 
 // 重新匯出所有公開功能，保持原有API兼容性
@@ -67,6 +68,12 @@ pub use enhanced_generation::{
     get_illustration_generation_status,
     cancel_illustration_generation,
     validate_imagen_api_connection,
+};
+
+// ========================= 圖像重命名管理 =========================
+pub use image_rename::{
+    rename_illustration,
+    batch_rename_illustrations,
 };
 
 // ========================= 共用輔助函數 =========================

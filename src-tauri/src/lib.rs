@@ -41,7 +41,9 @@ use commands::illustration::{
     // 優化的圖像管理 API
     generate_illustration_optimized, confirm_illustrations, add_to_collection, add_to_collection_with_data,
     // 圖片刪除管理 API
-    delete_illustrations, restore_illustrations, get_deleted_illustrations, permanent_delete_illustrations
+    delete_illustrations, restore_illustrations, get_deleted_illustrations, permanent_delete_illustrations,
+    // 圖片重命名管理 API
+    rename_illustration, batch_rename_illustrations
 };
 use commands::translation::{
     translate_character_description, optimize_prompt, search_vocabulary, 
@@ -57,6 +59,10 @@ use commands::batch_illustration::{
     cancel_batch, get_batch_queue_statistics, update_batch_manager_config,
     cleanup_completed_tasks, get_all_batches_summary, retry_failed_tasks,
     pause_batch, resume_batch
+};
+use commands::pollinations_auth::{
+    save_pollinations_token, get_pollinations_token, get_pollinations_token_info,
+    remove_pollinations_token, test_pollinations_token
 };
 use services::context::optimize_ultra_long_context_command;
 
@@ -205,6 +211,9 @@ pub fn run() {
       restore_illustrations,
       get_deleted_illustrations,
       permanent_delete_illustrations,
+      // 圖片重命名管理 commands
+      rename_illustration,
+      batch_rename_illustrations,
       // Translation commands
       translate_character_description,
       optimize_prompt,
@@ -232,8 +241,16 @@ pub fn run() {
       retry_failed_tasks,
       pause_batch,
       resume_batch,
+      // Pollinations Authentication commands
+      save_pollinations_token,
+      get_pollinations_token,
+      get_pollinations_token_info,
+      remove_pollinations_token,
+      test_pollinations_token,
       // Context Optimization commands
       optimize_ultra_long_context_command,
+      // PathManager testing commands
+      commands::test_path_manager,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

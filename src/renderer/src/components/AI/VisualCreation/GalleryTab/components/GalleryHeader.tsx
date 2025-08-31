@@ -201,9 +201,9 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
                 <button 
                   onClick={onOpenEbookIntegration}
                   className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors flex items-center gap-1"
-                  title="配置圖片在電子書中的整合設定"
+                  title="將選中圖片設定為電子書封面"
                 >
-                  📚 電子書整合
+                  📚 電子書封面
                 </button>
               </div>
               

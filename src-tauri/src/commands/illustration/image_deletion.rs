@@ -202,13 +202,17 @@ pub async fn permanent_delete_illustrations(
 
 /// 獲取垃圾桶目錄
 pub fn get_deleted_images_dir() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
-    let deleted_dir = dirs::data_local_dir()
-        .ok_or("無法獲取應用資料目錄")?
-        .join("genesis-chronicle")
-        .join("deleted-images");
+    // === 舊邏輯（註解保留）===
+    // let deleted_dir = dirs::data_local_dir()
+    //     .ok_or("無法獲取應用資料目錄")?
+    //     .join("genesis-chronicle")
+    //     .join("deleted-images");
+    // 
+    // std::fs::create_dir_all(&deleted_dir)?;
+    // Ok(deleted_dir)
     
-    std::fs::create_dir_all(&deleted_dir)?;
-    Ok(deleted_dir)
+    // === 新邏輯：使用 PathManager 統一路徑管理 ===
+    crate::utils::PathManager::get_trash_dir()
 }
 
 /// 處理單個圖片的刪除操作

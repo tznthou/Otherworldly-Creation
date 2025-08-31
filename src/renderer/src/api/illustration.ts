@@ -30,6 +30,29 @@ export interface ConfirmationResponse {
   message: string;
 }
 
+export interface RenameRequest {
+  id: string;
+  new_name: string;
+}
+
+export interface RenameResponse {
+  id: string;
+  old_name: string;
+  new_name: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface BatchRenameRequest {
+  operations: RenameRequest[];
+}
+
+export interface BatchRenameResponse {
+  results: RenameResponse[];
+  success_count: number;
+  failure_count: number;
+}
+
 export const illustrationAPI = {
   /**
    * 優化的圖片生成：直接儲存到最終位置，標記為未確認
@@ -99,5 +122,50 @@ export const illustrationAPI = {
     provider?: string;
   }) => {
     return api.invoke('confirm_temp_image_save', { tempImageData });
+  },
+
+  /**
+   * 重命名單個插畫
+   */
+  rename: async (id: string, newName: string): Promise<RenameResponse> => {
+    console.log('🏷️ [API] 重命名插畫:', { id, newName });
+    
+    if (!id || !newName.trim()) {
+      throw new Error('插畫ID和新名稱不能為空');
+    }
+    
+    const result = await api.invoke<{success: boolean; data: RenameResponse}>('rename_illustration', {
+      id,
+      new_name: newName
+    });
+    
+    if (!result.success) {
+      throw new Error('重命名失敗');
+    }
+    
+    console.log('✅ [API] 插畫重命名完成:', result.data);
+    return result.data;
+  },
+
+  /**
+   * 批次重命名插畫
+   */
+  batchRename: async (operations: RenameRequest[]): Promise<BatchRenameResponse> => {
+    console.log('🏷️ [API] 批次重命名插畫:', operations);
+    
+    if (operations.length === 0) {
+      throw new Error('沒有重命名操作');
+    }
+    
+    const result = await api.invoke<{success: boolean; data: BatchRenameResponse}>('batch_rename_illustrations', {
+      operations
+    });
+    
+    if (!result.success) {
+      throw new Error('批次重命名失敗');
+    }
+    
+    console.log('✅ [API] 批次重命名完成:', result.data);
+    return result.data;
   }
 };

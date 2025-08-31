@@ -9,6 +9,7 @@ export interface Project {
   novelLength: 'short' | 'medium' | 'long';
   createdAt: string; // 改為字符串以符合 Redux 序列化要求
   updatedAt: string; // 改為字符串以符合 Redux 序列化要求
+  cover_image?: string; // 電子書封面圖片路徑
   settings: {
     aiModel?: string;
     aiParams?: {

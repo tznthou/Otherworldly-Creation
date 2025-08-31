@@ -427,12 +427,44 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     setShowImageNamingPanel(true);
   };
   const handleCloseImageNaming = () => setShowImageNamingPanel(false);
-  const handleOpenEbookIntegration = () => {
+  const handleOpenEbookIntegration = async () => {
     if (!currentProject) {
       alert('請先選擇一個專案');
       return;
     }
-    setShowEbookIntegrationPanel(true);
+    
+    if (selectedImages.size === 0) {
+      alert('請先選擇要設為封面的圖片');
+      return;
+    }
+    
+    if (selectedImages.size > 1) {
+      alert('只能選擇一張圖片作為封面');
+      return;
+    }
+    
+    try {
+      const selectedImageId = Array.from(selectedImages)[0];
+      const selectedImage = filteredIllustrations.find(img => img.id === selectedImageId);
+      
+      if (!selectedImage) {
+        alert('找不到選中的圖片');
+        return;
+      }
+      
+      // 簡單實現：更新專案的封面圖片路徑
+      const apiModule = await import('../../../../api');
+      await apiModule.api.projects.update({
+        ...currentProject,
+        cover_image: selectedImage.local_file_path || selectedImage.image_url
+      });
+      
+      alert(`🎉 封面設定完成！\n\n已將「${selectedImage.original_prompt}」設為專案封面`);
+      
+    } catch (error) {
+      console.error('設定封面失敗:', error);
+      alert(`設定封面失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    }
   };
   const handleCloseEbookIntegration = () => setShowEbookIntegrationPanel(false);
 
@@ -440,11 +472,59 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
   const handleApplyRename = async (operation: BatchRenameOperation) => {
     try {
       console.log('應用批次重命名:', operation);
-      alert(`🎉 重命名預覽完成！\n\n將會重命名 ${operation.imageIds.length} 張圖片\n\n⚠️ 實際重命名功能需要後端API支援`);
+      
+      // 根據命名規則生成新名稱
+      const renameOperations = operation.imageIds.map((imageId, index) => {
+        const image = filteredIllustrations.find(img => img.id === imageId);
+        let newName = `未命名_${index + 1}`;
+        
+        if (image && operation.namingRule) {
+          // 根據命名規則生成名稱
+          newName = operation.namingRule.template
+            .replace('{prompt}', image.original_prompt?.substring(0, 30) || 'untitled')
+            .replace('{index}', (index + 1).toString())
+            .replace('{timestamp}', new Date().toISOString().slice(0, 10));
+          
+          if (operation.namingRule.customPrefix) {
+            newName = operation.namingRule.customPrefix + '_' + newName;
+          }
+          if (operation.namingRule.customSuffix) {
+            newName = newName + '_' + operation.namingRule.customSuffix;
+          }
+          
+          // 限制長度
+          if (newName.length > operation.namingRule.maxLength) {
+            newName = newName.substring(0, operation.namingRule.maxLength);
+          }
+        }
+        
+        return {
+          id: imageId,
+          new_name: newName
+        };
+      });
+      
+      // 調用後端API
+      const illustrationModule = await import('../../../../api/illustration');
+      const illustrationAPI = illustrationModule.illustrationAPI;
+      const result = await illustrationAPI.batchRename(renameOperations);
+      
+      // 顯示結果
+      if (result.success_count > 0) {
+        alert(`🎉 重命名完成！\n\n成功重命名 ${result.success_count} 張圖片\n${result.failure_count > 0 ? `失敗 ${result.failure_count} 張` : ''}`);
+        
+        // 刷新圖片列表
+        if (refetchData) {
+          refetchData();
+        }
+      } else {
+        alert('重命名失敗，請檢查圖片是否存在');
+      }
+      
       setShowImageNamingPanel(false);
     } catch (error) {
       console.error('批次重命名失敗:', error);
-      alert('重命名失敗，請稍後再試');
+      alert(`重命名失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
     }
   };
 

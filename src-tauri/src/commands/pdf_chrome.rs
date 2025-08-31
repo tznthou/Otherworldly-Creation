@@ -132,10 +132,15 @@ struct AIIllustration {
 
 /// 掃描專案AI插畫
 fn scan_project_illustrations(_project_id: &str) -> Result<Vec<AIIllustration>, String> {
-    let illustrations_dir = dirs::data_local_dir()
-        .ok_or("無法獲取本地數據目錄")?
-        .join("genesis-chronicle")
-        .join("generated-images");
+    // === 舊邏輯（註解保留）===
+    // let illustrations_dir = dirs::data_local_dir()
+    //     .ok_or("無法獲取本地數據目錄")?
+    //     .join("genesis-chronicle")
+    //     .join("generated-images");
+    
+    // === 新邏輯：使用 PathManager 統一路徑管理 ===
+    let illustrations_dir = crate::utils::PathManager::get_images_dir()
+        .map_err(|e| format!("無法獲取圖片目錄: {}", e))?;
     
     let mut illustrations = Vec::new();
     
@@ -574,9 +579,13 @@ pub async fn generate_pdf_chrome(
         .map(|m| m.len())
         .unwrap_or(0);
     
-    // 移動PDF到下載目錄
-    let downloads_dir = dirs::download_dir()
-        .unwrap_or_else(|| std::env::current_dir().unwrap());
+    // === 舊邏輯（註解保留）===
+    // let downloads_dir = dirs::download_dir()
+    //     .unwrap_or_else(|| std::env::current_dir().unwrap());
+    
+    // === 新邏輯：使用 PathManager 統一路徑管理 ===
+    let downloads_dir = crate::utils::PathManager::get_downloads_dir()
+        .unwrap_or_else(|_| std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")));
     
     let safe_title = project.name.replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], "_");
     let final_filename = format!("{}_PDF導出_{}.pdf", 

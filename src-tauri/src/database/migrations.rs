@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 19;
+const DB_VERSION: i32 = 20;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -134,6 +134,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v19(conn)?;
             update_version(conn, 19)?;
             log::info!("遷移到版本 19 完成");
+        }
+        
+        if current_version < 20 {
+            apply_migration_v20(conn)?;
+            update_version(conn, 20)?;
+            log::info!("遷移到版本 20 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -2276,6 +2282,44 @@ pub fn apply_migration_v19(conn: &Connection) -> Result<()> {
     
     log::info!("圖片收藏系統相關索引創建完成");
     log::info!("版本 19 遷移完成：圖片收藏系統已準備就緒");
+    
+    Ok(())
+}
+
+/// 版本 20 遷移：添加 Pollinations API tokens 管理系統
+pub fn apply_migration_v20(conn: &Connection) -> Result<()> {
+    log::info!("開始版本 20 遷移：添加 Pollinations API tokens 管理系統");
+    
+    // 創建 pollinations_tokens 表
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS pollinations_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_name TEXT NOT NULL UNIQUE DEFAULT 'default',
+            api_token TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_active BOOLEAN DEFAULT TRUE,
+            token_tier TEXT DEFAULT 'seed' -- 'seed', 'flower', 'nectar'
+        )",
+        [],
+    )?;
+    log::info!("已創建 pollinations_tokens 表");
+    
+    // 創建索引以提高查詢性能
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_tokens_active 
+         ON pollinations_tokens(is_active)",
+        [],
+    )?;
+    
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pollinations_tokens_user_name 
+         ON pollinations_tokens(user_name)",
+        [],
+    )?;
+    
+    log::info!("Pollinations API tokens 管理系統相關索引創建完成");
+    log::info!("版本 20 遷移完成：Pollinations API tokens 管理系統已準備就緒");
     
     Ok(())
 }

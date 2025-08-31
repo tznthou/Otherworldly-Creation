@@ -25,17 +25,27 @@ pub async fn generate_free_illustration_to_temp(
         return Err("提示詞不能為空".to_string());
     }
 
-    // 建立 Pollinations API 服務
-    let service = PollinationsApiService::new()
-        .map_err(|e| format!("Pollinations API 服務初始化失敗: {:?}", e))?;
+    // 嘗試獲取 API token 以支援高級模型
+    let api_token = crate::commands::pollinations_auth::get_active_pollinations_token().await.ok().flatten();
+    
+    // 根據是否有 token 建立不同等級的 Pollinations API 服務
+    let service = if let Some(token) = &api_token {
+        log::info!("[TempImageManager] 使用認證token，可存取Seed/Flower/Nectar層級模型");
+        PollinationsApiService::with_token(token.clone())
+            .map_err(|e| format!("認證API服務初始化失敗: {:?}", e))?
+    } else {
+        log::info!("[TempImageManager] 使用匿名存取，僅限基礎模型");
+        PollinationsApiService::new()
+            .map_err(|e| format!("基礎API服務初始化失敗: {:?}", e))?
+    };
 
-    // 解析模型
-    let pollinations_model = match model.as_deref().unwrap_or("flux") {
+    // 解析模型 - 預設使用 gptimage 作為備用方案
+    let pollinations_model = match model.as_deref().unwrap_or("gptimage") {
         "flux" => PollinationsModel::Flux,
         "gptimage" => PollinationsModel::GptImage,
         "kontext" => PollinationsModel::Kontext,
         "sdxl" => PollinationsModel::Sdxl,
-        _ => PollinationsModel::Flux,
+        _ => PollinationsModel::GptImage, // 改為 GptImage 作為預設備用
     };
 
     // 不再自動添加風格描述，使用原始prompt
@@ -44,7 +54,7 @@ pub async fn generate_free_illustration_to_temp(
 
     // 構建請求
     let request = PollinationsRequest {
-        prompt: enhanced_prompt,
+        prompt: enhanced_prompt.clone(),
         width: width.or(Some(1024)),
         height: height.or(Some(1024)),
         model: Some(pollinations_model),
@@ -55,19 +65,113 @@ pub async fn generate_free_illustration_to_temp(
         ..Default::default()
     };
 
-    // 生成圖像
-    match service.generate_image(request).await {
+    // 生成圖像 - 使用備用模型機制
+    // 根據是否有認證token動態調整可用模型
+    let fallback_models = if api_token.is_some() {
+        // 有token：可以使用所有模型，包括需要認證的Kontext
+        vec![
+            pollinations_model, // 原始選擇的模型
+            PollinationsModel::GptImage, // 最穩定，支援透明背景
+            PollinationsModel::Sdxl,     // 經典 Stable Diffusion XL
+            PollinationsModel::Kontext,  // 認證用戶可用：圖像到圖像轉換
+        ]
+    } else {
+        // 無token：只使用不需認證的基礎模型
+        vec![
+            pollinations_model, // 原始選擇的模型
+            PollinationsModel::GptImage, // 最穩定，支援透明背景
+            PollinationsModel::Sdxl,     // 經典 Stable Diffusion XL
+            // 不包含Kontext：需要認證
+        ]
+    };
+    
+    let mut errors = Vec::new();
+    
+    for (i, &model) in fallback_models.iter().enumerate() {
+        // 避免重複嘗試相同模型
+        if i > 0 && std::mem::discriminant(&model) == std::mem::discriminant(&pollinations_model) {
+            continue;
+        }
+        
+        let fallback_request = PollinationsRequest {
+            model: Some(model),
+            ..request.clone()
+        };
+        
+        match service.generate_image(fallback_request).await {
+            Ok(response) => {
+                if i > 0 {
+                    log::info!("[TempImageManager] 使用備用模型 {:?} 生成成功，耗時: {}ms", model, response.generation_time_ms);
+                } else {
+                    log::info!("[TempImageManager] 免費插畫生成成功，耗時: {}ms", response.generation_time_ms);
+                }
+                
+                // 儲存圖像到臨時目錄
+                let temp_path = save_temp_generated_image(&response.image_data, &response.id)
+                    .map_err(|e| format!("臨時圖像儲存失敗: {}", e))?;
+                
+                // 計算檔案大小
+                let file_size = response.image_data.len() as i64;
+                
+                return Ok(serde_json::json!({
+                    "success": true,
+                    "id": response.id,
+                    "prompt": response.prompt,
+                    "temp_path": temp_path,
+                    "image_url": response.image_url,
+                    "parameters": {
+                        "model": response.parameters.model,
+                        "width": response.parameters.width,
+                        "height": response.parameters.height,
+                        "seed": response.parameters.seed,
+                        "enhance": response.parameters.enhance,
+                        "style": style
+                    },
+                    "file_size_bytes": file_size,
+                    "generation_time_ms": response.generation_time_ms,
+                    "provider": "pollinations",
+                    "is_free": true,
+                    "is_temp": true,
+                    "project_id": projectId,
+                    "character_id": characterId,
+                    "original_prompt": prompt,
+                    "fallback_used": i > 0
+                }));
+            },
+            Err(e) => {
+                let error_msg = format!("{:?} 模型失敗: {:?}", model, e);
+                errors.push(error_msg);
+                log::warn!("[TempImageManager] 模型 {:?} 生成失敗: {:?}", model, e);
+                continue;
+            }
+        }
+    }
+    
+    // 如果所有具體模型都失敗，最後嘗試不指定模型（讓 Pollinations 自動選擇）
+    log::info!("[TempImageManager] 所有指定模型失敗，嘗試使用 API 預設模型");
+    let default_request = PollinationsRequest {
+        prompt: enhanced_prompt.clone(),
+        width: width.or(Some(1024)),
+        height: height.or(Some(1024)),
+        model: None, // 不指定模型，讓 API 自動選擇最佳可用模型
+        seed,
+        enhance: enhance.or(Some(false)),
+        nologo: Some(true),
+        transparent: Some(false),
+        ..Default::default()
+    };
+    
+    match service.generate_image(default_request).await {
         Ok(response) => {
-            log::info!("[TempImageManager] 免費插畫生成成功，耗時: {}ms", response.generation_time_ms);
+            log::info!("[TempImageManager] API預設模型生成成功，耗時: {}ms", response.generation_time_ms);
             
             // 儲存圖像到臨時目錄
             let temp_path = save_temp_generated_image(&response.image_data, &response.id)
                 .map_err(|e| format!("臨時圖像儲存失敗: {}", e))?;
             
-            // 計算檔案大小
             let file_size = response.image_data.len() as i64;
             
-            Ok(serde_json::json!({
+            return Ok(serde_json::json!({
                 "success": true,
                 "id": response.id,
                 "prompt": response.prompt,
@@ -88,14 +192,22 @@ pub async fn generate_free_illustration_to_temp(
                 "is_temp": true,
                 "project_id": projectId,
                 "character_id": characterId,
-                "original_prompt": prompt
-            }))
+                "original_prompt": prompt,
+                "fallback_used": true,
+                "model_description": "API預設模型（自動選擇）"
+            }));
         },
         Err(e) => {
-            log::error!("[TempImageManager] 免費插畫生成失敗: {:?}", e);
-            Err(format!("免費插畫生成失敗: {:?}", e))
+            let api_error = format!("API預設模型也失敗: {:?}", e);
+            errors.push(api_error);
+            log::error!("[TempImageManager] API預設模型也失敗: {:?}", e);
         }
     }
+    
+    // 所有模型都失敗了
+    let all_errors = errors.join("; ");
+    log::error!("[TempImageManager] 所有模型（包括預設）都失敗了，錯誤詳情: {}", all_errors);
+    Err(format!("Pollinations.AI 服務暫時不可用，請稍後再試。如果問題持續，可嘗試使用其他 AI 插畫功能。錯誤詳情: {}", all_errors))
 }
 
 /// 確認保存臨時圖像到正式目錄
@@ -357,17 +469,27 @@ pub async fn generate_illustration_optimized(
         return Err("提示詞不能為空".to_string());
     }
 
-    // 建立 Pollinations API 服務
-    let service = PollinationsApiService::new()
-        .map_err(|e| format!("Pollinations API 服務初始化失敗: {:?}", e))?;
+    // 嘗試獲取 API token 以支援高級模型
+    let api_token = crate::commands::pollinations_auth::get_active_pollinations_token().await.ok().flatten();
+    
+    // 根據是否有 token 建立不同等級的 Pollinations API 服務
+    let service = if let Some(token) = &api_token {
+        log::info!("[OptimizedGenerator] 使用認證token，可存取Seed/Flower/Nectar層級模型");
+        PollinationsApiService::with_token(token.clone())
+            .map_err(|e| format!("認證API服務初始化失敗: {:?}", e))?
+    } else {
+        log::info!("[OptimizedGenerator] 使用匿名存取，僅限基礎模型");
+        PollinationsApiService::new()
+            .map_err(|e| format!("基礎API服務初始化失敗: {:?}", e))?
+    };
 
-    // 解析模型
-    let pollinations_model = match model.as_deref().unwrap_or("flux") {
+    // 解析模型 - 預設改為 gptimage（更穩定，無需認證）
+    let pollinations_model = match model.as_deref().unwrap_or("gptimage") {
         "flux" => PollinationsModel::Flux,
         "gptimage" => PollinationsModel::GptImage, 
         "kontext" => PollinationsModel::Kontext,
         "sdxl" => PollinationsModel::Sdxl,
-        _ => PollinationsModel::Flux,
+        _ => PollinationsModel::GptImage, // 預設使用 GptImage（較穩定）
     };
 
     // 建立請求參數
@@ -407,7 +529,7 @@ pub async fn generate_illustration_optimized(
         characterId.as_deref(), 
         &prompt,
         &request.prompt,
-        &model.unwrap_or_else(|| "flux".to_string()),
+        &model.unwrap_or_else(|| "gptimage".to_string()),
         width.unwrap_or(1024),
         height.unwrap_or(1024),
         seed,
@@ -686,6 +808,13 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
 
 /// 儲存圖片到最終目錄
 pub fn save_to_final_directory(image_data: &[u8], image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
+    log::info!("[save_to_final_directory] 開始保存圖片 ID: {}, 數據大小: {} bytes", image_id, image_data.len());
+    
+    // 檢查圖片數據是否為空
+    if image_data.is_empty() {
+        return Err("圖片數據為空".into());
+    }
+    
     // 使用與資料庫相同的路徑策略
     let images_dir = if is_development_environment() {
         // 開發環境：使用項目根目錄下的 generated-images
@@ -698,14 +827,27 @@ pub fn save_to_final_directory(image_data: &[u8], image_id: &str) -> Result<Stri
             .join("images")
     };
     
+    log::info!("[save_to_final_directory] 目標目錄: {:?}", images_dir);
+    
     fs::create_dir_all(&images_dir)?;
     
     // 生成最終檔案路徑
     let filename = format!("{}.jpg", image_id);
     let final_path = images_dir.join(&filename);
     
+    log::info!("[save_to_final_directory] 完整檔案路徑: {:?}", final_path);
+    
     // 直接寫入檔案
     fs::write(&final_path, image_data)?;
+    
+    // 驗證檔案是否真的被創建
+    if final_path.exists() {
+        let file_size = fs::metadata(&final_path)?.len();
+        log::info!("[save_to_final_directory] 檔案保存成功，最終檔案大小: {} bytes", file_size);
+    } else {
+        log::error!("[save_to_final_directory] 檔案寫入後不存在！");
+        return Err("檔案寫入後不存在".into());
+    }
     
     Ok(final_path.to_string_lossy().to_string())
 }

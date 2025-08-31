@@ -10,6 +10,7 @@ export interface Project {
   novelLength: 'short' | 'medium' | 'long';
   createdAt: string;
   updatedAt: string;
+  cover_image?: string; // 電子書封面圖片路徑
   settings: {
     aiModel?: string;
     aiParams?: {
