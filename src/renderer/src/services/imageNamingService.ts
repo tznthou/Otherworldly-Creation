@@ -98,9 +98,9 @@ export class ImageNamingService {
    */
   private async buildNamingContext(
     metadata: ImageMetadata,
-    providedContext?: any
-  ): Promise<Record<string, any>> {
-    const context: Record<string, any> = {
+    providedContext?: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
+    const context: Record<string, unknown> = {
       // 基本資訊
       imageId: metadata.id,
       category: metadata.ebookInfo.category,
@@ -137,7 +137,8 @@ export class ImageNamingService {
     if (metadata.projectId) {
       try {
         const project = await api.projects.getById(metadata.projectId);
-        context.project = this.sanitizeForFilename((project as any).title || project.name || 'project');
+        const projectData = project as { title?: string; name: string };
+        context.project = this.sanitizeForFilename(projectData.title || projectData.name || 'project');
         context.projectId = project.id;
       } catch (_error) {
         context.project = 'unknown_project';
@@ -180,7 +181,7 @@ export class ImageNamingService {
   /**
    * 處理命名模板
    */
-  private processTemplate(template: string, context: Record<string, any>): string {
+  private processTemplate(template: string, context: Record<string, unknown>): string {
     return template.replace(/\{([^}]+)\}/g, (match, key) => {
       // 處理格式化選項 (如: {chapterNum:02d})
       const [varName, format] = key.split(':');
@@ -203,7 +204,7 @@ export class ImageNamingService {
   /**
    * 應用格式化選項
    */
-  private applyFormat(value: any, format: string): string {
+  private applyFormat(value: unknown, format: string): string {
     if (format.includes('d')) {
       // 數字格式化 (如: 02d)
       const width = parseInt(format.match(/(\d+)d/)?.[1] || '0');

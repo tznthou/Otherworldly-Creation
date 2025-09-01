@@ -64,7 +64,7 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
     }
   };
 
-  const handleSettingChange = (key: keyof typeof exportSettings, value: any) => {
+  const handleSettingChange = (key: keyof typeof exportSettings, value: unknown) => {
     dispatch(setExportSettings({ [key]: value }));
   };
 

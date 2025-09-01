@@ -54,9 +54,13 @@ pub async fn submit_batch_illustration_request(
     priority: Option<String>,
     maxParallel: Option<u32>,
     _apiKey: Option<String>,
+    provider: Option<String>, // 新增：圖片生成服務提供者 (預設 "pollinations")
 ) -> Result<Value, String> {
-    log::info!("[BatchCommand] 提交批次插畫請求，批次名稱: {}，請求數量: {}", 
-               batchName, requests.len());
+    // 確定使用的提供者（默認為 Pollinations 以確保向後兼容）
+    let selected_provider = provider.as_deref().unwrap_or("pollinations");
+    
+    log::info!("[BatchCommand] 提交批次插畫請求，批次名稱: {}，請求數量: {}，提供者: {}", 
+               batchName, requests.len(), selected_provider);
     
     // 解析優先級
     let task_priority = match priority.as_deref() {
@@ -104,6 +108,7 @@ pub async fn submit_batch_illustration_request(
             user_id: None,
             tags: vec!["illustration".to_string(), "batch".to_string()],
             notify_on_completion: false,
+            provider: Some(selected_provider.to_string()), // 添加提供者資訊
         }),
         execution_config: Some(crate::services::illustration::batch_manager::BatchExecutionConfig {
             max_parallel: maxParallel.map(|p| p as usize),

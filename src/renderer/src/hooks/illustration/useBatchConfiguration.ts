@@ -44,11 +44,19 @@ export interface UseBatchConfigurationReturn {
   /** API 金鑰來源 */
   apiKeySource: 'manual' | 'gemini' | 'openrouter';
   /** 插畫服務提供商 */
-  illustrationProvider: 'pollinations' | 'imagen';
+  illustrationProvider: 'pollinations' | 'imagen' | 'gemini-free' | 'gemini-paid';
   /** Pollinations 模型 */
   pollinationsModel: 'flux' | 'gptimage' | 'kontext' | 'sdxl';
   /** Pollinations 風格 */
   pollinationsStyle: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art';
+  /** Gemini 模型 */
+  geminiModel: 'gemini-2.5-flash' | 'gemini-2.5-flash-image-preview';
+  /** Gemini 品質等級 */
+  geminiQuality: 'standard' | 'high' | 'ultra';
+  /** Gemini 風格指引 */
+  geminiStyle: 'anime' | 'realistic' | 'artistic' | 'fantasy';
+  /** Gemini 安全等級 */
+  geminiSafetyLevel: 'block_most' | 'block_some' | 'block_few';
   /** API 金鑰 */
   apiKey: string;
   
@@ -78,11 +86,19 @@ export interface UseBatchConfigurationReturn {
   /** 設置 API 金鑰來源 */
   setApiKeySource: (source: 'manual' | 'gemini' | 'openrouter') => void;
   /** 設置插畫服務提供商 */
-  setIllustrationProvider: (provider: 'pollinations' | 'imagen') => void;
+  setIllustrationProvider: (provider: 'pollinations' | 'imagen' | 'gemini-free' | 'gemini-paid') => void;
   /** 設置 Pollinations 模型 */
   setPollinationsModel: (model: 'flux' | 'gptimage' | 'kontext' | 'sdxl') => void;
   /** 設置 Pollinations 風格 */
   setPollinationsStyle: (style: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art') => void;
+  /** 設置 Gemini 模型 */
+  setGeminiModel: (model: 'gemini-2.5-flash' | 'gemini-2.5-flash-image-preview') => void;
+  /** 設置 Gemini 品質等級 */
+  setGeminiQuality: (quality: 'standard' | 'high' | 'ultra') => void;
+  /** 設置 Gemini 風格指引 */
+  setGeminiStyle: (style: 'anime' | 'realistic' | 'artistic' | 'fantasy') => void;
+  /** 設置 Gemini 安全等級 */
+  setGeminiSafetyLevel: (level: 'block_most' | 'block_some' | 'block_few') => void;
   /** 設置 API 金鑰 */
   setApiKey: (key: string) => void;
   
@@ -122,7 +138,7 @@ export interface UseBatchConfigurationReturn {
   /** 獲取配置摘要 */
   getConfigurationSummary: () => string;
   /** 驗證單一字段 */
-  validateField: (field: keyof BatchConfiguration, value: any) => ValidationError | null;
+  validateField: (field: keyof BatchConfiguration, value: unknown) => ValidationError | null;
   /** 獲取建議的最大並行數 */
   getRecommendedMaxParallel: () => number;
 }
@@ -130,7 +146,7 @@ export interface UseBatchConfigurationReturn {
 // 驗證規則介面
 export interface ValidationRule {
   field: keyof BatchConfiguration;
-  validator: (value: any, config: BatchConfiguration) => ValidationError | null;
+  validator: (value: unknown, config: BatchConfiguration) => ValidationError | null;
   message: string;
 }
 
@@ -161,9 +177,13 @@ export interface BatchConfiguration {
   maxParallel: number;
   globalColorMode: 'color' | 'monochrome';
   apiKeySource: 'manual' | 'gemini' | 'openrouter';
-  illustrationProvider: 'pollinations' | 'imagen';
+  illustrationProvider: 'pollinations' | 'imagen' | 'gemini-free' | 'gemini-paid';
   pollinationsModel: 'flux' | 'gptimage' | 'kontext' | 'sdxl';
   pollinationsStyle: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art';
+  geminiModel: 'gemini-2.5-flash' | 'gemini-2.5-flash-image-preview';
+  geminiQuality: 'standard' | 'high' | 'ultra';
+  geminiStyle: 'anime' | 'realistic' | 'artistic' | 'fantasy';
+  geminiSafetyLevel: 'block_most' | 'block_some' | 'block_few';
   apiKey: string;
   
   // 風格模板相關
@@ -184,6 +204,10 @@ const DEFAULT_CONFIGURATION: BatchConfiguration = {
   illustrationProvider: 'pollinations',
   pollinationsModel: 'flux',
   pollinationsStyle: 'anime',
+  geminiModel: 'gemini-2.5-flash',
+  geminiQuality: 'standard',
+  geminiStyle: 'anime',
+  geminiSafetyLevel: 'block_most',
   apiKey: '',
   
   // 風格模板預設值
@@ -197,11 +221,12 @@ const DEFAULT_CONFIGURATION: BatchConfiguration = {
 const DEFAULT_VALIDATION_RULES: ValidationRule[] = [
   {
     field: 'batchName',
-    validator: (value: string) => {
-      if (!value || value.trim().length === 0) {
+    validator: (value: unknown) => {
+      const stringValue = String(value || '');
+      if (!stringValue || stringValue.trim().length === 0) {
         return { field: 'batchName', message: '批次名稱不能為空', severity: 'error' };
       }
-      if (value.length > 50) {
+      if (stringValue.length > 50) {
         return { field: 'batchName', message: '批次名稱不能超過 50 個字符', severity: 'error' };
       }
       return null;
@@ -210,11 +235,12 @@ const DEFAULT_VALIDATION_RULES: ValidationRule[] = [
   },
   {
     field: 'maxParallel',
-    validator: (value: number) => {
-      if (value < 1) {
+    validator: (value: unknown) => {
+      const numberValue = Number(value);
+      if (isNaN(numberValue) || numberValue < 1) {
         return { field: 'maxParallel', message: '最大並行數不能小於 1', severity: 'error' };
       }
-      if (value > 10) {
+      if (numberValue > 10) {
         return { field: 'maxParallel', message: '最大並行數不建議超過 10', severity: 'warning' };
       }
       return null;
@@ -223,11 +249,12 @@ const DEFAULT_VALIDATION_RULES: ValidationRule[] = [
   },
   {
     field: 'apiKey',
-    validator: (value: string, config: BatchConfiguration) => {
-      if (config.apiKeySource === 'manual' && (!value || value.trim().length === 0)) {
+    validator: (value: unknown, config: BatchConfiguration) => {
+      const stringValue = String(value || '');
+      if (config.apiKeySource === 'manual' && (!stringValue || stringValue.trim().length === 0)) {
         return { field: 'apiKey', message: '手動輸入模式下 API 金鑰不能為空', severity: 'error' };
       }
-      if (value && value.length < 10) {
+      if (stringValue && stringValue.length < 10) {
         return { field: 'apiKey', message: 'API 金鑰長度可能過短', severity: 'warning' };
       }
       return null;
@@ -251,9 +278,11 @@ const _PROVIDER_MODEL_RECOMMENDATIONS = {
 };
 
 // 建議的最大並行數（基於服務提供商）
-const RECOMMENDED_MAX_PARALLEL = {
+const RECOMMENDED_MAX_PARALLEL: Record<'pollinations' | 'imagen' | 'gemini-free' | 'gemini-paid', number> = {
   pollinations: 3, // Pollinations 免費服務建議較低並行
   imagen: 2, // Imagen 是付費服務，建議保守
+  'gemini-free': 1, // Gemini 免費版建議更保守
+  'gemini-paid': 3, // Gemini 付費版可以稍微提高
 };
 
 /**
@@ -290,9 +319,13 @@ export const useBatchConfiguration = (
   // === 插畫配置狀態 ===
   const [globalColorMode, setGlobalColorMode] = useState<'color' | 'monochrome'>('color');
   const [apiKeySource, setApiKeySource] = useState<'manual' | 'gemini' | 'openrouter'>('manual');
-  const [illustrationProvider, setIllustrationProvider] = useState<'pollinations' | 'imagen'>('pollinations');
+  const [illustrationProvider, setIllustrationProvider] = useState<'pollinations' | 'imagen' | 'gemini-free' | 'gemini-paid'>('pollinations');
   const [pollinationsModel, setPollinationsModel] = useState<'flux' | 'gptimage' | 'kontext' | 'sdxl'>('flux');
   const [pollinationsStyle, setPollinationsStyle] = useState<'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art'>('anime');
+  const [geminiModel, setGeminiModel] = useState<'gemini-2.5-flash' | 'gemini-2.5-flash-image-preview'>('gemini-2.5-flash');
+  const [geminiQuality, setGeminiQuality] = useState<'standard' | 'high' | 'ultra'>('standard');
+  const [geminiStyle, setGeminiStyle] = useState<'anime' | 'realistic' | 'artistic' | 'fantasy'>('anime');
+  const [geminiSafetyLevel, setGeminiSafetyLevel] = useState<'block_most' | 'block_some' | 'block_few'>('block_most');
   const [apiKey, setApiKey] = useState<string>('');
 
   // === 風格模板狀態 ===
@@ -317,6 +350,10 @@ export const useBatchConfiguration = (
     illustrationProvider,
     pollinationsModel,
     pollinationsStyle,
+    geminiModel,
+    geminiQuality,
+    geminiStyle,
+    geminiSafetyLevel,
     apiKey,
     
     // 風格模板相關
@@ -327,12 +364,14 @@ export const useBatchConfiguration = (
   }), [
     batchName, batchDescription, batchPriority, maxParallel,
     globalColorMode, apiKeySource, illustrationProvider,
-    pollinationsModel, pollinationsStyle, apiKey,
+    pollinationsModel, pollinationsStyle,
+    geminiModel, geminiQuality, geminiStyle, geminiSafetyLevel,
+    apiKey,
     selectedStyleTemplateId, useStyleTemplate, customPositivePrompts, customNegativePrompts
   ]);
 
   // === 驗證邏輯 ===
-  const validateField = useCallback((field: keyof BatchConfiguration, value: any): ValidationError | null => {
+  const validateField = useCallback((field: keyof BatchConfiguration, value: unknown): ValidationError | null => {
     const allRules = [...DEFAULT_VALIDATION_RULES, ...customValidators];
     const fieldRules = allRules.filter(rule => rule.field === field);
     
@@ -421,7 +460,7 @@ export const useBatchConfiguration = (
   }, [illustrationProvider, pollinationsModel, pollinationsStyle, globalColorMode, maxParallel]);
 
   const getRecommendedMaxParallel = useCallback((): number => {
-    return RECOMMENDED_MAX_PARALLEL[illustrationProvider] || DEFAULT_CONFIGURATION.maxParallel;
+    return RECOMMENDED_MAX_PARALLEL[illustrationProvider];
   }, [illustrationProvider]);
 
   // === 風格模板相關方法 ===
@@ -531,6 +570,10 @@ export const useBatchConfiguration = (
     illustrationProvider,
     pollinationsModel,
     pollinationsStyle,
+    geminiModel,
+    geminiQuality,
+    geminiStyle,
+    geminiSafetyLevel,
     apiKey,
     
     // === 風格模板系統 ===
@@ -550,6 +593,10 @@ export const useBatchConfiguration = (
     setIllustrationProvider,
     setPollinationsModel,
     setPollinationsStyle,
+    setGeminiModel,
+    setGeminiQuality,
+    setGeminiStyle,
+    setGeminiSafetyLevel,
     setApiKey,
     
     // === 風格模板管理函數 ===

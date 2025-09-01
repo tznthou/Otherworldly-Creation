@@ -166,6 +166,7 @@ pub struct BatchRequestMetadata {
     pub user_id: Option<String>,
     pub tags: Vec<String>,
     pub notify_on_completion: bool,
+    pub provider: Option<String>, // 新增：圖片生成服務提供者
 }
 
 /// 批次執行配置

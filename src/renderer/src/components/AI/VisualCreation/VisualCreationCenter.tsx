@@ -1,10 +1,15 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
+// import { useNavigate } from 'react-router-dom'; // 暫時不使用
 import type { AppDispatch } from '../../../store/store';
 import LoadingSpinner from '../../UI/LoadingSpinner';
 
 // 導入 Redux actions
-import { clearError, initializeVisualCreation } from '../../../store/slices/visualCreationSlice';
+import { 
+  clearError, 
+  initializeVisualCreation,
+  setCurrentProvider 
+} from '../../../store/slices/visualCreationSlice';
 
 // 導入自定義 hooks
 import { 
@@ -19,6 +24,7 @@ import { CreateTab } from './CreateTab';
 import { GalleryTab } from './GalleryTab';
 import ImagePreviewModal from './ImagePreviewModal';
 import ExportSettingsPanel from './panels/ExportSettingsPanel';
+import ServiceConfigurationPanel from './panels/ServiceConfigurationPanel';
 // import { StyleTemplateSelector } from './StyleTemplateSelector';
 import TutorialOverlay from './shared/TutorialOverlay';
 import PollinationsAuthStatus from '../PollinationsAuthStatus';
@@ -37,6 +43,7 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
   className = ''
 }) => {
   const dispatch = useDispatch<AppDispatch>();
+  // const navigate = useNavigate(); // 暫時不使用
   const [showAuthGuide, setShowAuthGuide] = React.useState(false);
   const [authStatusKey, setAuthStatusKey] = React.useState(0); // 用於強制重新渲染認證狀態
   
@@ -59,7 +66,7 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
   } = useTutorialManager(currentProject);
   
   const {
-    handleProviderChange,
+    // handleProviderChange, // 暫時不使用
     handleTabChange,
     handleSaveSelectedImages
   } = useVisualCreationHandlers();
@@ -78,22 +85,28 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
     switch (activeTab) {
       case 'create':
         return (
-          <div className="p-6 h-full">
-            <CreateTab className="h-full" />
+          <div className="h-full overflow-y-auto">
+            <div className="p-6">
+              <CreateTab />
+            </div>
           </div>
         );
         
       case 'gallery':
         return (
-          <div className="p-6 h-full">
-            <GalleryTab className="h-full" />
+          <div className="h-full overflow-y-auto">
+            <div className="p-6">
+              <GalleryTab />
+            </div>
           </div>
         );
         
       default:
         return (
-          <div className="p-6 h-full">
-            <CreateTab className="h-full" />
+          <div className="h-full overflow-y-auto">
+            <div className="p-6">
+              <CreateTab />
+            </div>
           </div>
         );
     }
@@ -102,7 +115,10 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
   // 如果沒有選擇專案，顯示提示
   if (!currentProject) {
     return (
-      <div className={`visual-creation-center ${className}`}>
+      <div 
+        className={`visual-creation-center h-full ${className}`}
+        style={{ isolation: 'isolate' }}
+      >
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="text-4xl mb-4">📚</div>
@@ -117,7 +133,10 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
   // 載入中狀態
   if (loading.initializing) {
     return (
-      <div className={`visual-creation-center ${className}`}>
+      <div 
+        className={`visual-creation-center h-full ${className}`}
+        style={{ isolation: 'isolate' }}
+      >
         <div className="flex items-center justify-center h-96">
           <LoadingSpinner size="large" />
           <span className="ml-3 text-cosmic-300">初始化視覺創作中心...</span>
@@ -129,7 +148,10 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
   // 錯誤狀態
   if (error) {
     return (
-      <div className={`visual-creation-center ${className}`}>
+      <div 
+        className={`visual-creation-center h-full ${className}`}
+        style={{ isolation: 'isolate' }}
+      >
         <div className="flex items-center justify-center h-96">
           <div className="text-center bg-red-900/20 border border-red-700/50 rounded-lg p-6 max-w-md">
             <div className="text-4xl mb-4">❌</div>
@@ -153,93 +175,95 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
   }
 
   return (
-    <div className={`visual-creation-center h-full flex flex-col ${className}`}>
-      {/* 頂部標題和供應商選擇器 */}
-      <div className="flex-shrink-0 bg-cosmic-900/95 border-b border-cosmic-700 px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* 標題 */}
+    <div 
+      className={`visual-creation-center h-full flex flex-col ${className}`} 
+      style={{ isolation: 'isolate' }}
+    >
+      {/* 頂部標題 */}
+      <div className="flex-shrink-0 bg-cosmic-900/95 border-b border-cosmic-700">
+        <div className="px-6 py-4">
           <div className="flex items-center space-x-3">
             <div className="text-2xl">🎨</div>
             <div>
               <h1 className="text-xl font-cosmic text-gold-500">視覺創作中心</h1>
-              <p className="text-sm text-cosmic-400">統一的 AI 插畫創作和管理平台</p>
+              <p className="text-sm text-cosmic-400">AI 插畫創作和管理平台</p>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* 供應商選擇器和認證狀態 */}
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-cosmic-400">插畫服務:</span>
-            <div className="flex bg-cosmic-800 rounded-lg p-1 border border-cosmic-700">
-              <button
-                onClick={() => handleProviderChange('pollinations')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
-                  currentProvider === 'pollinations'
-                    ? 'bg-green-600 text-white shadow-md'
-                    : 'text-cosmic-300 hover:text-white hover:bg-cosmic-700'
-                }`}
-              >
-                <div className="flex items-center space-x-1">
-                  <span className="text-xs">🆓</span>
-                  <span>Pollinations</span>
-                </div>
-              </button>
-              <button
-                onClick={() => handleProviderChange('imagen')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
-                  currentProvider === 'imagen'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-cosmic-300 hover:text-white hover:bg-cosmic-700'
-                }`}
-              >
-                <div className="flex items-center space-x-1">
-                  <span className="text-xs">💳</span>
-                  <span>Imagen</span>
-                </div>
-              </button>
+      {/* 主要內容區域 - 恢復左右布局 */}
+      <div className="flex-1 flex flex-row min-h-0" style={{ isolation: 'auto' }}>
+        {/* 左側：AI 服務配置面板 - 響應式寬度，正常布局流 */}
+        <div className="w-72 lg:w-80 xl:w-96 flex-shrink-0 bg-cosmic-900/80 border-r border-cosmic-700 overflow-y-auto">
+          <div className="p-4">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-gold-400 mb-2 flex items-center">
+                <span className="mr-2">⚙️</span>
+                AI 服務配置
+              </h2>
+              <p className="text-sm text-cosmic-400">選擇和配置圖像生成服務</p>
             </div>
             
-            {/* Pollinations 認證狀態 */}
+            {/* AI 服務配置面板 */}
+            <ServiceConfigurationPanel 
+              className="mb-4"
+              onConfigurationChange={(config) => {
+                console.log('🔧 [VisualCreation] 配置更新:', config);
+                // 同步提供者到 Redux 狀態
+                if (config.provider !== currentProvider) {
+                  console.log('🔄 [VisualCreation] 提供者變更:', currentProvider, '->', config.provider);
+                  dispatch(setCurrentProvider(config.provider));
+                }
+              }}
+              showBillingWarning={true}
+            />
+            
+            {/* 認證狀態（僅 Pollinations） */}
             {currentProvider === 'pollinations' && (
-              <div className="border-l border-cosmic-600 pl-4">
+              <div className="mt-4">
                 <PollinationsAuthStatus
                   key={authStatusKey}
                   onClick={handleAuthStatusClick}
-                  showDetails={false}
-                  className="cursor-pointer hover:bg-cosmic-800/30 rounded-lg p-2 transition-colors"
+                  showDetails={true}
+                  className="cursor-pointer hover:bg-cosmic-800/30 rounded-lg p-3 transition-colors"
                 />
               </div>
             )}
           </div>
         </div>
-      </div>
 
-      {/* 標籤頁導航 */}
-      <div className="flex-shrink-0 bg-cosmic-900/80 border-b border-cosmic-700">
-        <nav className="flex px-6">
-          {[
-            { id: 'create' as ActiveTab, label: '創建', icon: '✨', description: '生成新的插畫（已整合模板功能）' },
-            { id: 'gallery' as ActiveTab, label: '圖庫', icon: '🖼️', description: '插畫歷史管理' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
-                activeTab === tab.id
-                  ? 'border-gold-500 text-gold-500 bg-cosmic-800/50'
-                  : 'border-transparent text-cosmic-400 hover:text-cosmic-200 hover:bg-cosmic-800/30'
-              }`}
-              title={tab.description}
-            >
-              <span className="text-lg">{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </nav>
-      </div>
+        {/* 右側：插圖功能區域 - 填充剩餘空間 */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-cosmic-900/30">
+          {/* 標籤頁導航 */}
+          <div className="flex-shrink-0 bg-cosmic-900/80 border-b border-cosmic-700">
+            <nav className="flex px-6">
+              {[
+                { id: 'create' as ActiveTab, label: '創建', icon: '✨', description: '生成新的插畫（已整合模板功能）' },
+                { id: 'gallery' as ActiveTab, label: '圖庫', icon: '🖼️', description: '插畫歷史管理' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? 'border-gold-500 text-gold-500 bg-cosmic-800/50'
+                      : 'border-transparent text-cosmic-400 hover:text-cosmic-200 hover:bg-cosmic-800/30'
+                  }`}
+                  title={tab.description}
+                >
+                  <span className="text-lg">{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
 
-      {/* 主要內容區域 */}
-      <div className="flex-1 bg-cosmic-900/50 overflow-y-auto">
-        {renderTabContent()}
+          {/* 插圖功能內容區域 - 優化滾動處理 */}
+          <div className="flex-1 bg-cosmic-900/50 min-h-0 overflow-auto">
+            {renderTabContent()}
+          </div>
+        </div>
       </div>
 
       {/* 底部狀態欄 */}
@@ -248,7 +272,11 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
           <div className="flex items-center space-x-4">
             <span>專案: {currentProject.name}</span>
             <span>•</span>
-            <span>服務: {currentProvider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}</span>
+            <span>服務: {
+              currentProvider === 'pollinations' ? 'Pollinations.AI (免費)' :
+              currentProvider === 'imagen' ? 'Google Imagen (付費)' :
+              currentProvider === 'gemini' ? 'Gemini 2.5 Flash Image Preview' : '未知服務'
+            }</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -257,27 +285,35 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
         </div>
       </div>
 
-      {/* 圖像預覽模態框 */}
-      <ImagePreviewModal onSaveSelected={handleSaveSelectedImages} />
+      {/* 圖像預覽模態框 - 次高優先級 */}
+      <div className="relative z-[9998]">
+        <ImagePreviewModal onSaveSelected={handleSaveSelectedImages} />
+      </div>
       
-      {/* 導出設定面板 */}
-      <ExportSettingsPanel 
-        selectedImageIds={selectedImageIds}
-      />
+      {/* 導出設定面板 - 中等優先級 */}
+      <div className="relative z-[9997]">
+        <ExportSettingsPanel 
+          selectedImageIds={selectedImageIds}
+        />
+      </div>
 
-      {/* 教學覆蓋層 */}
-      <TutorialOverlay
-        isVisible={showTutorial}
-        onComplete={handleTutorialComplete}
-        onSkip={handleTutorialSkip}
-      />
+      {/* 教學覆蓋層 - 高優先級但低於配置面板 */}
+      <div className="relative z-[9998]">
+        <TutorialOverlay
+          isVisible={showTutorial}
+          onComplete={handleTutorialComplete}
+          onSkip={handleTutorialSkip}
+        />
+      </div>
 
-      {/* Pollinations 認證指南 */}
-      <PollinationsAuthGuide
-        isOpen={showAuthGuide}
-        onClose={() => setShowAuthGuide(false)}
-        onAuthUpdate={handleAuthUpdate}
-      />
+      {/* Pollinations 認證指南 - 中等優先級 */}
+      <div className="relative z-[9997]">
+        <PollinationsAuthGuide
+          isOpen={showAuthGuide}
+          onClose={() => setShowAuthGuide(false)}
+          onAuthUpdate={handleAuthUpdate}
+        />
+      </div>
 
       {/* 重新查看教學按鈕（開發用） */}
       {process.env.NODE_ENV === 'development' && (

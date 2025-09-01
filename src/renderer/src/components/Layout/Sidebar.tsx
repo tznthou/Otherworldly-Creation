@@ -128,7 +128,7 @@ const Sidebar: React.FC = () => {
         sidebarCollapsed ? 'w-16' : 'w-64'
       }`}
       style={{ 
-        zIndex: 1000, 
+        zIndex: 40, 
         pointerEvents: 'auto',
         position: 'fixed',
         transform: 'translateZ(0)',
@@ -195,7 +195,10 @@ const Sidebar: React.FC = () => {
                     if (!item.disabled) {
                       if (item.isModal && item.id === 'illustrations') {
                         // 打開 AI 插畫 modal
+                        console.log('🎨 [Sidebar] AI插畫按鈕被點擊');
+                        console.log('🎨 [Sidebar] 準備派發 openModal action');
                         dispatch(openModal('aiIllustration'));
+                        console.log('🎨 [Sidebar] openModal action 已派發完成');
                       } else if (item.path) {
                         // 額外驗證路徑格式
                         if (item.path.includes('undefined') || item.path.includes('null')) {

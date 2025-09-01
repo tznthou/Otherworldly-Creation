@@ -79,6 +79,30 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
   // 綜合錯誤狀態
   const combinedError = error || localError;
 
+  // 生成分支顏色
+  const generateBranchColor = useCallback((branchName: string): string => {
+    const colors = [
+      '#3B82F6', // 藍色
+      '#10B981', // 綠色
+      '#F59E0B', // 黃色
+      '#EF4444', // 紅色
+      '#8B5CF6', // 紫色
+      '#F97316', // 橙色
+      '#06B6D4', // 青色
+      '#84CC16', // 萊姆綠
+      '#EC4899', // 粉紅色
+      '#6B7280', // 灰色
+    ];
+
+    // 基於分支名稱生成一致的顏色
+    let hash = 0;
+    for (let i = 0; i < branchName.length; i++) {
+      hash = branchName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    return colors[Math.abs(hash) % colors.length];
+  }, []);
+
   // 創建分支
   const createBranch = useCallback(async (name: string, sourceVersionId: string): Promise<VersionOperationResult> => {
     try {
@@ -127,19 +151,19 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
       }
 
       return result;
-    } catch (error: any) {
-      const errorMessage = error.message || '創建分支失敗';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '創建分支失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'CREATE_BRANCH_FAILED',
-          details: error.toString(),
+          details: error instanceof Error ? error.toString() : String(error),
         },
       };
     }
-  }, [dispatch, versions, allBranches]);
+  }, [dispatch, versions, allBranches, generateBranchColor]);
 
   // 刪除分支
   const deleteBranch = useCallback(async (branchId: string): Promise<VersionOperationResult> => {
@@ -171,15 +195,15 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
         success: true,
         message: `分支 "${branch.name}" 已刪除`,
       };
-    } catch (error: any) {
-      const errorMessage = error.message || '刪除分支失敗';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '刪除分支失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'DELETE_BRANCH_FAILED',
-          details: error.toString(),
+          details: String(error),
         },
       };
     }
@@ -224,19 +248,19 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
         success: true,
         message: `分支已重命名為 "${newName}"`,
       };
-    } catch (error: any) {
-      const errorMessage = error.message || '重命名分支失敗';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '重命名分支失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'RENAME_BRANCH_FAILED',
-          details: error.toString(),
+          details: String(error),
         },
       };
     }
-  }, [allBranches]);
+  }, [allBranches, generateBranchColor]);
 
   // 切換分支
   const switchBranch = useCallback(async (branchId: string): Promise<VersionOperationResult> => {
@@ -255,15 +279,15 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
         success: true,
         message: `已切換到分支 "${branch.name}"`,
       };
-    } catch (error: any) {
-      const errorMessage = error.message || '切換分支失敗';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '切換分支失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'SWITCH_BRANCH_FAILED',
-          details: error.toString(),
+          details: String(error),
         },
       };
     }
@@ -296,15 +320,15 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
           details: 'Branch merging feature is under development',
         },
       };
-    } catch (error: any) {
-      const errorMessage = error.message || '合併分支失敗';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '合併分支失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'MERGE_BRANCH_FAILED',
-          details: error.toString(),
+          details: String(error),
         },
       };
     }
@@ -383,8 +407,8 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
       }
 
       return conflicts;
-    } catch (error: any) {
-      const errorMessage = error.message || '檢查合併衝突失敗';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '檢查合併衝突失敗';
       setLocalError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -410,29 +434,6 @@ export const useVersionBranching = (): UseVersionBranchingReturn => {
       .filter(Boolean) as ImageVersion[];
   }, [allBranches, versions]);
 
-  // 生成分支顏色
-  const generateBranchColor = useCallback((branchName: string): string => {
-    const colors = [
-      '#3B82F6', // 藍色
-      '#10B981', // 綠色
-      '#F59E0B', // 黃色
-      '#EF4444', // 紅色
-      '#8B5CF6', // 紫色
-      '#F97316', // 橙色
-      '#06B6D4', // 青色
-      '#84CC16', // 萊姆綠
-      '#EC4899', // 粉紅色
-      '#6B7280', // 灰色
-    ];
-
-    // 基於分支名稱生成一致的顏色
-    let hash = 0;
-    for (let i = 0; i < branchName.length; i++) {
-      hash = branchName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    
-    return colors[Math.abs(hash) % colors.length];
-  }, []);
 
   return {
     // 資料

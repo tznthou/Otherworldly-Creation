@@ -3,7 +3,8 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../store/store';
 import { 
   setTempImages as setReduxTempImages, 
-  setShowImagePreview as setReduxShowImagePreview 
+  setShowImagePreview as setReduxShowImagePreview,
+  TempImageData
 } from '../store/slices/visualCreationSlice';
 import { api } from '../api';
 import { useBatchConfiguration, useCharacterSelection } from './illustration';
@@ -11,11 +12,19 @@ import { BatchRequestItem } from '../components/AI/BatchIllustration/Illustratio
 import { imageGenerationService } from '../services/imageGenerationService';
 import type { ImageGenerationOptions } from '../services/imageGenerationService';
 import { SafetyFilterLevel } from '@google/genai';
+import { Project } from '../store/slices/projectsSlice';
+
+interface TempImage {
+  id: string;
+  url: string;
+  filename: string;
+  metadata?: Record<string, unknown>;
+}
 
 interface UseBatchSubmissionProps {
   batchConfig: ReturnType<typeof useBatchConfiguration>;
   characterSelection: ReturnType<typeof useCharacterSelection>;
-  currentProject: any;
+  currentProject: Project | null;
 }
 
 export const useBatchSubmission = ({
@@ -28,7 +37,7 @@ export const useBatchSubmission = ({
   const [error, setError] = useState('');
   const [showBillingModal, setShowBillingModal] = useState(false);
   const [billingErrorMessage, setBillingErrorMessage] = useState('');
-  const [tempImages, setTempImages] = useState<any[]>([]);
+  const [tempImages, setTempImages] = useState<TempImage[]>([]);
   const [showImagePreview, setShowImagePreview] = useState(false);
 
   const { effectiveProjectCharacters } = characterSelection;
@@ -49,9 +58,12 @@ export const useBatchSubmission = ({
       return;
     }
 
-    // 只有選擇 Imagen 時才需要 API Key
-    if (batchConfig.illustrationProvider === 'imagen' && !batchConfig.apiKey.trim()) {
-      setError('Google Imagen 需要 API 金鑰，請輸入或切換到免費的 Pollinations.AI');
+    // 只有選擇 Imagen 或 Gemini 付費版時才需要 API Key
+    if ((batchConfig.illustrationProvider === 'imagen' || 
+         batchConfig.illustrationProvider === 'gemini-paid') && 
+        !batchConfig.apiKey.trim()) {
+      const providerName = batchConfig.illustrationProvider === 'imagen' ? 'Google Imagen' : 'Gemini 付費版';
+      setError(`${providerName} 需要 API 金鑰，請輸入或切換到免費的 Pollinations.AI 或 Gemini 免費版`);
       return;
     }
 
@@ -68,10 +80,38 @@ export const useBatchSubmission = ({
     try {
       console.log(`🚀 開始批次插畫生成：${batchConfig.batchName}`);
       console.log(`🎨 色彩模式：${batchConfig.globalColorMode === 'color' ? '彩色' : '黑白'}`);
-      console.log(`🤖 使用服務：${batchConfig.illustrationProvider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}`);
+      
+      // 確定服務名稱
+      let serviceName = '';
+      switch (batchConfig.illustrationProvider) {
+        case 'pollinations':
+          serviceName = 'Pollinations.AI (免費)';
+          break;
+        case 'imagen':
+          serviceName = 'Google Imagen (付費)';
+          break;
+        case 'gemini-free':
+          serviceName = 'Gemini 2.5 Flash Image (免費)';
+          break;
+        case 'gemini-paid':
+          serviceName = 'Gemini 2.5 Flash Image (付費)';
+          break;
+        default:
+          serviceName = '未知服務';
+      }
+      console.log(`🤖 使用服務：${serviceName}`);
       console.log(`📋 共 ${requests.length} 個請求`);
 
-      let results: any[] = [];
+      interface BatchSubmissionResult {
+        success: boolean;
+        url?: string;
+        error?: string;
+        filename?: string;
+        tempImageData?: unknown;
+        request?: unknown;
+      }
+      
+      let results: Array<BatchSubmissionResult> = [];
 
       if (batchConfig.illustrationProvider === 'pollinations') {
         // === Pollinations.AI 免費生成 ===
@@ -151,7 +191,82 @@ export const useBatchSubmission = ({
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
         }
-      } else {
+      } else if (batchConfig.illustrationProvider === 'gemini-free' || 
+                 batchConfig.illustrationProvider === 'gemini-paid') {
+        // === Gemini 2.5 Flash Image 生成 ===
+        const isFreeTier = batchConfig.illustrationProvider === 'gemini-free';
+        console.log(`💎 使用 Gemini 2.5 Flash Image (${isFreeTier ? '免費版' : '付費版'})`);
+        console.log(`🔧 模型：${batchConfig.geminiModel}，品質：${batchConfig.geminiQuality}，風格：${batchConfig.geminiStyle}`);
+        
+        results = [];
+        
+        for (let i = 0; i < requests.length; i++) {
+          const req = requests[i];
+          console.log(`💎 生成進度: ${i + 1}/${requests.length} - ${req.scene_description.substring(0, 50)}...`);
+          
+          try {
+            // 構建增強提示詞
+            let enhancedPrompt = req.scene_description;
+            
+            // 加入角色資訊
+            if (req.selectedCharacterIds.length > 0) {
+              const characterNames = req.selectedCharacterIds.map(id => {
+                const char = effectiveProjectCharacters.find(c => c.id === id);
+                return char?.name;
+              }).filter(Boolean);
+              
+              if (characterNames.length > 0) {
+                enhancedPrompt = `${enhancedPrompt}, featuring ${characterNames.join(' and ')}`;
+              }
+            }
+            
+            // 根據場景類型調整
+            if (req.scene_type === 'portrait') {
+              enhancedPrompt += ', detailed character portrait';
+            } else if (req.scene_type === 'interaction') {
+              enhancedPrompt += ', character interaction scene';
+            } else if (req.scene_type === 'scene') {
+              enhancedPrompt += ', environmental scene with characters';
+            }
+
+            // 調用後端 API（目前使用模擬，實際實現需要添加對應的 API 調用）
+            // TODO: 實現 Gemini 2.5 Flash Image 的後端 API 調用
+            const result = {
+              success: false,
+              message: '🚧 Gemini 2.5 Flash Image 功能開發中，敬請期待！',
+              error: 'GEMINI_NOT_IMPLEMENTED'
+            };
+
+            if (result.success) {
+              results.push({
+                success: true,
+                tempImageData: result,
+                request: req
+              });
+              console.log(`✅ 第 ${i + 1} 張 Gemini 圖像生成成功`);
+            } else {
+              results.push({
+                success: false,
+                error: result.message || 'Gemini 生成失敗',
+                request: req
+              });
+              console.error(`❌ 第 ${i + 1} 張 Gemini 圖像生成失敗:`, result.message);
+            }
+          } catch (error) {
+            results.push({
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+              request: req
+            });
+            console.error(`❌ 第 ${i + 1} 張 Gemini 圖像生成異常:`, error);
+          }
+
+          // 避免過於頻繁的請求，每個請求間隔1秒
+          if (i < requests.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      } else if (batchConfig.illustrationProvider === 'imagen') {
         // === Google Imagen 付費生成 ===
         console.log('🔷 使用 Google Imagen');
         
@@ -194,7 +309,7 @@ export const useBatchSubmission = ({
         });
 
         // 執行批次生成
-        results = await imageGenerationService.generateBatch(
+        const batchResults = await imageGenerationService.generateBatch(
           imageRequests,
           batchConfig.apiKey,
           (current, total, currentPrompt) => {
@@ -202,6 +317,15 @@ export const useBatchSubmission = ({
             // 可以在這裡更新 UI 顯示進度
           }
         );
+
+        // 轉換 BatchResult[] 為 BatchSubmissionResult[]
+        results = batchResults.map((batchResult): BatchSubmissionResult => ({
+          success: batchResult.success,
+          error: typeof batchResult.error === 'string' ? batchResult.error : batchResult.error?.message,
+          // 如果有數據，從第一個結果中提取 URL
+          url: batchResult.data?.[0]?.imageData,
+          filename: `generated_${Date.now()}.png`
+        }));
       }
 
       // 統計結果
@@ -212,9 +336,26 @@ export const useBatchSubmission = ({
         console.log(`✅ 成功生成 ${successCount} 張圖像（臨時）`);
         
         // 收集所有成功的臨時圖像數據
-        const successfulTempImages = results
-          .filter(r => r.success && r.tempImageData)
-          .map(r => r.tempImageData);
+        const successfulTempImages: TempImage[] = results
+          .filter(r => r.success && (r.tempImageData || r.url))
+          .map(r => {
+            if (r.tempImageData && typeof r.tempImageData === 'object' && r.tempImageData !== null) {
+              const tempData = r.tempImageData as any;
+              return {
+                id: tempData.id || `temp-${Date.now()}-${Math.random()}`,
+                url: tempData.url || r.url || '',
+                filename: tempData.filename || r.filename || 'generated.png',
+                metadata: tempData.metadata || {}
+              } as TempImage;
+            } else {
+              return { 
+                id: `temp-${Date.now()}-${Math.random()}`, 
+                url: r.url || '', 
+                filename: r.filename || 'generated.png',
+                metadata: {}
+              } as TempImage;
+            }
+          });
         
         console.log('生成的臨時圖像數據:', successfulTempImages.length, '張');
         
@@ -223,7 +364,26 @@ export const useBatchSubmission = ({
         setShowImagePreview(true);
         
         // 同步到 Redux 狀態以供 ImagePreviewModal 使用
-        dispatch(setReduxTempImages(successfulTempImages));
+        const tempImageData: TempImageData[] = successfulTempImages.map(img => ({
+          id: img.id,
+          prompt: `Generated at ${new Date().toISOString()}`,
+          temp_path: img.url,
+          image_url: img.url,
+          parameters: {
+            model: 'unknown',
+            width: 512,
+            height: 512,
+            enhance: false,
+            style: 'default'
+          },
+          file_size_bytes: 0,
+          generation_time_ms: 0,
+          provider: 'unknown',
+          is_free: true,
+          is_temp: true,
+          original_prompt: `Generated at ${new Date().toISOString()}`
+        }));
+        dispatch(setReduxTempImages(tempImageData));
         dispatch(setReduxShowImagePreview(true));
         
         // 暫時不重置表單，等用戶確認後再重置

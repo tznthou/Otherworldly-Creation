@@ -623,7 +623,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         duration: 3000,
       }));
     }
-  }, [editor, dispatch]);
+  }, [editor, dispatch, clearOptions]);
   
   // 取消生成
   const handleCancel = useCallback(() => {

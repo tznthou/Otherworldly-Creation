@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   EbookExportConfig, 
   EbookImageIntegration,
@@ -50,6 +50,54 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'overview' | 'placement' | 'settings' | 'preview'>('overview');
   const [integrationData, setIntegrationData] = useState<EbookImageIntegration | null>(null);
+
+  // 生成整合數據 - 使用 useCallback 避免依賴警告
+  const generateIntegrationData = useCallback((images: IllustrationHistoryItem[]) => {
+    const integration: EbookImageIntegration = {
+      projectId,
+      totalImages: images.length,
+      processedImages: images.filter(img => img.status === 'completed').length,
+      byChapter: [
+        {
+          chapterId: 'ch1',
+          chapterTitle: '第一章：命運的邂逅',
+          imageCount: 1,
+          totalSize: 2.5,
+          placements: [
+            {
+              placement: EbookImagePlacement.Inline,
+              images: [
+                {
+                  imageId: 'img2',
+                  filename: 'Ch01_Opening_Scene.png',
+                  description: '第一章開場場景描繪',
+                  order: 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      globalImages: [
+        {
+          imageId: 'img1',
+          category: ImageCategory.Character,
+          placement: EbookImagePlacement.CharacterPortrait,
+          filename: 'Character_Alice_Portrait.png',
+          description: '主角艾莉的角色肖像'
+        }
+      ],
+      statistics: {
+        totalSizeMB: 5.2,
+        averageImageSize: 2.6,
+        compressionRatio: 0.75,
+        estimatedEbookIncrease: 4.8
+      },
+      lastUpdated: new Date().toISOString()
+    };
+    
+    setIntegrationData(integration);
+  }, [projectId]);
 
   // 載入專案圖片
   useEffect(() => {
@@ -107,55 +155,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
     };
 
     loadProjectImages();
-  }, [projectId]);
-
-  // 生成整合數據
-  const generateIntegrationData = (images: IllustrationHistoryItem[]) => {
-    const integration: EbookImageIntegration = {
-      projectId,
-      totalImages: images.length,
-      processedImages: images.filter(img => img.status === 'completed').length,
-      byChapter: [
-        {
-          chapterId: 'ch1',
-          chapterTitle: '第一章：命運的邂逅',
-          imageCount: 1,
-          totalSize: 2.5,
-          placements: [
-            {
-              placement: EbookImagePlacement.Inline,
-              images: [
-                {
-                  imageId: 'img2',
-                  filename: 'Ch01_Opening_Scene.png',
-                  description: '第一章開場場景描繪',
-                  order: 1
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      globalImages: [
-        {
-          imageId: 'img1',
-          category: ImageCategory.Character,
-          placement: EbookImagePlacement.CharacterPortrait,
-          filename: 'Character_Alice_Portrait.png',
-          description: '主角艾莉的角色肖像'
-        }
-      ],
-      statistics: {
-        totalSizeMB: 5.2,
-        averageImageSize: 2.6,
-        compressionRatio: 0.75,
-        estimatedEbookIncrease: 4.8
-      },
-      lastUpdated: new Date().toISOString()
-    };
-    
-    setIntegrationData(integration);
-  };
+  }, [projectId, generateIntegrationData]);
 
   // 位置配置選項
   const placementOptions = [
@@ -257,7 +257,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setSelectedTab(tab.id as any)}
+            onClick={() => setSelectedTab(tab.id as 'overview' | 'placement' | 'settings' | 'preview')}
             className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors ${
               selectedTab === tab.id
                 ? 'text-gold-400 border-b-2 border-gold-500 bg-gold-500/10'

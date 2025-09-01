@@ -212,7 +212,7 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
               </label>
               <select
                 value={state.config.organizationMethod}
-                onChange={(e) => updateConfig({ organizationMethod: e.target.value as any })}
+                onChange={(e) => updateConfig({ organizationMethod: e.target.value as 'flat' | 'by_character' | 'by_date' | 'by_project' })}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500"
               >
                 <option value="flat">平級 (所有檔案在同一目錄)</option>

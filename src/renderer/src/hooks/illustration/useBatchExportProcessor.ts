@@ -190,7 +190,7 @@ export function useBatchExportProcessor(
         processCurrentQueue();
       }
     }
-  }, [autoStart, enableBackgroundProcessing, exportManager.state.tasks, processCurrentQueue]);
+  }, [autoStart, enableBackgroundProcessing, exportManager.state.tasks, exportManager, processCurrentQueue]);
 
   // 背景處理監聽
   useEffect(() => {
@@ -205,7 +205,7 @@ export function useBatchExportProcessor(
     }, 2000); // 每2秒檢查一次
 
     return () => clearInterval(intervalId);
-  }, [enableBackgroundProcessing, exportManager.state.isPaused, processCurrentQueue]);
+  }, [enableBackgroundProcessing, exportManager.state.isPaused, exportManager, processCurrentQueue]);
 
   // 組件卸載時清理
   useEffect(() => {

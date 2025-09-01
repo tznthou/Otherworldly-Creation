@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo } from 'react';
-import { StyleTemplateFilter, StyleTemplateSortBy, STYLE_CATEGORIES } from '../../../../types/styleTemplate';
+import { StyleTemplateFilter, StyleTemplateSortBy, StyleCategory, STYLE_CATEGORIES } from '../../../../types/styleTemplate';
 
 interface TemplateFiltersProps {
   filter: StyleTemplateFilter;
@@ -32,7 +32,7 @@ export const TemplateFilters = memo<TemplateFiltersProps>(({
   const handleCategoryChange = useCallback((category: string) => {
     onFilterChange({
       ...filter,
-      category: category === 'all' ? undefined : category as any
+      category: category === 'all' ? undefined : category as StyleCategory
     });
   }, [filter, onFilterChange]);
 

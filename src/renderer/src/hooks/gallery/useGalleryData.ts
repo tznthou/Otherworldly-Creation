@@ -87,14 +87,14 @@ export const useGalleryData = (
       );
       
       // 檢查回傳格式並取出 illustrations 陣列
-      let history: any[] = [];
+      let history: unknown[] = [];
       
       if (Array.isArray(response)) {
         // 如果直接是陣列（舊格式）
         history = response;
-      } else if (response && typeof response === 'object' && 'illustrations' in response && Array.isArray((response as any).illustrations)) {
+      } else if (response && typeof response === 'object' && 'illustrations' in response && Array.isArray((response as { illustrations: unknown[] }).illustrations)) {
         // 如果是物件格式包含 illustrations 陣列（新格式）
-        history = (response as any).illustrations;
+        history = (response as { illustrations: unknown[] }).illustrations;
       } else {
         console.error('API 回傳格式不正確:', response);
         throw new Error('API 回傳的數據格式不正確');
@@ -102,7 +102,7 @@ export const useGalleryData = (
       
       // 整合版本管理數據
       console.log('[useGalleryData] 原始歷史數據:', history.length, '條記錄');
-      const enrichedHistory = history.map(enrichWithVersionData);
+      const enrichedHistory = history.map((illustration: unknown) => enrichWithVersionData(illustration as IllustrationHistoryItem));
       console.log('[useGalleryData] 處理後歷史數據:', enrichedHistory.length, '條記錄');
       
       setIllustrationHistory(enrichedHistory);
@@ -113,7 +113,7 @@ export const useGalleryData = (
     } finally {
       setLoading(false);
     }
-  }, [currentProject, enrichWithVersionData]);
+  }, [currentProject, enrichWithVersionData, loading]);
 
   // 重新獲取數據的便捷方法
   const refetchData = useCallback(() => {

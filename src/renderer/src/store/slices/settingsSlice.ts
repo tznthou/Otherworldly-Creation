@@ -62,6 +62,13 @@ export interface AppSettings {
   shortcuts: {
     [key: string]: string;
   };
+  
+  // 功能開關設定
+  features: {
+    // AI 插畫功能
+    extendedIllustrationServices: boolean;  // 擴展AI插圖服務 (Gemini、OpenRouter等)
+    smartApiDetection: boolean;             // 智能API檢測
+  };
 }
 
 // 預設設定
@@ -126,6 +133,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
     'replace': 'Ctrl+H',
     'undo': 'Ctrl+Z',
     'redo': 'Ctrl+Y',
+  },
+  
+  features: {
+    extendedIllustrationServices: true,  // 預設啟用擴展AI插圖服務
+    smartApiDetection: true,             // 預設啟用智能API檢測
   },
 };
 

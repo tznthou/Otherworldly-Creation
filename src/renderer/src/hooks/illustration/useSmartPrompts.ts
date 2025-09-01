@@ -185,6 +185,23 @@ export const useSmartPrompts = (
   const [appliedSuggestions, setAppliedSuggestions] = useState<PromptSuggestion[]>([]);
   const [rejectedSuggestions, setRejectedSuggestions] = useState<PromptSuggestion[]>([]);
   
+  // 檢測有害內容
+  const detectHarmfulContent = useCallback((prompt: string): { hasHarmful: boolean; issues: string[] } => {
+    const issues: string[] = [];
+    const lowercasePrompt = prompt.toLowerCase();
+    
+    HARMFUL_KEYWORDS.forEach(keyword => {
+      if (lowercasePrompt.includes(keyword)) {
+        issues.push(`包含可能不適當的內容：${keyword}`);
+      }
+    });
+    
+    return {
+      hasHarmful: issues.length > 0,
+      issues
+    };
+  }, []);
+
   // 獲取所有可用建議
   const availableSuggestions = useMemo(() => {
     const allSuggestions = Object.values(DEFAULT_SUGGESTIONS).flat();
@@ -257,7 +274,7 @@ export const useSmartPrompts = (
     } finally {
       setAnalyzing(false);
     }
-  }, [currentPrompt, analysisDelay, preferredStyle]);
+  }, [currentPrompt, analysisDelay, preferredStyle, detectHarmfulContent]);
   
   // 設置提示詞
   const setPrompt = useCallback((prompt: string) => {
@@ -372,21 +389,6 @@ export const useSmartPrompts = (
   }, []);
   
   // 檢測有害內容
-  const detectHarmfulContent = useCallback((prompt: string): { hasHarmful: boolean; issues: string[] } => {
-    const issues: string[] = [];
-    const lowercasePrompt = prompt.toLowerCase();
-    
-    HARMFUL_KEYWORDS.forEach(keyword => {
-      if (lowercasePrompt.includes(keyword)) {
-        issues.push(`包含可能不適當的內容：${keyword}`);
-      }
-    });
-    
-    return {
-      hasHarmful: issues.length > 0,
-      issues
-    };
-  }, []);
   
   // 優化提示詞長度
   const optimizePromptLength = useCallback((prompt: string, maxLength: number): string => {

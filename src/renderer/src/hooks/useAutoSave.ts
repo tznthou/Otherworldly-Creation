@@ -162,7 +162,7 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
     } finally {
       dispatch(setSaving(false));
     }
-  }, [currentChapter, saving, dispatch, updateStatus, stopCountdown, onSave, onError, settings.ui.soundEnabled]);
+  }, [currentChapter, saving, dispatch, updateStatus, stopCountdown, onSave, onError, onBeforeSave, onAfterSave, settings.ui.soundEnabled]);
 
   // 檢查內容是否有變化
   const checkForChanges = useCallback(() => {
@@ -221,12 +221,18 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
     return await saveNow(true);
   }, [currentChapter, saveNow]);
 
-  // 監聽章節內容變化
+  // 監聽章節內容變化 - 修復無限循環問題
   useEffect(() => {
-    if (currentChapter) {
+    if (!currentChapter) return;
+    
+    const currentContent = JSON.stringify(currentChapter.content);
+    const currentTitle = currentChapter.title;
+    
+    // 只有當內容真正改變時才觸發自動儲存
+    if (currentContent !== lastContentRef.current || currentTitle !== lastTitleRef.current) {
       triggerAutoSave();
     }
-  }, [currentChapter?.content, currentChapter?.title, currentChapter, triggerAutoSave]);
+  }, [currentChapter?.content, currentChapter?.title, currentChapter?.id]); // 移除triggerAutoSave依賴，只依賴實際數據
 
   // 監聽編輯器設定變化
   useEffect(() => {

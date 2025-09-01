@@ -95,15 +95,23 @@ class ImageGenerationService {
         ...(request.custom_style_params || {})
       };
 
-      // 設定 API URL 和 headers
-      const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${process.env.GCP_PROJECT_ID || 'default-project'}/locations/us-central1/publishers/google/models/imagegeneration@006:predict`;
+      // 設定 API URL 和 headers - 需要從用戶設定獲取
+      const gcpProjectId = process.env.GCP_PROJECT_ID;
+      const googleApiKey = process.env.GOOGLE_API_KEY;
+      
+      // 安全檢查：確保憑證存在
+      if (!gcpProjectId || !googleApiKey) {
+        throw new Error('Google Cloud 憑證未設定。請到設定頁面配置 GCP Project ID 和 API Key。');
+      }
+      
+      const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${gcpProjectId}/locations/us-central1/publishers/google/models/imagegeneration@006:predict`;
       
       onProgress?.(10);
 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.GOOGLE_API_KEY || 'default-key'}`,
+          'Authorization': `Bearer ${googleApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

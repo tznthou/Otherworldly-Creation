@@ -30,7 +30,7 @@ export interface UseVersionHistoryReturn {
   
   // 統計功能
   getStatistics: (imageId?: string) => Promise<VersionStatistics>;
-  getCreationFrequency: (period: 'daily' | 'weekly' | 'monthly') => any[];
+  getCreationFrequency: (period: 'daily' | 'weekly' | 'monthly') => { date: string; count: number }[];
   
   // 導出功能
   exportHistory: (imageId: string, format: 'json' | 'csv') => Promise<string>;
@@ -105,7 +105,12 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
             versions: imageVersions,
             tree: {
               rootVersion: imageVersions[0] || {} as ImageVersion,
-              tree: {} as any,
+              tree: {
+                version: imageVersions[0] || {} as ImageVersion,
+                children: [],
+                depth: 0,
+                isExpanded: true
+              },
               branches: [],
               totalVersions: imageVersions.length,
               maxDepth: 0,
@@ -137,8 +142,8 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
           resolve([history]);
         }, 800);
       });
-    } catch (error: any) {
-      const errorMessage = error.message || '載入版本歷史失敗';
+    } catch (error: unknown) {
+      const errorMessage = (error instanceof Error ? error.message : String(error)) || '載入版本歷史失敗';
       setLocalError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -161,15 +166,15 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
         success: true,
         message: '歷史記錄更新成功',
       };
-    } catch (error: any) {
-      const errorMessage = error.message || '更新歷史記錄失敗';
+    } catch (error: unknown) {
+      const errorMessage = (error instanceof Error ? error.message : String(error)) || '更新歷史記錄失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'UPDATE_HISTORY_FAILED',
-          details: error.toString(),
+          details: String(error),
         },
       };
     }
@@ -190,15 +195,15 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
         success: true,
         message: '歷史記錄已清除',
       };
-    } catch (error: any) {
-      const errorMessage = error.message || '清除歷史記錄失敗';
+    } catch (error: unknown) {
+      const errorMessage = (error instanceof Error ? error.message : String(error)) || '清除歷史記錄失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'CLEAR_HISTORY_FAILED',
-          details: error.toString(),
+          details: String(error),
         },
       };
     }
@@ -387,8 +392,8 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
       }
       
       throw new Error('不支援的格式');
-    } catch (error: any) {
-      const errorMessage = error.message || '導出統計資訊失敗';
+    } catch (error: unknown) {
+      const errorMessage = (error instanceof Error ? error.message : String(error)) || '導出統計資訊失敗';
       setLocalError(errorMessage);
       throw new Error(errorMessage);
     }

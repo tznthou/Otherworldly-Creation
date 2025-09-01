@@ -259,7 +259,7 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
         hasStoredSelection
       });
     }
-  }, [editor, onEditorReady, saveCurrentSelection, restoreSelection, hasStoredSelection]);
+  }, [editor, onEditorReady]); // 移除可能導致無限循環的函數依賴
 
   // 優化的 onChange 處理（添加selection保存邏輯）
   const handleChange = useCallback((newValue: Descendant[]) => {
@@ -333,7 +333,7 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
         }
       }
     }
-  }, [editor, onSave]);
+  }, [editor, onSave, saveCurrentSelection, hasStoredSelection, restoreSelection]);
 
   // 優化的渲染元素組件
   interface RenderElementProps {

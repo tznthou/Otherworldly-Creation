@@ -25,6 +25,17 @@ const ModalContainer: React.FC = () => {
   const { currentProject } = useAppSelector(state => state.projects);
   const { currentChapter, chapters } = useAppSelector(state => state.chapters);
 
+  // 調試日誌：追蹤 modal 狀態變化
+  React.useEffect(() => {
+    console.log('🔄 [ModalContainer] Modal 狀態更新:', {
+      aiIllustration: modals.aiIllustration,
+      allModals: modals
+    });
+    
+    // 強制顯示當前所有 modal 狀態
+    console.log('🎯 [ModalContainer] 當前所有 modal 狀態:', JSON.stringify(modals, null, 2));
+  }, [modals]);
+
 
   // 章節重新排序處理函數（使用 useCallback 避免無限重新渲染）
   const handleReorderChapters = useCallback(async (reorderedChapters: Chapter[]) => {

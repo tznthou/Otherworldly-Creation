@@ -3,7 +3,14 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import { api } from '../../api';
 
-export type IllustrationProvider = 'pollinations' | 'imagen';
+// 向後兼容的插圖服務提供者類型
+export type IllustrationProvider = 
+  | 'pollinations'          // 原有：免費服務
+  | 'imagen'               // 原有：Google Imagen (付費)
+  | 'gemini'               // 原有：向後兼容（等同於 gemini-flash）
+  | 'gemini-flash'         // 新增：Gemini 2.5 Flash Image (免費)
+  | 'openrouter-free'      // 新增：OpenRouter 免費圖像模型  
+  | 'openrouter-pro';      // 新增：OpenRouter 付費圖像模型
 export type PollinationsModel = 'flux' | 'gptimage' | 'kontext' | 'sdxl';
 export type PollinationsStyle = 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art';
 export type ColorMode = 'color' | 'monochrome';
@@ -40,6 +47,10 @@ export interface UseIllustrationServiceReturn {
   loadApiKeyFromProviders: () => Promise<void>;
   clearApiKey: () => void;
   validateConfiguration: () => { isValid: boolean; errors: string[] };
+  detectAvailableServices: () => Promise<{
+    availableServices: IllustrationProvider[];
+    serviceCapabilities: Record<string, any>;
+  }>;
   
   // 計算值
   isPollinationsFree: boolean;
@@ -150,6 +161,120 @@ export const useIllustrationService = (
       
     } catch (error) {
       console.error('❌ 載入 API Key 失敗:', error);
+    }
+  }, [currentProject]);
+
+  // 智能API檢測 - 分析可用的插畫服務
+  const detectAvailableServices = useCallback(async () => {
+    if (!currentProject) {
+      console.log('⚠️ 沒有當前專案，跳過服務檢測');
+      return {
+        availableServices: ['pollinations'] as IllustrationProvider[], // 預設免費服務
+        serviceCapabilities: {
+          pollinations: { isFree: true, requiresApiKey: false, quality: 'good' }
+        }
+      };
+    }
+
+    try {
+      console.log('🔍 開始檢測可用的插畫服務...');
+      const response = await api.aiProviders.getAll();
+      
+      if (!response.success || !response.providers) {
+        console.log('❌ 無法獲取 AI Providers，僅提供免費服務');
+        return {
+          availableServices: ['pollinations'] as IllustrationProvider[],
+          serviceCapabilities: {
+            pollinations: { isFree: true, requiresApiKey: false, quality: 'good' }
+          }
+        };
+      }
+
+      const availableServices: IllustrationProvider[] = ['pollinations']; // 始終可用
+      const serviceCapabilities: Record<string, any> = {
+        pollinations: { isFree: true, requiresApiKey: false, quality: 'good' }
+      };
+
+      // 檢查 Gemini 提供者
+      const geminiProvider = response.providers.find((p) => 
+        p.provider_type === 'gemini' && p.is_enabled && p.api_key_encrypted
+      );
+      
+      if (geminiProvider?.api_key_encrypted) {
+        // 同時添加 Imagen、Gemini (向後兼容) 和 Gemini Flash Image
+        availableServices.push('imagen', 'gemini', 'gemini-flash');
+        serviceCapabilities.imagen = { 
+          isFree: false, 
+          requiresApiKey: true, 
+          quality: 'premium',
+          provider: 'gemini' 
+        };
+        serviceCapabilities.gemini = { 
+          isFree: true, 
+          requiresApiKey: true, 
+          quality: 'high',
+          provider: 'gemini',
+          alias: 'gemini-flash' // 向後兼容標記
+        };
+        serviceCapabilities['gemini-flash'] = { 
+          isFree: true, 
+          requiresApiKey: true, 
+          quality: 'high',
+          provider: 'gemini' 
+        };
+        console.log('✅ 檢測到 Gemini API - 啟用 Imagen、Gemini 和 Gemini Flash');
+      }
+
+      // 檢查 OpenRouter 提供者
+      const openrouterProvider = response.providers.find((p) => 
+        p.provider_type === 'openrouter' && p.is_enabled && p.api_key_encrypted
+      );
+      
+      if (openrouterProvider?.api_key_encrypted) {
+        const modelName = (openrouterProvider.model || '').toLowerCase();
+        
+        // 根據模型判斷可用服務
+        if (modelName.includes('imagen') || modelName.includes('dall') || modelName.includes('midjourney')) {
+          availableServices.push('openrouter-pro');
+          serviceCapabilities['openrouter-pro'] = { 
+            isFree: false, 
+            requiresApiKey: true, 
+            quality: 'premium',
+            provider: 'openrouter',
+            model: openrouterProvider.model
+          };
+        }
+        
+        // 檢查是否有免費圖像模型
+        if (modelName.includes('free') || modelName.includes('stable-diffusion')) {
+          availableServices.push('openrouter-free');
+          serviceCapabilities['openrouter-free'] = { 
+            isFree: true, 
+            requiresApiKey: true, 
+            quality: 'good',
+            provider: 'openrouter',
+            model: openrouterProvider.model
+          };
+        }
+        
+        console.log(`✅ 檢測到 OpenRouter API - 模型: ${openrouterProvider.model}`);
+      }
+
+      console.log('🎯 檢測結果:', { availableServices, serviceCapabilities });
+      
+      return {
+        availableServices: availableServices.filter((service, index, arr) => arr.indexOf(service) === index), // 去重
+        serviceCapabilities
+      };
+      
+    } catch (error) {
+      console.error('❌ 檢測可用服務失敗:', error);
+      return {
+        availableServices: ['pollinations'] as IllustrationProvider[],
+        serviceCapabilities: {
+          pollinations: { isFree: true, requiresApiKey: false, quality: 'good' }
+        }
+      };
     }
   }, [currentProject]);
 
@@ -273,6 +398,7 @@ export const useIllustrationService = (
     loadApiKeyFromProviders,
     clearApiKey,
     validateConfiguration,
+    detectAvailableServices,
     
     // 計算值
     isPollinationsFree,

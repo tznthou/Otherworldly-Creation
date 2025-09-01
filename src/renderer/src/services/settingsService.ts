@@ -58,6 +58,9 @@ export class SettingsService {
       
       // 通知監聽器
       SettingsWatcher.notifyListeners(settings);
+      
+      // 觸發功能開關重載
+      this.notifyFeatureFlagsUpdate();
     } catch (error) {
       console.error('儲存設定失敗:', error);
       throw error;
@@ -126,6 +129,21 @@ export class SettingsService {
   }
   
   /**
+   * 通知功能開關系統更新
+   */
+  private static notifyFeatureFlagsUpdate() {
+    try {
+      // 派發自定義事件來通知功能開關系統更新
+      window.dispatchEvent(new CustomEvent('settings-updated', {
+        detail: { timestamp: Date.now() }
+      }));
+      console.log('🔄 已通知功能開關系統更新');
+    } catch (error) {
+      console.warn('通知功能開關更新失敗:', error);
+    }
+  }
+
+  /**
    * 驗證設定格式
    */
   static validateSettings(settings: unknown): boolean {
@@ -136,7 +154,7 @@ export class SettingsService {
       }
       
       // 檢查必要的頂層屬性
-      const requiredKeys = ['language', 'autoSave', 'ai', 'editor', 'ui', 'backup', 'privacy', 'shortcuts'];
+      const requiredKeys = ['language', 'ai', 'editor', 'ui', 'backup', 'privacy', 'shortcuts', 'features'];
       for (const key of requiredKeys) {
         if (!(key in settings)) {
           return false;
@@ -204,6 +222,11 @@ export class SettingsService {
       // 快捷鍵設定
       if (settingsObj.shortcuts && typeof settingsObj.shortcuts === 'object') {
         merged.shortcuts = { ...merged.shortcuts, ...settingsObj.shortcuts };
+      }
+      
+      // 功能開關設定
+      if (settingsObj.features && typeof settingsObj.features === 'object') {
+        merged.features = { ...merged.features, ...settingsObj.features };
       }
     }
     

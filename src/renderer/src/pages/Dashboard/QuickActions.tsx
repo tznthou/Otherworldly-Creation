@@ -98,7 +98,9 @@ const QuickActions: React.FC = () => {
       icon: '🖼️',
       color: 'from-pink-500 to-rose-600',
       action: () => {
+        console.log('🎨 [QuickActions] 幻想具現卡片被點擊');
         dispatch(openModal('aiIllustration'));
+        console.log('🎨 [QuickActions] openModal action 已派發完成');
       },
     },
     {

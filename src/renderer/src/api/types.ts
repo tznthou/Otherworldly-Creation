@@ -208,7 +208,7 @@ export interface API {
 
     // 批次管理
     initializeBatchManager: () => Promise<{ success: boolean; message?: string }>;
-    submitBatchRequest: (name: string, projectId: string, requests: BatchRequest[], priority: string, maxParallel: number, apiKey: string) => Promise<{ batchId: string }>;
+    submitBatchRequest: (name: string, projectId: string, requests: BatchRequest[], priority: string, maxParallel: number, apiKey: string, provider?: string) => Promise<{ batchId: string }>;
     getBatchStatus: (batchId: string) => Promise<BatchStatusResponse>;
     cancelBatch: (batchId: string) => Promise<{ success: boolean; message?: string }>;
     getAllBatchesSummary: () => Promise<BatchListResponse>;

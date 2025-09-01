@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { useIllustrationService } from '../../../../hooks/illustration';
 import type { 
   IllustrationProvider, 
@@ -6,6 +6,7 @@ import type {
   PollinationsStyle, 
   ColorMode 
 } from '../../../../hooks/illustration';
+import { FEATURE_FLAGS, debugLog, reloadFeatureFlags } from '../../../../config/features';
 import CosmicInput from '../../../UI/CosmicInput';
 import CosmicButton from '../../../UI/CosmicButton';
 
@@ -62,6 +63,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
     
     // 功能
     validateConfiguration,
+    detectAvailableServices,
     
     // 計算值
     isPollinationsFree,
@@ -69,6 +71,32 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
     serviceDisplayName,
     configurationSummary,
   } = useIllustrationService();
+
+  // 智能服務檢測狀態
+  const [availableServices, setAvailableServices] = useState<IllustrationProvider[]>(['pollinations', 'imagen', 'gemini', 'gemini-flash']);
+  const [serviceCapabilities, setServiceCapabilities] = useState<Record<string, any>>({});
+  const [isDetecting, setIsDetecting] = useState(false);
+  
+  // 監聽功能開關變更
+  const [featureFlags, setFeatureFlags] = useState(FEATURE_FLAGS);
+  
+  useEffect(() => {
+    const handleSettingsChange = () => {
+      console.log('🔄 [ServiceConfigurationPanel] 收到設定變更通知');
+      reloadFeatureFlags();
+      // 強制重新渲染組件以使用新的功能開關
+      const newFlags = {...FEATURE_FLAGS};
+      console.log('🎯 [ServiceConfigurationPanel] 新的功能開關狀態:', newFlags);
+      setFeatureFlags(newFlags);
+    };
+    
+    // 監聽設定變更事件
+    window.addEventListener('settings-updated', handleSettingsChange);
+    
+    return () => {
+      window.removeEventListener('settings-updated', handleSettingsChange);
+    };
+  }, []);
 
   // 配置變更回調
   React.useEffect(() => {
@@ -93,7 +121,105 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
     onConfigurationChange
   ]);
 
+  // 智能服務檢測
+  useEffect(() => {
+    const detectServices = async () => {
+      if (featureFlags.SMART_API_DETECTION && !isDetecting) {
+        setIsDetecting(true);
+        debugLog('開始智能服務檢測...');
+        
+        try {
+          const result = await detectAvailableServices();
+          setAvailableServices(result.availableServices);
+          setServiceCapabilities(result.serviceCapabilities);
+          debugLog('服務檢測完成:', result);
+        } catch (error) {
+          console.error('❌ 服務檢測失敗:', error);
+          // 保持預設服務
+          setAvailableServices(['pollinations', 'imagen']);
+        } finally {
+          setIsDetecting(false);
+        }
+      }
+    };
+
+    detectServices();
+  }, [detectAvailableServices, featureFlags.SMART_API_DETECTION]);
+
   const validation = validateConfiguration();
+
+  // 服務配置映射
+  const getServiceConfig = (service: IllustrationProvider) => {
+    const baseConfigs = {
+      pollinations: {
+        emoji: '🆓',
+        name: 'Pollinations.AI',
+        description: '完全免費・無需API Key',
+        details: '支援多種風格模型',
+        colors: 'border-green-500 bg-gradient-to-br from-green-500/20 to-emerald-500/20',
+        hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
+        textColor: 'text-green-400',
+        isFree: true
+      },
+      imagen: {
+        emoji: '💎',
+        name: 'Google Imagen',
+        description: '高品質專業級',
+        details: '需要 API Key',
+        colors: 'border-blue-500 bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
+        hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
+        textColor: 'text-blue-400',
+        isFree: false
+      },
+      gemini: {
+        emoji: '⚡',
+        name: 'Gemini Flash',
+        description: '快速免費・需要API',
+        details: '向後兼容模式',
+        colors: 'border-yellow-500 bg-gradient-to-br from-yellow-500/20 to-orange-500/20',
+        hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
+        textColor: 'text-yellow-400',
+        isFree: true
+      },
+      'gemini-flash': {
+        emoji: '⚡',
+        name: 'Gemini Flash Image',
+        description: '快速高品質・免費',
+        details: 'Gemini 2.5 Flash',
+        colors: 'border-yellow-500 bg-gradient-to-br from-yellow-500/20 to-orange-500/20',
+        hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
+        textColor: 'text-yellow-400',
+        isFree: true
+      },
+      'openrouter-free': {
+        emoji: '🌐',
+        name: 'OpenRouter 免費',
+        description: '多模型選擇・免費',
+        details: 'Stable Diffusion等',
+        colors: 'border-purple-500 bg-gradient-to-br from-purple-500/20 to-pink-500/20',
+        hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
+        textColor: 'text-purple-400',
+        isFree: true
+      },
+      'openrouter-pro': {
+        emoji: '🚀',
+        name: 'OpenRouter 專業',
+        description: '頂級模型・付費',
+        details: 'DALL-E、Midjourney等',
+        colors: 'border-indigo-500 bg-gradient-to-br from-indigo-500/20 to-blue-500/20',
+        hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
+        textColor: 'text-indigo-400',
+        isFree: false
+      }
+    };
+
+    return baseConfigs[service] || baseConfigs.pollinations;
+  };
+
+  // 決定要顯示的服務列表
+  const servicesToShow = featureFlags.EXTENDED_ILLUSTRATION_SERVICES 
+    ? availableServices 
+    : ['pollinations', 'imagen'];
 
   return (
     <div className={`service-configuration-panel ${className}`}>
@@ -138,41 +264,68 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
       {/* 插畫服務選擇器 */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-300 mb-3">
-          🤖 插畫服務 <span className="text-gray-400">(選擇生成服務)</span>
+          🤖 插畫服務 
+          <span className="text-gray-400">(選擇生成服務)</span>
+          {isDetecting && featureFlags.SMART_API_DETECTION && (
+            <span className="ml-2 text-xs text-yellow-400">🔍 檢測中...</span>
+          )}
         </label>
+        
+        {/* 動態服務網格 - 左側面板優化：2x2 網格 */}
         <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => setIllustrationProvider('pollinations')}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              illustrationProvider === 'pollinations'
-                ? 'border-green-500 bg-gradient-to-br from-green-500/20 to-emerald-500/20'
-                : 'border-gray-600 bg-gray-700 hover:border-gray-500'
-            }`}
-          >
-            <div className="text-center">
-              <div className="text-3xl mb-2">🆓</div>
-              <div className="font-medium text-white">Pollinations.AI</div>
-              <div className="text-xs text-green-400 mt-1">完全免費・無需API Key</div>
-              <div className="text-xs text-gray-400 mt-1">支援多種風格模型</div>
-            </div>
-          </button>
-          
-          <button
-            onClick={() => setIllustrationProvider('imagen')}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              illustrationProvider === 'imagen'
-                ? 'border-blue-500 bg-gradient-to-br from-blue-500/20 to-cyan-500/20'
-                : 'border-gray-600 bg-gray-700 hover:border-gray-500'
-            }`}
-          >
-            <div className="text-center">
-              <div className="text-3xl mb-2">💎</div>
-              <div className="font-medium text-white">Google Imagen</div>
-              <div className="text-xs text-blue-400 mt-1">高品質專業級</div>
-              <div className="text-xs text-gray-400 mt-1">需要 API Key</div>
-            </div>
-          </button>
+          {servicesToShow.map((service) => {
+            const config = getServiceConfig(service as IllustrationProvider);
+            const isSelected = illustrationProvider === service;
+            
+            return (
+              <button
+                key={service}
+                onClick={() => setIllustrationProvider(service as IllustrationProvider)}
+                className={`p-3 rounded-lg border-2 transition-all ${
+                  isSelected ? config.colors : config.hoverColors
+                }`}
+                disabled={isDetecting}
+              >
+                <div className="text-center">
+                  <div className="text-2xl mb-2">{config.emoji}</div>
+                  <div className="font-medium text-white text-xs mb-1">{config.name}</div>
+                  <div className={`text-xs ${config.textColor} mb-1`}>
+                    {config.description}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {config.details}
+                  </div>
+                  
+                  {/* 服務品質指標 */}
+                  {featureFlags.EXTENDED_ILLUSTRATION_SERVICES && serviceCapabilities[service] && (
+                    <div className="mt-2 flex justify-center">
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        serviceCapabilities[service].quality === 'premium' 
+                          ? 'bg-gold-500/20 text-gold-300' 
+                          : serviceCapabilities[service].quality === 'high'
+                          ? 'bg-blue-500/20 text-blue-300'
+                          : 'bg-green-500/20 text-green-300'
+                      }`}>
+                        {serviceCapabilities[service].quality === 'premium' ? '👑 頂級' :
+                         serviceCapabilities[service].quality === 'high' ? '⭐ 高品質' : '✅ 良好'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
+        
+        {/* 擴展服務提示 */}
+        {!featureFlags.EXTENDED_ILLUSTRATION_SERVICES && (
+          <div className="mt-3 p-3 bg-blue-900/20 border border-blue-700 rounded-lg">
+            <div className="text-sm text-blue-300">
+              💡 <strong>提示：</strong> 更多 AI 插畫服務（如 Gemini Flash、OpenRouter）可在 
+              <strong className="text-blue-200 mx-1">設定 → 一般 → AI 插畫功能設定</strong> 中啟用
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Pollinations 模型和風格選擇 */}

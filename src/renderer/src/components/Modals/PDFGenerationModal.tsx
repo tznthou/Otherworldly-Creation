@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
 import { addNotification } from '../../store/slices/uiSlice';
 import { api } from '../../api';
-import type { PDFGenerationOptions, PageSizeType } from '../../api/models';
+import type { PDFGenerationOptions, PageSizeType, PDFResult } from '../../api/models';
 
 interface PDFGenerationProgress {
   stage: 'preparing' | 'converting' | 'font-loading' | 'generating' | 'complete' | 'error';
@@ -196,7 +196,7 @@ const PDFGenerationModal: React.FC = () => {
         setTimeout(() => reject(new Error('PDF生成超時（超過10分鐘），可能字體處理遇到問題，請檢查後端日誌')), 600000)
       );
 
-      const result = await Promise.race([pdfGenerationPromise, timeoutPromise]) as any;
+      const result = await Promise.race([pdfGenerationPromise, timeoutPromise]) as PDFResult;
 
       // 完成狀態
       setProgress({
@@ -597,13 +597,14 @@ const PDFGenerationModal: React.FC = () => {
                     title: '測試完成',
                     message: 'PDF 測試生成成功！'
                   }));
-                } catch (error: any) {
+                } catch (error: unknown) {
                   console.error('❌ 測試PDF生成失敗:', error);
+                  const errorMessage = error instanceof Error ? error.message : '未知錯誤';
                   setProgress({
                     stage: 'error',
                     progress: 0,
                     totalChapters: 0,
-                    message: '❌ 測試失敗: ' + error.message
+                    message: '❌ 測試失敗: ' + errorMessage
                   });
                 } finally {
                   setGenerating(false);

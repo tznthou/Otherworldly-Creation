@@ -6,7 +6,7 @@ export class ExportError extends Error {
     message: string,
     public readonly taskId: string,
     public readonly code: string,
-    public readonly details?: any
+    public readonly details?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'ExportError';

@@ -25,7 +25,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
   selectedCharacters,
   sceneType,
   currentPrompt,
-  styleTemplate,
+  styleTemplate: _styleTemplate,
   onPromptSelect,
   onPromptOptimize,
   className = ''
@@ -38,7 +38,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
   const [activeTab, setActiveTab] = useState<'suggestions' | 'analysis' | 'history' | 'favorites'>('suggestions');
   const [suggestions, setSuggestions] = useState<SuggestionCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [analysisResult, setAnalysisResult] = useState<Record<string, unknown> | null>(null);
 
   // 生成智能建議
   const generateSuggestions = useCallback(async () => {
@@ -79,13 +79,25 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
       const suggestions = await promptIntelligence.generateSuggestions(request);
       
       // 轉換為 SuggestionCard 格式
-      const suggestionCards: SuggestionCard[] = suggestions.map((suggestion) => ({
-        id: suggestion.id,
-        prompt: suggestion.text,
-        confidence: suggestion.confidence,
-        category: suggestion.category as any,
-        reasoning: suggestion.description || '智能分析建議'
-      }));
+      const suggestionCards: SuggestionCard[] = suggestions.map((suggestion) => {
+        // 將原始類別映射到 SuggestionCard 的類別
+        let mappedCategory: SuggestionCard['category'] = 'character';
+        const categoryStr = String(suggestion.category);
+        if (categoryStr === 'portrait') mappedCategory = 'character';
+        else if (categoryStr === 'scene') mappedCategory = 'scene';
+        else if (categoryStr === 'interaction') mappedCategory = 'composition';
+        else if (categoryStr === 'character' || categoryStr === 'style' || categoryStr === 'composition') {
+          mappedCategory = categoryStr as SuggestionCard['category'];
+        }
+
+        return {
+          id: suggestion.id,
+          prompt: suggestion.text,
+          confidence: suggestion.confidence,
+          category: mappedCategory,
+          reasoning: suggestion.description || '智能分析建議'
+        };
+      });
 
       setSuggestions(suggestionCards);
     } catch (error) {
@@ -93,7 +105,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [selectedCharacters, sceneType, styleTemplate]);
+  }, [selectedCharacters, sceneType]);
 
   // 分析當前提示詞
   const analyzeCurrentPrompt = useCallback(async () => {
@@ -101,7 +113,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
 
     try {
       const analysis = await promptIntelligence.analyzePrompt(currentPrompt);
-      setAnalysisResult(analysis);
+      setAnalysisResult(analysis as unknown as Record<string, unknown>);
     } catch (error) {
       console.error('Failed to analyze prompt:', error);
     }
@@ -142,17 +154,19 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
     }
   }, []);
 
-  // 初始化建議
+  // 初始化建議 - 修復無限循環問題
   useEffect(() => {
-    generateSuggestions();
-  }, [generateSuggestions]);
+    if (selectedCharacters.length > 0) {
+      generateSuggestions();
+    }
+  }, [selectedCharacters, sceneType]); // 只依賴實際數據，不依賴函數
 
   // 分析當前提示詞
   useEffect(() => {
     if (currentPrompt && activeTab === 'analysis') {
       analyzeCurrentPrompt();
     }
-  }, [currentPrompt, activeTab, analyzeCurrentPrompt]);
+  }, [currentPrompt, activeTab]); // 只依賴實際數據
 
   // 渲染信心度指示器
   const renderConfidenceIndicator = (confidence: number) => {
@@ -241,28 +255,28 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
               <span className="text-cosmic-400">複雜度:</span>
-              <span className="ml-2 text-cosmic-200">{analysisResult.complexity}/10</span>
+              <span className="ml-2 text-cosmic-200">{String(analysisResult.complexity)}/10</span>
             </div>
             <div>
               <span className="text-cosmic-400">清晰度:</span>
-              <span className="ml-2 text-cosmic-200">{analysisResult.clarity}/10</span>
+              <span className="ml-2 text-cosmic-200">{String(analysisResult.clarity)}/10</span>
             </div>
             <div>
               <span className="text-cosmic-400">創意性:</span>
-              <span className="ml-2 text-cosmic-200">{analysisResult.creativity}/10</span>
+              <span className="ml-2 text-cosmic-200">{String(analysisResult.creativity)}/10</span>
             </div>
             <div>
               <span className="text-cosmic-400">可執行性:</span>
-              <span className="ml-2 text-cosmic-200">{analysisResult.feasibility}/10</span>
+              <span className="ml-2 text-cosmic-200">{String(analysisResult.feasibility)}/10</span>
             </div>
           </div>
         </div>
 
-        {analysisResult.suggestions && analysisResult.suggestions.length > 0 && (
+        {analysisResult.suggestions && Array.isArray(analysisResult.suggestions) && analysisResult.suggestions.length > 0 ? (
           <div className="bg-cosmic-700/50 border border-cosmic-600 rounded-lg p-4">
             <h4 className="text-sm font-medium text-gold-500 mb-2">💡 改進建議</h4>
             <ul className="space-y-2">
-              {analysisResult.suggestions.map((suggestion: string, index: number) => (
+              {(analysisResult.suggestions as string[]).map((suggestion: string, index: number) => (
                 <li key={index} className="text-xs text-cosmic-200 flex items-start">
                   <span className="text-gold-400 mr-2">•</span>
                   {suggestion}
@@ -270,7 +284,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
               ))}
             </ul>
           </div>
-        )}
+        ) : null}
 
         <button
           onClick={() => optimizePrompt(currentPrompt)}

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { selectEditorSettings, selectIsReadingMode, toggleReadingMode } from '../../store/slices/editorSlice';
 import { Descendant } from 'slate';
+import { ReactEditor } from 'slate-react';
+import SlateEditor from './SlateEditor';
 
 interface ReadingModeOverlayProps {
   children: React.ReactNode;
@@ -11,10 +13,16 @@ interface ReadingModeOverlayProps {
     content: Descendant[];
     chapterNumber?: number;
     order?: number;
+    wordCount?: number;
   } | null;
+  onEditorReady?: (editor: ReactEditor) => void;
 }
 
-const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({ children, currentChapter }) => {
+const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({ 
+  children, 
+  currentChapter,
+  onEditorReady
+}) => {
   const dispatch = useAppDispatch();
   const settings = useAppSelector(selectEditorSettings);
   const isReadingMode = useAppSelector(selectIsReadingMode);
@@ -77,96 +85,112 @@ const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({ children, curre
   
   console.log('ReadingModeOverlay: In reading mode, applying overlay');
 
-  // 渲染章節內容為純文字
-  const renderChapterContent = () => {
+  // 計算字數
+  const getWordCount = () => {
     if (!currentChapter?.content || !Array.isArray(currentChapter.content)) {
-      return <p className="text-gray-400 italic">沒有內容可顯示</p>;
+      return 0;
     }
-
-    return currentChapter.content.map((node: Descendant, index) => {
+    
+    let totalChars = 0;
+    currentChapter.content.forEach((node: Descendant) => {
       if ('type' in node && node.type === 'paragraph' && 'children' in node) {
-        const text = node.children.map((child: Descendant) => {
+        node.children.forEach((child: Descendant) => {
           if ('text' in child && typeof child.text === 'string') {
-            return child.text;
+            totalChars += child.text.length;
           }
-          return '';
-        }).join('') || '';
-        
-        return text.trim() ? (
-          <p key={index} className="mb-4" style={{ textIndent: '2em' }}>
-            {text}
-          </p>
-        ) : <br key={index} />;
+        });
       }
-      return null;
-    }).filter(Boolean);
+    });
+    return totalChars;
   };
+
+  const wordCount = getWordCount();
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black transition-all duration-300"
+      className="fixed inset-0 z-50 transition-all duration-300"
       style={{ 
-        backgroundColor: settings.backgroundColor,
-        opacity: settings.readingModeOpacity 
+        backgroundColor: settings.backgroundColor || '#0A1128'
       }}
       onMouseMove={handleMouseMove}
     >
       {/* 背景遮罩 */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10" />
       
-      {/* 主要內容區域 */}
-      <div 
-        className="relative h-full overflow-y-auto"
-        style={{
-          maxWidth: `${settings.readingModeWidth}px`,
-          margin: '0 auto',
-          padding: '2rem'
-        }}
-      >
-        {/* 章節標題 */}
-        {currentChapter && (
-          <div className="mb-8 text-center border-b border-gray-600 pb-6">
-            <h1 
-              className="text-2xl font-bold mb-2"
-              style={{ 
-                color: settings.textColor,
-                fontFamily: settings.fontFamily 
-              }}
-            >
-              第 {currentChapter.chapterNumber || currentChapter.order || '1'} 章
-            </h1>
-            <h2 
-              className="text-xl"
-              style={{ 
-                color: settings.textColor,
-                fontFamily: settings.fontFamily 
-              }}
-            >
-              {currentChapter.title}
-            </h2>
-          </div>
-        )}
-        
-        {/* 內容 */}
+      {/* 主要編輯區域 */}
+      <div className="relative h-full flex flex-col">
+        {/* 頂部標題欄 */}
         <div 
-          className="prose prose-lg max-w-none"
-          style={{
-            fontFamily: settings.fontFamily,
-            fontSize: `${settings.fontSize}px`,
-            fontWeight: settings.fontWeight,
-            lineHeight: settings.lineHeight,
-            letterSpacing: `${settings.letterSpacing}px`,
-            textAlign: settings.textAlign,
-            color: settings.textColor
+          className={`transition-all duration-300 border-b ${
+            showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'
+          }`}
+          style={{ 
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)'
           }}
         >
-          {renderChapterContent()}
+          <div className="px-8 py-4">
+            {currentChapter && (
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 
+                    className="text-xl font-bold"
+                    style={{ 
+                      color: settings.textColor || '#FFD700',
+                      fontFamily: settings.fontFamily 
+                    }}
+                  >
+                    第 {currentChapter.chapterNumber || currentChapter.order || '1'} 章 - {currentChapter.title}
+                  </h1>
+                </div>
+                <div className="flex items-center space-x-4 text-sm" style={{ color: settings.textColor }}>
+                  <span>{wordCount} 字</span>
+                  <span className="text-blue-400">閱讀模式</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 編輯器容器 */}
+        <div className="flex-1 overflow-hidden">
+          <div 
+            className="h-full mx-auto px-8 py-6 overflow-y-auto"
+            style={{
+              maxWidth: `${Math.max(settings.readingModeWidth || 800, 800)}px`
+            }}
+          >
+            {currentChapter ? (
+              <SlateEditor
+                key={`reading-editor-${currentChapter.id}`}
+                value={currentChapter.content || [{ type: 'paragraph', children: [{ text: '' }] }]}
+                onChange={() => {}} // 閱讀模式不允許編輯
+                placeholder="閱讀模式 - 享受沉浸式閱讀體驗..."
+                onEditorReady={onEditorReady}
+                isSaving={false}
+                showToolbar={false} // 閱讀模式隱藏工具欄
+                autoFocus={false} // 閱讀模式不自動聚焦
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center" style={{ color: settings.textColor }}>
+                  <div className="text-6xl mb-6">📖</div>
+                  <h2 className="text-2xl font-bold mb-4">
+                    閱讀模式
+                  </h2>
+                  <p className="text-gray-400">
+                    選擇一個章節開始閱讀
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* 控制欄 */}
       <div 
-        className={`fixed top-4 right-4 flex items-center space-x-2 transition-all duration-300 ${
+        className={`fixed top-16 right-4 flex flex-col space-y-2 transition-all duration-300 ${
           showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
         }`}
       >
@@ -217,7 +241,12 @@ const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({ children, curre
         }`}
       >
         <div className="bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2 text-white text-sm">
-          按 <kbd className="px-2 py-1 bg-white/20 rounded">Esc</kbd> 退出閱讀模式
+          <div className="flex items-center space-x-4">
+            <kbd className="px-2 py-1 bg-white/20 rounded">Esc</kbd>
+            <span>退出閱讀模式</span>
+            <kbd className="px-2 py-1 bg-white/20 rounded">F11</kbd>
+            <span>全螢幕</span>
+          </div>
         </div>
       </div>
     </div>

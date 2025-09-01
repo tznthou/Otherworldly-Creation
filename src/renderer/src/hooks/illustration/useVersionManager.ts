@@ -11,6 +11,24 @@ import {
   VersionTreeNode,
 } from '../../types/versionManagement';
 
+// 錯誤處理助手函數
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return String(error);
+};
+
+const getErrorString = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.toString();
+  }
+  return String(error);
+};
+
 // 返回類型定義
 export interface UseVersionManagerReturn {
   // 狀態
@@ -139,15 +157,15 @@ export const useVersionManager = (): UseVersionManagerReturn => {
       }
 
       return result;
-    } catch (error: any) {
-      const errorMessage = error.message || '創建版本失敗';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || '創建版本失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'CREATE_FAILED',
-          details: error.toString(),
+          details: getErrorString(error),
         },
       };
     }
@@ -180,15 +198,15 @@ export const useVersionManager = (): UseVersionManagerReturn => {
       }
 
       return result;
-    } catch (error: any) {
-      const errorMessage = error.message || '更新版本失敗';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || '更新版本失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'UPDATE_FAILED',
-          details: error.toString(),
+          details: getErrorString(error),
         },
       };
     }
@@ -218,15 +236,15 @@ export const useVersionManager = (): UseVersionManagerReturn => {
       }
 
       return result;
-    } catch (error: any) {
-      const errorMessage = error.message || '刪除版本失敗';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || '刪除版本失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'DELETE_FAILED',
-          details: error.toString(),
+          details: getErrorString(error),
         },
       };
     }
@@ -260,15 +278,15 @@ export const useVersionManager = (): UseVersionManagerReturn => {
       };
 
       return await createVersion(duplicatedData);
-    } catch (error: any) {
-      const errorMessage = error.message || '複製版本失敗';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || '複製版本失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'DUPLICATE_FAILED',
-          details: error.toString(),
+          details: getErrorString(error),
         },
       };
     }
@@ -301,15 +319,15 @@ export const useVersionManager = (): UseVersionManagerReturn => {
       }
 
       return result;
-    } catch (error: any) {
-      const errorMessage = error.message || '創建分支失敗';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || '創建分支失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'CREATE_BRANCH_FAILED',
-          details: error.toString(),
+          details: getErrorString(error),
         },
       };
     }
@@ -332,15 +350,15 @@ export const useVersionManager = (): UseVersionManagerReturn => {
         success: true,
         message: `已切換到分支：${branch.name}`,
       };
-    } catch (error: any) {
-      const errorMessage = error.message || '切換分支失敗';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || '切換分支失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'SWITCH_BRANCH_FAILED',
-          details: error.toString(),
+          details: getErrorString(error),
         },
       };
     }
@@ -362,15 +380,15 @@ export const useVersionManager = (): UseVersionManagerReturn => {
           details: 'Branch merging feature is not implemented yet',
         },
       };
-    } catch (error: any) {
-      const errorMessage = error.message || '合併分支失敗';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || '合併分支失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'MERGE_BRANCH_FAILED',
-          details: error.toString(),
+          details: getErrorString(error),
         },
       };
     }
@@ -507,8 +525,8 @@ export const useVersionManager = (): UseVersionManagerReturn => {
       setLocalError(null);
       const result = await dispatch(exportVersionsAsync(options)).unwrap();
       return result;
-    } catch (error: any) {
-      const errorMessage = error.message || '導出版本失敗';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || '導出版本失敗';
       setLocalError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -526,15 +544,15 @@ export const useVersionManager = (): UseVersionManagerReturn => {
       }
       
       return result;
-    } catch (error: any) {
-      const errorMessage = error.message || '匯入版本失敗';
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error) || '匯入版本失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'IMPORT_FAILED',
-          details: error.toString(),
+          details: getErrorString(error),
         },
       };
     }

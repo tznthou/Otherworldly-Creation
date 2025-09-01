@@ -16,7 +16,7 @@ export const ModularizedBatchPanel: React.FC = () => {
   const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
   const [selectedCharacterData, setSelectedCharacterData] = useState<Character[]>([]);
   const [sceneType, setSceneType] = useState<'portrait' | 'scene' | 'interaction'>('portrait');
-  const [serviceConfig, setServiceConfig] = useState<any>(null);
+  const [serviceConfig, setServiceConfig] = useState<Record<string, unknown> | null>(null);
   const [showDemo, setShowDemo] = useState(true);
 
   // 處理角色選擇變更
@@ -33,7 +33,7 @@ export const ModularizedBatchPanel: React.FC = () => {
   }, []);
 
   // 處理服務配置變更
-  const handleServiceConfigChange = useCallback((config: any) => {
+  const handleServiceConfigChange = useCallback((config: Record<string, unknown>) => {
     setServiceConfig(config);
     console.log('🤖 服務配置更新:', config);
   }, []);
@@ -144,11 +144,11 @@ export const ModularizedBatchPanel: React.FC = () => {
                 <div className="text-sm text-gray-300 space-y-1">
                   {serviceConfig ? (
                     <>
-                      <div>服務: {serviceConfig.provider}</div>
-                      <div>色彩: {serviceConfig.colorMode}</div>
+                      <div>服務: {String(serviceConfig.provider)}</div>
+                      <div>色彩: {String(serviceConfig.colorMode)}</div>
                       <div>狀態: {serviceConfig.isValid ? '✅ 有效' : '❌ 無效'}</div>
                       {serviceConfig.pollinationsModel && (
-                        <div>模型: {serviceConfig.pollinationsModel}</div>
+                        <div>模型: {String(serviceConfig.pollinationsModel)}</div>
                       )}
                     </>
                   ) : (

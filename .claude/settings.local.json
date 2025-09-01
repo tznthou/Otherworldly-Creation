@@ -94,7 +94,15 @@
       "Bash(else)",
       "Bash(echo \"File exists for ID: $id\")",
       "Bash(fi)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(pkill:*)",
+      "Read(/Users/tznthou/Documents/Practice/**)",
+      "Bash(npm run:*)",
+      "WebFetch(domain:openrouter.ai)",
+      "mcp__serena__find_referencing_symbols",
+      "Bash(pip --version)",
+      "Bash(uv:*)",
+      "Read(/Users/tznthou/Documents/Practice/6/**)"
     ],
     "deny": [],
     "ask": [],

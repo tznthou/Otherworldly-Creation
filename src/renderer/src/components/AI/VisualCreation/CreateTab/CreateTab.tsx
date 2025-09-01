@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../../../../store/store';
 
@@ -70,8 +70,8 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
   const [sceneDescription, setSceneDescription] = useState('');
   const [batchRequests, setBatchRequests] = useState<BatchRequest[]>([]);
 
-  // 快速模板預設
-  const quickTemplates = [
+  // 快速模板預設 - 使用 useMemo 避免每次渲染重新創建
+  const quickTemplates = useMemo(() => [
     {
       id: 'isekai',
       name: '🌟 異世界轉生',
@@ -120,7 +120,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
         '在機甲格納庫的準備場景'
       ]
     }
-  ];
+  ], []);
 
   const [selectedQuickTemplate, setSelectedQuickTemplate] = useState<string | null>(null);
 
@@ -219,7 +219,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     setSceneDescription('');
     
     console.log('📋 [CreateTab] 已添加批次請求:', request);
-  }, [selectedCharacters, sceneType, sceneDescription, artStyle, batchRequests, dispatch]);
+  }, [selectedCharacters, sceneType, sceneDescription, artStyle, batchRequests, buildEnrichedPrompt, dispatch]);
 
   // 執行批次生成
   const handleBatchGenerate = useCallback(async () => {
@@ -291,7 +291,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       console.error('❌ [CreateTab] 批次生成失敗:', error);
       dispatch(setError(error instanceof Error ? error.message : '批次生成失敗'));
     }
-  }, [batchRequests, currentProject, dispatch, currentProvider]);
+  }, [batchRequests, currentProject, dispatch, artStyle]);
 
   // 移除批次請求
   const handleRemoveBatchRequest = useCallback((requestId: string) => {
@@ -369,7 +369,11 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
               <span className="px-2 py-1 bg-cosmic-600 rounded text-xs">{batchRequests.length}</span>
             </div>
             <div className="text-xs text-cosmic-400">
-              服務: {currentProvider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}
+              服務: {
+                currentProvider === 'pollinations' ? 'Pollinations.AI (免費)' :
+                currentProvider === 'imagen' ? 'Google Imagen (付費)' :
+                currentProvider === 'gemini' ? 'Gemini 2.5 Flash Image Preview' : '未知服務'
+              }
             </div>
           </div>
 

@@ -33,11 +33,11 @@ const ChapterStatusPage: React.FC = () => {
         const chaptersData = await api.chapters.getByProjectId(projectId);
         
         // 計算字數的輔助函數
-        const calculateWordCount = (content: any[]): number => {
+        const calculateWordCount = (content: unknown[]): number => {
           if (!content || !Array.isArray(content)) return 0;
           
           let totalCount = 0;
-          const processNode = (node: any) => {
+          const processNode = (node: Record<string, unknown>) => {
             if (node.text && typeof node.text === 'string') {
               // 計算中文字符數，移除空白字符
               totalCount += node.text.replace(/\s/g, '').length;
@@ -47,7 +47,11 @@ const ChapterStatusPage: React.FC = () => {
             }
           };
           
-          content.forEach(processNode);
+          content.forEach((item: unknown) => {
+            if (typeof item === 'object' && item !== null) {
+              processNode(item as Record<string, unknown>);
+            }
+          });
           return totalCount;
         };
 

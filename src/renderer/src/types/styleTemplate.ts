@@ -50,7 +50,7 @@ export interface StyleTemplate {
   tags: string[];
   
   // 兼容性
-  supportedProviders: ('pollinations' | 'imagen')[];
+  supportedProviders: ('pollinations' | 'imagen' | 'gemini-free' | 'gemini-paid')[];
 }
 
 // 風格模板類別資訊
@@ -81,7 +81,7 @@ export interface CreateStyleTemplateRequest {
   description: string;
   parameters: StyleTemplate['parameters'];
   tags: string[];
-  supportedProviders: ('pollinations' | 'imagen')[];
+  supportedProviders: ('pollinations' | 'imagen' | 'gemini-free' | 'gemini-paid')[];
 }
 
 export interface UpdateStyleTemplateRequest extends Partial<CreateStyleTemplateRequest> {

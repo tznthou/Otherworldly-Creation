@@ -29,11 +29,11 @@ const VirtualizedContainer: React.FC<VirtualizedContainerProps> = ({
       resizeObserver.observe(containerRef.current);
     }
 
-    // 清理
+    // 清理 - 在外部保存 ref 的值
+    const currentContainer = containerRef.current;
     return () => {
-      const container = containerRef.current;
-      if (container) {
-        resizeObserver.unobserve(container);
+      if (currentContainer) {
+        resizeObserver.unobserve(currentContainer);
       }
       resizeObserver.disconnect();
     };

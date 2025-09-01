@@ -417,6 +417,17 @@ export function usePromptIntelligence(
     return combined;
   }, []);
 
+  // 提取關鍵詞
+  const extractKeywords = useCallback((text: string): string[] => {
+    // 簡單的關鍵詞提取邏輯
+    const words = text.toLowerCase()
+      .split(/[,\s]+/)
+      .filter(word => word.length > 2)
+      .filter(word => !['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word));
+    
+    return [...new Set(words)];
+  }, []);
+
   // 添加到歷史
   const addToHistory = useCallback((prompt: string, metadata: Partial<PromptHistory> = {}) => {
     if (!enablePromptHistory) return;
@@ -435,18 +446,7 @@ export function usePromptIntelligence(
       ...prev,
       promptHistory: [historyItem, ...prev.promptHistory.slice(0, maxHistorySize - 1)]
     }));
-  }, [enablePromptHistory, maxHistorySize]);
-
-  // 提取關鍵詞
-  const extractKeywords = useCallback((text: string): string[] => {
-    // 簡單的關鍵詞提取邏輯
-    const words = text.toLowerCase()
-      .split(/[,\s]+/)
-      .filter(word => word.length > 2)
-      .filter(word => !['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word));
-    
-    return [...new Set(words)];
-  }, []);
+  }, [enablePromptHistory, maxHistorySize, extractKeywords]);
 
   // 建議負面提示詞
   const suggestNegativePrompts = useCallback((positivePrompts: string[]): string[] => {

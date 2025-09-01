@@ -90,8 +90,8 @@ export const useVersionComparison = (): UseVersionComparisonReturn => {
       dispatch(setShowComparisonPanel(true));
 
       return comparison;
-    } catch (error: any) {
-      const errorMessage = error.message || '版本比較失敗';
+    } catch (error: unknown) {
+      const errorMessage = (error instanceof Error ? error.message : String(error)) || '版本比較失敗';
       setLocalError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -114,15 +114,15 @@ export const useVersionComparison = (): UseVersionComparisonReturn => {
           });
         }, 500);
       });
-    } catch (error: any) {
-      const errorMessage = error.message || '儲存比較結果失敗';
+    } catch (error: unknown) {
+      const errorMessage = (error instanceof Error ? error.message : String(error)) || '儲存比較結果失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'SAVE_COMPARISON_FAILED',
-          details: error.toString(),
+          details: String(error),
         },
       };
     }
@@ -145,18 +145,122 @@ export const useVersionComparison = (): UseVersionComparisonReturn => {
           });
         }, 300);
       });
-    } catch (error: any) {
-      const errorMessage = error.message || '刪除比較記錄失敗';
+    } catch (error: unknown) {
+      const errorMessage = (error instanceof Error ? error.message : String(error)) || '刪除比較記錄失敗';
       setLocalError(errorMessage);
       return {
         success: false,
         message: errorMessage,
         error: {
           code: 'DELETE_COMPARISON_FAILED',
-          details: error.toString(),
+          details: String(error),
         },
       };
     }
+  }, []);
+
+  // 文字相似度計算 (簡化版的 Jaccard 相似度)
+  const calculateTextSimilarity = useCallback((text1: string, text2: string): number => {
+    if (!text1 && !text2) return 1;
+    if (!text1 || !text2) return 0;
+
+    // 將文字轉換為詞彙集合
+    const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 0));
+    const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(w => w.length > 0));
+
+    // 計算交集和聯集
+    const intersection = new Set([...words1].filter(w => words2.has(w)));
+    const union = new Set([...words1, ...words2]);
+
+    return union.size > 0 ? intersection.size / union.size : 0;
+  }, []);
+
+  // AI 參數相似度計算
+  const calculateParameterSimilarity = useCallback((params1: Record<string, unknown>, params2: Record<string, unknown>): number => {
+    let similarity = 0;
+    let count = 0;
+
+    // 模型相同性
+    if (params1.model === params2.model) similarity += 1;
+    count++;
+
+    // 提供商相同性
+    if (params1.provider === params2.provider) similarity += 1;
+    count++;
+
+    // 種子值相似度
+    if (params1.seed !== undefined && params2.seed !== undefined) {
+      similarity += params1.seed === params2.seed ? 1 : 0;
+      count++;
+    }
+
+    // 指導值相似度
+    if (params1.guidance !== undefined && params2.guidance !== undefined && 
+        typeof params1.guidance === 'number' && typeof params2.guidance === 'number') {
+      const guidanceDiff = Math.abs(params1.guidance - params2.guidance);
+      similarity += Math.max(0, 1 - guidanceDiff / 10); // 假設最大差異為10
+      count++;
+    }
+
+    // 步數相似度
+    if (params1.steps !== undefined && params2.steps !== undefined &&
+        typeof params1.steps === 'number' && typeof params2.steps === 'number') {
+      const stepsDiff = Math.abs(params1.steps - params2.steps);
+      similarity += Math.max(0, 1 - stepsDiff / 50); // 假設最大差異為50
+      count++;
+    }
+
+    // 增強設定相同性
+    if (params1.enhance === params2.enhance) similarity += 1;
+    count++;
+
+    // 風格相同性
+    if (params1.style === params2.style) similarity += 1;
+    count++;
+
+    return count > 0 ? similarity / count : 0;
+  }, []);
+
+  // 尺寸相似度計算
+  const calculateDimensionSimilarity = useCallback((dim1: { width?: number; height?: number } | null, dim2: { width?: number; height?: number } | null): number => {
+    if (!dim1 || !dim2 || !dim1.width || !dim1.height || !dim2.width || !dim2.height) return 0;
+
+    const widthRatio = Math.min(dim1.width, dim2.width) / Math.max(dim1.width, dim2.width);
+    const heightRatio = Math.min(dim1.height, dim2.height) / Math.max(dim1.height, dim2.height);
+
+    return (widthRatio + heightRatio) / 2;
+  }, []);
+
+  // 標籤相似度計算
+  const calculateTagSimilarity = useCallback((tags1: string[] | undefined, tags2: string[] | undefined): number => {
+    if (!tags1?.length && !tags2?.length) return 1;
+    if (!tags1?.length || !tags2?.length) return 0;
+
+    const tagNames1 = new Set(tags1.map(tag => typeof tag === 'string' ? tag.toLowerCase() : ''));
+    const tagNames2 = new Set(tags2.map(tag => typeof tag === 'string' ? tag.toLowerCase() : ''));
+
+    const intersection = new Set([...tagNames1].filter(tag => tagNames2.has(tag)));
+    const union = new Set([...tagNames1, ...tagNames2]);
+
+    return union.size > 0 ? intersection.size / union.size : 0;
+  }, []);
+
+  // 檔案大小相似度計算
+  const calculateFileSizeSimilarity = useCallback((size1: number, size2: number): number => {
+    if (size1 === 0 && size2 === 0) return 1;
+    if (size1 === 0 || size2 === 0) return 0;
+
+    const ratio = Math.min(size1, size2) / Math.max(size1, size2);
+    return ratio;
+  }, []);
+
+  // 生成時間相似度計算
+  const calculateGenerationTimeSimilarity = useCallback((time1: number, time2: number): number => {
+    if (time1 === 0 && time2 === 0) return 1;
+    if (time1 === 0 || time2 === 0) return 0;
+
+    const ratio = Math.min(time1, time2) / Math.max(time1, time2);
+    return ratio;
   }, []);
 
   // 計算相似度
@@ -187,8 +291,8 @@ export const useVersionComparison = (): UseVersionComparisonReturn => {
 
     // 標籤相似度 (權重: 10%)
     const tagSimilarity = calculateTagSimilarity(
-      version1.metadata.tags,
-      version2.metadata.tags
+      version1.metadata.tags?.map(tag => typeof tag === 'string' ? tag : tag.name || ''),
+      version2.metadata.tags?.map(tag => typeof tag === 'string' ? tag : tag.name || '')
     );
     similarity += tagSimilarity * 0.1;
     totalWeight += 0.1;
@@ -210,109 +314,7 @@ export const useVersionComparison = (): UseVersionComparisonReturn => {
     totalWeight += 0.05;
 
     return totalWeight > 0 ? similarity / totalWeight : 0;
-  }, []);
-
-  // 文字相似度計算 (簡化版的 Jaccard 相似度)
-  const calculateTextSimilarity = useCallback((text1: string, text2: string): number => {
-    if (!text1 && !text2) return 1;
-    if (!text1 || !text2) return 0;
-
-    // 將文字轉換為詞彙集合
-    const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 0));
-    const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(w => w.length > 0));
-
-    // 計算交集和聯集
-    const intersection = new Set([...words1].filter(w => words2.has(w)));
-    const union = new Set([...words1, ...words2]);
-
-    return union.size > 0 ? intersection.size / union.size : 0;
-  }, []);
-
-  // AI 參數相似度計算
-  const calculateParameterSimilarity = useCallback((params1: any, params2: any): number => {
-    let similarity = 0;
-    let count = 0;
-
-    // 模型相同性
-    if (params1.model === params2.model) similarity += 1;
-    count++;
-
-    // 提供商相同性
-    if (params1.provider === params2.provider) similarity += 1;
-    count++;
-
-    // 種子值相似度
-    if (params1.seed !== undefined && params2.seed !== undefined) {
-      similarity += params1.seed === params2.seed ? 1 : 0;
-      count++;
-    }
-
-    // 指導值相似度
-    if (params1.guidance !== undefined && params2.guidance !== undefined) {
-      const guidanceDiff = Math.abs(params1.guidance - params2.guidance);
-      similarity += Math.max(0, 1 - guidanceDiff / 10); // 假設最大差異為10
-      count++;
-    }
-
-    // 步數相似度
-    if (params1.steps !== undefined && params2.steps !== undefined) {
-      const stepsDiff = Math.abs(params1.steps - params2.steps);
-      similarity += Math.max(0, 1 - stepsDiff / 50); // 假設最大差異為50
-      count++;
-    }
-
-    // 增強設定相同性
-    if (params1.enhance === params2.enhance) similarity += 1;
-    count++;
-
-    // 風格相同性
-    if (params1.style === params2.style) similarity += 1;
-    count++;
-
-    return count > 0 ? similarity / count : 0;
-  }, []);
-
-  // 尺寸相似度計算
-  const calculateDimensionSimilarity = useCallback((dim1: any, dim2: any): number => {
-    if (!dim1 || !dim2) return 0;
-
-    const widthRatio = Math.min(dim1.width, dim2.width) / Math.max(dim1.width, dim2.width);
-    const heightRatio = Math.min(dim1.height, dim2.height) / Math.max(dim1.height, dim2.height);
-
-    return (widthRatio + heightRatio) / 2;
-  }, []);
-
-  // 標籤相似度計算
-  const calculateTagSimilarity = useCallback((tags1: any[], tags2: any[]): number => {
-    if (!tags1?.length && !tags2?.length) return 1;
-    if (!tags1?.length || !tags2?.length) return 0;
-
-    const tagNames1 = new Set(tags1.map(tag => tag.name?.toLowerCase()));
-    const tagNames2 = new Set(tags2.map(tag => tag.name?.toLowerCase()));
-
-    const intersection = new Set([...tagNames1].filter(tag => tagNames2.has(tag)));
-    const union = new Set([...tagNames1, ...tagNames2]);
-
-    return union.size > 0 ? intersection.size / union.size : 0;
-  }, []);
-
-  // 檔案大小相似度計算
-  const calculateFileSizeSimilarity = useCallback((size1: number, size2: number): number => {
-    if (size1 === 0 && size2 === 0) return 1;
-    if (size1 === 0 || size2 === 0) return 0;
-
-    const ratio = Math.min(size1, size2) / Math.max(size1, size2);
-    return ratio;
-  }, []);
-
-  // 生成時間相似度計算
-  const calculateGenerationTimeSimilarity = useCallback((time1: number, time2: number): number => {
-    if (time1 === 0 && time2 === 0) return 1;
-    if (time1 === 0 || time2 === 0) return 0;
-
-    const ratio = Math.min(time1, time2) / Math.max(time1, time2);
-    return ratio;
-  }, []);
+  }, [calculateDimensionSimilarity, calculateFileSizeSimilarity, calculateGenerationTimeSimilarity, calculateParameterSimilarity, calculateTagSimilarity, calculateTextSimilarity]);
 
   // 尋找差異
   const findDifferences = useCallback((version1: ImageVersion, version2: ImageVersion): VersionDifference[] => {

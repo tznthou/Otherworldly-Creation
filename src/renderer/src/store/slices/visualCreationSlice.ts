@@ -73,7 +73,7 @@ export interface ExportTask {
 export interface VisualCreationState {
   // UI 狀態
   activeTab: 'create' | 'gallery' | 'templates' | 'versions';
-  currentProvider: 'pollinations' | 'imagen';
+  currentProvider: 'pollinations' | 'imagen' | 'gemini' | 'gemini-flash' | 'openrouter-free' | 'openrouter-pro';
   
   // 創建狀態
   selectedCharacters: string[];
@@ -228,7 +228,7 @@ export const generateIllustration = createAsyncThunk(
     style?: 'anime' | 'realistic' | 'fantasy' | 'watercolor' | 'digital_art';
     projectId?: string;
     characterId?: string;
-    provider: 'pollinations' | 'imagen';
+    provider: 'pollinations' | 'imagen' | 'gemini';
   }) => {
     if (params.provider === 'pollinations') {
       return await api.illustration.generateFreeIllustration(
@@ -242,9 +242,14 @@ export const generateIllustration = createAsyncThunk(
         params.projectId,
         params.characterId
       );
-    } else {
+    } else if (params.provider === 'imagen') {
       // Imagen 實現
       throw new Error('Imagen provider not implemented yet');
+    } else if (params.provider === 'gemini') {
+      // Gemini 2.5 Flash Image Preview 實現
+      throw new Error('Gemini 2.5 Flash Image Preview integration pending - API exists but needs command integration');
+    } else {
+      throw new Error('Unknown provider');
     }
   }
 );

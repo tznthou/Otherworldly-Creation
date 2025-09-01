@@ -67,7 +67,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
 
   const selectAll = useCallback(() => {
     dispatch(setSelectedImageIds(tempImages.map(img => img.id)));
-  }, [dispatch, tempImages.length]);
+  }, [dispatch, tempImages]);
 
   const deselectAll = useCallback(() => {
     dispatch(setSelectedImageIds([]));
@@ -143,7 +143,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [showImagePreview, currentImageIndex, tempImages.length, handleClose, setCurrentIndex, toggleImageSelectionLocal, selectAll, deselectAll]);
+  }, [showImagePreview, currentImageIndex, tempImages, handleClose, setCurrentIndex, toggleImageSelectionLocal, selectAll, deselectAll]);
 
   if (!showImagePreview || tempImages.length === 0 || currentImageIndex === -1) {
     return null;

@@ -16,6 +16,8 @@ pub mod pollinations_api;
 pub mod illustration_manager;
 pub mod batch_manager;
 pub mod style_resolver;
+pub mod provider_trait;
+pub mod gemini_image_api;
 
 pub use character_consistency::CharacterConsistencyManager;
 pub use seed_manager::SeedManager;
@@ -32,6 +34,10 @@ pub use batch_manager::{
     BatchManager, BatchRequest, TaskPriority
 };
 pub use style_resolver::StyleResolver;
+pub use provider_trait::{
+    ImageProvider
+};
+// Gemini Image API 類型僅供內部使用
 
 /// 插畫生成請求結構
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -104,6 +110,10 @@ pub enum IllustrationError {
     
     #[error("配置錯誤: {0}")]
     Config(String),
+    
+    #[error("服務錯誤: {message}")]
+    #[allow(dead_code)]  // 為未來錯誤處理預留
+    ServiceError { message: String },
     
     #[error("未知錯誤: {0}")]
     Unknown(String),

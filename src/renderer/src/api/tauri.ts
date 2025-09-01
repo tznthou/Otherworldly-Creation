@@ -1172,7 +1172,8 @@ export const tauriAPI: API = {
       requests: BatchRequest[],
       priority?: string,
       maxParallel?: number,
-      apiKey?: string
+      apiKey?: string,
+      provider?: string // 新增：圖片生成服務提供者 (預設 "pollinations")
     ) => {
       return safeInvoke('submit_batch_illustration_request', {
         batchName: batchName,
@@ -1180,7 +1181,8 @@ export const tauriAPI: API = {
         requests: requests,
         priority: priority,
         maxParallel: maxParallel,
-        apiKey: apiKey
+        apiKey: apiKey,
+        provider: provider // 添加提供者參數
       });
     },
 

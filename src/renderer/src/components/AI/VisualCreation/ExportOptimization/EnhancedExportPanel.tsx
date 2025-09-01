@@ -1,8 +1,49 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { EbookExportConfig } from '../../../../types/imageMetadata';
-// Note: Using any for now as these types are not defined yet
-type EPubGenerationOptions = any;
-type PDFGenerationOptions = any;
+// EPUB 導出選項類型 (基於 Rust 後端定義)
+interface EPubGenerationOptions {
+  include_cover?: boolean;
+  custom_css?: string;
+  font_family?: string;
+  chapter_break_style?: string;
+  author?: string;
+  include_illustrations?: boolean;
+  illustration_layout?: 'gallery' | 'inline' | 'chapter_start';
+  illustration_quality?: 'original' | 'compressed';
+  character_filter?: string[];
+  // 前端擴展選項
+  includeChapterNumbers?: boolean;
+  includeTOC?: boolean;
+  includeMetadata?: boolean;
+  fontSize?: 'small' | 'medium' | 'large';
+  fontFamily?: string;
+  includeImages?: boolean;
+  imageQuality?: number;
+  compressImages?: boolean;
+  // 修復 customCSS 屬性（與 custom_css 等同）
+  customCSS?: string;
+}
+
+// PDF 導出選項類型 (基於 Chrome Headless 後端)
+interface PDFGenerationOptions {
+  page_size?: string;
+  font_size?: number;
+  margins?: string;
+  include_cover?: boolean;
+  // 前端擴展選項
+  pageSize?: string;
+  margin?: { top: number; right: number; bottom: number; left: number };
+  includeHeader?: boolean;
+  includeFooter?: boolean;
+  headerText?: string;
+  footerText?: string;
+  fontSize?: number;
+  fontFamily?: string;
+  includeImages?: boolean;
+  imageQuality?: number;
+  generateBookmarks?: boolean;
+  includeTOC?: boolean;
+}
 
 interface EnhancedExportPanelProps {
   _projectId: string;
@@ -86,8 +127,8 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
 
   const [estimatedSize, setEstimatedSize] = useState({ epub: 0, pdf: 0, images: 0 });
 
-  // 品質預設配置
-  const qualityPresets = {
+  // 品質預設配置 - 使用 useMemo 避免依賴警告
+  const qualityPresets = useMemo(() => ({
     web: {
       name: 'Web 優化',
       description: '適合線上閱讀，檔案較小',
@@ -120,7 +161,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
       maxHeight: imageConfig.maxImageHeight,
       compression: imageConfig.compressionLevel
     }
-  };
+  }), [imageConfig]);
 
   // 當品質預設改變時更新配置
   useEffect(() => {
@@ -135,10 +176,10 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
       }));
       
       // 同步更新 EPUB 和 PDF 的圖片品質
-      setEpubOptions((prev: any) => ({ ...prev, imageQuality: preset.imageQuality }));
-      setPdfOptions((prev: any) => ({ ...prev, imageQuality: preset.imageQuality }));
+      setEpubOptions(prev => ({ ...prev, imageQuality: preset.imageQuality }));
+      setPdfOptions(prev => ({ ...prev, imageQuality: preset.imageQuality }));
     }
-  }, [qualityPreset]);
+  }, [qualityPreset, qualityPresets]);
 
   // 計算預估檔案大小
   const calculateEstimatedSize = useMemo(() => {
@@ -163,7 +204,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
     try {
       const combinedImageConfig = {
         ...imageConfig,
-        includeImages: epubOptions.includeImages || pdfOptions.includeImages
+        includeImages: Boolean(epubOptions.includeImages || pdfOptions.includeImages)
       };
 
       if (exportFormat === 'epub' || exportFormat === 'both') {
@@ -362,7 +403,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                   <select
                     value={imageConfig.compressionLevel}
                     onChange={(e) => {
-                      setImageConfig(prev => ({ ...prev, compressionLevel: e.target.value as any }));
+                      setImageConfig(prev => ({ ...prev, compressionLevel: e.target.value as 'none' | 'low' | 'medium' | 'high' }));
                       if (qualityPreset !== 'custom') setQualityPreset('custom');
                     }}
                     className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500"
@@ -426,7 +467,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                       <input
                         type="checkbox"
                         checked={epubOptions.includeChapterNumbers}
-                        onChange={(e) => setEpubOptions((prev: any) => ({ ...prev, includeChapterNumbers: e.target.checked }))}
+                        onChange={(e) => setEpubOptions(prev => ({ ...prev, includeChapterNumbers: e.target.checked }))}
                         className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
                       />
                       <span className="text-sm text-cosmic-300">包含章節編號</span>
@@ -435,7 +476,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                       <input
                         type="checkbox"
                         checked={epubOptions.includeTOC}
-                        onChange={(e) => setEpubOptions((prev: any) => ({ ...prev, includeTOC: e.target.checked }))}
+                        onChange={(e) => setEpubOptions(prev => ({ ...prev, includeTOC: e.target.checked }))}
                         className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
                       />
                       <span className="text-sm text-cosmic-300">包含目錄</span>
@@ -445,7 +486,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                     <label className="block text-sm font-medium text-cosmic-300 mb-2">字體大小</label>
                     <select
                       value={epubOptions.fontSize}
-                      onChange={(e) => setEpubOptions((prev: any) => ({ ...prev, fontSize: e.target.value }))}
+                      onChange={(e) => setEpubOptions(prev => ({ ...prev, fontSize: e.target.value as 'small' | 'medium' | 'large' }))}
                       className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 rounded-lg"
                     >
                       <option value="small">小</option>
@@ -465,7 +506,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                     <label className="block text-sm font-medium text-cosmic-300 mb-2">頁面大小</label>
                     <select
                       value={pdfOptions.pageSize}
-                      onChange={(e) => setPdfOptions((prev: any) => ({ ...prev, pageSize: e.target.value }))}
+                      onChange={(e) => setPdfOptions(prev => ({ ...prev, pageSize: e.target.value }))}
                       className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 rounded-lg"
                     >
                       <option value="A4">A4</option>
@@ -479,7 +520,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                       <input
                         type="checkbox"
                         checked={pdfOptions.includeHeader}
-                        onChange={(e) => setPdfOptions((prev: any) => ({ ...prev, includeHeader: e.target.checked }))}
+                        onChange={(e) => setPdfOptions(prev => ({ ...prev, includeHeader: e.target.checked }))}
                         className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
                       />
                       <span className="text-sm text-cosmic-300">包含頁首</span>
@@ -488,7 +529,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                       <input
                         type="checkbox"
                         checked={pdfOptions.includeFooter}
-                        onChange={(e) => setPdfOptions((prev: any) => ({ ...prev, includeFooter: e.target.checked }))}
+                        onChange={(e) => setPdfOptions(prev => ({ ...prev, includeFooter: e.target.checked }))}
                         className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
                       />
                       <span className="text-sm text-cosmic-300">包含頁尾</span>

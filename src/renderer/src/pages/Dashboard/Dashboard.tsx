@@ -53,7 +53,7 @@ const Dashboard: React.FC = () => {
       const { chapterStatusService } = await import('../../services/chapterStatusService');
       
       // 獲取所有專案的章節並統一狀態解析
-      let allChapters: any[] = [];
+      let allChapters: Array<{ id: string; title: string; status: string; content?: unknown; projectId: string; order: number; createdAt: string; updatedAt: string }> = [];
       for (const project of projects) {
         try {
           const chapters = await api.chapters.getByProjectId(project.id);
@@ -87,9 +87,11 @@ const Dashboard: React.FC = () => {
       
       // 計算統計數據
       const totalChapters = allChapters.length;
-      const completedCount = chapterStatusService.calculateCompletedCount(allChapters);
-      const completionRate = chapterStatusService.calculateCompletionRate(allChapters);
-      const statusDistribution = chapterStatusService.getStatusDistribution(allChapters);
+      // 將簡化的章節類型轉換為 chapterStatusService 期望的類型
+      const chaptersForService = allChapters as any[];
+      const completedCount = chapterStatusService.calculateCompletedCount(chaptersForService);
+      const completionRate = chapterStatusService.calculateCompletionRate(chaptersForService);
+      const statusDistribution = chapterStatusService.getStatusDistribution(chaptersForService);
       
       setChapterStats({
         totalChapters,
@@ -117,7 +119,7 @@ const Dashboard: React.FC = () => {
         sampleChapters: allChapters.slice(0, 3).map(c => ({ 
           title: c.title, 
           status: c.status,
-          hasMetadata: !!c.metadata 
+          hasMetadata: !!(c as any).metadata 
         })) // 顯示前3個章節的狀態信息
       });
     } catch (error) {

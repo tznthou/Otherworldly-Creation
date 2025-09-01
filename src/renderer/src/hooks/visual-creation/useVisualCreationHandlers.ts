@@ -4,9 +4,9 @@ import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '../../store/store';
 import { setActiveTab, setCurrentProvider, setSelectedImageIds, removeTempImages } from '../../store/slices/visualCreationSlice';
 import { illustrationAPI } from '../../api/illustration';
+import type { IllustrationProvider } from '../illustration/useIllustrationService';
 
 type ActiveTab = 'create' | 'gallery';
-type IllustrationProvider = 'pollinations' | 'imagen';
 
 export const useVisualCreationHandlers = () => {
   const dispatch = useDispatch<AppDispatch>();

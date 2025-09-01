@@ -455,6 +455,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                   <li>• 快速添加：一鍵將當前設定加入生成佇列</li>
                   <li>• 參數調整：風格模板、尺寸比例自定義</li>
                   <li>• 批次執行：同時處理多個插畫請求</li>
+                  <li>• <strong>收藏功能</strong>：生成完成後，點擊「加入收藏」將圖片永久保存到圖庫</li>
                 </ul>
               </div>
             </div>
@@ -479,6 +480,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               <ul className="text-gray-300 space-y-2">
                 <li>• <strong>虛擬化網格</strong>：高效能顯示大量圖片</li>
                 <li>• <strong>圖片預覽</strong>：全螢幕預覽模式，支援鍵盤導航</li>
+                <li>• <strong>收藏管理</strong>：透過「加入收藏」功能將生成的圖片加入永久圖庫</li>
                 <li>• <strong>一鍵保存</strong>：直接保存圖片到本地相簿</li>
                 <li>• <strong>批次管理</strong>：多選圖片進行批次操作</li>
                 <li>• <strong>搜索過濾</strong>：按角色、時間等條件篩選圖片</li>

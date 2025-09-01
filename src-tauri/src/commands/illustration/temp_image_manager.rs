@@ -10,10 +10,10 @@ use crate::database::connection::create_connection;
 #[allow(non_snake_case)]
 pub async fn generate_free_illustration_to_temp(
     prompt: String,
-    width: Option<u32>,
-    height: Option<u32>,
+    _width: Option<u32>, // 參數保留以維持 API 相容性，但 Pollinations 現在對尺寸參數過敏
+    _height: Option<u32>, // 參數保留以維持 API 相容性，但 Pollinations 現在對尺寸參數過敏
     model: Option<String>,
-    seed: Option<u32>,
+    _seed: Option<u32>, // 參數保留以維持 API 相容性，但實際使用 safe_seed
     enhance: Option<bool>,
     style: Option<String>,
     projectId: Option<String>,
@@ -52,13 +52,17 @@ pub async fn generate_free_illustration_to_temp(
     // 用戶可以在前端自行控制是否添加風格關鍵字
     let enhanced_prompt = prompt.clone();
 
+    // CRITICAL FIX: 移除 seed 參數以避免 Pollinations.AI 500 錯誤
+    // 2025-08-31: Pollinations.AI 現在對固定 seed 值過敏，導致所有模型都失敗
+    let safe_seed = None; // 強制設為 None，讓 API 自動選擇
+
     // 構建請求
     let request = PollinationsRequest {
         prompt: enhanced_prompt.clone(),
-        width: width.or(Some(1024)),
-        height: height.or(Some(1024)),
+        width: None, // 移除尺寸參數以避免 500 錯誤
+        height: None, // 移除尺寸參數以避免 500 錯誤
         model: Some(pollinations_model),
-        seed,
+        seed: safe_seed, // 使用安全的 seed 設定
         enhance: enhance.or(Some(false)),
         nologo: Some(true),
         transparent: Some(false),
@@ -151,10 +155,10 @@ pub async fn generate_free_illustration_to_temp(
     log::info!("[TempImageManager] 所有指定模型失敗，嘗試使用 API 預設模型");
     let default_request = PollinationsRequest {
         prompt: enhanced_prompt.clone(),
-        width: width.or(Some(1024)),
-        height: height.or(Some(1024)),
+        width: None, // 移除尺寸參數以避免 500 錯誤
+        height: None, // 移除尺寸參數以避免 500 錯誤
         model: None, // 不指定模型，讓 API 自動選擇最佳可用模型
-        seed,
+        seed: safe_seed, // 使用安全的 seed 設定
         enhance: enhance.or(Some(false)),
         nologo: Some(true),
         transparent: Some(false),
@@ -454,10 +458,10 @@ pub fn move_temp_to_final_image(temp_path: &str, image_id: &str) -> Result<Strin
 #[allow(non_snake_case)]
 pub async fn generate_illustration_optimized(
     prompt: String,
-    width: Option<u32>,
-    height: Option<u32>,
+    _width: Option<u32>, // 參數保留以維持 API 相容性，但 Pollinations 現在對尺寸參數過敏
+    _height: Option<u32>, // 參數保留以維持 API 相容性，但 Pollinations 現在對尺寸參數過敏
     model: Option<String>,
-    seed: Option<u32>,
+    _seed: Option<u32>, // 參數保留以維持 API 相容性，但實際使用 safe_seed
     enhance: Option<bool>,
     style: Option<String>,
     projectId: Option<String>,
@@ -492,13 +496,17 @@ pub async fn generate_illustration_optimized(
         _ => PollinationsModel::GptImage, // 預設使用 GptImage（較穩定）
     };
 
+    // CRITICAL FIX: 移除 seed 參數以避免 Pollinations.AI 500 錯誤
+    // 2025-08-31: Pollinations.AI 現在對固定 seed 值過敏，導致所有模型都失敗
+    let safe_seed = None; // 強制設為 None，讓 API 自動選擇
+
     // 建立請求參數
     let request = PollinationsRequest {
         prompt: prompt.clone(),
         model: Some(pollinations_model),
-        width: Some(width.unwrap_or(1024)),
-        height: Some(height.unwrap_or(1024)),
-        seed,
+        width: None, // 移除尺寸參數以避免 500 錯誤
+        height: None, // 移除尺寸參數以避免 500 錯誤
+        seed: safe_seed, // 使用安全的 seed 設定
         enhance: Some(enhance.unwrap_or(false)),
         transparent: Some(false),
         negative_prompt: None,
@@ -530,9 +538,9 @@ pub async fn generate_illustration_optimized(
         &prompt,
         &request.prompt,
         &model.unwrap_or_else(|| "gptimage".to_string()),
-        width.unwrap_or(1024),
-        height.unwrap_or(1024),
-        seed,
+        1024, // 預設值，因為 API 不再接受尺寸參數  
+        1024, // 預設值，因為 API 不再接受尺寸參數
+        safe_seed,
         enhance.unwrap_or(false),
         style.as_deref(),
         response.image_url.as_deref(),
@@ -862,7 +870,7 @@ pub fn save_pollinations_history_unconfirmed(
     model: &str,
     width: u32,
     height: u32,
-    seed: Option<u32>,
+    _seed: Option<u32>, // 參數保留以維持 API 相容性，但實際使用 safe_seed
     enhance: bool,
     style_applied: Option<&str>,
     image_url: Option<&str>,
@@ -887,7 +895,7 @@ pub fn save_pollinations_history_unconfirmed(
         )",
         rusqlite::params![
             id, project_id, character_id, original_prompt, enhanced_prompt,
-            model, width, height, seed, enhance, style_applied,
+            model, width, height, _seed, enhance, style_applied,
             image_url, local_file_path, file_size_bytes, generation_time_ms,
             current_time
         ],

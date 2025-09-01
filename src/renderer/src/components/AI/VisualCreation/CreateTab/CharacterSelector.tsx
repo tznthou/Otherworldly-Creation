@@ -27,23 +27,17 @@ const CharacterSelector: React.FC = () => {
     return match;
   });
   
-  // 調試信息
-  console.log('🐛 [CharacterSelector Debug] =================');
-  console.log('📂 currentProject:', currentProject);
-  console.log('🔑 currentProject?.id:', currentProject?.id, '(類型:', typeof currentProject?.id, ')');
-  console.log('📊 Redux characters總數:', characters.length);
-  console.log('🎯 projectCharacters總數 (過濾後):', projectCharacters.length);
-  
-  if (characters.length > 0 && projectCharacters.length === 0) {
-    console.log('❌ 沒有找到匹配的角色！');
-    console.log('📋 所有角色詳情:', characters.map(c => ({ 
-      id: c.id, 
-      name: c.name, 
-      projectId: c.projectId, 
-      projectIdType: typeof c.projectId 
-    })));
-  }
-  console.log('========================================');
+  // 調試信息 - 僅在必要時執行
+  React.useEffect(() => {
+    console.log('🐛 [CharacterSelector] 組件狀態更新');
+    console.log('📂 currentProject:', currentProject?.name, '(ID:', currentProject?.id, ')');
+    console.log('📊 Redux characters總數:', characters.length);
+    console.log('🎯 projectCharacters總數 (過濾後):', projectCharacters.length);
+    
+    if (characters.length > 0 && projectCharacters.length === 0) {
+      console.log('❌ 沒有找到匹配的角色！');
+    }
+  }, [currentProject?.id, characters.length, projectCharacters.length]);
   
   // 處理角色選擇
   const handleCharacterToggle = (characterId: string) => {

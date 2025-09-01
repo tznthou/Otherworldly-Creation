@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   ImageNamingConfig, 
   RenamePreviewResult,
@@ -62,8 +62,8 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
     }, {} as Record<string, typeof availableVariables>);
   }, [availableVariables]);
 
-  // 生成預覽
-  const generatePreview = async () => {
+  // 生成預覽 - 使用 useCallback 避免依賴警告
+  const generatePreview = useCallback(async () => {
     if (selectedImageIds.length === 0) return;
     
     setIsPreviewLoading(true);
@@ -83,7 +83,7 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
     } finally {
       setIsPreviewLoading(false);
     }
-  };
+  }, [selectedImageIds, namingConfig]);
 
   // 模板變更處理
   const handleTemplateChange = (templateId: string) => {
@@ -127,7 +127,7 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
       generatePreview();
     }, 500);
     return () => clearTimeout(timer);
-  }, [namingConfig, selectedImageIds]);
+  }, [namingConfig, selectedImageIds, generatePreview]);
 
   const hasConflicts = previewResults.some(result => result.conflicts);
   const hasWarnings = previewResults.some(result => result.warnings.length > 0);

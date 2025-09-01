@@ -228,7 +228,8 @@ export class ParameterOptimizer {
         ...(modelOptimized.adjustments || []),
         ...(notesOptimized.adjustments || [])
       ];
-      (optimized as any).adjustments = allAdjustments;
+      // 將調整說明添加到結果中
+      (optimized as Record<string, unknown>).adjustments = allAdjustments;
     }
 
     // 3. 基於版本變異
@@ -242,10 +243,10 @@ export class ParameterOptimizer {
       
       // 合併版本調整說明
       const finalAdjustments = [
-        ...((optimized as any).adjustments || []),
+        ...((optimized as Record<string, unknown>).adjustments as string[] || []),
         ...(versionOptimized.adjustments || [])
       ];
-      (optimized as any).adjustments = finalAdjustments;
+      (optimized as Record<string, unknown>).adjustments = finalAdjustments;
     }
 
     return optimized;

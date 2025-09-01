@@ -26,7 +26,7 @@ export interface GenerationResult {
   timestamp: Date;
   success: boolean;
   error?: string;
-  rawResponse?: any;
+  rawResponse?: Record<string, unknown>;
 }
 
 /**
@@ -134,7 +134,7 @@ export class GenerationExecutor {
     retryConfig: Partial<RetryConfig> = {}
   ): Promise<GenerationResult> {
     const finalRetryConfig = { ...this.DEFAULT_RETRY_CONFIG, ...retryConfig };
-    let lastError: any;
+    let lastError: unknown;
 
     for (let attempt = 0; attempt <= finalRetryConfig.maxRetries; attempt++) {
       try {
