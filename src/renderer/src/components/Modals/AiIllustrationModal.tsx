@@ -7,13 +7,17 @@ const AiIllustrationModal: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const handleClose = () => {
+    console.log('🚪 [AiIllustrationModal] 用戶主動關閉模態框');
     dispatch(closeModal('aiIllustration'));
   };
 
   // 調試：確認組件渲染（僅在組件首次渲染時）
   React.useEffect(() => {
     console.log('🎨 [AiIllustrationModal] 組件已掛載');
-    return () => console.log('🎨 [AiIllustrationModal] 組件即將卸載');
+    return () => {
+      console.log('🎨 [AiIllustrationModal] 組件即將卸載');
+      console.warn('⚠️ 如果這不是用戶主動關閉，可能存在意外的模態框關閉');
+    };
   }, []);
 
   // 錯誤邊界處理

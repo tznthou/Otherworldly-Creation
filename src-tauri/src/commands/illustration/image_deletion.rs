@@ -1,5 +1,6 @@
 use serde_json::Value;
 use crate::database::connection::create_connection;
+use super::delayed_deletion::get_deletion_queue;
 
 /// 刪除插畫（支援軟刪除和永久刪除）
 #[tauri::command]
@@ -486,4 +487,103 @@ pub struct DeletedImageInfo {
     pub original_file_path: Option<String>,
     pub deleted_file_path: Option<String>,
     pub table_name: String,
+}
+
+// ========================= 安全刪除（使用延遲刪除隊列）=========================
+
+/// 安全刪除插畫（使用延遲刪除隊列防止崩潰）
+#[tauri::command]
+#[allow(non_snake_case)]
+pub async fn delete_illustrations_safe(
+    imageIds: Vec<String>,
+    deleteType: String,
+    preserveMetadata: Option<bool>,
+    reason: Option<String>,
+    delayMs: Option<u64>,
+) -> Result<Value, String> {
+    log::info!("[SafeImageDeletion] 安全刪除插畫: {} 張，類型: {}", imageIds.len(), deleteType);
+    
+    let preserve_metadata = preserveMetadata.unwrap_or(true);
+    let delay = delayMs.unwrap_or(500); // 預設延遲500ms
+    let mut scheduled_count = 0;
+    let mut failed_count = 0;
+    let mut scheduled_task_ids = Vec::new();
+    let mut failed_image_ids = Vec::new();
+    let mut errors = Vec::new();
+    
+    // 建立資料庫連接
+    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
+    
+    // 獲取延遲刪除隊列
+    let deletion_queue = get_deletion_queue();
+    
+    for image_id in imageIds.iter() {
+        match get_image_info(&conn, image_id) {
+            Ok(image_info) => {
+                if let Some(file_path) = image_info.local_file_path {
+                    // 使用延遲刪除隊列
+                    match deletion_queue.schedule_deletion(
+                        std::path::PathBuf::from(&file_path),
+                        image_id.clone(),
+                        delay,
+                        reason.clone(),
+                    ) {
+                        Ok(task_id) => {
+                            scheduled_count += 1;
+                            scheduled_task_ids.push(task_id);
+                            log::info!("[SafeImageDeletion] 成功排程延遲刪除: {}", image_id);
+                        }
+                        Err(e) => {
+                            failed_count += 1;
+                            failed_image_ids.push(image_id.clone());
+                            errors.push(format!("圖片 {}: 排程失敗 - {}", image_id, e));
+                            log::error!("[SafeImageDeletion] 排程延遲刪除失敗 {}: {}", image_id, e);
+                        }
+                    }
+                } else {
+                    // 沒有本地檔案，直接更新資料庫狀態
+                    match process_single_image_deletion(
+                        &conn,
+                        image_id,
+                        &deleteType,
+                        preserve_metadata,
+                        reason.as_deref(),
+                        None,
+                    ) {
+                        Ok(_) => {
+                            scheduled_count += 1;
+                            log::info!("[SafeImageDeletion] 成功處理無檔案圖片: {}", image_id);
+                        }
+                        Err(e) => {
+                            failed_count += 1;
+                            failed_image_ids.push(image_id.clone());
+                            errors.push(format!("圖片 {}: {}", image_id, e));
+                            log::error!("[SafeImageDeletion] 處理圖片失敗 {}: {}", image_id, e);
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                failed_count += 1;
+                failed_image_ids.push(image_id.clone());
+                errors.push(format!("圖片 {}: 獲取圖片資訊失敗 - {}", image_id, e));
+                log::error!("[SafeImageDeletion] 獲取圖片資訊失敗 {}: {}", image_id, e);
+            }
+        }
+    }
+    
+    Ok(serde_json::json!({
+        "success": true,
+        "scheduledCount": scheduled_count,
+        "failedCount": failed_count,
+        "totalRequested": imageIds.len(),
+        "scheduledTaskIds": scheduled_task_ids,
+        "failedImageIds": failed_image_ids,
+        "errors": if errors.is_empty() { None } else { Some(errors) },
+        "delayMs": delay,
+        "message": format!("成功排程 {} 張圖片延遲刪除{}",
+            scheduled_count,
+            if failed_count > 0 { format!("，{} 張失敗", failed_count) } else { String::new() }
+        )
+    }))
 }

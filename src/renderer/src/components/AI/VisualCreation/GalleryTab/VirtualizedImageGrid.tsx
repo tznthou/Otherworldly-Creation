@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { FixedSizeGrid as Grid, GridChildComponentProps } from 'react-window';
 import { IllustrationHistoryItem } from '../../../../types/illustration';
 import { SafeImage } from '../../../UI/SafeImage';
@@ -10,6 +10,7 @@ interface VirtualizedImageGridProps {
   onToggleSelection: (imageId: string) => void;
   containerHeight: number;
   containerWidth: number;
+  deletingImages?: Set<string>; // 新增：正在刪除的圖片集合，可選
 }
 
 interface ItemData {
@@ -17,6 +18,7 @@ interface ItemData {
   columnCount: number;
   selectedImages: Set<string>;
   onToggleSelection: (imageId: string) => void;
+  deletingImages: Set<string>; // 新增：正在刪除的圖片集合
 }
 
 const ITEM_SIZE = 200; // 每個圖像項目的大小
@@ -63,14 +65,9 @@ const getStatusName = (status: string) => {
   }
 };
 
-// 網格項目組件
-const GridItem: React.FC<GridChildComponentProps<ItemData>> = ({
-  columnIndex,
-  rowIndex,
-  style,
-  data
-}) => {
-  const { illustrations, columnCount, selectedImages, onToggleSelection } = data;
+// 網格項目組件 - 使用 React.memo 防止不必要的重新渲染
+const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ columnIndex, rowIndex, style, data }) => {
+  const { illustrations, columnCount, selectedImages, onToggleSelection, deletingImages } = data;
   const itemIndex = rowIndex * columnCount + columnIndex;
   
   // 如果超出數據範圍，渲染空項目
@@ -79,6 +76,7 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = ({
   }
   
   const item = illustrations[itemIndex];
+  const isDeleting = deletingImages?.has(item.id) || false;
   
   return (
     <div
@@ -91,54 +89,86 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = ({
       }}
     >
       <div
-        className={`
-          relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all h-full
-          ${selectedImages.has(item.id) 
-            ? 'border-gold-500 ring-2 ring-gold-500/50' 
-            : 'border-cosmic-600 hover:border-cosmic-500'
-          }
-        `}
-        onClick={() => onToggleSelection(item.id)}
+        className={`relative group rounded-lg overflow-hidden border-2 transition-all h-full ${
+          isDeleting 
+            ? 'border-red-500 bg-red-900/20 cursor-not-allowed opacity-50' 
+            : selectedImages.has(item.id) 
+              ? 'border-gold-500 ring-2 ring-gold-500/50 cursor-pointer' 
+              : 'border-cosmic-600 hover:border-cosmic-500 cursor-pointer'
+        }`}
+        onClick={() => !isDeleting && onToggleSelection(item.id)}
       >
         {/* 圖像縮略圖 */}
         <div className="w-full h-full bg-cosmic-700 flex items-center justify-center">
-          {item.image_url || item.local_file_path ? (
-            <SafeImage
-              imageUrl={item.image_url}
-              localFilePath={item.local_file_path}
-              alt={item.original_prompt}
-              className="w-full h-full object-cover"
-              loading="lazy"
-              fallbackIcon="🎨"
-            />
-          ) : (
-            <div className="text-cosmic-400 text-xl">
-              {getStatusIcon(item.status)}
-            </div>
-          )}
+          {(() => {
+            // 🚨 如果正在刪除，顯示刪除中狀態而不是實際圖片
+            if (isDeleting) {
+              console.log('🗑️ VirtualizedImageGrid: 顯示刪除中狀態', { itemId: item.id });
+              return (
+                <div className="flex flex-col items-center justify-center text-red-400 text-center p-4">
+                  <div className="text-2xl mb-2 animate-spin">🗑️</div>
+                  <div className="text-xs">刪除中...</div>
+                </div>
+              );
+            }
+            
+            console.log('🔍 VirtualizedImageGrid: 檢查圖片渲染條件', {
+              itemId: item.id,
+              hasImageUrl: !!item.image_url,
+              hasLocalFilePath: !!item.image_path,
+              imageUrl: item.image_url,
+              localFilePath: item.image_path,
+              status: item.status
+            });
+            
+            if (item.image_url || item.image_path) {
+              console.log('✅ VirtualizedImageGrid: 渲染SafeImage組件', { itemId: item.id });
+              return (
+                <SafeImage
+                  key={`safe-image-${item.id}`}
+                  imageUrl={item.image_url}
+                  localFilePath={item.image_path}
+                  alt={item.original_prompt}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  fallbackIcon="🎨"
+                />
+              );
+            } else {
+              console.log('❌ VirtualizedImageGrid: 顯示狀態圖標', { itemId: item.id, status: item.status });
+              return (
+                <div className="text-cosmic-400 text-xl">
+                  {getStatusIcon(item.status)}
+                </div>
+              );
+            }
+          })()}
         </div>
         
         {/* 選擇指示器 */}
-        <div className={`
-          absolute top-2 left-2 w-5 h-5 rounded-full border flex items-center justify-center text-xs transition-all
-          ${selectedImages.has(item.id)
+        <div className={`absolute top-2 left-2 w-5 h-5 rounded-full border flex items-center justify-center text-xs transition-all ${
+          selectedImages.has(item.id)
             ? 'bg-gold-500 border-gold-500 text-white'
             : 'bg-black/50 border-white/50 text-white opacity-0 group-hover:opacity-100'
-          }
-        `}>
+        }`}>
           {selectedImages.has(item.id) && '✓'}
         </div>
         
         {/* 服務標籤 */}
-        <div className={`
-          absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity
-          ${item.is_free 
+        <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity ${
+          item.is_free 
             ? 'bg-green-600 text-white' 
             : 'bg-blue-600 text-white'
-          }
-        `}>
+        }`}>
           {item.is_free ? '免費' : '付費'}
         </div>
+        
+        {/* 未確認狀態標籤 */}
+        {!item.is_confirmed && (
+          <div className="absolute bottom-2 right-2 px-2 py-1 rounded text-xs font-medium bg-yellow-600 text-white opacity-90 group-hover:opacity-100 transition-opacity">
+            未確認
+          </div>
+        )}
         
         {/* 懸停信息 */}
         <div className="absolute inset-x-0 bottom-0 bg-black/70 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -152,15 +182,20 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = ({
       </div>
     </div>
   );
-};
+});
 
 const VirtualizedImageGrid: React.FC<VirtualizedImageGridProps> = ({
   illustrations,
   selectedImages,
   onToggleSelection,
   containerHeight,
-  containerWidth
+  containerWidth,
+  deletingImages = new Set() // 預設為空集合
 }) => {
+  // 穩定化函數引用，防止無限重新渲染
+  const stableToggleSelection = useCallback((imageId: string) => {
+    onToggleSelection(imageId);
+  }, [onToggleSelection]);
   const columnCount = useMemo(() => 
     calculateColumnCount(containerWidth), [containerWidth]
   );
@@ -169,12 +204,17 @@ const VirtualizedImageGrid: React.FC<VirtualizedImageGridProps> = ({
     Math.ceil(illustrations.length / columnCount), [illustrations.length, columnCount]
   );
   
+  // 使用 JSON.stringify 來穩定化 Set 物件的比較
+  const selectedImagesArray = useMemo(() => Array.from(selectedImages), [selectedImages]);
+  const deletingImagesArray = useMemo(() => Array.from(deletingImages), [deletingImages]);
+  
   const itemData: ItemData = useMemo(() => ({
     illustrations,
     columnCount,
     selectedImages,
-    onToggleSelection,
-  }), [illustrations, columnCount, selectedImages, onToggleSelection]);
+    onToggleSelection: stableToggleSelection,
+    deletingImages,
+  }), [illustrations, columnCount, selectedImagesArray, stableToggleSelection, deletingImagesArray]);
   
   // 如果沒有數據，顯示空狀態
   if (illustrations.length === 0) {

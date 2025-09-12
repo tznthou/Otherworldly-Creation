@@ -102,8 +102,10 @@ export const useGalleryData = (
       
       // 整合版本管理數據
       console.log('[useGalleryData] 原始歷史數據:', history.length, '條記錄');
+      console.log('[useGalleryData] 原始數據內容:', history.slice(0, 2)); // 顯示前2筆詳細內容
       const enrichedHistory = history.map((illustration: unknown) => enrichWithVersionData(illustration as IllustrationHistoryItem));
       console.log('[useGalleryData] 處理後歷史數據:', enrichedHistory.length, '條記錄');
+      console.log('[useGalleryData] 處理後數據內容:', enrichedHistory.slice(0, 2)); // 顯示前2筆處理後內容
       
       setIllustrationHistory(enrichedHistory);
       console.log('[useGalleryData] 已設置插畫歷史狀態');
@@ -113,7 +115,7 @@ export const useGalleryData = (
     } finally {
       setLoading(false);
     }
-  }, [currentProject, enrichWithVersionData, loading]);
+  }, [currentProject, enrichWithVersionData]);
 
   // 重新獲取數據的便捷方法
   const refetchData = useCallback(() => {

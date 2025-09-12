@@ -336,6 +336,13 @@ export interface API {
 
     // === 圖片刪除管理 ===
     deleteIllustrations: (request: DeleteIllustrationRequest) => Promise<DeleteIllustrationResponse>;
+    deleteIllustrationsSafe: (request: {
+      imageIds: string[];
+      deleteType: 'soft' | 'permanent';
+      preserveMetadata?: boolean;
+      reason?: string;
+      delayMs?: number;
+    }) => Promise<DeleteIllustrationResponse>;
     restoreIllustrations: (imageIds: string[]) => Promise<DeleteIllustrationResponse>;
     getDeletedIllustrations: (projectId: string) => Promise<IllustrationHistoryItem[]>;
     permanentDeleteIllustrations: (imageIds: string[]) => Promise<DeleteIllustrationResponse>;
@@ -384,6 +391,8 @@ export interface API {
       success: boolean;
       collected_count?: number;
       newly_confirmed_count?: number;
+      error_count?: number;
+      errors?: string[];
       message?: string;
     }>;
   };

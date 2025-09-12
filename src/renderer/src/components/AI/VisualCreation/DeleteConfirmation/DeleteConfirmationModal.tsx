@@ -138,10 +138,10 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
               {selectedImages.map((image, index) => (
                 <div key={image.id} className="relative group">
                   <div className="w-16 h-16 bg-cosmic-700 rounded overflow-hidden relative">
-                    {image.image_url || image.local_file_path ? (
+                    {image.image_url || image.image_path ? (
                       <SafeImage
                         imageUrl={image.image_url}
-                        localFilePath={image.local_file_path}
+                        localFilePath={image.image_path}
                         alt={image.original_prompt}
                         className="w-full h-full object-cover"
                         fallbackIcon="🗑️"

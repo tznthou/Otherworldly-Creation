@@ -125,11 +125,7 @@
       "Bash(if [ -f \"$file\" ])",
       "Bash(__NEW_LINE__ echo -e \"\\n=== 對應檔案檢查 ===\")",
       "Read(//Users/tznthou/**)",
-      "Bash(python test:*)",
-      "Bash(python:*)",
-      "Bash(xargs sed:*)",
-      "Bash(md5:*)",
-      "Bash(RELEASE_VERSION=1.1.9 node scripts/sync-version.js)"
+      "Bash(python test:*)"
     ],
     "deny": [],
     "ask": [],

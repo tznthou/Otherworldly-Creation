@@ -8,9 +8,11 @@ pub fn save_generated_image(image_data: &[u8], image_id: &str) -> Result<String,
     //     .join("genesis-chronicle")
     //     .join("images");
     
-    // === 新邏輯：使用 PathManager 統一路徑管理 ===
-    let images_dir = crate::utils::PathManager::get_images_dir()?;
-    // PathManager 已經處理目錄創建，無需重複調用
+    // === 新邏輯：使用 path_utils 統一路徑管理 ===
+    let images_dir = crate::utils::path_utils::get_images_base_dir()?;
+    
+    // 確保目錄存在
+    fs::create_dir_all(&images_dir)?;
     
     // 生成檔案路徑
     let filename = format!("{}.jpg", image_id);
@@ -19,5 +21,6 @@ pub fn save_generated_image(image_data: &[u8], image_id: &str) -> Result<String,
     // 寫入圖像數據
     fs::write(&file_path, image_data)?;
     
-    Ok(file_path.to_string_lossy().to_string())
+    // 返回資料庫儲存用的相對路徑格式
+    Ok(crate::utils::path_utils::to_relative_path(&file_path, image_id))
 }

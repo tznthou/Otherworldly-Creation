@@ -344,6 +344,7 @@ export interface IllustrationHistoryItem {
   style_applied?: string;
   image_url?: string;
   local_file_path?: string;
+  image_path?: string; // 後端提供的完整絕對路徑
   file_size_bytes?: number;
   generation_time_ms?: number;
   status: 'completed' | 'failed' | 'pending' | 'processing';
@@ -354,6 +355,7 @@ export interface IllustrationHistoryItem {
   is_favorite: boolean;
   provider: string;
   is_free: boolean;
+  is_confirmed: boolean;
   
   // Version Management Integration (Phase 4.3)
   versionId?: string; // 對應的版本管理 ID

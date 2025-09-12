@@ -1,0 +1,246 @@
+use std::path::PathBuf;
+use std::error::Error;
+
+/// 跨平台路徑管理工具
+/// 
+/// 這個模組統一處理所有圖片相關的路徑邏輯，確保在 Windows、macOS 等不同平台上的一致性
+/// 
+/// 路徑策略：
+/// - 開發環境：使用專案目錄下的 src-tauri/generated-images
+/// - 生產環境：使用系統標準位置 (~/.local/share 或 AppData)
+/// - 臨時和最終目錄使用相同的基礎路徑邏輯
+/// - 資料庫儲存相對路徑格式：src-tauri/generated-images/xxx.jpg
+
+/// 判斷是否為開發環境
+/// 
+/// 優先級：
+/// 1. 檢查 TAURI_ENV 環境變數
+/// 2. 檢查 NODE_ENV 環境變數  
+/// 3. 檢查執行檔路徑是否包含 debug 目錄
+pub fn is_development_environment() -> bool {
+    // 優先檢查 TAURI_ENV（最可靠）
+    if let Ok(env) = std::env::var("TAURI_ENV") {
+        return env == "development";
+    }
+    
+    // 備用：檢查 NODE_ENV
+    if let Ok(env) = std::env::var("NODE_ENV") {
+        return env == "development";
+    }
+    
+    // 最後備用：檢查執行檔路徑
+    if let Ok(exe_path) = std::env::current_exe() {
+        let path_str = exe_path.to_string_lossy();
+        // 支援 Windows 和 Unix 路徑分隔符
+        return path_str.contains("target/debug") || 
+               path_str.contains("target\\debug");
+    }
+    
+    false
+}
+
+/// 獲取圖片儲存的基礎目錄
+/// 
+/// 返回的路徑會根據開發/生產環境自動選擇：
+/// - 開發環境：{project_root}/src-tauri/generated-images
+/// - 生產環境：{data_dir}/genesis-chronicle/images
+pub fn get_images_base_dir() -> Result<PathBuf, Box<dyn Error>> {
+    let base_path = if is_development_environment() {
+        // 開發環境：使用絕對路徑找到專案根目錄，避免工作目錄問題
+        let exe_path = std::env::current_exe()?;
+        let project_root = exe_path
+            .ancestors()
+            .find(|p| p.join("src-tauri").exists())
+            .ok_or("無法找到專案根目錄")?;
+        project_root.join("src-tauri").join("generated-images")
+    } else {
+        // 生產環境：使用系統標準位置
+        dirs::data_dir()
+            .ok_or("無法獲取用戶資料目錄")?
+            .join("genesis-chronicle")
+            .join("images")
+    };
+    
+    // 確保目錄存在
+    std::fs::create_dir_all(&base_path)?;
+    
+    log::info!("[PathUtils] 圖片基礎目錄: {:?} (開發環境: {}, 當前目錄: {:?})", 
+        base_path, is_development_environment(), std::env::current_dir());
+    
+    Ok(base_path)
+}
+
+/// 獲取臨時圖片目錄
+/// 
+/// 臨時圖片在用戶確認前儲存在這裡
+/// 🔧 修復：真正分離臨時和最終目錄，解決檔案移動假操作問題
+pub fn get_temp_images_dir() -> Result<PathBuf, Box<dyn Error>> {
+    // 🎯 核心修復：臨時目錄使用 "temp" 子目錄，與最終目錄真正分離
+    let base_dir = get_images_base_dir()?;
+    let temp_dir = base_dir.join("temp");
+    
+    // 確保目錄存在
+    std::fs::create_dir_all(&temp_dir)?;
+    
+    log::info!("[PathUtils] 臨時圖片目錄: {:?} (已與最終目錄分離)", temp_dir);
+    
+    Ok(temp_dir)
+}
+
+/// 獲取最終圖片目錄
+/// 
+/// 確認後的圖片儲存在這裡
+pub fn get_final_images_dir() -> Result<PathBuf, Box<dyn Error>> {
+    let final_dir = get_images_base_dir()?;
+    
+    // 確保目錄存在
+    std::fs::create_dir_all(&final_dir)?;
+    
+    log::info!("[PathUtils] 最終圖片目錄: {:?}", final_dir);
+    
+    Ok(final_dir)
+}
+
+/// 將絕對路徑轉換為資料庫儲存用的檔名
+/// 
+/// 輸入: /path/to/project/src-tauri/generated-images/abc123.jpg
+/// 輸出: abc123.jpg
+/// 
+/// 🔧 新策略：資料庫只存檔名，實際路徑由環境動態決定
+/// 這徹底解決了開發/生產環境路徑不一致的問題
+pub fn to_relative_path(_absolute_path: &PathBuf, image_id: &str) -> String {
+    // 只返回檔名，不包含任何路徑資訊
+    // 實際儲存路徑將由 get_images_base_dir() 根據環境自動決定
+    format!("{}.jpg", image_id)
+}
+
+/// 從檔名獲取對應的完整絕對路徑
+/// 
+/// 輸入: abc123.jpg (只是檔名)
+/// 輸出: 
+/// - 開發環境: /project/src-tauri/generated-images/abc123.jpg
+/// - 生產環境: /Users/.../Library/Application Support/genesis-chronicle/images/abc123.jpg
+/// 
+/// 🔧 新策略：根據環境動態計算完整路徑，自動適應開發/生產環境
+pub fn from_relative_path(filename: &str) -> Result<PathBuf, Box<dyn Error>> {
+    // filename 現在應該只是檔名，如 "abc123.jpg"
+    // 如果還包含舊的路徑格式，先提取檔名
+    let clean_filename = std::path::Path::new(filename)
+        .file_name()
+        .ok_or("無效的檔案名稱")?
+        .to_string_lossy();
+    
+    // 根據當前環境動態計算基礎目錄，然後組合完整路徑
+    let base_dir = get_images_base_dir()?;
+    let absolute_path = base_dir.join(clean_filename.as_ref());
+    
+    log::debug!("[PathUtils] 檔名轉換: {} -> {:?}", filename, absolute_path);
+    
+    Ok(absolute_path)
+}
+
+/// 生成臨時圖片的完整檔案路徑
+/// 
+/// 為新生成的圖片建立臨時儲存路徑
+pub fn get_temp_image_path(image_id: &str) -> Result<PathBuf, Box<dyn Error>> {
+    let temp_dir = get_temp_images_dir()?;
+    let filename = format!("{}.jpg", image_id);
+    let full_path = temp_dir.join(filename);
+    
+    log::debug!("[PathUtils] 臨時圖片路徑: {:?}", full_path);
+    
+    Ok(full_path)
+}
+
+/// 生成最終圖片的完整檔案路徑
+/// 
+/// 為確認後的圖片建立最終儲存路徑
+pub fn get_final_image_path(image_id: &str) -> Result<PathBuf, Box<dyn Error>> {
+    let final_dir = get_final_images_dir()?;
+    let filename = format!("{}.jpg", image_id);
+    let full_path = final_dir.join(filename);
+    
+    log::debug!("[PathUtils] 最終圖片路徑: {:?}", full_path);
+    
+    Ok(full_path)
+}
+
+/// 檢查圖片檔案是否存在
+/// 
+/// 同時檢查臨時和最終位置
+pub fn image_exists(image_id: &str) -> (bool, bool) {
+    let temp_exists = get_temp_image_path(image_id)
+        .map(|path| path.exists())
+        .unwrap_or(false);
+        
+    let final_exists = get_final_image_path(image_id)
+        .map(|path| path.exists())
+        .unwrap_or(false);
+    
+    (temp_exists, final_exists)
+}
+
+/// 安全地移動檔案（跨平台相容）
+/// 
+/// 使用 copy + remove 的方式來確保跨檔案系統的相容性
+pub fn move_file_safe(from: &PathBuf, to: &PathBuf) -> Result<(), Box<dyn Error>> {
+    // 確保目標目錄存在
+    if let Some(parent) = to.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    
+    // 複製檔案
+    std::fs::copy(from, to)?;
+    
+    // 驗證複製是否成功
+    if !to.exists() {
+        return Err(format!("檔案複製失敗: {:?} -> {:?}", from, to).into());
+    }
+    
+    // 刪除原始檔案
+    std::fs::remove_file(from)?;
+    
+    log::info!("[PathUtils] 檔案移動成功: {:?} -> {:?}", from, to);
+    
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_environment_detection() {
+        // 基本測試確保函數不會 panic
+        let is_dev = is_development_environment();
+        println!("Development environment: {}", is_dev);
+    }
+    
+    #[test]
+    fn test_relative_path_format() {
+        let relative = to_relative_path(&PathBuf::new(), "test123");
+        assert_eq!(relative, "test123.jpg");  // 🔧 現在只返回檔名
+    }
+    
+    #[test] 
+    fn test_path_separation() {
+        // 🔧 修復測試：確認臨時和最終目錄已正確分離
+        if let (Ok(temp), Ok(final_dir)) = (get_temp_images_dir(), get_final_images_dir()) {
+            // 現在臨時目錄應該是最終目錄的 "temp" 子目錄
+            assert_ne!(temp, final_dir, "臨時和最終目錄應該不同");
+            assert!(temp.parent() == Some(&final_dir), "臨時目錄應該是最終目錄的子目錄");
+            assert!(temp.file_name() == Some(std::ffi::OsStr::new("temp")), "臨時目錄名稱應該是 'temp'");
+        }
+    }
+}
+#[cfg(test)]
+mod test {
+    use super::*;
+    
+    #[test]
+    fn test_path_conversion() {
+        let result = from_relative_path("b329dbd6-66d5-4bb3-a737-89fbb1fa435d.jpg");
+        println!("轉換結果: {:?}", result);
+    }
+}
+

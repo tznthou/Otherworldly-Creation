@@ -79,8 +79,8 @@ fn scan_project_illustrations(_project_id: &str) -> Result<Vec<IllustrationFile>
     //     .unwrap_or_else(|| std::path::PathBuf::from("."));
     // let illustrations_dir = data_dir.join("genesis-chronicle").join("generated-images");
     
-    // === 新邏輯：使用 PathManager 統一路徑管理 ===
-    let illustrations_dir = crate::utils::PathManager::get_images_dir()
+    // === 新邏輯：使用 path_utils 統一路徑管理 ===
+    let illustrations_dir = crate::utils::path_utils::get_images_base_dir()
         .map_err(|e| format!("無法獲取圖片目錄: {}", e))?;
     
     log::info!("EPUB 掃描插畫目錄: {:?}", illustrations_dir);

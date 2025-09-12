@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../../../../store/store';
+import { useNotification } from '../../../UI/NotificationSystem';
 
 // Redux actions
 import {
@@ -43,6 +44,7 @@ interface BatchRequest {
 
 const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const notification = useNotification();
   
   // Redux 狀態
   const {
@@ -69,6 +71,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
   // 本地狀態
   const [sceneDescription, setSceneDescription] = useState('');
   const [batchRequests, setBatchRequests] = useState<BatchRequest[]>([]);
+  const [isCollecting, setIsCollecting] = useState(false);
 
   // 快速模板預設 - 使用 useMemo 避免每次渲染重新創建
   const quickTemplates = useMemo(() => [
@@ -628,25 +631,135 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                       <button
                         onClick={async () => {
                           try {
-                            // 傳遞完整的臨時圖片資料而不只是ID
-                            const imageData = tempImages.map(image => ({
-                              id: image.id,
-                              project_id: image.project_id,
-                              character_id: image.character_id,
-                              original_prompt: image.original_prompt
-                            }));
+                            setIsCollecting(true);
+                            console.log('🔍 [Collection] 🚀 開始收藏流程...');
+                            
+                            if (!tempImages || tempImages.length === 0) {
+                              notification.warning('沒有可收藏的圖片', '請先生成圖片再進行收藏');
+                              return;
+                            }
+                            
+                            // 🛡️ 安全構建圖片數據，確保所有必要欄位存在
+                            const imageData = tempImages
+                              .filter(image => image && image.id) // 過濾無效數據
+                              .map(image => ({
+                                id: image.id,
+                                project_id: image.project_id || currentProject?.id,
+                                character_id: image.character_id,
+                                original_prompt: image.original_prompt || image.prompt || 'Generated image',
+                                temp_path: image.temp_path,
+                                parameters: image.parameters
+                              }));
+                            
+                            if (imageData.length === 0) {
+                              notification.error('無法收藏', '沒有有效的圖片數據可以收藏');
+                              return;
+                            }
+                            
+                            // 顯示處理中的通知
+                            notification.info('正在收藏', `正在收藏 ${imageData.length} 張圖片...`);
+                            
+                            // 🛡️ 安全調用API，使用完整的錯誤處理
                             const result = await api.illustration.addToCollectionWithData(imageData);
                             
-                            if (result.success) {
-                              console.log(`✅ 已加入收藏 ${result.collected_count} 張圖片`);
+                            console.log('🔍 [Collection] 收到後端回應:', result);
+                            
+                            // 🎉 使用通知系統替代 console.log
+                            if (result && result.success && (result.collected_count || 0) > 0) {
+                              const successMsg = `已成功收藏 ${result.collected_count || 0} 張圖片`;
+                              const detailMsg = [
+                                (result.newly_confirmed_count || 0) > 0 ? `其中 ${result.newly_confirmed_count} 張為新確認` : '',
+                                (result.error_count || 0) > 0 ? `${result.error_count} 個處理錯誤` : ''
+                              ].filter(Boolean).join('，');
+                              
+                              notification.success(
+                                '🎉 收藏成功',
+                                detailMsg ? `${successMsg}（${detailMsg}）` : successMsg,
+                                4000
+                              );
+                              
+                              // 記錄詳細信息到控制台
+                              console.log(`✅ [Collection] 收藏成功: ${result.collected_count || 0} 張圖片`);
+                              if (result.errors && result.errors.length > 0) {
+                                console.warn('⚠️ [Collection] 處理錯誤詳情:', result.errors);
+                              }
+                              
+                            } else if (result && !result.success) {
+                              // 🚫 處理部分失敗的情況
+                              const failMsg = result.message || '收藏過程中遇到問題';
+                              notification.warning(
+                                '收藏部分成功',
+                                failMsg,
+                                5000
+                              );
+                              console.warn(`⚠️ [Collection] ${failMsg}`);
+                              if (result.errors && result.errors.length > 0) {
+                                console.warn('⚠️ [Collection] 錯誤詳情:', result.errors);
+                              }
+                            } else {
+                              // ❌ 完全失敗
+                              notification.error(
+                                '收藏失敗',
+                                '服務器回應異常，請稍後再試',
+                                5000
+                              );
+                              console.error('❌ [Collection] 收藏失敗，回應格式異常:', result);
                             }
+                            
                           } catch (error) {
-                            console.error('❌ 加入收藏失敗:', error);
+                            // 🛡️ 全面的錯誤捕獲和處理
+                            console.error('💥 [Collection] 收藏操作發生錯誤:', error);
+                            
+                            let errorMessage = '收藏失敗';
+                            if (error instanceof Error) {
+                              errorMessage += `: ${error.message}`;
+                            } else if (typeof error === 'string') {
+                              errorMessage += `: ${error}`;
+                            } else {
+                              errorMessage += '：未知錯誤';
+                            }
+                            
+                            notification.error(
+                              '系統錯誤',
+                              errorMessage,
+                              5000
+                            );
+                            
+                            // 🔍 記錄詳細的錯誤信息以便調試
+                            console.error('🔍 [Collection] 錯誤詳情:', {
+                              error,
+                              tempImages: tempImages?.length || 0,
+                              currentProject: currentProject?.id
+                            });
+                          } finally {
+                            setIsCollecting(false);
                           }
                         }}
-                        className="text-xs px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors"
+                        className={`
+                          text-xs px-3 py-1 rounded transition-all duration-300
+                          ${isCollecting 
+                            ? 'bg-purple-700 opacity-70 cursor-wait' 
+                            : 'bg-purple-600 hover:bg-purple-700 active:scale-95'
+                          }
+                          disabled:bg-gray-600 disabled:opacity-50 text-white
+                        `}
+                        disabled={!tempImages || tempImages.length === 0 || isCollecting}
+                        title={
+                          isCollecting 
+                            ? '正在收藏...' 
+                            : tempImages && tempImages.length > 0 
+                              ? `收藏 ${tempImages.length} 張圖片` 
+                              : '沒有可收藏的圖片'
+                        }
                       >
-                        加入收藏
+                        {isCollecting ? (
+                          <>
+                            <span className="inline-block animate-spin mr-1">⏳</span>
+                            收藏中...
+                          </>
+                        ) : (
+                          <>🔖 加入收藏</>
+                        )}
                       </button>
                       <button
                         onClick={() => {

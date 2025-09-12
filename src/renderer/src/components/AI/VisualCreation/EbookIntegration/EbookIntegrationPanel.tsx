@@ -122,6 +122,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
             is_favorite: false,
             provider: 'pollinations',
             is_free: true,
+            is_confirmed: true,
             image_url: '/path/to/image1.png',
             local_file_path: '/path/to/image1.png',
             enhance: false
@@ -138,6 +139,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
             is_favorite: true,
             provider: 'pollinations',
             is_free: true,
+            is_confirmed: true,
             image_url: '/path/to/image2.png',
             local_file_path: '/path/to/image2.png',
             enhance: false

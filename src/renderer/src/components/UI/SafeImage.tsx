@@ -13,7 +13,7 @@ interface SafeImageProps {
   fallbackIcon?: string;
 }
 
-export const SafeImage: React.FC<SafeImageProps> = ({
+export const SafeImage: React.FC<SafeImageProps> = React.memo(({
   imageUrl,
   localFilePath,
   alt,
@@ -27,51 +27,59 @@ export const SafeImage: React.FC<SafeImageProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
 
+  // 🚨 調試日誌已清理，提高性能
+
+  // 🚨 已移除在渲染期間執行的狀態更新代碼，防止無限重新渲染
+
   useEffect(() => {
     let isMounted = true;
 
     async function loadImage() {
-      if (!isMounted) return;
+      if (!isMounted) {
+        return;
+      }
       
       setIsLoading(true);
       setHasError(false);
       setSrc('');
 
       try {
-        if (imageUrl) {
-          // 網路圖片直接使用
-          console.log('🌐 SafeImage: 載入網路圖片', imageUrl);
+        // 檢查網路圖片
+        if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== '') {
           setSrc(imageUrl);
           setIsLoading(false);
           return;
         }
 
-        if (localFilePath) {
+        // 檢查本地文件路徑
+        if (localFilePath && typeof localFilePath === 'string' && localFilePath.trim() !== '') {
+          console.log('🔍 [SafeImageDebug] 處理本地檔案路徑:', {
+            originalPath: localFilePath,
+            pathType: typeof localFilePath,
+            pathLength: localFilePath.length
+          });
+          
           // 統一路徑格式處理（Windows/Mac兼容）
           let cleanPath = localFilePath.replace(/^file:\/\//, '');
-          // 處理Windows路徑中的反斜槓
           cleanPath = cleanPath.replace(/\\/g, '/');
           
-          const assetUrl = convertFileSrc(cleanPath);
-          setSrc(assetUrl);
-          setIsLoading(false);
-          console.log('🖼️ SafeImage: 本地圖片轉換', {
-            original: localFilePath,
-            cleaned: cleanPath,
-            assetUrl: assetUrl
-          });
+          console.log('🔧 [SafeImageDebug] 清理後路徑:', cleanPath);
+          
+          try {
+            const assetUrl = convertFileSrc(cleanPath);
+            console.log('✅ [SafeImageDebug] convertFileSrc 成功:', assetUrl);
+            setSrc(assetUrl);
+            setIsLoading(false);
+          } catch (error) {
+            console.error('❌ [SafeImageDebug] convertFileSrc 失敗:', error);
+            setHasError(true);
+            setIsLoading(false);
+          }
           return;
         }
-
-        // 沒有圖片源
-        console.warn('⚠️ SafeImage: 沒有提供圖片源');
         setIsLoading(false);
       } catch (error) {
-        console.error('❌ SafeImage: 圖片載入錯誤', {
-          error,
-          imageUrl,
-          localFilePath
-        });
+        console.error('SafeImage: Image loading error', error);
         if (isMounted) {
           setHasError(true);
           setIsLoading(false);
@@ -124,4 +132,9 @@ export const SafeImage: React.FC<SafeImageProps> = ({
       }}
     />
   );
-};
+}, (prevProps, nextProps) => {
+  // 只有當 imageUrl 和 localFilePath 都相同時才認為組件相同
+  return prevProps.imageUrl === nextProps.imageUrl && 
+         prevProps.localFilePath === nextProps.localFilePath &&
+         prevProps.alt === nextProps.alt;
+});

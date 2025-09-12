@@ -3,6 +3,7 @@ use crate::services::illustration::pollinations_api::{
     PollinationsApiService, PollinationsRequest, PollinationsModel
 };
 use crate::database::connection::create_connection;
+use chrono::{Local, Utc};
 
 /// 免費插畫生成 - 使用 Pollinations.AI
 #[tauri::command]
@@ -185,19 +186,19 @@ pub async fn get_illustration_history(
     limit: Option<i32>,
     offset: Option<i32>,
 ) -> Result<Value, String> {
-    log::info!("[FreeGeneration] 獲取插畫歷史，專案: {:?}, 角色: {:?}", projectId, characterId);
+    log::info!("🔍 [get_illustration_history] API調用 - 專案: {:?}, 角色: {:?}, limit: {:?}, offset: {:?}", projectId, characterId, limit, offset);
     
     let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
     
+    // 🔧 修復：移除不存在的欄位 is_confirmed, in_collection, collected_at
     let mut query = String::from(
         "SELECT 
             id, project_id, character_id, original_prompt, enhanced_prompt,
             model, width, height, seed, enhance, style_applied,
             image_url, local_file_path, file_size_bytes, generation_time_ms,
-            status, error_message, created_at, batch_id, user_rating, is_favorite,
-            is_confirmed
+            status, error_message, created_at, batch_id, user_rating, is_favorite
          FROM pollinations_generations
-         WHERE deleted_at IS NULL AND (is_confirmed IS NULL OR is_confirmed = 1)"
+         WHERE deleted_at IS NULL"
     );
     
     let mut conditions = Vec::new();
@@ -237,28 +238,72 @@ pub async fn get_illustration_history(
     let param_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|p| p.as_ref()).collect();
     
     let rows = stmt.query_map(&param_refs[..], |row| {
+        // 🔧 先提取所有值，避免在 JSON 構建時處理 Result 類型
+        let id: String = row.get(0)?;
+        let project_id: Option<String> = row.get(1)?;
+        let character_id: Option<String> = row.get(2)?;
+        let original_prompt: String = row.get(3)?;
+        let enhanced_prompt: String = row.get(4)?;
+        let model: String = row.get(5)?;
+        let width: i32 = row.get(6)?;
+        let height: i32 = row.get(7)?;
+        let seed: Option<i32> = row.get(8)?;
+        let enhance: bool = row.get(9)?;
+        let style_applied: Option<String> = row.get(10)?;
+        let image_url: Option<String> = row.get(11)?;
+        let file_path: Option<String> = row.get(12)?;
+        let file_size_bytes: Option<i64> = row.get(13)?;
+        let generation_time_ms: Option<i32> = row.get(14)?;
+        let status: String = row.get(15)?;
+        let error_message: Option<String> = row.get(16)?;
+        let created_at: String = row.get(17)?;
+        let batch_id: Option<String> = row.get(18)?;
+        let user_rating: Option<i32> = row.get(19)?;
+        let is_favorite: bool = row.get(20)?;
+        
+        // 🔧 動態路徑解析：確保前端能正確載入圖片
+        let image_path = if let Some(path) = &file_path {
+            match crate::utils::path_utils::from_relative_path(path) {
+                Ok(full_path) => {
+                    let path_str = full_path.to_string_lossy().to_string();
+                    log::info!("🔍 [PathDebug] 轉換路徑: {} -> {}", path, path_str);
+                    path_str
+                }
+                Err(e) => {
+                    log::error!("❌ [PathDebug] 路徑轉換失敗: {} - {:?}", path, e);
+                    path.clone() // 如果解析失敗，使用原始路徑
+                }
+            }
+        } else {
+            String::new()
+        };
+        
+        // 🔧 構建 JSON，所有值都是已解析的類型
         Ok(serde_json::json!({
-            "id": row.get::<_, String>(0)?,
-            "project_id": row.get::<_, Option<String>>(1)?,
-            "character_id": row.get::<_, Option<String>>(2)?,
-            "original_prompt": row.get::<_, String>(3)?,
-            "enhanced_prompt": row.get::<_, String>(4)?,
-            "model": row.get::<_, String>(5)?,
-            "width": row.get::<_, i32>(6)?,
-            "height": row.get::<_, i32>(7)?,
-            "seed": row.get::<_, Option<i32>>(8)?,
-            "enhance": row.get::<_, bool>(9)?,
-            "style_applied": row.get::<_, Option<String>>(10)?,
-            "image_url": row.get::<_, Option<String>>(11)?,
-            "local_file_path": row.get::<_, Option<String>>(12)?,
-            "file_size_bytes": row.get::<_, Option<i64>>(13)?,
-            "generation_time_ms": row.get::<_, Option<i32>>(14)?,
-            "status": row.get::<_, String>(15)?,
-            "error_message": row.get::<_, Option<String>>(16)?,
-            "created_at": row.get::<_, String>(17)?,
-            "batch_id": row.get::<_, Option<String>>(18)?,
-            "user_rating": row.get::<_, Option<i32>>(19)?,
-            "is_favorite": row.get::<_, bool>(20)?,
+            "id": id,
+            "project_id": project_id,
+            "character_id": character_id,
+            "original_prompt": original_prompt,
+            "enhanced_prompt": enhanced_prompt,
+            "model": model,
+            "width": width,
+            "height": height,
+            "seed": seed,
+            "enhance": enhance,
+            "style_applied": style_applied,
+            "image_url": image_url,
+            "local_file_path": file_path,
+            "image_path": image_path, // 🔧 使用動態解析的完整路徑
+            "file_size_bytes": file_size_bytes,
+            "generation_time_ms": generation_time_ms,
+            "status": status,
+            "error_message": error_message,
+            "created_at": created_at,
+            "batch_id": batch_id,
+            "user_rating": user_rating,
+            "is_favorite": is_favorite,
+            // 🔧 為向後相容性提供預設值
+            "is_confirmed": true, // 現有記錄視為已確認
             "provider": "pollinations",
             "is_free": true
         }))
@@ -313,6 +358,73 @@ pub async fn get_free_illustration_models() -> Result<Value, String> {
     }))
 }
 
+/// 自動修復資料庫與檔案系統不同步問題
+#[tauri::command]
+#[allow(non_snake_case)]
+pub async fn repair_database_sync() -> Result<Value, String> {
+    log::info!("[DatabaseRepair] 開始自動修復資料庫同步問題");
+    
+    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
+    let mut repaired_count = 0;
+    let mut orphaned_count = 0;
+    let mut errors = Vec::new();
+    
+    // 1. 查找所有未確認的記錄
+    let mut stmt = conn.prepare(
+        "SELECT id, local_file_path FROM pollinations_generations 
+         WHERE deleted_at IS NULL AND is_confirmed = 0 AND local_file_path IS NOT NULL"
+    ).map_err(|e| format!("準備查詢失敗: {}", e))?;
+    
+    let rows = stmt.query_map([], |row| {
+        Ok((
+            row.get::<_, String>(0)?, // id
+            row.get::<_, String>(1)?  // local_file_path
+        ))
+    }).map_err(|e| format!("執行查詢失敗: {}", e))?;
+    
+    for row in rows {
+        match row {
+            Ok((id, local_file_path)) => {
+                // 檢查檔案是否存在
+                if std::path::Path::new(&local_file_path).exists() {
+                    // 檔案存在，標記為已確認
+                    match conn.execute(
+                        "UPDATE pollinations_generations SET is_confirmed = 1 WHERE id = ?",
+                        [&id]
+                    ) {
+                        Ok(_) => {
+                            repaired_count += 1;
+                            log::info!("[DatabaseRepair] 修復圖片記錄: {}", id);
+                        }
+                        Err(e) => {
+                            errors.push(format!("更新記錄 {} 失敗: {}", id, e));
+                            log::error!("[DatabaseRepair] 更新記錄失敗: {} - {}", id, e);
+                        }
+                    }
+                } else {
+                    // 檔案不存在，標記為孤立記錄
+                    orphaned_count += 1;
+                    log::warn!("[DatabaseRepair] 發現孤立記錄: {} - {}", id, local_file_path);
+                }
+            }
+            Err(e) => {
+                errors.push(format!("讀取記錄失敗: {}", e));
+                log::error!("[DatabaseRepair] 讀取記錄失敗: {}", e);
+            }
+        }
+    }
+    
+    log::info!("[DatabaseRepair] 修復完成 - 修復: {}筆, 孤立: {}筆", repaired_count, orphaned_count);
+    
+    Ok(serde_json::json!({
+        "success": true,
+        "repaired_count": repaired_count,
+        "orphaned_count": orphaned_count,
+        "errors": if errors.is_empty() { None } else { Some(errors) },
+        "message": format!("資料庫修復完成：修復 {} 筆記錄，發現 {} 筆孤立記錄", repaired_count, orphaned_count)
+    }))
+}
+
 // ========================= 輔助函數 =========================
 
 /// 保存成功的 Pollinations 生成歷史記錄
@@ -342,9 +454,9 @@ pub fn save_pollinations_history(
             id, project_id, character_id, original_prompt, enhanced_prompt,
             model, width, height, seed, enhance, style_applied,
             image_url, local_file_path, file_size_bytes, generation_time_ms,
-            status, created_at
+            status, created_timestamp, created_at
         ) VALUES (
-            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, 'completed', CURRENT_TIMESTAMP
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, 'completed', ?16, ?17
         )",
         params![
             id,
@@ -361,7 +473,9 @@ pub fn save_pollinations_history(
             image_url,
             local_file_path,
             file_size_bytes,
-            generation_time_ms
+            generation_time_ms,
+            chrono::Utc::now().timestamp(),
+            chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string() // 🔧 使用本地時間
         ],
     ).map_err(|e| format!("插入生成歷史失敗: {}", e))?;
     
@@ -394,9 +508,9 @@ pub fn save_pollinations_history_failed(
         "INSERT INTO pollinations_generations (
             id, project_id, character_id, original_prompt, enhanced_prompt,
             model, width, height, seed, enhance, style_applied,
-            status, error_message, created_at
+            status, error_message, created_timestamp, created_at
         ) VALUES (
-            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 'failed', ?12, CURRENT_TIMESTAMP
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 'failed', ?12, ?13, ?14
         )",
         params![
             id,
@@ -410,7 +524,9 @@ pub fn save_pollinations_history_failed(
             seed,
             enhance,
             style_applied,
-            error_message
+            error_message,
+            chrono::Utc::now().timestamp(),
+            chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string() // 🔧 使用本地時間
         ],
     ).map_err(|e| format!("插入失敗記錄失敗: {}", e))?;
     

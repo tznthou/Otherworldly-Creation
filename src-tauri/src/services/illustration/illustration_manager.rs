@@ -491,12 +491,10 @@ impl IllustrationManager {
     
     /// 保存圖像到本地
     async fn save_image_to_local(&self, image_data: &str, image_id: &str) -> Result<String> {
-        use std::env;
         
-        // 獲取當前工作目錄並創建絕對路徑
-        let current_dir = env::current_dir()
-            .map_err(|e| IllustrationError::Unknown(format!("無法獲取當前工作目錄: {}", e)))?;
-        let save_dir = current_dir.join("generated_images");
+        // 使用統一的路徑管理系統
+        let save_dir = crate::utils::path_utils::get_images_base_dir()
+            .map_err(|e| IllustrationError::Unknown(format!("無法獲取圖片目錄: {}", e)))?;
         
         // 創建保存目錄
         if !save_dir.exists() {

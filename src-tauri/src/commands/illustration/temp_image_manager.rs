@@ -1,217 +1,83 @@
 use serde_json::Value;
-use std::{fs, time::Instant};
-use crate::services::illustration::pollinations_api::{
-    PollinationsApiService, PollinationsRequest, PollinationsModel
-};
 use crate::database::connection::create_connection;
+use crate::utils::storage_handler::StorageHandler;
+use crate::utils::api_handler::{PollinationsApiHandler, ApiGenerationRequest};
+use crate::utils::db_operations::{IllustrationDbHandler, IllustrationRecord};
+use chrono::{Local, Utc};
 
 /// 免費插畫生成到臨時目錄 - 供預覽使用
+/// 
+/// 🔧 重構: 使用統一的 API 處理器，大幅簡化邏輯
 #[tauri::command]
 #[allow(non_snake_case)]
 pub async fn generate_free_illustration_to_temp(
     prompt: String,
-    _width: Option<u32>, // 參數保留以維持 API 相容性，但 Pollinations 現在對尺寸參數過敏
-    _height: Option<u32>, // 參數保留以維持 API 相容性，但 Pollinations 現在對尺寸參數過敏
+    _width: Option<u32>, // 參數保留以維持 API 相容性
+    _height: Option<u32>, // 參數保留以維持 API 相容性
     model: Option<String>,
-    _seed: Option<u32>, // 參數保留以維持 API 相容性，但實際使用 safe_seed
+    _seed: Option<u32>, // 參數保留以維持 API 相容性
     enhance: Option<bool>,
     style: Option<String>,
     projectId: Option<String>,
     characterId: Option<String>,
 ) -> Result<Value, String> {
-    log::info!("[TempImageManager] 免費插畫生成到臨時目錄: {}", prompt);
+    log::info!("[TempImageManager] 🎨 免費插畫生成到臨時目錄: {}", prompt);
     
-    if prompt.trim().is_empty() {
-        return Err("提示詞不能為空".to_string());
+    // 建構 API 請求
+    let api_request = ApiGenerationRequest {
+        prompt,
+        model,
+        width: _width,
+        height: _height,
+        seed: _seed,
+        enhance,
+        style,
+        project_id: projectId,
+        character_id: characterId,
+    };
+    
+    // 使用統一的 API 處理器生成圖片
+    let api_result = PollinationsApiHandler::generate_with_fallback(api_request.clone()).await;
+    
+    if !api_result.success {
+        let error_msg = api_result.error_message.unwrap_or_else(|| "未知錯誤".to_string());
+        log::error!("[TempImageManager] ❌ 生成失敗: {}", error_msg);
+        return Err(error_msg);
     }
 
-    // 嘗試獲取 API token 以支援高級模型
-    let api_token = crate::commands::pollinations_auth::get_active_pollinations_token().await.ok().flatten();
+    // 儲存圖像到臨時目錄
+    let temp_path = save_temp_generated_image(&api_result.image_data, &api_result.id)
+        .map_err(|e| format!("臨時圖像儲存失敗: {}", e))?;
     
-    // 根據是否有 token 建立不同等級的 Pollinations API 服務
-    let service = if let Some(token) = &api_token {
-        log::info!("[TempImageManager] 使用認證token，可存取Seed/Flower/Nectar層級模型");
-        PollinationsApiService::with_token(token.clone())
-            .map_err(|e| format!("認證API服務初始化失敗: {:?}", e))?
-    } else {
-        log::info!("[TempImageManager] 使用匿名存取，僅限基礎模型");
-        PollinationsApiService::new()
-            .map_err(|e| format!("基礎API服務初始化失敗: {:?}", e))?
-    };
-
-    // 解析模型 - 預設使用 gptimage 作為備用方案
-    let pollinations_model = match model.as_deref().unwrap_or("gptimage") {
-        "flux" => PollinationsModel::Flux,
-        "gptimage" => PollinationsModel::GptImage,
-        "kontext" => PollinationsModel::Kontext,
-        "sdxl" => PollinationsModel::Sdxl,
-        _ => PollinationsModel::GptImage, // 改為 GptImage 作為預設備用
-    };
-
-    // 不再自動添加風格描述，使用原始prompt
-    // 用戶可以在前端自行控制是否添加風格關鍵字
-    let enhanced_prompt = prompt.clone();
-
-    // CRITICAL FIX: 移除 seed 參數以避免 Pollinations.AI 500 錯誤
-    // 2025-08-31: Pollinations.AI 現在對固定 seed 值過敏，導致所有模型都失敗
-    let safe_seed = None; // 強制設為 None，讓 API 自動選擇
-
-    // 構建請求
-    let request = PollinationsRequest {
-        prompt: enhanced_prompt.clone(),
-        width: None, // 移除尺寸參數以避免 500 錯誤
-        height: None, // 移除尺寸參數以避免 500 錯誤
-        model: Some(pollinations_model),
-        seed: safe_seed, // 使用安全的 seed 設定
-        enhance: enhance.or(Some(false)),
-        nologo: Some(true),
-        transparent: Some(false),
-        ..Default::default()
-    };
-
-    // 生成圖像 - 使用備用模型機制
-    // 根據是否有認證token動態調整可用模型
-    let fallback_models = if api_token.is_some() {
-        // 有token：可以使用所有模型，包括需要認證的Kontext
-        vec![
-            pollinations_model, // 原始選擇的模型
-            PollinationsModel::GptImage, // 最穩定，支援透明背景
-            PollinationsModel::Sdxl,     // 經典 Stable Diffusion XL
-            PollinationsModel::Kontext,  // 認證用戶可用：圖像到圖像轉換
-        ]
-    } else {
-        // 無token：只使用不需認證的基礎模型
-        vec![
-            pollinations_model, // 原始選擇的模型
-            PollinationsModel::GptImage, // 最穩定，支援透明背景
-            PollinationsModel::Sdxl,     // 經典 Stable Diffusion XL
-            // 不包含Kontext：需要認證
-        ]
-    };
+    // 計算檔案大小
+    let file_size = api_result.image_data.len() as i64;
     
-    let mut errors = Vec::new();
+    log::info!("[TempImageManager] ✅ 免費插畫生成成功，耗時: {}ms", api_result.generation_time_ms);
     
-    for (i, &model) in fallback_models.iter().enumerate() {
-        // 避免重複嘗試相同模型
-        if i > 0 && std::mem::discriminant(&model) == std::mem::discriminant(&pollinations_model) {
-            continue;
-        }
-        
-        let fallback_request = PollinationsRequest {
-            model: Some(model),
-            ..request.clone()
-        };
-        
-        match service.generate_image(fallback_request).await {
-            Ok(response) => {
-                if i > 0 {
-                    log::info!("[TempImageManager] 使用備用模型 {:?} 生成成功，耗時: {}ms", model, response.generation_time_ms);
-                } else {
-                    log::info!("[TempImageManager] 免費插畫生成成功，耗時: {}ms", response.generation_time_ms);
-                }
-                
-                // 儲存圖像到臨時目錄
-                let temp_path = save_temp_generated_image(&response.image_data, &response.id)
-                    .map_err(|e| format!("臨時圖像儲存失敗: {}", e))?;
-                
-                // 計算檔案大小
-                let file_size = response.image_data.len() as i64;
-                
-                return Ok(serde_json::json!({
-                    "success": true,
-                    "id": response.id,
-                    "prompt": response.prompt,
-                    "temp_path": temp_path,
-                    "image_url": response.image_url,
-                    "parameters": {
-                        "model": response.parameters.model,
-                        "width": response.parameters.width,
-                        "height": response.parameters.height,
-                        "seed": response.parameters.seed,
-                        "enhance": response.parameters.enhance,
-                        "style": style
-                    },
-                    "file_size_bytes": file_size,
-                    "generation_time_ms": response.generation_time_ms,
-                    "provider": "pollinations",
-                    "is_free": true,
-                    "is_temp": true,
-                    "project_id": projectId,
-                    "character_id": characterId,
-                    "original_prompt": prompt,
-                    "fallback_used": i > 0
-                }));
-            },
-            Err(e) => {
-                let error_msg = format!("{:?} 模型失敗: {:?}", model, e);
-                errors.push(error_msg);
-                log::warn!("[TempImageManager] 模型 {:?} 生成失敗: {:?}", model, e);
-                continue;
-            }
-        }
-    }
-    
-    // 如果所有具體模型都失敗，最後嘗試不指定模型（讓 Pollinations 自動選擇）
-    log::info!("[TempImageManager] 所有指定模型失敗，嘗試使用 API 預設模型");
-    let default_request = PollinationsRequest {
-        prompt: enhanced_prompt.clone(),
-        width: None, // 移除尺寸參數以避免 500 錯誤
-        height: None, // 移除尺寸參數以避免 500 錯誤
-        model: None, // 不指定模型，讓 API 自動選擇最佳可用模型
-        seed: safe_seed, // 使用安全的 seed 設定
-        enhance: enhance.or(Some(false)),
-        nologo: Some(true),
-        transparent: Some(false),
-        ..Default::default()
-    };
-    
-    match service.generate_image(default_request).await {
-        Ok(response) => {
-            log::info!("[TempImageManager] API預設模型生成成功，耗時: {}ms", response.generation_time_ms);
-            
-            // 儲存圖像到臨時目錄
-            let temp_path = save_temp_generated_image(&response.image_data, &response.id)
-                .map_err(|e| format!("臨時圖像儲存失敗: {}", e))?;
-            
-            let file_size = response.image_data.len() as i64;
-            
-            return Ok(serde_json::json!({
-                "success": true,
-                "id": response.id,
-                "prompt": response.prompt,
-                "temp_path": temp_path,
-                "image_url": response.image_url,
-                "parameters": {
-                    "model": response.parameters.model,
-                    "width": response.parameters.width,
-                    "height": response.parameters.height,
-                    "seed": response.parameters.seed,
-                    "enhance": response.parameters.enhance,
-                    "style": style
-                },
-                "file_size_bytes": file_size,
-                "generation_time_ms": response.generation_time_ms,
-                "provider": "pollinations",
-                "is_free": true,
-                "is_temp": true,
-                "project_id": projectId,
-                "character_id": characterId,
-                "original_prompt": prompt,
-                "fallback_used": true,
-                "model_description": "API預設模型（自動選擇）"
-            }));
+    Ok(serde_json::json!({
+        "success": true,
+        "id": api_result.id,
+        "prompt": api_result.prompt,
+        "temp_path": temp_path,
+        "image_url": api_result.image_url,
+        "parameters": {
+            "model": api_result.parameters.model,
+            "width": api_result.parameters.width,
+            "height": api_result.parameters.height,
+            "seed": api_result.parameters.seed,
+            "enhance": api_result.parameters.enhance,
+            "style": api_result.parameters.style
         },
-        Err(e) => {
-            let api_error = format!("API預設模型也失敗: {:?}", e);
-            errors.push(api_error);
-            log::error!("[TempImageManager] API預設模型也失敗: {:?}", e);
-        }
-    }
-    
-    // 所有模型都失敗了
-    let all_errors = errors.join("; ");
-    log::error!("[TempImageManager] 所有模型（包括預設）都失敗了，錯誤詳情: {}", all_errors);
-    Err(format!("Pollinations.AI 服務暫時不可用，請稍後再試。如果問題持續，可嘗試使用其他 AI 插畫功能。錯誤詳情: {}", all_errors))
+        "file_size_bytes": file_size,
+        "generation_time_ms": api_result.generation_time_ms,
+        "provider": "pollinations",
+        "is_free": true,
+        "is_temp": true,
+        "project_id": api_request.project_id,
+        "character_id": api_request.character_id,
+        "original_prompt": api_request.prompt,
+        "fallback_used": api_result.fallback_used
+    }))
 }
 
 /// 確認保存臨時圖像到正式目錄
@@ -337,120 +203,80 @@ pub async fn delete_temp_image(
 }
 
 /// 清理過期的臨時圖像（超過24小時）
+/// 
+/// 🔧 重構: 使用統一的 StorageHandler，簡化清理邏輯
 #[tauri::command]
 pub async fn cleanup_expired_temp_images() -> Result<Value, String> {
-    log::info!("[TempImageManager] 清理過期的臨時圖像");
+    log::info!("[TempImageManager] 🧹 開始清理過期的臨時圖像");
     
-    use std::fs;
-    use std::time::{Duration, SystemTime};
-    
-    let temp_dir = get_temp_images_dir()
-        .map_err(|e| format!("獲取臨時目錄失敗: {}", e))?;
-    
-    let mut cleaned_count = 0;
-    let cutoff_time = SystemTime::now() - Duration::from_secs(24 * 60 * 60); // 24小時前
-    
-    if let Ok(entries) = fs::read_dir(&temp_dir) {
-        for entry in entries.flatten() {
-            if let Ok(metadata) = entry.metadata() {
-                if let Ok(created) = metadata.created() {
-                    if created < cutoff_time {
-                        if let Ok(_) = fs::remove_file(entry.path()) {
-                            cleaned_count += 1;
-                            log::info!("[TempImageManager] 已清理過期臨時圖像: {:?}", entry.path());
-                        }
-                    }
-                }
-            }
+    match StorageHandler::cleanup_expired_temp_files(24) {
+        Ok(cleaned_count) => {
+            log::info!("[TempImageManager] ✅ 清理完成，共清理 {} 個過期臨時圖像", cleaned_count);
+            
+            Ok(serde_json::json!({
+                "success": true,
+                "cleaned_count": cleaned_count,
+                "message": format!("已清理 {} 個過期臨時圖像", cleaned_count)
+            }))
+        },
+        Err(e) => {
+            let error_msg = format!("清理過期臨時圖像失敗: {}", e);
+            log::error!("[TempImageManager] ❌ {}", error_msg);
+            Err(error_msg)
         }
     }
-    
-    log::info!("[TempImageManager] 清理完成，共清理 {} 個過期臨時圖像", cleaned_count);
-    
-    Ok(serde_json::json!({
-        "success": true,
-        "cleaned_count": cleaned_count,
-        "message": format!("已清理 {} 個過期臨時圖像", cleaned_count)
-    }))
 }
 
 // ========================= 臨時圖像輔助函數 =========================
 
 /// 獲取臨時圖像目錄
+/// 
+/// ⚠️ DEPRECATED: 請使用 crate::utils::path_utils::get_temp_images_dir()
+/// 這個函數保留是為了向後相容，但內部已重導向到新的統一路徑系統
 pub fn get_temp_images_dir() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
-    // 使用與資料庫相同的路徑策略
-    let temp_dir = if is_development_environment() {
-        // 開發環境：使用項目根目錄下的 generated-images
-        std::env::current_dir()?.join("generated-images")
-    } else {
-        // 生產環境：使用與資料庫相同的 dirs::data_dir()
-        dirs::data_dir()
-            .ok_or("無法獲取用戶資料目錄")?
-            .join("genesis-chronicle")
-            .join("images")
-    };
-    
-    std::fs::create_dir_all(&temp_dir)?;
-    Ok(temp_dir)
+    // 重導向到新的統一路徑系統
+    crate::utils::path_utils::get_temp_images_dir()
+        .map_err(|e| e.into())
 }
 
 /// 檢查是否為開發環境
+/// 
+/// ⚠️ DEPRECATED: 請使用 crate::utils::path_utils::is_development_environment()
+/// 這個函數保留是為了向後相容，但內部已重導向到新的統一實現
 fn is_development_environment() -> bool {
-    // 檢查執行檔路徑是否包含 debug 目錄
-    if let Ok(exe_path) = std::env::current_exe() {
-        if let Some(path_str) = exe_path.to_str() {
-            return path_str.contains("/target/debug/") || path_str.contains("\\target\\debug\\");
-        }
-    }
-    
-    // 檢查環境變數
-    std::env::var("NODE_ENV").map(|v| v == "development").unwrap_or(false) ||
-    std::env::var("TAURI_DEV").is_ok()
+    crate::utils::path_utils::is_development_environment()
 }
 
 /// 儲存生成的圖像到臨時目錄
+/// 
+/// 🔧 重構: 使用統一的 StorageHandler，提供更好的錯誤處理和一致性
 pub fn save_temp_generated_image(image_data: &[u8], image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
-    use std::fs;
-    
-    let temp_dir = get_temp_images_dir()?;
-    
-    // 生成檔案路徑
-    let filename = format!("{}.jpg", image_id);
-    let file_path = temp_dir.join(&filename);
-    
-    // 寫入圖像數據
-    fs::write(&file_path, image_data)?;
-    
-    Ok(file_path.to_string_lossy().to_string())
+    match StorageHandler::save_to_temp(image_data, image_id)? {
+        result if result.success => {
+            log::info!("[save_temp_generated_image] ✅ {}", result.message);
+            Ok(result.file_path)
+        },
+        result => {
+            log::error!("[save_temp_generated_image] ❌ {}", result.message);
+            Err(result.message.into())
+        }
+    }
 }
 
 /// 將臨時圖像移動到正式目錄
+/// 
+/// 🔧 重構: 使用統一的 StorageHandler，提供更一致的處理邏輯
 pub fn move_temp_to_final_image(temp_path: &str, image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
-    use std::fs;
-    
-    // 使用與資料庫相同的路徑策略
-    let images_dir = if is_development_environment() {
-        // 開發環境：使用項目根目錄下的 generated-images
-        std::env::current_dir()?.join("generated-images")
-    } else {
-        // 生產環境：使用與資料庫相同的 dirs::data_dir()
-        dirs::data_dir()
-            .ok_or("無法獲取用戶資料目錄")?
-            .join("genesis-chronicle")
-            .join("images")
-    };
-    
-    fs::create_dir_all(&images_dir)?;
-    
-    // 生成最終檔案路徑
-    let filename = format!("{}.jpg", image_id);
-    let final_path = images_dir.join(&filename);
-    
-    // 移動檔案
-    fs::copy(temp_path, &final_path)?;
-    fs::remove_file(temp_path)?;
-    
-    Ok(final_path.to_string_lossy().to_string())
+    match StorageHandler::move_temp_to_final(temp_path, image_id)? {
+        result if result.success => {
+            log::info!("[move_temp_to_final] ✅ {}", result.message);
+            Ok(result.relative_path)
+        },
+        result => {
+            log::error!("[move_temp_to_final] ❌ {}", result.message);
+            Err(result.message.into())
+        }
+    }
 }
 
 /// 優化的圖片生成：直接儲存到最終位置，使用標記系統
@@ -473,93 +299,79 @@ pub async fn generate_illustration_optimized(
         return Err("提示詞不能為空".to_string());
     }
 
-    // 嘗試獲取 API token 以支援高級模型
-    let api_token = crate::commands::pollinations_auth::get_active_pollinations_token().await.ok().flatten();
-    
-    // 根據是否有 token 建立不同等級的 Pollinations API 服務
-    let service = if let Some(token) = &api_token {
-        log::info!("[OptimizedGenerator] 使用認證token，可存取Seed/Flower/Nectar層級模型");
-        PollinationsApiService::with_token(token.clone())
-            .map_err(|e| format!("認證API服務初始化失敗: {:?}", e))?
-    } else {
-        log::info!("[OptimizedGenerator] 使用匿名存取，僅限基礎模型");
-        PollinationsApiService::new()
-            .map_err(|e| format!("基礎API服務初始化失敗: {:?}", e))?
-    };
-
-    // 解析模型 - 預設改為 gptimage（更穩定，無需認證）
-    let pollinations_model = match model.as_deref().unwrap_or("gptimage") {
-        "flux" => PollinationsModel::Flux,
-        "gptimage" => PollinationsModel::GptImage, 
-        "kontext" => PollinationsModel::Kontext,
-        "sdxl" => PollinationsModel::Sdxl,
-        _ => PollinationsModel::GptImage, // 預設使用 GptImage（較穩定）
-    };
-
-    // CRITICAL FIX: 移除 seed 參數以避免 Pollinations.AI 500 錯誤
-    // 2025-08-31: Pollinations.AI 現在對固定 seed 值過敏，導致所有模型都失敗
-    let safe_seed = None; // 強制設為 None，讓 API 自動選擇
-
-    // 建立請求參數
-    let request = PollinationsRequest {
+    // 使用新的 ApiHandler 進行 API 調用
+    let api_request = ApiGenerationRequest {
         prompt: prompt.clone(),
-        model: Some(pollinations_model),
-        width: None, // 移除尺寸參數以避免 500 錯誤
-        height: None, // 移除尺寸參數以避免 500 錯誤
-        seed: safe_seed, // 使用安全的 seed 設定
-        enhance: Some(enhance.unwrap_or(false)),
-        transparent: Some(false),
-        negative_prompt: None,
-        nologo: Some(true),
-        reference_image: None,
+        model,
+        width: _width,
+        height: _height,
+        seed: _seed,
+        enhance,
+        style: style.clone(),
+        project_id: projectId.clone(),
+        character_id: characterId.clone(),
     };
-
-    let now = Instant::now();
     
-    // 呼叫 API 生成圖片  
-    let response = service.generate_image(request.clone()).await
-        .map_err(|e| format!("圖片生成失敗: {:?}", e))?;
+    let api_result = PollinationsApiHandler::generate_with_fallback(api_request.clone()).await;
     
-    let generation_time = now.elapsed().as_millis() as i32;
+    if !api_result.success {
+        return Err(api_result.error_message.unwrap_or_else(|| "API調用失敗".to_string()));
+    }
 
-    // 直接儲存到最終目錄
-    let final_path = save_to_final_directory(&response.image_data, &response.id)
+    // 使用 StorageHandler 儲存到最終目錄
+    let storage_result = StorageHandler::save_to_final(&api_result.image_data, &api_result.id)
         .map_err(|e| format!("圖片儲存失敗: {}", e))?;
     
-    let file_size = fs::metadata(&final_path)
-        .map(|m| m.len() as i64)
-        .unwrap_or(0);
+    if !storage_result.success {
+        return Err(storage_result.message);
+    }
 
-    // 儲存到資料庫，標記為未確認
-    if let Err(e) = save_pollinations_history_unconfirmed(
-        &response.id,
-        projectId.as_deref(),
-        characterId.as_deref(), 
-        &prompt,
-        &request.prompt,
-        &model.unwrap_or_else(|| "gptimage".to_string()),
-        1024, // 預設值，因為 API 不再接受尺寸參數  
-        1024, // 預設值，因為 API 不再接受尺寸參數
-        safe_seed,
-        enhance.unwrap_or(false),
-        style.as_deref(),
-        response.image_url.as_deref(),
-        &final_path,
-        file_size,
-        generation_time,
-    ) {
-        log::warn!("[OptimizedGenerator] 儲存歷史記錄失敗: {}", e);
+    // 使用新的 DbHandler 儲存到資料庫，標記為未確認
+    let db_record = IllustrationRecord {
+        id: api_result.id.clone(),
+        project_id: projectId.clone(),
+        character_id: characterId.clone(),
+        original_prompt: prompt.clone(),
+        enhanced_prompt: api_result.prompt.clone(),
+        model: api_result.parameters.model.clone(),
+        width: api_result.parameters.width,
+        height: api_result.parameters.height,
+        seed: api_result.parameters.seed,
+        enhance: api_result.parameters.enhance,
+        style_applied: style.clone(),
+        image_url: api_result.image_url.clone(),
+        local_file_path: storage_result.file_path.clone(),
+        file_size_bytes: storage_result.file_size as i64,
+        generation_time_ms: api_result.generation_time_ms,
+    };
+    
+    let db_result = IllustrationDbHandler::save_unconfirmed_record(&db_record);
+    if !db_result.success {
+        log::warn!("[OptimizedGenerator] ⚠️ {}", db_result.message);
+        if let Some(details) = &db_result.error_details {
+            log::warn!("[OptimizedGenerator] 詳細錯誤: {}", details);
+        }
         // 不阻斷主流程
     }
 
+    log::info!("[OptimizedGenerator] ✅ 圖片生成完成: {} bytes, {}ms", 
+        storage_result.file_size, api_result.generation_time_ms);
+
     Ok(serde_json::json!({
         "success": true,
-        "id": response.id,
-        "final_path": final_path,
-        "image_url": response.image_url,
+        "id": api_result.id,
+        "final_path": storage_result.file_path,
+        "image_url": api_result.image_url,
         "is_confirmed": false,
-        "file_size_bytes": file_size,
-        "generation_time_ms": generation_time,
+        "file_size_bytes": storage_result.file_size,
+        "generation_time_ms": api_result.generation_time_ms,
+        "parameters": {
+            "model": api_result.parameters.model,
+            "width": api_result.parameters.width,
+            "height": api_result.parameters.height,
+            "enhance": api_result.parameters.enhance,
+            "fallback_used": api_result.fallback_used
+        },
         "message": "圖片已生成（待確認）"
     }))
 }
@@ -567,33 +379,18 @@ pub async fn generate_illustration_optimized(
 /// 確認圖片：將is_confirmed標記為true
 #[tauri::command]
 pub async fn confirm_illustrations(image_ids: Vec<String>) -> Result<Value, String> {
-    log::info!("[OptimizedGenerator] 確認圖片: {:?}", image_ids);
+    log::info!("[OptimizedGenerator] 🎯 確認圖片: {:?}", image_ids);
     
-    if image_ids.is_empty() {
-        return Err("沒有提供圖片ID".to_string());
+    let db_result = IllustrationDbHandler::confirm_illustrations(&image_ids);
+    
+    if !db_result.success {
+        return Err(db_result.message);
     }
-
-    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {:?}", e))?;
-    
-    // 構建 IN 子句的佔位符
-    let placeholders: Vec<&str> = image_ids.iter().map(|_| "?").collect();
-    let in_clause = placeholders.join(",");
-    
-    // 更新 pollinations_generations
-    let mut stmt = conn.prepare(&format!(
-        "UPDATE pollinations_generations SET is_confirmed = 1 WHERE id IN ({})",
-        in_clause
-    )).map_err(|e| format!("SQL準備失敗: {:?}", e))?;
-    
-    let updated_count = stmt.execute(rusqlite::params_from_iter(image_ids.iter()))
-        .map_err(|e| format!("更新失敗: {:?}", e))?;
-    
-    log::info!("[OptimizedGenerator] 已確認 {} 張圖片", updated_count);
 
     Ok(serde_json::json!({
         "success": true,
-        "confirmed_count": updated_count,
-        "message": format!("已確認 {} 張圖片", updated_count)
+        "confirmed_count": db_result.affected_rows,
+        "message": db_result.message
     }))
 }
 
@@ -602,159 +399,160 @@ pub async fn confirm_illustrations(image_ids: Vec<String>) -> Result<Value, Stri
 #[tauri::command]
 #[allow(non_snake_case)]
 pub async fn add_to_collection(imageIds: Vec<String>) -> Result<Value, String> {
-    log::info!("[Collection] 加入收藏: {:?}", imageIds);
+    log::info!("[Collection] 🎨 加入收藏: {:?}", imageIds);
     
-    if imageIds.is_empty() {
-        return Err("沒有提供圖片ID".to_string());
+    // TODO: 處理臨時圖片到收藏的複雜邏輯，目前簡化為基本收藏功能
+    let db_result = IllustrationDbHandler::add_to_collection(&imageIds);
+    
+    if !db_result.success {
+        log::warn!("[Collection] ⚠️ 收藏失敗: {}", db_result.message);
+        return Err(db_result.message);
     }
-
-    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {:?}", e))?;
-    
-    let mut total_collected = 0;
-    let mut newly_confirmed = 0;
-    
-    for image_id in &imageIds {
-        // 檢查圖片是否已存在於資料庫中
-        let exists: i32 = conn.query_row(
-            "SELECT COUNT(*) FROM pollinations_generations WHERE id = ?",
-            [image_id],
-            |row| row.get(0)
-        ).unwrap_or(0);
-        
-        if exists == 0 {
-            // 圖片不在資料庫中，嘗試從臨時檔案確認保存
-            log::info!("[Collection] 圖片 {} 不在資料庫中，嘗試從臨時檔案確認保存", image_id);
-            
-            // 尋找臨時檔案
-            let temp_dir = get_temp_images_dir()
-                .map_err(|e| format!("無法獲取臨時目錄: {}", e))?;
-            let temp_file = temp_dir.join(format!("{}.jpg", image_id));
-            
-            if temp_file.exists() {
-                // 讀取臨時檔案
-                let image_data = std::fs::read(&temp_file)
-                    .map_err(|e| format!("讀取臨時檔案失敗: {}", e))?;
-                
-                // 保存到最終目錄
-                let final_path = save_to_final_directory(&image_data, image_id)
-                    .map_err(|e| format!("保存到最終目錄失敗: {}", e))?;
-                
-                let file_size = image_data.len() as i64;
-                
-                // 插入資料庫記錄（使用基本資訊）
-                if let Err(e) = save_pollinations_history_unconfirmed(
-                    image_id,
-                    None, // project_id
-                    None, // character_id
-                    "Generated image", // original_prompt
-                    "Generated image", // enhanced_prompt
-                    "flux", // model
-                    1024, // width
-                    1024, // height
-                    None, // seed
-                    false, // enhance
-                    None, // style_applied
-                    None, // image_url
-                    &final_path,
-                    file_size,
-                    0, // generation_time_ms
-                ) {
-                    log::warn!("[Collection] 保存圖片記錄失敗: {}", e);
-                    continue;
-                }
-                
-                newly_confirmed += 1;
-                log::info!("[Collection] 已確認保存臨時圖片: {}", image_id);
-                
-                // 刪除臨時檔案
-                let _ = std::fs::remove_file(&temp_file);
-            } else {
-                log::warn!("[Collection] 圖片 {} 既不在資料庫中，臨時檔案也不存在", image_id);
-                continue;
-            }
-        }
-        
-        // 更新為收藏狀態
-        let updated = conn.execute(
-            "UPDATE pollinations_generations 
-             SET in_collection = 1, 
-                 collected_at = CURRENT_TIMESTAMP, 
-                 is_confirmed = 1 
-             WHERE id = ?",
-            [image_id]
-        ).map_err(|e| format!("更新收藏狀態失敗: {}", e))?;
-        
-        if updated > 0 {
-            total_collected += 1;
-        }
-    }
-    
-    log::info!("[Collection] 完成收藏: {} 張圖片收藏, {} 張新確認", total_collected, newly_confirmed);
 
     Ok(serde_json::json!({
         "success": true,
-        "collected_count": total_collected,
-        "newly_confirmed_count": newly_confirmed,
-        "message": format!("已加入收藏 {} 張圖片{}", 
-            total_collected,
-            if newly_confirmed > 0 { format!("（其中 {} 張為新確認）", newly_confirmed) } else { String::new() }
-        )
+        "collected_count": db_result.affected_rows,
+        "message": db_result.message
     }))
 }
 
 /// 帶完整資料的收藏功能：處理臨時圖片並保留原始上下文
+/// 🔧 加強版：防止panic，確保APP穩定性
 #[tauri::command]
 #[allow(non_snake_case)]
 pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value, String> {
-    log::info!("[Collection] 帶資料的收藏請求: {} 張圖片", imageData.len());
+    log::info!("[Collection] 🚀 帶資料的收藏請求開始: {} 張圖片", imageData.len());
     
+    // 🛡️ 基本輸入驗證
     if imageData.is_empty() {
+        log::warn!("[Collection] ⚠️ 沒有提供圖片資料");
         return Err("沒有提供圖片資料".to_string());
     }
 
-    let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {:?}", e))?;
+    // 🛡️ 安全的資料庫連接，加強錯誤處理
+    let conn = match create_connection() {
+        Ok(connection) => {
+            log::info!("[Collection] ✅ 資料庫連接成功");
+            connection
+        },
+        Err(e) => {
+            log::error!("[Collection] ❌ 資料庫連接失敗: {:?}", e);
+            return Err(format!("資料庫連接失敗，請檢查資料庫狀態: {:?}", e));
+        }
+    };
     
     let mut total_collected = 0;
     let mut newly_confirmed = 0;
+    let mut processing_errors = Vec::new();
     
-    for image_data in &imageData {
-        let image_id = image_data.get("id")
-            .and_then(|v| v.as_str())
-            .ok_or("圖片ID缺失")?;
+    // 🛡️ 逐一處理，即使部分失敗也不影響整體
+    for (index, image_data) in imageData.iter().enumerate() {
+        log::info!("[Collection] 🔄 處理第 {}/{} 張圖片", index + 1, imageData.len());
+        
+        // 🛡️ 安全提取圖片ID
+        let image_id = match image_data.get("id").and_then(|v| v.as_str()) {
+            Some(id) if !id.is_empty() => {
+                log::info!("[Collection] 📷 處理圖片ID: {}", id);
+                id
+            },
+            _ => {
+                let error = format!("第 {} 張圖片資料缺少有效ID", index + 1);
+                log::error!("[Collection] ❌ {}", error);
+                processing_errors.push(error);
+                continue; // 跳過這個無效的圖片資料，不會導致崩潰
+            }
+        };
         
         let project_id = image_data.get("project_id").and_then(|v| v.as_str());
         let character_id = image_data.get("character_id").and_then(|v| v.as_str());
-        let original_prompt = image_data.get("original_prompt").and_then(|v| v.as_str()).unwrap_or("Generated image");
+        let original_prompt = image_data.get("original_prompt")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Generated image");
         
-        // 檢查圖片是否已存在於資料庫中
-        let exists: i32 = conn.query_row(
+        log::info!("[Collection] 📋 圖片上下文 - 專案: {:?}, 角色: {:?}, 提示: {}", 
+            project_id, character_id, &original_prompt[..original_prompt.len().min(50)]);
+        
+        // 🛡️ 安全檢查圖片是否已存在於資料庫中
+        let exists = match conn.query_row(
             "SELECT COUNT(*) FROM pollinations_generations WHERE id = ?",
             [image_id],
-            |row| row.get(0)
-        ).unwrap_or(0);
+            |row| row.get::<_, i32>(0)
+        ) {
+            Ok(count) => {
+                log::info!("[Collection] 🔍 圖片 {} 資料庫檢查結果: {} 筆記錄", image_id, count);
+                count
+            },
+            Err(e) => {
+                let error = format!("圖片 {} 資料庫查詢失敗: {}", image_id, e);
+                log::error!("[Collection] ❌ {}", error);
+                processing_errors.push(error);
+                0 // 假設不存在，繼續處理，避免因查詢失敗而中斷
+            }
+        };
         
+        // 🛡️ 如果圖片不在資料庫中，從臨時檔案確認保存
         if exists == 0 {
-            // 圖片不在資料庫中，嘗試從臨時檔案確認保存
-            log::info!("[Collection] 圖片 {} 不在資料庫中，嘗試從臨時檔案確認保存", image_id);
+            log::info!("[Collection] 📂 圖片 {} 不在資料庫中，嘗試從臨時檔案確認保存", image_id);
             
-            // 尋找臨時檔案
-            let temp_dir = get_temp_images_dir()
-                .map_err(|e| format!("無法獲取臨時目錄: {}", e))?;
+            // 🛡️ 安全獲取臨時目錄
+            let temp_dir = match get_temp_images_dir() {
+                Ok(dir) => {
+                    log::info!("[Collection] 📁 臨時目錄路徑: {:?}", dir);
+                    dir
+                },
+                Err(e) => {
+                    let error = format!("圖片 {} 無法獲取臨時目錄: {}", image_id, e);
+                    log::error!("[Collection] ❌ {}", error);
+                    processing_errors.push(error);
+                    continue; // 跳過這張圖片，不會導致崩潰
+                }
+            };
+            
             let temp_file = temp_dir.join(format!("{}.jpg", image_id));
+            log::info!("[Collection] 🔍 檢查臨時檔案: {:?}", temp_file);
             
+            // 🛡️ 檢查臨時檔案是否存在
             if temp_file.exists() {
-                // 讀取臨時檔案
-                let image_bytes = std::fs::read(&temp_file)
-                    .map_err(|e| format!("讀取臨時檔案失敗: {}", e))?;
+                log::info!("[Collection] ✅ 找到臨時檔案，開始處理");
                 
-                // 保存到最終目錄
-                let final_path = save_to_final_directory(&image_bytes, image_id)
-                    .map_err(|e| format!("保存到最終目錄失敗: {}", e))?;
+                // 🛡️ 安全讀取臨時檔案
+                let image_bytes = match std::fs::read(&temp_file) {
+                    Ok(bytes) => {
+                        log::info!("[Collection] 📖 成功讀取臨時檔案，大小: {} bytes", bytes.len());
+                        if bytes.is_empty() {
+                            let error = format!("圖片 {} 的臨時檔案為空", image_id);
+                            log::error!("[Collection] ❌ {}", error);
+                            processing_errors.push(error);
+                            continue;
+                        }
+                        bytes
+                    },
+                    Err(e) => {
+                        let error = format!("圖片 {} 讀取臨時檔案失敗: {}", image_id, e);
+                        log::error!("[Collection] ❌ {}", error);
+                        processing_errors.push(error);
+                        continue; // 跳過這張圖片，不會導致崩潰
+                    }
+                };
+                
+                // 🛡️ 安全保存到最終目錄
+                let final_path = match save_to_final_directory(&image_bytes, image_id) {
+                    Ok(path) => {
+                        log::info!("[Collection] ✅ 成功保存到最終目錄: {}", path);
+                        path
+                    },
+                    Err(e) => {
+                        let error = format!("圖片 {} 保存到最終目錄失敗: {}", image_id, e);
+                        log::error!("[Collection] ❌ {}", error);
+                        processing_errors.push(error);
+                        continue; // 跳過這張圖片，不會導致崩潰
+                    }
+                };
                 
                 let file_size = image_bytes.len() as i64;
                 
-                // 插入資料庫記錄（保留原始上下文）
-                if let Err(e) = save_pollinations_history_unconfirmed(
+                // 🛡️ 安全插入資料庫記錄
+                match save_pollinations_history_unconfirmed(
                     image_id,
                     project_id,
                     character_id,
@@ -771,93 +569,111 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
                     file_size,
                     0,
                 ) {
-                    log::warn!("[Collection] 保存圖片記錄失敗: {}", e);
-                    continue;
+                    Ok(_) => {
+                        newly_confirmed += 1;
+                        log::info!("[Collection] ✅ 已成功確認保存臨時圖片: {} (專案: {:?})", image_id, project_id);
+                    },
+                    Err(e) => {
+                        let error = format!("圖片 {} 保存記錄到資料庫失敗: {}", image_id, e);
+                        log::warn!("[Collection] ⚠️ {}", error);
+                        processing_errors.push(error);
+                        // 不使用continue，因為檔案已經保存成功，只是資料庫記錄失敗
+                        // 可以繼續進行收藏狀態更新
+                    }
                 }
                 
-                newly_confirmed += 1;
-                log::info!("[Collection] 已確認保存臨時圖片: {} (專案: {:?})", image_id, project_id);
-                
-                // 刪除臨時檔案
-                let _ = std::fs::remove_file(&temp_file);
+                // 🛡️ 安全刪除臨時檔案
+                match std::fs::remove_file(&temp_file) {
+                    Ok(_) => log::info!("[Collection] 🗑️ 已清理臨時檔案"),
+                    Err(e) => log::warn!("[Collection] ⚠️ 清理臨時檔案失敗: {}", e),
+                }
             } else {
-                log::warn!("[Collection] 圖片 {} 既不在資料庫中，臨時檔案也不存在", image_id);
+                let warning = format!("圖片 {} 既不在資料庫中，臨時檔案也不存在", image_id);
+                log::warn!("[Collection] ⚠️ {}", warning);
+                processing_errors.push(warning);
                 continue;
             }
+        } else {
+            log::info!("[Collection] ✅ 圖片 {} 已存在於資料庫中", image_id);
         }
         
-        // 更新為收藏狀態
-        let updated = conn.execute(
+        // 🛡️ 安全更新收藏狀態
+        match conn.execute(
             "UPDATE pollinations_generations 
              SET in_collection = 1, 
                  collected_at = CURRENT_TIMESTAMP, 
                  is_confirmed = 1 
              WHERE id = ?",
             [image_id]
-        ).map_err(|e| format!("更新收藏狀態失敗: {}", e))?;
-        
-        if updated > 0 {
-            total_collected += 1;
+        ) {
+            Ok(updated) => {
+                if updated > 0 {
+                    total_collected += 1;
+                    log::info!("[Collection] ✅ 成功更新收藏狀態 for image: {}", image_id);
+                } else {
+                    let warning = format!("圖片 {} 不存在，無法更新收藏狀態", image_id);
+                    log::warn!("[Collection] ⚠️ {}", warning);
+                    processing_errors.push(warning);
+                }
+            },
+            Err(e) => {
+                let error = format!("圖片 {} 更新收藏狀態失敗: {}", image_id, e);
+                log::error!("[Collection] ❌ {}", error);
+                processing_errors.push(error);
+                // 不使用 continue，因為這張圖片可能已經部分處理成功
+                // 繼續處理下一張圖片
+            }
         }
     }
     
-    log::info!("[Collection] 完成帶資料收藏: {} 張圖片收藏, {} 張新確認", total_collected, newly_confirmed);
+    // 🎯 總結處理結果
+    log::info!("[Collection] 🏁 處理完成統計:");
+    log::info!("[Collection]   ✅ 成功收藏: {} 張圖片", total_collected);
+    log::info!("[Collection]   🆕 新確認: {} 張圖片", newly_confirmed);
+    log::info!("[Collection]   ⚠️ 處理錯誤: {} 個", processing_errors.len());
+    
+    if !processing_errors.is_empty() {
+        log::warn!("[Collection] 📋 錯誤詳情:");
+        for (i, error) in processing_errors.iter().enumerate() {
+            log::warn!("[Collection]   {}. {}", i + 1, error);
+        }
+    }
+
+    // 🛡️ 構建安全的回應
+    let success_message = if total_collected > 0 {
+        format!("已加入收藏 {} 張圖片{}{}", 
+            total_collected,
+            if newly_confirmed > 0 { format!("（其中 {} 張為新確認）", newly_confirmed) } else { String::new() },
+            if !processing_errors.is_empty() { format!("，{} 個處理錯誤（詳見日誌）", processing_errors.len()) } else { String::new() }
+        )
+    } else {
+        "沒有圖片成功加入收藏，請檢查日誌了解詳情".to_string()
+    };
 
     Ok(serde_json::json!({
-        "success": true,
+        "success": total_collected > 0, // 只要有成功收藏的就算成功
         "collected_count": total_collected,
         "newly_confirmed_count": newly_confirmed,
-        "message": format!("已加入收藏 {} 張圖片{}", 
-            total_collected,
-            if newly_confirmed > 0 { format!("（其中 {} 張為新確認）", newly_confirmed) } else { String::new() }
-        )
+        "error_count": processing_errors.len(),
+        "errors": if processing_errors.len() <= 5 { processing_errors } else { processing_errors[..5].to_vec() }, // 最多返回5個錯誤
+        "message": success_message
     }))
 }
 
 /// 儲存圖片到最終目錄
+/// 
+/// 🔧 重構: 使用統一的 StorageHandler，簡化邏輯並提高一致性
 pub fn save_to_final_directory(image_data: &[u8], image_id: &str) -> Result<String, Box<dyn std::error::Error>> {
-    log::info!("[save_to_final_directory] 開始保存圖片 ID: {}, 數據大小: {} bytes", image_id, image_data.len());
-    
-    // 檢查圖片數據是否為空
-    if image_data.is_empty() {
-        return Err("圖片數據為空".into());
+    match StorageHandler::save_to_final(image_data, image_id)? {
+        result if result.success => {
+            log::info!("[save_to_final_directory] ✅ {}", result.message);
+            Ok(result.relative_path)
+        },
+        result => {
+            log::error!("[save_to_final_directory] ❌ {}", result.message);
+            Err(result.message.into())
+        }
     }
-    
-    // 使用與資料庫相同的路徑策略
-    let images_dir = if is_development_environment() {
-        // 開發環境：使用項目根目錄下的 generated-images
-        std::env::current_dir()?.join("generated-images")
-    } else {
-        // 生產環境：使用與資料庫相同的 dirs::data_dir()
-        dirs::data_dir()
-            .ok_or("無法獲取用戶資料目錄")?
-            .join("genesis-chronicle")
-            .join("images")
-    };
-    
-    log::info!("[save_to_final_directory] 目標目錄: {:?}", images_dir);
-    
-    fs::create_dir_all(&images_dir)?;
-    
-    // 生成最終檔案路徑
-    let filename = format!("{}.jpg", image_id);
-    let final_path = images_dir.join(&filename);
-    
-    log::info!("[save_to_final_directory] 完整檔案路徑: {:?}", final_path);
-    
-    // 直接寫入檔案
-    fs::write(&final_path, image_data)?;
-    
-    // 驗證檔案是否真的被創建
-    if final_path.exists() {
-        let file_size = fs::metadata(&final_path)?.len();
-        log::info!("[save_to_final_directory] 檔案保存成功，最終檔案大小: {} bytes", file_size);
-    } else {
-        log::error!("[save_to_final_directory] 檔案寫入後不存在！");
-        return Err("檔案寫入後不存在".into());
-    }
-    
-    Ok(final_path.to_string_lossy().to_string())
 }
 
 /// 儲存Pollinations歷史記錄（標記為未確認）
@@ -891,13 +707,14 @@ pub fn save_pollinations_history_unconfirmed(
             image_url, local_file_path, file_size_bytes, generation_time_ms,
             is_confirmed, created_timestamp, created_at
         ) VALUES (
-            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, 0, ?16, CURRENT_TIMESTAMP
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, 0, ?16, ?17
         )",
         rusqlite::params![
             id, project_id, character_id, original_prompt, enhanced_prompt,
             model, width, height, _seed, enhance, style_applied,
             image_url, local_file_path, file_size_bytes, generation_time_ms,
-            current_time
+            current_time,
+            chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string() // 🔧 使用本地時間
         ],
     )?;
     

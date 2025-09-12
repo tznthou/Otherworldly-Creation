@@ -15,6 +15,8 @@ pub mod temp_image_manager;
 pub mod image_deletion;
 pub mod enhanced_generation;
 pub mod image_rename;
+pub mod delayed_deletion;
+pub mod data_repair;
 pub mod utils;
 
 // 重新匯出所有公開功能，保持原有API兼容性
@@ -37,6 +39,7 @@ pub use free_generation::{
     test_pollinations_connection,
     get_illustration_history,
     get_free_illustration_models,
+    repair_database_sync,
 };
 
 // ========================= 臨時圖像管理 =========================
@@ -56,6 +59,7 @@ pub use temp_image_manager::{
 // ========================= 圖像刪除管理 =========================
 pub use image_deletion::{
     delete_illustrations,
+    delete_illustrations_safe,
     restore_illustrations,
     get_deleted_illustrations,
     permanent_delete_illustrations,
@@ -74,6 +78,19 @@ pub use enhanced_generation::{
 pub use image_rename::{
     rename_illustration,
     batch_rename_illustrations,
+};
+
+// ========================= 延遲刪除管理 =========================
+pub use delayed_deletion::{
+    schedule_delayed_deletion,
+    cancel_delayed_deletion,
+    get_delayed_deletion_status,
+};
+
+// ========================= 資料修復工具 =========================
+pub use data_repair::{
+    repair_image_paths,
+    scan_orphaned_files,
 };
 
 // ========================= 共用輔助函數 =========================

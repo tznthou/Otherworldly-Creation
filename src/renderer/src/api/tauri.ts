@@ -1359,6 +1359,23 @@ export const tauriAPI: API = {
       });
     },
 
+    // 安全刪除插畫（使用延遲刪除隊列防止崩潰）
+    deleteIllustrationsSafe: async (request: {
+      imageIds: string[];
+      deleteType: 'soft' | 'permanent';
+      preserveMetadata?: boolean;
+      reason?: string;
+      delayMs?: number;
+    }) => {
+      return safeInvoke('delete_illustrations_safe', {
+        imageIds: request.imageIds,
+        deleteType: request.deleteType,
+        preserveMetadata: request.preserveMetadata,
+        reason: request.reason,
+        delayMs: request.delayMs
+      });
+    },
+
     restoreIllustrations: async (imageIds: string[]) => {
       return safeInvoke('restore_illustrations', { image_ids: imageIds });
     },

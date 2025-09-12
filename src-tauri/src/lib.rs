@@ -35,15 +35,19 @@ use commands::illustration::{
     generate_enhanced_illustration, get_illustration_generation_status,
     cancel_illustration_generation, validate_imagen_api_connection,
     generate_free_illustration, test_pollinations_connection, get_free_illustration_models,
-    get_illustration_history,
+    get_illustration_history, repair_database_sync,
     // 臨時圖像管理 API
     generate_free_illustration_to_temp, confirm_temp_image_save, delete_temp_image, cleanup_expired_temp_images,
     // 優化的圖像管理 API
     generate_illustration_optimized, confirm_illustrations, add_to_collection, add_to_collection_with_data,
     // 圖片刪除管理 API
-    delete_illustrations, restore_illustrations, get_deleted_illustrations, permanent_delete_illustrations,
+    delete_illustrations, delete_illustrations_safe, restore_illustrations, get_deleted_illustrations, permanent_delete_illustrations,
     // 圖片重命名管理 API
-    rename_illustration, batch_rename_illustrations
+    rename_illustration, batch_rename_illustrations,
+    // 延遲刪除管理 API
+    schedule_delayed_deletion, cancel_delayed_deletion, get_delayed_deletion_status,
+    // 資料修復工具 API
+    repair_image_paths, scan_orphaned_files
 };
 use commands::translation::{
     translate_character_description, optimize_prompt, search_vocabulary, 
@@ -196,6 +200,7 @@ pub fn run() {
       test_pollinations_connection,
       get_free_illustration_models,
       get_illustration_history,
+      repair_database_sync,
       // 臨時圖像預覽管理
       generate_free_illustration_to_temp,
       confirm_temp_image_save,
@@ -208,12 +213,20 @@ pub fn run() {
       add_to_collection_with_data,
       // 圖片刪除管理 commands
       delete_illustrations,
+      delete_illustrations_safe,
       restore_illustrations,
       get_deleted_illustrations,
       permanent_delete_illustrations,
       // 圖片重命名管理 commands
       rename_illustration,
       batch_rename_illustrations,
+      // 延遲刪除管理 commands
+      schedule_delayed_deletion,
+      cancel_delayed_deletion,
+      get_delayed_deletion_status,
+      // 資料修復工具 commands
+      repair_image_paths,
+      scan_orphaned_files,
       // Translation commands
       translate_character_description,
       optimize_prompt,

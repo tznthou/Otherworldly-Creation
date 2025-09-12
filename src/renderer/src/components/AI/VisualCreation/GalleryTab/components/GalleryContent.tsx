@@ -1,332 +1,356 @@
-import React from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { SafeImage } from '../../../../UI/SafeImage';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
 import type { IllustrationHistoryItem } from '../../../../../types/illustration';
-import type { Character } from '../../../../../types/character';
 import VirtualizedImageGrid from '../VirtualizedImageGrid';
-import VirtualizedContainer from '../VirtualizedContainer';
 import { formatDateTime } from '../../../../../utils/dateUtils';
 
 interface GalleryContentProps {
-  loading: boolean;
-  versionLoading: boolean;
-  filteredIllustrations: IllustrationHistoryItem[];
+  illustrations: IllustrationHistoryItem[];
   selectedImages: Set<string>;
-  viewMode: 'grid' | 'list';
-  projectCharacters: Character[];
-  
-  // 事件處理
-  onToggleImageSelection: (imageId: string) => void;
-  onDragEnd: (event: DragEndEvent) => void;
-  onPreviewImage: (imageId: string) => void;
-  onDownloadImage: (imageId: string) => void;
-  onViewVersionHistory: (imageId: string) => void;
-  onCreateVariant: (imageId: string) => void;
+  onToggleSelection: (imageId: string) => void;
+  deletingImages?: Set<string>;
+  viewMode?: 'grid' | 'list';
+  sortBy?: 'newest' | 'oldest' | 'rating' | 'size';
+  isCollectionView?: boolean;
+  searchQuery?: string;
+  selectedProvider?: string;
+  selectedStatus?: string;
+  selectedVersion?: string;
+  selectedPeriod?: string;
 }
 
-const GalleryContent: React.FC<GalleryContentProps> = ({
-  loading,
-  versionLoading,
-  filteredIllustrations,
+export const GalleryContent: React.FC<GalleryContentProps> = ({
+  illustrations,
   selectedImages,
-  viewMode,
-  projectCharacters,
-  onToggleImageSelection,
-  onDragEnd,
-  onPreviewImage,
-  onDownloadImage,
-  onViewVersionHistory,
-  onCreateVariant,
+  onToggleSelection,
+  deletingImages = new Set(),
+  viewMode = 'grid',
+  sortBy = 'newest',
+  isCollectionView: _isCollectionView = false,
+  searchQuery = '',
+  selectedProvider,
+  selectedStatus,
+  selectedVersion,
+  selectedPeriod
 }) => {
-  // 拖拽感應器設置
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [isObserverReady, setIsObserverReady] = useState(false);
 
-  // 獲取角色名稱
-  const getCharacterName = (characterId?: string) => {
-    if (!characterId) return '無角色';
-    const char = projectCharacters.find(c => c.id === characterId);
-    return char?.name || '未知角色';
-  };
-
-  // 格式化版本號顯示
-  const formatVersionNumber = (versionNumber?: number) => {
-    if (!versionNumber) return '';
-    return `v${versionNumber.toFixed(1)}`;
-  };
-
-  // 獲取版本類型圖標
-  const getVersionTypeIcon = (type?: string) => {
-    switch (type) {
-      case 'original': return '🌟';
-      case 'revision': return '✏️';
-      case 'branch': return '🌿';
-      case 'merge': return '🔄';
-      default: return '📄';
+  // 📐 超激進尺寸設置 - 立即生效，不等待ResizeObserver
+  useEffect(() => {
+    console.log('🚀 [GalleryContent] 超激進尺寸設置開始...');
+    
+    // 立即設置合理的默認尺寸，不等待任何條件
+    const immediateSize = {
+      width: Math.max(window.innerWidth - 400, 800),
+      height: Math.max(window.innerHeight - 300, 600)
+    };
+    
+    console.log('⚡ [GalleryContent] 立即設置預設尺寸:', immediateSize);
+    setDimensions(immediateSize);
+    setIsObserverReady(true);
+    
+    if (!containerRef.current) {
+      console.warn('❌ [GalleryContent] containerRef.current 不存在，但已設置預設尺寸');
+      return;
     }
-  };
 
-  // 獲取狀態圖標和名稱
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed': return '✅';
-      case 'failed': return '❌';
-      case 'pending': return '⏳';
-      case 'processing': return '🔄';
-      default: return '❓';
-    }
-  };
-
-  const getStatusName = (status: string) => {
-    switch (status) {
-      case 'completed': return '完成';
-      case 'failed': return '失敗';
-      case 'pending': return '等待';
-      case 'processing': return '處理中';
-      default: return '未知';
-    }
-  };
-
-  // 格式化日期
-  const formatDate = (dateString: string) => {
-    return formatDateTime(dateString, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
+    const container = containerRef.current;
+    console.log('📦 [GalleryContent] 容器元素檢查:', {
+      offsetWidth: container.offsetWidth,
+      offsetHeight: container.offsetHeight,
+      clientWidth: container.clientWidth,
+      clientHeight: container.clientHeight,
+      scrollWidth: container.scrollWidth,
+      scrollHeight: container.scrollHeight,
+      className: container.className,
+      computedStyles: {
+        width: getComputedStyle(container).width,
+        height: getComputedStyle(container).height,
+        position: getComputedStyle(container).position,
+        display: getComputedStyle(container).display
+      }
     });
-  };
 
-  if (loading || versionLoading) {
+    // 智能備用尺寸計算
+    const smartFallback = {
+      width: Math.max(
+        container.clientWidth,
+        container.offsetWidth,
+        immediateSize.width
+      ),
+      height: Math.max(
+        container.clientHeight, 
+        container.offsetHeight,
+        immediateSize.height
+      )
+    };
+    
+    console.log('🎯 [GalleryContent] 智能備用尺寸:', smartFallback);
+
+    // 立即更新為智能尺寸（如果更大的話）
+    if (smartFallback.width > immediateSize.width || smartFallback.height > immediateSize.height) {
+      console.log('📈 [GalleryContent] 更新為智能尺寸');
+      setDimensions(smartFallback);
+    }
+
+    // 設置ResizeObserver（但不依賴它）
+    const resizeObserver = new ResizeObserver((entries) => {
+      console.log('📏 [GalleryContent] ResizeObserver 觸發, entries數量:', entries.length);
+      
+      for (const entry of entries) {
+        const observedDimensions = {
+          width: Math.max(entry.contentRect.width, 300),
+          height: Math.max(entry.contentRect.height, 200),
+        };
+        
+        console.log('✅ [GalleryContent] ResizeObserver新尺寸:', observedDimensions);
+        setDimensions(observedDimensions);
+      }
+    });
+
+    try {
+      resizeObserver.observe(container);
+      console.log('🔄 [GalleryContent] ResizeObserver 已啟動（作為輔助）');
+    } catch (error) {
+      console.error('❌ [GalleryContent] ResizeObserver 錯誤（但不影響顯示）:', error);
+    }
+
+    return () => {
+      console.log('🧹 [GalleryContent] 清理ResizeObserver');
+      resizeObserver.disconnect();
+    };
+  }, []);
+  
+  // 尺寸變化調試
+  useEffect(() => {
+    console.log('📊 [GalleryContent] 尺寸狀態更新:', {
+      dimensions,
+      isObserverReady,
+      shouldRender: dimensions.width > 0 && dimensions.height > 0,
+      illustrations: illustrations.length
+    });
+  }, [dimensions, isObserverReady, illustrations.length]);
+
+  // 過濾和排序邏輯
+  const filteredAndSortedIllustrations = useMemo(() => {
+    let filtered = [...illustrations];
+
+    // 搜尋過濾
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.original_prompt?.toLowerCase().includes(query) ||
+        item.enhanced_prompt?.toLowerCase().includes(query) ||
+        item.id.toLowerCase().includes(query)
+      );
+    }
+
+    // 服務商過濾
+    if (selectedProvider) {
+      filtered = filtered.filter(item => {
+        // 根據不同的服務商字段判斷
+        const provider = item.provider || 
+                        (item.model?.includes('flux') ? 'pollinations' : 'unknown');
+        return provider === selectedProvider;
+      });
+    }
+
+    // 狀態過濾
+    if (selectedStatus) {
+      filtered = filtered.filter(item => item.status === selectedStatus);
+    }
+
+    // 版本過濾（這裡可以根據模型或其他字段）
+    if (selectedVersion) {
+      filtered = filtered.filter(item => 
+        item.model?.toLowerCase().includes(selectedVersion.toLowerCase())
+      );
+    }
+
+    // 時間段過濾
+    if (selectedPeriod) {
+      const now = new Date();
+      let startDate: Date;
+      
+      switch (selectedPeriod) {
+        case 'today':
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        default:
+          startDate = new Date(0);
+      }
+      
+      filtered = filtered.filter(item => {
+        const itemDate = new Date(item.created_at);
+        return itemDate >= startDate;
+      });
+    }
+
+    // 排序
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'rating':
+          return (b.user_rating || 0) - (a.user_rating || 0);
+        case 'size':
+          return (b.file_size_bytes || 0) - (a.file_size_bytes || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [illustrations, searchQuery, selectedProvider, selectedStatus, selectedVersion, selectedPeriod, sortBy]);
+
+  if (filteredAndSortedIllustrations.length === 0) {
     return (
-      <div className="flex-1 bg-cosmic-800/30 rounded-lg border border-cosmic-700 overflow-hidden">
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <div className="text-4xl mb-4">⏳</div>
-            <p className="text-cosmic-400">載入插畫和版本數據中...</p>
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center h-64 text-cosmic-400">
+        <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p className="text-lg mb-2">沒有找到符合條件的圖片</p>
+        <p className="text-sm opacity-60">
+          {searchQuery ? '嘗試調整搜尋條件' : '開始生成一些精美的插畫吧'}
+        </p>
       </div>
     );
   }
 
-  if (filteredIllustrations.length === 0) {
-    return (
-      <div className="flex-1 bg-cosmic-800/30 rounded-lg border border-cosmic-700 overflow-hidden">
-        <div className="flex flex-col items-center justify-center h-full text-center">
-          <div className="text-6xl mb-6">🖼️</div>
-          <h3 className="text-xl font-cosmic text-cosmic-300 mb-2">尚無插畫</h3>
-          <p className="text-cosmic-400 mb-4">開始創建您的第一張插畫吧！</p>
-          <button className="px-4 py-2 bg-gold-600 hover:bg-gold-700 text-white rounded-lg transition-colors">
-            🎨 開始創作
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // 📊 激進渲染策略 - 總是嘗試渲染
+  const shouldRender = true; // 總是渲染，使用最小保護尺寸
+  const isLoading = false; // 不再顯示載入狀態
+  const safeWidth = Math.max(dimensions.width, 300);
+  const safeHeight = Math.max(dimensions.height, 200);
+
+  console.log('🎬 [GalleryContent] 激進渲染決策:', {
+    shouldRender,
+    isLoading,
+    originalDimensions: dimensions,
+    safeDimensions: { width: safeWidth, height: safeHeight },
+    isObserverReady,
+    filteredLength: filteredAndSortedIllustrations.length,
+    windowSize: { width: window.innerWidth, height: window.innerHeight }
+  });
 
   return (
-    <div className="flex-1 bg-cosmic-800/30 rounded-lg border border-cosmic-700 overflow-hidden">
-      <DndContext 
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={onDragEnd}
-      >
-        <div className="h-full overflow-y-auto">
+    <div ref={containerRef} className="w-full h-full overflow-hidden">
+      {shouldRender ? (
+        <>
           {viewMode === 'grid' ? (
-            // 虛擬化網格視圖
-            <VirtualizedContainer>
-              {({ width, height }) => (
-                <VirtualizedImageGrid
-                  illustrations={filteredIllustrations}
-                  selectedImages={selectedImages}
-                  onToggleSelection={onToggleImageSelection}
-                  containerWidth={width}
-                  containerHeight={height}
-                />
-              )}
-            </VirtualizedContainer>
+            <VirtualizedImageGrid
+              illustrations={filteredAndSortedIllustrations}
+              selectedImages={selectedImages}
+              onToggleSelection={onToggleSelection}
+              containerWidth={safeWidth}
+              containerHeight={safeHeight}
+              deletingImages={deletingImages}
+            />
           ) : (
-            // 列表視圖（支援拖拽排序）
-            <SortableContext 
-              items={filteredIllustrations.map(item => item.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="divide-y divide-cosmic-700">
-                {filteredIllustrations.map((item) => (
+            <div className="p-4 space-y-4 overflow-y-auto h-full">
+              {filteredAndSortedIllustrations.map((item) => {
+                const isSelected = selectedImages.has(item.id);
+                const isDeleting = deletingImages.has(item.id);
+
+                return (
                   <div
                     key={item.id}
                     className={`
-                      p-4 flex items-center space-x-4 hover:bg-cosmic-700/30 transition-colors cursor-pointer
-                      ${selectedImages.has(item.id) ? 'bg-gold-900/20' : ''}
+                      flex bg-cosmic-800 rounded-lg p-4 transition-all duration-200
+                      ${isSelected ? 'ring-2 ring-primary-500 bg-primary-500/10' : 'hover:bg-cosmic-700'}
+                      ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
                     `}
-                    onClick={() => onToggleImageSelection(item.id)}
+                    onClick={() => !isDeleting && onToggleSelection(item.id)}
                   >
-                    {/* 選擇框 */}
-                    <div className={`
-                      flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center text-xs
-                      ${selectedImages.has(item.id)
-                        ? 'bg-gold-500 border-gold-500 text-white'
-                        : 'border-cosmic-500 hover:border-gold-400'
-                      }
-                    `}>
-                      {selectedImages.has(item.id) && '✓'}
-                    </div>
-                    
-                    {/* 縮略圖 */}
-                    <div className="flex-shrink-0 w-16 h-16 bg-cosmic-700 rounded overflow-hidden relative">
-                      {item.image_url || item.local_file_path ? (
-                        <SafeImage
-                          imageUrl={item.image_url}
-                          localFilePath={item.local_file_path}
-                          alt={item.original_prompt}
-                          className="w-full h-full object-cover"
-                          fallbackIcon="🎨"
-                        />
+                    <div className="relative w-32 h-32 flex-shrink-0 mr-4">
+                      {item.image_url || item.image_path ? (
+                        <>
+                          <SafeImage
+                            imageUrl={item.image_url}
+                            localFilePath={item.image_path}
+                            alt={item.original_prompt}
+                            className="w-full h-full object-cover rounded"
+                            loading="lazy"
+                            fallbackIcon="🎨"
+                          />
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-primary-500/20 rounded flex items-center justify-center">
+                              <svg className="w-8 h-8 text-primary-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                          {isDeleting && (
+                            <div className="absolute inset-0 bg-red-500/20 rounded flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-400"></div>
+                            </div>
+                          )}
+                        </>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-cosmic-400 text-xl">
-                          {getStatusIcon(item.status)}
+                        <div className="w-full h-full bg-cosmic-700 rounded flex items-center justify-center">
+                          <span className="text-2xl text-cosmic-500">🎨</span>
                         </div>
                       )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-cosmic-100 mb-2 truncate">
+                        {item.original_prompt || '未命名插畫'}
+                      </h3>
                       
-                      {/* 版本標識 */}
-                      {item.versionNumber && (
-                        <div className="absolute top-1 right-1 bg-black/70 text-white text-xs px-1 py-0.5 rounded flex items-center space-x-1">
-                          <span>{getVersionTypeIcon(item.versionType)}</span>
-                          <span>{formatVersionNumber(item.versionNumber)}</span>
-                          {item.totalVersions && item.totalVersions > 1 && (
-                            <span className="text-gold-400">({item.totalVersions})</span>
+                      <div className="space-y-1 text-xs text-cosmic-400">
+                        <div className="flex items-center justify-between">
+                          <span>模型: {item.model || 'unknown'}</span>
+                          <span>{item.width || 0}×{item.height || 0}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span>狀態: {item.status === 'completed' ? '完成' : item.status}</span>
+                          <span>
+                            {item.file_size_bytes 
+                              ? `${Math.round(item.file_size_bytes / 1024)} KB` 
+                              : '未知大小'
+                            }
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span>{formatDateTime(item.created_at)}</span>
+                          {item.user_rating && (
+                            <div className="flex items-center">
+                              <span>⭐</span>
+                              <span className="ml-1">{item.user_rating}</span>
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                    
-                    {/* 詳細信息 */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-medium text-white truncate">
-                          {getStatusName(item.status)} - {item.model}
-                        </h4>
-                        <span className={`
-                          px-2 py-0.5 rounded-full text-xs
-                          ${item.is_free ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'}
-                        `}>
-                          {item.provider === 'pollinations' ? 'Pollinations' : 'Imagen'}
-                        </span>
-                        
-                        {/* 版本狀態標識 */}
-                        {item.versionStatus && item.versionStatus !== 'active' && (
-                          <span className="px-2 py-0.5 rounded-full text-xs bg-orange-600 text-white">
-                            {item.versionStatus}
-                          </span>
-                        )}
-                        {item.isLatestVersion && item.totalVersions && item.totalVersions > 1 && (
-                          <span className="px-2 py-0.5 rounded-full text-xs bg-green-600 text-white">
-                            最新
-                          </span>
-                        )}
                       </div>
-                      <p className="text-sm text-cosmic-300 truncate mb-1">
-                        {item.enhanced_prompt || item.original_prompt}
-                      </p>
-                      <div className="flex items-center space-x-4 text-xs text-cosmic-400">
-                        <span>{formatDate(item.created_at)}</span>
-                        <span>{item.width}×{item.height}</span>
-                        {item.character_id && (
-                          <span>角色: {getCharacterName(item.character_id)}</span>
-                        )}
-                        {/* 版本信息 */}
-                        {item.branchName && (
-                          <span>分支: {item.branchName}</span>
-                        )}
-                        {item.versionTags && item.versionTags.length > 0 && (
-                          <span>標籤: {item.versionTags.slice(0, 2).join(', ')}</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* 操作按鈕 */}
-                    <div className="flex-shrink-0 flex items-center space-x-2">
-                      {/* 版本操作 */}
-                      {item.versionId && (
-                        <>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onViewVersionHistory(item.id);
-                            }}
-                            className="p-1 text-cosmic-400 hover:text-white transition-colors"
-                            title="查看版本歷史"
-                          >
-                            🕰️
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onCreateVariant(item.id);
-                            }}
-                            className="p-1 text-cosmic-400 hover:text-white transition-colors"
-                            title="創建變體"
-                          >
-                            🔄
-                          </button>
-                        </>
-                      )}
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onPreviewImage(item.id);
-                        }}
-                        className="p-1 text-cosmic-400 hover:text-white transition-colors"
-                        title="預覽"
-                      >
-                        👁️
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDownloadImage(item.id);
-                        }}
-                        className="p-1 text-cosmic-400 hover:text-white transition-colors"
-                        title="下載"
-                      >
-                        📥
-                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            </SortableContext>
+                );
+              })}
+            </div>
           )}
+        </>
+      ) : (
+        // ❌ 備用錯誤狀態
+        <div className="flex flex-col items-center justify-center h-full text-cosmic-400">
+          <div className="text-6xl mb-4">⚠️</div>
+          <p className="text-lg mb-2">容器尺寸計算失敗</p>
+          <p className="text-sm opacity-60">請重新整理頁面或檢查瀏覽器開發者工具</p>
+          <p className="text-xs mt-2">調試: {JSON.stringify({dimensions, isObserverReady})}</p>
         </div>
-      </DndContext>
+      )}
     </div>
   );
 };
-
-export default GalleryContent;
