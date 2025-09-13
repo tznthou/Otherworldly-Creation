@@ -821,53 +821,76 @@ const AISettingsModal: React.FC = () => {
                   </div>
                 )}
 
-                {/* 使用說明 */}
+                {/* AI插畫功能與提供者指南 */}
                 <div>
-                  <h3 className="text-lg font-medium text-gold-400 mb-4">使用說明</h3>
+                  <h3 className="text-lg font-medium text-gold-400 mb-4">🎨 AI插畫功能指南</h3>
                   <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4 text-sm text-gray-300">
+
+                    {/* 智能推薦系統說明 */}
+                    <div className="mb-6 p-3 bg-gradient-to-r from-cosmic-700 to-cosmic-600 rounded-lg">
+                      <h4 className="text-gold-400 font-medium text-sm mb-2">🧠 智能推薦系統</h4>
+                      <p className="text-xs text-gray-200">
+                        系統會根據小說內容自動推薦最適合的AI提供者，每個提供者都有獨特優勢。建議開啟多個提供者讓系統智能選擇最佳方案。
+                      </p>
+                    </div>
+
+                    {/* 提供者詳細說明 */}
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <h5 className="text-gold-400 mb-2">🦙 Ollama</h5>
+                        <h5 className="text-gold-400 mb-2">🦙 Ollama (本地隱私)</h5>
                         <ul className="space-y-1 text-xs">
-                          <li>• 本地運行，無需 API 金鑰</li>
-                          <li>• 需要先安裝並啟動 Ollama 服務</li>
-                          <li>• 推薦模型: llama3.2, qwen2.5</li>
-                          <li>• 點擊「🔍 搜尋模型」自動獲取可用模型</li>
+                          <li>• 完全本地運行，無隱私風險</li>
+                          <li>• 最新推薦: llama3.2, qwen2.5</li>
+                          <li>• 🎨 插畫特色: 離線可用，速度快</li>
+                          <li>• 點擊「🔍 搜尋模型」自動獲取</li>
                         </ul>
                       </div>
                       <div>
-                        <h5 className="text-gold-400 mb-2">🤖 OpenAI</h5>
-                        <ul className="space-y-1 text-xs">
-                          <li>• 需要有效的 OpenAI API 金鑰</li>
-                          <li>• 推薦模型: gpt-4, gpt-3.5-turbo</li>
-                          <li>• 按使用量計費</li>
-                          <li>• 輸入API金鑰後可搜尋可用模型</li>
-                        </ul>
-                      </div>
-                      <div>
-                        <h5 className="text-gold-400 mb-2">✨ Google Gemini</h5>
+                        <h5 className="text-gold-400 mb-2">✨ Gemini (多模態之王)</h5>
                         <ul className="space-y-1 text-xs">
                           <li>• 需要 Google AI API 金鑰</li>
-                          <li>• 推薦模型: gemini-pro, gemini-1.5-pro</li>
-                          <li>• 支援多語言內容</li>
-                          <li>• 輸入API金鑰後可搜尋可用模型</li>
+                          <li>• 最新推薦: gemini-2.0-flash (2024)</li>
+                          <li>• 🎨 插畫特色: 最懂中文文化，創意豐富</li>
+                          <li>• 輸入API金鑰後可搜尋模型</li>
                         </ul>
                       </div>
                       <div>
-                        <h5 className="text-gold-400 mb-2">🧠 Claude</h5>
+                        <h5 className="text-gold-400 mb-2">🤖 OpenAI (商業級穩定)</h5>
+                        <ul className="space-y-1 text-xs">
+                          <li>• 需要 OpenAI API 金鑰</li>
+                          <li>• 最新推薦: gpt-4o, gpt-image-1</li>
+                          <li>• 🎨 插畫特色: 圖像品質穩定，商業可靠</li>
+                          <li>• 輸入API金鑰後可搜尋模型</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h5 className="text-gold-400 mb-2">🧠 Claude (深度理解)</h5>
                         <ul className="space-y-1 text-xs">
                           <li>• 需要 Anthropic API 金鑰</li>
-                          <li>• 推薦模型: claude-3-sonnet, claude-3-haiku</li>
-                          <li>• 適合長文本生成</li>
-                          <li>• 輸入API金鑰後可搜尋可用模型</li>
+                          <li>• 推薦模型: claude-3.5-sonnet, claude-3.5-haiku</li>
+                          <li>• 🎨 插畫特色: 深度文本理解，細膩描述</li>
+                          <li>• 輸入API金鑰後可搜尋模型</li>
                         </ul>
                       </div>
                     </div>
-                    <div className="mt-4 p-3 bg-cosmic-700 rounded-lg">
-                      <p className="text-gold-400 font-medium text-sm">💡 模型搜尋功能</p>
-                      <p className="text-xs mt-1">
-                        輸入API金鑰後，點擊「🔍 搜尋模型」按鈕可自動獲取該提供者的所有可用模型，無需手動輸入模型名稱。
-                      </p>
+
+                    {/* 使用建議 */}
+                    <div className="mt-6 grid md:grid-cols-2 gap-3">
+                      <div className="p-3 bg-cosmic-700 rounded-lg">
+                        <p className="text-gold-400 font-medium text-sm mb-1">💡 最佳實踐建議</p>
+                        <ul className="text-xs space-y-1">
+                          <li>✅ 新手：全部開啟，讓系統智能選擇</li>
+                          <li>✅ 隱私優先：主用 Ollama</li>
+                          <li>✅ 商用穩定：OpenAI + Ollama 組合</li>
+                          <li>✅ 創意實驗：Gemini + OpenRouter 組合</li>
+                        </ul>
+                      </div>
+                      <div className="p-3 bg-cosmic-700 rounded-lg">
+                        <p className="text-gold-400 font-medium text-sm mb-1">🔧 模型搜尋功能</p>
+                        <p className="text-xs">
+                          輸入API金鑰後，點擊「🔍 搜尋模型」按鈕可自動獲取該提供者的所有可用模型，無需手動輸入模型名稱。
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

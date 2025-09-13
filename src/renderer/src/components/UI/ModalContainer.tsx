@@ -18,6 +18,8 @@ import UpdateManagerModal from '../Modals/UpdateManagerModal';
 import EPubGenerationModal from '../Modals/EPubGenerationModal';
 import PDFGenerationModal from '../Modals/PDFGenerationModal';
 import AiIllustrationModal from '../Modals/AiIllustrationModal';
+import CharacterAnalysisModal from '../Modals/CharacterAnalysisModal';
+import PlotAnalysisModal from '../Modals/PlotAnalysisModal';
 
 const ModalContainer: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -83,6 +85,20 @@ const ModalContainer: React.FC = () => {
       {modals.epubGeneration && <EPubGenerationModal />}
       {modals.pdfGeneration && <PDFGenerationModal />}
       {modals.aiIllustration && <AiIllustrationModal />}
+      {modals.characterAnalysis && currentProject && currentChapter && (
+        <CharacterAnalysisModal
+          projectId={currentProject.id}
+          chapters={chapters}
+          currentChapter={currentChapter}
+        />
+      )}
+      {modals.plotAnalysis && currentProject && currentChapter && (
+        <PlotAnalysisModal
+          projectId={currentProject.id}
+          chapters={chapters}
+          currentChapter={currentChapter}
+        />
+      )}
     </>
   );
 };

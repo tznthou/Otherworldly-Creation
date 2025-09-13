@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.2.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.2.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green" alt="Platform">
   <img src="https://img.shields.io/badge/AI_Providers-5-orange" alt="AI Providers">
   <img src="https://img.shields.io/badge/code_lines-105k+-purple" alt="Code Lines">
@@ -32,6 +32,20 @@
 - **🧠 Character Analysis**: Big Five personality analysis for consistent character development
 - **✍️ Focus Writing Mode**: Distraction-free immersive writing environment
 - **📊 Template System**: Quick-start templates for fantasy, romance, isekai, and sci-fi genres
+
+### 🚀 What's New in v1.2.1 - Repository Optimization & Documentation Excellence (2025-09-13)
+
+#### 📚 Documentation & Project Management
+- **CLAUDE.md Enhancement**: Comprehensive documentation updates with missing npm scripts and expanded architecture details
+- **Git Repository Cleanup**: Complete removal of legacy branches (local & remote) with zero data loss protection
+- **README Restructuring**: Reorganized version history with newest updates first for better navigation
+- **Development Workflow**: Enhanced project analysis capabilities with Serena MCP integration
+
+#### 🔧 Technical Infrastructure Improvements
+- **Testing Framework**: Added segregated test scripts (unit, integration, performance) for targeted development
+- **Build Pipeline**: Enhanced development commands with comprehensive pre-release checks
+- **Code Quality**: Maintained 100% TypeScript safety and zero Rust warnings
+- **State Management**: Improved Redux Toolkit documentation with 16 specialized slices
 
 ### 🚀 What's New in v1.2.0 - System Architecture Breakthrough
 
@@ -223,6 +237,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <p align="center">
-  <strong>Genesis Chronicle v1.2.0</strong><br>
+  <strong>Genesis Chronicle v1.2.1</strong><br>
   Made with ❤️ for Chinese light novel creators worldwide
 </p>

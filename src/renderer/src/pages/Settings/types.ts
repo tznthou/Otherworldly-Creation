@@ -1,7 +1,7 @@
 import { AppSettings } from '../../store/slices/settingsSlice';
 import { AppDispatch } from '../../store/store';
 
-export type SettingsTab = 'general' | 'ui' | 'backup' | 'database' | 'update' | 'privacy' | 'shortcuts' | 'templates';
+export type SettingsTab = 'general' | 'ui' | 'backup' | 'database' | 'update' | 'privacy' | 'templates';
 
 export interface SettingsTabConfig {
   id: string;
@@ -27,18 +27,17 @@ export const SETTINGS_TABS: SettingsTabConfig[] = [
   { id: 'database', name: '資料庫維護', icon: '🗄️' },
   { id: 'update', name: '自動更新', icon: '🔄' },
   { id: 'privacy', name: '隱私', icon: '🔒' },
-  { id: 'shortcuts', name: '快捷鍵', icon: '⌨️' },
 ];
 
-export const SHORTCUT_LABELS: { [key: string]: string } = {
-  save: '儲存',
-  newProject: '新建專案',
-  openProject: '開啟專案',
-  aiContinue: 'AI 續寫',
-  toggleSidebar: '切換側邊欄',
-  toggleFullscreen: '全螢幕',
-  find: '尋找',
-  replace: '取代',
-  undo: '復原',
-  redo: '重做',
+export const SHORTCUT_LABELS: Record<string, string> = {
+  'focusMode': '專注模式',
+  'save': '儲存',
+  'newChapter': '新章節',
+  'find': '尋找',
+  'replace': '取代',
+  'toggleSidebar': '切換側邊欄',
+  'aiContinue': 'AI續寫',
+  'characterAnalysis': '角色分析',
+  'export': '匯出',
 };
+

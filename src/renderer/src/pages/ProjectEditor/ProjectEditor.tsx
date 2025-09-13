@@ -20,9 +20,7 @@ import FocusWritingModeOverlay from '../../components/Editor/FocusWritingModeOve
 import ChapterList from '../../components/Editor/ChapterList';
 import ChapterNotes from '../../components/Editor/ChapterNotes';
 import AIWritingPanel from '../../components/Editor/AIWritingPanel';
-import { PlotAnalysisPanel } from '../../components/AI/PlotAnalysisPanel';
-import type { PlotSuggestion } from '../../services/plotAnalysisService';
-import LazyCharacterAnalysisPanel from '../../components/AI/LazyCharacterAnalysisPanel';
+// 劇情分析和角色分析現在使用模態框，不需要直接 import 面板組件
 import AIStatusIndicator from '../../components/UI/AIStatusIndicator';
 import SaveStatusIndicator from '../../components/UI/SaveStatusIndicator';
 import SaveStatusPanel from '../../components/UI/SaveStatusPanel';
@@ -51,8 +49,7 @@ const ProjectEditorContent: React.FC = () => {
   const _isFocusWritingMode = useAppSelector(selectIsFocusWritingMode);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(currentChapter?.id || null);
   const [showAIPanel, setShowAIPanel] = useState(false);
-  const [showPlotAnalysisPanel, setShowPlotAnalysisPanel] = useState(false);
-  const [showCharacterAnalysisPanel, setShowCharacterAnalysisPanel] = useState(false);
+  // 劇情分析和角色分析現在使用模態框，不需要面板狀態
   const [showSavePanel, setShowSavePanel] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [currentEditor, setCurrentEditor] = useState<Editor | undefined>(undefined); // 新增：存儲當前編輯器實例
@@ -185,19 +182,19 @@ const ProjectEditorContent: React.FC = () => {
     }
   }, [chapters, currentChapter, selectedChapterId, dispatch]);
 
-  // 檢查 URL 參數，自動開啟劇情分析面板
+  // 檢查 URL 參數，自動開啟劇情分析模態框
   useEffect(() => {
     const shouldOpenPlotAnalysis = searchParams.get('plotAnalysis') === 'true';
-    if (shouldOpenPlotAnalysis && !showPlotAnalysisPanel && currentChapter) {
-      setShowPlotAnalysisPanel(true);
+    if (shouldOpenPlotAnalysis && currentChapter) {
+      dispatch(openModal('plotAnalysis'));
       setShowAIPanel(false);
-      notification.info('劇情分析', '正在為您開啟劇情分析面板...');
-      
+      notification.info('劇情分析', '正在為您開啟劇情分析...');
+
       // 清除 URL 參數，避免重複觸發
       searchParams.delete('plotAnalysis');
       setSearchParams(searchParams, { replace: true });
     }
-  }, [searchParams, setSearchParams, showPlotAnalysisPanel, currentChapter, notification]);
+  }, [searchParams, setSearchParams, currentChapter, notification, dispatch]);
 
   // 處理章節選擇
   const handleChapterSelect = useCallback((chapterId: string) => {
@@ -290,37 +287,23 @@ const ProjectEditorContent: React.FC = () => {
   const handleAIWrite = useCallback(() => {
     if (!showAIPanel) {
       setShowAIPanel(true);
-      setShowPlotAnalysisPanel(false); // 關閉劇情分析面板
-      setShowCharacterAnalysisPanel(false); // 關閉角色分析面板
       notification.info('AI 續寫', '請在右側面板中設定參數並生成續寫內容');
     } else {
       setShowAIPanel(false);
     }
   }, [showAIPanel, notification]);
 
-  // 處理劇情分析 - 開啟劇情分析面板
+  // 處理劇情分析 - 開啟劇情分析模態框
   const handlePlotAnalysis = useCallback(() => {
-    if (!showPlotAnalysisPanel) {
-      setShowPlotAnalysisPanel(true);
-      setShowAIPanel(false); // 關閉AI續寫面板
-      setShowCharacterAnalysisPanel(false); // 關閉角色分析面板
-      notification.info('劇情分析', '準備開始深度分析您的故事劇情');
-    } else {
-      setShowPlotAnalysisPanel(false);
-    }
-  }, [showPlotAnalysisPanel, notification]);
+    dispatch(openModal('plotAnalysis'));
+    notification.info('劇情分析', '準備開始深度分析您的故事劇情');
+  }, [dispatch, notification]);
 
-  // 處理角色分析 - 開啟角色分析面板
+  // 處理角色分析 - 開啟角色分析模態框
   const handleCharacterAnalysis = useCallback(() => {
-    if (!showCharacterAnalysisPanel) {
-      setShowCharacterAnalysisPanel(true);
-      setShowAIPanel(false); // 關閉AI續寫面板
-      setShowPlotAnalysisPanel(false); // 關閉劇情分析面板
-      notification.info('角色分析', '準備開始深度分析您的角色特徵');
-    } else {
-      setShowCharacterAnalysisPanel(false);
-    }
-  }, [showCharacterAnalysisPanel, notification]);
+    dispatch(openModal('characterAnalysis'));
+    notification.info('角色分析', '準備開始深度分析您的角色特徵');
+  }, [dispatch, notification]);
 
   if (loading) {
     return (
@@ -462,25 +445,17 @@ const ProjectEditorContent: React.FC = () => {
                     {/* 劇情分析按鈕 */}
                     <button
                       onClick={handlePlotAnalysis}
-                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 ${
-                        showPlotAnalysisPanel
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-cosmic-700 hover:bg-purple-600/20 text-purple-300 hover:text-purple-200'
-                      }`}
+                      className="px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 bg-cosmic-700 hover:bg-purple-600/20 text-purple-300 hover:text-purple-200 hover:scale-105 transform"
                       title="劇情分析"
                     >
                       <span>🎭</span>
                       <span>劇情</span>
                     </button>
-                    
+
                     {/* 角色分析按鈕 */}
                     <button
                       onClick={handleCharacterAnalysis}
-                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 ${
-                        showCharacterAnalysisPanel
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-cosmic-700 hover:bg-blue-600/20 text-blue-300 hover:text-blue-200'
-                      }`}
+                      className="px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 bg-cosmic-700 hover:bg-blue-600/20 text-blue-300 hover:text-blue-200 hover:scale-105 transform"
                       title="角色分析"
                     >
                       <span>👥</span>
@@ -592,41 +567,7 @@ const ProjectEditorContent: React.FC = () => {
           </div>
         )}
 
-        {/* 劇情分析面板 */}
-        {showPlotAnalysisPanel && currentChapter && id && (
-          <div className="w-96 border-l border-cosmic-700 flex-shrink-0 overflow-y-auto" style={{ minWidth: '384px' }}>
-            <PlotAnalysisPanel
-              _projectId={id}
-              chapters={chapters}
-              currentChapter={currentChapter}
-              _onSuggestionApply={(suggestion: PlotSuggestion) => {
-                notification.info('建議應用', `正在應用建議：${suggestion.title}`);
-                // 這裡可以添加具體的建議應用邏輯
-              }}
-            />
-          </div>
-        )}
-
-        {/* 角色分析面板 */}
-        {showCharacterAnalysisPanel && currentChapter && id && (
-          <div className="w-96 border-l border-cosmic-700 flex-shrink-0 overflow-y-auto" style={{ minWidth: '384px' }}>
-            <LazyCharacterAnalysisPanel
-              projectId={id}
-              chapters={chapters.map(chapter => ({
-                ...chapter,
-                content: JSON.stringify(chapter.content)
-              }))}
-              currentChapter={currentChapter ? {
-                ...currentChapter,
-                content: JSON.stringify(currentChapter.content)
-              } : null}
-              _onSuggestionApply={(suggestion: string) => {
-                notification.info('建議應用', `正在應用建議：${suggestion}`);
-                // 這裡可以添加具體的建議應用邏輯
-              }}
-            />
-          </div>
-        )}
+        {/* 劇情分析和角色分析現在使用模態框顯示 */}
 
         {/* 編輯器設定面板 */}
         {isSettingsOpen && (

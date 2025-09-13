@@ -11,7 +11,6 @@ import {
   TemplateManagementSettings,
   BackupSettings,
   PrivacySettings,
-  ShortcutsSettings,
   DatabaseMaintenanceSettings,
 } from './tabs';
 
@@ -94,8 +93,6 @@ const SettingsMain: React.FC = () => {
         return <UpdateSettings />;
       case 'privacy':
         return <PrivacySettings {...commonProps} />;
-      case 'shortcuts':
-        return <ShortcutsSettings {...commonProps} />;
       default:
         return <GeneralSettings {...commonProps} />;
     }

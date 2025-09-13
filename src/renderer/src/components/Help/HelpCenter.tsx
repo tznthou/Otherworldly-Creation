@@ -15,39 +15,23 @@ interface HelpCenterProps {
 }
 
 export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'faq' | 'shortcuts' | 'manual' | 'quickstart'>('quickstart');
+  const [activeTab, setActiveTab] = useState<'faq' | 'manual' | 'quickstart'>('quickstart');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [showUserManual, setShowUserManual] = useState(false);
   const [showQuickStart, setShowQuickStart] = useState(false);
-  
+
   const dispatch = useAppDispatch();
   const { startTutorial, resetTutorials: _resetTutorials } = useTutorial();
   const notification = useNotification();
-  
+
   const handleCreateProject = () => {
     dispatch(openModal('createProject'));
   };
 
   // 使用新的搜索函數
   const filteredFAQ = searchFAQ(searchQuery, selectedCategory === 'all' ? undefined : selectedCategory);
-
-  // 鍵盤快捷鍵資料
-  const shortcuts = [
-    { key: 'Ctrl + S', description: '儲存當前章節' },
-    { key: 'Ctrl + N', description: '創建新章節' },
-    { key: 'Ctrl + D', description: '複製當前行' },
-    { key: 'Ctrl + /', description: '切換註釋' },
-    { key: 'Ctrl + F', description: '搜尋文字' },
-    { key: 'Ctrl + H', description: '取代文字' },
-    { key: 'Ctrl + Z', description: '撤銷' },
-    { key: 'Ctrl + Y', description: '重做' },
-    { key: 'F11', description: '切換全螢幕' },
-    { key: 'Ctrl + ,', description: '開啟設定' },
-    { key: 'Ctrl + Shift + P', description: '開啟命令面板' },
-    { key: 'Alt + A', description: '開啟 AI 續寫面板' }
-  ];
 
   const handleStartTutorial = (tutorialId: TutorialId) => {
     startTutorial(tutorialId);
@@ -82,12 +66,11 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
           {[
             { id: 'quickstart', label: '快速入門', icon: '🚀' },
             { id: 'manual', label: '使用手冊', icon: '📖' },
-            { id: 'faq', label: '常見問題', icon: '❓' },
-            { id: 'shortcuts', label: '快捷鍵', icon: '⌨️' }
+            { id: 'faq', label: '常見問題', icon: '❓' }
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'faq' | 'shortcuts' | 'manual' | 'quickstart')}
+              onClick={() => setActiveTab(tab.id as 'faq' | 'manual' | 'quickstart')}
               className={`flex items-center space-x-2 px-6 py-3 transition-colors ${
                 activeTab === tab.id
                   ? 'bg-gold-500/20 text-gold-400 border-b-2 border-gold-500'
@@ -283,36 +266,6 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* 快捷鍵 */}
-          {activeTab === 'shortcuts' && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
-                <h3 className="text-xl font-semibold text-white mb-2">鍵盤快捷鍵</h3>
-                <p className="text-gray-400">使用快捷鍵提升您的創作效率</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {shortcuts.map((shortcut, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-cosmic-800/50 border border-cosmic-600 rounded-lg"
-                  >
-                    <span className="text-gray-300">{shortcut.description}</span>
-                    <kbd className="px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-sm text-gold-400 font-mono">
-                      {shortcut.key}
-                    </kbd>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-                <h4 className="text-blue-400 font-semibold mb-2">💡 提示</h4>
-                <p className="text-gray-300 text-sm">
-                  在 macOS 系統上，請將 Ctrl 替換為 Cmd 鍵。您也可以在設定中自定義快捷鍵。
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

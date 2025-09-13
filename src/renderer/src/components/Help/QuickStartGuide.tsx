@@ -220,27 +220,6 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               </div>
             </div>
 
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">快捷鍵</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-300">儲存</span>
-                  <kbd className="px-2 py-1 bg-cosmic-700 rounded text-gold-400">Ctrl+S</kbd>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-300">AI 續寫</span>
-                  <kbd className="px-2 py-1 bg-cosmic-700 rounded text-gold-400">Alt+A</kbd>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-300">搜尋</span>
-                  <kbd className="px-2 py-1 bg-cosmic-700 rounded text-gold-400">Ctrl+F</kbd>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-300">新章節</span>
-                  <kbd className="px-2 py-1 bg-cosmic-700 rounded text-gold-400">Ctrl+N</kbd>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       ),

@@ -35,8 +35,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 2. **Database**: Specify columns explicitly, never `SELECT *`
 3. **Slate.js**: Use `key={editor-${id}}` for remounting
 4. **TypeScript**: Use `APIResponse<T>` wrapper for type safety
-5. **Modals**: Use `dispatch(openModal('name'))` system
+5. **Modals**: Use `dispatch(openModal('name'))` system via Redux uiSlice
 6. **Path Management**: Use PathManager for all file operations (v1.2.0+)
+7. **UI Feature Removal**: NEVER remove UI functionality without verifying target location has COMPLETE feature parity - check control settings, not just documentation
+8. **State Management**: All component state should flow through Redux - avoid local state for shared data
+9. **Error Handling**: Wrap all Tauri API calls with APIResponse<T> and error boundaries
+10. **Rust Build**: Use `cargo check --manifest-path src-tauri/Cargo.toml` for compilation checks
 
 ### Development Commands (v1.2.0)
 
@@ -66,23 +70,37 @@ cargo check --manifest-path src-tauri/Cargo.toml  # Rust compile check
 
 # Testing
 npm test                     # Run all tests (Jest with jsdom)
+npm run test:unit            # Run unit tests only
+npm run test:integration     # Run integration tests only
+npm run test:performance     # Run performance tests
 npm test -- --testNamePattern="test name"  # Run single test by name
 npm test -- --watch         # Run tests in watch mode
 cargo test --manifest-path src-tauri/Cargo.toml   # Rust tests
 
-# Build
+# Build & Package
 npm run build               # Full build (frontend + Tauri)
 npm run build:renderer     # Frontend build only
+npm run build:tauri        # Tauri build only
 cargo tauri build          # Full production build
+npm run package            # Complete packaging
+
+# Utilities
+npm run clean              # Clean build artifacts
+npm run optimize           # Optimize resources
+npm run diagnostic         # Run diagnostic checks
+npm run setup              # Quick project setup
 ```
 
 ### Architecture Overview
 - **Command Flow**: Frontend (`src/renderer/src/api/tauri.ts`) → Tauri IPC → Rust handlers (`src-tauri/src/commands/`)
-- **AI Providers**: 5 providers with custom trait system (`src-tauri/src/services/ai_providers/`)
+- **AI Providers**: 5 providers with custom trait system (`src-tauri/src/services/ai_providers/trait.rs`)
+- **State Management**: Redux Toolkit with 16 slices (projects, chapters, characters, ai, ui, etc.)
 - **Database**: SQLite v20 with migration system, dual environment setup
 - **Path Management**: Unified PathManager system (v1.2.0 breakthrough)
 - **Editor**: Slate.js with 2-second auto-save, force remount with unique keys
 - **Export**: EPUB 3.0 + PDF (Chrome Headless) with Chinese font support
+- **Modal System**: Centralized modal management via Redux (`uiSlice.ts`)
+- **Error Handling**: Comprehensive error boundaries and APIResponse<T> wrapper
 
 ### Important Paths
 - **Dev DB**: `src-tauri/genesis-chronicle-dev.db`
@@ -90,6 +108,9 @@ cargo tauri build          # Full production build
 - **Commands**: `src-tauri/src/commands/` (system, project, chapter, character, ai_providers, epub, pdf_chrome)
 - **API Layer**: `src/renderer/src/api/tauri.ts` (ALWAYS use `import { api }`, never direct invoke)
 - **AI Providers**: `src-tauri/src/services/ai_providers/trait.rs` + implementations
+- **Redux Store**: `src/renderer/src/store/store.ts` (16 slices with middleware configuration)
+- **Modal Components**: `src/renderer/src/components/Modals/` (CharacterAnalysisModal, PlotAnalysisModal, etc.)
+- **Settings**: `src/renderer/src/pages/Settings/` (GeneralSettings with AI feature controls)
 
 ## 📚 Detailed Documentation in Serena Memories
 
@@ -113,10 +134,17 @@ cargo tauri build          # Full production build
 
 ### AI Provider Integration
 - **Ollama**: Local, privacy-first (llama3.2, qwen2.5)
-- **OpenAI**: Industry standard (gpt-4o, gpt-4o-mini)  
-- **Gemini**: Multimodal, long context (gemini-2.5-flash, gemini-2.5-pro)
+- **OpenAI**: Industry standard (gpt-4o, gpt-4o-mini, gpt-image-1)
+- **Gemini**: Multimodal, long context (gemini-2.0-flash, gemini-1.5-pro)
 - **Claude**: Deep understanding (claude-3.5-sonnet, claude-3.5-haiku)
 - **OpenRouter**: 100+ models unified API
+
+### Modern Features (v1.2.0+)
+- **Character Analysis Modal**: Full-screen modal with z-index 10002 for character analysis
+- **Plot Analysis Modal**: Full-screen modal for story plot analysis
+- **Visual Creation Center**: AI illustration with batch processing
+- **Smart API Detection**: Intelligent provider recommendation based on available API keys
+- **Dynamic Model Discovery**: Auto-discovery of available models per provider
 
 ### Template System (Quick Start)
 - **🏰 Fantasy Adventure**: Classic magical worlds
@@ -163,6 +191,70 @@ cargo tauri build          # Full production build
 - **File Growth**: +46 files (447 total across 5 languages)
 - **Stability**: Production-grade reliability achieved
 - **Architecture**: From technical debt to competitive advantage
+
+---
+
+## ⚠️ UI Feature Removal Protocol (CRITICAL!)
+
+**Background**: Critical lesson from AI插畫設定移除事件where removing "duplicate" functionality resulted in loss of user control capabilities.
+
+### 🚨 Before Removing ANY UI Feature - Mandatory Checklist
+
+1. **Deep Function Analysis** (not surface comparison):
+   ```
+   Original Location: Settings controls + documentation
+   Target Location: Only documentation ❌ INCOMPLETE
+   Result: Users lose control ability
+   ```
+
+2. **Function Type Verification**:
+   - [ ] Setting controls (toggles/selectors/inputs)
+   - [ ] Documentation/guides
+   - [ ] Action buttons (test/save/reset)
+   - [ ] Status indicators
+
+3. **Complete Feature Parity Check**:
+   - [ ] All user-controllable settings preserved
+   - [ ] Same accessibility/discoverability
+   - [ ] Workflow continuity maintained
+
+4. **Division of Labor Analysis**:
+   ```
+   Question: Are locations truly duplicate OR complementary?
+   Example: GeneralSettings (controls) + AISettingsModal (detailed config)
+   ```
+
+### 📋 Standard Operating Procedure
+
+**Step 1: Create Function Inventory**
+- List ALL functionality in source location
+- List ALL functionality in target location
+- Map each item 1:1 for verification
+
+**Step 2: User Journey Testing**
+- Can users still accomplish same tasks?
+- Is the path still intuitive?
+- Any workflow disruption?
+
+**Step 3: Gradual Removal**
+- Comment out UI (don't delete)
+- Test functionality completeness
+- Get user confirmation before permanent removal
+
+**Step 4: Documentation Update**
+- Update user guides if paths change
+- Record architectural decisions in Serena
+
+### 🎯 Case Study: AI插畫設定 Event
+
+**What Happened**: Removed GeneralSettings AI controls assuming AISettingsModal had same functionality
+**Reality**: AISettingsModal only had guides, not setting controls
+**Lost Functionality**:
+- 智能API檢測 toggle
+- 擴展AI插圖服務 toggle
+**Fix**: Restored controls to GeneralSettings with clear division of labor
+
+**Memory Reference**: `ui-cleanup-lessons-learned` in Serena
 
 ---
 

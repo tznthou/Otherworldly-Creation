@@ -133,7 +133,11 @@
       "Bash(cargo fix:*)",
       "Bash(timeout 10s npm run dev:*)",
       "Bash(timeout 15s npm run dev)",
-      "Bash(RELEASE_VERSION=1.2.0 node scripts/sync-version.js)"
+      "Bash(RELEASE_VERSION=1.2.0 node scripts/sync-version.js)",
+      "Bash(git remote:*)",
+      "Bash(git for-each-ref:*)",
+      "Bash(git show-branch:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": [],

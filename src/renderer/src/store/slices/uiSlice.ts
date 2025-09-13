@@ -29,6 +29,8 @@ interface UIState {
     pdfGeneration: boolean; // PDF 生成模態框
     aiIllustration: boolean; // AI 插畫生成模態框
     imagePreview: boolean; // 圖像預覽模態框
+    characterAnalysis: boolean; // 角色分析模態框
+    plotAnalysis: boolean; // 劇情分析模態框
   };
   loading: {
     global: boolean;
@@ -77,6 +79,8 @@ const initialState: UIState = {
     pdfGeneration: false,
     aiIllustration: false,
     imagePreview: false,
+    characterAnalysis: false,
+    plotAnalysis: false,
   },
   loading: {
     global: false,
@@ -136,8 +140,15 @@ const uiSlice = createSlice({
         allModals: { ...state.modals }
       });
     },
-    closeModal: (state, action: PayloadAction<keyof UIState['modals']>) => {
-      state.modals[action.payload] = false;
+    closeModal: (state, action: PayloadAction<keyof UIState['modals'] | undefined>) => {
+      if (action.payload) {
+        state.modals[action.payload] = false;
+      } else {
+        // 如果沒有提供參數，關閉所有開啟的 modals
+        Object.keys(state.modals).forEach(key => {
+          state.modals[key as keyof UIState['modals']] = false;
+        });
+      }
     },
     closeAllModals: (state) => {
       Object.keys(state.modals).forEach(key => {

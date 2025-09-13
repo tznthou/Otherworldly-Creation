@@ -47,6 +47,15 @@ export const MODEL_WHITELIST: ProviderModels = {
       isRecommended: true
     },
     {
+      id: 'gpt-image-1',
+      name: 'GPT Image 1',
+      description: '專業圖像生成和編輯模型，支持多圖像輸入',
+      maxTokens: 4096,
+      contextWindow: 128000,
+      costLevel: 'medium',
+      isRecommended: true
+    },
+    {
       id: 'gpt-3.5-turbo',
       name: 'GPT-3.5 Turbo',
       description: '經典模型，性價比高',
@@ -66,13 +75,21 @@ export const MODEL_WHITELIST: ProviderModels = {
 
   gemini: [
     {
-      id: 'gemini-2.0-flash-exp',
-      name: 'Gemini 2.0 Flash (Experimental)',
-      description: '最新實驗版本，超長上下文窗口',
+      id: 'gemini-2.0-flash',
+      name: 'Gemini 2.0 Flash',
+      description: '最新穩定版本，多模態能力出色，最懂中文文化',
       maxTokens: 8192,
       contextWindow: 1000000,
       costLevel: 'medium',
       isRecommended: true
+    },
+    {
+      id: 'gemini-2.0-flash-exp',
+      name: 'Gemini 2.0 Flash (Experimental)',
+      description: '實驗版本，超長上下文窗口',
+      maxTokens: 8192,
+      contextWindow: 1000000,
+      costLevel: 'medium'
     },
     {
       id: 'gemini-1.5-pro',

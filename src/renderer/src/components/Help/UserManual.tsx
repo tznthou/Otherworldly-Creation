@@ -393,12 +393,15 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           <div>
             <h4 className="text-lg font-semibold text-gold-400 mb-3">功能特色</h4>
             <ul className="text-gray-300 space-y-2">
-              <li>• <strong>雙服務支持</strong>：整合Pollinations.AI（免費）和Google Imagen（付費）</li>
-              <li>• <strong>角色整合</strong>：直接連接角色管理系統，自動載入角色資料</li>
-              <li>• <strong>智能場景建構</strong>：根據選中角色自動生成場景描述</li>
-              <li>• <strong>批次生成管理</strong>：支持多任務並行處理和進度監控</li>
-              <li>• <strong>完整圖庫系統</strong>：歷史記錄管理和圖片預覽功能</li>
-              <li>• <strong>統一操作界面</strong>：三大功能標籤（創建、監控、圖庫）</li>
+              <li>• <strong>🧠 智能推薦系統</strong>：系統根據小說內容自動推薦最適合的AI提供者</li>
+              <li>• <strong>🌐 多AI提供者支持</strong>：整合5大AI服務（Ollama、OpenAI、Gemini、Claude、OpenRouter）</li>
+              <li>• <strong>🎯 專業圖像生成</strong>：包含GPT-Image-1、Gemini-2.0-Flash等最新圖像模型</li>
+              <li>• <strong>🏠 本地隱私選項</strong>：Ollama提供完全本地運行，保護隱私安全</li>
+              <li>• <strong>👥 角色整合</strong>：直接連接角色管理系統，自動載入角色資料</li>
+              <li>• <strong>🎨 智能場景建構</strong>：根據選中角色自動生成場景描述</li>
+              <li>• <strong>⚡ 批次生成管理</strong>：支持多任務並行處理和進度監控</li>
+              <li>• <strong>📚 完整圖庫系統</strong>：歷史記錄管理和圖片預覽功能</li>
+              <li>• <strong>🎛️ 統一操作界面</strong>：三大功能標籤（創建、監控、圖庫）</li>
             </ul>
           </div>
 
@@ -559,18 +562,6 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">快捷鍵與操作技巧</h4>
-            <div className="bg-cosmic-800/50 p-4 rounded-lg">
-              <ul className="text-gray-300 space-y-2 text-sm">
-                <li>• <strong>ESC鍵</strong>：關閉視覺創作中心模態視窗</li>
-                <li>• <strong>圖片預覽</strong>：左右箭頭鍵導航，ESC關閉</li>
-                <li>• <strong>批次選擇</strong>：Shift+點擊可連續選擇角色</li>
-                <li>• <strong>快速切換</strong>：數字鍵1-3快速切換功能標籤</li>
-                <li>• <strong>保存快捷</strong>：在預覽模式按S鍵快速保存</li>
-              </ul>
-            </div>
-          </div>
         </div>
       )
     },
@@ -602,7 +593,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
             <h4 className="text-lg font-semibold text-gold-400 mb-3">使用 AI 續寫</h4>
             <ol className="text-gray-300 space-y-2">
               <li>1. 在編輯器中將游標定位到想要續寫的位置</li>
-              <li>2. 點擊工具列的「AI 續寫」按鈕或按 Alt+A</li>
+              <li>2. 點擊工具列的「AI 續寫」按鈕</li>
               <li>3. 在 AI 面板中設定生成參數（長度、風格、創意度）</li>
               <li>4. 點擊「生成」開始 AI 續寫</li>
               <li>5. 查看生成結果，選擇合適的內容插入</li>
