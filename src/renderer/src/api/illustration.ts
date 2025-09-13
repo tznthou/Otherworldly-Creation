@@ -55,6 +55,47 @@ export interface BatchRenameResponse {
 
 export const illustrationAPI = {
   /**
+   * Gemini 插畫生成
+   */
+  generateGeminiIllustration: async (params: IllustrationGenerationParams & {
+    provider: string;
+    apiKey: string;
+  }) => {
+    console.log('🎨 [API] 生成 Gemini 圖片:', params);
+    
+    const result = await api.invoke('generate_gemini_illustration', {
+      prompt: params.prompt,
+      provider: params.provider,
+      apiKey: params.apiKey,
+      width: params.width,
+      height: params.height,
+      projectId: params.projectId,
+      characterId: params.characterId,
+      style: params.style,
+    });
+    
+    console.log('✅ [API] Gemini 圖片生成完成:', result);
+    
+    return result;
+  },
+
+  /**
+   * 測試 Gemini 連接
+   */
+  testGeminiConnection: async (apiKey: string, provider: string) => {
+    console.log('🔗 [API] 測試 Gemini 連接:', provider);
+    
+    const result = await api.invoke('test_gemini_connection', {
+      apiKey,
+      provider,
+    });
+    
+    console.log('✅ [API] Gemini 連接測試完成:', result);
+    
+    return result;
+  },
+
+  /**
    * 優化的圖片生成：直接儲存到最終位置，標記為未確認
    */
   generateOptimized: async (params: IllustrationGenerationParams): Promise<IllustrationResponse> => {

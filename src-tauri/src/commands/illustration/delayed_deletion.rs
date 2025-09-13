@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH, Duration};
 use std::thread;
 use std::path::{Path, PathBuf};
@@ -347,17 +347,11 @@ impl DelayedDeletionQueue {
 }
 
 /// 全局延遲刪除隊列實例
-static mut GLOBAL_DELETION_QUEUE: Option<DelayedDeletionQueue> = None;
-static QUEUE_INIT: std::sync::Once = std::sync::Once::new();
+static GLOBAL_DELETION_QUEUE: OnceLock<DelayedDeletionQueue> = OnceLock::new();
 
 /// 獲取全局延遲刪除隊列
 pub fn get_deletion_queue() -> &'static DelayedDeletionQueue {
-    unsafe {
-        QUEUE_INIT.call_once(|| {
-            GLOBAL_DELETION_QUEUE = Some(DelayedDeletionQueue::new());
-        });
-        GLOBAL_DELETION_QUEUE.as_ref().unwrap()
-    }
+    GLOBAL_DELETION_QUEUE.get_or_init(|| DelayedDeletionQueue::new())
 }
 
 /// Tauri命令：排程延遲刪除

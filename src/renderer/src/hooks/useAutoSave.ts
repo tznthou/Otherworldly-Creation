@@ -232,7 +232,7 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
     if (currentContent !== lastContentRef.current || currentTitle !== lastTitleRef.current) {
       triggerAutoSave();
     }
-  }, [currentChapter?.content, currentChapter?.title, currentChapter?.id]); // 移除triggerAutoSave依賴，只依賴實際數據
+  }, [currentChapter, triggerAutoSave]);
 
   // 監聽編輯器設定變化
   useEffect(() => {

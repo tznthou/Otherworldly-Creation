@@ -17,6 +17,7 @@ pub mod enhanced_generation;
 pub mod image_rename;
 pub mod delayed_deletion;
 pub mod data_repair;
+pub mod gemini_generation;
 pub mod utils;
 
 // 重新匯出所有公開功能，保持原有API兼容性
@@ -91,6 +92,12 @@ pub use delayed_deletion::{
 pub use data_repair::{
     repair_image_paths,
     scan_orphaned_files,
+};
+
+// ========================= Gemini 插畫生成 =========================
+pub use gemini_generation::{
+    generate_gemini_illustration,
+    test_gemini_connection,
 };
 
 // ========================= 共用輔助函數 =========================

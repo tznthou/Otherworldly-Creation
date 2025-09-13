@@ -13,8 +13,10 @@ import {
 
 // API
 import { api } from '../../../../api/tauri';
+import { illustrationAPI } from '../../../../api/illustration';
 
 // Custom Hooks
+import { useIllustrationService } from '../../../../hooks/illustration';
 // import { useAutoVersionCreation } from '../../../../hooks/illustration'; // 已改用收藏功能替代
 
 // UI Components
@@ -46,9 +48,15 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
   const dispatch = useDispatch<AppDispatch>();
   const notification = useNotification();
   
+  // 插畫服務配置
+  const {
+    illustrationProvider,
+    apiKey,
+    serviceDisplayName,
+  } = useIllustrationService();
+  
   // Redux 狀態
   const {
-    currentProvider,
     selectedCharacters,
     sceneType,
     artStyle,
@@ -70,6 +78,8 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
 
   // 本地狀態
   const [sceneDescription, setSceneDescription] = useState('');
+  const [englishPrompt, setEnglishPrompt] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
   const [batchRequests, setBatchRequests] = useState<BatchRequest[]>([]);
   const [isCollecting, setIsCollecting] = useState(false);
 
@@ -224,6 +234,25 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     console.log('📋 [CreateTab] 已添加批次請求:', request);
   }, [selectedCharacters, sceneType, sceneDescription, artStyle, batchRequests, buildEnrichedPrompt, dispatch]);
 
+  // 獲取AI服務提供者的正確模型名稱
+  const getModelNameForProvider = (provider: string): string => {
+    switch (provider) {
+      case 'pollinations':
+        return 'flux';
+      case 'gemini':
+      case 'gemini-flash':
+        return 'gemini-2.5-flash-image-preview';
+      case 'imagen':
+        return 'imagen-3';
+      case 'openai':
+        return 'dall-e-3';
+      case 'claude':
+        return 'claude-3.5-sonnet';
+      default:
+        return provider;
+    }
+  };
+
   // 執行批次生成
   const handleBatchGenerate = useCallback(async () => {
     if (batchRequests.length === 0) {
@@ -242,42 +271,78 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       for (const request of batchRequests) {
         console.log(`🎯 [CreateTab] 處理請求: ${request.id}`);
         
-        // 為每個請求生成插畫，使用增強的 prompt（新的優化API）
-        const result = await api.illustration.generateFreeIllustrationToTemp(
-          request.enriched_prompt,
-          1024,   // width
-          1024,   // height
-          'flux', // model
-          undefined, // seed
-          false,  // enhance
-          artStyle, // style
-          currentProject.id,
-          request.selectedCharacterIds[0] // 使用第一個選中的角色ID
-        );
+        // 根據 provider 選擇不同的 API
+        let result;
+        console.log(`🔍 [CreateTab] 使用插畫服務: ${illustrationProvider} (${serviceDisplayName})`);
+        
+        if (illustrationProvider === 'gemini' || illustrationProvider === 'gemini-flash') {
+          // 使用 Gemini API
+          result = await illustrationAPI.generateGeminiIllustration({
+            prompt: request.enriched_prompt,
+            provider: illustrationProvider,
+            apiKey: apiKey,
+            width: 1024,
+            height: 1024,
+            style: artStyle,
+            projectId: currentProject.id,
+            characterId: request.selectedCharacterIds[0],
+          });
+        } else if (illustrationProvider === 'imagen') {
+          // TODO: 使用 Imagen API（未實作）
+          throw new Error('Imagen 服務尚未實作，請選擇其他服務');
+        } else {
+          // 預設使用 Pollinations API
+          result = await api.illustration.generateFreeIllustrationToTemp(
+            request.enriched_prompt,
+            1024,   // width
+            1024,   // height
+            'flux', // model
+            undefined, // seed
+            false,  // enhance
+            artStyle, // style
+            currentProject.id,
+            request.selectedCharacterIds[0] // 使用第一個選中的角色ID
+          );
+        }
         
         console.log(`✅ [CreateTab] 請求 ${request.id} 完成:`, result);
         
         // 將生成的圖片添加到臨時圖片列表
-        if (result.success) {
+        if (result && typeof result === 'object' && 'success' in result && result.success) {
+          const resultWithData = result as { 
+            success: boolean; 
+            id: string; 
+            temp_path: string; 
+            temp_url: string; 
+            image_url?: string;
+            prompt: string; 
+            original_prompt?: string;
+            parameters?: { model: string; width: number; height: number; seed?: number; enhance: boolean; style?: string };
+            file_size_bytes?: number;
+            generation_time_ms?: number;
+            provider?: string;
+            project_id?: string; 
+            character_id?: string;
+          };
           const tempImage = {
-            id: result.id || '',
-            temp_path: result.temp_path || '',
-            image_url: result.image_url,
-            prompt: result.prompt || request.enriched_prompt,
-            original_prompt: result.original_prompt || request.enriched_prompt,
-            parameters: result.parameters || {
-              model: 'flux',
-              width: 512,
-              height: 512,
+            id: resultWithData.id || '',
+            temp_path: resultWithData.temp_path || '',
+            image_url: resultWithData.image_url,
+            prompt: resultWithData.prompt || request.enriched_prompt,
+            original_prompt: resultWithData.original_prompt || request.enriched_prompt,
+            parameters: resultWithData.parameters || {
+              model: getModelNameForProvider(illustrationProvider),
+              width: 1024,
+              height: 1024,
               enhance: false
             },
-            file_size_bytes: result.file_size_bytes || 0,
-            generation_time_ms: result.generation_time_ms || 0,
-            provider: result.provider || 'pollinations',
+            file_size_bytes: resultWithData.file_size_bytes || 0,
+            generation_time_ms: resultWithData.generation_time_ms || 0,
+            provider: resultWithData.provider || illustrationProvider,
             is_free: true,
             is_temp: true,
-            project_id: result.project_id,
-            character_id: result.character_id
+            project_id: resultWithData.project_id,
+            character_id: resultWithData.character_id
           };
           
           dispatch(addTempImage(tempImage));
@@ -292,9 +357,55 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       
     } catch (error) {
       console.error('❌ [CreateTab] 批次生成失敗:', error);
-      dispatch(setError(error instanceof Error ? error.message : '批次生成失敗'));
+      
+      // 智能錯誤處理：解析Rust後端的友善錯誤格式
+      const handleSmartError = (errorMessage: string) => {
+        if (errorMessage.startsWith('FRIENDLY_ERROR||')) {
+          // 解析結構化錯誤訊息: FRIENDLY_ERROR||title||subtitle||action1||action2||...
+          const parts = errorMessage.split('||');
+          if (parts.length >= 3) {
+            const title = parts[1];
+            const subtitle = parts[2];
+            const actions = parts.slice(3);
+            
+            console.log(`📋 [SmartError] 友善錯誤: ${title} | ${subtitle}`);
+            console.log(`🛠️ [SmartError] 建議操作:`, actions);
+            
+            // 顯示詳細的錯誤訊息，包含建議操作
+            let fullMessage = `${title}\n${subtitle}`;
+            if (actions.length > 0) {
+              fullMessage += `\n\n建議解決方案：\n${actions.map(action => `• ${action}`).join('\n')}`;
+            }
+            
+            return fullMessage;
+          }
+        }
+        
+        // 檢測常見錯誤類型並提供友善訊息
+        if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('exceeded')) {
+          return `🚫 AI配額已用完\nGemini免費版今日額度已達上限\n\n建議解決方案：\n• 立即切換到OpenAI繼續創作\n• 明天自動恢復 (配額會在UTC午夜重置)\n• 升級付費版獲得無限配額`;
+        }
+        
+        if (errorMessage.includes('401') || errorMessage.includes('invalid') || errorMessage.includes('authentication')) {
+          return `🔑 AI服務認證失敗\nAPI金鑰可能無效或已過期\n\n建議解決方案：\n• 請檢查設定中的API金鑰是否正確\n• 確認金鑰是否已啟用圖片生成權限`;
+        }
+        
+        if (errorMessage.includes('503') || errorMessage.includes('unavailable') || errorMessage.includes('maintenance')) {
+          return `⚠️ AI服務暫時不可用\n服務端正在維護中\n\n建議解決方案：\n• 請稍後重試或使用其他AI服務\n• 預計恢復時間：30分鐘內`;
+        }
+        
+        if (errorMessage.includes('network') || errorMessage.includes('timeout') || errorMessage.includes('connection')) {
+          return `🌐 網路連線問題\n無法連接到AI服務\n\n建議解決方案：\n• 請檢查網路連線後重試\n• 或切換到其他可用服務`;
+        }
+        
+        // 預設錯誤處理
+        return `❌ 生成失敗\n${errorMessage}\n\n建議解決方案：\n• 請重試或切換其他AI服務\n• 如問題持續，請檢查服務狀態`;
+      };
+      
+      const friendlyError = handleSmartError(error instanceof Error ? error.message : '批次生成失敗');
+      dispatch(setError(friendlyError));
     }
-  }, [batchRequests, currentProject, dispatch, artStyle]);
+  }, [batchRequests, currentProject, dispatch, artStyle, illustrationProvider, apiKey, serviceDisplayName]);
 
   // 移除批次請求
   const handleRemoveBatchRequest = useCallback((requestId: string) => {
@@ -308,6 +419,71 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     setBatchRequests([]);
     console.log('🧹 [CreateTab] 已清空所有批次請求');
   }, []);
+
+  // AI 翻譯和優化提示詞
+  const translateAndOptimize = useCallback(async () => {
+    if (!sceneDescription.trim()) {
+      notification.warning('請輸入場景描述', '請先描述您想要的場景内容');
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      // 備用方案：簡單的關鍵詞翻譯和優化
+      let optimizedPrompt = `masterpiece, best quality, detailed`;
+      
+      // 基礎場景翻譯
+      let sceneTranslation = sceneDescription;
+      if (sceneDescription.includes('森林')) sceneTranslation = sceneTranslation.replace('森林', 'forest');
+      if (sceneDescription.includes('魔法')) sceneTranslation = sceneTranslation.replace('魔法', 'magic');
+      if (sceneDescription.includes('學校') || sceneDescription.includes('校園')) {
+        sceneTranslation = sceneTranslation.replace(/學校|校園/g, 'school');
+      }
+      if (sceneDescription.includes('櫻花')) sceneTranslation = sceneTranslation.replace('櫻花', 'cherry blossoms');
+      if (sceneDescription.includes('夕陽')) sceneTranslation = sceneTranslation.replace('夕陽', 'sunset');
+      if (sceneDescription.includes('微笑')) sceneTranslation = sceneTranslation.replace('微笑', 'smiling');
+      if (sceneDescription.includes('站在')) sceneTranslation = sceneTranslation.replace('站在', 'standing at');
+      
+      // 添加角色描述
+      const selectedChars = projectCharacters.filter(char => 
+        selectedCharacters.includes(char.id)
+      );
+      if (selectedChars.length > 0) {
+        const characterDescs = selectedChars.map(char => 
+          char.appearance || char.background || `character ${char.name}`
+        ).join(', ');
+        optimizedPrompt += `, ${characterDescs}`;
+      }
+
+      // 添加場景描述
+      optimizedPrompt += `, ${sceneTranslation}`;
+
+      // 添加風格標籤
+      if (artStyle === 'anime') {
+        optimizedPrompt += ', anime style, illustration';
+      } else if (artStyle === 'realistic') {
+        optimizedPrompt += ', photorealistic, detailed';
+      }
+
+      // 添加場景類型標籤
+      if (sceneType === 'portrait') {
+        optimizedPrompt += ', portrait, close-up';
+      } else if (sceneType === 'scene') {
+        optimizedPrompt += ', full scene, environment';
+      } else if (sceneType === 'interaction') {
+        optimizedPrompt += ', character interaction, dynamic pose';
+      }
+
+      setEnglishPrompt(optimizedPrompt);
+      notification.success('✨ 優化完成', '已自動生成英文提示詞！');
+
+    } catch (error) {
+      console.error('翻譯優化失敗:', error);
+      notification.error('優化失敗', '請稍後重試');
+    } finally {
+      setIsTranslating(false);
+    }
+  }, [sceneDescription, projectCharacters, selectedCharacters, sceneType, artStyle, notification]);
 
   return (
     <div className={`create-tab flex flex-col h-full ${className}`}>
@@ -373,9 +549,9 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
             </div>
             <div className="text-xs text-cosmic-400">
               服務: {
-                currentProvider === 'pollinations' ? 'Pollinations.AI (免費)' :
-                currentProvider === 'imagen' ? 'Google Imagen (付費)' :
-                currentProvider === 'gemini' ? 'Gemini 2.5 Flash Image Preview' : '未知服務'
+                illustrationProvider === 'pollinations' ? 'Pollinations.AI (免費)' :
+                illustrationProvider === 'imagen' ? 'Google Imagen (付費)' :
+                illustrationProvider === 'gemini' || illustrationProvider === 'gemini-flash' ? 'Gemini Flash Image' : '未知服務'
               }
             </div>
           </div>
@@ -444,10 +620,55 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                   <span className="text-xs text-cosmic-500">
                     {sceneDescription.length}/500 字
                   </span>
-                  <div className="text-xs text-cosmic-400">
-                    💡 詳細描述能獲得更好的生成效果
-                  </div>
+                  <button
+                    onClick={translateAndOptimize}
+                    disabled={!sceneDescription.trim() || isTranslating}
+                    className={`
+                      text-xs px-3 py-1 rounded-full transition-all duration-200
+                      ${isTranslating 
+                        ? 'bg-gold-700 opacity-70 cursor-wait' 
+                        : sceneDescription.trim()
+                          ? 'bg-gold-600 hover:bg-gold-700 hover:scale-105 active:scale-95'
+                          : 'bg-gray-600 opacity-50 cursor-not-allowed'
+                      }
+                      text-white font-medium shadow-sm
+                    `}
+                  >
+                    {isTranslating ? '✨ 優化中...' : '✨ AI優化提示詞'}
+                  </button>
                 </div>
+                
+                {/* AI 優化結果顯示 */}
+                {englishPrompt && (
+                  <div className="mt-4 p-3 bg-green-900/20 border border-green-600/30 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium text-green-400">🎯 優化後的英文提示詞</h4>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(englishPrompt);
+                          notification.info('已複製', '提示詞已複製到剪貼板');
+                        }}
+                        className="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                      >
+                        📋 複製
+                      </button>
+                    </div>
+                    <div className="text-xs text-green-200 bg-green-950/30 p-2 rounded border break-all">
+                      {englishPrompt}
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-xs text-green-400">
+                        包含 {englishPrompt.split(',').length} 個標籤
+                      </span>
+                      <button
+                        onClick={() => setSceneDescription(englishPrompt)}
+                        className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                      >
+                        📥 使用此提示詞
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 快速模板輔助工具 - 收折到底部 */}
@@ -639,16 +860,15 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                               return;
                             }
                             
-                            // 🛡️ 安全構建圖片數據，確保所有必要欄位存在
+                            // 🛡️ 優化：只傳遞輕量級數據，避免 IPC 大數據傳輸問題
                             const imageData = tempImages
                               .filter(image => image && image.id) // 過濾無效數據
                               .map(image => ({
                                 id: image.id,
                                 project_id: image.project_id || currentProject?.id,
                                 character_id: image.character_id,
-                                original_prompt: image.original_prompt || image.prompt || 'Generated image',
-                                temp_path: image.temp_path,
-                                parameters: image.parameters
+                                original_prompt: image.original_prompt || image.prompt || 'Generated image'
+                                // 移除 temp_path 和 parameters 避免傳輸大數據
                               }));
                             
                             if (imageData.length === 0) {

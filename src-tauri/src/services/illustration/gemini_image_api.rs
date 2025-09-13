@@ -28,6 +28,112 @@ use super::provider_trait::{
     UnifiedImageParameters, CostInfo, ModelInfo
 };
 
+/// 錯誤類型分類，用於生成使用者友善的錯誤訊息
+#[derive(Debug, Clone, PartialEq)]
+pub enum ErrorType {
+    QuotaExceeded,      // 配額超限 (429)
+    InvalidApiKey,      // API Key 無效 (401, 403)
+    ServiceUnavailable, // 服務暫停 (503, 502)
+    NetworkError,       // 網路問題
+    Unknown,            // 未知錯誤
+}
+
+/// 錯誤分析和分類函數
+pub fn classify_gemini_error(error_msg: &str) -> ErrorType {
+    let error_lower = error_msg.to_lowercase();
+    
+    // 檢查配額相關錯誤
+    if error_lower.contains("429") || 
+       error_lower.contains("quota") || 
+       error_lower.contains("exceeded") ||
+       error_lower.contains("resource_exhausted") ||
+       error_lower.contains("rate limit") {
+        return ErrorType::QuotaExceeded;
+    }
+    
+    // 檢查認證相關錯誤
+    if error_lower.contains("401") || 
+       error_lower.contains("403") ||
+       error_lower.contains("invalid") || 
+       error_lower.contains("authentication") ||
+       error_lower.contains("unauthorized") ||
+       error_lower.contains("api key") {
+        return ErrorType::InvalidApiKey;
+    }
+    
+    // 檢查服務可用性錯誤
+    if error_lower.contains("503") || 
+       error_lower.contains("502") ||
+       error_lower.contains("504") ||
+       error_lower.contains("unavailable") ||
+       error_lower.contains("maintenance") {
+        return ErrorType::ServiceUnavailable;
+    }
+    
+    // 檢查網路相關錯誤
+    if error_lower.contains("network") || 
+       error_lower.contains("timeout") ||
+       error_lower.contains("connection") ||
+       error_lower.contains("dns") {
+        return ErrorType::NetworkError;
+    }
+    
+    ErrorType::Unknown
+}
+
+/// 生成使用者友善的錯誤訊息
+pub fn generate_user_friendly_message(error_type: ErrorType, provider: &str) -> (String, String, Vec<String>) {
+    match error_type {
+        ErrorType::QuotaExceeded => {
+            let title = "🚫 AI配額已用完".to_string();
+            let subtitle = format!("{}免費版今日額度已達上限", 
+                if provider == "gemini" { "Gemini " } else { "" });
+            let actions = vec![
+                "立即切換到OpenAI繼續創作".to_string(),
+                "明天自動恢復 (配額會在UTC午夜重置)".to_string(),
+                "升級付費版獲得無限配額".to_string(),
+            ];
+            (title, subtitle, actions)
+        },
+        ErrorType::InvalidApiKey => {
+            let title = "🔑 AI服務認證失敗".to_string();
+            let subtitle = "API金鑰可能無效或已過期".to_string();
+            let actions = vec![
+                "請檢查設定中的API金鑰是否正確".to_string(),
+                "確認金鑰是否已啟用圖片生成權限".to_string(),
+            ];
+            (title, subtitle, actions)
+        },
+        ErrorType::ServiceUnavailable => {
+            let title = "⚠️ AI服務暫時不可用".to_string();
+            let subtitle = "服務端正在維護中".to_string();
+            let actions = vec![
+                "請稍後重試或使用其他AI服務".to_string(),
+                "預計恢復時間：30分鐘內".to_string(),
+            ];
+            (title, subtitle, actions)
+        },
+        ErrorType::NetworkError => {
+            let title = "🌐 網路連線問題".to_string();
+            let subtitle = "無法連接到AI服務".to_string();
+            let actions = vec![
+                "請檢查網路連線後重試".to_string(),
+                "或切換到其他可用服務".to_string(),
+            ];
+            (title, subtitle, actions)
+        },
+        ErrorType::Unknown => {
+            let title = "❌ 生成失敗".to_string();
+            let subtitle = "遇到未知錯誤".to_string();
+            let actions = vec![
+                "請重試或切換其他AI服務".to_string(),
+                "如問題持續，請檢查服務狀態".to_string(),
+            ];
+            (title, subtitle, actions)
+        },
+    }
+}
+
 /// Gemini Image API 服務配置
 #[derive(Debug, Clone)]
 #[allow(dead_code)]  // 為未來 API 預留
@@ -107,8 +213,6 @@ pub struct GeminiImageResponse {
 #[derive(Debug, Serialize)]
 struct GoogleAIStudioRequest {
     contents: Vec<ContentItem>,
-    generation_config: GenerationConfig,
-    safety_settings: Vec<SafetySetting>,
 }
 
 #[derive(Debug, Serialize)]
@@ -121,21 +225,7 @@ struct Part {
     text: String,
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct GenerationConfig {
-    response_modalities: Vec<String>, // ["Image"]
-    media_resolution: String,         // "medium"
-    temperature: f32,
-    top_p: f32,
-}
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-struct SafetySetting {
-    category: String,
-    threshold: String,
-}
 
 /// Google AI Studio API 響應結構
 #[derive(Debug, Deserialize)]
@@ -180,35 +270,55 @@ struct UsageMetadata {
     candidates_token_count: Option<i32>,
 }
 
-/// OpenRouter API 請求結構
+/// OpenRouter API 請求結構（Chat Completions 格式）
 #[derive(Debug, Serialize)]
 struct OpenRouterRequest {
     model: String,
-    prompt: String,
+    messages: Vec<OpenRouterMessage>,
+    modalities: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    width: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    height: Option<u32>,
+    max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     seed: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    negative_prompt: Option<String>,
 }
 
-/// OpenRouter API 響應結構
+#[derive(Debug, Serialize)]
+struct OpenRouterMessage {
+    role: String,
+    content: String,
+}
+
+/// OpenRouter API 響應結構（Chat Completions 格式）
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]  // API 響應結構，保留完整性
 struct OpenRouterResponse {
     id: String,
-    data: Vec<OpenRouterImageData>,
+    choices: Vec<OpenRouterChoice>,
     usage: Option<OpenRouterUsage>,
 }
 
 #[derive(Debug, Deserialize)]
-struct OpenRouterImageData {
-    #[serde(rename = "b64_json")]
-    b64_json: Option<String>,
-    url: Option<String>,
+struct OpenRouterChoice {
+    message: OpenRouterResponseMessage,
+}
+
+#[derive(Debug, Deserialize)]
+struct OpenRouterResponseMessage {
+    role: String,
+    content: Option<String>,
+    images: Option<Vec<OpenRouterImage>>, // 修正：使用正確的結構
+}
+
+#[derive(Debug, Deserialize)]
+struct OpenRouterImage {
+    #[serde(rename = "type")]
+    image_type: String, // "image_url"
+    image_url: OpenRouterImageUrl,
+}
+
+#[derive(Debug, Deserialize)]
+struct OpenRouterImageUrl {
+    url: String, // base64 data URL
 }
 
 #[derive(Debug, Deserialize)]
@@ -253,29 +363,22 @@ impl GeminiImageApiService {
 
         log::info!("[GeminiImageAPI] 開始免費圖像生成，ID: {}", generation_id);
 
-        // 構建 Google AI Studio 請求
+        // 構建 Google AI Studio 請求 - 使用正確的圖像生成模型
         let api_request = GoogleAIStudioRequest {
             contents: vec![ContentItem {
                 parts: vec![Part {
                     text: self.build_enhanced_prompt(&request),
                 }],
             }],
-            generation_config: GenerationConfig {
-                response_modalities: vec!["Image".to_string()],
-                media_resolution: "medium".to_string(),
-                temperature: 0.7,
-                top_p: 0.95,
-            },
-            safety_settings: self.build_safety_settings(&request),
         };
 
-        // Google AI Studio endpoint
+        // Google AI Studio 圖像生成端點 - 使用 gemini-2.5-flash-image-preview
         let url = format!(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={}",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key={}",
             api_key
         );
 
-        log::info!("[GeminiImageAPI] 發送請求到 Google AI Studio");
+        log::info!("[GeminiImageAPI] 發送請求到 Google AI Studio (gemini-2.5-flash-image-preview)");
 
         let response = self.client
             .post(&url)
@@ -288,11 +391,25 @@ impl GeminiImageApiService {
         let status = response.status();
         if !status.is_success() {
             let error_text = response.text().await.unwrap_or_default();
-            return Err(IllustrationError::AIApi(format!(
-                "Google AI Studio API 錯誤 {}: {}",
-                status,
-                error_text
-            )));
+            let full_error_msg = format!("Google AI Studio API 錯誤 {}: {}", status, error_text);
+            
+            // 分類錯誤並生成使用者友善訊息
+            let error_type = classify_gemini_error(&full_error_msg);
+            let (title, subtitle, actions) = generate_user_friendly_message(error_type, "gemini");
+            
+            // 記錄詳細錯誤到 log，但返回友善訊息給前端
+            log::error!("[GeminiImageAPI] {}", full_error_msg);
+            log::info!("[GeminiImageAPI] 使用者友善錯誤訊息: {} | {}", title, subtitle);
+            
+            // 構建包含友善訊息的結構化錯誤
+            let user_friendly_error = format!(
+                "FRIENDLY_ERROR||{}||{}||{}", 
+                title, 
+                subtitle, 
+                actions.join("||")
+            );
+            
+            return Err(IllustrationError::AIApi(user_friendly_error));
         }
 
         let api_response: GoogleAIStudioResponse = response
@@ -311,7 +428,7 @@ impl GeminiImageApiService {
             image_data,
             prompt: request.prompt.clone(),
             generation_time_ms,
-            model: "gemini-2.5-flash-image".to_string(),
+            model: "gemini-2.5-flash-image-preview".to_string(),
             provider_type: "free".to_string(),
             cost_info: Some(CostInfo {
                 cost_usd: None,
@@ -331,14 +448,16 @@ impl GeminiImageApiService {
         // 構建 OpenRouter 請求
         let api_request = OpenRouterRequest {
             model: "google/gemini-2.5-flash-image-preview".to_string(),
-            prompt: self.build_enhanced_prompt(&request),
-            width: request.width,
-            height: request.height,
+            messages: vec![OpenRouterMessage {
+                role: "user".to_string(),
+                content: self.build_enhanced_prompt(&request),
+            }],
+            modalities: vec!["image".to_string(), "text".to_string()],
+            max_tokens: Some(1000),
             seed: request.seed,
-            negative_prompt: request.negative_prompt.clone(),
         };
 
-        let url = "https://openrouter.ai/api/v1/images/generations";
+        let url = "https://openrouter.ai/api/v1/chat/completions";
 
         log::info!("[GeminiImageAPI] 發送請求到 OpenRouter");
 
@@ -354,11 +473,25 @@ impl GeminiImageApiService {
         let status = response.status();
         if !status.is_success() {
             let error_text = response.text().await.unwrap_or_default();
-            return Err(IllustrationError::AIApi(format!(
-                "OpenRouter API 錯誤 {}: {}",
-                status,
-                error_text
-            )));
+            let full_error_msg = format!("OpenRouter API 錯誤 {}: {}", status, error_text);
+            
+            // 分類錯誤並生成使用者友善訊息
+            let error_type = classify_gemini_error(&full_error_msg);
+            let (title, subtitle, actions) = generate_user_friendly_message(error_type, "gemini-paid");
+            
+            // 記錄詳細錯誤到 log，但返回友善訊息給前端
+            log::error!("[GeminiImageAPI] {}", full_error_msg);
+            log::info!("[GeminiImageAPI] 使用者友善錯誤訊息: {} | {}", title, subtitle);
+            
+            // 構建包含友善訊息的結構化錯誤
+            let user_friendly_error = format!(
+                "FRIENDLY_ERROR||{}||{}||{}", 
+                title, 
+                subtitle, 
+                actions.join("||")
+            );
+            
+            return Err(IllustrationError::AIApi(user_friendly_error));
         }
 
         let api_response: OpenRouterResponse = response
@@ -419,34 +552,6 @@ impl GeminiImageApiService {
         prompt
     }
 
-    /// 構建安全設定
-    fn build_safety_settings(&self, request: &GeminiImageRequest) -> Vec<SafetySetting> {
-        let threshold = match request.safety_level.as_deref().unwrap_or("block_most") {
-            "block_few" => "BLOCK_ONLY_HIGH",
-            "block_some" => "BLOCK_MEDIUM_AND_ABOVE",
-            "block_most" => "BLOCK_LOW_AND_ABOVE",
-            _ => "BLOCK_MEDIUM_AND_ABOVE",
-        };
-
-        vec![
-            SafetySetting {
-                category: "HARM_CATEGORY_HARASSMENT".to_string(),
-                threshold: threshold.to_string(),
-            },
-            SafetySetting {
-                category: "HARM_CATEGORY_HATE_SPEECH".to_string(),
-                threshold: threshold.to_string(),
-            },
-            SafetySetting {
-                category: "HARM_CATEGORY_SEXUALLY_EXPLICIT".to_string(),
-                threshold: threshold.to_string(),
-            },
-            SafetySetting {
-                category: "HARM_CATEGORY_DANGEROUS_CONTENT".to_string(),
-                threshold: threshold.to_string(),
-            },
-        ]
-    }
 
     /// 從 Google AI Studio 響應提取圖像
     fn extract_image_from_google_response(&self, response: &GoogleAIStudioResponse) -> Result<Vec<u8>> {
@@ -469,33 +574,88 @@ impl GeminiImageApiService {
 
     /// 從 OpenRouter 響應提取圖像
     async fn extract_image_from_openrouter_response(&self, response: &OpenRouterResponse) -> Result<Vec<u8>> {
-        let image_data = response.data.first()
-            .ok_or_else(|| IllustrationError::AIApi("OpenRouter 響應中沒有圖像數據".to_string()))?;
+        // 添加詳細日誌以便調試
+        log::info!("[GeminiImageAPI] OpenRouter 響應分析開始");
+        log::debug!("[GeminiImageAPI] 完整響應: {:?}", response);
+        
+        let choice = response.choices.first()
+            .ok_or_else(|| IllustrationError::AIApi("OpenRouter 響應中沒有選擇項".to_string()))?;
 
-        if let Some(b64_data) = &image_data.b64_json {
-            // 解碼 base64 數據
-            let image_bytes = general_purpose::STANDARD
-                .decode(b64_data)
-                .map_err(|e| IllustrationError::AIApi(format!("解碼 base64 圖像失敗: {}", e)))?;
-            Ok(image_bytes)
-        } else if let Some(url) = &image_data.url {
-            // 從 URL 下載圖像
-            let response = self.client
-                .get(url)
-                .send()
-                .await
-                .map_err(|e| IllustrationError::AIApi(format!("下載圖像失敗: {}", e)))?;
-
-            let image_bytes = response
-                .bytes()
-                .await
-                .map_err(|e| IllustrationError::AIApi(format!("讀取圖像數據失敗: {}", e)))?
-                .to_vec();
-
-            Ok(image_bytes)
-        } else {
-            Err(IllustrationError::AIApi("OpenRouter 響應中沒有可用的圖像數據".to_string()))
+        log::debug!("[GeminiImageAPI] Choice 內容: {:?}", choice);
+        log::debug!("[GeminiImageAPI] Message 角色: {}", choice.message.role);
+        
+        if let Some(content) = &choice.message.content {
+            log::debug!("[GeminiImageAPI] Message content: {}", content);
         }
+
+        // 嘗試多種解析方式
+        // 方式1: 檢查 images 字段（正確的 OpenRouter 格式）
+        if let Some(images) = &choice.message.images {
+            log::info!("[GeminiImageAPI] 找到 images 字段，包含 {} 張圖片", images.len());
+            
+            let first_image = images.first()
+                .ok_or_else(|| IllustrationError::AIApi("OpenRouter 響應中圖像列表為空".to_string()))?;
+
+            log::info!("[GeminiImageAPI] 圖片類型: {}, 解析 URL", first_image.image_type);
+            return self.decode_image_data(&first_image.image_url.url);
+        }
+
+        // 方式2: 檢查 content 字段是否包含 base64 圖片數據
+        if let Some(content) = &choice.message.content {
+            log::info!("[GeminiImageAPI] 嘗試從 content 字段解析圖片");
+            
+            // 檢查是否包含 data URL
+            if content.contains("data:image/") {
+                log::info!("[GeminiImageAPI] 在 content 中發現 data URL");
+                return self.decode_image_data(content);
+            }
+            
+            // 檢查是否是純 base64 數據
+            if content.len() > 100 && content.chars().all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=') {
+                log::info!("[GeminiImageAPI] 可能是 base64 數據，嘗試解碼");
+                return self.decode_image_data(content);
+            }
+        }
+
+        // 如果都沒找到，提供詳細的錯誤信息
+        let error_msg = format!(
+            "OpenRouter 響應中沒有找到圖像數據。響應結構: choices[0].message.images={:?}, content={:?}", 
+            choice.message.images.as_ref().map(|v| format!("{}張圖片", v.len())),
+            choice.message.content.as_ref().map(|s| if s.len() > 100 { format!("{}... ({}字符)", &s[..100], s.len()) } else { s.clone() })
+        );
+        
+        log::error!("[GeminiImageAPI] {}", error_msg);
+        Err(IllustrationError::AIApi(error_msg))
+    }
+
+    /// 解碼圖像數據的輔助函數
+    fn decode_image_data(&self, image_data: &str) -> Result<Vec<u8>> {
+        // 處理 data URL 格式 (data:image/png;base64,xxxx)
+        let b64_data = if image_data.starts_with("data:") {
+            log::info!("[GeminiImageAPI] 處理 data URL 格式");
+            // 提取 base64 部分
+            image_data.split(',').nth(1)
+                .ok_or_else(|| IllustrationError::AIApi("無效的 data URL 格式".to_string()))?
+        } else {
+            log::info!("[GeminiImageAPI] 直接處理 base64 數據");
+            // 直接是 base64 數據
+            image_data
+        };
+
+        // 解碼 base64 數據
+        let image_bytes = general_purpose::STANDARD
+            .decode(b64_data)
+            .map_err(|e| {
+                let preview = if b64_data.len() > 50 { 
+                    format!("{}...", &b64_data[..50]) 
+                } else { 
+                    b64_data.to_string() 
+                };
+                IllustrationError::AIApi(format!("解碼 base64 圖像失敗: {}, 數據預覽: {}", e, preview))
+            })?;
+
+        log::info!("[GeminiImageAPI] 成功解碼圖像，大小: {} bytes", image_bytes.len());
+        Ok(image_bytes)
     }
 
     /// 健康檢查

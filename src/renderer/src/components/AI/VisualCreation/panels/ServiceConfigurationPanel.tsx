@@ -74,7 +74,11 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
 
   // 智能服務檢測狀態
   const [availableServices, setAvailableServices] = useState<IllustrationProvider[]>(['pollinations', 'imagen', 'gemini', 'gemini-flash']);
-  const [serviceCapabilities, setServiceCapabilities] = useState<Record<string, any>>({});
+  interface ServiceCapability {
+    quality?: 'premium' | 'high' | 'standard';
+    [key: string]: unknown;
+  }
+  const [serviceCapabilities, setServiceCapabilities] = useState<Record<string, ServiceCapability>>({});
   const [isDetecting, setIsDetecting] = useState(false);
   
   // 監聽功能開關變更
@@ -131,7 +135,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
         try {
           const result = await detectAvailableServices();
           setAvailableServices(result.availableServices);
-          setServiceCapabilities(result.serviceCapabilities);
+          setServiceCapabilities(result.serviceCapabilities as Record<string, ServiceCapability>);
           debugLog('服務檢測完成:', result);
         } catch (error) {
           console.error('❌ 服務檢測失敗:', error);
@@ -144,7 +148,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
     };
 
     detectServices();
-  }, [detectAvailableServices, featureFlags.SMART_API_DETECTION]);
+  }, [detectAvailableServices, featureFlags.SMART_API_DETECTION, isDetecting]);
 
   const validation = validateConfiguration();
 
@@ -161,16 +165,6 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
         textColor: 'text-green-400',
         isFree: true
       },
-      imagen: {
-        emoji: '💎',
-        name: 'Google Imagen',
-        description: '高品質專業級',
-        details: '需要 API Key',
-        colors: 'border-blue-500 bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
-        hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
-        textColor: 'text-blue-400',
-        isFree: false
-      },
       gemini: {
         emoji: '⚡',
         name: 'Gemini Flash',
@@ -184,12 +178,12 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
       'gemini-flash': {
         emoji: '⚡',
         name: 'Gemini Flash Image',
-        description: '快速高品質・免費',
-        details: 'Gemini 2.5 Flash',
-        colors: 'border-yellow-500 bg-gradient-to-br from-yellow-500/20 to-orange-500/20',
+        description: '快速高品質・付費版',
+        details: 'OpenRouter ($0.03/圖)',
+        colors: 'border-orange-500 bg-gradient-to-br from-orange-500/20 to-red-500/20',
         hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
-        textColor: 'text-yellow-400',
-        isFree: true
+        textColor: 'text-orange-400',
+        isFree: false
       },
       'openrouter-free': {
         emoji: '🌐',
@@ -213,13 +207,13 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
       }
     };
 
-    return baseConfigs[service] || baseConfigs.pollinations;
+    return baseConfigs[service as keyof typeof baseConfigs] || baseConfigs.pollinations;
   };
 
   // 決定要顯示的服務列表
   const servicesToShow = featureFlags.EXTENDED_ILLUSTRATION_SERVICES 
-    ? availableServices 
-    : ['pollinations', 'imagen'];
+    ? availableServices.filter(service => service !== 'imagen') // 移除 imagen
+    : ['pollinations']; // 基本模式只顯示 Pollinations
 
   return (
     <div className={`service-configuration-panel ${className}`}>
@@ -300,14 +294,14 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
                   {featureFlags.EXTENDED_ILLUSTRATION_SERVICES && serviceCapabilities[service] && (
                     <div className="mt-2 flex justify-center">
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                        serviceCapabilities[service].quality === 'premium' 
+                        serviceCapabilities[service]?.quality === 'premium' 
                           ? 'bg-gold-500/20 text-gold-300' 
-                          : serviceCapabilities[service].quality === 'high'
+                          : serviceCapabilities[service]?.quality === 'high'
                           ? 'bg-blue-500/20 text-blue-300'
                           : 'bg-green-500/20 text-green-300'
                       }`}>
-                        {serviceCapabilities[service].quality === 'premium' ? '👑 頂級' :
-                         serviceCapabilities[service].quality === 'high' ? '⭐ 高品質' : '✅ 良好'}
+                        {serviceCapabilities[service]?.quality === 'premium' ? '👑 頂級' :
+                         serviceCapabilities[service]?.quality === 'high' ? '⭐ 高品質' : '✅ 良好'}
                       </span>
                     </div>
                   )}
@@ -321,7 +315,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
         {!featureFlags.EXTENDED_ILLUSTRATION_SERVICES && (
           <div className="mt-3 p-3 bg-blue-900/20 border border-blue-700 rounded-lg">
             <div className="text-sm text-blue-300">
-              💡 <strong>提示：</strong> 更多 AI 插畫服務（如 Gemini Flash、OpenRouter）可在 
+              💡 <strong>提示：</strong> 更多 AI 插畫服務（如 Gemini Flash、Gemini Flash Image、OpenRouter）可在 
               <strong className="text-blue-200 mx-1">設定 → 一般 → AI 插畫功能設定</strong> 中啟用
             </div>
           </div>

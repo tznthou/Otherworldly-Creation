@@ -3,7 +3,12 @@ use crate::database::connection::create_connection;
 use crate::utils::storage_handler::StorageHandler;
 use crate::utils::api_handler::{PollinationsApiHandler, ApiGenerationRequest};
 use crate::utils::db_operations::{IllustrationDbHandler, IllustrationRecord};
-use chrono::{Local, Utc};
+
+/// 安全地截取 Unicode 字符串的前 n 個字符
+/// 避免在多字節 UTF-8 字符中間切片導致 panic
+fn truncate_unicode_safe(s: &str, max_chars: usize) -> String {
+    s.chars().take(max_chars).collect()
+}
 
 /// 免費插畫生成到臨時目錄 - 供預覽使用
 /// 
@@ -417,11 +422,11 @@ pub async fn add_to_collection(imageIds: Vec<String>) -> Result<Value, String> {
 }
 
 /// 帶完整資料的收藏功能：處理臨時圖片並保留原始上下文
-/// 🔧 加強版：防止panic，確保APP穩定性
+/// 🔧 優化版：避免大數據 IPC 傳輸，只傳遞 ID 和元數據
 #[tauri::command]
 #[allow(non_snake_case)]
 pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value, String> {
-    log::info!("[Collection] 🚀 帶資料的收藏請求開始: {} 張圖片", imageData.len());
+    log::info!("[Collection] 🚀 優化的收藏請求開始: {} 張圖片", imageData.len());
     
     // 🛡️ 基本輸入驗證
     if imageData.is_empty() {
@@ -470,7 +475,7 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
             .unwrap_or("Generated image");
         
         log::info!("[Collection] 📋 圖片上下文 - 專案: {:?}, 角色: {:?}, 提示: {}", 
-            project_id, character_id, &original_prompt[..original_prompt.len().min(50)]);
+            project_id, character_id, truncate_unicode_safe(original_prompt, 50));
         
         // 🛡️ 安全檢查圖片是否已存在於資料庫中
         let exists = match conn.query_row(
@@ -490,9 +495,9 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
             }
         };
         
-        // 🛡️ 如果圖片不在資料庫中，從臨時檔案確認保存
+        // 🛡️ 如果圖片不在資料庫中，嘗試從臨時檔案或正式檔案確認保存
         if exists == 0 {
-            log::info!("[Collection] 📂 圖片 {} 不在資料庫中，嘗試從臨時檔案確認保存", image_id);
+            log::info!("[Collection] 📂 圖片 {} 不在資料庫中，嘗試從檔案系統確認保存", image_id);
             
             // 🛡️ 安全獲取臨時目錄
             let temp_dir = match get_temp_images_dir() {
@@ -511,34 +516,53 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
             let temp_file = temp_dir.join(format!("{}.jpg", image_id));
             log::info!("[Collection] 🔍 檢查臨時檔案: {:?}", temp_file);
             
-            // 🛡️ 檢查臨時檔案是否存在
-            if temp_file.exists() {
-                log::info!("[Collection] ✅ 找到臨時檔案，開始處理");
-                
-                // 🛡️ 安全讀取臨時檔案
-                let image_bytes = match std::fs::read(&temp_file) {
-                    Ok(bytes) => {
-                        log::info!("[Collection] 📖 成功讀取臨時檔案，大小: {} bytes", bytes.len());
-                        if bytes.is_empty() {
-                            let error = format!("圖片 {} 的臨時檔案為空", image_id);
-                            log::error!("[Collection] ❌ {}", error);
-                            processing_errors.push(error);
-                            continue;
-                        }
-                        bytes
-                    },
-                    Err(e) => {
-                        let error = format!("圖片 {} 讀取臨時檔案失敗: {}", image_id, e);
+            // 🛡️ 先檢查正式檔案是否存在（適用於 Gemini 等直接保存到正式目錄的圖片）
+            let generated_images_dir = temp_dir.parent().unwrap().join("generated-images");
+            let final_file = generated_images_dir.join(format!("{}.jpg", image_id));
+            log::info!("[Collection] 🔍 檢查正式檔案: {:?}", final_file);
+            
+            let (source_file, is_from_temp) = if final_file.exists() {
+                log::info!("[Collection] ✅ 找到正式檔案（可能是 Gemini 圖片）");
+                (final_file, false)
+            } else if temp_file.exists() {
+                log::info!("[Collection] ✅ 找到臨時檔案");
+                (temp_file.clone(), true)
+            } else {
+                let warning = format!("圖片 {} 既不在資料庫中，臨時檔案也不存在，正式檔案也不存在", image_id);
+                log::warn!("[Collection] ⚠️ {}", warning);
+                processing_errors.push(warning);
+                continue;
+            };
+            
+            // 🛡️ 處理找到的檔案
+            log::info!("[Collection] ✅ 找到檔案，開始處理");
+            
+            // 🛡️ 安全讀取檔案
+            let image_bytes = match std::fs::read(&source_file) {
+                Ok(bytes) => {
+                    log::info!("[Collection] 📖 成功讀取檔案，大小: {} bytes", bytes.len());
+                    if bytes.is_empty() {
+                        let error = format!("圖片 {} 的檔案為空", image_id);
                         log::error!("[Collection] ❌ {}", error);
                         processing_errors.push(error);
-                        continue; // 跳過這張圖片，不會導致崩潰
+                        continue;
                     }
-                };
-                
-                // 🛡️ 安全保存到最終目錄
-                let final_path = match save_to_final_directory(&image_bytes, image_id) {
+                    bytes
+                },
+                Err(e) => {
+                    let error = format!("圖片 {} 讀取檔案失敗: {}", image_id, e);
+                    log::error!("[Collection] ❌ {}", error);
+                    processing_errors.push(error);
+                    continue; // 跳過這張圖片，不會導致崩潰
+                }
+            };
+            
+            // 🛡️ 處理檔案保存到最終目錄
+            let final_path = if is_from_temp {
+                // 從臨時目錄移動到最終目錄
+                match save_to_final_directory(&image_bytes, image_id) {
                     Ok(path) => {
-                        log::info!("[Collection] ✅ 成功保存到最終目錄: {}", path);
+                        log::info!("[Collection] ✅ 成功從臨時目錄保存到最終目錄: {}", path);
                         path
                     },
                     Err(e) => {
@@ -547,51 +571,55 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
                         processing_errors.push(error);
                         continue; // 跳過這張圖片，不會導致崩潰
                     }
-                };
-                
-                let file_size = image_bytes.len() as i64;
-                
-                // 🛡️ 安全插入資料庫記錄
-                match save_pollinations_history_unconfirmed(
-                    image_id,
-                    project_id,
-                    character_id,
-                    original_prompt,
-                    original_prompt,
-                    "flux",
-                    1024,
-                    1024,
-                    None,
-                    false,
-                    None,
-                    None,
-                    &final_path,
-                    file_size,
-                    0,
-                ) {
-                    Ok(_) => {
-                        newly_confirmed += 1;
-                        log::info!("[Collection] ✅ 已成功確認保存臨時圖片: {} (專案: {:?})", image_id, project_id);
-                    },
-                    Err(e) => {
-                        let error = format!("圖片 {} 保存記錄到資料庫失敗: {}", image_id, e);
-                        log::warn!("[Collection] ⚠️ {}", error);
-                        processing_errors.push(error);
-                        // 不使用continue，因為檔案已經保存成功，只是資料庫記錄失敗
-                        // 可以繼續進行收藏狀態更新
-                    }
                 }
-                
-                // 🛡️ 安全刪除臨時檔案
+            } else {
+                // 檔案已經在最終目錄，直接使用相對路徑
+                let relative_path = format!("generated-images/{}.jpg", image_id);
+                log::info!("[Collection] ✅ 檔案已在最終目錄，使用路徑: {}", relative_path);
+                relative_path
+            };
+            
+            let file_size = image_bytes.len() as i64;
+            
+            // 🛡️ 安全插入資料庫記錄
+            match save_pollinations_history_unconfirmed(
+                image_id,
+                project_id,
+                character_id,
+                original_prompt,
+                original_prompt,
+                "flux",
+                1024,
+                1024,
+                None,
+                false,
+                None,
+                None,
+                &final_path,
+                file_size,
+                0,
+            ) {
+                Ok(_) => {
+                    newly_confirmed += 1;
+                    log::info!("[Collection] ✅ 已成功確認保存臨時圖片: {} (專案: {:?})", image_id, project_id);
+                },
+                Err(e) => {
+                    let error = format!("圖片 {} 保存記錄到資料庫失敗: {}", image_id, e);
+                    log::warn!("[Collection] ⚠️ {}", error);
+                    processing_errors.push(error);
+                    // 不使用continue，因為檔案已經保存成功，只是資料庫記錄失敗
+                    // 可以繼續進行收藏狀態更新
+                }
+            }
+            
+            // 🛡️ 清理臨時檔案（只有從臨時目錄來的檔案才需要清理）
+            if is_from_temp {
                 match std::fs::remove_file(&temp_file) {
                     Ok(_) => log::info!("[Collection] 🗑️ 已清理臨時檔案"),
                     Err(e) => log::warn!("[Collection] ⚠️ 清理臨時檔案失敗: {}", e),
                 }
             } else {
-                let warning = format!("圖片 {} 既不在資料庫中，臨時檔案也不存在", image_id);
-                log::warn!("[Collection] ⚠️ {}", warning);
-                processing_errors.push(warning);
-                continue;
+                log::info!("[Collection] 📁 檔案已在最終目錄，無需清理臨時檔案");
             }
         } else {
             log::info!("[Collection] ✅ 圖片 {} 已存在於資料庫中", image_id);

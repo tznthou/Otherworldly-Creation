@@ -47,7 +47,9 @@ use commands::illustration::{
     // 延遲刪除管理 API
     schedule_delayed_deletion, cancel_delayed_deletion, get_delayed_deletion_status,
     // 資料修復工具 API
-    repair_image_paths, scan_orphaned_files
+    repair_image_paths, scan_orphaned_files,
+    // Gemini 插畫生成 API
+    generate_gemini_illustration, test_gemini_connection
 };
 use commands::translation::{
     translate_character_description, optimize_prompt, search_vocabulary, 
@@ -227,6 +229,9 @@ pub fn run() {
       // 資料修復工具 commands
       repair_image_paths,
       scan_orphaned_files,
+      // Gemini 插畫生成 commands
+      generate_gemini_illustration,
+      test_gemini_connection,
       // Translation commands
       translate_character_description,
       optimize_prompt,

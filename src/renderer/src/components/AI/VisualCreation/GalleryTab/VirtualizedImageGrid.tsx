@@ -118,7 +118,9 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
               hasLocalFilePath: !!item.image_path,
               imageUrl: item.image_url,
               localFilePath: item.image_path,
-              status: item.status
+              status: item.status,
+              model: item.model,
+              provider: item.provider
             });
             
             if (item.image_url || item.image_path) {
@@ -126,7 +128,7 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
               return (
                 <SafeImage
                   key={`safe-image-${item.id}`}
-                  imageUrl={item.image_url}
+                  imageUrl={item.image_url && item.image_url.startsWith('http') ? item.image_url : undefined}
                   localFilePath={item.image_path}
                   alt={item.original_prompt}
                   className="w-full h-full object-cover"
@@ -204,9 +206,9 @@ const VirtualizedImageGrid: React.FC<VirtualizedImageGridProps> = ({
     Math.ceil(illustrations.length / columnCount), [illustrations.length, columnCount]
   );
   
-  // 使用 JSON.stringify 來穩定化 Set 物件的比較
-  const selectedImagesArray = useMemo(() => Array.from(selectedImages), [selectedImages]);
-  const deletingImagesArray = useMemo(() => Array.from(deletingImages), [deletingImages]);
+  // 使用 JSON.stringify 來穩定化 Set 物件的比較（保留以備未來使用）
+  const _selectedImagesArray = useMemo(() => Array.from(selectedImages), [selectedImages]);
+  const _deletingImagesArray = useMemo(() => Array.from(deletingImages), [deletingImages]);
   
   const itemData: ItemData = useMemo(() => ({
     illustrations,
@@ -214,7 +216,7 @@ const VirtualizedImageGrid: React.FC<VirtualizedImageGridProps> = ({
     selectedImages,
     onToggleSelection: stableToggleSelection,
     deletingImages,
-  }), [illustrations, columnCount, selectedImagesArray, stableToggleSelection, deletingImagesArray]);
+  }), [illustrations, columnCount, selectedImages, stableToggleSelection, deletingImages]);
   
   // 如果沒有數據，顯示空狀態
   if (illustrations.length === 0) {

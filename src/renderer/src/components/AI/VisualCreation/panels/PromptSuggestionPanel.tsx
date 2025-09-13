@@ -105,7 +105,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [selectedCharacters, sceneType]);
+  }, [selectedCharacters, sceneType, promptIntelligence]);
 
   // 分析當前提示詞
   const analyzeCurrentPrompt = useCallback(async () => {
@@ -117,7 +117,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
     } catch (error) {
       console.error('Failed to analyze prompt:', error);
     }
-  }, [currentPrompt]);
+  }, [currentPrompt, promptIntelligence]);
 
   // 優化提示詞
   const optimizePrompt = useCallback(async (prompt: string) => {
@@ -130,7 +130,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
     } catch (error) {
       console.error('Failed to optimize prompt:', error);
     }
-  }, [onPromptOptimize]);
+  }, [onPromptOptimize, promptIntelligence]);
 
   // 切換最愛狀態
   const toggleFavorite = useCallback((prompt: string) => {
@@ -152,21 +152,21 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
       };
       promptIntelligence.addToFavorites(newFavorite);
     }
-  }, []);
+  }, [promptIntelligence]);
 
   // 初始化建議 - 修復無限循環問題
   useEffect(() => {
     if (selectedCharacters.length > 0) {
       generateSuggestions();
     }
-  }, [selectedCharacters, sceneType]); // 只依賴實際數據，不依賴函數
+  }, [selectedCharacters, sceneType, generateSuggestions]);
 
   // 分析當前提示詞
   useEffect(() => {
     if (currentPrompt && activeTab === 'analysis') {
       analyzeCurrentPrompt();
     }
-  }, [currentPrompt, activeTab]); // 只依賴實際數據
+  }, [currentPrompt, activeTab, analyzeCurrentPrompt]);
 
   // 渲染信心度指示器
   const renderConfidenceIndicator = (confidence: number) => {

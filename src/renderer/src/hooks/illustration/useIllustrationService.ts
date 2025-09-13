@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store/store';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '../../store/store';
+import { setCurrentProvider } from '../../store/slices/visualCreationSlice';
 import { api } from '../../api';
 
 // 向後兼容的插圖服務提供者類型
@@ -49,7 +50,7 @@ export interface UseIllustrationServiceReturn {
   validateConfiguration: () => { isValid: boolean; errors: string[] };
   detectAvailableServices: () => Promise<{
     availableServices: IllustrationProvider[];
-    serviceCapabilities: Record<string, any>;
+    serviceCapabilities: Record<string, unknown>;
   }>;
   
   // 計算值
@@ -75,14 +76,19 @@ export const useIllustrationService = (
   options: UseIllustrationServiceOptions = {}
 ): UseIllustrationServiceReturn => {
   const { 
-    defaultProvider = 'pollinations',
     autoLoadApiKey = true 
   } = options;
 
+  const dispatch = useDispatch<AppDispatch>();
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
-
-  // 服務配置狀態
-  const [illustrationProvider, setIllustrationProvider] = useState<IllustrationProvider>(defaultProvider);
+  
+  // 從 Redux 讀取 currentProvider 而不是維護內部狀態
+  const illustrationProvider = useSelector((state: RootState) => state.visualCreation.currentProvider);
+  
+  // 創建 setIllustrationProvider 函數來 dispatch Redux action
+  const setIllustrationProvider = useCallback((provider: IllustrationProvider) => {
+    dispatch(setCurrentProvider(provider));
+  }, [dispatch]);
   
   // Pollinations 配置
   const [pollinationsModel, setPollinationsModel] = useState<PollinationsModel>('flux');
@@ -121,48 +127,68 @@ export const useIllustrationService = (
         return;
       }
 
-      // 優先找 Gemini provider
-      const geminiProvider = response.providers.find((p) => 
-        p.provider_type === 'gemini' && p.is_enabled && p.api_key_encrypted
-      );
-      
-      if (geminiProvider?.api_key_encrypted) {
-        try {
-          const decodedApiKey = atob(geminiProvider.api_key_encrypted);
-          setApiKeyState(decodedApiKey);
-          setApiKeySource('gemini');
-          setIsApiKeyLoaded(true);
-          console.log('✅ 成功載入 Gemini API Key');
-          return;
-        } catch (error) {
-          console.error('❌ 解碼 Gemini API Key 失敗:', error);
+      // 根據當前選擇的服務載入對應的 API key
+      if (illustrationProvider === 'gemini') {
+        // Gemini Flash 免費版：使用 Gemini API key
+        const geminiProvider = response.providers.find((p) => 
+          p.provider_type === 'gemini' && p.is_enabled && p.api_key_encrypted
+        );
+        
+        if (geminiProvider?.api_key_encrypted) {
+          try {
+            const decodedApiKey = atob(geminiProvider.api_key_encrypted);
+            setApiKeyState(decodedApiKey);
+            setApiKeySource('gemini');
+            setIsApiKeyLoaded(true);
+            console.log('✅ 成功載入 Gemini API Key');
+            return;
+          } catch (error) {
+            console.error('❌ 解碼 Gemini API Key 失敗:', error);
+          }
         }
-      }
-      
-      // 檢查 OpenRouter（如果支援 Gemini/Imagen）
-      const openrouterProvider = response.providers.find((p) => 
-        p.provider_type === 'openrouter' && p.is_enabled && p.api_key_encrypted
-      );
-      
-      if (openrouterProvider?.api_key_encrypted) {
-        const modelName = openrouterProvider.model || '';
-        if (modelName.toLowerCase().includes('imagen') || modelName.toLowerCase().includes('gemini')) {
+      } else if (illustrationProvider === 'gemini-flash') {
+        // Gemini Flash Image 付費版：使用 OpenRouter API key
+        const openrouterProvider = response.providers.find((p) => 
+          p.provider_type === 'openrouter' && p.is_enabled && p.api_key_encrypted
+        );
+        
+        if (openrouterProvider?.api_key_encrypted) {
           try {
             const decodedApiKey = atob(openrouterProvider.api_key_encrypted);
             setApiKeyState(decodedApiKey);
             setApiKeySource('openrouter');
             setIsApiKeyLoaded(true);
-            console.log('✅ 成功載入 OpenRouter API Key');
+            console.log('✅ 成功載入 OpenRouter API Key (用於 Gemini Flash Image)');
+            return;
           } catch (error) {
             console.error('❌ 解碼 OpenRouter API Key 失敗:', error);
           }
         }
+      } else {
+        // 其他服務：嘗試載入 Gemini API key 作為預設
+        const geminiProvider = response.providers.find((p) => 
+          p.provider_type === 'gemini' && p.is_enabled && p.api_key_encrypted
+        );
+        
+        if (geminiProvider?.api_key_encrypted) {
+          try {
+            const decodedApiKey = atob(geminiProvider.api_key_encrypted);
+            setApiKeyState(decodedApiKey);
+            setApiKeySource('gemini');
+            setIsApiKeyLoaded(true);
+            console.log('✅ 成功載入 Gemini API Key');
+            return;
+          } catch (error) {
+            console.error('❌ 解碼 Gemini API Key 失敗:', error);
+          }
+        }
       }
       
+      console.log('⚠️ 沒有找到可用的 API Key');
     } catch (error) {
       console.error('❌ 載入 API Key 失敗:', error);
     }
-  }, [currentProject]);
+  }, [currentProject, illustrationProvider]);
 
   // 智能API檢測 - 分析可用的插畫服務
   const detectAvailableServices = useCallback(async () => {
@@ -191,7 +217,7 @@ export const useIllustrationService = (
       }
 
       const availableServices: IllustrationProvider[] = ['pollinations']; // 始終可用
-      const serviceCapabilities: Record<string, any> = {
+      const serviceCapabilities: Record<string, unknown> = {
         pollinations: { isFree: true, requiresApiKey: false, quality: 'good' }
       };
 
@@ -201,28 +227,15 @@ export const useIllustrationService = (
       );
       
       if (geminiProvider?.api_key_encrypted) {
-        // 同時添加 Imagen、Gemini (向後兼容) 和 Gemini Flash Image
-        availableServices.push('imagen', 'gemini', 'gemini-flash');
-        serviceCapabilities.imagen = { 
-          isFree: false, 
-          requiresApiKey: true, 
-          quality: 'premium',
-          provider: 'gemini' 
-        };
+        // 添加 Gemini (向後兼容) - 免費版使用 Google AI Studio
+        availableServices.push('gemini');
         serviceCapabilities.gemini = { 
           isFree: true, 
           requiresApiKey: true, 
           quality: 'high',
-          provider: 'gemini',
-          alias: 'gemini-flash' // 向後兼容標記
+          provider: 'gemini'
         };
-        serviceCapabilities['gemini-flash'] = { 
-          isFree: true, 
-          requiresApiKey: true, 
-          quality: 'high',
-          provider: 'gemini' 
-        };
-        console.log('✅ 檢測到 Gemini API - 啟用 Imagen、Gemini 和 Gemini Flash');
+        console.log('✅ 檢測到 Gemini API - 啟用 Gemini Flash 免費版');
       }
 
       // 檢查 OpenRouter 提供者
@@ -233,7 +246,17 @@ export const useIllustrationService = (
       if (openrouterProvider?.api_key_encrypted) {
         const modelName = (openrouterProvider.model || '').toLowerCase();
         
-        // 根據模型判斷可用服務
+        // 添加 Gemini Flash Image (付費版使用 OpenRouter)
+        availableServices.push('gemini-flash');
+        serviceCapabilities['gemini-flash'] = { 
+          isFree: false, 
+          requiresApiKey: true, 
+          quality: 'high',
+          provider: 'openrouter',
+          model: 'google/gemini-2.5-flash-image-preview'
+        };
+        
+        // 根據模型判斷其他可用服務
         if (modelName.includes('imagen') || modelName.includes('dall') || modelName.includes('midjourney')) {
           availableServices.push('openrouter-pro');
           serviceCapabilities['openrouter-pro'] = { 
@@ -257,7 +280,7 @@ export const useIllustrationService = (
           };
         }
         
-        console.log(`✅ 檢測到 OpenRouter API - 模型: ${openrouterProvider.model}`);
+        console.log(`✅ 檢測到 OpenRouter API - 啟用 Gemini Flash Image 付費版和其他模型`);
       }
 
       console.log('🎯 檢測結果:', { availableServices, serviceCapabilities });
@@ -352,11 +375,17 @@ export const useIllustrationService = (
   useEffect(() => {
     console.log(`🔄 插畫服務切換至: ${serviceDisplayName}`);
     
+    // 當切換服務時，重新載入對應的 API key
+    if (currentProject && autoLoadApiKey && (illustrationProvider === 'gemini' || illustrationProvider === 'gemini-flash')) {
+      setIsApiKeyLoaded(false); // 重置載入狀態
+      loadApiKeyFromProviders(); // 重新載入對應的 API key
+    }
+    
     // 如果切換到免費服務，可以清空 API Key（可選）
     if (illustrationProvider === 'pollinations' && apiKeySource === 'manual') {
       // 不自動清空，讓用戶自己決定
     }
-  }, [illustrationProvider, serviceDisplayName, apiKeySource]);
+  }, [illustrationProvider, serviceDisplayName, apiKeySource, currentProject, autoLoadApiKey, loadApiKeyFromProviders]);
 
   // 調試資訊
   useEffect(() => {

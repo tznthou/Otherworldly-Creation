@@ -10,6 +10,3 @@ pub use language_purity::*;
 pub use path_manager::PathManager;
 
 // path_utils 導出實際使用的函數
-pub use path_utils::{
-    from_relative_path  // 只導出實際使用的函數
-};

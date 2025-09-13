@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, startTransition } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, startTransition } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -8,6 +8,7 @@ import SimpleErrorBoundary from '../../../UI/SimpleErrorBoundary';
 import type { RootState, AppDispatch } from '../../../../store/store';
 import type { IllustrationHistoryItem } from '../../../../types/illustration';
 import type { ImageVersion } from '../../../../types/versionManagement';
+import type { DeleteIllustrationResponse } from '../../../../api/types';
 import {
   exportSelectedImages,
   setSelectedImageIds,
@@ -63,7 +64,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
   } = useGalleryData(currentProject, versions);
   
   // 本地狀態
-  const selectedImages = new Set(selectedImageIds);
+  const selectedImages = useMemo(() => new Set(selectedImageIds), [selectedImageIds]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filterProvider, setFilterProvider] = useState<'all' | 'pollinations' | 'imagen'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'failed'>('all');
@@ -415,7 +416,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
         setTimeout(() => reject(new Error('超級安全刪除操作超時')), 45000); // 45秒超時
       });
       
-      const response = await Promise.race([safeDeletePromise, timeoutPromise]) as any;
+      const response = await Promise.race([safeDeletePromise, timeoutPromise]) as DeleteIllustrationResponse;
       console.log('✅ [UltraSafeDelete] 後端API響應:', response);
       
       if (response && response.success) {
@@ -518,7 +519,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       const deletePromise = api.illustration.deleteIllustrations(request);
       
       console.log('🔄 [DEBUG] 開始 API 調用...');
-      const response = await Promise.race([deletePromise, timeoutPromise]) as any;
+      const response = await Promise.race([deletePromise, timeoutPromise]) as DeleteIllustrationResponse;
       console.log('✅ [DEBUG] API 調用完成:', response);
       
       if (response && response.success) {

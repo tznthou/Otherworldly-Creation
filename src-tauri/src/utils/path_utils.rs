@@ -73,16 +73,21 @@ pub fn get_images_base_dir() -> Result<PathBuf, Box<dyn Error>> {
 /// 獲取臨時圖片目錄
 /// 
 /// 臨時圖片在用戶確認前儲存在這裡
-/// 🔧 修復：真正分離臨時和最終目錄，解決檔案移動假操作問題
+/// 🔧 修復：開發環境使用同一目錄，生產環境使用 temp 子目錄
 pub fn get_temp_images_dir() -> Result<PathBuf, Box<dyn Error>> {
-    // 🎯 核心修復：臨時目錄使用 "temp" 子目錄，與最終目錄真正分離
     let base_dir = get_images_base_dir()?;
-    let temp_dir = base_dir.join("temp");
     
-    // 確保目錄存在
-    std::fs::create_dir_all(&temp_dir)?;
+    let temp_dir = if is_development_environment() {
+        // 開發環境：使用同一個目錄，不建立 temp 子目錄
+        base_dir
+    } else {
+        // 生產環境：使用 temp 子目錄分離臨時和最終圖片
+        let temp_path = base_dir.join("temp");
+        std::fs::create_dir_all(&temp_path)?;
+        temp_path
+    };
     
-    log::info!("[PathUtils] 臨時圖片目錄: {:?} (已與最終目錄分離)", temp_dir);
+    log::info!("[PathUtils] 臨時圖片目錄: {:?} (開發環境: {})", temp_dir, is_development_environment());
     
     Ok(temp_dir)
 }

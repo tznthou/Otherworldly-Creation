@@ -37,7 +37,7 @@ const CharacterSelector: React.FC = () => {
     if (characters.length > 0 && projectCharacters.length === 0) {
       console.log('❌ 沒有找到匹配的角色！');
     }
-  }, [currentProject?.id, characters.length, projectCharacters.length]);
+  }, [currentProject?.id, currentProject?.name, characters.length, projectCharacters.length]);
   
   // 處理角色選擇
   const handleCharacterToggle = (characterId: string) => {

@@ -129,7 +129,11 @@
       "Bash(python:*)",
       "Bash(xargs sed:*)",
       "Bash(md5:*)",
-      "Bash(RELEASE_VERSION=1.1.9 node scripts/sync-version.js)"
+      "Bash(RELEASE_VERSION=1.1.9 node scripts/sync-version.js)",
+      "Bash(cargo fix:*)",
+      "Bash(timeout 10s npm run dev:*)",
+      "Bash(timeout 15s npm run dev)",
+      "Bash(RELEASE_VERSION=1.2.0 node scripts/sync-version.js)"
     ],
     "deny": [],
     "ask": [],

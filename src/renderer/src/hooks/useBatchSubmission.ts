@@ -340,7 +340,7 @@ export const useBatchSubmission = ({
           .filter(r => r.success && (r.tempImageData || r.url))
           .map(r => {
             if (r.tempImageData && typeof r.tempImageData === 'object' && r.tempImageData !== null) {
-              const tempData = r.tempImageData as any;
+              const tempData = r.tempImageData as Record<string, unknown>;
               return {
                 id: tempData.id || `temp-${Date.now()}-${Math.random()}`,
                 url: tempData.url || r.url || '',

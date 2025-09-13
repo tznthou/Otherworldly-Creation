@@ -3,7 +3,6 @@ use crate::services::illustration::pollinations_api::{
     PollinationsApiService, PollinationsRequest, PollinationsModel
 };
 use crate::database::connection::create_connection;
-use chrono::{Local, Utc};
 
 /// 免費插畫生成 - 使用 Pollinations.AI
 #[tauri::command]
@@ -190,8 +189,10 @@ pub async fn get_illustration_history(
     
     let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
     
-    // 🔧 修復：移除不存在的欄位 is_confirmed, in_collection, collected_at
-    let mut query = String::from(
+    let mut all_illustrations = Vec::new();
+    
+    // 🎯 查詢 pollinations_generations 表
+    let mut pollinations_query = String::from(
         "SELECT 
             id, project_id, character_id, original_prompt, enhanced_prompt,
             model, width, height, seed, enhance, style_applied,
@@ -201,44 +202,51 @@ pub async fn get_illustration_history(
          WHERE deleted_at IS NULL"
     );
     
+    // 🎯 查詢 illustration_generations 表 (Gemini, OpenAI 等)
+    let mut illustration_query = String::from(
+        "SELECT 
+            id, project_id, character_id, scene_description as original_prompt, translated_prompt as enhanced_prompt,
+            api_model as model, 
+            CAST(SUBSTR(image_size, 1, INSTR(image_size, 'x') - 1) AS INTEGER) as width,
+            CAST(SUBSTR(image_size, INSTR(image_size, 'x') + 1) AS INTEGER) as height,
+            seed_value as seed, 0 as enhance, '' as style_applied,
+            image_url, 'generated-images/' || image_url as local_file_path, file_size, generation_time_ms,
+            status, error_message, created_at, batch_id, user_rating, is_favorite,
+            api_provider, is_confirmed
+         FROM illustration_generations
+         WHERE deleted_at IS NULL AND is_permanently_deleted = 0"
+    );
+    
+    // 構建條件和參數
     let mut conditions = Vec::new();
-    let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+    let mut pollinations_params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+    let mut illustration_params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
     
     if let Some(ref pid) = projectId {
         conditions.push("project_id = ?");
-        params.push(Box::new(pid.clone()));
+        pollinations_params.push(Box::new(pid.clone()));
+        illustration_params.push(Box::new(pid.clone()));
     }
     
     if let Some(ref cid) = characterId {
         conditions.push("character_id = ?");
-        params.push(Box::new(cid.clone()));
+        pollinations_params.push(Box::new(cid.clone()));
+        illustration_params.push(Box::new(cid.clone()));
     }
     
     if !conditions.is_empty() {
-        query.push_str(" AND ");
-        query.push_str(&conditions.join(" AND "));
+        let condition_str = format!(" AND {}", conditions.join(" AND "));
+        pollinations_query.push_str(&condition_str);
+        illustration_query.push_str(&condition_str);
     }
     
-    query.push_str(" ORDER BY created_at DESC");
+    // 🎯 處理 pollinations_generations 查詢
+    let mut stmt = conn.prepare(&pollinations_query)
+        .map_err(|e| format!("Pollinations SQL 準備失敗: {}", e))?;
     
-    if let Some(limit_val) = limit {
-        query.push_str(" LIMIT ?");
-        params.push(Box::new(limit_val));
-    }
+    let param_refs: Vec<&dyn rusqlite::ToSql> = pollinations_params.iter().map(|p| p.as_ref()).collect();
     
-    if let Some(offset_val) = offset {
-        query.push_str(" OFFSET ?");
-        params.push(Box::new(offset_val));
-    }
-    
-    let mut stmt = conn.prepare(&query)
-        .map_err(|e| format!("SQL 準備失敗: {}", e))?;
-    
-    // 轉換參數為引用
-    let param_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|p| p.as_ref()).collect();
-    
-    let rows = stmt.query_map(&param_refs[..], |row| {
-        // 🔧 先提取所有值，避免在 JSON 構建時處理 Result 類型
+    let pollinations_rows = stmt.query_map(&param_refs[..], |row| {
         let id: String = row.get(0)?;
         let project_id: Option<String> = row.get(1)?;
         let character_id: Option<String> = row.get(2)?;
@@ -261,24 +269,24 @@ pub async fn get_illustration_history(
         let user_rating: Option<i32> = row.get(19)?;
         let is_favorite: bool = row.get(20)?;
         
-        // 🔧 動態路徑解析：確保前端能正確載入圖片
         let image_path = if let Some(path) = &file_path {
-            match crate::utils::path_utils::from_relative_path(path) {
-                Ok(full_path) => {
-                    let path_str = full_path.to_string_lossy().to_string();
-                    log::info!("🔍 [PathDebug] 轉換路徑: {} -> {}", path, path_str);
-                    path_str
-                }
-                Err(e) => {
-                    log::error!("❌ [PathDebug] 路徑轉換失敗: {} - {:?}", path, e);
-                    path.clone() // 如果解析失敗，使用原始路徑
-                }
+            // 確保路徑有 generated-images/ 前綴
+            let normalized_path = if path.starts_with("generated-images/") {
+                path.clone()
+            } else if path.contains("/") {
+                path.clone() // 已經是完整路徑
+            } else {
+                format!("generated-images/{}", path) // 只是檔案名，需要加前綴
+            };
+            
+            match crate::utils::path_utils::from_relative_path(&normalized_path) {
+                Ok(full_path) => full_path.to_string_lossy().to_string(),
+                Err(_) => normalized_path
             }
         } else {
             String::new()
         };
         
-        // 🔧 構建 JSON，所有值都是已解析的類型
         Ok(serde_json::json!({
             "id": id,
             "project_id": project_id,
@@ -293,7 +301,7 @@ pub async fn get_illustration_history(
             "style_applied": style_applied,
             "image_url": image_url,
             "local_file_path": file_path,
-            "image_path": image_path, // 🔧 使用動態解析的完整路徑
+            "image_path": image_path,
             "file_size_bytes": file_size_bytes,
             "generation_time_ms": generation_time_ms,
             "status": status,
@@ -302,29 +310,139 @@ pub async fn get_illustration_history(
             "batch_id": batch_id,
             "user_rating": user_rating,
             "is_favorite": is_favorite,
-            // 🔧 為向後相容性提供預設值
-            "is_confirmed": true, // 現有記錄視為已確認
+            "is_confirmed": true,
             "provider": "pollinations",
             "is_free": true
         }))
-    }).map_err(|e| format!("查詢執行失敗: {}", e))?;
+    }).map_err(|e| format!("Pollinations 查詢執行失敗: {}", e))?;
     
-    let mut illustrations = Vec::new();
-    for row in rows {
+    for row in pollinations_rows {
         match row {
-            Ok(illustration) => illustrations.push(illustration),
-            Err(e) => {
-                log::warn!("[FreeGeneration] 跳過無效記錄: {}", e);
-            }
+            Ok(illustration) => all_illustrations.push(illustration),
+            Err(e) => log::warn!("[Pollinations] 跳過無效記錄: {}", e),
         }
     }
     
-    log::info!("[FreeGeneration] 獲取插畫歷史成功，共 {} 條記錄", illustrations.len());
+    // 🎯 處理 illustration_generations 查詢
+    let mut stmt2 = conn.prepare(&illustration_query)
+        .map_err(|e| format!("Illustration SQL 準備失敗: {}", e))?;
+    
+    let param_refs2: Vec<&dyn rusqlite::ToSql> = illustration_params.iter().map(|p| p.as_ref()).collect();
+    
+    let illustration_rows = stmt2.query_map(&param_refs2[..], |row| {
+        let id: String = row.get(0)?;
+        let project_id: Option<String> = row.get(1)?;
+        let character_id: Option<String> = row.get(2)?;
+        let original_prompt: String = row.get(3)?;
+        let enhanced_prompt: Option<String> = row.get(4)?;
+        let model: String = row.get(5)?;
+        let width: i32 = row.get(6)?;
+        let height: i32 = row.get(7)?;
+        let seed: Option<i32> = row.get(8)?;
+        let enhance: bool = row.get(9)?;
+        let style_applied: String = row.get(10)?;
+        let image_url: Option<String> = row.get(11)?;
+        let file_path: Option<String> = row.get(12)?;
+        let file_size_bytes: Option<i64> = row.get(13)?;
+        let generation_time_ms: Option<i32> = row.get(14)?;
+        let status: String = row.get(15)?;
+        let error_message: Option<String> = row.get(16)?;
+        let created_at: String = row.get(17)?;
+        let batch_id: Option<String> = row.get(18)?;
+        let user_rating: Option<i32> = row.get(19)?;
+        let is_favorite: bool = row.get(20)?;
+        let api_provider: String = row.get(21)?;
+        let is_confirmed: bool = row.get(22)?;
+        
+        let image_path = if let Some(path) = &file_path {
+            match crate::utils::path_utils::from_relative_path(path) {
+                Ok(full_path) => full_path.to_string_lossy().to_string(),
+                Err(_) => path.clone()
+            }
+        } else {
+            String::new()
+        };
+        
+        // 🎯 智能模型名稱映射
+        let display_model = match api_provider.as_str() {
+            "gemini" | "gemini-flash" => "gemini-2.5-flash-image-preview",
+            "openai" => match model.as_str() {
+                "dall-e-2" => "dall-e-2",
+                "dall-e-3" => "dall-e-3", 
+                _ => &model
+            },
+            "claude" => "claude-3.5-sonnet",
+            "imagen" => "imagen-3",
+            _ => &model
+        };
+        
+        // 🎯 判斷是否免費服務
+        let is_free = matches!(api_provider.as_str(), "gemini" | "gemini-flash");
+        
+        Ok(serde_json::json!({
+            "id": id,
+            "project_id": project_id,
+            "character_id": character_id,
+            "original_prompt": original_prompt,
+            "enhanced_prompt": enhanced_prompt.unwrap_or_else(|| original_prompt.clone()),
+            "model": display_model,
+            "width": width,
+            "height": height,
+            "seed": seed,
+            "enhance": enhance,
+            "style_applied": style_applied,
+            "image_url": image_url,
+            "local_file_path": file_path,
+            "image_path": image_path,
+            "file_size_bytes": file_size_bytes,
+            "generation_time_ms": generation_time_ms,
+            "status": status,
+            "error_message": error_message,
+            "created_at": created_at,
+            "batch_id": batch_id,
+            "user_rating": user_rating,
+            "is_favorite": is_favorite,
+            "is_confirmed": is_confirmed,
+            "provider": api_provider,
+            "is_free": is_free
+        }))
+    }).map_err(|e| format!("Illustration 查詢執行失敗: {}", e))?;
+    
+    for row in illustration_rows {
+        match row {
+            Ok(illustration) => all_illustrations.push(illustration),
+            Err(e) => log::warn!("[Illustration] 跳過無效記錄: {}", e),
+        }
+    }
+    
+    // 🎯 按創建時間排序 (最新在前)
+    all_illustrations.sort_by(|a, b| {
+        let a_time = a.get("created_at").and_then(|v| v.as_str()).unwrap_or("");
+        let b_time = b.get("created_at").and_then(|v| v.as_str()).unwrap_or("");
+        b_time.cmp(a_time)
+    });
+    
+    // 🎯 應用 limit 和 offset
+    let total_count = all_illustrations.len();
+    let start = offset.unwrap_or(0) as usize;
+    let end = if let Some(limit_val) = limit {
+        (start + limit_val as usize).min(total_count)
+    } else {
+        total_count
+    };
+    
+    let paginated_illustrations = if start < total_count {
+        all_illustrations[start..end].to_vec()
+    } else {
+        Vec::new()
+    };
+    
+    log::info!("[get_illustration_history] 合併查詢成功，共 {} 條記錄，返回 {} 條", total_count, paginated_illustrations.len());
     
     Ok(serde_json::json!({
         "success": true,
-        "illustrations": illustrations,
-        "total": illustrations.len(),
+        "illustrations": paginated_illustrations,
+        "total": total_count,
         "project_id": projectId,
         "character_id": characterId
     }))

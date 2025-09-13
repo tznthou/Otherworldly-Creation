@@ -174,6 +174,25 @@ impl IllustrationDbHandler {
         }
     }
 
+    /// 保存插畫生成記錄到統一表格
+    pub fn save_illustration_generation(record: &IllustrationRecord) -> DatabaseResult {
+        let result = Self::internal_save_illustration_generation(record);
+        
+        match result {
+            Ok(()) => {
+                info!("✅ 已保存插畫生成記錄: {}", record.id);
+                DatabaseResult::success(1, format!("插畫記錄已保存: {}", record.id))
+            }
+            Err(e) => {
+                error!("❌ 保存插畫記錄失敗: {}", e);
+                DatabaseResult::error(
+                    "保存插畫記錄失敗".to_string(),
+                    Some(e.to_string())
+                )
+            }
+        }
+    }
+
     /// 保存未確認的插畫記錄
     pub fn save_unconfirmed_record(record: &IllustrationRecord) -> DatabaseResult {
         let result = Self::internal_save_unconfirmed_record(record);
@@ -191,6 +210,45 @@ impl IllustrationDbHandler {
                 )
             }
         }
+    }
+
+    /// 內部方法：寫入 illustration_generations 表
+    fn internal_save_illustration_generation(record: &IllustrationRecord) -> Result<(), Box<dyn Error>> {
+        let conn = create_connection()?;
+        
+        let local_time = Local::now();
+        let formatted_time = local_time.format("%Y-%m-%d %H:%M:%S").to_string();
+        
+        log::info!("[DB] 保存到 illustration_generations 表: {} 時間: {}", record.id, formatted_time);
+        
+        conn.execute(
+            "INSERT INTO illustration_generations (
+                id, project_id, character_id, 
+                scene_description, translated_prompt,
+                api_provider, api_model, image_url,
+                image_size, file_size, generation_time_ms,
+                status, created_at, is_confirmed, in_collection
+            ) VALUES (
+                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, 1, 0
+            )",
+            rusqlite::params![
+                record.id,
+                record.project_id.as_deref(),
+                record.character_id.as_deref(),
+                record.original_prompt,          // scene_description
+                record.enhanced_prompt,          // translated_prompt
+                record.model,                    // api_provider (gemini/gemini-flash)
+                record.model,                    // api_model
+                record.local_file_path,          // 使用本地路徑作為 image_url
+                format!("{}x{}", record.width, record.height),  // image_size
+                record.file_size_bytes,
+                record.generation_time_ms,
+                "completed",                     // status
+                formatted_time
+            ],
+        )?;
+        
+        Ok(())
     }
 
     /// 內部保存方法（處理實際資料庫操作）

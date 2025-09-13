@@ -5,6 +5,7 @@ import { fetchProjects } from '../../store/slices/projectsSlice';
 import { fetchAIProviders, setDefaultProvider, setDefaultModel } from '../../store/slices/aiSlice';
 import { Card, CardContent } from '../../components/UI/Card';
 import CosmicBackground from '../../components/UI/CosmicBackground';
+import type { Chapter } from '../../api/models';
 // import { initStatusManager } from '../../modules/chapterStatus';
 // import { useStatusStatistics } from '../../modules/chapterStatus/hooks';
 import QuickActions from './QuickActions';
@@ -87,8 +88,8 @@ const Dashboard: React.FC = () => {
       
       // 計算統計數據
       const totalChapters = allChapters.length;
-      // 將簡化的章節類型轉換為 chapterStatusService 期望的類型
-      const chaptersForService = allChapters as any[];
+      // 確保章節數據符合 Chapter 類型
+      const chaptersForService = allChapters as Chapter[];
       const completedCount = chapterStatusService.calculateCompletedCount(chaptersForService);
       const completionRate = chapterStatusService.calculateCompletionRate(chaptersForService);
       const statusDistribution = chapterStatusService.getStatusDistribution(chaptersForService);
@@ -119,7 +120,7 @@ const Dashboard: React.FC = () => {
         sampleChapters: allChapters.slice(0, 3).map(c => ({ 
           title: c.title, 
           status: c.status,
-          hasMetadata: !!(c as any).metadata 
+          hasMetadata: !!(c as Record<string, unknown>).metadata 
         })) // 顯示前3個章節的狀態信息
       });
     } catch (error) {

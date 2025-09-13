@@ -115,7 +115,7 @@ export const useGalleryData = (
     } finally {
       setLoading(false);
     }
-  }, [currentProject, enrichWithVersionData]);
+  }, [currentProject, enrichWithVersionData, loading]);
 
   // 重新獲取數據的便捷方法
   const refetchData = useCallback(() => {
