@@ -211,4 +211,4 @@ optimized_context_example.txt
 coverage/
 
 # Claude Code project configuration (contains personal instructions)
-CLAUDE.md
+CLAUDE.md*.backup.tsx

@@ -1,13 +1,21 @@
-# 創世紀元：Genesis Chronicle v1.2.1
+# 創世紀元：Genesis Chronicle v1.2.3
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
 <p align="center">
   <a href="README.md">English</a> | <strong>繁體中文</strong>
 </p>
 
-![Version](https://img.shields.io/badge/version-v1.2.1-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange)
+![Version](https://img.shields.io/badge/version-v1.2.3-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange)
 
 ## 🚀 最新更新歷程
+
+### 🌟 v1.2.3 - 使用者體驗卓越與系統精進 (2025年9月15日)
+
+#### 🎨 視覺創作與電子書準備重大突破
+- **拖曳分類修復**: 完全修復電子書排版分類系統 - 圖片顯示完美，@dnd-kit整合
+- **SafeImage組件**: 解決CSS布局衝突並移除調試覆蓋層，提供純淨視覺體驗
+- **AI插圖面板**: 修復無限循環、Token顯示問題和導航按鈕，實現無縫工作流程
+- **電子書準備套件**: 15個專業組件支援拖曳分類、批量重命名和元數據分析
 
 ### 🌟 v1.2.1 - 專案優化與文檔提升 (2025年9月13日)
 
@@ -42,6 +50,34 @@
 - **載入狀態管理**: 實時進度指示器和按鈕狀態管理，提升操作確定性
 - **統計信息詳化**: 提供詳細的操作反饋信息
 - **告別盲點操作**: 徹底解決無反饋操作的用戶體驗問題
+
+## 🗓️ 未來發展藍圖
+
+### 📊 隱私保護與遙測增強 (NocoDB 整合計劃)
+> *為提升用戶洞察與系統改進而設計的隱私優先分析系統*
+
+#### 🔐 隱私優先的分析系統
+- **遙測資料收集**: 可選的匿名使用分析，用戶完全控制
+- **錯誤報告**: 智能錯誤回報系統，快速問題解決
+- **使用情況分析**: 理解用戶行為模式，優化功能設計
+- **NocoDB 後端**: 專業無代碼資料庫解決方案，提供資料視覺化和分析
+
+#### ✨ 開發中的關鍵功能
+- **🛡️ 隱私控制**: 細緻的用戶資料收集控制權（UI介面已完成）
+- **📈 分析儀表板**: 應用程式使用模式的即時洞察
+- **🔧 錯誤追蹤**: 自動化錯誤報告，支援附件上傳
+- **📊 資料視覺化**: 透過 NocoDB 內建圖表和分析功能
+- **🔒 匿名處理**: 完整用戶匿名化，安全 JWT 認證
+
+#### 🏗️ 技術實作架構
+- **REST API 整合**: NocoDB 端點無縫資料收集
+- **離線支援**: 本地快取配合批次同步
+- **檔案上傳支援**: 錯誤截圖和日誌附件功能
+- **Webhook 自動化**: 關鍵錯誤自動通知系統
+
+*完整實作計劃已納入專案文檔 - 隱私優先設計，用戶完全控制*
+
+---
 
 ## 🌟 核心特色
 
