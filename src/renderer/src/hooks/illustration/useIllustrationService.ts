@@ -278,24 +278,31 @@ export const useIllustrationService = (
           model: 'google/gemini-2.5-flash-image-preview'
         };
         
-        // 根據模型判斷其他可用服務
-        if (modelName.includes('imagen') || modelName.includes('dall') || modelName.includes('midjourney')) {
+        // 根據模型判斷其他可用服務 - 修復：包含 Gemini 圖像模型
+        if (modelName.includes('imagen') ||
+            modelName.includes('dall') ||
+            modelName.includes('midjourney') ||
+            modelName.includes('gemini') ||  // 🔧 修復：添加 Gemini 圖像模型支援
+            modelName.includes('flux') ||
+            modelName.includes('stable-diffusion')) {
           availableServices.push('openrouter-pro');
-          serviceCapabilities['openrouter-pro'] = { 
-            isFree: false, 
-            requiresApiKey: true, 
+          serviceCapabilities['openrouter-pro'] = {
+            isFree: false,
+            requiresApiKey: true,
             quality: 'premium',
             provider: 'openrouter',
             model: openrouterProvider.model
           };
         }
         
-        // 檢查是否有免費圖像模型
-        if (modelName.includes('free') || modelName.includes('stable-diffusion')) {
+        // 檢查是否有免費圖像模型 - 修復：包含 Gemini 免費模型
+        if (modelName.includes('free') ||
+            modelName.includes('stable-diffusion') ||
+            (modelName.includes('gemini') && modelName.includes('flash'))) {  // 🔧 修復：Gemini Flash 免費版
           availableServices.push('openrouter-free');
-          serviceCapabilities['openrouter-free'] = { 
-            isFree: true, 
-            requiresApiKey: true, 
+          serviceCapabilities['openrouter-free'] = {
+            isFree: true,
+            requiresApiKey: true,
             quality: 'good',
             provider: 'openrouter',
             model: openrouterProvider.model
