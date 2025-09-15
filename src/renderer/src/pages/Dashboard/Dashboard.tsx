@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { fetchProjects } from '../../store/slices/projectsSlice';
-import { fetchAIProviders, setDefaultProvider, setDefaultModel } from '../../store/slices/aiSlice';
+import { setDefaultProvider, setDefaultModel } from '../../store/slices/aiSlice';
 import { Card, CardContent } from '../../components/UI/Card';
 import CosmicBackground from '../../components/UI/CosmicBackground';
 import type { Chapter } from '../../api/models';
@@ -153,17 +153,8 @@ const Dashboard: React.FC = () => {
     initStatusSystem();
     loadProjects();
     
-    // 載入 AI 提供者列表
-    const loadAIProviders = async () => {
-      try {
-        console.log('Dashboard: 載入 AI 提供者列表...');
-        await dispatch(fetchAIProviders());
-      } catch (error) {
-        console.error('Dashboard: 載入 AI 提供者失敗:', error);
-      }
-    };
-    
-    loadAIProviders();
+    // ✅ AI 提供者列表由 App.tsx 統一載入，這裡不需要重複載入
+    console.log('Dashboard: AI 提供者列表由 App.tsx 統一管理');
     
     // 從 localStorage 載入保存的 AI 設定
     const loadSavedAISettings = () => {

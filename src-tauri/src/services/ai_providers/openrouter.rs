@@ -285,7 +285,8 @@ impl AIProvider for OpenRouterProvider {
             }
             Err(e) => {
                 log::warn!("[OpenRouterProvider] OpenRouter API 不可用: {}", e);
-                Err(e)
+                // 🔧 修復：返回 Ok(false) 而不是 Err，讓 UI 可以正確顯示狀態
+                Ok(false)
             }
         }
     }

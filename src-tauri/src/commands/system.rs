@@ -136,13 +136,46 @@ pub async fn show_open_dialog(
         }
     }
     
+    // 檢查是否是目錄選擇
+    let is_directory = options.properties
+        .as_ref()
+        .map(|props| props.contains(&"openDirectory".to_string()))
+        .unwrap_or(false);
+
     // 檢查是否需要多選
     let is_multiple = options.properties
         .as_ref()
         .map(|props| props.contains(&"multiSelections".to_string()))
         .unwrap_or(false);
-    
-    if is_multiple {
+
+    if is_directory {
+        // 目錄選擇
+        let result = Arc::new(Mutex::new(None));
+        let result_clone = Arc::clone(&result);
+
+        builder.pick_folder(move |folder_path| {
+            *result_clone.lock().unwrap() = Some(folder_path);
+        });
+
+        // 等待結果
+        loop {
+            tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+            let guard = result.lock().unwrap();
+            if guard.is_some() {
+                let folder_path = guard.clone().unwrap();
+                break match folder_path {
+                    Some(path) => Ok(OpenDialogResult {
+                        canceled: false,
+                        file_paths: Some(vec![path.to_string()]),
+                    }),
+                    None => Ok(OpenDialogResult {
+                        canceled: true,
+                        file_paths: None,
+                    }),
+                };
+            }
+        }
+    } else if is_multiple {
         let result = Arc::new(Mutex::new(None));
         let result_clone = Arc::clone(&result);
         
@@ -314,4 +347,127 @@ fn compare_versions(current: &str, latest: &str) -> bool {
     }
     
     false
+}
+
+#[tauri::command]
+pub async fn read_image_as_base64(image_path: String) -> Result<String, String> {
+    use std::fs;
+    use base64::{Engine, engine::general_purpose};
+    use crate::utils::path_utils::get_final_image_path;
+
+    log::info!("[read_image_as_base64] 讀取圖片文件: {}", image_path);
+
+    // 獲取完整路徑
+    let full_path = match get_final_image_path(&image_path) {
+        Ok(path) => path,
+        Err(e) => {
+            let error_msg = format!("無法解析圖片路徑: {} - {}", image_path, e);
+            log::error!("[read_image_as_base64] {}", error_msg);
+            return Err(error_msg);
+        }
+    };
+    log::info!("[read_image_as_base64] 完整路徑: {}", full_path.display());
+
+    // 檢查文件是否存在
+    if !full_path.exists() {
+        let error_msg = format!("圖片文件不存在: {}", full_path.display());
+        log::error!("[read_image_as_base64] {}", error_msg);
+        return Err(error_msg);
+    }
+
+    // 讀取文件為字節
+    match fs::read(&full_path) {
+        Ok(bytes) => {
+            // 轉換為 base64
+            let base64_string = general_purpose::STANDARD.encode(&bytes);
+            log::info!("[read_image_as_base64] 文件讀取成功，大小: {} bytes, base64 長度: {}", bytes.len(), base64_string.len());
+            Ok(base64_string)
+        },
+        Err(e) => {
+            let error_msg = format!("無法讀取圖片文件: {} - {}", full_path.display(), e);
+            log::error!("[read_image_as_base64] {}", error_msg);
+            Err(error_msg)
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn save_export_file(
+    data_url: String,
+    output_path: String
+) -> Result<String, String> {
+    use std::fs;
+    use std::path::Path;
+    use base64::{Engine, engine::general_purpose};
+
+    // 展開路徑中的波浪號
+    let expanded_path = if output_path.starts_with("~/") {
+        match dirs::home_dir() {
+            Some(home) => output_path.replacen("~", &home.to_string_lossy(), 1),
+            None => {
+                let error_msg = "無法獲取用戶主目錄".to_string();
+                log::error!("[save_export_file] {}", error_msg);
+                return Err(error_msg);
+            }
+        }
+    } else {
+        output_path.clone()
+    };
+
+    log::info!("[save_export_file] 原始路徑: {}", output_path);
+    log::info!("[save_export_file] 展開路徑: {}", expanded_path);
+
+    // 解析 data URL
+    if !data_url.starts_with("data:") {
+        let error_msg = "無效的 data URL 格式".to_string();
+        log::error!("[save_export_file] {}", error_msg);
+        return Err(error_msg);
+    }
+
+    // 找到 base64 數據部分
+    let parts: Vec<&str> = data_url.split(',').collect();
+    if parts.len() != 2 {
+        let error_msg = "data URL 格式錯誤".to_string();
+        log::error!("[save_export_file] {}", error_msg);
+        return Err(error_msg);
+    }
+
+    let base64_data = parts[1];
+
+    // 解碼 base64 數據
+    let decoded_data = match general_purpose::STANDARD.decode(base64_data) {
+        Ok(data) => data,
+        Err(e) => {
+            let error_msg = format!("base64 解碼失敗: {}", e);
+            log::error!("[save_export_file] {}", error_msg);
+            return Err(error_msg);
+        }
+    };
+
+    log::info!("[save_export_file] base64 解碼成功，數據大小: {} bytes", decoded_data.len());
+
+    // 確保輸出目錄存在
+    let output_path_obj = Path::new(&expanded_path);
+    if let Some(parent) = output_path_obj.parent() {
+        log::info!("[save_export_file] 創建目錄: {}", parent.display());
+        if let Err(e) = fs::create_dir_all(parent) {
+            let error_msg = format!("無法創建目錄 {}: {}", parent.display(), e);
+            log::error!("[save_export_file] {}", error_msg);
+            return Err(error_msg);
+        }
+        log::info!("[save_export_file] 目錄已確保存在: {}", parent.display());
+    }
+
+    // 寫入檔案
+    match fs::write(&expanded_path, &decoded_data) {
+        Ok(()) => {
+            log::info!("[save_export_file] ✅ 檔案儲存成功: {} ({} bytes)", expanded_path, decoded_data.len());
+            Ok(expanded_path)
+        },
+        Err(e) => {
+            let error_msg = format!("檔案寫入失敗: {} - {}", expanded_path, e);
+            log::error!("[save_export_file] ❌ {}", error_msg);
+            Err(error_msg)
+        }
+    }
 }

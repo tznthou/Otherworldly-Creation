@@ -5,22 +5,28 @@ import { convertFileSrc } from '@tauri-apps/api/core';
 interface SafeImageProps {
   imageUrl?: string;
   localFilePath?: string;
+  src?: string;
   alt: string;
   className?: string;
+  style?: React.CSSProperties;
   onLoad?: () => void;
   onError?: () => void;
   loading?: 'lazy' | 'eager';
+  fallback?: string;
   fallbackIcon?: string;
 }
 
 export const SafeImage: React.FC<SafeImageProps> = React.memo(({
   imageUrl,
   localFilePath,
+  src: externalSrc,
   alt,
   className = '',
+  style,
   onLoad,
   onError,
   loading = 'lazy',
+  fallback = '載入失敗',
   fallbackIcon = '🖼️'
 }) => {
   const [src, setSrc] = useState<string>('');
@@ -44,6 +50,13 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
       setSrc('');
 
       try {
+        // 檢查外部src參數
+        if (externalSrc && typeof externalSrc === 'string' && externalSrc.trim() !== '') {
+          setSrc(externalSrc);
+          setIsLoading(false);
+          return;
+        }
+
         // 檢查網路圖片
         if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== '') {
           setSrc(imageUrl);
@@ -58,12 +71,29 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
             pathType: typeof localFilePath,
             pathLength: localFilePath.length
           });
-          
+
           // 統一路徑格式處理（Windows/Mac兼容）
           let cleanPath = localFilePath.replace(/^file:\/\//, '');
           cleanPath = cleanPath.replace(/\\/g, '/');
-          
+
           console.log('🔧 [SafeImageDebug] 清理後路徑:', cleanPath);
+          console.log('🔧 [SafeImageDebug] 路徑處理步驟:', {
+            step1_removedFileProtocol: localFilePath.replace(/^file:\/\//, ''),
+            step2_normalizedSlashes: cleanPath,
+            isAbsolutePath: cleanPath.startsWith('/'),
+            pathContainsGeneratedImages: cleanPath.includes('generated-images')
+          });
+
+          // 🔧 修復：如果只是檔案名，手動構建完整路徑
+          if (!cleanPath.startsWith('/') && !cleanPath.includes('generated-images')) {
+            // 檢查是否為 UUID 格式的檔案名（如 abc123.jpg）
+            const isUuidFilename = /^[a-f0-9-]{36}\.jpg$/i.test(cleanPath);
+            if (isUuidFilename) {
+              // 手動構建開發環境的完整路徑
+              cleanPath = `/Users/tznthou/Documents/Practice/6 novel writing/src-tauri/generated-images/${cleanPath}`;
+              console.log('🔧 [SafeImageDebug] 手動構建完整路徑:', cleanPath);
+            }
+          }
           
           try {
             const assetUrl = convertFileSrc(cleanPath);
@@ -93,7 +123,7 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
     return () => {
       isMounted = false;
     };
-  }, [imageUrl, localFilePath, onError]);
+  }, [imageUrl, localFilePath, externalSrc, onError]);
 
   // 載入中
   if (isLoading) {
@@ -111,9 +141,9 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
   // 錯誤狀態
   if (hasError || !src) {
     return (
-      <div className={`flex flex-col items-center justify-center bg-cosmic-700 text-cosmic-400 ${className}`}>
+      <div className={`flex flex-col items-center justify-center bg-cosmic-700 text-cosmic-400 ${className}`} style={style}>
         <div className="text-2xl mb-1">{fallbackIcon}</div>
-        <div className="text-xs opacity-60">載入失敗</div>
+        <div className="text-xs opacity-60">{fallback}</div>
       </div>
     );
   }
@@ -124,6 +154,7 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
       src={src}
       alt={alt}
       className={className}
+      style={style}
       loading={loading}
       onLoad={onLoad}
       onError={() => {
@@ -133,8 +164,9 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
     />
   );
 }, (prevProps, nextProps) => {
-  // 只有當 imageUrl 和 localFilePath 都相同時才認為組件相同
-  return prevProps.imageUrl === nextProps.imageUrl && 
+  // 只有當關鍵props都相同時才認為組件相同
+  return prevProps.imageUrl === nextProps.imageUrl &&
          prevProps.localFilePath === nextProps.localFilePath &&
+         prevProps.src === nextProps.src &&
          prevProps.alt === nextProps.alt;
 });

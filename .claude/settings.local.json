@@ -137,7 +137,13 @@
       "Bash(git remote:*)",
       "Bash(git for-each-ref:*)",
       "Bash(git show-branch:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git show:*)",
+      "Bash(cargo:*)",
+      "WebFetch(domain:crates.io)",
+      "Bash(git diff:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": [],

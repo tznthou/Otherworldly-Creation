@@ -24,14 +24,14 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost https://tauri.localhost data: blob: http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'",
+      "csp": "default-src 'self'; connect-src 'self' asset: https: http: ws: wss: ipc: http://ipc.localhost; img-src 'self' asset: https://asset.localhost https://tauri.localhost data: blob: http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'",
       "assetProtocol": {
         "enable": true,
         "scope": [
           "**"
         ]
       },
-      "dangerousDisableAssetCspModification": false
+      "dangerousDisableAssetCspModification": true
     }
   },
   "bundle": {

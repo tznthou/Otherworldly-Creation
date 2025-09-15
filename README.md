@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/version-v1.2.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green" alt="Platform">
   <img src="https://img.shields.io/badge/AI_Providers-5-orange" alt="AI Providers">
-  <img src="https://img.shields.io/badge/code_lines-105k+-purple" alt="Code Lines">
+  <img src="https://img.shields.io/badge/code_lines-113k+-purple" alt="Code Lines">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="License">
 </p>
 
@@ -141,8 +141,8 @@ AI Providers ← Provider Traits ← AI Service Layer
 ## 📊 Project Stats
 
 ### Scale & Performance
-- **Core Code**: 105,530 lines (TypeScript: 76,005, Rust: 24,106, JS: 4,895)
-- **Files**: 447 core files across 5 languages
+- **Core Code**: 113,016 lines (TypeScript: 82,819, Rust: 24,449, JS: 5,748)
+- **Files**: 475 core files across 3 languages
 - **Database**: SQLite v20 with 20 migration levels
 - **AI Models**: Support for 100+ models across 5 providers
 - **Performance**: 300% faster startup, 70% less memory than Electron
@@ -233,6 +233,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **AI Providers**: OpenAI, Google, Anthropic, Ollama community
 - **Open Source Libraries**: React, TypeScript, Slate.js, and many more
 - **Community**: Contributors and users who make this project possible
+
+## 📝 Change Log
+
+### [2025-09-15 11:18:53]
+- **Total lines of code**: 113,016 lines (+7,486 from v1.2.0)
+- **Change from last update**: +7,486 lines (+7.1% growth)
+- **Files modified**: 43 core files updated
+- **New features added**:
+  - Ebook Preparation functionality (4 new files)
+  - Image compression service
+  - Enhanced drag-drop support
+  - AI illustration panel fixes
+  - Database duplicate cleanup system
+- **Technical improvements**:
+  - Fixed ebook image path inconsistency
+  - Resolved AI illustration UX issues
+  - Enhanced notification system
+  - Improved error handling
+
+### Previous Updates
+- **[2025-09-13]**: v1.2.1 - Documentation excellence & repository optimization
+- **[2025-09-12]**: v1.2.0 - System architecture breakthrough (105,530 lines)
+- **[2025-08-31]**: v1.1.9 - Stability improvements and path management fixes
 
 ---
 

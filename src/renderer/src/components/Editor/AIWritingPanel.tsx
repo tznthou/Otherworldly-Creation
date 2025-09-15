@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Editor, Transforms } from 'slate';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { addNotification } from '../../store/slices/uiSlice';
-import { setCurrentModel, fetchAvailableModels, checkOllamaService, fetchAIProviders, generateTextWithProvider } from '../../store/slices/aiSlice';
+import { setCurrentModel, fetchAvailableModels, checkOllamaService, generateTextWithProvider } from '../../store/slices/aiSlice';
 import { api } from '../../api';
 import AIHistoryPanel from '../AI/AIHistoryPanel';
 import { useAppSelector as useAppSelectorTyped } from '../../hooks/redux';
@@ -211,6 +211,45 @@ const QuickPresets: React.FC<{
     </div>
   );
 };
+// 💾 使用上次設定組件
+const UseLastSettings: React.FC<{
+  onLoadLastSettings: () => void;
+  onSaveCurrentSettings: () => void;
+  hasLastSettings: boolean;
+  className?: string;
+}> = ({ onLoadLastSettings, onSaveCurrentSettings, hasLastSettings, className = "" }) => {
+  return (
+    <div className={`mb-4 ${className}`}>
+      <div className="text-sm text-gray-300 mb-2 flex items-center">
+        <span className="mr-2">💾</span>
+        設定記憶
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={onLoadLastSettings}
+          disabled={!hasLastSettings}
+          className={`flex-1 p-2 rounded-lg text-xs transition-colors border ${
+            hasLastSettings
+              ? 'bg-cosmic-700 hover:bg-cosmic-600 border-cosmic-600 hover:border-cosmic-500 text-white'
+              : 'bg-cosmic-800 border-cosmic-700 text-gray-500 cursor-not-allowed'
+          }`}
+          title={hasLastSettings ? "載入上次使用的參數設定" : "目前沒有保存的設定"}
+        >
+          <span className="mr-1">⚡</span>
+          使用上次設定
+        </button>
+        <button
+          onClick={onSaveCurrentSettings}
+          className="flex-1 p-2 bg-cosmic-700 hover:bg-cosmic-600 rounded-lg text-xs transition-colors border border-cosmic-600 hover:border-cosmic-500"
+          title="保存當前參數設定供下次使用"
+        >
+          <span className="mr-1">💾</span>
+          保存當前設定
+        </button>
+      </div>
+    </div>
+  );
+};
 
 // 📈 參數風險指示器
 const ParameterRiskIndicator: React.FC<{
@@ -353,8 +392,90 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   const [topP, setTopP] = useState(0.9);
   const [presencePenalty, setPresencePenalty] = useState(0);
   
+  // 💾 設定記憶功能狀態
+  const [hasLastSettings, setHasLastSettings] = useState(false);
+  
   // 📊 使用新的進度和選項狀態（從hooks獲取）
   const { isGenerating, progress, generationOptions, clearOptions, cancelGeneration } = aiGeneration;
+  
+  // 💾 localStorage 相關常數
+  const SETTINGS_KEY = 'ai-writing-settings';
+  
+  // 💾 檢查是否有保存的設定
+  useEffect(() => {
+    const savedSettings = localStorage.getItem(SETTINGS_KEY);
+    setHasLastSettings(!!savedSettings);
+  }, []);
+  
+  // 💾 保存當前設定到 localStorage
+  const handleSaveCurrentSettings = useCallback(() => {
+    const currentSettings = {
+      temperature,
+      maxTokens,
+      generationCount,
+      topP,
+      presencePenalty,
+      showAdvancedSettings,
+      timestamp: new Date().toISOString(),
+    };
+    
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentSettings));
+    setHasLastSettings(true);
+    
+    dispatch(addNotification({
+      type: 'success',
+      title: '設定已保存',
+      message: '當前參數設定已保存，下次可快速載入',
+      duration: 2000,
+    }));
+  }, [temperature, maxTokens, generationCount, topP, presencePenalty, showAdvancedSettings, dispatch]);
+  
+  // 💾 載入上次設定
+  const handleLoadLastSettings = useCallback(() => {
+    try {
+      const savedSettings = localStorage.getItem(SETTINGS_KEY);
+      if (!savedSettings) {
+        dispatch(addNotification({
+          type: 'warning',
+          title: '沒有保存的設定',
+          message: '目前沒有可載入的設定',
+          duration: 2000,
+        }));
+        return;
+      }
+      
+      const settings = JSON.parse(savedSettings);
+      
+      // 恢復參數設定
+      setTemperature(settings.temperature ?? 0.7);
+      setMaxTokens(settings.maxTokens ?? 600);
+      setGenerationCount(settings.generationCount ?? 2);
+      setTopP(settings.topP ?? 0.9);
+      setPresencePenalty(settings.presencePenalty ?? 0);
+      setShowAdvancedSettings(settings.showAdvancedSettings ?? false);
+      
+      // 格式化保存時間
+      const saveTime = settings.timestamp 
+        ? new Date(settings.timestamp).toLocaleString('zh-TW')
+        : '未知時間';
+      
+      dispatch(addNotification({
+        type: 'success',
+        title: '設定已載入',
+        message: `已成功載入 ${saveTime} 的設定`,
+        duration: 3000,
+      }));
+      
+    } catch (error) {
+      console.error('載入設定失敗:', error);
+      dispatch(addNotification({
+        type: 'error',
+        title: '載入設定失敗',
+        message: '無法載入上次的設定，請重新設定',
+        duration: 3000,
+      }));
+    }
+  }, [dispatch]);
   
   // 🚀 快速預設應用函數
   const handleApplyPreset = useCallback((presetValues: PresetConfig['values']) => {
@@ -433,18 +554,10 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
     }
   }, [currentModel, dispatch]);
   
-  // 載入 AI 提供商列表
+  // ✅ AI 提供者列表由 App.tsx 統一載入，這裡不需要重複載入
   useEffect(() => {
-    const loadProviders = async () => {
-      try {
-        console.log('[AIWritingPanel] 載入 AI 提供商...');
-        await dispatch(fetchAIProviders());
-      } catch (error) {
-        console.error('[AIWritingPanel] 載入提供商失敗:', error);
-      }
-    };
-    loadProviders();
-  }, [dispatch]);
+    console.log('[AIWritingPanel] AI 提供者列表由 App.tsx 統一管理');
+  }, []);
 
   // 🔧 修復：簡化 Ollama 兼容性檢查
   useEffect(() => {
@@ -748,6 +861,15 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         {/* 🚀 快速預設 */}
         <div className="mb-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
           <QuickPresets onApplyPreset={handleApplyPreset} />
+        </div>
+
+        {/* 💾 使用上次設定 */}
+        <div className="mb-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
+          <UseLastSettings 
+            onLoadLastSettings={handleLoadLastSettings}
+            onSaveCurrentSettings={handleSaveCurrentSettings}
+            hasLastSettings={hasLastSettings}
+          />
         </div>
 
         {/* 📊 參數風險指示器 */}

@@ -28,9 +28,9 @@ interface GalleryHeaderProps {
   isExporting: boolean;
   exportProgress: number;
   onOpenImageNaming: () => void;
+  onOpenEbookPreparation: () => void;
   onOpenEbookIntegration: () => void;
   onOpenBatchExport: () => void;
-  onExportSelected: () => void;
   onDeleteSelected: () => void;
 }
 
@@ -53,10 +53,10 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
   toggleSelectAll,
   isExporting,
   exportProgress,
-  onOpenImageNaming,
-  onOpenEbookIntegration,
+  onOpenImageNaming: _onOpenImageNaming,
+  onOpenEbookPreparation,
+  onOpenEbookIntegration: _onOpenEbookIntegration,
   onOpenBatchExport,
-  onExportSelected,
   onDeleteSelected,
 }) => {
   return (
@@ -189,42 +189,28 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
             
             {/* 導出按鈕群組 */}
             <div className="flex items-center space-x-2">
-              {/* 圖片管理功能 */}
+              {/* 電子書排版功能 */}
               <div className="flex items-center space-x-2 mr-2 pr-2 border-r border-cosmic-600">
-                <button 
-                  onClick={onOpenImageNaming}
-                  className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm transition-colors flex items-center gap-1"
-                  title="批次重命名選中的圖片，支援智能命名模板"
+                <button
+                  onClick={onOpenEbookPreparation}
+                  className="px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded text-sm transition-colors flex items-center gap-1"
+                  title="電子書排版預備 - 智能整理圖片並配置章節排版（包含重命名功能，不影響現有PDF輸出功能）"
                 >
-                  🏷️ 重命名 ({selectedImages.size})
-                </button>
-                <button 
-                  onClick={onOpenEbookIntegration}
-                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors flex items-center gap-1"
-                  title="將選中圖片設定為電子書封面"
-                >
-                  📚 電子書封面
+                  📚 電子書排版 ({selectedImages.size})
                 </button>
               </div>
               
               {/* 導出功能 */}
-              <button 
+              <button
                 onClick={onOpenBatchExport}
-                className="px-3 py-1 bg-gold-600 hover:bg-gold-700 text-white rounded text-sm transition-colors flex items-center gap-2"
-                title="進入高級導出設定面板，自訂格式、品質、檔名等選項"
-              >
-                📦 批次導出 ({selectedImages.size})
-              </button>
-              <button 
-                onClick={onExportSelected}
                 disabled={isExporting}
-                className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded text-sm transition-colors"
-                title="點擊後會彈出資料夾選擇對話框"
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded text-sm transition-colors flex items-center gap-2"
+                title="開啟導出功能，支援快速導出和批次處理"
               >
                 {isExporting ? (
                   <>📤 導出中... ({exportProgress}%)</>
                 ) : (
-                  <>📁 快速導出</>
+                  <>📥 導出 ({selectedImages.size})</>
                 )}
               </button>
               <button 

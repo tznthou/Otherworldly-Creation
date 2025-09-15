@@ -258,7 +258,7 @@ export const ErrorToastContainer: React.FC = () => {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 w-96 max-w-full">
+    <div className="fixed top-4 right-4 z-[100000] w-96 max-w-full">
       <div className="space-y-2">
         {visibleErrors.map((error) => (
           <ErrorToast

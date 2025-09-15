@@ -34,8 +34,8 @@ export function useBatchExportProcessor(
   options: UseBatchExportProcessorOptions = {}
 ): UseBatchExportProcessorReturn {
   const {
-    autoStart = false,
-    enableBackgroundProcessing = true,
+    autoStart: _autoStart = false,
+    enableBackgroundProcessing: _enableBackgroundProcessing = true,
     onTaskComplete,
     onTaskFailed,
     onBatchComplete
@@ -182,7 +182,8 @@ export function useBatchExportProcessor(
     }
   }, [exportManager]);
 
-  // 自動開始處理
+  // 自動開始處理 - 已停用，改為手動確認導出
+  /*
   useEffect(() => {
     if (autoStart && enableBackgroundProcessing) {
       const pendingTasks = exportManager.getTasksByStatus('pending');
@@ -191,8 +192,10 @@ export function useBatchExportProcessor(
       }
     }
   }, [autoStart, enableBackgroundProcessing, exportManager.state.tasks, exportManager, processCurrentQueue]);
+  */
 
-  // 背景處理監聽
+  // 背景處理監聽 - 已停用，改為手動確認導出
+  /*
   useEffect(() => {
     if (!enableBackgroundProcessing) return;
 
@@ -206,6 +209,7 @@ export function useBatchExportProcessor(
 
     return () => clearInterval(intervalId);
   }, [enableBackgroundProcessing, exportManager.state.isPaused, exportManager, processCurrentQueue]);
+  */
 
   // 組件卸載時清理
   useEffect(() => {

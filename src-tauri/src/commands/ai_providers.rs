@@ -448,7 +448,7 @@ pub async fn generate_ai_text(request: AIGenerationRequestData) -> Result<AIGene
     // 構建生成請求（使用增強的上下文提示詞）
     let generation_request = crate::services::ai_providers::AIGenerationRequest {
         model: request.model.clone(),
-        prompt: enhanced_prompt, // 🔥 使用帶上下文的增強提示詞
+        prompt: enhanced_prompt.clone(), // 🔥 使用帶上下文的增強提示詞
         system_prompt: request.system_prompt.clone(),
         params: crate::services::ai_providers::AIGenerationParams {
             temperature: request.temperature.unwrap_or(0.7),
@@ -463,10 +463,47 @@ pub async fn generate_ai_text(request: AIGenerationRequestData) -> Result<AIGene
     // 生成文本
     match provider_instance.generate_text(generation_request).await {
         Ok(response) => {
-            let _generation_time_ms = start_time.elapsed().as_millis() as i32;
-            
-            // 將結果保存到歷史記錄（可選）
-            // TODO: 實現歷史記錄保存
+            let generation_time_ms = start_time.elapsed().as_millis() as i32;
+
+            // 🔥 修復：實現歷史記錄保存功能
+            let save_history_result = {
+                use crate::commands::ai_history::create_ai_history;
+                use crate::database::models::CreateAIHistoryRequest;
+
+                let history_request = CreateAIHistoryRequest {
+                    project_id: request.project_id.clone(),
+                    chapter_id: request.chapter_id.clone(),
+                    provider_id: Some(request.provider_id.clone()),
+                    model: request.model.clone(),
+                    prompt: enhanced_prompt.clone(), // 保存實際使用的完整提示詞
+                    generated_text: response.text.clone(),
+                    parameters: Some(serde_json::json!({
+                        "temperature": request.temperature.unwrap_or(0.7),
+                        "max_tokens": request.max_tokens.unwrap_or(500),
+                        "top_p": request.top_p,
+                        "presence_penalty": request.presence_penalty,
+                        "frequency_penalty": request.frequency_penalty,
+                        "stop": request.stop
+                    }).to_string()),
+                    language_purity: None, // 可以後續實現語言純度分析
+                    token_count: response.usage.as_ref().and_then(|u| u.total_tokens),
+                    generation_time_ms: Some(generation_time_ms),
+                    position: request.position.map(|p| p as i32),
+                };
+
+                create_ai_history(history_request).await
+            };
+
+            // 記錄歷史保存結果
+            match save_history_result {
+                Ok(history) => {
+                    log::info!("✅ 成功保存AI生成歷史記錄: {}", history.id);
+                }
+                Err(e) => {
+                    log::warn!("⚠️ 保存AI生成歷史記錄失敗: {}", e);
+                    // 不影響主要功能，只是記錄警告
+                }
+            }
             
             Ok(AIGenerationResult {
                 success: true,

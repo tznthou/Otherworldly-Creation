@@ -71,25 +71,19 @@ pub fn get_images_base_dir() -> Result<PathBuf, Box<dyn Error>> {
 }
 
 /// 獲取臨時圖片目錄
-/// 
+///
 /// 臨時圖片在用戶確認前儲存在這裡
-/// 🔧 修復：開發環境使用同一目錄，生產環境使用 temp 子目錄
+/// 🔧 修復：所有環境都分離臨時和最終目錄，防止資料丟失
 pub fn get_temp_images_dir() -> Result<PathBuf, Box<dyn Error>> {
     let base_dir = get_images_base_dir()?;
-    
-    let temp_dir = if is_development_environment() {
-        // 開發環境：使用同一個目錄，不建立 temp 子目錄
-        base_dir
-    } else {
-        // 生產環境：使用 temp 子目錄分離臨時和最終圖片
-        let temp_path = base_dir.join("temp");
-        std::fs::create_dir_all(&temp_path)?;
-        temp_path
-    };
-    
-    log::info!("[PathUtils] 臨時圖片目錄: {:?} (開發環境: {})", temp_dir, is_development_environment());
-    
-    Ok(temp_dir)
+
+    // 🔧 關鍵修復：開發和生產環境都使用 temp 子目錄分離臨時和最終圖片
+    let temp_path = base_dir.join("temp");
+    std::fs::create_dir_all(&temp_path)?;
+
+    log::info!("[PathUtils] 臨時圖片目錄: {:?} (開發環境: {})", temp_path, is_development_environment());
+
+    Ok(temp_path)
 }
 
 /// 獲取最終圖片目錄
@@ -227,11 +221,11 @@ mod tests {
         assert_eq!(relative, "test123.jpg");  // 🔧 現在只返回檔名
     }
     
-    #[test] 
+    #[test]
     fn test_path_separation() {
-        // 🔧 修復測試：確認臨時和最終目錄已正確分離
+        // 🔧 修復測試：確認臨時和最終目錄已正確分離（所有環境）
         if let (Ok(temp), Ok(final_dir)) = (get_temp_images_dir(), get_final_images_dir()) {
-            // 現在臨時目錄應該是最終目錄的 "temp" 子目錄
+            // 現在所有環境中，臨時目錄都應該是最終目錄的 "temp" 子目錄
             assert_ne!(temp, final_dir, "臨時和最終目錄應該不同");
             assert!(temp.parent() == Some(&final_dir), "臨時目錄應該是最終目錄的子目錄");
             assert!(temp.file_name() == Some(std::ffi::OsStr::new("temp")), "臨時目錄名稱應該是 'temp'");

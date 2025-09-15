@@ -56,6 +56,7 @@ export interface UseIllustrationServiceReturn {
   // 計算值
   isPollinationsFree: boolean;
   requiresApiKey: boolean;
+  supportsOptionalApiKey: boolean;
   serviceDisplayName: string;
   configurationSummary: string;
 }
@@ -101,6 +102,7 @@ export const useIllustrationService = (
   const [apiKey, setApiKeyState] = useState<string>('');
   const [apiKeySource, setApiKeySource] = useState<ApiKeySource>('manual');
   const [isApiKeyLoaded, setIsApiKeyLoaded] = useState(false);
+  const [isLoadingApiKey, setIsLoadingApiKey] = useState(false);
 
   // API Key 設定（帶來源追蹤）
   const setApiKey = useCallback((key: string) => {
@@ -111,29 +113,31 @@ export const useIllustrationService = (
     }
   }, [apiKeySource]);
 
-  // 從 AI Providers 載入 API Key
-  const loadApiKeyFromProviders = useCallback(async () => {
+  // 從 AI Providers 載入 API Key（修復閉包陷阱問題）
+  const loadApiKeyFromProviders = useCallback(async (targetProvider?: IllustrationProvider) => {
     if (!currentProject) {
       console.log('⚠️ 沒有當前專案，跳過 API Key 載入');
       return;
     }
 
+    const providerToUse = targetProvider || illustrationProvider;
+    console.log(`🔑 開始為 ${providerToUse} 載入 API Key...`);
+
     try {
-      console.log('🔑 開始從 AI Providers 載入 API Key...');
       const response = await api.aiProviders.getAll();
-      
+
       if (!response.success || !response.providers) {
         console.log('❌ 無法獲取 AI Providers');
         return;
       }
 
       // 根據當前選擇的服務載入對應的 API key
-      if (illustrationProvider === 'gemini') {
+      if (providerToUse === 'gemini') {
         // Gemini Flash 免費版：使用 Gemini API key
-        const geminiProvider = response.providers.find((p) => 
+        const geminiProvider = response.providers.find((p) =>
           p.provider_type === 'gemini' && p.is_enabled && p.api_key_encrypted
         );
-        
+
         if (geminiProvider?.api_key_encrypted) {
           try {
             const decodedApiKey = atob(geminiProvider.api_key_encrypted);
@@ -146,12 +150,12 @@ export const useIllustrationService = (
             console.error('❌ 解碼 Gemini API Key 失敗:', error);
           }
         }
-      } else if (illustrationProvider === 'gemini-flash') {
+      } else if (providerToUse === 'gemini-flash') {
         // Gemini Flash Image 付費版：使用 OpenRouter API key
-        const openrouterProvider = response.providers.find((p) => 
+        const openrouterProvider = response.providers.find((p) =>
           p.provider_type === 'openrouter' && p.is_enabled && p.api_key_encrypted
         );
-        
+
         if (openrouterProvider?.api_key_encrypted) {
           try {
             const decodedApiKey = atob(openrouterProvider.api_key_encrypted);
@@ -164,12 +168,30 @@ export const useIllustrationService = (
             console.error('❌ 解碼 OpenRouter API Key 失敗:', error);
           }
         }
+      } else if (providerToUse === 'openrouter-free' || providerToUse === 'openrouter-pro') {
+        // OpenRouter 服務：使用 OpenRouter API key
+        const openrouterProvider = response.providers.find((p) =>
+          p.provider_type === 'openrouter' && p.is_enabled && p.api_key_encrypted
+        );
+
+        if (openrouterProvider?.api_key_encrypted) {
+          try {
+            const decodedApiKey = atob(openrouterProvider.api_key_encrypted);
+            setApiKeyState(decodedApiKey);
+            setApiKeySource('openrouter');
+            setIsApiKeyLoaded(true);
+            console.log(`✅ 成功載入 OpenRouter API Key (用於 ${providerToUse})`);
+            return;
+          } catch (error) {
+            console.error('❌ 解碼 OpenRouter API Key 失敗:', error);
+          }
+        }
       } else {
-        // 其他服務：嘗試載入 Gemini API key 作為預設
-        const geminiProvider = response.providers.find((p) => 
+        // 其他服務（pollinations、imagen）：嘗試載入 Gemini API key 作為預設
+        const geminiProvider = response.providers.find((p) =>
           p.provider_type === 'gemini' && p.is_enabled && p.api_key_encrypted
         );
-        
+
         if (geminiProvider?.api_key_encrypted) {
           try {
             const decodedApiKey = atob(geminiProvider.api_key_encrypted);
@@ -183,12 +205,12 @@ export const useIllustrationService = (
           }
         }
       }
-      
+
       console.log('⚠️ 沒有找到可用的 API Key');
     } catch (error) {
       console.error('❌ 載入 API Key 失敗:', error);
     }
-  }, [currentProject, illustrationProvider]);
+  }, [currentProject, illustrationProvider]); // 保持 illustrationProvider 依賴，但通過參數傳遞避免閉包陷阱
 
   // 智能API檢測 - 分析可用的插畫服務
   const detectAvailableServices = useCallback(async () => {
@@ -333,7 +355,30 @@ export const useIllustrationService = (
 
   // 計算值
   const isPollinationsFree = illustrationProvider === 'pollinations';
-  const requiresApiKey = illustrationProvider === 'imagen';
+
+  // 檢查是否支援可選的 API Key 配置
+  const supportsOptionalApiKey = useMemo(() => {
+    const optionalApiKeyServices: IllustrationProvider[] = ['pollinations'];
+    return optionalApiKeyServices.includes(illustrationProvider);
+  }, [illustrationProvider]);
+
+  const requiresApiKey = useMemo(() => {
+    // 完全不需要 API Key 的服務 (無選填選項)
+    const _freeServices: IllustrationProvider[] = [];
+
+    // 需要 API Key 的服務 (必填)
+    const requiresApiKeyServices: IllustrationProvider[] = ['imagen', 'gemini', 'gemini-flash', 'openrouter-free', 'openrouter-pro'];
+
+    // 支援可選 API Key 的服務 (選填) - Pollinations 現在支援可選的 API Token
+    const optionalApiKeyServices: IllustrationProvider[] = ['pollinations'];
+
+    // 對於有可選 API Key 支援的服務，在 UI 中仍顯示配置選項但不強制要求
+    if (optionalApiKeyServices.includes(illustrationProvider)) {
+      return false; // 不強制要求，但 ServiceConfigurationPanel 會顯示配置選項
+    }
+
+    return requiresApiKeyServices.includes(illustrationProvider);
+  }, [illustrationProvider]);
   
   const serviceDisplayName = useMemo(() => {
     switch (illustrationProvider) {
@@ -341,6 +386,14 @@ export const useIllustrationService = (
         return 'Pollinations.AI (免費)';
       case 'imagen':
         return 'Google Imagen (付費)';
+      case 'gemini':
+        return 'Gemini Flash (免費版)';
+      case 'gemini-flash':
+        return 'Gemini Flash Image (付費版)';
+      case 'openrouter-free':
+        return 'OpenRouter (免費模型)';
+      case 'openrouter-pro':
+        return 'OpenRouter (付費模型)';
       default:
         return '未知服務';
     }
@@ -366,26 +419,37 @@ export const useIllustrationService = (
 
   // 自動載入 API Key
   useEffect(() => {
-    if (autoLoadApiKey && currentProject && !isApiKeyLoaded) {
-      loadApiKeyFromProviders();
+    if (autoLoadApiKey && currentProject && !isApiKeyLoaded && !isLoadingApiKey) {
+      console.log(`🔄 開始為 ${illustrationProvider} 自動載入 API Key...`);
+      setIsLoadingApiKey(true);
+      loadApiKeyFromProviders(illustrationProvider).finally(() => {
+        setIsLoadingApiKey(false);
+      });
     }
-  }, [autoLoadApiKey, currentProject, isApiKeyLoaded, loadApiKeyFromProviders]);
+  }, [autoLoadApiKey, currentProject, isApiKeyLoaded, isLoadingApiKey, loadApiKeyFromProviders, illustrationProvider]);
 
   // 服務切換時的處理
   useEffect(() => {
     console.log(`🔄 插畫服務切換至: ${serviceDisplayName}`);
-    
-    // 當切換服務時，重新載入對應的 API key
-    if (currentProject && autoLoadApiKey && (illustrationProvider === 'gemini' || illustrationProvider === 'gemini-flash')) {
-      setIsApiKeyLoaded(false); // 重置載入狀態
-      loadApiKeyFromProviders(); // 重新載入對應的 API key
+
+    // 當切換服務時重新載入適當的 API Key
+    if (currentProject && autoLoadApiKey) {
+      // 需要 API Key 的服務類型
+      const needsApiKey = ['gemini', 'gemini-flash', 'openrouter-free', 'openrouter-pro', 'imagen'].includes(illustrationProvider);
+
+      if (needsApiKey) {
+        console.log('🔄 服務切換：重新載入 API Key...');
+        setIsApiKeyLoaded(false);
+        setIsLoadingApiKey(true);
+        loadApiKeyFromProviders(illustrationProvider).finally(() => {
+          setIsLoadingApiKey(false);
+        });
+      } else {
+        // 切換到不需要 API Key 的服務，保持當前狀態
+        console.log('🔄 服務切換到免費服務，不需要 API Key');
+      }
     }
-    
-    // 如果切換到免費服務，可以清空 API Key（可選）
-    if (illustrationProvider === 'pollinations' && apiKeySource === 'manual') {
-      // 不自動清空，讓用戶自己決定
-    }
-  }, [illustrationProvider, serviceDisplayName, apiKeySource, currentProject, autoLoadApiKey, loadApiKeyFromProviders]);
+  }, [illustrationProvider, currentProject, autoLoadApiKey, loadApiKeyFromProviders]);
 
   // 調試資訊
   useEffect(() => {
@@ -432,6 +496,7 @@ export const useIllustrationService = (
     // 計算值
     isPollinationsFree,
     requiresApiKey,
+    supportsOptionalApiKey,
     serviceDisplayName,
     configurationSummary,
   };

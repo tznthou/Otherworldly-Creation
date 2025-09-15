@@ -10,7 +10,6 @@ import type { IllustrationHistoryItem } from '../../../../types/illustration';
 import type { ImageVersion } from '../../../../types/versionManagement';
 import type { DeleteIllustrationResponse } from '../../../../api/types';
 import {
-  exportSelectedImages,
   setSelectedImageIds,
   setActiveTab,
 } from '../../../../store/slices/visualCreationSlice';
@@ -25,6 +24,7 @@ import {
 import BatchExportPanel from '../panels/BatchExportPanel';
 import ImageNamingPanel from '../ImageNaming/ImageNamingPanel';
 import EbookIntegrationPanel from '../EbookIntegration/EbookIntegrationPanel';
+import { EbookPreparationPanel } from '../EbookPreparation/EbookPreparationPanel';
 import { createPortal } from 'react-dom';
 import DeleteConfirmationModal from '../DeleteConfirmation/DeleteConfirmationModal';
 import type { BatchRenameOperation, EbookExportConfig } from '../../../../types/imageMetadata';
@@ -81,6 +81,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
   const [showBatchExportModal, setShowBatchExportModal] = useState(false);
   const [showImageNamingPanel, setShowImageNamingPanel] = useState(false);
   const [showEbookIntegrationPanel, setShowEbookIntegrationPanel] = useState(false);
+  const [showEbookPreparationPanel, setShowEbookPreparationPanel] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingImages, setDeletingImages] = useState<Set<string>>(new Set()); // 標記正在刪除的圖片
@@ -643,19 +644,6 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     }
   };
 
-  // 導出選中圖像
-  const handleExportSelected = async () => {
-    if (selectedImages.size === 0) return;
-    
-    const selectedIds = Array.from(selectedImages);
-    try {
-      await dispatch(exportSelectedImages({ 
-        selectedImageIds: selectedIds 
-      })).unwrap();
-    } catch (error) {
-      console.error('導出失敗:', error);
-    }
-  };
 
   // 切換圖像選擇 - 使用 useCallback 防止無限重新渲染
   const toggleImageSelection = useCallback((imageId: string) => {
@@ -706,6 +694,36 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     setShowImageNamingPanel(true);
   };
   const handleCloseImageNaming = () => setShowImageNamingPanel(false);
+
+  // 電子書排版預備處理函數
+  const handleOpenEbookPreparation = () => {
+    if (!currentProject) {
+      dispatch(addNotification({
+        type: 'warning',
+        title: '無專案選擇',
+        message: '請先選擇一個專案才能進行電子書排版預備',
+        duration: 3000
+      }));
+      return;
+    }
+
+    if (selectedImages.size === 0) {
+      dispatch(addNotification({
+        type: 'warning',
+        title: '無選擇項目',
+        message: '請先選擇要整理的圖片',
+        duration: 3000
+      }));
+      return;
+    }
+
+    setShowEbookPreparationPanel(true);
+  };
+
+  const handleCloseEbookPreparation = () => {
+    setShowEbookPreparationPanel(false);
+  };
+
   const handleOpenEbookIntegration = async () => {
     if (!currentProject) {
       dispatch(addNotification({
@@ -954,9 +972,9 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
         isExporting={isExporting}
         exportProgress={exportProgress}
         onOpenImageNaming={handleOpenImageNaming}
+        onOpenEbookPreparation={handleOpenEbookPreparation}
         onOpenEbookIntegration={handleOpenEbookIntegration}
         onOpenBatchExport={handleOpenBatchExport}
-        onExportSelected={handleExportSelected}
         onDeleteSelected={handleDeleteSelected}
       />
 
@@ -1182,6 +1200,28 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
         </div>
       )}
       
+      {/* 電子書排版預備面板 */}
+      {showEbookPreparationPanel && currentProject && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          style={{ zIndex: 999999 }}
+          onClick={handleCloseEbookPreparation}
+        >
+          <div
+            className="relative w-full max-w-7xl max-h-[90vh] overflow-y-auto bg-cosmic-900 rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <EbookPreparationPanel
+              selectedImageIds={selectedImageIdsArray}
+              illustrations={filteredIllustrations}
+              onClose={handleCloseEbookPreparation}
+              className="w-full h-full"
+            />
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* 電子書整合面板 */}
       {showEbookIntegrationPanel && currentProject && createPortal(
         <div 

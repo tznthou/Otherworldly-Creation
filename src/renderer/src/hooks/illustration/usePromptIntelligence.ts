@@ -561,8 +561,8 @@ export function usePromptIntelligence(
 
 // 模擬 AI 建議生成（實際應該調用後端 API）
 async function mockGenerateSuggestions(request: PromptSuggestionRequest): Promise<PromptSuggestion[]> {
-  // 模擬 API 延遲
-  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+  // 🔥 修復：減少延遲時間，避免用戶體驗問題
+  await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200)); // 原本 1000 + 1000，現在最多 500ms
   
   const suggestions: PromptSuggestion[] = [...DEFAULT_SUGGESTIONS];
   
@@ -616,8 +616,8 @@ async function mockAnalyzePrompt(
   prompt: string, 
   context?: Partial<PromptSuggestionRequest>
 ): Promise<PromptAnalysis> {
-  // 模擬 API 延遲
-  await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700));
+  // 🔥 修復：減少延遲時間
+  await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300)); // 原本 800 + 700，現在最多 500ms
   
   const words = prompt.toLowerCase().split(/[,\s]+/).filter(Boolean);
   

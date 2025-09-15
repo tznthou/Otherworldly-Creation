@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -85,20 +85,36 @@ import './index.css';
 })();
 
 
+// 🛡️ 全局初始化標誌 - 確保整個應用程式生命週期內只初始化一次
+let GLOBAL_INIT_FLAG = false;
+
 // 簡化的應用程式組件
 const SimpleApp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
 
+  // 🔧 修復無限循環：使用 useRef 確保初始化只執行一次
+  const hasInitialized = useRef(false);
+
   useEffect(() => {
+    // 🛡️ 雙重保護：檢查全局標誌和組件標誌
+    if (GLOBAL_INIT_FLAG || hasInitialized.current) {
+      console.log('🛡️ 初始化已完成，跳過重複調用');
+      return;
+    }
+
+    // 🔒 立即設置標誌，防止並發調用
+    GLOBAL_INIT_FLAG = true;
+    hasInitialized.current = true;
+
     const initApp = async () => {
       try {
         console.log('🚀 開始應用程式初始化...');
-        
+
         // 初始化 React Scan 性能監控（僅開發環境）
         initReactScan();
-        
+
         // 初始化 i18n 系統
         console.log('🌐 初始化國際化系統...');
         try {
@@ -107,18 +123,18 @@ const SimpleApp: React.FC = () => {
         } catch (error) {
           console.warn('⚠️  國際化系統初始化失敗，使用預設語言:', error);
         }
-        
+
         // 最小延遲確保所有系統就緒
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         // 隱藏載入畫面
         const loadingElement = document.getElementById('loading');
         if (loadingElement) {
           loadingElement.style.display = 'none';
         }
-        
+
         setIsLoading(false);
-        
+
         // 背景載入資料（不阻塞 UI）
         setTimeout(async () => {
           try {
@@ -129,29 +145,29 @@ const SimpleApp: React.FC = () => {
             console.warn('⚠️  專案資料載入失敗:', error);
           }
         }, 100);
-        
+
         // 背景初始化 AI 服務（多提供者支援）
         setTimeout(async () => {
           try {
             console.log('🤖 初始化 AI 提供者系統...');
-            
+
             // 1. 載入 AI 提供者列表
             const providers = await dispatch(fetchAIProviders()).unwrap();
             console.log('✅ AI 提供者列表載入完成，數量:', providers.length);
-            
+
             // 2. 從 localStorage 獲取當前選中的提供者
             const savedProvider = localStorage.getItem('ai_default_provider');
             const currentProvider = savedProvider || (providers.find(p => p.is_enabled)?.id);
-            
+
             console.log('🎯 當前提供者:', currentProvider);
-            
+
             if (currentProvider) {
               // 3. 載入當前提供者的模型列表 - 關鍵修復！
               console.log('📡 載入提供者模型:', currentProvider);
               await dispatch(setActiveProvider(currentProvider)).unwrap();
               console.log('✅ 提供者模型載入完成');
             }
-            
+
             // 4. 向後兼容：也檢查 Ollama 服務（如果是 Ollama 提供者）
             if (currentProvider === 'ollama') {
               try {
@@ -165,7 +181,7 @@ const SimpleApp: React.FC = () => {
                 console.warn('⚠️  Ollama 服務額外檢查失敗:', error);
               }
             }
-            
+
           } catch (error) {
             console.warn('⚠️  AI 系統初始化失敗:', error);
             // 降級處理：如果多提供者初始化失敗，回退到 Ollama 單一檢查
@@ -181,7 +197,7 @@ const SimpleApp: React.FC = () => {
             }
           }
         }, 1000);
-        
+
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error('❌ 應用程式初始化失敗:', error);
@@ -191,7 +207,7 @@ const SimpleApp: React.FC = () => {
     };
 
     initApp();
-  }, [dispatch]);
+  }, []); // 🔥 關鍵修復：移除 dispatch 依賴，改為空陣列
 
   if (isLoading) {
     return null; // 讓 HTML 載入畫面繼續顯示

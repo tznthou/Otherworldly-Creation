@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 
-const DB_VERSION: i32 = 20;
+const DB_VERSION: i32 = 21;
 
 /// 執行資料庫遷移
 pub fn run_migrations(conn: &Connection) -> Result<()> {
@@ -140,6 +140,12 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             apply_migration_v20(conn)?;
             update_version(conn, 20)?;
             log::info!("遷移到版本 20 完成");
+        }
+
+        if current_version < 21 {
+            apply_migration_v21(conn)?;
+            update_version(conn, 21)?;
+            log::info!("遷移到版本 21 完成");
         }
         
         log::info!("資料庫遷移完成");
@@ -2320,6 +2326,112 @@ pub fn apply_migration_v20(conn: &Connection) -> Result<()> {
     
     log::info!("Pollinations API tokens 管理系統相關索引創建完成");
     log::info!("版本 20 遷移完成：Pollinations API tokens 管理系統已準備就緒");
-    
+
+    Ok(())
+}
+
+/// 版本 21 遷移：電子書圖片對應系統
+pub fn apply_migration_v21(conn: &Connection) -> Result<()> {
+    log::info!("開始版本 21 遷移：電子書圖片對應系統");
+
+    // 創建 ebook_mappings 表 - 虛擬檔名對應系統
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS ebook_mappings (
+            id TEXT PRIMARY KEY,                    -- UUID 唯一識別碼
+            physical_id TEXT NOT NULL,              -- 對應圖片的實際 ID (pollinations_generations.id 或 illustration_generations.id)
+            source_table TEXT NOT NULL,             -- 來源表格名稱 ('pollinations_generations' 或 'illustration_generations')
+
+            -- 電子書檔名資訊
+            virtual_filename TEXT NOT NULL,         -- 虛擬檔名（供電子書使用，語意化的）
+            chapter_order INTEGER,                  -- 在章節中的排序（可選）
+            category TEXT,                          -- 圖片分類（character, scene, cover, decoration 等）
+
+            -- 專案關聯
+            project_id TEXT,                        -- 關聯專案 ID（可選，用於專案內分組）
+
+            -- 標記和描述
+            description TEXT,                       -- 圖片描述或註解
+            tags TEXT,                              -- JSON 格式的標籤陣列
+
+            -- 匯出配置
+            export_format TEXT DEFAULT 'original',  -- 匯出格式：original, jpeg, png, webp
+            resize_config TEXT,                     -- JSON: 調整大小設定 {width?, height?, quality?}
+
+            -- 元數據
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_by TEXT DEFAULT 'system',       -- 創建來源：system, user, auto_rename
+
+            -- 外鍵約束
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+
+    log::info!("已創建 ebook_mappings 表");
+
+    // 創建索引以提高查詢性能
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ebook_mappings_physical_id
+         ON ebook_mappings(physical_id, source_table)",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ebook_mappings_project
+         ON ebook_mappings(project_id)",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ebook_mappings_category
+         ON ebook_mappings(category)",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ebook_mappings_filename
+         ON ebook_mappings(virtual_filename)",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ebook_mappings_chapter_order
+         ON ebook_mappings(project_id, chapter_order)",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ebook_mappings_created_at
+         ON ebook_mappings(created_at DESC)",
+        [],
+    )?;
+
+    log::info!("電子書圖片對應系統相關索引創建完成");
+
+    // 創建功能開關設定表 (如果不存在)
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS feature_flags (
+            feature_name TEXT PRIMARY KEY,
+            is_enabled BOOLEAN DEFAULT FALSE,
+            config TEXT,                            -- JSON 格式的功能配置
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )",
+        [],
+    )?;
+
+    // 插入電子書虛擬命名功能開關
+    conn.execute(
+        "INSERT OR IGNORE INTO feature_flags (feature_name, is_enabled, description, config)
+         VALUES ('ebook_virtual_naming', FALSE, '電子書虛擬檔名對應系統 - 允許為圖片設定語意化檔名而不修改原始檔案',
+                 '{\"auto_generate_names\": true, \"preserve_originals\": true, \"export_rename_on_demand\": true}')",
+        [],
+    )?;
+
+    log::info!("已插入電子書虛擬命名功能開關（預設關閉）");
+    log::info!("版本 21 遷移完成：電子書圖片對應系統已準備就緒");
+
     Ok(())
 }

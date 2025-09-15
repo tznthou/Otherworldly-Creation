@@ -448,6 +448,7 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
     
     let mut total_collected = 0;
     let mut newly_confirmed = 0;
+    let mut skipped_duplicates = 0; // 跳過的重複圖片計數
     let mut processing_errors = Vec::new();
     
     // 🛡️ 逐一處理，即使部分失敗也不影響整體
@@ -473,30 +474,56 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
         let original_prompt = image_data.get("original_prompt")
             .and_then(|v| v.as_str())
             .unwrap_or("Generated image");
-        
-        log::info!("[Collection] 📋 圖片上下文 - 專案: {:?}, 角色: {:?}, 提示: {}", 
+
+        // 🔧 提取模型和提供者信息，避免硬編碼問題
+        let model = image_data.get("model")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown");
+        let provider = image_data.get("provider")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown");
+
+        log::info!("[Collection] 📋 圖片上下文 - 專案: {:?}, 角色: {:?}, 提示: {}",
             project_id, character_id, truncate_unicode_safe(original_prompt, 50));
+        log::info!("[Collection] 🤖 模型信息 - 模型: {}, 提供者: {}", model, provider);
         
-        // 🛡️ 安全檢查圖片是否已存在於資料庫中
-        let exists = match conn.query_row(
-            "SELECT COUNT(*) FROM pollinations_generations WHERE id = ?",
-            [image_id],
-            |row| row.get::<_, i32>(0)
-        ) {
-            Ok(count) => {
-                log::info!("[Collection] 🔍 圖片 {} 資料庫檢查結果: {} 筆記錄", image_id, count);
-                count
-            },
+        // 🛡️ 檢查圖片是否已存在於任何資料庫表中（防止重複收藏）
+        let already_exists = match check_image_exists_in_any_table(&conn, image_id) {
+            Ok(exists) => exists,
             Err(e) => {
                 let error = format!("圖片 {} 資料庫查詢失敗: {}", image_id, e);
                 log::error!("[Collection] ❌ {}", error);
                 processing_errors.push(error);
-                0 // 假設不存在，繼續處理，避免因查詢失敗而中斷
+                false // 假設不存在，繼續處理
             }
         };
+
+        // 如果圖片已存在於任一表中，跳過重複收藏
+        if already_exists {
+            log::warn!("[Collection] ⚠️ 圖片 {} 已存在於資料庫中，跳過重複收藏", image_id);
+            skipped_duplicates += 1; // 增加跳過計數
+
+            // 更新收藏狀態（如果尚未收藏）
+            match update_collection_status(&conn, image_id) {
+                Ok(updated) => {
+                    if updated > 0 {
+                        total_collected += 1;
+                        log::info!("[Collection] ✅ 已更新圖片 {} 的收藏狀態", image_id);
+                    } else {
+                        log::info!("[Collection] ℹ️ 圖片 {} 已在收藏中", image_id);
+                    }
+                },
+                Err(e) => {
+                    let error = format!("更新圖片 {} 收藏狀態失敗: {}", image_id, e);
+                    log::warn!("[Collection] ⚠️ {}", error);
+                    processing_errors.push(error);
+                }
+            }
+            continue; // 跳過後續的檔案操作和資料庫寫入
+        }
         
-        // 🛡️ 如果圖片不在資料庫中，嘗試從臨時檔案或正式檔案確認保存
-        if exists == 0 {
+        // 🛡️ 圖片不在資料庫中，嘗試從臨時檔案或正式檔案確認保存
+        {
             log::info!("[Collection] 📂 圖片 {} 不在資料庫中，嘗試從檔案系統確認保存", image_id);
             
             // 🛡️ 安全獲取臨時目錄
@@ -521,9 +548,38 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
             let final_file = generated_images_dir.join(format!("{}.jpg", image_id));
             log::info!("[Collection] 🔍 檢查正式檔案: {:?}", final_file);
             
+            // 🔧 檢查檔案存在情況，正確處理重複檔案邏輯
             let (source_file, is_from_temp) = if final_file.exists() {
                 log::info!("[Collection] ✅ 找到正式檔案（可能是 Gemini 圖片）");
-                (final_file, false)
+                log::info!("[Collection] 🔄 圖片 {} 已在正式目錄，更新收藏狀態並清理temp檔案", image_id);
+
+                // 🛡️ 清理temp檔案（如果存在）
+                if temp_file.exists() {
+                    match std::fs::remove_file(&temp_file) {
+                        Ok(_) => log::info!("[Collection] 🗑️ 已清理重複的temp檔案: {:?}", temp_file),
+                        Err(e) => log::warn!("[Collection] ⚠️ 清理temp檔案失敗: {:?} - {}", temp_file, e),
+                    }
+                }
+
+                // 🔧 更新收藏狀態（對已存在於正式目錄的圖片）
+                match update_collection_status(&conn, image_id) {
+                    Ok(updated) => {
+                        if updated > 0 {
+                            total_collected += 1;
+                            log::info!("[Collection] ✅ 已更新正式檔案的收藏狀態: {}", image_id);
+                        } else {
+                            skipped_duplicates += 1; // 已收藏的重複檔案
+                            log::info!("[Collection] ℹ️ 正式檔案已在收藏中: {}", image_id);
+                        }
+                    },
+                    Err(e) => {
+                        let error = format!("更新正式檔案收藏狀態失敗: {} - {}", image_id, e);
+                        log::warn!("[Collection] ⚠️ {}", error);
+                        processing_errors.push(error);
+                        skipped_duplicates += 1;
+                    }
+                }
+                continue; // 處理下一張圖片
             } else if temp_file.exists() {
                 log::info!("[Collection] ✅ 找到臨時檔案");
                 (temp_file.clone(), true)
@@ -563,6 +619,14 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
                 match save_to_final_directory(&image_bytes, image_id) {
                     Ok(path) => {
                         log::info!("[Collection] ✅ 成功從臨時目錄保存到最終目錄: {}", path);
+
+                        // 🧹 清理臨時文件，避免重複佔用空間
+                        if let Err(e) = std::fs::remove_file(&source_file) {
+                            log::warn!("[Collection] ⚠️ 清理臨時文件失敗: {:?} - {}", source_file, e);
+                        } else {
+                            log::info!("[Collection] 🗑️ 臨時文件清理成功: {:?}", source_file);
+                        }
+
                         path
                     },
                     Err(e) => {
@@ -581,14 +645,14 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
             
             let file_size = image_bytes.len() as i64;
             
-            // 🛡️ 安全插入資料庫記錄
+            // 🛡️ 安全插入資料庫記錄，使用正確的模型信息
             match save_pollinations_history_unconfirmed(
                 image_id,
                 project_id,
                 character_id,
                 original_prompt,
                 original_prompt,
-                "flux",
+                model, // 🔧 使用從前端傳遞來的模型信息，而不是硬編碼
                 1024,
                 1024,
                 None,
@@ -621,43 +685,30 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
             } else {
                 log::info!("[Collection] 📁 檔案已在最終目錄，無需清理臨時檔案");
             }
-        } else {
-            log::info!("[Collection] ✅ 圖片 {} 已存在於資料庫中", image_id);
         }
-        
-        // 🛡️ 安全更新收藏狀態
-        match conn.execute(
-            "UPDATE pollinations_generations 
-             SET in_collection = 1, 
-                 collected_at = CURRENT_TIMESTAMP, 
-                 is_confirmed = 1 
-             WHERE id = ?",
-            [image_id]
-        ) {
+
+        // 🔧 更新收藏狀態（對新確認的圖片）
+        match update_collection_status(&conn, image_id) {
             Ok(updated) => {
                 if updated > 0 {
                     total_collected += 1;
-                    log::info!("[Collection] ✅ 成功更新收藏狀態 for image: {}", image_id);
-                } else {
-                    let warning = format!("圖片 {} 不存在，無法更新收藏狀態", image_id);
-                    log::warn!("[Collection] ⚠️ {}", warning);
-                    processing_errors.push(warning);
+                    log::info!("[Collection] ✅ 已設置圖片 {} 為收藏狀態", image_id);
                 }
             },
             Err(e) => {
-                let error = format!("圖片 {} 更新收藏狀態失敗: {}", image_id, e);
-                log::error!("[Collection] ❌ {}", error);
-                processing_errors.push(error);
-                // 不使用 continue，因為這張圖片可能已經部分處理成功
-                // 繼續處理下一張圖片
+                let warning = format!("圖片 {} 收藏狀態更新失敗: {}", image_id, e);
+                log::warn!("[Collection] ⚠️ {}", warning);
+                processing_errors.push(warning);
             }
         }
+        // 繼續處理下一張圖片
     }
     
     // 🎯 總結處理結果
     log::info!("[Collection] 🏁 處理完成統計:");
     log::info!("[Collection]   ✅ 成功收藏: {} 張圖片", total_collected);
     log::info!("[Collection]   🆕 新確認: {} 張圖片", newly_confirmed);
+    log::info!("[Collection]   ⏭️ 跳過重複: {} 張圖片", skipped_duplicates);
     log::info!("[Collection]   ⚠️ 處理錯誤: {} 個", processing_errors.len());
     
     if !processing_errors.is_empty() {
@@ -668,20 +719,35 @@ pub async fn add_to_collection_with_data(imageData: Vec<Value>) -> Result<Value,
     }
 
     // 🛡️ 構建安全的回應
-    let success_message = if total_collected > 0 {
-        format!("已加入收藏 {} 張圖片{}{}", 
-            total_collected,
-            if newly_confirmed > 0 { format!("（其中 {} 張為新確認）", newly_confirmed) } else { String::new() },
-            if !processing_errors.is_empty() { format!("，{} 個處理錯誤（詳見日誌）", processing_errors.len()) } else { String::new() }
-        )
+    let success_message = if total_collected > 0 || skipped_duplicates > 0 {
+        let mut parts = Vec::new();
+
+        if total_collected > 0 {
+            parts.push(format!("已加入收藏 {} 張圖片", total_collected));
+        }
+
+        if skipped_duplicates > 0 {
+            parts.push(format!("跳過 {} 張重複圖片", skipped_duplicates));
+        }
+
+        if newly_confirmed > 0 {
+            parts.push(format!("其中 {} 張為新確認", newly_confirmed));
+        }
+
+        if !processing_errors.is_empty() {
+            parts.push(format!("{} 個處理錯誤（詳見日誌）", processing_errors.len()));
+        }
+
+        parts.join("，")
     } else {
-        "沒有圖片成功加入收藏，請檢查日誌了解詳情".to_string()
+        "沒有圖片處理成功，請檢查日誌了解詳情".to_string()
     };
 
     Ok(serde_json::json!({
-        "success": total_collected > 0, // 只要有成功收藏的就算成功
+        "success": total_collected > 0 || skipped_duplicates > 0, // 有成功處理的圖片就算成功
         "collected_count": total_collected,
         "newly_confirmed_count": newly_confirmed,
+        "skipped_duplicates": skipped_duplicates,
         "error_count": processing_errors.len(),
         "errors": if processing_errors.len() <= 5 { processing_errors } else { processing_errors[..5].to_vec() }, // 最多返回5個錯誤
         "message": success_message
@@ -748,4 +814,74 @@ pub fn save_pollinations_history_unconfirmed(
     
     log::info!("已儲存未確認的圖片記錄: {}", id);
     Ok(())
+}
+
+/// 檢查圖片是否存在於任何資料庫表中
+///
+/// 防止重複收藏的核心函數，檢查兩個主要表格
+fn check_image_exists_in_any_table(conn: &rusqlite::Connection, image_id: &str) -> Result<bool, Box<dyn std::error::Error>> {
+    // 檢查 pollinations_generations 表
+    let count_pollinations: i32 = conn.query_row(
+        "SELECT COUNT(*) FROM pollinations_generations WHERE id = ? AND deleted_at IS NULL",
+        [image_id],
+        |row| row.get(0)
+    ).unwrap_or(0);
+
+    // 檢查 illustration_generations 表
+    let count_illustration: i32 = conn.query_row(
+        "SELECT COUNT(*) FROM illustration_generations WHERE id = ? AND deleted_at IS NULL AND is_permanently_deleted = 0",
+        [image_id],
+        |row| row.get(0)
+    ).unwrap_or(0);
+
+    let exists = count_pollinations > 0 || count_illustration > 0;
+
+    if exists {
+        log::info!("[check_image_exists] 圖片 {} 存在於資料庫: Pollinations={}, Illustration={}",
+                   image_id, count_pollinations, count_illustration);
+    } else {
+        log::info!("[check_image_exists] 圖片 {} 不存在於任何表中", image_id);
+    }
+
+    Ok(exists)
+}
+
+/// 只更新收藏狀態，不重複寫入記錄
+///
+/// 返回更新的記錄數量
+fn update_collection_status(conn: &rusqlite::Connection, image_id: &str) -> Result<usize, Box<dyn std::error::Error>> {
+    // 更新 pollinations_generations 表的收藏狀態
+    let pollinations_updated = conn.execute(
+        "UPDATE pollinations_generations
+         SET in_collection = 1,
+             collected_at = CURRENT_TIMESTAMP,
+             is_confirmed = 1
+         WHERE id = ? AND in_collection = 0",
+        [image_id]
+    ).unwrap_or(0);
+
+    // 更新 illustration_generations 表的收藏狀態
+    let illustration_updated = conn.execute(
+        "UPDATE illustration_generations
+         SET in_collection = 1,
+             collected_at = CURRENT_TIMESTAMP,
+             is_confirmed = 1
+         WHERE id = ? AND in_collection = 0",
+        [image_id]
+    ).unwrap_or(0);
+
+    let total_updated = pollinations_updated + illustration_updated;
+
+    if pollinations_updated > 0 {
+        log::info!("[update_collection_status] ✅ 更新 Pollinations 表收藏狀態: {}", image_id);
+    }
+    if illustration_updated > 0 {
+        log::info!("[update_collection_status] ✅ 更新 Illustration 表收藏狀態: {}", image_id);
+    }
+
+    if total_updated == 0 {
+        log::info!("[update_collection_status] ℹ️ 圖片 {} 已在收藏中或不存在", image_id);
+    }
+
+    Ok(total_updated)
 }

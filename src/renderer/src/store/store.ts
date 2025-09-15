@@ -13,6 +13,7 @@ import notificationReducer from './slices/notificationSlice';
 import settingsReducer from './slices/settingsSlice';
 import visualCreationReducer from './slices/visualCreationSlice';
 import versionManagementReducer from './slices/versionManagementSlice';
+import ebookPreparationReducer from './slices/ebookPreparationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -31,6 +32,7 @@ export const store = configureStore({
     settings: settingsReducer,
     visualCreation: visualCreationReducer, // 新增視覺創作狀態管理
     versionManagement: versionManagementReducer, // 新增版本管理狀態管理
+    ebookPreparation: ebookPreparationReducer, // 新增電子書排版預備狀態管理
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

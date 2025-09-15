@@ -391,6 +391,7 @@ export interface API {
       success: boolean;
       collected_count?: number;
       newly_confirmed_count?: number;
+      skipped_duplicates?: number;
       error_count?: number;
       errors?: string[];
       message?: string;

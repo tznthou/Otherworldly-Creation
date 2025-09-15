@@ -82,7 +82,7 @@ const CosmicNotification: React.FC<CosmicNotificationProps> = ({
   return (
     <div
       className={`
-        fixed top-4 right-4 z-50 max-w-sm w-full
+        fixed top-4 right-4 z-[100000] max-w-sm w-full
         ${config.bgColor} ${config.borderColor} ${config.glowColor}
         backdrop-blur-sm border rounded-lg shadow-xl
         transform transition-all duration-300 ease-out

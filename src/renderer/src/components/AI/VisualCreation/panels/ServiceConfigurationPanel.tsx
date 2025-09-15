@@ -1,14 +1,15 @@
 import React, { memo, useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { openModal } from '../../../../store/slices/uiSlice';
 import { useIllustrationService } from '../../../../hooks/illustration';
-import type { 
-  IllustrationProvider, 
-  PollinationsModel, 
-  PollinationsStyle, 
-  ColorMode 
+import type {
+  IllustrationProvider,
+  PollinationsModel,
+  PollinationsStyle,
+  ColorMode
 } from '../../../../hooks/illustration';
 import { FEATURE_FLAGS, debugLog, reloadFeatureFlags } from '../../../../config/features';
-import CosmicInput from '../../../UI/CosmicInput';
-import CosmicButton from '../../../UI/CosmicButton';
+import { api } from '../../../../api';
 
 interface ServiceConfigurationPanelProps {
   className?: string;
@@ -25,12 +26,12 @@ interface ServiceConfigurationPanelProps {
 
 /**
  * 插畫服務配置面板組件
- * 
+ *
  * 功能：
  * - 選擇插畫服務提供商
  * - 配置 Pollinations 模型和風格
- * - 管理 API Key
  * - 色彩模式選擇
+ * - 簡化的 API 狀態顯示（詳細配置統一在 AI 提供者管理）
  * - 配置驗證和警告
  */
 export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps> = memo(({
@@ -38,35 +39,32 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
   onConfigurationChange,
   showBillingWarning = true
 }) => {
+  const dispatch = useDispatch();
+
   const {
     // 服務配置
     illustrationProvider,
     setIllustrationProvider,
-    
+
     // Pollinations 配置
     pollinationsModel,
     setPollinationsModel,
     pollinationsStyle,
     setPollinationsStyle,
-    
+
     // 通用配置
     globalColorMode,
     setGlobalColorMode,
-    
-    // API Key 管理
-    apiKey,
-    setApiKey,
-    apiKeySource,
+
+    // API Key 狀態檢查
     isApiKeyLoaded,
-    loadApiKeyFromProviders,
-    clearApiKey,
-    
+    apiKeySource,
+
     // 功能
     validateConfiguration,
     detectAvailableServices,
-    
+
     // 計算值
-    isPollinationsFree,
     requiresApiKey,
     serviceDisplayName,
     configurationSummary,
@@ -80,10 +78,15 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
   }
   const [serviceCapabilities, setServiceCapabilities] = useState<Record<string, ServiceCapability>>({});
   const [isDetecting, setIsDetecting] = useState(false);
-  
+
+  // Pollinations API Token 狀態 - 使用簡化版本避免與 useIllustrationService 衝突
+  const [pollinationsTokenInput, setPollinationsTokenInput] = useState<string>('');
+  const [isPollinationsLoading, setIsPollinationsLoading] = useState(false);
+  const [hasPollinationsToken, setHasPollinationsToken] = useState(false);
+
   // 監聽功能開關變更
   const [featureFlags, setFeatureFlags] = useState(FEATURE_FLAGS);
-  
+
   useEffect(() => {
     const handleSettingsChange = () => {
       console.log('🔄 [ServiceConfigurationPanel] 收到設定變更通知');
@@ -93,14 +96,33 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
       console.log('🎯 [ServiceConfigurationPanel] 新的功能開關狀態:', newFlags);
       setFeatureFlags(newFlags);
     };
-    
+
     // 監聽設定變更事件
     window.addEventListener('settings-updated', handleSettingsChange);
-    
+
     return () => {
       window.removeEventListener('settings-updated', handleSettingsChange);
     };
   }, []);
+
+  // 簡化的 Pollinations Token 檢查 - 只在需要時載入，避免無限迴圈
+  useEffect(() => {
+    if (illustrationProvider === 'pollinations') {
+      const checkPollinationsToken = async () => {
+        try {
+          const response = await api.invoke('get_pollinations_token') as string | null;
+          setHasPollinationsToken(!!response);
+          if (response && !pollinationsTokenInput) {
+            setPollinationsTokenInput(response);
+          }
+        } catch (error) {
+          console.warn('無法檢查 Pollinations Token:', error);
+          setHasPollinationsToken(false);
+        }
+      };
+      checkPollinationsToken();
+    }
+  }, [illustrationProvider, pollinationsTokenInput]); // 只在選擇 Pollinations 時檢查
 
   // 配置變更回調
   React.useEffect(() => {
@@ -111,17 +133,16 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
         colorMode: globalColorMode,
         pollinationsModel: illustrationProvider === 'pollinations' ? pollinationsModel : undefined,
         pollinationsStyle: illustrationProvider === 'pollinations' ? pollinationsStyle : undefined,
-        apiKey,
+        apiKey: '', // 不在此處管理 API Key
         isValid: validation.isValid
       });
     }
   }, [
-    illustrationProvider, 
-    globalColorMode, 
-    pollinationsModel, 
-    pollinationsStyle, 
-    apiKey, 
-    validateConfiguration, 
+    illustrationProvider,
+    globalColorMode,
+    pollinationsModel,
+    pollinationsStyle,
+    validateConfiguration,
     onConfigurationChange
   ]);
 
@@ -131,7 +152,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
       if (featureFlags.SMART_API_DETECTION && !isDetecting) {
         setIsDetecting(true);
         debugLog('開始智能服務檢測...');
-        
+
         try {
           const result = await detectAvailableServices();
           setAvailableServices(result.availableServices);
@@ -148,9 +169,79 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
     };
 
     detectServices();
-  }, [detectAvailableServices, featureFlags.SMART_API_DETECTION, isDetecting]);
+  }, [featureFlags.SMART_API_DETECTION]); // 🔥 修復無限迴圈：移除 detectAvailableServices 和 isDetecting 依賴
 
   const validation = validateConfiguration();
+
+  // 跳轉到 AI 設定的處理函數
+  const handleNavigateToAISettings = () => {
+    // 使用 Redux 打開 AI 設定模態框
+    dispatch(openModal('aiSettings'));
+  };
+
+  // 簡化的 Pollinations Token 操作
+  const handleLoadPollinationsToken = async () => {
+    setIsPollinationsLoading(true);
+    try {
+      const response = await api.invoke('get_pollinations_token') as string | null;
+      if (response) {
+        setPollinationsTokenInput(response);
+        setHasPollinationsToken(true);
+        debugLog('✅ 載入 Pollinations API Token 成功');
+      } else {
+        setPollinationsTokenInput('');
+        setHasPollinationsToken(false);
+        debugLog('ℹ️ 未找到已儲存的 Pollinations API Token');
+      }
+    } catch (error) {
+      console.error('❌ 載入 Pollinations Token 失敗:', error);
+      setHasPollinationsToken(false);
+    } finally {
+      setIsPollinationsLoading(false);
+    }
+  };
+
+  const handleSavePollinationsToken = async () => {
+    if (!pollinationsTokenInput.trim()) {
+      alert('請輸入 API Token');
+      return;
+    }
+
+    setIsPollinationsLoading(true);
+    try {
+      await api.invoke('save_pollinations_token', {
+        token: pollinationsTokenInput.trim(),
+        user_name: 'user',
+        token_tier: 'seed'
+      });
+      setHasPollinationsToken(true);
+      debugLog('✅ Pollinations API Token 儲存成功');
+      alert('API Token 已成功儲存！');
+    } catch (error) {
+      console.error('❌ 儲存 Pollinations Token 失敗:', error);
+      alert(`儲存失敗: ${error}`);
+    } finally {
+      setIsPollinationsLoading(false);
+    }
+  };
+
+  const handleClearPollinationsToken = async () => {
+    if (!confirm('確定要清除 API Token 嗎？')) return;
+
+    setIsPollinationsLoading(true);
+    try {
+      await api.invoke('remove_pollinations_token');
+      setPollinationsTokenInput('');
+      setHasPollinationsToken(false);
+      debugLog('✅ Pollinations API Token 已清除');
+      alert('API Token 已清除');
+    } catch (error) {
+      console.error('❌ 清除 Pollinations Token 失敗:', error);
+      alert(`清除失敗: ${error}`);
+    } finally {
+      setIsPollinationsLoading(false);
+    }
+  };
 
   // 服務配置映射
   const getServiceConfig = (service: IllustrationProvider) => {
@@ -211,7 +302,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
   };
 
   // 決定要顯示的服務列表
-  const servicesToShow = featureFlags.EXTENDED_ILLUSTRATION_SERVICES 
+  const servicesToShow = featureFlags.EXTENDED_ILLUSTRATION_SERVICES
     ? availableServices.filter(service => service !== 'imagen') // 移除 imagen
     : ['pollinations']; // 基本模式只顯示 Pollinations
 
@@ -237,7 +328,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
               <div className="text-xs text-gray-400 mt-1">豐富色彩表現</div>
             </div>
           </button>
-          
+
           <button
             onClick={() => setGlobalColorMode('monochrome')}
             className={`p-4 rounded-lg border-2 transition-all ${
@@ -258,19 +349,19 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
       {/* 插畫服務選擇器 */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-300 mb-3">
-          🤖 插畫服務 
+          🤖 插畫服務
           <span className="text-gray-400">(選擇生成服務)</span>
           {isDetecting && featureFlags.SMART_API_DETECTION && (
             <span className="ml-2 text-xs text-yellow-400">🔍 檢測中...</span>
           )}
         </label>
-        
+
         {/* 動態服務網格 - 左側面板優化：2x2 網格 */}
         <div className="grid grid-cols-2 gap-3">
           {servicesToShow.map((service) => {
             const config = getServiceConfig(service as IllustrationProvider);
             const isSelected = illustrationProvider === service;
-            
+
             return (
               <button
                 key={service}
@@ -289,13 +380,13 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
                   <div className="text-xs text-gray-400">
                     {config.details}
                   </div>
-                  
+
                   {/* 服務品質指標 */}
                   {featureFlags.EXTENDED_ILLUSTRATION_SERVICES && serviceCapabilities[service] && (
                     <div className="mt-2 flex justify-center">
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                        serviceCapabilities[service]?.quality === 'premium' 
-                          ? 'bg-gold-500/20 text-gold-300' 
+                        serviceCapabilities[service]?.quality === 'premium'
+                          ? 'bg-gold-500/20 text-gold-300'
                           : serviceCapabilities[service]?.quality === 'high'
                           ? 'bg-blue-500/20 text-blue-300'
                           : 'bg-green-500/20 text-green-300'
@@ -310,12 +401,12 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
             );
           })}
         </div>
-        
+
         {/* 擴展服務提示 */}
         {!featureFlags.EXTENDED_ILLUSTRATION_SERVICES && (
           <div className="mt-3 p-3 bg-blue-900/20 border border-blue-700 rounded-lg">
             <div className="text-sm text-blue-300">
-              💡 <strong>提示：</strong> 更多 AI 插畫服務（如 Gemini Flash、Gemini Flash Image、OpenRouter）可在 
+              💡 <strong>提示：</strong> 更多 AI 插畫服務（如 Gemini Flash、Gemini Flash Image、OpenRouter）可在
               <strong className="text-blue-200 mx-1">設定 → 一般 → AI 插畫功能設定</strong> 中啟用
             </div>
           </div>
@@ -326,7 +417,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
       {illustrationProvider === 'pollinations' && (
         <div className="mb-6 p-4 bg-green-900/20 border border-green-700 rounded-lg">
           <h4 className="text-sm font-medium text-green-300 mb-4">🎨 Pollinations.AI 設定</h4>
-          
+
           {/* 模型選擇 */}
           <div className="mb-4">
             <label className="block text-sm text-gray-300 mb-2">模型選擇</label>
@@ -343,7 +434,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
           </div>
 
           {/* 風格選擇 */}
-          <div>
+          <div className="mb-4">
             <label className="block text-sm text-gray-300 mb-2">風格選擇</label>
             <div className="grid grid-cols-5 gap-2">
               {[
@@ -368,63 +459,85 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
               ))}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* API Key 管理 (僅限 Imagen) */}
-      {requiresApiKey && (
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            API 金鑰 
-            {isApiKeyLoaded && apiKeySource !== 'manual' ? (
-              <span className="text-green-400 ml-2">
-                ✅ 已從 {apiKeySource === 'gemini' ? 'Gemini' : 'OpenRouter'} 載入
-              </span>
-            ) : (
-              <span className="text-red-400"> *</span>
-            )}
-          </label>
-          
-          <div className="flex space-x-2">
-            <CosmicInput
-              type="password"
-              value={apiKey}
-              onChange={(value) => setApiKey(value)}
-              placeholder={
-                isApiKeyLoaded && apiKeySource !== 'manual'
-                  ? "已自動載入 (可覆寫)" 
-                  : "輸入 Google Cloud API 金鑰"
-              }
-              className="flex-1"
-            />
-            <CosmicButton
-              onClick={loadApiKeyFromProviders}
-              variant="secondary"
-              size="small"
-            >
-              🔄 載入
-            </CosmicButton>
-            {apiKey && (
-              <CosmicButton
-                onClick={clearApiKey}
-                variant="danger"
-                size="small"
-              >
-                🗑️ 清空
-              </CosmicButton>
-            )}
+          {/* API Token 配置 */}
+          <div className="pt-4 border-t border-green-700/50">
+            <label className="block text-sm text-gray-300 mb-2">
+              🔐 API Token <span className="text-green-400">(選填)</span>
+              {isPollinationsLoading && <span className="ml-2 text-xs text-yellow-400">處理中...</span>}
+              {hasPollinationsToken && <span className="ml-2 text-xs text-green-400">✅ 已設定</span>}
+              {!hasPollinationsToken && !isPollinationsLoading && <span className="ml-2 text-xs text-gray-400">未設定</span>}
+            </label>
+            <div className="space-y-2">
+              <div className="flex space-x-2">
+                <input
+                  type="password"
+                  value={pollinationsTokenInput}
+                  onChange={(e) => setPollinationsTokenInput(e.target.value)}
+                  placeholder="輸入 Pollinations API Token"
+                  disabled={isPollinationsLoading}
+                  className="flex-1 p-2 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                />
+                <button
+                  onClick={pollinationsTokenInput.trim() ? handleSavePollinationsToken : handleLoadPollinationsToken}
+                  disabled={isPollinationsLoading}
+                  className="px-3 py-2 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white text-sm rounded transition-colors"
+                >
+                  {pollinationsTokenInput.trim() ? '儲存' : '載入'}
+                </button>
+                <button
+                  onClick={handleClearPollinationsToken}
+                  disabled={isPollinationsLoading || !hasPollinationsToken}
+                  className="px-3 py-2 bg-gray-600 hover:bg-gray-500 disabled:opacity-50 text-white text-sm rounded transition-colors"
+                >
+                  清除
+                </button>
+              </div>
+              <p className="text-xs text-green-200">
+                💡 API Token 用於身份驗證，可獲得更快速度和高級功能。
+                <a
+                  href="https://auth.pollinations.ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-300 hover:text-green-200 underline ml-1"
+                >
+                  取得 Token →
+                </a>
+              </p>
+            </div>
           </div>
-          
-          {isApiKeyLoaded && apiKeySource !== 'manual' && (
-            <p className="text-xs text-gray-400 mt-1">
-              💡 已自動使用 AI 提供者管理中的金鑰，您也可以手動輸入覆寫
-            </p>
-          )}
         </div>
       )}
 
-      {/* Google Cloud 計費警告 */}
-      {requiresApiKey && showBillingWarning && (
+      {/* 簡化的 API 狀態顯示 */}
+      {requiresApiKey && (
+        <div className="mb-6 p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-blue-300 font-medium">🔑 API 配置</span>
+              {isApiKeyLoaded && apiKeySource !== 'manual' ? (
+                <span className="text-green-400 text-sm">
+                  ✅ 已從 {apiKeySource === 'gemini' ? 'Gemini' : 'OpenRouter'} 載入
+                </span>
+              ) : (
+                <span className="text-yellow-400 text-sm">⚠️ 需要配置</span>
+              )}
+            </div>
+            <button
+              onClick={handleNavigateToAISettings}
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded transition-colors"
+            >
+              前往設定
+            </button>
+          </div>
+          <p className="text-xs text-blue-200 mt-2">
+            💡 在 AI 提供者管理中統一配置所有服務的 API 金鑰和詳細設定
+          </p>
+        </div>
+      )}
+
+      {/* 保留 Google Cloud 計費警告但簡化 */}
+      {requiresApiKey && showBillingWarning && illustrationProvider === 'imagen' && (
         <div className="mb-6 p-4 bg-gradient-to-r from-orange-900/40 to-red-900/40 border-2 border-orange-500/60 rounded-lg">
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0">
@@ -438,14 +551,8 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
               </h4>
               <div className="text-sm text-orange-200 space-y-1">
                 <p className="font-medium">Imagen API 需要付費的 Google Cloud 帳戶才能使用</p>
-                <ul className="list-disc list-inside space-y-1 mt-2 text-xs text-orange-100">
-                  <li>需要有效的 Google Cloud API 金鑰</li>
-                  <li>必須啟用 Imagen API 服務</li>
-                  <li className="font-medium text-orange-200">⭐ 必須設定付費方式（計費帳戶）</li>
-                  <li>在 Google Cloud Console 中完成所有設定</li>
-                </ul>
                 <p className="text-xs text-orange-300 mt-2 font-medium">
-                  💡 如果遇到計費錯誤，系統會提供詳細的設定說明
+                  💡 詳細設定說明請參考 AI 提供者管理中的完整指南
                 </p>
               </div>
             </div>
@@ -453,46 +560,22 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
         </div>
       )}
 
-      {/* 配置驗證結果 */}
-      {!validation.isValid && (
-        <div className="mb-6 p-3 bg-red-900/30 border border-red-700/50 rounded text-red-300">
-          <div className="font-medium mb-1">配置錯誤：</div>
-          <ul className="list-disc list-inside text-sm">
-            {validation.errors.map((error, index) => (
-              <li key={index}>{error}</li>
-            ))}
-          </ul>
+      {/* 配置摘要 */}
+      {validation && (
+        <div className={`p-3 rounded-lg border ${
+          validation.isValid
+            ? 'bg-green-900/20 border-green-700 text-green-300'
+            : 'bg-red-900/20 border-red-700 text-red-300'
+        }`}>
+          <div className="text-sm font-medium mb-1">
+            {validation.isValid ? '✅ 配置完成' : '❌ 配置不完整'}
+          </div>
+          <div className="text-xs opacity-80">
+            服務: {serviceDisplayName} | 色彩: {globalColorMode === 'color' ? '彩色' : '黑白'}
+            {configurationSummary && ` | ${configurationSummary}`}
+          </div>
         </div>
       )}
-
-      {/* 配置摘要 */}
-      <div className="mt-4 p-3 bg-cosmic-800/50 rounded-lg">
-        <div className="text-sm text-cosmic-300">
-          <div className="font-medium mb-1">當前配置：</div>
-          <div>{configurationSummary}</div>
-          {validation.isValid ? (
-            <div className="text-green-400 text-xs mt-1">✅ 配置有效</div>
-          ) : (
-            <div className="text-red-400 text-xs mt-1">❌ 配置無效</div>
-          )}
-        </div>
-      </div>
-
-      {/* 服務狀態指示 */}
-      <div className="mt-4 flex items-center justify-between text-xs">
-        <div className="flex items-center space-x-2">
-          <div className={`w-2 h-2 rounded-full ${
-            isPollinationsFree ? 'bg-green-500' : 'bg-blue-500'
-          } animate-pulse`}></div>
-          <span className="text-cosmic-400">
-            {serviceDisplayName} 
-            {isPollinationsFree ? ' - 免費服務' : ' - 付費服務'}
-          </span>
-        </div>
-        <div className="text-cosmic-500">
-          {validation.isValid ? '服務可用' : '需要配置'}
-        </div>
-      </div>
     </div>
   );
 });

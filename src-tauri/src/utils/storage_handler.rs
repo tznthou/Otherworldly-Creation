@@ -253,12 +253,17 @@ impl StorageHandler {
         if let Ok(entries) = std::fs::read_dir(&temp_dir) {
             for entry in entries.flatten() {
                 if let Ok(metadata) = entry.metadata() {
-                    if let Ok(created) = metadata.created() {
-                        if created < cutoff_time {
+                    // 🔥 修復：使用修改時間而不是建立時間，避免誤刪今天的圖片
+                    if let Ok(modified) = metadata.modified() {
+                        if modified < cutoff_time {
                             if let Ok(_) = std::fs::remove_file(entry.path()) {
                                 cleaned_count += 1;
-                                log::debug!("[StorageHandler] 🗑️ 清理過期檔案: {:?}", entry.path());
+                                log::debug!("[StorageHandler] 🗑️ 清理過期檔案: {:?} (修改時間: {:?})",
+                                           entry.path(), modified);
                             }
+                        } else {
+                            log::debug!("[StorageHandler] 📄 保留檔案: {:?} (修改時間: {:?}, 截止時間: {:?})",
+                                       entry.path(), modified, cutoff_time);
                         }
                     }
                 }

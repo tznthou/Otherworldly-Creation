@@ -71,11 +71,8 @@ export const useGalleryData = (
   // 獲取插畫歷史 (使用 useCallback 避免無限迴圈)
   const fetchIllustrationHistory = useCallback(async () => {
     if (!currentProject) return;
-    
+
     try {
-      // 防止重複調用
-      if (loading) return;
-      
       setLoading(true);
       setError(null);
       
@@ -115,7 +112,7 @@ export const useGalleryData = (
     } finally {
       setLoading(false);
     }
-  }, [currentProject, enrichWithVersionData, loading]);
+  }, [currentProject, enrichWithVersionData]); // 🔥 移除 loading 依賴，避免無限迴圈
 
   // 重新獲取數據的便捷方法
   const refetchData = useCallback(() => {

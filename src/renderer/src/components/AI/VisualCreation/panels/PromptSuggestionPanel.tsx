@@ -39,12 +39,24 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
   const [suggestions, setSuggestions] = useState<SuggestionCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<Record<string, unknown> | null>(null);
+  const [error, setError] = useState<string | null>(null); // 新增錯誤狀態
 
-  // 生成智能建議
+  // 🔥 修復：添加超時保護的智能建議生成
   const generateSuggestions = useCallback(async () => {
-    if (selectedCharacters.length === 0) return;
+    if (selectedCharacters.length === 0) {
+      setSuggestions([]);
+      return;
+    }
 
     setIsLoading(true);
+    setError(null);
+    
+    // 超時保護：10秒後自動取消
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+      setError('⏱️ 智能建議生成超時，請重試或聯繫技術支援');
+    }, 10000);
+
     try {
       const request: PromptSuggestionRequest = {
         characters: selectedCharacters.map(char => ({
@@ -99,9 +111,13 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
         };
       });
 
+      clearTimeout(timeoutId); // 成功時清除超時
       setSuggestions(suggestionCards);
+      console.log('✅ 智能建議生成成功:', suggestionCards.length, '個建議');
     } catch (error) {
-      console.error('Failed to generate suggestions:', error);
+      clearTimeout(timeoutId); // 錯誤時清除超時
+      console.error('❌ 智能建議生成失敗:', error);
+      setError(error instanceof Error ? error.message : '智能建議生成失敗，請重試');
     } finally {
       setIsLoading(false);
     }
@@ -154,12 +170,15 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
     }
   }, [promptIntelligence]);
 
-  // 初始化建議 - 修復無限循環問題
+  // 🔥 修復：優化 useEffect 依賴，避免無限循環
   useEffect(() => {
     if (selectedCharacters.length > 0) {
       generateSuggestions();
+    } else {
+      setSuggestions([]);
+      setError(null);
     }
-  }, [selectedCharacters, sceneType, generateSuggestions]);
+  }, [selectedCharacters.length, sceneType]); // 只監聽關鍵變化
 
   // 分析當前提示詞
   useEffect(() => {
@@ -451,6 +470,21 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
               <div className="text-center text-cosmic-400 py-8">
                 <div className="animate-spin w-6 h-6 border-2 border-gold-500 border-t-transparent rounded-full mx-auto mb-2"></div>
                 <p>正在生成智能建議...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center text-red-400 py-8">
+                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                  <p className="mb-3">{error}</p>
+                  <button
+                    onClick={() => {
+                      setError(null);
+                      generateSuggestions();
+                    }}
+                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+                  >
+                    重試
+                  </button>
+                </div>
               </div>
             ) : suggestions.length > 0 ? (
               suggestions.map(renderSuggestionCard)

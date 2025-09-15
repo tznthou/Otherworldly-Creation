@@ -80,7 +80,7 @@ const AISettingsModal: React.FC = () => {
   useEffect(() => {
     loadProviders();
     loadSupportedTypes();
-  }, [loadProviders, loadSupportedTypes]);
+  }, []); // 🔥 修復無限循環：只在組件掛載時執行一次
 
   const searchAvailableModels = async (providerType: string, apiKey?: string, endpoint?: string): Promise<Array<{id: string; name: string}>> => {
     try {
@@ -827,69 +827,233 @@ const AISettingsModal: React.FC = () => {
                   <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4 text-sm text-gray-300">
 
                     {/* 智能推薦系統說明 */}
-                    <div className="mb-6 p-3 bg-gradient-to-r from-cosmic-700 to-cosmic-600 rounded-lg">
-                      <h4 className="text-gold-400 font-medium text-sm mb-2">🧠 智能推薦系統</h4>
-                      <p className="text-xs text-gray-200">
+                    <div className="mb-6 p-4 bg-gradient-to-r from-cosmic-700 to-cosmic-600 rounded-lg">
+                      <h4 className="text-gold-400 font-medium text-base mb-3 flex items-center">
+                        <span className="text-xl mr-2">🧠</span>
+                        智能推薦系統
+                      </h4>
+                      <p className="text-sm text-gray-100 leading-relaxed">
                         系統會根據小說內容自動推薦最適合的AI提供者，每個提供者都有獨特優勢。建議開啟多個提供者讓系統智能選擇最佳方案。
                       </p>
                     </div>
 
                     {/* 提供者詳細說明 */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <h5 className="text-gold-400 mb-2">🦙 Ollama (本地隱私)</h5>
-                        <ul className="space-y-1 text-xs">
-                          <li>• 完全本地運行，無隱私風險</li>
-                          <li>• 最新推薦: llama3.2, qwen2.5</li>
-                          <li>• 🎨 插畫特色: 離線可用，速度快</li>
-                          <li>• 點擊「🔍 搜尋模型」自動獲取</li>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
+                        <h5 className="text-gold-400 mb-3 font-medium text-base flex items-center">
+                          <span className="text-xl mr-2">🦙</span>
+                          Ollama (本地隱私)
+                        </h5>
+                        <ul className="space-y-2 text-sm text-gray-200">
+                          <li className="flex items-start">
+                            <span className="text-green-400 mr-2 mt-1">•</span>
+                            <span>完全本地運行，無隱私風險</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-400 mr-2 mt-1">•</span>
+                            <span>最新推薦: llama3.2, qwen2.5</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-yellow-400 mr-2 mt-1">🎨</span>
+                            <span><strong>插畫特色:</strong> 離線可用，速度快</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-purple-400 mr-2 mt-1">💡</span>
+                            <span>點擊「🔍 搜尋模型」自動獲取</span>
+                          </li>
                         </ul>
                       </div>
-                      <div>
-                        <h5 className="text-gold-400 mb-2">✨ Gemini (多模態之王)</h5>
-                        <ul className="space-y-1 text-xs">
-                          <li>• 需要 Google AI API 金鑰</li>
-                          <li>• 最新推薦: gemini-2.0-flash (2024)</li>
-                          <li>• 🎨 插畫特色: 最懂中文文化，創意豐富</li>
-                          <li>• 輸入API金鑰後可搜尋模型</li>
+                      <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
+                        <h5 className="text-gold-400 mb-3 font-medium text-base flex items-center">
+                          <span className="text-xl mr-2">✨</span>
+                          Gemini (多模態之王)
+                        </h5>
+                        <ul className="space-y-2 text-sm text-gray-200">
+                          <li className="flex items-start">
+                            <span className="text-red-400 mr-2 mt-1">•</span>
+                            <span>需要 Google AI API 金鑰</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-400 mr-2 mt-1">•</span>
+                            <span>最新推薦: gemini-2.0-flash (2024)</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-yellow-400 mr-2 mt-1">🎨</span>
+                            <span><strong>插圖特色:</strong> 最懂中文文化，創意豐富</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-green-400 mr-2 mt-1">🚀</span>
+                            <span><strong>高速生成:</strong> Flash版本針對插圖優化</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-purple-400 mr-2 mt-1">💡</span>
+                            <span><strong>文化理解:</strong> 對中式奇幻元素理解極佳</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-pink-400 mr-2 mt-1">🎭</span>
+                            <span><strong>風格多樣:</strong> 支援動漫、古風、現代等風格</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-orange-400 mr-2 mt-1">💰</span>
+                            <span><strong>免費額度:</strong> Google AI Studio 提供免費試用</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-cyan-400 mr-2 mt-1">•</span>
+                            <span>輸入API金鑰後可搜尋模型</span>
+                          </li>
                         </ul>
                       </div>
-                      <div>
-                        <h5 className="text-gold-400 mb-2">🤖 OpenAI (商業級穩定)</h5>
-                        <ul className="space-y-1 text-xs">
-                          <li>• 需要 OpenAI API 金鑰</li>
-                          <li>• 最新推薦: gpt-4o, gpt-image-1</li>
-                          <li>• 🎨 插畫特色: 圖像品質穩定，商業可靠</li>
-                          <li>• 輸入API金鑰後可搜尋模型</li>
+                      <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
+                        <h5 className="text-gold-400 mb-3 font-medium text-base flex items-center">
+                          <span className="text-xl mr-2">🤖</span>
+                          OpenAI (商業級穩定)
+                        </h5>
+                        <ul className="space-y-2 text-sm text-gray-200">
+                          <li className="flex items-start">
+                            <span className="text-red-400 mr-2 mt-1">•</span>
+                            <span>需要 OpenAI API 金鑰</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-400 mr-2 mt-1">•</span>
+                            <span>最新推薦: gpt-4o, gpt-image-1</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-yellow-400 mr-2 mt-1">🎨</span>
+                            <span><strong>插畫特色:</strong> 圖像品質穩定，商業可靠</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-cyan-400 mr-2 mt-1">•</span>
+                            <span>輸入API金鑰後可搜尋模型</span>
+                          </li>
                         </ul>
                       </div>
-                      <div>
-                        <h5 className="text-gold-400 mb-2">🧠 Claude (深度理解)</h5>
-                        <ul className="space-y-1 text-xs">
-                          <li>• 需要 Anthropic API 金鑰</li>
-                          <li>• 推薦模型: claude-3.5-sonnet, claude-3.5-haiku</li>
-                          <li>• 🎨 插畫特色: 深度文本理解，細膩描述</li>
-                          <li>• 輸入API金鑰後可搜尋模型</li>
+                      <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
+                        <h5 className="text-gold-400 mb-3 font-medium text-base flex items-center">
+                          <span className="text-xl mr-2">🧠</span>
+                          Claude (深度理解)
+                        </h5>
+                        <ul className="space-y-2 text-sm text-gray-200">
+                          <li className="flex items-start">
+                            <span className="text-red-400 mr-2 mt-1">•</span>
+                            <span>需要 Anthropic API 金鑰</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-400 mr-2 mt-1">•</span>
+                            <span>推薦模型: claude-3.5-sonnet, claude-3.5-haiku</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-yellow-400 mr-2 mt-1">🎨</span>
+                            <span><strong>插畫特色:</strong> 深度文本理解，細膩描述</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-cyan-400 mr-2 mt-1">•</span>
+                            <span>輸入API金鑰後可搜尋模型</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
+                        <h5 className="text-gold-400 mb-3 font-medium text-base flex items-center">
+                          <span className="text-xl mr-2">🔄</span>
+                          OpenRouter (百模聚合)
+                        </h5>
+                        <ul className="space-y-2 text-sm text-gray-200">
+                          <li className="flex items-start">
+                            <span className="text-red-400 mr-2 mt-1">•</span>
+                            <span>需要 OpenRouter API 金鑰</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-yellow-400 mr-2 mt-1">🎨</span>
+                            <span><strong>插圖亮點:</strong> 100+ 圖像模型統一接口</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-green-400 mr-2 mt-1">⚡</span>
+                            <span><strong>Gemini Flash Image:</strong> $0.03/圖，高品質</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-400 mr-2 mt-1">🆓</span>
+                            <span><strong>免費模型:</strong> Stable Diffusion 系列可用</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-purple-400 mr-2 mt-1">💎</span>
+                            <span><strong>頂級選擇:</strong> DALL-E、Midjourney 等</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-orange-400 mr-2 mt-1">🎯</span>
+                            <span><strong>成本透明:</strong> 按使用量精確計費</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-pink-400 mr-2 mt-1">📊</span>
+                            <span><strong>模型比較:</strong> 輕鬆測試不同模型效果</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-cyan-400 mr-2 mt-1">•</span>
+                            <span>輸入API金鑰後可搜尋模型</span>
+                          </li>
                         </ul>
                       </div>
                     </div>
 
                     {/* 使用建議 */}
-                    <div className="mt-6 grid md:grid-cols-2 gap-3">
-                      <div className="p-3 bg-cosmic-700 rounded-lg">
-                        <p className="text-gold-400 font-medium text-sm mb-1">💡 最佳實踐建議</p>
-                        <ul className="text-xs space-y-1">
-                          <li>✅ 新手：全部開啟，讓系統智能選擇</li>
-                          <li>✅ 隱私優先：主用 Ollama</li>
-                          <li>✅ 商用穩定：OpenAI + Ollama 組合</li>
-                          <li>✅ 創意實驗：Gemini + OpenRouter 組合</li>
+                    <div className="mt-8 mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="p-5 bg-cosmic-700 rounded-lg border border-cosmic-600">
+                        <p className="text-gold-400 font-medium text-base mb-3 flex items-center">
+                          <span className="text-xl mr-2">💡</span>
+                          插圖服務建議組合
+                        </p>
+                        <ul className="text-sm space-y-2 text-gray-200">
+                          <li className="flex items-start">
+                            <span className="text-green-400 mr-2 mt-1">✅</span>
+                            <span><strong>新手推薦:</strong> Gemini + Pollinations (免費開始)</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-400 mr-2 mt-1">✅</span>
+                            <span><strong>隱私優先:</strong> 主用 Ollama (完全本地)</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-purple-400 mr-2 mt-1">✅</span>
+                            <span><strong>品質穩定:</strong> OpenAI + Gemini 組合</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-orange-400 mr-2 mt-1">✅</span>
+                            <span><strong>成本優化:</strong> OpenRouter 免費模型 + Gemini</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-yellow-400 mr-2 mt-1">✅</span>
+                            <span><strong>專業創作:</strong> OpenRouter 付費模型最全</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-gold-400 mr-2 mt-1">⭐</span>
+                            <span><strong>中文小說:</strong> Gemini 理解度最佳</span>
+                          </li>
                         </ul>
                       </div>
-                      <div className="p-3 bg-cosmic-700 rounded-lg">
-                        <p className="text-gold-400 font-medium text-sm mb-1">🔧 模型搜尋功能</p>
-                        <p className="text-xs">
-                          輸入API金鑰後，點擊「🔍 搜尋模型」按鈕可自動獲取該提供者的所有可用模型，無需手動輸入模型名稱。
+                      <div className="p-5 bg-cosmic-700 rounded-lg border border-cosmic-600">
+                        <p className="text-gold-400 font-medium text-base mb-3 flex items-center">
+                          <span className="text-xl mr-2">🎯</span>
+                          插圖功能亮點
                         </p>
+                        <ul className="text-sm space-y-2 text-gray-200">
+                          <li className="flex items-start">
+                            <span className="text-green-400 mr-2 mt-1">🚀</span>
+                            <span><strong>Gemini Flash:</strong> 2秒生成，理解中文情境</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-purple-400 mr-2 mt-1">💎</span>
+                            <span><strong>OpenRouter:</strong> 一個API調用百種模型</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-400 mr-2 mt-1">🔧</span>
+                            <span><strong>模型搜尋:</strong> 輸入API金鑰自動獲取模型</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-orange-400 mr-2 mt-1">💰</span>
+                            <span><strong>成本控制:</strong> OpenRouter按圖精確計費</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-pink-400 mr-2 mt-1">🎨</span>
+                            <span><strong>智能推薦:</strong> 系統自動選最適合模型</span>
+                          </li>
+                        </ul>
                       </div>
                     </div>
                   </div>
@@ -899,10 +1063,10 @@ const AISettingsModal: React.FC = () => {
           </div>
 
           {/* 底部按鈕 */}
-          <div className="sticky bottom-0 bg-cosmic-900 p-6 border-t border-cosmic-700 flex justify-end space-x-4 rounded-b-xl">
+          <div className="sticky bottom-0 bg-cosmic-900 px-8 py-6 border-t border-cosmic-700 flex justify-end space-x-4 rounded-b-xl mt-4">
             <button
               onClick={handleClose}
-              className="btn-secondary"
+              className="btn-secondary text-base px-6 py-3 font-medium"
             >
               關閉
             </button>

@@ -1,13 +1,35 @@
 import { useReducer, useCallback } from 'react';
+import type { ImageNamingConfig } from '../../types/imageMetadata';
 
 // 導出格式類型
 export type ExportFormat = 'png' | 'jpg' | 'webp';
+
+// 圖片尺寸調整設定
+export interface ResizeOptions {
+  enabled: boolean;
+  maxWidth?: number;
+  maxHeight?: number;
+  maintainAspectRatio: boolean;
+}
+
+// 進階壓縮選項
+export interface AdvancedCompressionOptions {
+  useWebWorker?: boolean;        // 使用 Web Worker 處理
+  progressive?: boolean;         // 漸進式 JPEG
+  optimizePalette?: boolean;     // PNG 調色板優化
+  stripMetadata?: boolean;       // 移除元數據
+  targetFileSize?: number;       // 目標檔案大小（bytes）
+}
 
 // 導出品質設定
 export interface ExportQuality {
   format: ExportFormat;
   quality: number; // 1-100, 只對 jpg 和 webp 有效
   compression: number; // 0-9, 主要用於 PNG
+
+  // 新增進階壓縮選項
+  resize?: ResizeOptions;
+  advanced?: AdvancedCompressionOptions;
 }
 
 // 導出任務狀態
@@ -30,12 +52,15 @@ export interface ExportTask {
   fileSizeBytes?: number;
 }
 
+// 檔案組織方法
+export type OrganizationMethod = 'flat' | 'by_character' | 'by_date' | 'by_project';
+
 // 批次導出配置
 export interface BatchExportConfig {
   // 檔案命名規則
-  nameTemplate: string; // 例如: "{project}_{character}_{date}_{index}"
+  namingConfig: ImageNamingConfig;
   outputDirectory: string;
-  organizationMethod: 'flat' | 'by_character' | 'by_date' | 'by_project';
+  organizationMethod: OrganizationMethod;
   
   // 導出設定
   defaultFormat: ExportFormat;
@@ -99,9 +124,16 @@ export type ExportManagerAction =
 
 // 預設配置
 const DEFAULT_CONFIG: BatchExportConfig = {
-  nameTemplate: '{project}_{character}_{date}_{index}',
+  namingConfig: {
+    template: '{project}_{character}_{date}_{index}',
+    includeTimestamp: false,
+    includeChapterInfo: true,
+    includeCharacterInfo: true,
+    maxLength: 100,
+    sanitizeSpecialChars: true
+  },
   outputDirectory: '~/Downloads/AI_Illustrations',
-  organizationMethod: 'by_character',
+  organizationMethod: 'flat',
   defaultFormat: 'png',
   defaultQuality: {
     format: 'png',
@@ -308,34 +340,38 @@ export interface UseExportManagerOptions {
 export interface UseExportManagerReturn {
   // 狀態
   state: ExportManagerState;
-  
+
   // 任務管理
   addTask: (task: Omit<ExportTask, 'id' | 'status' | 'progress'>) => void;
   removeTask: (taskId: string) => void;
   updateTask: (taskId: string, updates: Partial<ExportTask>) => void;
   clearCompletedTasks: () => void;
-  
+
   // 批次操作
   addBatchTasks: (tasks: Omit<ExportTask, 'id' | 'status' | 'progress'>[]) => void;
-  
+
   // 處理控制
   startProcessing: () => void;
   pauseProcessing: () => void;
   resumeProcessing: () => void;
   stopProcessing: () => void;
-  
+
   // 配置管理
   updateConfig: (updates: Partial<BatchExportConfig>) => void;
   resetConfig: () => void;
-  
+
   // 錯誤處理
   clearError: () => void;
-  
+
   // 實用功能
   getTasksByStatus: (status: ExportTaskStatus) => ExportTask[];
   getTotalProgress: () => number;
   getEstimatedTime: () => string;
   resetAll: () => void;
+
+  // 目錄選擇功能
+  selectOutputDirectory: () => Promise<string | null>;
+  loadSavedDirectory: () => string | null;
 }
 
 /**
@@ -441,7 +477,60 @@ export function useExportManager(options: UseExportManagerOptions = {}): UseExpo
   const resetAll = useCallback(() => {
     dispatch({ type: 'RESET_ALL' });
   }, []);
-  
+
+  // 選擇輸出目錄
+  const selectOutputDirectory = useCallback(async (): Promise<string | null> => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      const result = await invoke('show_open_dialog', {
+        options: {
+          title: '選擇導出目錄',
+          properties: ['openDirectory']
+        }
+      });
+
+      const dialogResult = result as { canceled: boolean; filePaths?: string[] };
+      if (!dialogResult.canceled && dialogResult.filePaths && dialogResult.filePaths.length > 0) {
+        const selectedPath = dialogResult.filePaths[0];
+        console.log(`📁 [ExportManager] 用戶選擇目錄: ${selectedPath}`);
+
+        // 更新配置中的輸出目錄
+        updateConfig({ outputDirectory: selectedPath });
+
+        // 儲存到 localStorage 記住用戶選擇
+        localStorage.setItem('exportOutputDirectory', selectedPath);
+
+        return selectedPath;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('❌ [ExportManager] 選擇目錄失敗:', error);
+      return null;
+    }
+  }, [updateConfig]);
+
+  // 從 localStorage 載入上次選擇的目錄
+  const loadSavedDirectory = useCallback(() => {
+    const savedDirectory = localStorage.getItem('exportOutputDirectory');
+    if (savedDirectory) {
+      console.log(`💾 [ExportManager] 載入儲存的目錄: ${savedDirectory}`);
+      updateConfig({ outputDirectory: savedDirectory });
+      return savedDirectory;
+    } else {
+      console.log(`💾 [ExportManager] 沒有儲存的目錄，使用默認配置`);
+      // 確保配置已正確初始化
+      updateConfig({
+        outputDirectory: DEFAULT_CONFIG.outputDirectory,
+        defaultFormat: DEFAULT_CONFIG.defaultFormat,
+        defaultQuality: DEFAULT_CONFIG.defaultQuality,
+        organizationMethod: DEFAULT_CONFIG.organizationMethod
+      });
+    }
+    return null;
+  }, [updateConfig]);
+
   return {
     state,
     addTask,
@@ -459,7 +548,9 @@ export function useExportManager(options: UseExportManagerOptions = {}): UseExpo
     getTasksByStatus,
     getTotalProgress,
     getEstimatedTime,
-    resetAll
+    resetAll,
+    selectOutputDirectory,
+    loadSavedDirectory
   };
 }
 

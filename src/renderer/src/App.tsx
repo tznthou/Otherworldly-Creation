@@ -98,7 +98,7 @@ const App: React.FC = () => {
     };
 
     initApp();
-  }, [dispatch]);
+  }, []); // 🔥 修復無限循環：移除 dispatch 依賴，只在組件掛載時執行一次
 
   // 載入中狀態
   if (isLoading) {

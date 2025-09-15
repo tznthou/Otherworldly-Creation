@@ -335,7 +335,8 @@ impl AIProvider for GeminiProvider {
             }
             Err(e) => {
                 log::warn!("[GeminiProvider] Gemini API 不可用: {}", e);
-                Err(e)
+                // 🔧 修復：返回 Ok(false) 而不是 Err，讓 UI 可以正確顯示狀態
+                Ok(false)
             }
         }
     }

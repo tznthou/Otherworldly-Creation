@@ -5,7 +5,7 @@ use crate::services::illustration::gemini_image_api::{
 // use crate::database::connection::create_connection; // 暫時不使用
 use crate::utils::storage_handler::StorageHandler;
 use crate::utils::db_operations::{IllustrationDbHandler, IllustrationRecord};
-use crate::utils::path_utils::to_relative_path;
+// use crate::utils::path_utils::to_relative_path; // 🔧 移除：不再需要，StorageHandler直接返回正確路徑
 
 /// Gemini 插畫生成命令
 #[tauri::command]
@@ -82,15 +82,17 @@ pub async fn generate_gemini_illustration(
         Ok(response) => {
             log::info!("[GeminiGeneration] Gemini 插畫生成成功，耗時: {}ms", response.generation_time_ms);
             
-            // 儲存圖像到臨時目錄（開發環境直接是最終目錄）
-            let storage_result = StorageHandler::save_to_temp(&response.image_data, &response.id)
+            // 🔧 修復：Gemini圖片直接儲存到最終目錄，避免檔案路徑不一致問題
+            let storage_result = StorageHandler::save_to_final(&response.image_data, &response.id)
                 .map_err(|e| format!("圖像儲存失敗: {}", e))?;
 
             if !storage_result.success {
                 return Err(storage_result.message);
             }
 
-            // 建立資料庫記錄
+            log::info!("[GeminiGeneration] ✅ 圖片已直接保存到最終目錄: {}", storage_result.relative_path);
+
+            // 🔧 修復：建立資料庫記錄，使用正確的相對路徑（與實際檔案位置一致）
             let record = IllustrationRecord {
                 id: response.id.clone(),
                 project_id: projectId.clone(),
@@ -104,7 +106,7 @@ pub async fn generate_gemini_illustration(
                 enhance: style.is_some(),
                 style_applied: style.clone(),
                 image_url: None, // Gemini 沒有外部 URL
-                local_file_path: to_relative_path(&std::path::PathBuf::from(&storage_result.file_path), &response.id),
+                local_file_path: storage_result.relative_path.clone(), // 🔧 使用StorageHandler返回的正確相對路徑
                 file_size_bytes: storage_result.file_size as i64,
                 generation_time_ms: response.generation_time_ms as i32,
             };
@@ -113,17 +115,16 @@ pub async fn generate_gemini_illustration(
             let db_result = IllustrationDbHandler::save_illustration_generation(&record);
             if !db_result.success {
                 log::error!("[GeminiGeneration] ❌ 資料庫保存失敗: {}", db_result.message);
-                // 儲存失敗不影響圖片生成成功，但需要記錄為臨時狀態
-                log::warn!("[GeminiGeneration] 圖片已保存到檔案系統，但資料庫記錄失敗，將標記為臨時狀態");
+                log::warn!("[GeminiGeneration] 圖片已保存到檔案系統: {}，但資料庫記錄失敗", storage_result.file_path);
             } else {
-                log::info!("[GeminiGeneration] ✅ 資料庫記錄保存成功: {}", record.id);
+                log::info!("[GeminiGeneration] ✅ 資料庫記錄保存成功: {} -> {}", record.id, record.local_file_path);
             }
 
             Ok(serde_json::json!({
                 "success": true,
                 "id": response.id,
                 "prompt": response.prompt,
-                "temp_path": storage_result.file_path,
+                "final_path": storage_result.file_path, // 🔧 修復：現在是最終路徑，不是temp路徑
                 "image_url": null,
                 "parameters": {
                     "model": provider,

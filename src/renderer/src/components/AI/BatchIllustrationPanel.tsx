@@ -195,60 +195,60 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   // 組件初始化
   useEffect(() => {
     initializeBatchManager();
-  }, [initializeBatchManager]);
+  }, []); // 🔥 修復無限循環：只在組件掛載時執行一次
 
-  // 自動獲取API金鑰
-  useEffect(() => {
-    const loadApiKey = async () => {
-      try {
-        const response = await api.aiProviders.getAll();
-        
-        if (response.success && response.providers) {
-          // 優先找 Gemini provider
-          const geminiProvider = response.providers.find((p) => 
-            p.provider_type === 'gemini' && p.is_enabled
-          );
-          
-          if (geminiProvider?.api_key_encrypted) {
-            try {
-              const decodedApiKey = atob(geminiProvider.api_key_encrypted);
-              batchConfig.setApiKey(decodedApiKey);
-              batchConfig.setApiKeySource('gemini');
-              console.log('✅ 已自動載入並解碼 Gemini API 金鑰');
-              return;
-            } catch (error) {
-              console.error('❌ 解碼 Gemini API 金鑰失敗:', error);
-            }
-          }
-          
-          // 檢查 OpenRouter
-          const openrouterProvider = response.providers.find((p) => 
-            p.provider_type === 'openrouter' && p.is_enabled
-          );
-          
-          if (openrouterProvider?.api_key_encrypted) {
-            const modelName = openrouterProvider.model || '';
-            if (modelName.toLowerCase().includes('imagen') || modelName.toLowerCase().includes('gemini')) {
-              try {
-                const decodedApiKey = atob(openrouterProvider.api_key_encrypted);
-                batchConfig.setApiKey(decodedApiKey);
-                batchConfig.setApiKeySource('openrouter');
-                console.log('✅ 已自動載入並解碼 OpenRouter API 金鑰');
-              } catch (error) {
-                console.error('❌ 解碼 OpenRouter API 金鑰失敗:', error);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('無法自動載入 API 金鑰:', error);
-      }
-    };
-    
-    if (currentProject) {
-      loadApiKey();
-    }
-  }, [currentProject, batchConfig]);
+  // 🚫 自動獲取API金鑰功能已禁用 - 避免無限循環
+  // useEffect(() => {
+  //   const loadApiKey = async () => {
+  //     try {
+  //       const response = await api.aiProviders.getAll();
+  //
+  //       if (response.success && response.providers) {
+  //         // 優先找 Gemini provider
+  //         const geminiProvider = response.providers.find((p) =>
+  //           p.provider_type === 'gemini' && p.is_enabled
+  //         );
+  //
+  //         if (geminiProvider?.api_key_encrypted) {
+  //           try {
+  //             const decodedApiKey = atob(geminiProvider.api_key_encrypted);
+  //             batchConfig.setApiKey(decodedApiKey);
+  //             batchConfig.setApiKeySource('gemini');
+  //             console.log('✅ 已自動載入並解碼 Gemini API 金鑰');
+  //             return;
+  //           } catch (error) {
+  //             console.error('❌ 解碼 Gemini API 金鑰失敗:', error);
+  //           }
+  //         }
+  //
+  //         // 檢查 OpenRouter
+  //         const openrouterProvider = response.providers.find((p) =>
+  //           p.provider_type === 'openrouter' && p.is_enabled
+  //         );
+  //
+  //         if (openrouterProvider?.api_key_encrypted) {
+  //           const modelName = openrouterProvider.model || '';
+  //           if (modelName.toLowerCase().includes('imagen') || modelName.toLowerCase().includes('gemini')) {
+  //             try {
+  //               const decodedApiKey = atob(openrouterProvider.api_key_encrypted);
+  //               batchConfig.setApiKey(decodedApiKey);
+  //               batchConfig.setApiKeySource('openrouter');
+  //               console.log('✅ 已自動載入並解碼 OpenRouter API 金鑰');
+  //             } catch (error) {
+  //               console.error('❌ 解碼 OpenRouter API 金鑰失敗:', error);
+  //             }
+  //           }
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('無法自動載入 API 金鑰:', error);
+  //     }
+  //   };
+  //
+  //   if (currentProject) {
+  //     loadApiKey();
+  //   }
+  // }, [currentProject]); // 🔥 修復無限循環：移除 batchConfig 依賴
 
   return (
     <div className={`batch-illustration-panel ${className}`}>

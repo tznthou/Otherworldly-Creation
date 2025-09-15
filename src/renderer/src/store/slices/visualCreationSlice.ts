@@ -292,107 +292,6 @@ export const saveSelectedImages = createAsyncThunk(
   }
 );
 
-export const exportSelectedImages = createAsyncThunk(
-  'visualCreation/exportImages',
-  async (
-    { selectedImageIds, exportPath }: { selectedImageIds: string[]; exportPath?: string },
-    { getState, dispatch }
-  ) => {
-    const state = getState() as { visualCreation: VisualCreationState };
-    const { tempImages, exportSettings } = state.visualCreation;
-    
-    const selectedImages = tempImages.filter(img => selectedImageIds.includes(img.id));
-    
-    if (selectedImages.length === 0) {
-      throw new Error('沒有選中的圖像可以導出');
-    }
-
-    // 創建導出任務
-    const exportTask: ExportTask = {
-      id: Date.now().toString(),
-      imageIds: selectedImageIds,
-      settings: exportSettings,
-      status: 'processing',
-      progress: 0,
-      exportedFiles: [],
-    };
-
-    dispatch(setExportTask(exportTask));
-
-    const exportedFiles: string[] = [];
-    let processedCount = 0;
-
-    try {
-      // 如果沒有指定導出路徑，使用系統對話框選擇
-      const finalExportPath = exportPath || await api.system.selectDirectory();
-      
-      if (!finalExportPath) {
-        throw new Error('未選擇導出路徑');
-      }
-
-      for (const [index, imageData] of selectedImages.entries()) {
-        try {
-          // 生成檔名
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-          const fileName = `${exportSettings.prefix}-${timestamp}-${index + 1}.${exportSettings.format}`;
-          
-          // 調用後端導出 API（需要在 Tauri 後端實現）
-          const result = await api.illustration.exportImage({
-            imagePath: imageData.temp_path,
-            outputPath: `${finalExportPath}/${fileName}`,
-            format: exportSettings.format,
-            quality: exportSettings.quality,
-            includeMetadata: exportSettings.includeMetadata,
-            metadata: exportSettings.includeMetadata ? {
-              prompt: imageData.prompt,
-              parameters: imageData.parameters,
-              provider: imageData.provider,
-              generationTime: imageData.generation_time_ms,
-            } : undefined,
-          });
-
-          if (result.success) {
-            exportedFiles.push(result.outputPath || fileName);
-          }
-        } catch (error) {
-          console.error(`導出圖像失敗: ${imageData.id}`, error);
-        }
-
-        processedCount++;
-        const progress = Math.round((processedCount / selectedImages.length) * 100);
-        
-        // 更新進度
-        dispatch(setExportProgress(progress));
-      }
-
-      const updatedTask: ExportTask = {
-        ...exportTask,
-        status: 'completed',
-        progress: 100,
-        exportedFiles,
-      };
-
-      dispatch(setExportTask(updatedTask));
-      
-      return {
-        success: true,
-        exportedCount: exportedFiles.length,
-        totalCount: selectedImages.length,
-        exportPath: finalExportPath,
-        exportedFiles,
-      };
-    } catch (error) {
-      const failedTask: ExportTask = {
-        ...exportTask,
-        status: 'failed',
-        error: error instanceof Error ? error.message : '導出失敗',
-      };
-
-      dispatch(setExportTask(failedTask));
-      throw error;
-    }
-  }
-);
 
 // Slice
 export const visualCreationSlice = createSlice({
@@ -692,28 +591,6 @@ export const visualCreationSlice = createSlice({
         state.error = action.error.message || '保存圖像失敗';
       });
     
-    // 導出圖像
-    builder
-      .addCase(exportSelectedImages.pending, (state) => {
-        state.loading.exporting = true;
-        state.isExporting = true;
-        state.error = null;
-        state.exportProgress = 0;
-      })
-      .addCase(exportSelectedImages.fulfilled, (state, action) => {
-        state.loading.exporting = false;
-        state.isExporting = false;
-        state.exportProgress = 100;
-        
-        // 顯示成功訊息
-        console.log(`成功導出 ${action.payload.exportedCount}/${action.payload.totalCount} 張圖像到 ${action.payload.exportPath}`);
-      })
-      .addCase(exportSelectedImages.rejected, (state, action) => {
-        state.loading.exporting = false;
-        state.isExporting = false;
-        state.exportProgress = 0;
-        state.error = action.error.message || '導出圖像失敗';
-      });
   },
 });
 

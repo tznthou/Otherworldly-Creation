@@ -50,8 +50,8 @@ impl PathManager {
     /// - Windows: %LOCALAPPDATA%\genesis-chronicle\images
     pub fn get_images_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
         let images_dir = if Self::is_development() {
-            // 開發環境：專案根目錄/generated-images
-            env::current_dir()?.join("generated-images")
+            // 開發環境：src-tauri/generated-images (Tauri 應用結構)
+            env::current_dir()?.join("src-tauri").join("generated-images")
         } else {
             // 生產環境：平台特定目錄
             #[cfg(target_os = "macos")]
@@ -96,8 +96,8 @@ impl PathManager {
     /// - Windows: %LOCALAPPDATA%\genesis-chronicle\deleted-images
     pub fn get_trash_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
         let trash_dir = if Self::is_development() {
-            // 開發環境：專案根目錄/deleted-images
-            env::current_dir()?.join("deleted-images")
+            // 開發環境：src-tauri/deleted-images (Tauri 應用結構)
+            env::current_dir()?.join("src-tauri").join("deleted-images")
         } else {
             // 生產環境：平台特定目錄
             #[cfg(target_os = "macos")]
@@ -194,7 +194,7 @@ impl PathManager {
     /// 取得臨時目錄
     pub fn get_temp_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
         let temp_dir = if Self::is_development() {
-            env::current_dir()?.join("temp")
+            env::current_dir()?.join("src-tauri").join("temp")
         } else {
             dirs::cache_dir()
                 .ok_or("無法獲取快取目錄")?

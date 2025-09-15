@@ -214,21 +214,49 @@ export const generateText = createAsyncThunk(
     };
   }
 );
+// 🛡️ 防止重複調用的全局變量
+let lastFetchTime = 0;
+let isCurrentlyFetching = false;
+const FETCH_COOLDOWN = 2000; // 2秒冷卻時間
+
 // Multi-provider async thunks
 export const fetchAIProviders = createAsyncThunk(
   'ai/fetchAIProviders',
   async (_, { rejectWithValue }) => {
     try {
-      console.log('Redux: 獲取 AI 提供者列表...');
+      const now = Date.now();
+
+      // 🛡️ 防重複調用：檢查是否在冷卻期內或正在執行
+      if (isCurrentlyFetching) {
+        console.log('🛡️ fetchAIProviders 已在執行中，跳過重複調用');
+        return rejectWithValue('Already fetching');
+      }
+
+      if (now - lastFetchTime < FETCH_COOLDOWN) {
+        console.log('🛡️ fetchAIProviders 在冷卻期內，跳過調用');
+        return rejectWithValue('Too frequent calls');
+      }
+
+      // 🔒 設置正在執行標誌
+      isCurrentlyFetching = true;
+      lastFetchTime = now;
+
+      console.log('✅ fetchAIProviders 正常執行');
       const response = await api.aiProviders.getAll();
       console.log('Redux: AI 提供者列表結果:', response);
-      
+
       if (response.success && response.providers) {
+        // 🔓 成功後重置標誌
+        isCurrentlyFetching = false;
         return response.providers;
       } else {
+        // 🔓 失敗後重置標誌
+        isCurrentlyFetching = false;
         throw new Error(response.error || '獲取提供者失敗');
       }
     } catch (error) {
+      // 🔓 異常後重置標誌
+      isCurrentlyFetching = false;
       console.error('Redux: 獲取 AI 提供者失敗:', error);
       return rejectWithValue([]);
     }

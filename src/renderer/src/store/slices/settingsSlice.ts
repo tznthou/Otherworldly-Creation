@@ -63,6 +63,9 @@ export interface AppSettings {
     [key: string]: string;
   };
   
+  // 電子書功能設定
+  ebookVirtualNaming: boolean;            // 電子書虛擬檔名對應系統
+
   // 功能開關設定
   features: {
     // AI 插畫功能
@@ -135,9 +138,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
     'redo': 'Ctrl+Y',
   },
   
+  // 電子書功能預設值
+  ebookVirtualNaming: false,              // 預設關閉電子書虛擬檔名功能
+
   features: {
-    extendedIllustrationServices: true,  // 預設啟用擴展AI插圖服務
-    smartApiDetection: true,             // 預設啟用智能API檢測
+    extendedIllustrationServices: false,  // 🚫 已禁用 - 功能已遷移至AI Provider管理
+    smartApiDetection: false,             // 🚫 已禁用 - 功能已遷移至AI Provider管理
   },
 };
 

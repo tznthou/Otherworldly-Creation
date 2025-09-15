@@ -277,7 +277,8 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
                       {item.image_url || item.image_path ? (
                         <>
                           <SafeImage
-                            imageUrl={item.image_url}
+                            key={`safe-image-list-${item.id}`}
+                            imageUrl={item.image_url && item.image_url.startsWith('http') ? item.image_url : undefined}
                             localFilePath={item.image_path}
                             alt={item.original_prompt}
                             className="w-full h-full object-cover rounded"

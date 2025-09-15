@@ -4,7 +4,6 @@ import type { RootState, AppDispatch } from '../../../../store/store';
 import {
   setExportSettings,
   setShowExportPanel,
-  exportSelectedImages,
 } from '../../../../store/slices/visualCreationSlice';
 import type { ExportFormat } from '../../../../store/slices/visualCreationSlice';
 
@@ -54,14 +53,9 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
   };
 
   const handleExport = async () => {
-    try {
-      await dispatch(exportSelectedImages({ 
-        selectedImageIds 
-      })).unwrap();
-      handleClose();
-    } catch (error) {
-      console.error('導出失敗:', error);
-    }
+    // TODO: 改為使用新的批次導出系統
+    console.log('導出功能已移至 BatchExportPanel');
+    handleClose();
   };
 
   const handleSettingChange = (key: keyof typeof exportSettings, value: unknown) => {

@@ -860,15 +860,18 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                               return;
                             }
                             
-                            // 🛡️ 優化：只傳遞輕量級數據，避免 IPC 大數據傳輸問題
+                            // 🛡️ 優化：只傳遞必要的數據，包含模型信息用於正確的資料庫記錄
                             const imageData = tempImages
                               .filter(image => image && image.id) // 過濾無效數據
                               .map(image => ({
                                 id: image.id,
                                 project_id: image.project_id || currentProject?.id,
                                 character_id: image.character_id,
-                                original_prompt: image.original_prompt || image.prompt || 'Generated image'
-                                // 移除 temp_path 和 parameters 避免傳輸大數據
+                                original_prompt: image.original_prompt || image.prompt || 'Generated image',
+                                // 🔧 添加模型信息以避免後端硬編碼問題
+                                model: image.parameters?.model || image.provider || 'unknown',
+                                provider: image.provider || 'unknown'
+                                // 移除 temp_path 和大部分 parameters 避免傳輸大數據
                               }));
                             
                             if (imageData.length === 0) {
@@ -885,21 +888,40 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                             console.log('🔍 [Collection] 收到後端回應:', result);
                             
                             // 🎉 使用通知系統替代 console.log
-                            if (result && result.success && (result.collected_count || 0) > 0) {
+                            if (result && result.success && ((result.collected_count || 0) > 0 || (result.skipped_duplicates || 0) > 0)) {
                               const successMsg = `已成功收藏 ${result.collected_count || 0} 張圖片`;
                               const detailMsg = [
                                 (result.newly_confirmed_count || 0) > 0 ? `其中 ${result.newly_confirmed_count} 張為新確認` : '',
+                                (result.skipped_duplicates || 0) > 0 ? `跳過 ${result.skipped_duplicates} 張重複圖片` : '',
                                 (result.error_count || 0) > 0 ? `${result.error_count} 個處理錯誤` : ''
                               ].filter(Boolean).join('，');
-                              
-                              notification.success(
-                                '🎉 收藏成功',
-                                detailMsg ? `${successMsg}（${detailMsg}）` : successMsg,
-                                4000
-                              );
-                              
+
+                              // 根據情況選擇不同的通知類型
+                              const hasNewCollections = (result.collected_count || 0) > 0;
+                              const hasSkipped = (result.skipped_duplicates || 0) > 0;
+
+                              if (hasNewCollections && !hasSkipped) {
+                                notification.success(
+                                  '🎉 收藏成功',
+                                  detailMsg ? `${successMsg}（${detailMsg}）` : successMsg,
+                                  4000
+                                );
+                              } else if (!hasNewCollections && hasSkipped) {
+                                notification.info(
+                                  'ℹ️ 圖片已存在',
+                                  `跳過 ${result.skipped_duplicates} 張重複圖片，這些圖片已在圖庫中`,
+                                  4000
+                                );
+                              } else {
+                                notification.success(
+                                  '🎉 收藏完成',
+                                  detailMsg ? `${successMsg}（${detailMsg}）` : successMsg,
+                                  4000
+                                );
+                              }
+
                               // 記錄詳細信息到控制台
-                              console.log(`✅ [Collection] 收藏成功: ${result.collected_count || 0} 張圖片`);
+                              console.log(`✅ [Collection] 收藏處理完成: 新收藏${result.collected_count || 0}張，跳過${result.skipped_duplicates || 0}張重複`);
                               if (result.errors && result.errors.length > 0) {
                                 console.warn('⚠️ [Collection] 處理錯誤詳情:', result.errors);
                               }
