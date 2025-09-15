@@ -63,8 +63,10 @@ impl PathManager {
             }
             #[cfg(target_os = "windows")]
             {
-                dirs::data_local_dir()
-                    .ok_or("無法獲取 Windows 本地資料目錄")?
+                // 🔧 修復：使用 data_dir() 而非 data_local_dir()
+                // data_dir() = %APPDATA% (Roaming) 與實際存放位置一致
+                dirs::data_dir()
+                    .ok_or("無法獲取 Windows 資料目錄")?
                     .join("genesis-chronicle")
                     .join("images")
             }
@@ -109,8 +111,9 @@ impl PathManager {
             }
             #[cfg(target_os = "windows")]
             {
-                dirs::data_local_dir()
-                    .ok_or("無法獲取 Windows 本地資料目錄")?
+                // 🔧 修復：使用 data_dir() 保持與圖片目錄一致
+                dirs::data_dir()
+                    .ok_or("無法獲取 Windows 資料目錄")?
                     .join("genesis-chronicle")
                     .join("deleted-images")
             }
@@ -158,10 +161,11 @@ impl PathManager {
             }
             #[cfg(target_os = "windows")]
             {
-                let data_dir = dirs::data_local_dir()
-                    .ok_or("無法獲取 Windows 本地資料目錄")?
+                // 🔧 修復：使用 data_dir() 與圖片目錄保持一致
+                let data_dir = dirs::data_dir()
+                    .ok_or("無法獲取 Windows 資料目錄")?
                     .join("genesis-chronicle");
-                    
+
                 // 確保目錄存在
                 std::fs::create_dir_all(&data_dir)?;
                 data_dir.join("genesis-chronicle.db")
