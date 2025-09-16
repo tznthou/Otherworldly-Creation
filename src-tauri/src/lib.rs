@@ -6,7 +6,7 @@ mod utils;
 use commands::system::{
     get_app_version, quit_app, reload_app, show_save_dialog, show_open_dialog, open_external,
     check_for_updates, download_update, install_update, set_auto_update, read_image_as_base64,
-    save_export_file
+    save_export_file, get_image_path, get_environment_info
 };
 use commands::project::{get_all_projects, get_project_by_id, create_project, update_project, delete_project};
 use commands::chapter::{get_chapters_by_project_id, get_chapter_by_id, create_chapter, update_chapter, delete_chapter};
@@ -110,6 +110,8 @@ pub fn run() {
       set_auto_update,
       read_image_as_base64,
       save_export_file,
+      get_image_path,
+      get_environment_info,
       // Project commands
       get_all_projects,
       get_project_by_id,

@@ -1,6 +1,7 @@
 // 安全圖片組件 - 繞過 CSP 限制
 import React, { useState, useEffect } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import { api } from '../../api';
 
 interface SafeImageProps {
   imageUrl?: string;
@@ -90,18 +91,45 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
             pathContainsGenesisChronicle: cleanPath.includes('genesis-chronicle')
           });
 
-          // 🔧 修復：如果只是檔案名，手動構建完整路徑
+          // 🔧 修復：如果只是檔案名，使用新的API動態獲取完整路徑
           if (!cleanPath.startsWith('/') && !cleanPath.match(/^[a-zA-Z]:/) && !cleanPath.includes('generated-images')) {
-            // 檢查是否為 UUID 格式的檔案名（如 abc123.jpg）
-            const isUuidFilename = /^[a-f0-9-]{36}\.jpg$/i.test(cleanPath);
-            if (isUuidFilename) {
-              if (process.env.NODE_ENV === 'development') {
-                // 開發環境：手動構建路徑
-                cleanPath = `/Users/tznthou/Documents/Practice/6 novel writing/src-tauri/generated-images/${cleanPath}`;
-                console.log('🔧 [SafeImageDebug] 開發環境路徑:', cleanPath);
-              } else {
-                // 生產環境：使用相對路徑讓 Tauri 自動解析
-                console.log('🔧 [SafeImageDebug] 生產環境，使用原始路徑:', cleanPath);
+            // 🔧 擴展檢測：支援更多檔案名格式 (UUID 36字元 + 短ID 8字元 + .jpg)
+            const isImageFilename = /^[a-f0-9-]{8,36}\.jpg$/i.test(cleanPath);
+            if (isImageFilename) {
+              try {
+                console.log('🔧 [SafeImageDebug] 檢測到圖片檔案名，正在獲取完整路徑:', cleanPath);
+                // 使用新的API動態獲取正確路徑（跨平台相容）
+                const fullPath = await api.system.getImagePath(cleanPath);
+                cleanPath = fullPath;
+                console.log('✅ [SafeImageDebug] API返回完整路徑:', cleanPath);
+              } catch (error) {
+                console.error('❌ [SafeImageDebug] 無法獲取圖片路徑:', error);
+                // 🔧 使用動態路徑組合作為 fallback（跨用戶相容）
+                const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+                const localPaths = homeDir ? [
+                  `${homeDir}/Documents/Practice/6 novel writing/src-tauri/generated-images/${cleanPath}`,
+                  `${homeDir}/Library/Application Support/genesis-chronicle/generated-images/${cleanPath}`
+                ] : [];
+
+                for (const tryPath of localPaths) {
+                  console.log('🔧 [SafeImageDebug] 嘗試 fallback 路徑:', tryPath);
+                  try {
+                    const _assetUrl = convertFileSrc(tryPath);
+                    cleanPath = tryPath;
+                    console.log('✅ [SafeImageDebug] fallback 成功:', tryPath);
+                    break;
+                  } catch (_fallbackError) {
+                    console.log('❌ [SafeImageDebug] fallback 失敗:', tryPath);
+                    continue;
+                  }
+                }
+
+                // 如果沒有有效的 fallback 路徑或都失敗了
+                if (localPaths.length === 0 || !cleanPath.includes('/')) {
+                  setHasError(true);
+                  setIsLoading(false);
+                  return;
+                }
               }
             }
           }

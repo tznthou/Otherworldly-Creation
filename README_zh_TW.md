@@ -1,13 +1,32 @@
-# 創世紀元：Genesis Chronicle v1.2.3
+# 創世紀元：Genesis Chronicle v1.2.5
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
 <p align="center">
   <a href="README.md">English</a> | <strong>繁體中文</strong>
 </p>
 
-![Version](https://img.shields.io/badge/version-v1.2.3-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange)
+![Version](https://img.shields.io/badge/version-v1.2.5-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange)
 
 ## 🚀 最新更新歷程
+
+### 🌟 v1.2.5 - 跨平台相容性與視覺創作體驗突破 (2025年9月16日)
+
+#### 🌐 跨平台相容性革命性突破
+- **通用路徑管理系統**: SafeImage元件跨用戶相容性根本修復 - 徹底消除寫死用戶路徑問題
+- **動態環境檢測機制**: 增強路徑解析系統，使用 `process.env.HOME`/`process.env.USERPROFILE` 實現無縫部署
+- **生產環境就緒部署**: 完全消除用戶特定依賴，實現應用程式通用分發能力
+
+#### 🎨 視覺創作系統重大升級
+- **CreateTab 體驗全面提升**: 綜合性 UI/UX 改進，新增135+行功能代碼
+- **優化生成控制流程**: 精簡圖片生成工作流，提升用戶反饋體驗
+- **先進服務配置系統**: ServiceConfigurationPanel 重構，提升性能與可維護性
+- **智能圖片預覽功能**: 增強預覽模態功能，改善錯誤處理與載入狀態
+
+#### 🔧 系統架構精進優化
+- **路徑管理系統進化**: 強化 path_utils.rs，提升開發/生產環境檢測能力
+- **API 層級功能擴展**: 擴充系統指令，新增圖片路徑解析功能
+- **統計精準度提升**: 修正專案指標，準確顯示111K+程式碼行數
+- **代碼品質卓越維持**: 保持100% TypeScript安全性與零關鍵ESLint錯誤
 
 ### 🌟 v1.2.3 - 使用者體驗卓越與系統精進 (2025年9月15日)
 

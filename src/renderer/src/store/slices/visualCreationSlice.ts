@@ -73,7 +73,7 @@ export interface ExportTask {
 export interface VisualCreationState {
   // UI 狀態
   activeTab: 'create' | 'gallery' | 'templates' | 'versions';
-  currentProvider: 'pollinations' | 'imagen' | 'gemini' | 'gemini-flash' | 'openrouter-free' | 'openrouter-pro';
+  currentProvider: 'pollinations' | 'gemini' | 'openrouter';
   
   // 創建狀態
   selectedCharacters: string[];

@@ -183,8 +183,8 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
             {currentProvider === 'pollinations' && (
               <p>• 使用免費服務，無額外費用</p>
             )}
-            {currentProvider === 'imagen' && (
-              <p>• 使用付費服務，請確認已設定 API 金鑰</p>
+            {(currentProvider === 'gemini' || currentProvider === 'openrouter') && (
+              <p>• 使用 {currentProvider === 'gemini' ? 'Gemini' : 'OpenRouter'} 服務，請確認已設定 API 金鑰</p>
             )}
           </div>
         </div>

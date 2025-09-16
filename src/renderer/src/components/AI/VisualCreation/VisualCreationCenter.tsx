@@ -274,8 +274,8 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
             <span>•</span>
             <span>服務: {
               currentProvider === 'pollinations' ? 'Pollinations.AI (免費)' :
-              currentProvider === 'imagen' ? 'Google Imagen (付費)' :
-              currentProvider === 'gemini' ? 'Gemini 2.5 Flash Image Preview' : '未知服務'
+              currentProvider === 'gemini' ? 'Gemini Flash (免費/付費額度)' :
+              currentProvider === 'openrouter' ? 'OpenRouter (Gemini 2.5 Flash Image Preview)' : '未知服務'
             }</span>
           </div>
           <div className="flex items-center space-x-2">

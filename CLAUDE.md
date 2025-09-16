@@ -23,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Genesis Chronicle v1.2.0** - AI-powered Chinese light novel writing application
 - **Stack**: Tauri v2 + Rust + React/TypeScript + SQLite
-- **Scale**: 105,530 lines of code across 447 files (5 languages)
+- **Scale**: 111,017 lines of code across 466 files (3 languages)
 - **AI**: 5 providers (Ollama, OpenAI, Gemini, Claude, OpenRouter)
 - **Editor**: Slate.js with auto-save
 - **Export**: EPUB 3.0 + PDF (Chrome Headless)
@@ -187,8 +187,8 @@ npm run setup              # Quick project setup
 - **Code Quality**: TypeScript errors: 63 → 0, Rust warnings: 0 maintained
 
 ### Development Impact
-- **Scale Growth**: +8,259 lines of code (+8.5% growth to 105,530 total)
-- **File Growth**: +46 files (447 total across 5 languages)
+- **Scale Growth**: +8,259 lines of code (+8.5% growth to 105,530 total, now 111,017)
+- **File Growth**: +46 files (447 total, now 466 across 3 languages)
 - **Stability**: Production-grade reliability achieved
 - **Architecture**: From technical debt to competitive advantage
 

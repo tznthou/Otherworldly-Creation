@@ -18,6 +18,7 @@ import type {
   OpenDialogOptions,
   DialogResult,
   UpdateInfo,
+  EnvironmentInfo,
   AIHistoryQueryParams,
   CreateAIProviderRequest,
   UpdateAIProviderRequest,
@@ -145,6 +146,8 @@ export interface API {
     selectDirectory: (title?: string) => Promise<string>;
     quitApp: () => Promise<void>;
     reloadApp: () => Promise<void>;
+    getImagePath: (filename: string) => Promise<string>;
+    getEnvironmentInfo: () => Promise<EnvironmentInfo>;
   };
 
   // 更新管理

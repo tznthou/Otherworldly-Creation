@@ -145,18 +145,33 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, [showImagePreview, currentImageIndex, tempImages, handleClose, setCurrentIndex, toggleImageSelectionLocal, selectAll, deselectAll]);
 
+  // 🔍 調試：記錄 Modal 渲染條件
+  console.log('🔍 [ImagePreviewModal] 渲染條件檢查:', {
+    showImagePreview,
+    tempImagesLength: tempImages.length,
+    currentImageIndex,
+    shouldShow: showImagePreview && tempImages.length > 0 && currentImageIndex !== -1
+  });
+
   if (!showImagePreview || tempImages.length === 0 || currentImageIndex === -1) {
+    console.log('❌ [ImagePreviewModal] Modal 不顯示，原因:', {
+      showImagePreview: !showImagePreview ? '❌ showImagePreview=false' : '✅',
+      tempImages: tempImages.length === 0 ? '❌ tempImages 為空' : '✅',
+      currentImageIndex: currentImageIndex === -1 ? '❌ currentImageIndex=-1' : '✅'
+    });
     return null;
   }
+
+  console.log('✅ [ImagePreviewModal] Modal 應該顯示!');
 
   const currentImage = tempImages[currentImageIndex];
   if (!currentImage) return null;
 
   return createPortal(
     <div 
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/80 flex items-center justify-center"
       style={{
-        zIndex: 9999,
+        zIndex: 99999,
         position: 'fixed',
         isolation: 'isolate',
         top: 0,

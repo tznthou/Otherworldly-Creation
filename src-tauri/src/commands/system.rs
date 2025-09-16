@@ -47,6 +47,15 @@ pub struct OpenDialogResult {
     pub file_paths: Option<Vec<String>>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EnvironmentInfo {
+    #[serde(rename = "isDevelopment")]
+    pub is_development: bool,
+    #[serde(rename = "imagesDir")]
+    pub images_dir: String,
+    pub platform: String,
+}
+
 #[tauri::command]
 pub fn get_app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
@@ -386,6 +395,51 @@ pub async fn read_image_as_base64(image_path: String) -> Result<String, String> 
         Err(e) => {
             let error_msg = format!("無法讀取圖片文件: {} - {}", full_path.display(), e);
             log::error!("[read_image_as_base64] {}", error_msg);
+            Err(error_msg)
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn get_image_path(filename: String) -> Result<String, String> {
+    use crate::utils::path_utils;
+
+    log::info!("[get_image_path] 請求圖片路徑: {}", filename);
+
+    match path_utils::from_relative_path(&filename) {
+        Ok(path) => {
+            let path_str = path.to_string_lossy().to_string();
+            log::info!("[get_image_path] 返回路徑: {}", path_str);
+            Ok(path_str)
+        },
+        Err(e) => {
+            let error_msg = format!("無法解析圖片路徑 {}: {}", filename, e);
+            log::error!("[get_image_path] {}", error_msg);
+            Err(error_msg)
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn get_environment_info() -> Result<EnvironmentInfo, String> {
+    use crate::utils::path_utils;
+
+    let is_development = path_utils::is_development_environment();
+
+    match path_utils::get_images_base_dir() {
+        Ok(images_dir) => {
+            let result = EnvironmentInfo {
+                is_development,
+                images_dir: images_dir.to_string_lossy().to_string(),
+                platform: std::env::consts::OS.to_string(),
+            };
+
+            log::info!("[get_environment_info] 環境資訊: {:?}", result);
+            Ok(result)
+        },
+        Err(e) => {
+            let error_msg = format!("無法獲取圖片目錄: {}", e);
+            log::error!("[get_environment_info] {}", error_msg);
             Err(error_msg)
         }
     }

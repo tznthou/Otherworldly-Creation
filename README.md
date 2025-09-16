@@ -10,10 +10,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.2.3-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.2.5-blue" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green" alt="Platform">
   <img src="https://img.shields.io/badge/AI_Providers-5-orange" alt="AI Providers">
-  <img src="https://img.shields.io/badge/code_lines-113k+-purple" alt="Code Lines">
+  <img src="https://img.shields.io/badge/code_lines-111k+-purple" alt="Code Lines">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="License">
 </p>
 
@@ -40,6 +40,25 @@
 - **🧠 Character Analysis**: Big Five personality analysis for consistent character development
 - **✍️ Focus Writing Mode**: Distraction-free immersive writing environment
 - **📊 Template System**: Quick-start templates for fantasy, romance, isekai, and sci-fi genres
+
+### 🚀 What's New in v1.2.5 - Cross-Platform Compatibility & Visual Creation Enhancement (2025-09-16)
+
+#### 🌐 Cross-Platform Compatibility Breakthrough
+- **Universal Path Management**: Revolutionary fix for cross-user compatibility in SafeImage component - eliminates hardcoded user paths
+- **Dynamic Environment Detection**: Enhanced path resolution system using `process.env.HOME`/`process.env.USERPROFILE` for seamless deployment
+- **Production-Ready Deployment**: Complete elimination of user-specific dependencies, enabling universal application distribution
+
+#### 🎨 Visual Creation System Major Upgrade
+- **Enhanced CreateTab Experience**: Comprehensive UI/UX improvements with 135+ lines of new functionality
+- **Optimized Generation Controls**: Streamlined image generation workflow with improved user feedback
+- **Advanced Service Configuration**: Refactored ServiceConfigurationPanel for better performance and maintainability
+- **Intelligent Image Preview**: Enhanced preview modal functionality with better error handling and loading states
+
+#### 🔧 System Architecture Refinements
+- **Path Management Evolution**: Advanced path_utils.rs with enhanced development/production environment detection
+- **API Layer Improvements**: Extended system commands with new image path resolution capabilities
+- **Statistics Accuracy**: Corrected project metrics displaying accurate 111K+ lines of code
+- **Code Quality Excellence**: Maintained 100% TypeScript safety and zero critical ESLint errors
 
 ### 🚀 What's New in v1.2.3 - User Experience Excellence & System Refinement (2025-09-15)
 

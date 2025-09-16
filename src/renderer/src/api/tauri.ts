@@ -795,6 +795,8 @@ export const tauriAPI: API = {
     },
     quitApp: () => safeInvoke('quit_app'),
     reloadApp: () => safeInvoke('reload_app'),
+    getImagePath: (filename: string) => safeInvoke('get_image_path', { filename }),
+    getEnvironmentInfo: () => safeInvoke('get_environment_info'),
   },
 
   updates: {

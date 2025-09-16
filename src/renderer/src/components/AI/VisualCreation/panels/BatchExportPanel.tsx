@@ -2,6 +2,7 @@ import React, { memo, useCallback, useState } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { useBatchExportProcessor } from '../../../../hooks/illustration/useBatchExportProcessor';
 import type { ExportFormat, ExportTaskStatus, OrganizationMethod } from '../../../../hooks/illustration/useExportManager';
+import { api } from '../../../../api';
 
 interface BatchExportPanelProps {
   className?: string;
@@ -65,10 +66,22 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
 
     // 3. 檢查是否為純檔名（沒有路徑分隔符）
     if (!url.includes('/') && !url.includes('\\') && url.includes('.')) {
-      // 構建完整路徑：使用開發環境的圖片基礎目錄
-      const basePath = '/Users/tznthou/Documents/Practice/6 novel writing/src-tauri/generated-images';
-      const fullPath = `${basePath}/${url}`;
-      return convertFileSrc(fullPath);
+      // 檢查是否為 UUID 格式的檔案名
+      const isUuidFilename = /^[a-f0-9-]{36}\.jpg$/i.test(url);
+      if (isUuidFilename) {
+        // 🔧 修復：使用API動態獲取路徑（異步處理）
+        // 注意：這裡先返回一個預設值，實際路徑將通過async方式處理
+        api.system.getImagePath(url)
+          .then((fullPath: string) => convertFileSrc(fullPath))
+          .catch((error: Error) => {
+            console.error('❌ [BatchExportPanel] 無法獲取圖片路徑:', error);
+            return convertFileSrc(url); // fallback
+          });
+        // 暫時使用原始檔名作為fallback
+        return convertFileSrc(url);
+      }
+      // 其他檔案直接轉換
+      return convertFileSrc(url);
     }
 
     // 4. 如果是相對或絕對路徑，直接轉換

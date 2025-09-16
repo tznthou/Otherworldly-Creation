@@ -8,7 +8,7 @@ import type {
   PollinationsStyle,
   ColorMode
 } from '../../../../hooks/illustration';
-import { FEATURE_FLAGS, debugLog, reloadFeatureFlags } from '../../../../config/features';
+import { debugLog } from '../../../../config/features';
 import { api } from '../../../../api';
 
 interface ServiceConfigurationPanelProps {
@@ -71,7 +71,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
   } = useIllustrationService();
 
   // 智能服務檢測狀態
-  const [availableServices, setAvailableServices] = useState<IllustrationProvider[]>(['pollinations', 'imagen', 'gemini', 'gemini-flash']);
+  const [availableServices, setAvailableServices] = useState<IllustrationProvider[]>(['pollinations', 'gemini', 'openrouter']);
   interface ServiceCapability {
     quality?: 'premium' | 'high' | 'standard';
     [key: string]: unknown;
@@ -84,26 +84,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
   const [isPollinationsLoading, setIsPollinationsLoading] = useState(false);
   const [hasPollinationsToken, setHasPollinationsToken] = useState(false);
 
-  // 監聽功能開關變更
-  const [featureFlags, setFeatureFlags] = useState(FEATURE_FLAGS);
-
-  useEffect(() => {
-    const handleSettingsChange = () => {
-      console.log('🔄 [ServiceConfigurationPanel] 收到設定變更通知');
-      reloadFeatureFlags();
-      // 強制重新渲染組件以使用新的功能開關
-      const newFlags = {...FEATURE_FLAGS};
-      console.log('🎯 [ServiceConfigurationPanel] 新的功能開關狀態:', newFlags);
-      setFeatureFlags(newFlags);
-    };
-
-    // 監聽設定變更事件
-    window.addEventListener('settings-updated', handleSettingsChange);
-
-    return () => {
-      window.removeEventListener('settings-updated', handleSettingsChange);
-    };
-  }, []);
+  // 移除功能開關相關代碼，簡化邏輯
 
   // 簡化的 Pollinations Token 檢查 - 只在需要時載入，避免無限迴圈
   useEffect(() => {
@@ -149,7 +130,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
   // 智能服務檢測
   useEffect(() => {
     const detectServices = async () => {
-      if (featureFlags.SMART_API_DETECTION && !isDetecting) {
+      if (!isDetecting) {
         setIsDetecting(true);
         debugLog('開始智能服務檢測...');
 
@@ -161,7 +142,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
         } catch (error) {
           console.error('❌ 服務檢測失敗:', error);
           // 保持預設服務
-          setAvailableServices(['pollinations', 'imagen']);
+          setAvailableServices(['pollinations']);
         } finally {
           setIsDetecting(false);
         }
@@ -169,7 +150,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
     };
 
     detectServices();
-  }, [featureFlags.SMART_API_DETECTION]); // 🔥 修復無限迴圈：移除 detectAvailableServices 和 isDetecting 依賴
+  }, [detectAvailableServices]);
 
   const validation = validateConfiguration();
 
@@ -260,40 +241,20 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
         emoji: '⚡',
         name: 'Gemini Flash',
         description: '快速免費・需要API',
-        details: '向後兼容模式',
+        details: '免費/付費額度',
         colors: 'border-yellow-500 bg-gradient-to-br from-yellow-500/20 to-orange-500/20',
         hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
         textColor: 'text-yellow-400',
         isFree: true
       },
-      'gemini-flash': {
-        emoji: '⚡',
-        name: 'Gemini Flash Image',
+      openrouter: {
+        emoji: '🚀',
+        name: 'OpenRouter',
         description: '快速高品質・付費版',
-        details: 'OpenRouter ($0.03/圖)',
+        details: 'Gemini 2.5 Flash Image Preview ($0.03/圖)',
         colors: 'border-orange-500 bg-gradient-to-br from-orange-500/20 to-red-500/20',
         hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
         textColor: 'text-orange-400',
-        isFree: false
-      },
-      'openrouter-free': {
-        emoji: '🌐',
-        name: 'OpenRouter 免費',
-        description: '多模型選擇・免費',
-        details: 'Stable Diffusion等',
-        colors: 'border-purple-500 bg-gradient-to-br from-purple-500/20 to-pink-500/20',
-        hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
-        textColor: 'text-purple-400',
-        isFree: true
-      },
-      'openrouter-pro': {
-        emoji: '🚀',
-        name: 'OpenRouter 專業',
-        description: '頂級模型・付費',
-        details: 'DALL-E、Midjourney等',
-        colors: 'border-indigo-500 bg-gradient-to-br from-indigo-500/20 to-blue-500/20',
-        hoverColors: 'border-gray-600 bg-gray-700 hover:border-gray-500',
-        textColor: 'text-indigo-400',
         isFree: false
       }
     };
@@ -301,46 +262,59 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
     return baseConfigs[service as keyof typeof baseConfigs] || baseConfigs.pollinations;
   };
 
-  // 決定要顯示的服務列表
-  const servicesToShow = featureFlags.EXTENDED_ILLUSTRATION_SERVICES
-    ? availableServices.filter(service => service !== 'imagen') // 移除 imagen
-    : ['pollinations']; // 基本模式只顯示 Pollinations
+  // 直接顯示檢測到的服務列表
+  const servicesToShow = availableServices;
 
   return (
     <div className={`service-configuration-panel ${className}`}>
-      {/* 色彩模式選擇 - 全局設定 */}
+      {/* 插畫風格選擇 - 輕小說專業模式 */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-300 mb-3">
-          🎨 色彩模式 <span className="text-gray-400">(套用至整個批次)</span>
+          🎨 插畫風格 <span className="text-gray-400">(套用至整個批次)</span>
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => setGlobalColorMode('color')}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`p-3 rounded-lg border-2 transition-all ${
               globalColorMode === 'color'
                 ? 'border-purple-500 bg-gradient-to-br from-red-500/10 via-purple-500/10 to-blue-500/10'
                 : 'border-gray-600 bg-gray-700 hover:border-gray-500'
             }`}
           >
             <div className="text-center">
-              <div className="text-3xl mb-2">🌈</div>
-              <div className="font-medium text-white">彩色插畫</div>
-              <div className="text-xs text-gray-400 mt-1">豐富色彩表現</div>
+              <div className="text-2xl mb-1">🌈</div>
+              <div className="font-medium text-white text-sm">彩色插畫</div>
+              <div className="text-xs text-gray-400 mt-1">全彩繪圖</div>
             </div>
           </button>
 
           <button
-            onClick={() => setGlobalColorMode('monochrome')}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              globalColorMode === 'monochrome'
+            onClick={() => setGlobalColorMode('manga')}
+            className={`p-3 rounded-lg border-2 transition-all ${
+              globalColorMode === 'manga'
+                ? 'border-gray-300 bg-gray-800'
+                : 'border-gray-600 bg-gray-700 hover:border-gray-500'
+            }`}
+          >
+            <div className="text-center">
+              <div className="text-2xl mb-1">📖</div>
+              <div className="font-medium text-white text-sm">漫畫線稿</div>
+              <div className="text-xs text-gray-400 mt-1">黑白線條</div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setGlobalColorMode('sketch')}
+            className={`p-3 rounded-lg border-2 transition-all ${
+              globalColorMode === 'sketch'
                 ? 'border-gray-400 bg-gray-800'
                 : 'border-gray-600 bg-gray-700 hover:border-gray-500'
             }`}
           >
             <div className="text-center">
-              <div className="text-3xl mb-2">⚫⚪</div>
-              <div className="font-medium text-white">黑白插畫</div>
-              <div className="text-xs text-gray-400 mt-1">經典素描風格</div>
+              <div className="text-2xl mb-1">✏️</div>
+              <div className="font-medium text-white text-sm">素描風格</div>
+              <div className="text-xs text-gray-400 mt-1">灰階素描</div>
             </div>
           </button>
         </div>
@@ -351,7 +325,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
         <label className="block text-sm font-medium text-gray-300 mb-3">
           🤖 插畫服務
           <span className="text-gray-400">(選擇生成服務)</span>
-          {isDetecting && featureFlags.SMART_API_DETECTION && (
+          {isDetecting && (
             <span className="ml-2 text-xs text-yellow-400">🔍 檢測中...</span>
           )}
         </label>
@@ -382,7 +356,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
                   </div>
 
                   {/* 服務品質指標 */}
-                  {featureFlags.EXTENDED_ILLUSTRATION_SERVICES && serviceCapabilities[service] && (
+                  {serviceCapabilities[service] && (
                     <div className="mt-2 flex justify-center">
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         serviceCapabilities[service]?.quality === 'premium'
@@ -402,15 +376,13 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
           })}
         </div>
 
-        {/* 擴展服務提示 */}
-        {!featureFlags.EXTENDED_ILLUSTRATION_SERVICES && (
-          <div className="mt-3 p-3 bg-blue-900/20 border border-blue-700 rounded-lg">
-            <div className="text-sm text-blue-300">
-              💡 <strong>提示：</strong> 更多 AI 插畫服務（如 Gemini Flash、Gemini Flash Image、OpenRouter）可在
-              <strong className="text-blue-200 mx-1">設定 → 一般 → AI 插畫功能設定</strong> 中啟用
-            </div>
+        {/* 提示訊息 */}
+        <div className="mt-3 p-3 bg-blue-900/20 border border-blue-700 rounded-lg">
+          <div className="text-sm text-blue-300">
+            💡 <strong>提示：</strong> 需要更多 AI 插畫服務？請前往
+            <strong className="text-blue-200 mx-1">設定 → AI 提供者管理</strong> 新增 API 金鑰
           </div>
-        )}
+        </div>
       </div>
 
       {/* Pollinations 模型和風格選擇 */}
@@ -537,7 +509,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
       )}
 
       {/* 保留 Google Cloud 計費警告但簡化 */}
-      {requiresApiKey && showBillingWarning && illustrationProvider === 'imagen' && (
+      {requiresApiKey && showBillingWarning && (illustrationProvider === 'gemini' || illustrationProvider === 'openrouter') && (
         <div className="mb-6 p-4 bg-gradient-to-r from-orange-900/40 to-red-900/40 border-2 border-orange-500/60 rounded-lg">
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0">
@@ -571,7 +543,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
             {validation.isValid ? '✅ 配置完成' : '❌ 配置不完整'}
           </div>
           <div className="text-xs opacity-80">
-            服務: {serviceDisplayName} | 色彩: {globalColorMode === 'color' ? '彩色' : '黑白'}
+            服務: {serviceDisplayName} | 風格: {globalColorMode === 'color' ? '彩色插畫' : globalColorMode === 'manga' ? '漫畫線稿' : '素描風格'}
             {configurationSummary && ` | ${configurationSummary}`}
           </div>
         </div>

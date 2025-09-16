@@ -8,6 +8,8 @@ import {
   setError,
   openVersionPanel,
   addTempImage,
+  setShowImagePreview,
+  setCurrentImageIndex,
   type TempImageData,
 } from '../../../../store/slices/visualCreationSlice';
 
@@ -28,6 +30,7 @@ import PromptSuggestionPanel from '../panels/PromptSuggestionPanel';
 import WorkflowSteps from '../shared/WorkflowSteps';
 import GuidanceCard from '../shared/GuidanceCard';
 import Tooltip from '../../../UI/Tooltip';
+import { SafeImage } from '../../../UI/SafeImage';
 import { GUIDANCE_TEXTS } from '../shared/guidanceTexts';
 
 interface CreateTabProps {
@@ -53,6 +56,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     illustrationProvider,
     apiKey,
     serviceDisplayName,
+    globalColorMode,
   } = useIllustrationService();
   
   // Redux 狀態
@@ -64,6 +68,8 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     error,
     tempImages,
     isGenerating,
+    showImagePreview,
+    currentImageIndex,
   } = useSelector((state: RootState) => state.visualCreation);
   
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
@@ -240,8 +246,9 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       case 'pollinations':
         return 'flux';
       case 'gemini':
-      case 'gemini-flash':
         return 'gemini-2.5-flash-image-preview';
+      case 'openrouter':
+        return 'google/gemini-2.5-flash-image-preview';
       case 'imagen':
         return 'imagen-3';
       case 'openai':
@@ -270,15 +277,28 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       
       for (const request of batchRequests) {
         console.log(`🎯 [CreateTab] 處理請求: ${request.id}`);
-        
+
+        // 🎨 增強 prompt：確保包含插畫風格關鍵字
+        let enhancedPrompt = request.enriched_prompt;
+        if (globalColorMode === 'manga') {
+          if (!enhancedPrompt.includes('manga style') && !enhancedPrompt.includes('black and white')) {
+            enhancedPrompt += ', manga style, black and white, line art, ink drawing, screentone, detailed linework, comic illustration';
+          }
+        } else if (globalColorMode === 'sketch') {
+          if (!enhancedPrompt.includes('pencil sketch') && !enhancedPrompt.includes('grayscale')) {
+            enhancedPrompt += ', pencil sketch, grayscale drawing, soft shading, hand-drawn, artistic sketch, charcoal effect';
+          }
+        }
+        console.log(`🎨 [CreateTab] 插畫風格: ${globalColorMode}, 增強後 prompt:`, enhancedPrompt);
+
         // 根據 provider 選擇不同的 API
         let result;
         console.log(`🔍 [CreateTab] 使用插畫服務: ${illustrationProvider} (${serviceDisplayName})`);
         
-        if (illustrationProvider === 'gemini' || illustrationProvider === 'gemini-flash') {
+        if (illustrationProvider === 'gemini') {
           // 使用 Gemini API
           result = await illustrationAPI.generateGeminiIllustration({
-            prompt: request.enriched_prompt,
+            prompt: enhancedPrompt,
             provider: illustrationProvider,
             apiKey: apiKey,
             width: 1024,
@@ -287,13 +307,22 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
             projectId: currentProject.id,
             characterId: request.selectedCharacterIds[0],
           });
-        } else if (illustrationProvider === 'imagen') {
-          // TODO: 使用 Imagen API（未實作）
-          throw new Error('Imagen 服務尚未實作，請選擇其他服務');
+        } else if (illustrationProvider === 'openrouter') {
+          // 使用 OpenRouter API 訪問 Gemini 2.5 Flash Image
+          result = await illustrationAPI.generateGeminiIllustration({
+            prompt: enhancedPrompt,
+            provider: 'gemini-flash', // 🔧 修復：OpenRouter 對應到 gemini-flash 配置
+            apiKey: apiKey,
+            width: 1024,
+            height: 1024,
+            style: artStyle,
+            projectId: currentProject.id,
+            characterId: request.selectedCharacterIds[0],
+          });
         } else {
           // 預設使用 Pollinations API
           result = await api.illustration.generateFreeIllustrationToTemp(
-            request.enriched_prompt,
+            enhancedPrompt,
             1024,   // width
             1024,   // height
             'flux', // model
@@ -309,24 +338,34 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
         
         // 將生成的圖片添加到臨時圖片列表
         if (result && typeof result === 'object' && 'success' in result && result.success) {
-          const resultWithData = result as { 
-            success: boolean; 
-            id: string; 
-            temp_path: string; 
-            temp_url: string; 
+          const resultWithData = result as {
+            success: boolean;
+            id: string;
+            temp_path?: string;
+            final_path?: string;
+            temp_url?: string;
             image_url?: string;
-            prompt: string; 
+            prompt?: string;
             original_prompt?: string;
             parameters?: { model: string; width: number; height: number; seed?: number; enhance: boolean; style?: string };
             file_size_bytes?: number;
             generation_time_ms?: number;
             provider?: string;
-            project_id?: string; 
+            project_id?: string;
             character_id?: string;
           };
+
+          // 🔧 修復：優先使用 final_path，fallback 到 temp_path (適配 Gemini API)
+          const imagePath = resultWithData.final_path || resultWithData.temp_path || '';
+          console.log('🔍 [CreateTab] 圖片路徑處理:', {
+            final_path: resultWithData.final_path,
+            temp_path: resultWithData.temp_path,
+            使用路徑: imagePath
+          });
+
           const tempImage = {
             id: resultWithData.id || '',
-            temp_path: resultWithData.temp_path || '',
+            temp_path: imagePath, // 使用正確的圖片路徑
             image_url: resultWithData.image_url,
             prompt: resultWithData.prompt || request.enriched_prompt,
             original_prompt: resultWithData.original_prompt || request.enriched_prompt,
@@ -351,7 +390,29 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       
       // 批次完成後的後續處理
       console.log('🎉 [CreateTab] 所有批次請求完成');
-      
+
+      // 🚀 自動開啟大圖預覽 Modal
+      // 確保 currentImageIndex 正確設置，然後開啟預覽
+      dispatch(setCurrentImageIndex(0));
+      dispatch(setShowImagePreview(true));
+      console.log('🖼️ [CreateTab] 自動開啟大圖預覽 Modal');
+
+      // 🔍 調試：檢查 Redux state
+      setTimeout(() => {
+        console.log('🔍 [CreateTab] Redux State 檢查:', {
+          tempImagesLength: tempImages.length,
+          showImagePreview: showImagePreview,
+          currentImageIndex: currentImageIndex,
+          tempImagesData: tempImages.map(img => ({
+            id: img.id,
+            temp_path: img.temp_path,
+            image_url: img.image_url,
+            hasPath: !!img.temp_path,
+            hasUrl: !!img.image_url
+          }))
+        });
+      }, 100);
+
       // 可選：清空批次請求
       // dispatch(generateBatchRequests([]));
       
@@ -405,7 +466,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       const friendlyError = handleSmartError(error instanceof Error ? error.message : '批次生成失敗');
       dispatch(setError(friendlyError));
     }
-  }, [batchRequests, currentProject, dispatch, artStyle, illustrationProvider, apiKey, serviceDisplayName]);
+  }, [batchRequests, currentProject, dispatch, artStyle, illustrationProvider, apiKey, serviceDisplayName, globalColorMode]);
 
   // 移除批次請求
   const handleRemoveBatchRequest = useCallback((requestId: string) => {
@@ -474,6 +535,14 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
         optimizedPrompt += ', character interaction, dynamic pose';
       }
 
+      // 🎨 根據插畫風格模式添加專業關鍵字
+      if (globalColorMode === 'manga') {
+        optimizedPrompt += ', manga style, black and white, line art, ink drawing, screentone, detailed linework, comic illustration';
+      } else if (globalColorMode === 'sketch') {
+        optimizedPrompt += ', pencil sketch, grayscale drawing, soft shading, hand-drawn, artistic sketch, charcoal effect';
+      }
+      // 彩色模式 (color) 保持原有邏輯，不額外添加關鍵字
+
       setEnglishPrompt(optimizedPrompt);
       notification.success('✨ 優化完成', '已自動生成英文提示詞！');
 
@@ -483,7 +552,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     } finally {
       setIsTranslating(false);
     }
-  }, [sceneDescription, projectCharacters, selectedCharacters, sceneType, artStyle, notification]);
+  }, [sceneDescription, projectCharacters, selectedCharacters, sceneType, artStyle, globalColorMode, notification]);
 
   return (
     <div className={`create-tab flex flex-col h-full ${className}`}>
@@ -550,8 +619,8 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
             <div className="text-xs text-cosmic-400">
               服務: {
                 illustrationProvider === 'pollinations' ? 'Pollinations.AI (免費)' :
-                illustrationProvider === 'imagen' ? 'Google Imagen (付費)' :
-                illustrationProvider === 'gemini' || illustrationProvider === 'gemini-flash' ? 'Gemini Flash Image' : '未知服務'
+                illustrationProvider === 'gemini' ? 'Gemini Flash (免費/付費額度)' :
+                illustrationProvider === 'openrouter' ? 'OpenRouter (Gemini 2.5 Flash Image Preview)' : '未知服務'
               }
             </div>
           </div>
@@ -1017,12 +1086,24 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {tempImages.slice(-4).map((image: TempImageData, _index: number) => (
-                      <div key={image.id} className="aspect-square bg-cosmic-700/50 rounded border border-cosmic-600 p-2">
-                        <div className="w-full h-full flex items-center justify-center bg-cosmic-600 rounded">
-                          <div className="text-center text-cosmic-300">
-                            <div className="text-2xl mb-2">🎨</div>
-                            <div className="text-xs">圖片生成成功</div>
-                            <div className="text-xs text-cosmic-500">{image.id.slice(-8)}</div>
+                      <div key={image.id} className="aspect-square bg-cosmic-700/50 rounded border border-cosmic-600 p-2 overflow-hidden">
+                        <div className="w-full h-full relative rounded">
+                          <SafeImage
+                            imageUrl={image.image_url}
+                            localFilePath={image.temp_path}
+                            alt={`生成的插畫 - ${image.prompt?.slice(0, 50) || 'AI插畫'}`}
+                            className="w-full h-full object-cover rounded"
+                            fallbackIcon="🎨"
+                            fallback="載入中..."
+                          />
+                          {/* 圖片信息覆蓋層 */}
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                            <div className="text-xs text-white truncate">
+                              ID: {image.id.slice(-8)}
+                            </div>
+                            <div className="text-xs text-gray-300 truncate">
+                              {image.parameters?.model || 'AI生成'}
+                            </div>
                           </div>
                         </div>
                       </div>

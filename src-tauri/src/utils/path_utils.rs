@@ -12,30 +12,62 @@ use std::error::Error;
 /// - 資料庫儲存相對路徑格式：src-tauri/generated-images/xxx.jpg
 
 /// 判斷是否為開發環境
-/// 
+///
 /// 優先級：
 /// 1. 檢查 TAURI_ENV 環境變數
-/// 2. 檢查 NODE_ENV 環境變數  
+/// 2. 檢查 NODE_ENV 環境變數
 /// 3. 檢查執行檔路徑是否包含 debug 目錄
+/// 4. Windows特定檢查
 pub fn is_development_environment() -> bool {
     // 優先檢查 TAURI_ENV（最可靠）
     if let Ok(env) = std::env::var("TAURI_ENV") {
+        log::debug!("[PathUtils] TAURI_ENV = {}", env);
         return env == "development";
     }
-    
+
     // 備用：檢查 NODE_ENV
     if let Ok(env) = std::env::var("NODE_ENV") {
+        log::debug!("[PathUtils] NODE_ENV = {}", env);
         return env == "development";
     }
-    
-    // 最後備用：檢查執行檔路徑
+
+    // 檢查執行檔路徑
     if let Ok(exe_path) = std::env::current_exe() {
         let path_str = exe_path.to_string_lossy();
+        log::debug!("[PathUtils] 執行檔路徑: {}", path_str);
+
         // 支援 Windows 和 Unix 路徑分隔符
-        return path_str.contains("target/debug") || 
-               path_str.contains("target\\debug");
+        let is_debug = path_str.contains("target/debug") ||
+                      path_str.contains("target\\debug");
+
+        if is_debug {
+            return true;
+        }
+
+        // Windows特定檢查：檢查是否在 .exe 檔名中包含 dev 或 debug
+        #[cfg(target_os = "windows")]
+        {
+            if path_str.to_lowercase().contains("debug") ||
+               path_str.to_lowercase().contains("dev") {
+                log::debug!("[PathUtils] Windows開發模式檢測: 路徑包含debug/dev");
+                return true;
+            }
+        }
     }
-    
+
+    // 最後檢查：檢查當前工作目錄是否在專案根目錄
+    if let Ok(current_dir) = std::env::current_dir() {
+        let current_path = current_dir.to_string_lossy();
+        log::debug!("[PathUtils] 當前工作目錄: {}", current_path);
+
+        // 如果工作目錄包含 src-tauri，很可能是開發環境
+        if current_path.contains("src-tauri") || current_dir.join("src-tauri").exists() {
+            log::debug!("[PathUtils] 檢測到src-tauri目錄，判定為開發環境");
+            return true;
+        }
+    }
+
+    log::debug!("[PathUtils] 判定為生產環境");
     false
 }
 
@@ -55,10 +87,22 @@ pub fn get_images_base_dir() -> Result<PathBuf, Box<dyn Error>> {
         project_root.join("src-tauri").join("generated-images")
     } else {
         // 生產環境：使用系統標準位置
-        dirs::data_dir()
-            .ok_or("無法獲取用戶資料目錄")?
-            .join("genesis-chronicle")
-            .join("images")
+        #[cfg(target_os = "windows")]
+        {
+            // Windows: 使用 AppData\Local
+            dirs::data_local_dir()
+                .ok_or("無法獲取Windows用戶資料目錄")?
+                .join("genesis-chronicle")
+                .join("generated-images")
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            // macOS/Linux: 使用標準資料目錄
+            dirs::data_dir()
+                .ok_or("無法獲取用戶資料目錄")?
+                .join("genesis-chronicle")
+                .join("generated-images")
+        }
     };
     
     // 確保目錄存在

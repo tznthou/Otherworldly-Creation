@@ -215,6 +215,13 @@ export interface UpdateInfo {
   error?: string;
 }
 
+// 環境資訊
+export interface EnvironmentInfo {
+  isDevelopment: boolean;
+  imagesDir: string;
+  platform: string;
+}
+
 // AI 歷史查詢參數
 export interface AIHistoryQueryParams {
   projectId?: string;
