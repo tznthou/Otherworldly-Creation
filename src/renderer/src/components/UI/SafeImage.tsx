@@ -93,8 +93,8 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
 
           // 🔧 修復：如果只是檔案名，使用新的API動態獲取完整路徑
           if (!cleanPath.startsWith('/') && !cleanPath.match(/^[a-zA-Z]:/) && !cleanPath.includes('generated-images')) {
-            // 🔧 擴展檢測：支援更多檔案名格式 (UUID 36字元 + 短ID 8字元 + .jpg)
-            const isImageFilename = /^[a-f0-9-]{8,36}\.jpg$/i.test(cleanPath);
+            // 🔧 修復：使用精確的UUID格式檢測（標準36字符UUID）
+            const isImageFilename = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.jpg$/i.test(cleanPath);
             if (isImageFilename) {
               try {
                 console.log('🔧 [SafeImageDebug] 檢測到圖片檔案名，正在獲取完整路徑:', cleanPath);
@@ -105,32 +105,11 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
                 console.log('✅ [SafeImageDebug] API返回完整路徑（已正規化）:', cleanPath);
               } catch (error) {
                 console.error('❌ [SafeImageDebug] 無法獲取圖片路徑:', error);
-                // 🔧 使用動態路徑組合作為 fallback（跨用戶相容）
-                const homeDir = process.env.HOME || process.env.USERPROFILE || '';
-                const localPaths = homeDir ? [
-                  `${homeDir}/Documents/Practice/6 novel writing/src-tauri/generated-images/${cleanPath}`,
-                  `${homeDir}/Library/Application Support/genesis-chronicle/generated-images/${cleanPath}`
-                ] : [];
-
-                for (const tryPath of localPaths) {
-                  console.log('🔧 [SafeImageDebug] 嘗試 fallback 路徑:', tryPath);
-                  try {
-                    const _assetUrl = convertFileSrc(tryPath);
-                    cleanPath = tryPath;
-                    console.log('✅ [SafeImageDebug] fallback 成功:', tryPath);
-                    break;
-                  } catch (_fallbackError) {
-                    console.log('❌ [SafeImageDebug] fallback 失敗:', tryPath);
-                    continue;
-                  }
-                }
-
-                // 如果沒有有效的 fallback 路徑或都失敗了
-                if (localPaths.length === 0 || !cleanPath.includes('/')) {
-                  setHasError(true);
-                  setIsLoading(false);
-                  return;
-                }
+                // 🔧 安全修復：移除hardcoded路徑，直接設置錯誤狀態
+                console.error('❌ [SafeImageDebug] API獲取失敗，無法顯示圖片');
+                setHasError(true);
+                setIsLoading(false);
+                return;
               }
             }
           }
@@ -205,7 +184,34 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
       style={style}
       loading={loading}
       onLoad={onLoad}
-      onError={() => {
+      onError={async () => {
+        // 🔧 修復：使用可靠的Windows檢測，嘗試base64方式
+        const isWindows = (() => {
+          if ('userAgentData' in navigator && (navigator as any).userAgentData?.platform) {
+            return (navigator as any).userAgentData.platform.toLowerCase().includes('windows');
+          }
+          return navigator.userAgent.toLowerCase().includes('windows') ||
+                 navigator.platform.toLowerCase().includes('win');
+        })();
+
+        if (isWindows && localFilePath) {
+          try {
+            console.log('🔧 [SafeImage] Windows圖片載入失敗，嘗試base64方式:', localFilePath);
+            // 從localFilePath提取檔名
+            const filename = localFilePath.replace(/^file:\/\//, '').replace(/\\/g, '/').split('/').pop();
+            // 🔧 修復：使用精確的UUID格式檢測
+            if (filename && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.jpg$/i.test(filename)) {
+              const dataUrl = await api.system.getImageDataUrl(filename);
+              setSrc(dataUrl);
+              console.log('✅ [SafeImage] Windows base64載入成功');
+              return; // 成功則返回，不設置錯誤狀態
+            }
+          } catch (error) {
+            console.error('❌ [SafeImage] Windows base64載入失敗:', error);
+            // 繼續原有錯誤處理
+          }
+        }
+        // 原有錯誤處理邏輯
         setHasError(true);
         onError?.();
       }}

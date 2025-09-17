@@ -147,6 +147,7 @@ export interface API {
     quitApp: () => Promise<void>;
     reloadApp: () => Promise<void>;
     getImagePath: (filename: string) => Promise<string>;
+    getImageDataUrl: (filename: string) => Promise<string>;
     getEnvironmentInfo: () => Promise<EnvironmentInfo>;
   };
 

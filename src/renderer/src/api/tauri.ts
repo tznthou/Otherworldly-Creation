@@ -9,6 +9,7 @@ import type {
 import type { BatchRequest } from '../types/illustration';
 import type { Descendant } from 'slate';
 import { measureAsyncFunction, performanceLogger } from '../utils/performanceLogger';
+import { convertFileSrc } from '@tauri-apps/api/core';
 
 // Tauri 後端類型定義
 interface TauriProject {
@@ -796,6 +797,32 @@ export const tauriAPI: API = {
     quitApp: () => safeInvoke('quit_app'),
     reloadApp: () => safeInvoke('reload_app'),
     getImagePath: (filename: string) => safeInvoke('get_image_path', { filename }),
+    // 🔧 Windows兼容性：新增Base64圖片獲取方法，不影響現有功能
+    getImageDataUrl: async (filename: string): Promise<string> => {
+      // 🔧 修復：使用更可靠的Windows檢測
+      const isWindows = (() => {
+        if ('userAgentData' in navigator && (navigator as any).userAgentData?.platform) {
+          return (navigator as any).userAgentData.platform.toLowerCase().includes('windows');
+        }
+        return navigator.userAgent.toLowerCase().includes('windows') ||
+               navigator.platform.toLowerCase().includes('win');
+      })();
+
+      try {
+        // 只在Windows上使用base64
+        if (isWindows) {
+          const base64 = await safeInvoke<string>('read_image_as_base64', { imagePath: filename });
+          return `data:image/jpeg;base64,${base64}`;
+        }
+        // 其他平台維持原邏輯
+        const path = await safeInvoke<string>('get_image_path', { filename });
+        return convertFileSrc(path);
+      } catch (_error) {
+        // 🔧 修復：避免循環失敗，直接返回error狀態
+        console.error('❌ [getImageDataUrl] 所有獲取方式都失敗:', filename);
+        throw new Error(`無法獲取圖片: ${filename}`);
+      }
+    },
     getEnvironmentInfo: () => safeInvoke('get_environment_info'),
   },
 

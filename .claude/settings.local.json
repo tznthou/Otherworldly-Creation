@@ -144,7 +144,8 @@
       "WebFetch(domain:crates.io)",
       "Bash(git diff:*)",
       "Bash(git reset:*)",
-      "Bash(RELEASE_VERSION=1.2.6 node scripts/sync-version.js)"
+      "Bash(RELEASE_VERSION=1.2.6 node scripts/sync-version.js)",
+      "Bash(RELEASE_VERSION=1.2.7 node scripts/sync-version.js)"
     ],
     "deny": [],
     "ask": [],

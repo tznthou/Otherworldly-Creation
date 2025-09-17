@@ -1,13 +1,27 @@
-# 創世紀元：Genesis Chronicle v1.2.5
+# 創世紀元：Genesis Chronicle v1.2.7
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
 <p align="center">
   <a href="README.md">English</a> | <strong>繁體中文</strong>
 </p>
 
-![Version](https://img.shields.io/badge/version-v1.2.5-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange)
+![Version](https://img.shields.io/badge/version-v1.2.7-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange)
 
 ## 🚀 最新更新歷程
+
+### 🌟 v1.2.7 - Windows圖片顯示相容性修復版 (2025年9月17日)
+
+#### 🔧 Windows環境圖片顯示根本修復
+- **Windows路徑格式相容性問題**: 修復Rust端getImagePath返回路徑格式與前端不匹配的核心問題
+- **SafeImage組件Windows強化**: 統一路徑分隔符為正斜線，確保convertFileSrc API在Windows環境正常工作
+- **跨平台路徑處理統一**: Windows/Mac/Linux三平台圖片路徑處理完全統一，保持系統穩定性
+- **用戶體驗改善**: Windows用戶現在可以正常查看AI生成的圖片預覽和管理圖庫
+
+#### 🎯 技術改進重點
+- 修復Windows環境下圖庫載入空白問題
+- 提升SafeImage組件跨平台相容性
+- 強化convertFileSrc API Windows支援
+- 保持Mac/Linux環境完全穩定，無任何功能影響
 
 ### 🌟 v1.2.5 - 跨平台相容性與視覺創作體驗突破 (2025年9月16日)
 
@@ -978,6 +992,6 @@ MIT License - 詳見 [LICENSE](./LICENSE) 檔案
 
 **Genesis Chronicle** - 讓AI為你的創作插上翅膀 ✨
 
-*更新時間：2025年9月12日 22:40 CST*  
-*專案狀態：v1.2.0 系統架構突破版，八大核心功能全面完成，支持100+個AI模型*  
-*技術里程碑：105,530行核心程式碼，突破10.5萬行里程碑，系統架構根本性提升，447個核心檔案* 🚀
+*更新時間：2025年9月17日 20:35 CST*
+*專案狀態：v1.2.7 Windows相容性修復版，八大核心功能全面完成，支持100+個AI模型*
+*技術里程碑：111,017行核心程式碼，Windows圖片顯示問題根本解決，466個核心檔案* 🚀

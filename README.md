@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.2.5-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.2.7-blue" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green" alt="Platform">
   <img src="https://img.shields.io/badge/AI_Providers-5-orange" alt="AI Providers">
   <img src="https://img.shields.io/badge/code_lines-111k+-purple" alt="Code Lines">
@@ -40,6 +40,20 @@
 - **🧠 Character Analysis**: Big Five personality analysis for consistent character development
 - **✍️ Focus Writing Mode**: Distraction-free immersive writing environment
 - **📊 Template System**: Quick-start templates for fantasy, romance, isekai, and sci-fi genres
+
+### 🚀 What's New in v1.2.7 - Windows Image Display Compatibility Fix (2025-09-17)
+
+#### 🔧 Windows Environment Image Display Root Fix
+- **Windows Path Format Compatibility**: Fixed core issue where Rust-side getImagePath returned path format mismatched with frontend
+- **SafeImage Component Windows Enhancement**: Unified path separators to forward slashes, ensuring convertFileSrc API works properly in Windows environment
+- **Cross-Platform Path Processing Unification**: Complete unification of image path processing across Windows/Mac/Linux platforms while maintaining system stability
+- **User Experience Improvement**: Windows users can now properly view AI-generated image previews and manage galleries
+
+#### 🎯 Technical Improvement Highlights
+- Fixed Windows environment gallery loading blank issues
+- Enhanced SafeImage component cross-platform compatibility
+- Strengthened convertFileSrc API Windows support
+- Maintained complete stability for Mac/Linux environments with no functional impact
 
 ### 🚀 What's New in v1.2.5 - Cross-Platform Compatibility & Visual Creation Enhancement (2025-09-16)
 
@@ -321,6 +335,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <p align="center">
-  <strong>Genesis Chronicle v1.2.1</strong><br>
+  <strong>Genesis Chronicle v1.2.7</strong><br>
   Made with ❤️ for Chinese light novel creators worldwide
 </p>

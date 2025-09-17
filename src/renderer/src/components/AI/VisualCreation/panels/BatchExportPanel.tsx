@@ -2,7 +2,6 @@ import React, { memo, useCallback, useState } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { useBatchExportProcessor } from '../../../../hooks/illustration/useBatchExportProcessor';
 import type { ExportFormat, ExportTaskStatus, OrganizationMethod } from '../../../../hooks/illustration/useExportManager';
-import { api } from '../../../../api';
 
 interface BatchExportPanelProps {
   className?: string;
@@ -52,7 +51,7 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
     }
   });
 
-  // 智能圖片URL處理函數
+  // 智能圖片URL處理函數（同步版本，用於批次導出）
   const processImageUrl = useCallback((url: string): string => {
     // 1. 如果已經是 asset:// 協議，直接返回
     if (url.startsWith('asset://')) {
@@ -69,16 +68,10 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
       // 檢查是否為 UUID 格式的檔案名
       const isUuidFilename = /^[a-f0-9-]{36}\.jpg$/i.test(url);
       if (isUuidFilename) {
-        // 🔧 修復：使用API動態獲取路徑（異步處理）
-        // 注意：這裡先返回一個預設值，實際路徑將通過async方式處理
-        api.system.getImagePath(url)
-          .then((fullPath: string) => convertFileSrc(fullPath))
-          .catch((error: Error) => {
-            console.error('❌ [BatchExportPanel] 無法獲取圖片路徑:', error);
-            return convertFileSrc(url); // fallback
-          });
-        // 暫時使用原始檔名作為fallback
-        return convertFileSrc(url);
+        // 🔧 修復：對於批次導出，直接使用檔名（後端會處理路徑解析）
+        // 這裡不需要異步處理，因為批次導出器會在處理時動態解析路徑
+        console.log('🔧 [BatchExportPanel] 檢測到UUID檔名，交由後端處理:', url);
+        return url; // 直接返回檔名，讓後端處理
       }
       // 其他檔案直接轉換
       return convertFileSrc(url);
