@@ -408,7 +408,10 @@ pub async fn get_image_path(filename: String) -> Result<String, String> {
 
     match path_utils::from_relative_path(&filename) {
         Ok(path) => {
-            let path_str = path.to_string_lossy().to_string();
+            // 🔧 Windows兼容性修復：統一路徑分隔符為正斜線
+            let path_str = path.to_string_lossy()
+                .replace('\\', "/")  // 確保convertFileSrc在Windows上正常工作
+                .to_string();
             log::info!("[get_image_path] 返回路徑: {}", path_str);
             Ok(path_str)
         },

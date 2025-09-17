@@ -100,8 +100,9 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
                 console.log('🔧 [SafeImageDebug] 檢測到圖片檔案名，正在獲取完整路徑:', cleanPath);
                 // 使用新的API動態獲取正確路徑（跨平台相容）
                 const fullPath = await api.system.getImagePath(cleanPath);
-                cleanPath = fullPath;
-                console.log('✅ [SafeImageDebug] API返回完整路徑:', cleanPath);
+                // 🔧 Windows兼容性：確保路徑格式統一（防禦性編程）
+                cleanPath = fullPath.replace(/\\/g, '/');
+                console.log('✅ [SafeImageDebug] API返回完整路徑（已正規化）:', cleanPath);
               } catch (error) {
                 console.error('❌ [SafeImageDebug] 無法獲取圖片路徑:', error);
                 // 🔧 使用動態路徑組合作為 fallback（跨用戶相容）
