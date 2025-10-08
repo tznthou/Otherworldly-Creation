@@ -152,11 +152,31 @@ jobs:
       - name: 🏗️ Build frontend
         run: npm run build:renderer
 
+      - name: 🔍 Pre-build diagnostics
+        run: |
+          echo "=== Cargo Dependencies Check ==="
+          cd src-tauri
+          echo "Checking keyring crate availability..."
+          cargo tree -p keyring || echo "⚠️  keyring not in tree"
+          echo ""
+          echo "Checking Cargo.toml syntax..."
+          cargo metadata --format-version 1 > /dev/null && echo "✅ Cargo.toml valid" || echo "❌ Cargo.toml invalid"
+          echo ""
+          echo "Listing features..."
+          cargo metadata --format-version 1 | grep -A5 '"name":"keyring"' || echo "No keyring found"
+          echo "================================"
+
       - name: 🔨 Build Tauri app (DMG + App)
         run: |
           echo "🚀 Building Tauri app with DMG support..."
           cd src-tauri
-          cargo tauri build --target universal-apple-darwin
+          echo "Running cargo tauri build with verbose output..."
+          cargo tauri build --target universal-apple-darwin --verbose || {
+            echo "❌ Build failed! Showing last 100 lines of output..."
+            echo "================================"
+            cargo tauri build --target universal-apple-darwin 2>&1 | tail -100
+            exit 1
+          }
           echo "✅ Tauri build completed"
 
       - name: 📦 Create PKG installer
@@ -283,12 +303,30 @@ jobs:
       - name: 🏗️ Build frontend
         run: npm run build:renderer
 
+      - name: 🔍 Pre-build diagnostics
+        run: |
+          Write-Output "=== Cargo Dependencies Check ==="
+          cd src-tauri
+          Write-Output "Checking keyring crate availability..."
+          cargo tree -p keyring
+          Write-Output ""
+          Write-Output "Checking Cargo.toml syntax..."
+          cargo metadata --format-version 1 > $null
+          if ($?) { Write-Output "✅ Cargo.toml valid" } else { Write-Output "❌ Cargo.toml invalid" }
+          Write-Output "================================"
+
       - name: 🔨 Build Tauri app (MSI)
         run: |
-          echo "🚀 Building Tauri app for Windows..."
+          Write-Output "🚀 Building Tauri app for Windows..."
           cd src-tauri
-          cargo tauri build --target x86_64-pc-windows-msvc
-          echo "✅ Tauri Windows build completed"
+          Write-Output "Running cargo tauri build with verbose output..."
+          cargo tauri build --target x86_64-pc-windows-msvc --verbose
+          if (!$?) {
+            Write-Output "❌ Build failed! Attempting to show error details..."
+            cargo tauri build --target x86_64-pc-windows-msvc 2>&1 | Select-Object -Last 100
+            exit 1
+          }
+          Write-Output "✅ Tauri Windows build completed"
 
       - name: 🔍 Verify Windows build artifacts
         run: |
