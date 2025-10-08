@@ -448,6 +448,7 @@ pub async fn get_environment_info() -> Result<EnvironmentInfo, String> {
     }
 }
 
+/* 暫時禁用以驗證 keyring 是否為問題根源
 /// 🔐 取得加密設定
 #[tauri::command]
 pub async fn get_secure_key(key: String) -> Result<Option<String>, String> {
@@ -504,6 +505,7 @@ pub async fn delete_secure_key(key: String) -> Result<(), String> {
         }
     }
 }
+*/
 
 /// 🔐 診斷 Tauri Store 功能
 #[tauri::command]

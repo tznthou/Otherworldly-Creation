@@ -27,7 +27,7 @@ tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-store = "2"
-keyring = "3.6"
+# keyring = "3.6"  # 暫時禁用以驗證是否為問題根源
 rusqlite = { version = "0.32", features = ["bundled", "chrono"] }
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }
