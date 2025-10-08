@@ -163,7 +163,8 @@
       "Bash(true })",
       "Bash({ echo \"📊 檢查現有的 localStorage 內容：\" echo \"\" sqlite3 \"$HOME/Library/Application Support/genesis-chronicle/Local Storage/leveldb\" \".dump\")",
       "Bash(osascript:*)",
-      "Bash(RELEASE_VERSION=1.2.8 node scripts/sync-version.js)"
+      "Bash(RELEASE_VERSION=1.2.8 node scripts/sync-version.js)",
+      "Bash(gh run view:*)"
     ],
     "deny": [],
     "ask": [],
