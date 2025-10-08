@@ -170,8 +170,19 @@ jobs:
         run: |
           echo "🚀 Building Tauri app with DMG support..."
           cd src-tauri
-          echo "Running cargo tauri build..."
-          cargo tauri build --target universal-apple-darwin
+          echo "Running cargo tauri build with verbose output..."
+          cargo tauri build --target universal-apple-darwin --verbose 2>&1 | tee build.log
+          BUILD_EXIT_CODE=${PIPESTATUS[0]}
+
+          if [ $BUILD_EXIT_CODE -ne 0 ]; then
+            echo "❌ Build failed with exit code $BUILD_EXIT_CODE"
+            echo "📋 Last 100 lines of build output:"
+            tail -100 build.log
+            echo "📋 Searching for ERROR messages:"
+            grep -i "error" build.log | tail -20 || echo "No ERROR found in grep"
+            exit $BUILD_EXIT_CODE
+          fi
+
           echo "✅ Tauri build completed"
 
       - name: 📦 Create PKG installer
@@ -314,8 +325,19 @@ jobs:
         run: |
           Write-Output "🚀 Building Tauri app for Windows..."
           cd src-tauri
-          Write-Output "Running cargo tauri build..."
-          cargo tauri build --target x86_64-pc-windows-msvc
+          Write-Output "Running cargo tauri build with verbose output..."
+          cargo tauri build --target x86_64-pc-windows-msvc --verbose 2>&1 | Tee-Object -FilePath build.log
+          $BUILD_EXIT_CODE = $LASTEXITCODE
+
+          if ($BUILD_EXIT_CODE -ne 0) {
+            Write-Output "❌ Build failed with exit code $BUILD_EXIT_CODE"
+            Write-Output "📋 Last 100 lines of build output:"
+            Get-Content build.log -Tail 100
+            Write-Output "📋 Searching for ERROR messages:"
+            Select-String -Path build.log -Pattern "error" -CaseSensitive:$false | Select-Object -Last 20
+            exit $BUILD_EXIT_CODE
+          }
+
           Write-Output "✅ Tauri Windows build completed"
 
       - name: 🔍 Verify Windows build artifacts
