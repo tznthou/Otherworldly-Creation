@@ -48,6 +48,45 @@
 - 強化convertFileSrc API Windows支援
 - 保持Mac/Linux環境完全穩定，無任何功能影響
 
+#### 🐛 關鍵Bug修復 - Tauri版本不匹配陷阱（v1.2.8重要經驗）
+- **問題描述**: 連續9次GitHub Actions建置失敗，錯誤訊息不明確（僅顯示exit code 1）
+- **根本原因**: NPM自動升級依賴導致前後端版本不匹配
+  - 添加 `@tauri-apps/plugin-store@^2.4.0` 時，NPM因peerDependencies自動將 `@tauri-apps/api` 從 2.7.0 升級到 2.8.0
+  - Rust端仍為 `tauri = "2.7.0"`，導致版本不匹配：`tauri (v2.7.0) : @tauri-apps/api (v2.8.0)`
+- **解決方案**:
+  1. **精確版本鎖定**: 移除package.json中所有Tauri套件的 `^` 前綴
+  2. **統一版本管理**: 使用 `=` 鎖定Rust端Tauri版本
+  3. **CI詳細日誌**: 添加 `--verbose` 和錯誤診斷輸出
+- **經驗教訓**:
+  - ❌ **錯誤做法**: 只比對package.json（`^2.7.0`看起來一樣）
+  - ✅ **正確做法**: 必須比對package-lock.json（實際安裝的版本）
+  - ✅ **驗證指令**: `npm list @tauri-apps/api` 確認實際版本
+
+#### 📝 開發者注意事項（v1.2.8版本發布經驗總結）
+**Tauri版本相容性要求**:
+- Rust `tauri = "=2.7.0"` 必須與 NPM `@tauri-apps/api: "2.7.0"` 完全一致
+- 所有Tauri plugin版本必須對齊（plugin-store, plugin-dialog等）
+- 關鍵依賴使用精確版本（無 `^` 或 `~`）防止自動升級
+- CI/CD環境中使用 `npm ci` 而非 `npm install` 確保依賴一致性
+
+**NPM依賴解析陷阱**:
+```
+添加依賴時的自動升級機制：
+1. v1.2.7: @tauri-apps/api@2.7.0 (鎖定在package-lock.json)
+2. v1.2.8: 添加 @tauri-apps/plugin-store@^2.4.0
+3. plugin-store的peerDependencies: "@tauri-apps/api": "^2.6.0"
+4. NPM判斷: api可以是2.6.0-2.x.x，當前是^2.7.0
+5. NPM自動升級: api升級到2.8.0（範圍內最新版）
+6. 結果: 與Rust端tauri = 2.7.0不匹配，建置失敗
+```
+
+**診斷技巧（10次建置失敗的血淚教訓）**:
+- 使用 `--verbose` 標誌獲取詳細建置輸出
+- 比對 package-lock.json 而非 package.json
+- GitHub Actions失敗時使用 `tee` 儲存完整日誌
+- 添加 `grep -i "error"` 快速定位錯誤訊息
+- 第9次建置才找到根本原因：verbose日誌揭露版本不匹配
+
 ### 🌟 v1.2.5 - 跨平台相容性與視覺創作體驗突破 (2025年9月16日)
 
 #### 🌐 跨平台相容性革命性突破

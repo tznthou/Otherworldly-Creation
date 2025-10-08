@@ -205,6 +205,85 @@ npm run setup              # Quick project setup
 
 ---
 
+## 🐛 Critical Lessons Learned (v1.2.8 發布經驗)
+
+### ⚠️ Tauri 版本匹配陷阱
+
+**問題**：連續 9 次 GitHub Actions 構建失敗
+**根本原因**：Rust 和 NPM 包版本不匹配
+
+#### 錯誤訊息
+```
+Error [tauri_cli] Found version mismatched Tauri packages.
+Make sure the NPM and crate versions are on the same major/minor releases:
+tauri (v2.7.0) : @tauri-apps/api (v2.8.0)
+tauri-plugin-store (v2.3.0) : @tauri-apps/plugin-store (v2.4.0)
+```
+
+#### 發生原因
+
+**隱形的版本升級**：
+1. v1.2.7 使用 `@tauri-apps/api@2.7.0` ✅ 匹配
+2. v1.2.8 添加 `@tauri-apps/plugin-store@^2.4.0`
+3. npm 依賴解析時，發現 plugin-store 的 peerDependencies 允許 `@tauri-apps/api@^2.6.0`
+4. npm 自動將 api 升級到 `2.8.0` ❌ 不匹配 Rust 的 `tauri@2.7.0`
+
+**為什麼沒發現**：
+- ❌ 只比對了 `package.json`（看起來一樣）
+- ❌ 沒比對 `package-lock.json`（實際安裝版本）
+- ✅ 應該檢查：`npm list @tauri-apps/api`
+
+#### 解決方案
+
+**精確鎖定關鍵依賴**：
+```json
+// ❌ 錯誤：使用 ^ 允許次版本升級
+"@tauri-apps/api": "^2.7.0",
+"@tauri-apps/plugin-store": "^2.4.0"
+
+// ✅ 正確：精確版本匹配 Rust
+"@tauri-apps/api": "2.7.0",      // 匹配 tauri = "=2.7.0"
+"@tauri-apps/plugin-store": "2.3.0"  // 匹配 tauri-plugin-store = "2.3.0"
+```
+
+#### 診斷技巧
+
+**本地看不到，CI 失敗時**：
+1. 添加 `--verbose` flag 到構建命令
+2. 輸出最後 100 行日誌
+3. 用 grep/Select-String 搜索 ERROR
+
+**GitHub Actions 錯誤輸出模板**：
+```yaml
+- name: Build with error diagnostics
+  run: |
+    cargo tauri build --verbose 2>&1 | tee build.log
+    BUILD_EXIT_CODE=${PIPESTATUS[0]}
+    if [ $BUILD_EXIT_CODE -ne 0 ]; then
+      echo "❌ Build failed"
+      tail -100 build.log
+      grep -i "error" build.log | tail -20
+      exit $BUILD_EXIT_CODE
+    fi
+```
+
+#### 版本檢查清單
+
+發布前必須檢查：
+- [ ] `Cargo.toml` 版本：`tauri = "=X.Y.Z"`（精確鎖定）
+- [ ] `package.json` 版本：`@tauri-apps/api: "X.Y.Z"`（無 ^）
+- [ ] `package-lock.json`：`npm list @tauri-apps/api` 確認實際版本
+- [ ] 所有 plugin 版本對齊：`tauri-plugin-* = NPM @tauri-apps/plugin-*`
+
+#### 記憶查詢
+
+相關問題記得查詢 Serena 記憶：
+- 版本不匹配診斷流程
+- GitHub Actions 調試技巧
+- 依賴管理最佳實踐
+
+---
+
 ## ⚠️ UI Feature Removal Protocol (CRITICAL!)
 
 **Background**: Critical lesson from AI插畫設定移除事件where removing "duplicate" functionality resulted in loss of user control capabilities.

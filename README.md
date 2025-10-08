@@ -88,6 +88,21 @@ For detailed implementation documentation, see:
 - `KEYRING_IMPLEMENTATION_SUMMARY.md` - Complete technical overview
 - `KEYRING_TEST.md` - Testing guide and verification procedures
 
+#### 🐛 Critical Bug Fix - Tauri Version Mismatch
+- **Issue**: 9 consecutive GitHub Actions build failures due to NPM package auto-upgrade
+- **Root Cause**: Adding `@tauri-apps/plugin-store` triggered npm to upgrade `@tauri-apps/api` from 2.7.0 to 2.8.0, causing mismatch with Rust's `tauri = 2.7.0`
+- **Solution**: Exact version pinning for all Tauri packages (removed `^` from package.json)
+- **Impact**: Enhanced dependency management practices and added verbose error diagnostics to GitHub Actions
+
+#### 📝 Developer Notes
+**Version Compatibility Requirements**:
+- Rust `tauri = "=2.7.0"` must match NPM `@tauri-apps/api: "2.7.0"` exactly
+- All Tauri plugins must align: `tauri-plugin-store = 2.3.0` ↔ `@tauri-apps/plugin-store: 2.3.0`
+- Use exact versions (no `^` or `~`) for critical dependencies to prevent auto-upgrades
+- Always verify `package-lock.json` when adding new dependencies
+
+**Key Lesson**: When adding dependencies, npm's dependency resolution may upgrade existing packages if `^` is used. Always check `npm list` to verify actual installed versions match Rust crate versions.
+
 ### 🚀 What's New in v1.2.7 - Windows Image Display Compatibility Fix (2025-09-17)
 
 #### 🔧 Windows Environment Image Display Root Fix
