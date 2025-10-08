@@ -1,72 +1,125 @@
 import { AppSettings, DEFAULT_SETTINGS } from '../store/slices/settingsSlice';
 import { api } from '../api';
 import { Language } from '../i18n';
+import { Store } from '@tauri-apps/plugin-store';
 
-const SETTINGS_KEY = 'genesis-chronicle-settings';
+// 🔐 使用加密的 Tauri Store 取代 localStorage
+const SETTINGS_STORE_FILE = '.settings.dat';
+const SETTINGS_KEY = 'app-settings';
+const SETTINGS_HISTORY_KEY = 'settings-history';
+
+// 初始化加密的 settings store
+let settingsStore: Store | null = null;
+
+async function getStore(): Promise<Store> {
+  if (!settingsStore) {
+    settingsStore = await Store.load(SETTINGS_STORE_FILE);
+  }
+  return settingsStore;
+}
 
 export class SettingsService {
+  /**
+   * 🔄 一次性遷移：從 localStorage 遷移到加密儲存
+   */
+  private static async migrateFromLocalStorage(): Promise<AppSettings | null> {
+    try {
+      const OLD_SETTINGS_KEY = 'genesis-chronicle-settings';
+      const oldSettings = localStorage.getItem(OLD_SETTINGS_KEY);
+
+      if (oldSettings) {
+        console.log('🔄 檢測到舊版 localStorage 設定，開始遷移...');
+        const parsed = JSON.parse(oldSettings);
+        const store = await getStore();
+
+        // 儲存到加密 store
+        await store.set(SETTINGS_KEY, parsed);
+        await store.save();
+
+        // 清除舊的 localStorage
+        localStorage.removeItem(OLD_SETTINGS_KEY);
+        localStorage.removeItem(`${OLD_SETTINGS_KEY}-history`);
+
+        console.log('✅ 設定遷移完成！已從 localStorage 移至加密儲存');
+        return parsed;
+      }
+
+      return null;
+    } catch (error) {
+      console.warn('⚠️ localStorage 遷移失敗:', error);
+      return null;
+    }
+  }
+
   /**
    * 載入設定
    */
   static async loadSettings(): Promise<AppSettings> {
     console.log('開始載入設定...');
-    
+
     try {
-      // 簡化載入邏輯，優先使用 localStorage，避免 API 調用卡死
-      const stored = localStorage.getItem(SETTINGS_KEY);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          const mergedSettings = this.mergeWithDefaults(parsed);
-          console.log('從 localStorage 載入設定成功');
-          return mergedSettings;
-        } catch (error) {
-          console.warn('localStorage 設定解析失敗:', error);
-        }
+      const store = await getStore();
+
+      // 🔄 首次執行：嘗試從 localStorage 遷移
+      const migratedSettings = await this.migrateFromLocalStorage();
+      if (migratedSettings) {
+        const mergedSettings = this.mergeWithDefaults(migratedSettings);
+        console.log('✅ 從 localStorage 遷移設定成功');
+        return mergedSettings;
       }
-      
-      // 如果 localStorage 沒有設定，使用預設設定
-      console.log('使用預設設定');
-      
-      // 儲存預設設定到 localStorage
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(DEFAULT_SETTINGS));
-      
+
+      // 從加密 store 載入
+      const stored = await store.get<AppSettings>(SETTINGS_KEY);
+      if (stored) {
+        const mergedSettings = this.mergeWithDefaults(stored);
+        console.log('✅ 從加密儲存載入設定成功');
+        return mergedSettings;
+      }
+
+      // 如果沒有設定，使用預設設定並儲存
+      console.log('📝 使用預設設定');
+      await store.set(SETTINGS_KEY, DEFAULT_SETTINGS);
+      await store.save();
+
       return DEFAULT_SETTINGS;
-      
+
     } catch (error) {
-      console.error('設定載入完全失敗，使用預設設定:', error);
+      console.error('❌ 設定載入完全失敗，使用預設設定:', error);
       return DEFAULT_SETTINGS;
     }
   }
-  
+
   /**
    * 儲存設定
    */
   static async saveSettings(settings: AppSettings): Promise<void> {
     try {
-      // 優先儲存到 localStorage，確保不會卡死
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-      console.log('設定已儲存到 localStorage');
-      
+      const store = await getStore();
+
+      // 🔐 儲存到加密 store
+      await store.set(SETTINGS_KEY, settings);
+      await store.save();
+      console.log('✅ 設定已儲存到加密儲存（AES-256）');
+
       // 儲存設定變更歷史
-      this.saveSettingsHistory(settings);
-      
+      await this.saveSettingsHistory(settings);
+
       // 後台同步到後端（不阻塞主流程）
       this.syncSettingsToBackend(settings).catch(error => {
-        console.warn('背景同步設定到後端失敗:', error);
+        console.warn('⚠️ 背景同步設定到後端失敗:', error);
       });
-      
+
       // 通知監聽器
       SettingsWatcher.notifyListeners(settings);
-      
+
       // 觸發功能開關重載
       this.notifyFeatureFlagsUpdate();
     } catch (error) {
-      console.error('儲存設定失敗:', error);
+      console.error('❌ 儲存設定失敗:', error);
       throw error;
     }
   }
-  
+
   /**
    * 後台同步設定到後端
    */
@@ -75,31 +128,38 @@ export class SettingsService {
       for (const [key, value] of Object.entries(settings)) {
         await api.settings.set(key, value);
       }
-      console.log('設定已同步到後端');
+      console.log('✅ 設定已同步到後端');
     } catch (error) {
-      console.warn('同步設定到後端失敗:', error);
+      console.warn('⚠️ 同步設定到後端失敗:', error);
     }
   }
-  
+
   /**
    * 重置設定
    */
   static async resetSettings(): Promise<void> {
     try {
-      localStorage.removeItem(SETTINGS_KEY);
-      
+      const store = await getStore();
+
+      // 清除加密儲存
+      await store.delete(SETTINGS_KEY);
+      await store.delete(SETTINGS_HISTORY_KEY);
+      await store.save();
+
       // 通知主程序重置設定
       try {
         await api.settings.reset();
       } catch (error) {
-        console.warn('重置後端設定失敗:', error);
+        console.warn('⚠️ 重置後端設定失敗:', error);
       }
+
+      console.log('✅ 設定已重置');
     } catch (error) {
-      console.error('重置設定失敗:', error);
+      console.error('❌ 重置設定失敗:', error);
       throw error;
     }
   }
-  
+
   /**
    * 匯出設定
    */
@@ -108,11 +168,11 @@ export class SettingsService {
       const settings = await this.loadSettings();
       return JSON.stringify(settings, null, 2);
     } catch (error) {
-      console.error('匯出設定失敗:', error);
+      console.error('❌ 匯出設定失敗:', error);
       throw error;
     }
   }
-  
+
   /**
    * 匯入設定
    */
@@ -123,23 +183,22 @@ export class SettingsService {
       await this.saveSettings(mergedSettings);
       return mergedSettings;
     } catch (error) {
-      console.error('匯入設定失敗:', error);
+      console.error('❌ 匯入設定失敗:', error);
       throw error;
     }
   }
-  
+
   /**
    * 通知功能開關系統更新
    */
   private static notifyFeatureFlagsUpdate() {
     try {
-      // 派發自定義事件來通知功能開關系統更新
       window.dispatchEvent(new CustomEvent('settings-updated', {
         detail: { timestamp: Date.now() }
       }));
       console.log('🔄 已通知功能開關系統更新');
     } catch (error) {
-      console.warn('通知功能開關更新失敗:', error);
+      console.warn('⚠️ 通知功能開關更新失敗:', error);
     }
   }
 
@@ -148,127 +207,119 @@ export class SettingsService {
    */
   static validateSettings(settings: unknown): boolean {
     try {
-      // 基本結構檢查
       if (!settings || typeof settings !== 'object') {
         return false;
       }
-      
-      // 檢查必要的頂層屬性
+
       const requiredKeys = ['language', 'ai', 'editor', 'ui', 'backup', 'privacy', 'shortcuts', 'features'];
       for (const key of requiredKeys) {
         if (!(key in settings)) {
           return false;
         }
       }
-      
+
       const settingsObj = settings as Record<string, unknown>;
-      // 檢查 AI 設定
       if (!settingsObj.ai || typeof settingsObj.ai !== 'object') {
         return false;
       }
-      
-      // 檢查編輯器設定
+
       if (!settingsObj.editor || typeof settingsObj.editor !== 'object') {
         return false;
       }
-      
+
       return true;
     } catch (_error) {
       return false;
     }
   }
-  
+
   /**
    * 合併設定與預設值
    */
   private static mergeWithDefaults(settings: unknown): AppSettings {
     const merged = { ...DEFAULT_SETTINGS };
-    
+
     if (settings && typeof settings === 'object') {
       const settingsObj = settings as Record<string, unknown>;
-      // 一般設定
       if (typeof settingsObj.language === 'string' && ['zh-TW', 'zh-CN', 'en', 'ja'].includes(settingsObj.language)) {
         merged.language = settingsObj.language as Language;
       }
-      // 遷移舊的 autoSave 設定到 backup.autoBackup
       if (typeof settingsObj.autoSave === 'boolean') merged.backup.autoBackup = settingsObj.autoSave;
-      if (typeof settingsObj.autoSaveInterval === 'number') merged.backup.backupInterval = Math.round(settingsObj.autoSaveInterval / 1000); // 轉換為小時
-      
-      // AI 設定
+      if (typeof settingsObj.autoSaveInterval === 'number') merged.backup.backupInterval = Math.round(settingsObj.autoSaveInterval / 1000);
+
       if (settingsObj.ai && typeof settingsObj.ai === 'object') {
         merged.ai = { ...merged.ai, ...settingsObj.ai };
       }
-      
-      // 編輯器設定
+
       if (settingsObj.editor && typeof settingsObj.editor === 'object') {
         merged.editor = { ...merged.editor, ...settingsObj.editor };
       }
-      
-      // UI 設定
+
       if (settingsObj.ui && typeof settingsObj.ui === 'object') {
         merged.ui = { ...merged.ui, ...settingsObj.ui };
       }
-      
-      // 備份設定
+
       if (settingsObj.backup && typeof settingsObj.backup === 'object') {
         merged.backup = { ...merged.backup, ...settingsObj.backup };
       }
-      
-      // 隱私設定
+
       if (settingsObj.privacy && typeof settingsObj.privacy === 'object') {
         merged.privacy = { ...merged.privacy, ...settingsObj.privacy };
       }
-      
-      // 快捷鍵設定
+
       if (settingsObj.shortcuts && typeof settingsObj.shortcuts === 'object') {
         merged.shortcuts = { ...merged.shortcuts, ...settingsObj.shortcuts };
       }
-      
-      // 功能開關設定
+
       if (settingsObj.features && typeof settingsObj.features === 'object') {
         merged.features = { ...merged.features, ...settingsObj.features };
       }
     }
-    
+
     return merged;
   }
-  
+
   /**
    * 獲取設定變更歷史
    */
-  static getSettingsHistory(): Array<{ timestamp: Date; settings: AppSettings }> {
+  static async getSettingsHistory(): Promise<Array<{ timestamp: Date; settings: AppSettings }>> {
     try {
-      const history = localStorage.getItem(`${SETTINGS_KEY}-history`);
+      const store = await getStore();
+      const history = await store.get<Array<{ timestamp: string; settings: AppSettings }>>(SETTINGS_HISTORY_KEY);
+
       if (history) {
-        return JSON.parse(history).map((item: { timestamp: string; settings: AppSettings }) => ({
+        return history.map(item => ({
           ...item,
           timestamp: new Date(item.timestamp)
         }));
       }
       return [];
     } catch (error) {
-      console.error('獲取設定歷史失敗:', error);
+      console.error('❌ 獲取設定歷史失敗:', error);
       return [];
     }
   }
-  
+
   /**
    * 儲存設定變更歷史
    */
-  static saveSettingsHistory(settings: AppSettings): void {
+  static async saveSettingsHistory(settings: AppSettings): Promise<void> {
     try {
-      const history = this.getSettingsHistory();
+      const store = await getStore();
+      const history = await this.getSettingsHistory();
+
       history.unshift({
         timestamp: new Date(),
         settings: { ...settings }
       });
-      
+
       // 只保留最近 10 次變更
       const trimmedHistory = history.slice(0, 10);
-      
-      localStorage.setItem(`${SETTINGS_KEY}-history`, JSON.stringify(trimmedHistory));
+
+      await store.set(SETTINGS_HISTORY_KEY, trimmedHistory);
+      await store.save();
     } catch (error) {
-      console.error('儲存設定歷史失敗:', error);
+      console.error('❌ 儲存設定歷史失敗:', error);
     }
   }
 }
@@ -276,24 +327,24 @@ export class SettingsService {
 // 設定變更監聽器
 export class SettingsWatcher {
   private static listeners: Array<(settings: AppSettings) => void> = [];
-  
+
   static addListener(callback: (settings: AppSettings) => void): void {
     this.listeners.push(callback);
   }
-  
+
   static removeListener(callback: (settings: AppSettings) => void): void {
     const index = this.listeners.indexOf(callback);
     if (index > -1) {
       this.listeners.splice(index, 1);
     }
   }
-  
+
   static notifyListeners(settings: AppSettings): void {
     this.listeners.forEach(callback => {
       try {
         callback(settings);
       } catch (error) {
-        console.error('設定監聽器執行失敗:', error);
+        console.error('❌ 設定監聽器執行失敗:', error);
       }
     });
   }

@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { store } from './store/store';
 import { useAppDispatch } from './hooks/redux';
+import { useSettings } from './hooks/useSettings';
 import { checkOllamaService, fetchModelsInfo, fetchAIProviders, setActiveProvider } from './store/slices/aiSlice';
 import { fetchProjects } from './store/slices/projectsSlice';
 import Layout from './components/Layout/Layout';
@@ -23,6 +24,25 @@ import { initReactScan } from './utils/reactScan';
 // import { performanceMonitor } from './utils/performanceMonitor';
 // import { performanceBenchmark } from './utils/performanceBenchmark';
 import './index.css';
+
+// 🔐 最早期設定遷移 - 在任何組件渲染之前執行
+(async () => {
+  try {
+    console.log('🔐 [EARLY INIT] 開始早期設定遷移檢查...');
+    const { SettingsService } = await import('./services/settingsService');
+    await SettingsService.loadSettings();
+    console.log('🔐 [EARLY INIT] 設定載入完成');
+
+    const lcCheck = localStorage.getItem('genesis-chronicle-settings');
+    if (lcCheck) {
+      console.log('⚠️ [EARLY INIT] localStorage 仍有設定，遷移可能失敗');
+    } else {
+      console.log('✅ [EARLY INIT] localStorage 已清除，遷移成功！');
+    }
+  } catch (error) {
+    console.error('❌ [EARLY INIT] 早期設定遷移失敗:', error);
+  }
+})();
 
 // 🛡️ 超早期錯誤攔截器 - 在任何其他代碼運行之前設置
 (() => {
@@ -93,6 +113,9 @@ const SimpleApp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+
+  // 🔐 載入加密設定（觸發 localStorage → Tauri Store 遷移）
+  useSettings();
 
   // 🔧 修復無限循環：使用 useRef 確保初始化只執行一次
   const hasInitialized = useRef(false);

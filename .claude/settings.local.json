@@ -148,7 +148,16 @@
       "Bash(RELEASE_VERSION=1.2.7 node scripts/sync-version.js)",
       "Bash(time npm run build:renderer --silent)",
       "Bash(time cargo check:*)",
-      "Bash(timeout 60s cargo test --lib api_handler::tests::test_build_request)"
+      "Bash(timeout 60s cargo test --lib api_handler::tests::test_build_request)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash({)",
+      "Bash(__NEW_LINE__ echo \"🧹 清除所有快取...\")",
+      "Bash(__NEW_LINE__ echo \"✅ 清除完成！\")",
+      "Bash(})",
+      "Bash(timeout 15 npx tsc --noEmit)",
+      "Bash({ echo \"🛑 完全停止所有程序...\" pkill -9 -f \"genesis-chronicle\")",
+      "Bash({ echo \"🧹 清除所有編譯快取和輸出...\" rm -rf dist rm -rf node_modules/.vite rm -rf .vite rm -rf src-tauri/target/debug/incremental rm -rf src-tauri/target/debug/build rm -rf src-tauri/target/debug/deps)",
+      "Bash(head -3 })"
     ],
     "deny": [],
     "ask": [],

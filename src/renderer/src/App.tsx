@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useAppDispatch } from './hooks/redux';
+import { useSettings } from './hooks/useSettings';
 import { fetchModelsInfo, fetchAIProviders, setActiveProvider } from './store/slices/aiSlice';
 import { fetchProjects } from './store/slices/projectsSlice';
 import Layout from './components/Layout/Layout';
@@ -23,14 +24,26 @@ const App: React.FC = () => {
   const [initError, setInitError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
 
+  // 🔐 載入加密設定（觸發 localStorage → Tauri Store 遷移）
+  useSettings();
+
   useEffect(() => {
     const initApp = async () => {
       try {
         console.log('🚀 開始應用程式初始化...');
-        
+
+        // 🔐 強制測試加密設定遷移
+        console.log('🔐 [FORCE TEST] 開始測試加密設定遷移...');
+        const { SettingsService } = await import('./services/settingsService');
+        console.log('🔐 [FORCE TEST] SettingsService imported');
+        const testSettings = await SettingsService.loadSettings();
+        console.log('🔐 [FORCE TEST] 設定載入完成:', testSettings);
+        const lcCheck = localStorage.getItem('genesis-chronicle-settings');
+        console.log('🔐 [FORCE TEST] localStorage check:', lcCheck ? `❌ 仍存在 (${lcCheck.length} chars)` : '✅ 已清除');
+
         // 初始化 React Scan 性能監控（僅開發環境）
         initReactScan();
-        
+
         // 初始化 i18n 系統
         console.log('🌐 初始化國際化系統...');
         try {
