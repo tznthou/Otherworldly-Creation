@@ -260,7 +260,63 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     }
   };
 
-  // 執行批次生成
+  // 🎯 智能Seed生成系統：確保不同環境產生不同插畫
+  const generateSmartSeed = useCallback((characterIds: string[], prompt: string, templateId?: string): number => {
+    // 基礎隨機性：時間戳（毫秒）+ 強化隨機數
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000000); // 增強隨機範圍
+    
+    // 🔐 隱私友好的環境特徵：僅收集必要且無敏感性的信息
+    const language = window.navigator.language || 'en-US';
+    const timezone = (() => {
+      try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      } catch (_error) {
+        console.warn('🔍 [SmartSeed] 無法獲取時區，使用UTC');
+        return 'UTC';
+      }
+    })();
+    
+    // 內容特徵：基於角色、提示詞和模板創建內容指紋
+    const characterHash = characterIds.join('|');
+    const promptHash = prompt.slice(0, 30); // 限制長度避免過長prompt影響性能
+    const templateHash = templateId || 'default';
+    
+    // 🚀 優化：限制組合字符串長度以提升性能
+    const combinedString = [
+      timestamp.toString(),
+      random.toString(),
+      language,
+      timezone,
+      characterHash,
+      promptHash,
+      templateHash
+    ].join('|').slice(0, 300); // 限制總長度避免性能問題
+    
+    // 使用高效hash函數將字符串轉換為數字seed
+    let hash = 0;
+    const maxIterations = Math.min(combinedString.length, 200); // 限制計算循環次數
+    for (let i = 0; i < maxIterations; i++) {
+      const char = combinedString.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // 轉換為32位整數
+    }
+    
+    // 確保seed為正數且在Pollinations API支持範圍內（1-999999999）
+    const seed = Math.abs(hash) % 999999999 + 1;
+    
+    console.log(`🎲 [CreateTab] 智能Seed生成: ${seed}`, {
+      characterCount: characterIds.length,
+      promptLength: prompt.length,
+      templateId,
+      environmentFactors: { language, timezone }, // 隱私友好的日誌
+      timestamp,
+      random
+    });
+    
+    return seed;
+  }, []);
+
   const handleBatchGenerate = useCallback(async () => {
     if (batchRequests.length === 0) {
       dispatch(setError('請先添加至少一個生成請求'));
@@ -278,6 +334,13 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       for (const request of batchRequests) {
         console.log(`🎯 [CreateTab] 處理請求: ${request.id}`);
 
+        // 🎲 生成智能Seed：確保不同環境產生不同插畫
+        const smartSeed = generateSmartSeed(
+          request.selectedCharacterIds,
+          request.enriched_prompt,
+          selectedQuickTemplate || undefined
+        );
+
         // 🎨 增強 prompt：確保包含插畫風格關鍵字
         let enhancedPrompt = request.enriched_prompt;
         if (globalColorMode === 'manga') {
@@ -289,7 +352,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
             enhancedPrompt += ', pencil sketch, grayscale drawing, soft shading, hand-drawn, artistic sketch, charcoal effect';
           }
         }
-        console.log(`🎨 [CreateTab] 插畫風格: ${globalColorMode}, 增強後 prompt:`, enhancedPrompt);
+        console.log(`🎨 [CreateTab] 插畫風格: ${globalColorMode}, 智能Seed: ${smartSeed}, 增強後prompt:`, enhancedPrompt);
 
         // 根據 provider 選擇不同的 API
         let result;
@@ -320,13 +383,13 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
             characterId: request.selectedCharacterIds[0],
           });
         } else {
-          // 預設使用 Pollinations API
+          // 🎲 使用 Pollinations API 與智能Seed
           result = await api.illustration.generateFreeIllustrationToTemp(
             enhancedPrompt,
             1024,   // width
             1024,   // height
             'flux', // model
-            undefined, // seed
+            smartSeed, // 🎯 使用智能生成的seed
             false,  // enhance
             artStyle, // style
             currentProject.id,
@@ -373,6 +436,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
               model: getModelNameForProvider(illustrationProvider),
               width: 1024,
               height: 1024,
+              seed: smartSeed, // 📝 記錄使用的智能seed
               enhance: false
             },
             file_size_bytes: resultWithData.file_size_bytes || 0,
@@ -392,7 +456,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       console.log('🎉 [CreateTab] 所有批次請求完成');
 
       // 🚀 自動開啟大圖預覽 Modal
-      // 確保 currentImageIndex 正確設置，然後開啟預覽
+      // 確保currentImageIndex 正確設置，然後開啟預覽
       dispatch(setCurrentImageIndex(0));
       dispatch(setShowImagePreview(true));
       console.log('🖼️ [CreateTab] 自動開啟大圖預覽 Modal');
@@ -466,7 +530,8 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       const friendlyError = handleSmartError(error instanceof Error ? error.message : '批次生成失敗');
       dispatch(setError(friendlyError));
     }
-  }, [batchRequests, currentProject, dispatch, artStyle, illustrationProvider, apiKey, serviceDisplayName, globalColorMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batchRequests, currentProject, dispatch, artStyle, illustrationProvider, apiKey, serviceDisplayName, globalColorMode, generateSmartSeed, selectedQuickTemplate]);
 
   // 移除批次請求
   const handleRemoveBatchRequest = useCallback((requestId: string) => {

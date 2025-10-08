@@ -134,16 +134,27 @@ impl PollinationsApiHandler {
 
     /// 建構 API 請求參數
     pub fn build_request(request: &ApiGenerationRequest, model: PollinationsModel) -> PollinationsRequest {
-        // CRITICAL FIX: 移除 seed 參數以避免 Pollinations.AI 500 錯誤
-        // 2025-08-31: Pollinations.AI 現在對固定 seed 值過敏，導致所有模型都失敗
-        let safe_seed = None; // 強制設為 None，讓 API 自動選擇
+        // 🎲 智能Seed處理：接受前端傳入的智能seed，確保不同環境產生不同插畫
+        // 修復日期：2025-09-18 - 解決相同模板產生相同插畫的問題
+        let smart_seed = match request.seed {
+            Some(seed_value) => {
+                // 前端傳入智能seed：使用它來確保不同環境的唯一性
+                log::info!("[ApiHandler] 🎯 使用前端智能Seed: {}", seed_value);
+                Some(seed_value)
+            },
+            None => {
+                // 前端未傳入seed：讓API自動選擇（保持隨機性）
+                log::info!("[ApiHandler] 🎲 未指定seed，由API自動選擇隨機seed");
+                None
+            }
+        };
 
         PollinationsRequest {
             prompt: request.prompt.clone(),
             width: None, // 移除尺寸參數以避免 500 錯誤
             height: None, // 移除尺寸參數以避免 500 錯誤
             model: Some(model),
-            seed: safe_seed,
+            seed: smart_seed, // 🎯 使用智能seed或讓API自動選擇
             enhance: request.enhance.or(Some(false)),
             nologo: Some(true),
             transparent: Some(false),
@@ -432,7 +443,7 @@ mod tests {
         assert!(matches!(api_request.model, Some(PollinationsModel::Flux)));
         assert_eq!(api_request.width, None); // 應該被設為 None（避免 API 錯誤）
         assert_eq!(api_request.height, None); // 應該被設為 None（避免 API 錯誤）
-        assert_eq!(api_request.seed, None); // 應該被設為 None（避免 API 錯誤）
+        assert_eq!(api_request.seed, Some(12345)); // 🎯 智能seed應該被保留
         assert_eq!(api_request.enhance, Some(true));
         assert_eq!(api_request.nologo, Some(true));
         assert_eq!(api_request.transparent, Some(false));

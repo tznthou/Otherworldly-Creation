@@ -145,7 +145,10 @@
       "Bash(git diff:*)",
       "Bash(git reset:*)",
       "Bash(RELEASE_VERSION=1.2.6 node scripts/sync-version.js)",
-      "Bash(RELEASE_VERSION=1.2.7 node scripts/sync-version.js)"
+      "Bash(RELEASE_VERSION=1.2.7 node scripts/sync-version.js)",
+      "Bash(time npm run build:renderer --silent)",
+      "Bash(time cargo check:*)",
+      "Bash(timeout 60s cargo test --lib api_handler::tests::test_build_request)"
     ],
     "deny": [],
     "ask": [],

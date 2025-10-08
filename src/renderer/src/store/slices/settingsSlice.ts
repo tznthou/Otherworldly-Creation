@@ -20,6 +20,18 @@ export interface AppSettings {
     ollamaTimeout: number; // 秒
     ollamaRetryAttempts: number;
     ollamaRetryDelay: number; // 毫秒
+    
+    // 智能上下文優化設定
+    intelligentContext: {
+      enabled: boolean;                                    // 啟用智能上下文優化
+      optimizationLevel: 'basic' | 'advanced' | 'experimental';  // 優化等級
+      preserveDialogue: boolean;                          // 保留對話內容
+      maxTokenBudget: number;                            // 最大Token預算
+      plotAnalysisWeight: number;                        // 劇情分析權重 (0-1)
+      statusWeight: number;                              // 章節狀態權重 (0-1)
+      proximityWeight: number;                           // 位置接近權重 (0-1)
+      enablePerformanceMode: boolean;                    // 性能模式（減少分析複雜度）
+    };
   };
   
   // 編輯器設定
@@ -71,6 +83,9 @@ export interface AppSettings {
     // AI 插畫功能
     extendedIllustrationServices: boolean;  // 擴展AI插圖服務 (Gemini、OpenRouter等)
     smartApiDetection: boolean;             // 智能API檢測
+    
+    // 智能上下文功能
+    intelligentContextOptimization: boolean; // 智能多維度上下文優化
   };
 }
 
@@ -91,6 +106,18 @@ export const DEFAULT_SETTINGS: AppSettings = {
     ollamaTimeout: 120, // 120 秒
     ollamaRetryAttempts: 3,
     ollamaRetryDelay: 1000, // 1 秒
+
+    // 智能上下文優化預設設定
+    intelligentContext: {
+      enabled: false,                       // 預設關閉，需要用戶手動啟用
+      optimizationLevel: 'advanced',       // 預設高級模式
+      preserveDialogue: true,              // 預設保留對話
+      maxTokenBudget: 8000,               // 預設8000 Token預算
+      plotAnalysisWeight: 0.4,            // 劇情分析權重40%
+      statusWeight: 0.3,                  // 章節狀態權重30%
+      proximityWeight: 0.3,               // 位置接近權重30%
+      enablePerformanceMode: false,       // 預設完整分析模式
+    },
   },
   
   editor: {
@@ -144,6 +171,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   features: {
     extendedIllustrationServices: false,  // 🚫 已禁用 - 功能已遷移至AI Provider管理
     smartApiDetection: false,             // 🚫 已禁用 - 功能已遷移至AI Provider管理
+    intelligentContextOptimization: false, // 🚫 預設關閉智能上下文優化
   },
 };
 
@@ -170,7 +198,17 @@ const settingsSlice = createSlice({
   reducers: {
     // 載入設定
     loadSettings: (state, action: PayloadAction<AppSettings>) => {
-      state.settings = { ...DEFAULT_SETTINGS, ...action.payload };
+      const loadedSettings = action.payload;
+
+      // 🛡️ Migration: 確保新增的 intelligentContext 設定存在
+      if (!loadedSettings.ai?.intelligentContext) {
+        loadedSettings.ai = {
+          ...loadedSettings.ai,
+          intelligentContext: DEFAULT_SETTINGS.ai.intelligentContext
+        };
+      }
+
+      state.settings = { ...DEFAULT_SETTINGS, ...loadedSettings };
       state.isLoading = false;
       state.hasUnsavedChanges = false;
       state.lastSaved = new Date();

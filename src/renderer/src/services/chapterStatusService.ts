@@ -208,7 +208,7 @@ export class ChapterStatusService {
   /**
    * 🔄 統一狀態解析邏輯：優先從metadata解析，回退到直接status字段
    */
-  private parseChapterStatus(chapter: Chapter): ChapterStatus {
+  public parseChapterStatus(chapter: Chapter): ChapterStatus {
     try {
       // 優先從 metadata 中讀取狀態（與 ChapterStatusPage 一致）
       if (chapter.metadata) {

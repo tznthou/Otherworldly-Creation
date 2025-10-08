@@ -2,6 +2,9 @@ import { Editor, Range, Transforms } from 'slate';
 import { analyzeChapterNotes, type ChapterNotesAnalysis } from '../../utils/chapterNotesAnalyzer';
 import { api } from '../../api';
 
+// 🐛 開發模式 debug logging (生產環境會被優化掉)
+const DEBUG_INTELLIGENT_CONTEXT = process.env.NODE_ENV === 'development';
+
 /**
  * 編輯器上下文類型
  */
@@ -36,10 +39,24 @@ export interface PromptContext {
  * 上下文優化配置
  */
 export interface ContextOptimizationConfig {
+  // 原有的基礎配置
   maxTokens: number;
   focusCharacters?: string[];
   compressionLevel?: 'light' | 'medium' | 'smart';
   enableOptimization?: boolean;
+  
+  // 新增的智能優化配置
+  enableIntelligentOptimization?: boolean;
+  preserveDialogue?: boolean;
+  contextOptimizationLevel?: 'basic' | 'advanced' | 'experimental';
+  
+  // 多維度權重配置
+  plotAnalysisWeight?: number;
+  statusWeight?: number;
+  proximityWeight?: number;
+  
+  // Token預算管理
+  maxTokenBudget?: number;
 }
 
 /**
@@ -52,7 +69,14 @@ export interface ContextOptimizationConfig {
  * - 整合超長上下文優化
  * - 建構智能化的prompt
  */
+import { IntelligentContextBuilder, type OptimizedContext } from './IntelligentContextBuilder';
+
 export class ContextPreparationService {
+  private intelligentContextBuilder: IntelligentContextBuilder;
+
+  constructor() {
+    this.intelligentContextBuilder = new IntelligentContextBuilder();
+  }
 
   /**
    * 準備編輯器上下文信息
@@ -147,6 +171,70 @@ export class ContextPreparationService {
   }
 
   /**
+   * 智能多維度上下文建構
+   * 
+   * 核心功能：
+   * - 跨章節上下文整合
+   * - 基於章節狀態、劇情重要性的權重分配
+   * - U形注意力模式優化
+   * - 智能Token分配
+   */
+  async prepareIntelligentContext(
+    projectId: string,
+    chapterId: string,
+    config: ContextOptimizationConfig
+  ): Promise<OptimizedContext> {
+    // 檢查是否啟用智能優化
+    if (!config.enableIntelligentOptimization) {
+      throw new Error('智能上下文優化未啟用');
+    }
+
+    // 構建智能上下文配置
+    const intelligentConfig = {
+      enableIntelligentOptimization: true,
+      preserveDialogue: config.preserveDialogue ?? true,
+      focusCharacters: config.focusCharacters ?? [],
+      maxTokenBudget: config.maxTokenBudget ?? config.maxTokens ?? 8000,
+      contextOptimizationLevel: config.contextOptimizationLevel ?? 'advanced',
+      plotAnalysisWeight: config.plotAnalysisWeight ?? 0.4,
+      statusWeight: config.statusWeight ?? 0.3,
+      proximityWeight: config.proximityWeight ?? 0.3
+    };
+
+    try {
+      if (DEBUG_INTELLIGENT_CONTEXT) {
+        console.log('🧠 開始智能多維度上下文建構:', {
+          projectId,
+          chapterId,
+          maxTokenBudget: intelligentConfig.maxTokenBudget,
+          level: intelligentConfig.contextOptimizationLevel
+        });
+      }
+
+      const optimizedContext = await this.intelligentContextBuilder.buildMultiDimensionalContext(
+        projectId,
+        chapterId,
+        intelligentConfig
+      );
+
+      if (DEBUG_INTELLIGENT_CONTEXT) {
+        console.log('✅ 智能上下文建構完成:', {
+          tokenCount: optimizedContext.tokenCount,
+          compressionRatio: optimizedContext.compressionRatio,
+          usedChapters: optimizedContext.usedChapters.length,
+          buildTime: optimizedContext.performanceMetrics.buildTime
+        });
+      }
+
+      return optimizedContext;
+
+    } catch (error) {
+      console.error('🔥 智能上下文建構失敗:', error);
+      throw new Error(`智能上下文建構失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    }
+  }
+
+  /**
    * 建構基於章節筆記的系統提示詞
    */
   buildSystemPrompt(chapterNotes?: ChapterNotes): string {
@@ -166,7 +254,7 @@ export class ContextPreparationService {
         stylePrompts.push('注重動作場景的節奏感和視覺效果');
       }
       if (style.description > 0.5) {
-        stylePrompts.push('豐富環境描述，營造沉浸感');
+        stylePrompts.push('豐富環境描述，營造沈浸感');
       }
       if (style.emotion > 0.5) {
         stylePrompts.push('深入挖掘角色內心情感變化');
@@ -210,32 +298,80 @@ export class ContextPreparationService {
 
   /**
    * 準備完整的prompt上下文
+   * 
+   * 重要改進：現在支援智能多章節上下文建構
    */
   async preparePromptContext(
     editorContext: EditorContext,
     chapterId: string,
+    projectId: string,
     optimizationConfig: ContextOptimizationConfig
   ): Promise<PromptContext> {
     // 獲取章節筆記
     const chapterNotes = await this.getChapterNotes(chapterId);
     
-    // 優化上下文（如果需要）
     let optimizedContext: string | undefined;
-    if (optimizationConfig.enableOptimization && editorContext.textLength > 50000) {
-      optimizedContext = await this.optimizeContext(
-        editorContext.currentText, 
-        {
-          ...optimizationConfig,
-          focusCharacters: optimizationConfig.focusCharacters
+
+    // 檢查是否使用智能優化模式
+    if (optimizationConfig.enableIntelligentOptimization) {
+      try {
+        if (DEBUG_INTELLIGENT_CONTEXT) {
+          console.log('🧠 使用智能多維度上下文建構模式');
         }
-      );
+        
+        const intelligentResult = await this.prepareIntelligentContext(
+          projectId,
+          chapterId,
+          optimizationConfig
+        );
+
+        // 使用智能建構的結果
+        optimizedContext = intelligentResult.optimizedContent;
+        
+        if (DEBUG_INTELLIGENT_CONTEXT) {
+          console.log('✅ 智能上下文建構成功:', {
+            originalMode: false,
+            tokenCount: intelligentResult.tokenCount,
+            compression: `${(intelligentResult.compressionRatio * 100).toFixed(1)}%`,
+            chapters: intelligentResult.usedChapters.length
+          });
+        }
+
+      } catch (error) {
+        console.warn('⚠️ 智能上下文建構失敗，回退到傳統模式:', error);
+        
+        // 回退到傳統優化模式
+        if (optimizationConfig.enableOptimization && editorContext.textLength > 50000) {
+          optimizedContext = await this.optimizeContext(
+            editorContext.currentText, 
+            optimizationConfig
+          );
+        }
+      }
+
+    } else {
+      // 傳統優化模式（向後兼容）
+      if (optimizationConfig.enableOptimization && editorContext.textLength > 50000) {
+        optimizedContext = await this.optimizeContext(
+          editorContext.currentText, 
+          {
+            ...optimizationConfig,
+            focusCharacters: optimizationConfig.focusCharacters
+          }
+        );
+      }
     }
 
     // 建構系統提示
     const systemPrompt = this.buildSystemPrompt(chapterNotes || undefined);
     
     // 建構基礎prompt
-    const basePrompt = `續寫位置: ${editorContext.position}`;
+    let basePrompt = `續寫位置: ${editorContext.position}`;
+    
+    // 如果沒有智能上下文，使用當前編輯器內容
+    if (!optimizedContext) {
+      basePrompt = `${editorContext.currentText}\n\n續寫位置: ${editorContext.position}`;
+    }
 
     return {
       basePrompt,

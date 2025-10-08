@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import type { AppDispatch } from '../store/store';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '../store/store';
 import { addNotification } from '../store/slices/uiSlice';
 import { Editor } from 'slate';
 
@@ -12,6 +12,9 @@ import { generationExecutor } from '../services/ai-generation/GenerationExecutor
 import { progressManager, type ProgressState } from '../services/ai-generation/ProgressManager';
 
 import type { AIParams } from '../services/ai-generation/ParameterOptimizer';
+
+// 🐛 開發模式 debug logging (生產環境會被優化掉)
+const DEBUG_AI_GENERATION = process.env.NODE_ENV === 'development';
 
 /**
  * AI生成配置類型
@@ -68,12 +71,13 @@ export interface AIGenerationHook {
  */
 export function useAIGeneration(): AIGenerationHook {
   const dispatch = useDispatch<AppDispatch>();
-  
+  const settings = useSelector((state: RootState) => state.settings.settings);
+
   // 狀態管理
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState<ProgressState>(progressManager.getCurrentProgress());
   const [generationOptions, setGenerationOptions] = useState<GenerationOption[]>([]);
-  
+
   // 取消控制
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -81,7 +85,9 @@ export function useAIGeneration(): AIGenerationHook {
    * 主要生成方法
    */
   const generate = useCallback(async (config: AIGenerationConfig): Promise<void> => {
-    console.log('🚀 開始AI生成流程:', config);
+    if (DEBUG_AI_GENERATION) {
+      console.log('🚀 開始AI生成流程:', config);
+    }
     
     // 1. 驗證階段
     const validationResult = validationService.validateAll({
@@ -108,20 +114,45 @@ export function useAIGeneration(): AIGenerationHook {
     abortControllerRef.current = new AbortController();
     
     // 初始化進度管理
-    progressManager.initProgress(config.generationCount, '準備生成上下文...');
+    progressManager.initProgress(config.generationCount, '準備智能多維度上下文建構...');
 
     try {
       // 3. 準備上下文階段
       progressManager.updateStep('分析編輯器狀態...');
       const editorContext = contextPreparationService.prepareEditorContext(config.editor);
       
-      progressManager.updateStep('準備上下文和章節筆記...');
+      // 檢查是否啟用智能上下文優化
+      const isIntelligentOptimizationEnabled =
+        settings.features?.intelligentContextOptimization &&
+        settings.ai?.intelligentContext?.enabled;
+
+      if (isIntelligentOptimizationEnabled) {
+        progressManager.updateStep('🧠 執行智能跨章節上下文分析...');
+      } else {
+        progressManager.updateStep('準備傳統上下文...');
+      }
+
       const promptContext = await contextPreparationService.preparePromptContext(
         editorContext,
         config.chapterId,
+        config.projectId,
         {
+          // 基礎配置
           maxTokens: config.baseParams.maxTokens,
-          enableOptimization: config.enableContextOptimization || false
+          enableOptimization: config.enableContextOptimization || false,
+
+          // 智能優化配置（從設定讀取）
+          enableIntelligentOptimization: isIntelligentOptimizationEnabled,
+          preserveDialogue: settings.ai?.intelligentContext?.preserveDialogue ?? true,
+          contextOptimizationLevel: settings.ai?.intelligentContext?.optimizationLevel ?? 'advanced',
+
+          // 多維度權重配置（從設定讀取）
+          plotAnalysisWeight: settings.ai?.intelligentContext?.plotAnalysisWeight ?? 0.4,
+          statusWeight: settings.ai?.intelligentContext?.statusWeight ?? 0.3,
+          proximityWeight: settings.ai?.intelligentContext?.proximityWeight ?? 0.3,
+
+          // Token預算管理（從設定讀取，回退到基礎maxTokens）
+          maxTokenBudget: settings.ai?.intelligentContext?.maxTokenBudget ?? config.baseParams.maxTokens
         }
       );
 
@@ -150,7 +181,9 @@ export function useAIGeneration(): AIGenerationHook {
           dispatch
         });
 
-        console.log(`📋 版本${i + 1}參數:`, optimizedParams);
+        if (DEBUG_AI_GENERATION) {
+          console.log(`📋 版本${i + 1}參數:`, optimizedParams);
+        }
       }
 
       // 5. 執行生成階段
@@ -187,7 +220,7 @@ export function useAIGeneration(): AIGenerationHook {
       if (successfulResults.length > 0) {
         const message = batchResult.failureCount > 0
           ? `成功生成 ${batchResult.successCount} 個版本，${batchResult.failureCount} 個失敗`
-          : `成功生成 ${batchResult.successCount} 個版本`;
+          : `🧠 智能上下文續寫成功生成 ${batchResult.successCount} 個版本`;
           
         dispatch(addNotification({
           type: batchResult.failureCount === 0 ? 'success' : 'warning',
@@ -201,15 +234,32 @@ export function useAIGeneration(): AIGenerationHook {
 
     } catch (error) {
       console.error('❌ AI生成流程失敗:', error);
-      
+
+      // 🎯 智能錯誤分類
+      let userFriendlyMessage = '生成文本時發生錯誤';
+      if (error instanceof Error) {
+        const errorMsg = error.message.toLowerCase();
+        if (errorMsg.includes('not found') || errorMsg.includes('找不到')) {
+          userFriendlyMessage = '章節資料不存在，請檢查專案設定';
+        } else if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('timeout')) {
+          userFriendlyMessage = '網路連線失敗，請檢查網路狀態後重試';
+        } else if (errorMsg.includes('api key') || errorMsg.includes('unauthorized')) {
+          userFriendlyMessage = 'API 金鑰無效，請檢查 AI Provider 設定';
+        } else if (errorMsg.includes('智能上下文') || errorMsg.includes('intelligent context')) {
+          userFriendlyMessage = `智能上下文建構失敗: ${error.message}`;
+        } else {
+          userFriendlyMessage = error.message;
+        }
+      }
+
       // 更新進度為失敗狀態
       progressManager.addError(error instanceof Error ? error.message : '未知錯誤');
       progressManager.completeProgress('生成失敗');
-      
+
       dispatch(addNotification({
         type: 'error',
         title: 'AI 續寫失敗',
-        message: error instanceof Error ? error.message : '生成文本時發生錯誤',
+        message: userFriendlyMessage,
         duration: 5000,
       }));
     } finally {
