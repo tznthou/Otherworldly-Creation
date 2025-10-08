@@ -125,8 +125,20 @@ jobs:
 
       - name: 🔧 Install Tauri CLI
         run: |
-          echo "Installing Tauri CLI v2..."
-          cargo install tauri-cli --version "^2.0" --locked
+          if ! command -v cargo-tauri &> /dev/null; then
+            echo "Installing Tauri CLI..."
+            cargo install tauri-cli --version "^2.0"
+          else
+            echo "Tauri CLI already installed: $(cargo tauri --version)"
+          fi
+
+      - name: 🔍 Verify build environment
+        run: |
+          echo "=== Environment Check ==="
+          echo "Rust: $(rustc --version)"
+          echo "Cargo: $(cargo --version)"
+          echo "Tauri CLI: $(cargo tauri --version)"
+          echo "========================"
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
@@ -243,8 +255,21 @@ jobs:
 
       - name: 🔧 Install Tauri CLI
         run: |
-          Write-Output "Installing Tauri CLI v2..."
-          cargo install tauri-cli --version "^2.0" --locked
+          if (!(Get-Command "cargo-tauri" -ErrorAction SilentlyContinue)) {
+            Write-Output "Installing Tauri CLI..."
+            cargo install tauri-cli --version "^2.0"
+          } else {
+            $version = cargo tauri --version
+            Write-Output "Tauri CLI already installed: $version"
+          }
+
+      - name: 🔍 Verify build environment
+        run: |
+          Write-Output "=== Environment Check ==="
+          Write-Output "Rust: $(rustc --version)"
+          Write-Output "Cargo: $(cargo --version)"
+          Write-Output "Tauri CLI: $(cargo tauri --version)"
+          Write-Output "========================"
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
