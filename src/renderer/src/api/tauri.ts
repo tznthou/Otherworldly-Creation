@@ -1431,6 +1431,19 @@ export const tauriAPI: API = {
   invoke: <T = unknown>(cmd: string, args?: Record<string, unknown>) => {
     return safeInvoke<T>(cmd, args);
   },
+
+  // 🔐 加密設定管理 (Keyring)
+  getSecureKey: async (key: string) => {
+    return safeInvoke<string | null>('get_secure_key', { key });
+  },
+
+  setSecureKey: async (key: string, value: string) => {
+    return safeInvoke<void>('set_secure_key', { key, value });
+  },
+
+  deleteSecureKey: async (key: string) => {
+    return safeInvoke<void>('delete_secure_key', { key });
+  },
 };
 
 // 匯出為 api，供其他檔案使用

@@ -157,7 +157,13 @@
       "Bash(timeout 15 npx tsc --noEmit)",
       "Bash({ echo \"🛑 完全停止所有程序...\" pkill -9 -f \"genesis-chronicle\")",
       "Bash({ echo \"🧹 清除所有編譯快取和輸出...\" rm -rf dist rm -rf node_modules/.vite rm -rf .vite rm -rf src-tauri/target/debug/incremental rm -rf src-tauri/target/debug/build rm -rf src-tauri/target/debug/deps)",
-      "Bash(head -3 })"
+      "Bash(head -3 })",
+      "Bash(open:*)",
+      "Bash({ pkill -9 -f \"genesis-chronicle\")",
+      "Bash(true })",
+      "Bash({ echo \"📊 檢查現有的 localStorage 內容：\" echo \"\" sqlite3 \"$HOME/Library/Application Support/genesis-chronicle/Local Storage/leveldb\" \".dump\")",
+      "Bash(osascript:*)",
+      "Bash(RELEASE_VERSION=1.2.8 node scripts/sync-version.js)"
     ],
     "deny": [],
     "ask": [],

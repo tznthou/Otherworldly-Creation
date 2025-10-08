@@ -1574,6 +1574,7 @@ dependencies = [
  "chrono",
  "dirs 5.0.1",
  "html-escape",
+ "keyring",
  "lazy_static",
  "log",
  "mime_guess",
@@ -2360,6 +2361,16 @@ dependencies = [
  "bitflags 2.9.1",
  "serde",
  "unicode-segmentation",
+]
+
+[[package]]
+name = "keyring"
+version = "3.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eebcc3aff044e5944a8fbaf69eb277d11986064cba30c468730e8b9909fb551c"
+dependencies = [
+ "log",
+ "zeroize",
 ]
 
 [[package]]

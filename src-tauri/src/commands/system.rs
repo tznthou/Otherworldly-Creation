@@ -448,6 +448,141 @@ pub async fn get_environment_info() -> Result<EnvironmentInfo, String> {
     }
 }
 
+/// 🔐 取得加密設定
+#[tauri::command]
+pub async fn get_secure_key(key: String) -> Result<Option<String>, String> {
+    use crate::services::keyring_service::KeyringService;
+
+    log::info!("🔐 [get_secure_key] 讀取加密設定: {}", key);
+
+    match KeyringService::get_secure_key(&key) {
+        Ok(value) => {
+            log::info!("🔐 [get_secure_key] 成功讀取: {}", key);
+            Ok(value)
+        }
+        Err(e) => {
+            log::warn!("🔐 [get_secure_key] 讀取失敗 (將降級到 localStorage): {} - {}", key, e);
+            Ok(None)
+        }
+    }
+}
+
+/// 🔐 設定加密設定
+#[tauri::command]
+pub async fn set_secure_key(key: String, value: String) -> Result<(), String> {
+    use crate::services::keyring_service::KeyringService;
+
+    log::info!("🔐 [set_secure_key] 寫入加密設定: {}", key);
+
+    match KeyringService::set_secure_key(&key, &value) {
+        Ok(()) => {
+            log::info!("🔐 [set_secure_key] 成功寫入: {}", key);
+            Ok(())
+        }
+        Err(e) => {
+            log::error!("🔐 [set_secure_key] 寫入失敗: {} - {}", key, e);
+            Err(format!("無法寫入加密設定: {}", e))
+        }
+    }
+}
+
+/// 🔐 刪除加密設定
+#[tauri::command]
+pub async fn delete_secure_key(key: String) -> Result<(), String> {
+    use crate::services::keyring_service::KeyringService;
+
+    log::info!("🔐 [delete_secure_key] 刪除加密設定: {}", key);
+
+    match KeyringService::delete_secure_key(&key) {
+        Ok(()) => {
+            log::info!("🔐 [delete_secure_key] 成功刪除: {}", key);
+            Ok(())
+        }
+        Err(e) => {
+            log::warn!("🔐 [delete_secure_key] 刪除失敗 (可能不存在): {} - {}", key, e);
+            Ok(())
+        }
+    }
+}
+
+/// 🔐 診斷 Tauri Store 功能
+#[tauri::command]
+pub async fn test_store_plugin(app: AppHandle) -> Result<String, String> {
+    use tauri_plugin_store::StoreExt;
+    use std::fs;
+
+    log::info!("🧪 [test_store_plugin] 開始測試 Tauri Store 功能...");
+
+    let mut results = Vec::new();
+
+    // 1. 測試 Store 初始化
+    results.push("步驟 1: 測試 Store 初始化".to_string());
+    let store = match app.store(".settings-test.dat") {
+        Ok(s) => {
+            results.push("✅ Store 初始化成功".to_string());
+            s
+        }
+        Err(e) => {
+            let error = format!("❌ Store 初始化失敗: {}", e);
+            results.push(error.clone());
+            log::error!("🧪 [test_store_plugin] {}", error);
+            return Ok(results.join("\n"));
+        }
+    };
+
+    // 2. 測試寫入
+    results.push("\n步驟 2: 測試寫入數據".to_string());
+    store.set("test-key".to_string(), serde_json::json!({ "message": "Hello from Store!" }));
+    results.push("✅ 寫入數據成功".to_string());
+
+    // 3. 測試儲存
+    results.push("\n步驟 3: 測試儲存到檔案".to_string());
+    if let Err(e) = store.save() {
+        let error = format!("❌ 儲存失敗: {}", e);
+        results.push(error.clone());
+        log::error!("🧪 [test_store_plugin] {}", error);
+        return Ok(results.join("\n"));
+    }
+    results.push("✅ 儲存到檔案成功".to_string());
+
+    // 4. 測試讀取
+    results.push("\n步驟 4: 測試讀取數據".to_string());
+    match store.get("test-key") {
+        Some(value) => {
+            results.push(format!("✅ 讀取數據成功: {}", value));
+        }
+        None => {
+            results.push("⚠️ 數據不存在（可能是 bug）".to_string());
+        }
+    }
+
+    // 5. 檢查檔案位置
+    results.push("\n步驟 5: 檢查檔案位置".to_string());
+
+    // 獲取 app data directory (使用標準方法)
+    let app_data_dir = dirs::data_dir()
+        .ok_or("無法獲取 app data dir".to_string())?
+        .join("genesis-chronicle");
+
+    results.push(format!("📁 App Data Dir: {}", app_data_dir.display()));
+
+    // 確保目錄存在
+    if !app_data_dir.exists() {
+        fs::create_dir_all(&app_data_dir)
+            .map_err(|e| format!("無法創建目錄: {}", e))?;
+    }
+
+    let store_file = app_data_dir.join(".settings-test.dat");
+    if store_file.exists() {
+        results.push(format!("✅ 檔案已建立: {}", store_file.display()));
+    } else {
+        results.push(format!("⚠️ 檔案不存在: {}", store_file.display()));
+    }
+
+    log::info!("🧪 [test_store_plugin] 測試完成");
+    Ok(results.join("\n"))
+}
+
 #[tauri::command]
 pub async fn save_export_file(
     data_url: String,

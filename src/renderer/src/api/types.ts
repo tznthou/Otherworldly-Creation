@@ -404,6 +404,11 @@ export interface API {
 
   // 通用 Tauri 調用方法
   invoke: <T = unknown>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
+
+  // 🔐 加密設定管理 (Keyring)
+  getSecureKey: (key: string) => Promise<string | null>;
+  setSecureKey: (key: string, value: string) => Promise<void>;
+  deleteSecureKey: (key: string) => Promise<void>;
 }
 
 // 超長上下文優化相關類型

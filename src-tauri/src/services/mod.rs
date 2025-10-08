@@ -3,3 +3,4 @@ pub mod ai_providers;
 pub mod illustration;
 pub mod translation;
 pub mod context;
+pub mod keyring_service;

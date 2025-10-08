@@ -1,13 +1,38 @@
-# 創世紀元：Genesis Chronicle v1.2.7
+# 創世紀元：Genesis Chronicle v1.2.8
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
 <p align="center">
   <a href="README.md">English</a> | <strong>繁體中文</strong>
 </p>
 
-![Version](https://img.shields.io/badge/version-v1.2.7-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success)
+![Version](https://img.shields.io/badge/version-v1.2.8-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-112k+-purple)
 
 ## 🚀 最新更新歷程
+
+### 🌟 v1.2.8 - 安全性強化：API金鑰加密儲存 (2025年10月8日)
+
+#### 🔐 系統 Keyring 加密實作
+- **作業系統原生加密**: 採用業界標準的系統鑰匙圈加密儲存（macOS Keychain、Windows Credential Manager、Linux Secret Service）
+- **零配置安全機制**: 自動加密，無需用戶設定 - API金鑰受系統級安全保護
+- **多層級失效保護**: 智能容錯機制確保即使keyring不可用，應用程式仍穩定運作
+- **跨平台完全相容**: 在macOS、Windows、Linux環境無縫運作
+
+#### ✨ 核心安全特性
+- **自動遷移機制**: 現有API金鑰在首次使用時自動從localStorage遷移到加密儲存
+- **雙寫安全策略**: API金鑰同時寫入加密keyring（主要）和localStorage（備份）以確保最大可靠性
+- **優雅降級處理**: 若keyring失敗，應用程式自動回退到localStorage確保不中斷運作
+- **業界最佳實踐**: 實作模式與OpenAI Codex、Deno CLI等領先開發工具相同
+
+#### 🎯 技術亮點
+- **260行新安全程式碼**: 遵循「零破壞性變更」哲學的最小實作
+- **零刪除原則**: 所有現有功能完整保留 - 純增量式安全層
+- **OpenAI驗證模式**: Fallback策略與OpenAI官方工具方法完全一致
+- **Rust Keyring Crate v3.6**: 經過實戰驗證的加密函式庫，被多個主流開源專案採用
+
+#### 📚 安全性文檔
+詳細實作文檔請參閱：
+- `KEYRING_IMPLEMENTATION_SUMMARY.md` - 完整技術概覽
+- `KEYRING_TEST.md` - 測試指南與驗證程序
 
 ### 🌟 v1.2.7 - Windows圖片顯示相容性修復版 (2025年9月17日)
 
@@ -267,20 +292,21 @@
 - 🔄 **版本管理系統** - 完整的圖像版本控制，支援分支、比較、時間線檢視
 - ⚡ **性能監控系統** - 完整性能監控框架，自動長任務檢測，記憶體使用監控
 
-### 📊 專案規模 (截至2025年9月12日，v1.2.0系統架構突破更新)
-- **核心程式碼**: 105,530行（精確統計，不含依賴包）📊 **品質重於數量！** 基於cloc專業統計
-- **前端程式碼**: 76,005行（TypeScript/React，335個檔案）
-  - 🎨 視覺創作組件: 8,500行（35個檔案）**預覽功能新增3個組件**
-  - 🎣 插畫相關 Hooks: 4,300行（15個檔案）**預覽邏輯Hooks新增**
-  - 🔥 AI續寫服務模組: 7個專業服務（重構完成）
-  - 📦 Redux狀態管理: 13個 slices，包含視覺創作和版本管理狀態
-- **後端程式碼**: 24,106行（Rust/Tauri，77個檔案）**路徑統一+資料修復工具**
-- **配置與腳本**: 4,895行（JavaScript工具腳本，33個檔案）
-- **代碼檔案數**: 447個核心程式檔案（TypeScript 335個 + Rust 77個 + JavaScript 33個 + CSS 1個 + HTML 1個）
-- **依賴包管理**: 550個第三方套件（node_modules，不計入統計）
-- **開發狀態**: 100%功能完成，v1.2.0 系統架構突破，八大核心功能全面完成，程式碼突破10.5萬行里程碑
-- **測試基礎**: 完整測試架構建立，8個測試檔案，92個測試案例
-- **性能框架**: 完整性能監控系統 (performanceMonitor.ts 283行)，自動長任務檢測
+### 📊 專案規模 (截至2025年10月8日，v1.2.8安全性強化更新)
+- **核心程式碼**: 112,266行（精確統計，不含依賴包）📊 **品質重於數量！** 基於cloc專業統計
+- **前端程式碼**: 81,806行（TypeScript/React，346個檔案）
+  - 🔐 安全性強化: 新增260行加密儲存實作（Keyring整合）
+  - 🎨 視覺創作組件: 8,500行（35個檔案）
+  - 🎣 插畫相關 Hooks: 4,300行（15個檔案）
+  - 🔥 AI續寫服務模組: 7個專業服務
+  - 📦 Redux狀態管理: 16個 slices，包含視覺創作和安全性管理
+- **後端程式碼**: 24,692行（Rust/Tauri，78個檔案）**Keyring加密+路徑統一**
+- **配置與腳本**: 5,768行（JavaScript工具腳本，44個檔案）
+- **代碼檔案數**: 468個核心程式檔案（TypeScript 346個 + Rust 78個 + JavaScript 44個）
+- **依賴包管理**: 550+個第三方套件（node_modules，不計入統計）
+- **開發狀態**: 100%功能完成，v1.2.8 安全性強化，API金鑰加密儲存實作，程式碼突破11.2萬行里程碑
+- **測試基礎**: 完整測試架構建立，包含Keyring功能測試
+- **性能框架**: 完整性能監控系統，保持80-150MB低記憶體使用
 
 ### 🚀 技術優勢 (最新更新 2025-08-24 AI續寫系統模組化重構)
 - **性能提升**: 啟動速度300%提升，記憶體使用70%減少

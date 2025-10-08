@@ -322,6 +322,166 @@ export class SettingsService {
       console.error('❌ 儲存設定歷史失敗:', error);
     }
   }
+
+  // ========================================
+  // 🔐 加密 API Key 管理 (Keyring)
+  // ========================================
+
+  /**
+   * 🔐 取得加密的 API Key
+   *
+   * 讀取順序：
+   * 1. 優先從 OS Keyring 讀取 (macOS Keychain / Windows Credential Manager)
+   * 2. 如果失敗，降級到 localStorage (向後相容)
+   *
+   * @param key - API key 的識別名稱 (例如: "ai.openaiApiKey")
+   * @returns API key 值，不存在則返回 null
+   */
+  static async getSecureApiKey(key: string): Promise<string | null> {
+    try {
+      // 1️⃣ 優先嘗試從 Keyring 讀取
+      console.log(`🔐 [getSecureApiKey] 嘗試從 Keyring 讀取: ${key}`);
+      const result = await api.getSecureKey(key);
+
+      if (result) {
+        console.log(`✅ [getSecureApiKey] Keyring 讀取成功: ${key}`);
+        return result;
+      }
+
+      // 2️⃣ Keyring 沒有資料，降級到 localStorage (向後相容)
+      console.log(`⚠️ [getSecureApiKey] Keyring 無資料，降級到 localStorage: ${key}`);
+      const settings = await this.loadSettings();
+
+      // 根據 key 路徑取得值 (例如: "ai.openaiApiKey" -> settings.ai.openaiApiKey)
+      const value = this.getNestedValue(settings, key);
+
+      if (value && typeof value === 'string') {
+        // 🔄 自動遷移：發現 localStorage 有資料，同步到 Keyring
+        console.log(`🔄 [getSecureApiKey] 自動遷移到 Keyring: ${key}`);
+        await this.setSecureApiKey(key, value);
+        return value;
+      }
+
+      console.log(`ℹ️ [getSecureApiKey] 未找到資料: ${key}`);
+      return null;
+
+    } catch (error) {
+      console.error(`❌ [getSecureApiKey] 讀取失敗: ${key}`, error);
+      // 發生任何錯誤都回退到 localStorage
+      try {
+        const settings = await this.loadSettings();
+        const value = this.getNestedValue(settings, key);
+        return (value && typeof value === 'string') ? value : null;
+      } catch (fallbackError) {
+        console.error(`❌ [getSecureApiKey] localStorage fallback 也失敗:`, fallbackError);
+        return null;
+      }
+    }
+  }
+
+  /**
+   * 🔐 設定加密的 API Key
+   *
+   * 寫入策略：雙寫保險
+   * 1. 寫入 OS Keyring (主要加密儲存)
+   * 2. 同時寫入 localStorage (備份 + 向後相容)
+   *
+   * @param key - API key 的識別名稱
+   * @param value - API key 的值
+   */
+  static async setSecureApiKey(key: string, value: string): Promise<void> {
+    try {
+      console.log(`🔐 [setSecureApiKey] 開始寫入: ${key}`);
+
+      // 1️⃣ 寫入 Keyring (主要儲存)
+      try {
+        await api.setSecureKey(key, value);
+        console.log(`✅ [setSecureApiKey] Keyring 寫入成功: ${key}`);
+      } catch (keyringError) {
+        console.warn(`⚠️ [setSecureApiKey] Keyring 寫入失敗 (將僅使用 localStorage): ${key}`, keyringError);
+      }
+
+      // 2️⃣ 同時寫入 localStorage (備份 + 向後相容)
+      const settings = await this.loadSettings();
+      this.setNestedValue(settings, key, value);
+      await this.saveSettings(settings);
+      console.log(`✅ [setSecureApiKey] localStorage 備份成功: ${key}`);
+
+    } catch (error) {
+      console.error(`❌ [setSecureApiKey] 寫入完全失敗: ${key}`, error);
+      throw new Error(`無法儲存 API Key: ${error}`);
+    }
+  }
+
+  /**
+   * 🔐 刪除加密的 API Key
+   *
+   * 刪除策略：雙刪除
+   * 1. 從 OS Keyring 刪除
+   * 2. 從 localStorage 刪除
+   *
+   * @param key - API key 的識別名稱
+   */
+  static async deleteSecureApiKey(key: string): Promise<void> {
+    try {
+      console.log(`🔐 [deleteSecureApiKey] 開始刪除: ${key}`);
+
+      // 1️⃣ 從 Keyring 刪除
+      try {
+        await api.deleteSecureKey(key);
+        console.log(`✅ [deleteSecureApiKey] Keyring 刪除成功: ${key}`);
+      } catch (keyringError) {
+        console.warn(`⚠️ [deleteSecureApiKey] Keyring 刪除失敗 (可能不存在): ${key}`, keyringError);
+      }
+
+      // 2️⃣ 從 localStorage 刪除
+      const settings = await this.loadSettings();
+      this.setNestedValue(settings, key, ''); // 設為空字串
+      await this.saveSettings(settings);
+      console.log(`✅ [deleteSecureApiKey] localStorage 刪除成功: ${key}`);
+
+    } catch (error) {
+      console.error(`❌ [deleteSecureApiKey] 刪除失敗: ${key}`, error);
+    }
+  }
+
+  /**
+   * 工具函數：根據路徑取得巢狀物件的值
+   * 例如: getNestedValue(settings, "ai.openaiApiKey") => settings.ai.openaiApiKey
+   */
+  private static getNestedValue(obj: any, path: string): any {
+    const keys = path.split('.');
+    let current = obj;
+
+    for (const key of keys) {
+      if (current && typeof current === 'object' && key in current) {
+        current = current[key];
+      } else {
+        return undefined;
+      }
+    }
+
+    return current;
+  }
+
+  /**
+   * 工具函數：根據路徑設定巢狀物件的值
+   * 例如: setNestedValue(settings, "ai.openaiApiKey", "sk-xxx") => settings.ai.openaiApiKey = "sk-xxx"
+   */
+  private static setNestedValue(obj: any, path: string, value: any): void {
+    const keys = path.split('.');
+    const lastKey = keys.pop()!;
+    let current = obj;
+
+    for (const key of keys) {
+      if (!(key in current) || typeof current[key] !== 'object') {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+
+    current[lastKey] = value;
+  }
 }
 
 // 設定變更監聽器
