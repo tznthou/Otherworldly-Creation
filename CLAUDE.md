@@ -21,10 +21,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📝 Project Overview
 
-**Genesis Chronicle v1.2.0** - AI-powered Chinese light novel writing application
+**Genesis Chronicle v1.2.8** - AI-powered Chinese light novel writing application
 - **Stack**: Tauri v2 + Rust + React/TypeScript + SQLite
-- **Scale**: 111,017 lines of code across 466 files (3 languages)
+- **Scale**: 112,266 lines of code across 468 files (3 languages)
 - **AI**: 5 providers (Ollama, OpenAI, Gemini, Claude, OpenRouter)
+- **Security**: OS-native Keyring encryption for API keys (v1.2.8+)
 - **Editor**: Slate.js with auto-save
 - **Export**: EPUB 3.0 + PDF (Chrome Headless)
 
@@ -37,10 +38,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 4. **TypeScript**: Use `APIResponse<T>` wrapper for type safety
 5. **Modals**: Use `dispatch(openModal('name'))` system via Redux uiSlice
 6. **Path Management**: Use PathManager for all file operations (v1.2.0+)
-7. **UI Feature Removal**: NEVER remove UI functionality without verifying target location has COMPLETE feature parity - check control settings, not just documentation
-8. **State Management**: All component state should flow through Redux - avoid local state for shared data
-9. **Error Handling**: Wrap all Tauri API calls with APIResponse<T> and error boundaries
-10. **Rust Build**: Use `cargo check --manifest-path src-tauri/Cargo.toml` for compilation checks
+7. **Security**: Use `SettingsService.getSecureApiKey()` / `setSecureApiKey()` for API keys (v1.2.8+)
+8. **UI Feature Removal**: NEVER remove UI functionality without verifying target location has COMPLETE feature parity - check control settings, not just documentation
+9. **State Management**: All component state should flow through Redux - avoid local state for shared data
+10. **Error Handling**: Wrap all Tauri API calls with APIResponse<T> and error boundaries
+11. **Rust Build**: Use `cargo check --manifest-path src-tauri/Cargo.toml` for compilation checks
 
 ### Development Commands (v1.2.0)
 
@@ -97,6 +99,7 @@ npm run setup              # Quick project setup
 - **State Management**: Redux Toolkit with 16 slices (projects, chapters, characters, ai, ui, etc.)
 - **Database**: SQLite v20 with migration system, dual environment setup
 - **Path Management**: Unified PathManager system (v1.2.0 breakthrough)
+- **Security**: System Keyring encryption with automatic fallback (v1.2.8)
 - **Editor**: Slate.js with 2-second auto-save, force remount with unique keys
 - **Export**: EPUB 3.0 + PDF (Chrome Headless) with Chinese font support
 - **Modal System**: Centralized modal management via Redux (`uiSlice.ts`)
@@ -108,6 +111,8 @@ npm run setup              # Quick project setup
 - **Commands**: `src-tauri/src/commands/` (system, project, chapter, character, ai_providers, epub, pdf_chrome)
 - **API Layer**: `src/renderer/src/api/tauri.ts` (ALWAYS use `import { api }`, never direct invoke)
 - **AI Providers**: `src-tauri/src/services/ai_providers/trait.rs` + implementations
+- **Security Service**: `src-tauri/src/services/keyring_service.rs` + `src/renderer/src/services/settingsService.ts`
+- **Security Docs**: `KEYRING_IMPLEMENTATION_SUMMARY.md`, `KEYRING_TEST.md`
 - **Redux Store**: `src/renderer/src/store/store.ts` (16 slices with middleware configuration)
 - **Modal Components**: `src/renderer/src/components/Modals/` (CharacterAnalysisModal, PlotAnalysisModal, etc.)
 - **Settings**: `src/renderer/src/pages/Settings/` (GeneralSettings with AI feature controls)
@@ -146,6 +151,15 @@ npm run setup              # Quick project setup
 - **Smart API Detection**: Intelligent provider recommendation based on available API keys
 - **Dynamic Model Discovery**: Auto-discovery of available models per provider
 
+### Security & API Key Management (v1.2.8+)
+- **Keyring Integration**: Use `SettingsService.getSecureApiKey()` / `setSecureApiKey()` for API keys
+- **Automatic Migration**: localStorage → Keyring happens automatically on first use
+- **Dual-Write Strategy**: All API keys written to both Keyring (primary) and localStorage (backup)
+- **Graceful Fallback**: If Keyring fails, application automatically uses localStorage
+- **Cross-Platform**: macOS Keychain, Windows Credential Manager, Linux Secret Service
+- **Zero Breaking Changes**: Pure additive security layer, all existing functionality preserved
+- **Documentation**: See [KEYRING_IMPLEMENTATION_SUMMARY.md](KEYRING_IMPLEMENTATION_SUMMARY.md) and [KEYRING_TEST.md](KEYRING_TEST.md)
+
 ### Template System (Quick Start)
 - **🏰 Fantasy Adventure**: Classic magical worlds
 - **💕 Campus Romance**: Modern urban youth stories
@@ -172,25 +186,22 @@ npm run setup              # Quick project setup
 
 ---
 
-## 🔄 v1.2.0 System Architecture Breakthrough
+## 🔄 Major Version Milestones
 
-### Path Management Revolution
+### v1.2.8 - Security Enhancement (2025-10-08)
+- **OS-Native Encryption**: System Keyring integration for API key security
+- **Implementation**: 260 lines (Rust 52 + TypeScript 144 + commands 58)
+- **Cross-Platform**: macOS Keychain, Windows Credential Manager, Linux Secret Service
+- **Zero Breaking Changes**: Pure additive security layer with automatic fallback
+- **Code Growth**: +367 lines (111,017 → 112,266 total)
+
+### v1.2.0 - System Architecture Breakthrough
 - **Issue Resolved**: 2-week blocking problem with temp/final directory unification
 - **Solution**: Complete PathManager architecture implementation
 - **Impact**: Eliminated 6 redundant image generation commands
 - **Result**: Bulletproof atomic file operations with database consistency
-
-### Key Architectural Changes
-- **File Operations**: All file operations now use unified PathManager
-- **Database Sync**: 100% consistency between file system and database state
-- **Thread Safety**: Fixed async SQLite Statement issues for production stability
-- **Code Quality**: TypeScript errors: 63 → 0, Rust warnings: 0 maintained
-
-### Development Impact
-- **Scale Growth**: +8,259 lines of code (+8.5% growth to 105,530 total, now 111,017)
-- **File Growth**: +46 files (447 total, now 466 across 3 languages)
-- **Stability**: Production-grade reliability achieved
-- **Architecture**: From technical debt to competitive advantage
+- **Key Changes**: Unified file operations, 100% database sync, thread safety fixes
+- **Code Growth**: +8,259 lines (105,530 → 111,017 total), +46 files (447 → 466)
 
 ---
 
