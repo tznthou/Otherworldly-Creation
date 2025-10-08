@@ -125,12 +125,8 @@ jobs:
 
       - name: 🔧 Install Tauri CLI
         run: |
-          if ! command -v cargo-tauri &> /dev/null; then
-            echo "Installing Tauri CLI..."
-            cargo install tauri-cli --version "^2.0"
-          else
-            echo "Tauri CLI already installed: $(cargo tauri --version)"
-          fi
+          echo "Installing Tauri CLI v2..."
+          cargo install tauri-cli --version "^2.0" --locked
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
@@ -247,13 +243,8 @@ jobs:
 
       - name: 🔧 Install Tauri CLI
         run: |
-          if (!(Get-Command "cargo-tauri" -ErrorAction SilentlyContinue)) {
-            Write-Output "Installing Tauri CLI..."
-            cargo install tauri-cli --version "^2.0"
-          } else {
-            $version = cargo tauri --version
-            Write-Output "Tauri CLI already installed: $version"
-          }
+          Write-Output "Installing Tauri CLI v2..."
+          cargo install tauri-cli --version "^2.0" --locked
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
