@@ -170,13 +170,8 @@ jobs:
         run: |
           echo "🚀 Building Tauri app with DMG support..."
           cd src-tauri
-          echo "Running cargo tauri build with verbose output..."
-          cargo tauri build --target universal-apple-darwin --verbose || {
-            echo "❌ Build failed! Showing last 100 lines of output..."
-            echo "================================"
-            cargo tauri build --target universal-apple-darwin 2>&1 | tail -100
-            exit 1
-          }
+          echo "Running cargo tauri build..."
+          cargo tauri build --target universal-apple-darwin
           echo "✅ Tauri build completed"
 
       - name: 📦 Create PKG installer
@@ -319,13 +314,8 @@ jobs:
         run: |
           Write-Output "🚀 Building Tauri app for Windows..."
           cd src-tauri
-          Write-Output "Running cargo tauri build with verbose output..."
-          cargo tauri build --target x86_64-pc-windows-msvc --verbose
-          if (!$?) {
-            Write-Output "❌ Build failed! Attempting to show error details..."
-            cargo tauri build --target x86_64-pc-windows-msvc 2>&1 | Select-Object -Last 100
-            exit 1
-          }
+          Write-Output "Running cargo tauri build..."
+          cargo tauri build --target x86_64-pc-windows-msvc
           Write-Output "✅ Tauri Windows build completed"
 
       - name: 🔍 Verify Windows build artifacts
