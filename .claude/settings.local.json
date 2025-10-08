@@ -164,7 +164,12 @@
       "Bash({ echo \"📊 檢查現有的 localStorage 內容：\" echo \"\" sqlite3 \"$HOME/Library/Application Support/genesis-chronicle/Local Storage/leveldb\" \".dump\")",
       "Bash(osascript:*)",
       "Bash(RELEASE_VERSION=1.2.8 node scripts/sync-version.js)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(head:*)",
+      "Bash(awk:*)",
+      "Bash(test:*)",
+      "Bash(sudo rm:*)",
+      "Bash({ echo \"⚠️ pkg_debug 需要手動刪除\")"
     ],
     "deny": [],
     "ask": [],

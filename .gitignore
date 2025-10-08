@@ -212,3 +212,4 @@ coverage/
 
 # Claude Code project configuration (contains personal instructions)
 CLAUDE.md*.backup.tsx
+pkg_debug/
