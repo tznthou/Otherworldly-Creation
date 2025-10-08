@@ -49,16 +49,20 @@ jobs:
 
           ## 🆕 本版本改進
 
-          ### 🔧 安裝系統全面升級
-          - ⭐ **DMG 格式成為主要推薦**：提供 macOS 用戶最佳安裝體驗
-          - ✅ **PKG 格式轉為 Legacy 支援**：保留企業環境使用需求
-          - ✅ **版本統一管理**：所有平台版本號完全一致
-          - ✅ **自動化流程**：GitHub Actions 全自動建置和發布
+          ### 🔐 v1.2.8 - 安全性強化：API 金鑰加密儲存 (2025-10-08)
+          - 🔒 **作業系統原生加密**：採用系統 Keyring 保護 API 金鑰
+            - macOS: Keychain 原生加密
+            - Windows: Credential Manager (DPAPI)
+            - Linux: Secret Service
+          - 🔄 **自動遷移機制**：現有 API 金鑰自動升級至加密儲存
+          - 🛡️ **雙重保護策略**：Keyring (主要) + localStorage (備援)
+          - ✨ **零破壞更新**：純增量式安全層，完全相容舊版資料
+          - 📚 **業界標準實作**：參考 OpenAI Codex、Deno CLI 等專案
 
-          ### 💡 安裝建議
-          - **🥇 一般用戶**：強烈推薦使用 **DMG 格式**，拖放到 Applications 即可
-          - **🏢 企業用戶**：如有批次部署需求，可選擇 PKG 格式
-          - **✨ 最佳體驗**：DMG 格式已成為主要推薦選項！
+          ### 🔧 安裝系統
+          - ⭐ **DMG 格式 (macOS 推薦)**：拖放到 Applications 即可，最佳用戶體驗
+          - 🏢 **PKG 格式 (企業環境)**：批次部署專用，適合 IT 管理
+          - 💻 **MSI 格式 (Windows)**：標準 Windows 安裝程式
 
           ## ✨ 主要功能
           - 🤖 **5大AI供應商整合** (Ollama, OpenAI, Gemini, Claude, OpenRouter)
