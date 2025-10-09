@@ -269,23 +269,8 @@ pub async fn get_illustration_history(
         let user_rating: Option<i32> = row.get(19)?;
         let is_favorite: bool = row.get(20)?;
         
-        let image_path = if let Some(path) = &file_path {
-            // 確保路徑有 generated-images/ 前綴
-            let normalized_path = if path.starts_with("generated-images/") {
-                path.clone()
-            } else if path.contains("/") {
-                path.clone() // 已經是完整路徑
-            } else {
-                format!("generated-images/{}", path) // 只是檔案名，需要加前綴
-            };
-            
-            match crate::utils::path_utils::from_relative_path(&normalized_path) {
-                Ok(full_path) => full_path.to_string_lossy().to_string(),
-                Err(_) => normalized_path
-            }
-        } else {
-            String::new()
-        };
+        // 直接返回檔名，前端通過 getImagePath API 獲取完整路徑
+        let image_path = file_path.clone().unwrap_or_default();
         
         Ok(serde_json::json!({
             "id": id,
@@ -354,14 +339,8 @@ pub async fn get_illustration_history(
         let api_provider: String = row.get(21)?;
         let is_confirmed: bool = row.get(22)?;
         
-        let image_path = if let Some(path) = &file_path {
-            match crate::utils::path_utils::from_relative_path(path) {
-                Ok(full_path) => full_path.to_string_lossy().to_string(),
-                Err(_) => path.clone()
-            }
-        } else {
-            String::new()
-        };
+        // 直接返回檔名，前端通過 getImagePath API 獲取完整路徑
+        let image_path = file_path.clone().unwrap_or_default();
         
         // 🎯 智能模型名稱映射
         let display_model = match api_provider.as_str() {

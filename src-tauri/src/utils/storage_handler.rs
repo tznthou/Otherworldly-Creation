@@ -95,12 +95,12 @@ impl StorageHandler {
             return Ok(ImageStorageResult::error(error));
         }
         
-        let absolute_path = temp_path.to_string_lossy().to_string();
+        let filename = format!("{}.jpg", image_id);  // 只返回檔名，前端通過 API 獲取完整路徑
         let relative_path = to_relative_path(&temp_path, image_id);
-        
-        log::info!("[StorageHandler] ✅ 臨時儲存成功: {} bytes", file_size);
-        
-        Ok(ImageStorageResult::success(absolute_path, relative_path, file_size))
+
+        log::info!("[StorageHandler] ✅ 臨時儲存成功: {} bytes (返回檔名: {})", file_size, filename);
+
+        Ok(ImageStorageResult::success(filename, relative_path, file_size))
     }
     
     /// 儲存圖片到最終目錄
@@ -149,12 +149,12 @@ impl StorageHandler {
             return Ok(ImageStorageResult::error(error));
         }
         
-        let absolute_path = final_path.to_string_lossy().to_string();
+        let filename = format!("{}.jpg", image_id);  // 只返回檔名，前端通過 API 獲取完整路徑
         let relative_path = to_relative_path(&final_path, image_id);
-        
-        log::info!("[StorageHandler] ✅ 最終儲存成功: {} bytes", file_size);
-        
-        Ok(ImageStorageResult::success(absolute_path, relative_path, file_size))
+
+        log::info!("[StorageHandler] ✅ 最終儲存成功: {} bytes (返回檔名: {})", file_size, filename);
+
+        Ok(ImageStorageResult::success(filename, relative_path, file_size))
     }
     
     /// 將臨時圖片移動到最終目錄
@@ -187,12 +187,12 @@ impl StorageHandler {
         }
         
         let file_size = std::fs::metadata(&final_path)?.len();
-        let absolute_path = final_path.to_string_lossy().to_string();
+        let filename = format!("{}.jpg", image_id);  // 只返回檔名，前端通過 API 獲取完整路徑
         let relative_path = to_relative_path(&final_path, image_id);
-        
-        log::info!("[StorageHandler] ✅ 檔案移動成功: {} bytes", file_size);
-        
-        Ok(ImageStorageResult::success(absolute_path, relative_path, file_size))
+
+        log::info!("[StorageHandler] ✅ 檔案移動成功: {} bytes (返回檔名: {})", file_size, filename);
+
+        Ok(ImageStorageResult::success(filename, relative_path, file_size))
     }
     
     /// 刪除臨時檔案
