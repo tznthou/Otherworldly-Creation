@@ -124,7 +124,7 @@ pub async fn generate_gemini_illustration(
                 "success": true,
                 "id": response.id,
                 "prompt": response.prompt,
-                "final_path": storage_result.file_path, // 🔧 修復：現在是最終路徑，不是temp路徑
+                "image_path": storage_result.file_path, // 🔧 統一字段名：與 Pollinations 保持一致
                 "image_url": null,
                 "parameters": {
                     "model": provider,

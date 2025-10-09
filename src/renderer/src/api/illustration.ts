@@ -16,7 +16,7 @@ export interface IllustrationGenerationParams {
 export interface IllustrationResponse {
   success: boolean;
   id: string;
-  final_path: string;
+  image_path: string;
   image_url: string;
   is_confirmed: boolean;
   file_size_bytes: number;

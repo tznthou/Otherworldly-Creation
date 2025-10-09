@@ -178,7 +178,7 @@ pub async fn confirm_temp_image_save(
     Ok(serde_json::json!({
         "success": true,
         "id": temp_id,
-        "final_path": final_path,
+        "image_path": final_path,
         "message": "圖像已成功保存"
     }))
 }
@@ -365,7 +365,7 @@ pub async fn generate_illustration_optimized(
     Ok(serde_json::json!({
         "success": true,
         "id": api_result.id,
-        "final_path": storage_result.file_path,
+        "image_path": storage_result.file_path,
         "image_url": api_result.image_url,
         "is_confirmed": false,
         "file_size_bytes": storage_result.file_size,

@@ -404,9 +404,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
           const resultWithData = result as {
             success: boolean;
             id: string;
-            temp_path?: string;
-            final_path?: string;
-            temp_url?: string;
+            image_path?: string;
             image_url?: string;
             prompt?: string;
             original_prompt?: string;
@@ -418,11 +416,10 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
             character_id?: string;
           };
 
-          // 🔧 修復：優先使用 final_path，fallback 到 temp_path (適配 Gemini API)
-          const imagePath = resultWithData.final_path || resultWithData.temp_path || '';
+          // 🔧 統一字段：所有 AI 提供商都返回 image_path
+          const imagePath = resultWithData.image_path || '';
           console.log('🔍 [CreateTab] 圖片路徑處理:', {
-            final_path: resultWithData.final_path,
-            temp_path: resultWithData.temp_path,
+            image_path: resultWithData.image_path,
             使用路徑: imagePath
           });
 
