@@ -943,11 +943,19 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
 
   // 準備數據
   const selectedImageIdsArray = Array.from(selectedImages);
-  const availableImages = filteredIllustrations.map(item => ({
-    id: item.id,
-    url: item.image_url || (item.image_path ? convertFileSrc(item.image_path) : '') || '',
-    name: item.original_prompt.slice(0, 30).replace(/[^\w\s-]/g, '').trim() || `illustration_${item.id}`
-  }));
+  const availableImages = filteredIllustrations.map(item => {
+    // 🔧 智能 URL 偵測：區分 HTTP URL 和本地路徑
+    const isValidHttpUrl = item.image_url && /^https?:\/\//.test(item.image_url);
+    const imageUrl = isValidHttpUrl
+      ? item.image_url
+      : (item.full_path ? convertFileSrc(item.full_path) : '');
+
+    return {
+      id: item.id,
+      url: imageUrl || '',
+      name: item.original_prompt.slice(0, 30).replace(/[^\w\s-]/g, '').trim() || `illustration_${item.id}`
+    };
+  });
 
   return (
     <div className={`gallery-tab flex flex-col h-full min-h-screen ${className}`}>

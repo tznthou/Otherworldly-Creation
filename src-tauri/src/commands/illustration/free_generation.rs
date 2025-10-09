@@ -203,14 +203,15 @@ pub async fn get_illustration_history(
     );
     
     // 🎯 查詢 illustration_generations 表 (Gemini, OpenAI 等)
+    // 🔧 修復：Gemini 的 image_url 欄位實際存的是相對路徑，不是 HTTP URL
     let mut illustration_query = String::from(
-        "SELECT 
+        "SELECT
             id, project_id, character_id, scene_description as original_prompt, translated_prompt as enhanced_prompt,
-            api_model as model, 
+            api_model as model,
             CAST(SUBSTR(image_size, 1, INSTR(image_size, 'x') - 1) AS INTEGER) as width,
             CAST(SUBSTR(image_size, INSTR(image_size, 'x') + 1) AS INTEGER) as height,
             seed_value as seed, 0 as enhance, '' as style_applied,
-            image_url, 'generated-images/' || image_url as local_file_path, file_size, generation_time_ms,
+            NULL as image_url, image_url as local_file_path, file_size, generation_time_ms,
             status, error_message, created_at, batch_id, user_rating, is_favorite,
             api_provider, is_confirmed
          FROM illustration_generations
@@ -271,7 +272,14 @@ pub async fn get_illustration_history(
         
         // 直接返回檔名，前端通過 getImagePath API 獲取完整路徑
         let image_path = file_path.clone().unwrap_or_default();
-        
+
+        // 🔧 修復：計算完整絕對路徑供 convertFileSrc 使用
+        let full_image_path = file_path.as_ref().and_then(|path| {
+            crate::utils::path_utils::get_final_images_dir()
+                .ok()
+                .map(|dir| dir.join(path).to_string_lossy().to_string())
+        });
+
         Ok(serde_json::json!({
             "id": id,
             "project_id": project_id,
@@ -287,6 +295,7 @@ pub async fn get_illustration_history(
             "image_url": image_url,
             "local_file_path": file_path,
             "image_path": image_path,
+            "full_path": full_image_path,
             "file_size_bytes": file_size_bytes,
             "generation_time_ms": generation_time_ms,
             "status": status,
@@ -341,23 +350,30 @@ pub async fn get_illustration_history(
         
         // 直接返回檔名，前端通過 getImagePath API 獲取完整路徑
         let image_path = file_path.clone().unwrap_or_default();
-        
+
+        // 🔧 修復：計算完整絕對路徑供 convertFileSrc 使用
+        let full_image_path = file_path.as_ref().and_then(|path| {
+            crate::utils::path_utils::get_final_images_dir()
+                .ok()
+                .map(|dir| dir.join(path).to_string_lossy().to_string())
+        });
+
         // 🎯 智能模型名稱映射
         let display_model = match api_provider.as_str() {
             "gemini" | "gemini-flash" => "gemini-2.5-flash-image-preview",
             "openai" => match model.as_str() {
                 "dall-e-2" => "dall-e-2",
-                "dall-e-3" => "dall-e-3", 
+                "dall-e-3" => "dall-e-3",
                 _ => &model
             },
             "claude" => "claude-3.5-sonnet",
             "imagen" => "imagen-3",
             _ => &model
         };
-        
+
         // 🎯 判斷是否免費服務
         let is_free = matches!(api_provider.as_str(), "gemini" | "gemini-flash");
-        
+
         Ok(serde_json::json!({
             "id": id,
             "project_id": project_id,
@@ -373,6 +389,7 @@ pub async fn get_illustration_history(
             "image_url": image_url,
             "local_file_path": file_path,
             "image_path": image_path,
+            "full_path": full_image_path,
             "file_size_bytes": file_size_bytes,
             "generation_time_ms": generation_time_ms,
             "status": status,

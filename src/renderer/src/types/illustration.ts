@@ -344,7 +344,8 @@ export interface IllustrationHistoryItem {
   style_applied?: string;
   image_url?: string;
   local_file_path?: string;
-  image_path?: string; // 後端提供的完整絕對路徑
+  image_path?: string; // 檔名或相對路徑
+  full_path?: string; // 🔧 新增：後端提供的完整絕對路徑（用於 convertFileSrc）
   file_size_bytes?: number;
   generation_time_ms?: number;
   status: 'completed' | 'failed' | 'pending' | 'processing';
