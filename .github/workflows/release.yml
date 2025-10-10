@@ -89,13 +89,17 @@ jobs:
           
           📝 **版本統一保證**：本次發布所有平台版本號均為 v${{ steps.get_version.outputs.VERSION }}，徹底解決版本不一致問題！"
           
-          # 使用 gh CLI 創建 release
+          # 使用 gh CLI 創建或更新 release
+          # 先刪除舊的 release (如果存在)
+          gh release delete ${{ steps.get_version.outputs.VERSION }} --yes || true
+
+          # 創建新的 release
           RELEASE_OUTPUT=$(gh release create ${{ steps.get_version.outputs.VERSION }} \
             --title "Genesis Chronicle ${{ steps.get_version.outputs.VERSION }}" \
             --notes "$RELEASE_BODY" \
             --draft=false \
             --prerelease=false)
-          
+
           # 取得 upload URL (雖然 gh CLI 不需要，但保持相容性)
           UPLOAD_URL=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.get_version.outputs.VERSION }} --jq .upload_url)
           echo "upload_url=$UPLOAD_URL" >> $GITHUB_OUTPUT
