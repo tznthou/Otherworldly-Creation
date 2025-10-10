@@ -398,8 +398,9 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               <li>• <strong>🎯 專業圖像生成</strong>：包含GPT-Image-1、Gemini-2.0-Flash等最新圖像模型</li>
               <li>• <strong>🏠 本地隱私選項</strong>：Ollama提供完全本地運行，保護隱私安全</li>
               <li>• <strong>👥 角色整合</strong>：直接連接角色管理系統，自動載入角色資料</li>
-              <li>• <strong>🎨 智能場景建構</strong>：根據選中角色自動生成場景描述</li>
-              <li>• <strong>⚡ 批次生成管理</strong>：支持多任務並行處理和進度監控</li>
+              <li>• <strong>🎨 智能場景建構</strong>：根據選中角色自動生成場景描述，角色驅動創作流程</li>
+              <li>• <strong>⚡ 快速迭代工作流</strong>：收藏/刪除按鈕 + 自動清空，大幅提升創作效率</li>
+              <li>• <strong>🔁 批次生成管理</strong>：支持多任務並行處理和進度監控</li>
               <li>• <strong>📚 完整圖庫系統</strong>：歷史記錄管理和圖片預覽功能</li>
               <li>• <strong>🎛️ 統一操作界面</strong>：三大功能標籤（創建、監控、圖庫）</li>
             </ul>
@@ -452,13 +453,23 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div className="bg-cosmic-800/50 p-4 rounded-lg">
-                <h5 className="text-white font-semibold mb-2">生成控制</h5>
+                <h5 className="text-white font-semibold mb-2">生成控制與快速迭代</h5>
                 <ul className="text-gray-300 text-sm space-y-1">
                   <li>• 批次設定：為生成任務命名和添加描述</li>
                   <li>• 快速添加：一鍵將當前設定加入生成佇列</li>
                   <li>• 參數調整：風格模板、尺寸比例自定義</li>
                   <li>• 批次執行：同時處理多個插畫請求</li>
-                  <li>• <strong>收藏功能</strong>：生成完成後，點擊「加入收藏」將圖片永久保存到圖庫</li>
+                  <li>• <strong>角色驅動生成</strong>：根據角色設定直接生成圖片，無需選擇預設模板</li>
+                </ul>
+              </div>
+
+              <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mt-3">
+                <h5 className="text-green-400 font-semibold mb-2">⚡ 快速迭代工作流程（新）</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• <strong>🔖 加入收藏</strong>：生成滿意的圖片後，點擊「加入收藏」永久保存到圖庫</li>
+                  <li>• <strong>🗑️ 刪除按鈕</strong>：不滿意的圖片可一鍵清空預覽區，立即繼續生成</li>
+                  <li>• <strong>🔄 自動清空</strong>：收藏成功後預覽區自動清空，無需手動操作</li>
+                  <li>• <strong>⚡ 快速迭代</strong>：生成 → 評估 → (收藏/刪除) → 繼續生成，大幅提升創作效率</li>
                 </ul>
               </div>
             </div>

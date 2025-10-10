@@ -135,8 +135,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     sidebarWidth: 280,
     showStatusBar: true,
     animationsEnabled: true,
-    soundEnabled: true,
-    notificationsEnabled: true,
+    soundEnabled: false,
+    notificationsEnabled: false,
   },
   
   backup: {
@@ -205,6 +205,15 @@ const settingsSlice = createSlice({
         loadedSettings.ai = {
           ...loadedSettings.ai,
           intelligentContext: DEFAULT_SETTINGS.ai.intelligentContext
+        };
+      }
+
+      // 🔧 Migration (v1.3.5): 強制重置音效和通知預設值為關閉
+      if (loadedSettings.ui) {
+        loadedSettings.ui = {
+          ...loadedSettings.ui,
+          soundEnabled: false,
+          notificationsEnabled: false,
         };
       }
 

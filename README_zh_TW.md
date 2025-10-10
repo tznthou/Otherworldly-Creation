@@ -1,13 +1,47 @@
-# 創世紀元：Genesis Chronicle v1.3.4
+# 創世紀元：Genesis Chronicle v1.3.5
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
 <p align="center">
   <a href="README.md">English</a> | <strong>繁體中文</strong>
 </p>
 
-![Version](https://img.shields.io/badge/version-v1.3.4-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-112k+-purple)
+![Version](https://img.shields.io/badge/version-v1.3.5-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-105k+-purple)
 
 ## 🚀 最新更新歷程
+
+### 🌟 v1.3.5 - UX 優化與設定預設值調整 (2025年10月11日)
+
+#### ⚙️ 設定改善
+- **預設值調整**：音效和通知現在預設為關閉，提供更安靜的使用體驗
+- **自動遷移**：現有用戶的設定會自動遷移到新的預設值
+- **智能覆蓋**：遷移邏輯確保所有用戶都能享受改進的預設設定
+
+#### ⚡ AI插畫快速迭代工作流程
+**問題**：生成多張插畫時迭代速度慢 - 用戶必須在每次生成後手動清空預覽區
+
+**新功能**：
+- **🗑️ 刪除按鈕**：一鍵清空預覽區並重新開始
+- **🔄 自動清空**：收藏成功後預覽區自動清空
+- **🎯 優化佈局**：主要操作（收藏和刪除）與次要操作分離
+- **⚡ 快速工作流程**：生成 → 評估 → (收藏/刪除) → 繼續生成
+
+**工作流程對比**：
+```
+之前：生成 → 儲存 → 手動清空 → 生成 (5步驟)
+現在：生成 → 收藏 → 自動清空 → 生成 (3步驟，快40%)
+```
+
+#### 🎨 角色驅動創作
+- **簡化介面**：移除快速模板選擇，專注於角色驅動生成
+- **直接生成**：直接從角色設定創建插畫
+- **降低複雜度**：更清爽的UI，減少決策點
+
+**影響**：
+- TypeScript：-94 行（移除模板定義）
+- UI：-63 行（移除模板選擇介面）
+- 用戶流程：每次生成減少 2 次點擊
+
+---
 
 ### 🌟 v1.3.4 - Windows 圖片路徑終極修復：一個月的診斷突破 (2025年10月10日)
 

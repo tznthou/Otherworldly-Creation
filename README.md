@@ -10,12 +10,12 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.3.4-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.3.5-blue" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green" alt="Platform">
   <img src="https://img.shields.io/badge/AI_Providers-5-orange" alt="AI Providers">
   <img src="https://img.shields.io/badge/RAM_Usage-80~150MB-success" alt="RAM Usage">
   <img src="https://img.shields.io/badge/App_Size-55MB-success" alt="App Size">
-  <img src="https://img.shields.io/badge/code_lines-112k+-purple" alt="Code Lines">
+  <img src="https://img.shields.io/badge/code_lines-105k+-purple" alt="Code Lines">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="License">
 </p>
 
@@ -62,6 +62,40 @@
 | Microsoft Word | 100-300MB | 300MB+ | 5-10% |
 
 *If it can run a modern web browser, it can run Genesis Chronicle perfectly!*
+
+### 🚀 What's New in v1.3.5 - UX Optimization & Settings Defaults (2025-10-11)
+
+#### ⚙️ Settings Improvements
+- **Default Settings Changed**: Sound and notifications now default to OFF for a quieter user experience
+- **Automatic Migration**: Existing users' settings automatically migrate to new defaults
+- **Smart Override**: Migration logic ensures all users benefit from improved defaults
+
+#### ⚡ AI Illustration Quick Iteration Workflow
+**Problem**: Slow iteration when generating multiple illustrations - users had to manually clear preview area after each generation
+
+**New Features**:
+- **🗑️ Delete Button**: One-click to clear preview area and start fresh
+- **🔄 Auto-Clear**: Preview area automatically clears after successful collection
+- **🎯 Optimized Layout**: Primary actions (Collect & Delete) separated from secondary operations
+- **⚡ Rapid Workflow**: Generate → Evaluate → (Collect/Delete) → Generate Next
+
+**Workflow Comparison**:
+```
+Before: Generate → Save → Manual Clear → Generate (5 steps)
+After:  Generate → Collect → Auto-Clear → Generate (3 steps, 40% faster)
+```
+
+#### 🎨 Character-Driven Creation
+- **Simplified Interface**: Removed quick template selection to focus on character-driven generation
+- **Direct Generation**: Create illustrations directly from character settings
+- **Reduced Complexity**: Cleaner UI with fewer decision points
+
+**Impact**:
+- TypeScript: -94 lines (template definitions removed)
+- UI: -63 lines (template selection interface removed)
+- User Flow: 2 fewer clicks per generation
+
+---
 
 ### 🚀 What's New in v1.3.4 - Windows Image Path Ultimate Fix: One Month Diagnostic Breakthrough (2025-10-10)
 

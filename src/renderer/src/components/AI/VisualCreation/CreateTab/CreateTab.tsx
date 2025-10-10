@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../../../../store/store';
 import { useNotification } from '../../../UI/NotificationSystem';
@@ -10,6 +10,7 @@ import {
   addTempImage,
   setShowImagePreview,
   setCurrentImageIndex,
+  clearTempImages,
   type TempImageData,
 } from '../../../../store/slices/visualCreationSlice';
 
@@ -89,78 +90,18 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
   const [batchRequests, setBatchRequests] = useState<BatchRequest[]>([]);
   const [isCollecting, setIsCollecting] = useState(false);
 
-  // 快速模板預設 - 使用 useMemo 避免每次渲染重新創建
-  const quickTemplates = useMemo(() => [
-    {
-      id: 'isekai',
-      name: '🌟 異世界轉生',
-      sceneType: 'scene' as const,
-      artStyle: 'anime',
-      sampleScenes: [
-        '在魔法學院的教室中',
-        '在異世界的森林探險',
-        '在王都的冒險者公會',
-        '在龍穴中的最終決戰'
-      ]
-    },
-    {
-      id: 'school',
-      name: '🏫 校園戀愛',
-      sceneType: 'interaction' as const,
-      artStyle: 'anime',
-      sampleScenes: [
-        '在櫻花樹下的告白場景',
-        '在校園屋頂的午餐時光',
-        '在圖書館的偶遇',
-        '在文化祭的浪漫時刻'
-      ]
-    },
-    {
-      id: 'fantasy',
-      name: '⚔️ 奇幻冒險',
-      sceneType: 'scene' as const,
-      artStyle: 'fantasy',
-      sampleScenes: [
-        '在古老城堡的大廳',
-        '與巨龍的史詩對決',
-        '在魔法森林的神秘遺跡',
-        '在矮人王國的鍛造工坊'
-      ]
-    },
-    {
-      id: 'scifi',
-      name: '🚀 科幻冒險',
-      sceneType: 'scene' as const,
-      artStyle: 'digital_art',
-      sampleScenes: [
-        '在太空站的指揮中心',
-        '在外星球的探索任務',
-        '在未來都市的高樓大廈',
-        '在機甲格納庫的準備場景'
-      ]
+  // 刪除臨時圖片處理函數
+  const handleDeleteImages = useCallback(() => {
+    if (!tempImages || tempImages.length === 0) {
+      notification.warning('沒有可刪除的圖片', '預覽區已經是空的');
+      return;
     }
-  ], []);
 
-  const [selectedQuickTemplate, setSelectedQuickTemplate] = useState<string | null>(null);
-
-  // 應用快速模板
-  const applyQuickTemplate = useCallback((templateId: string, sampleSceneIndex?: number) => {
-    const template = quickTemplates.find(t => t.id === templateId);
-    if (!template) return;
-
-    // 應用模板設置到 Redux 狀態
-    // 這裡需要調用相關的 Redux actions
-    // dispatch(setSceneType(template.sceneType));
-    // dispatch(setArtStyle(template.artStyle));
-    
-    // 如果選擇了示例場景，自動填充場景描述
-    if (sampleSceneIndex !== undefined && template.sampleScenes[sampleSceneIndex]) {
-      setSceneDescription(template.sampleScenes[sampleSceneIndex]);
-    }
-    
-    setSelectedQuickTemplate(templateId);
-    console.log(`🎨 [CreateTab] 已應用快速模板: ${template.name}`);
-  }, [quickTemplates]);
+    const count = tempImages.length;
+    dispatch(clearTempImages());
+    notification.info('✅ 已刪除', `已清空 ${count} 張臨時圖片，可繼續生成新圖片`);
+    console.log(`🗑️ [CreateTab] 已清空 ${count} 張臨時圖片`);
+  }, [tempImages, dispatch, notification]);
 
   // 自動版本創建 Hook - 現已改用收藏功能替代
   // const { createVersionForImage } = useAutoVersionCreation();
@@ -337,8 +278,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
         // 🎲 生成智能Seed：確保不同環境產生不同插畫
         const smartSeed = generateSmartSeed(
           request.selectedCharacterIds,
-          request.enriched_prompt,
-          selectedQuickTemplate || undefined
+          request.enriched_prompt
         );
 
         // 🎨 增強 prompt：確保包含插畫風格關鍵字
@@ -528,7 +468,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       dispatch(setError(friendlyError));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [batchRequests, currentProject, dispatch, artStyle, illustrationProvider, apiKey, serviceDisplayName, globalColorMode, generateSmartSeed, selectedQuickTemplate]);
+  }, [batchRequests, currentProject, dispatch, artStyle, illustrationProvider, apiKey, serviceDisplayName, globalColorMode, generateSmartSeed]);
 
   // 移除批次請求
   const handleRemoveBatchRequest = useCallback((requestId: string) => {
@@ -801,70 +741,6 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                   </div>
                 )}
               </div>
-
-              {/* 快速模板輔助工具 - 收折到底部 */}
-              <details className="group bg-cosmic-800/20 rounded-lg border border-cosmic-700">
-                <summary className="cursor-pointer p-3 hover:bg-cosmic-700/30 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-cosmic-400 flex items-center gap-2">
-                      🎨 快速模板輔助
-                      <span className="text-xs opacity-60">(可選)</span>
-                    </span>
-                    <svg className="w-4 h-4 text-cosmic-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m19 9-7 7-7-7" />
-                    </svg>
-                  </div>
-                </summary>
-                <div className="p-3 pt-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {quickTemplates.map((template) => (
-                      <div key={template.id} className="relative">
-                        <button
-                          onClick={() => applyQuickTemplate(template.id)}
-                          className={`w-full p-3 rounded-lg border transition-all text-left ${
-                            selectedQuickTemplate === template.id
-                              ? 'border-gold-500 bg-gold-900/30 text-gold-200'
-                              : 'border-cosmic-600 bg-cosmic-800/50 text-cosmic-300 hover:border-gold-600'
-                          }`}
-                        >
-                          <div className="text-sm font-medium mb-1">{template.name}</div>
-                          <div className="text-xs text-cosmic-400">
-                            {template.sceneType === 'interaction' ? '互動' : '場景'} • {template.artStyle}
-                          </div>
-                          {selectedQuickTemplate === template.id && (
-                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-gold-500 rounded-full"></div>
-                          )}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  {selectedQuickTemplate && (
-                    <div className="mt-3 pt-3 border-t border-cosmic-600">
-                      <div className="text-xs text-cosmic-400 mb-2">示例場景 (點擊應用):</div>
-                      <div className="grid gap-1">
-                        {quickTemplates.find(t => t.id === selectedQuickTemplate)?.sampleScenes.map((scene, index) => (
-                          <button
-                            key={index}
-                            onClick={() => applyQuickTemplate(selectedQuickTemplate, index)}
-                            className="text-left text-xs p-2 rounded bg-cosmic-700/50 hover:bg-cosmic-600 text-cosmic-300 hover:text-white transition-colors"
-                          >
-                            {scene}
-                          </button>
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => {
-                          setSelectedQuickTemplate(null);
-                          setSceneDescription('');
-                        }}
-                        className="mt-2 text-xs px-2 py-1 bg-red-600/20 border border-red-500/30 text-red-300 rounded hover:bg-red-600/30 transition-colors"
-                      >
-                        清除模板
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </details>
             </div>
           </div>
         
@@ -979,7 +855,9 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                 <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-cosmic text-gold-500">🖼️ 最新生成</h3>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
+                      {/* 主要操作區：收藏 & 刪除 */}
+                      <div className="flex items-center gap-2 border-r border-cosmic-600 pr-2">
                       <button
                         onClick={async () => {
                           try {
@@ -1049,6 +927,12 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                                   detailMsg ? `${successMsg}（${detailMsg}）` : successMsg,
                                   4000
                                 );
+                              }
+
+                              // 🎯 收藏成功後自動清空預覽區
+                              if (hasNewCollections || hasSkipped) {
+                                dispatch(clearTempImages());
+                                console.log('✨ [Collection] 已自動清空預覽區，可繼續生成新圖片');
                               }
 
                               // 記錄詳細信息到控制台
@@ -1134,6 +1018,19 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                           <>🔖 加入收藏</>
                         )}
                       </button>
+
+                      {/* 刪除按鈕 */}
+                      <button
+                        onClick={handleDeleteImages}
+                        className="text-xs px-3 py-1 bg-red-600 hover:bg-red-700 active:scale-95 text-white rounded transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!tempImages || tempImages.length === 0}
+                        title={tempImages && tempImages.length > 0 ? `刪除 ${tempImages.length} 張臨時圖片` : '沒有可刪除的圖片'}
+                      >
+                        🗑️ 刪除
+                      </button>
+                      </div>
+
+                      {/* 次要操作區 */}
                       <button
                         onClick={() => {
                           // TODO: 實現變體創建邏輯
