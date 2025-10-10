@@ -72,6 +72,7 @@
     "@reduxjs/toolkit": "^1.9.7",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tailwindcss/postcss": "^4.1.12",
+    "COMMENT_TAURI_VERSIONS": "⚠️ CRITICAL: All @tauri-apps packages MUST match Cargo.toml versions EXACTLY (no ^ or ~). See v1.2.8 lesson: version mismatch causes GitHub Actions build failures.",
     "@tauri-apps/api": "2.7.0",
     "@tauri-apps/plugin-dialog": "2.3.2",
     "@tauri-apps/plugin-log": "2.6.0",

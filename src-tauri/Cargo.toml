@@ -21,6 +21,8 @@ tauri-build = { version = "=2.3.1", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
+# ⚠️ CRITICAL: All tauri versions MUST match package.json @tauri-apps versions EXACTLY
+# Use = for exact version pinning. See v1.2.8 & v1.3.3 lessons about version mismatch failures.
 tauri = { version = "=2.7.0", features = ["protocol-asset"] }
 tauri-plugin-log = "2"
 tauri-plugin-dialog = "2"
