@@ -7,7 +7,9 @@ use commands::system::{
     get_app_version, quit_app, reload_app, show_save_dialog, show_open_dialog, open_external,
     check_for_updates, download_update, install_update, set_auto_update, read_image_as_base64,
     save_export_file, get_image_path, get_environment_info, test_store_plugin,
-    get_secure_key, set_secure_key, delete_secure_key
+    get_secure_key, set_secure_key, delete_secure_key,
+    // 日誌管理 commands (v1.3.3)
+    get_log_directory, open_log_directory, get_recent_logs
 };
 use commands::project::{get_all_projects, get_project_by_id, create_project, update_project, delete_project};
 use commands::chapter::{get_chapters_by_project_id, get_chapter_by_id, create_chapter, update_chapter, delete_chapter};
@@ -73,6 +75,7 @@ use commands::pollinations_auth::{
     remove_pollinations_token, test_pollinations_token
 };
 use services::context::optimize_ultra_long_context_command;
+use tauri_plugin_log::{Target, TargetKind, RotationStrategy, TimezoneStrategy};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -82,20 +85,42 @@ pub fn run() {
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_store::Builder::default().build())
     .setup(|app| {
-      if cfg!(debug_assertions) {
-        app.handle().plugin(
-          tauri_plugin_log::Builder::default()
-            .level(log::LevelFilter::Info)
-            .build(),
-        )?;
-      }
-      
+      // 🔧 日誌系統配置 - 所有環境都啟用（v1.3.3 修復）
+      // 根據編譯模式設置不同的日誌級別
+      let log_level = if cfg!(debug_assertions) {
+        log::LevelFilter::Debug  // 開發環境：詳細日誌
+      } else {
+        log::LevelFilter::Info   // 生產環境：重要資訊
+      };
+
+      // 配置日誌插件：輸出到終端 + 日誌檔案
+      app.handle().plugin(
+        tauri_plugin_log::Builder::default()
+          .level(log_level)
+          .targets([
+            Target::new(TargetKind::Stdout),
+            Target::new(TargetKind::LogDir { file_name: None }),
+          ])
+          .max_file_size(5_000_000)  // 5MB 單檔上限
+          .rotation_strategy(RotationStrategy::KeepAll)
+          .timezone_strategy(TimezoneStrategy::UseLocal)
+          .build(),
+      )?;
+
+      // 記錄應用啟動資訊（方便診斷）
+      log::info!("========================================");
+      log::info!("Genesis Chronicle v{} 啟動", env!("CARGO_PKG_VERSION"));
+      log::info!("環境: {}", if cfg!(debug_assertions) { "開發" } else { "生產" });
+      log::info!("平台: {} {}", std::env::consts::OS, std::env::consts::ARCH);
+      log::info!("日誌級別: {:?}", log_level);
+      log::info!("========================================");
+
       // 初始化資料庫
       if let Err(e) = database::init_database() {
         log::error!("資料庫初始化失敗: {}", e);
         return Err(e.into());
       }
-      
+
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![
@@ -118,6 +143,10 @@ pub fn run() {
       get_secure_key,
       set_secure_key,
       delete_secure_key,
+      // Log Management commands (v1.3.3)
+      get_log_directory,
+      open_log_directory,
+      get_recent_logs,
       // Project commands
       get_all_projects,
       get_project_by_id,

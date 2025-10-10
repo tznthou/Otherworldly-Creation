@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -662,4 +662,122 @@ pub async fn save_export_file(
             Err(error_msg)
         }
     }
+}
+
+// ============================================================================
+// 日誌管理 Commands (v1.3.3)
+// ============================================================================
+
+/// 獲取日誌目錄路徑
+#[tauri::command]
+pub fn get_log_directory(app: AppHandle) -> Result<String, String> {
+    // 使用 Tauri 的標準 API 獲取日誌目錄
+    let log_dir = app.path()
+        .app_log_dir()
+        .map_err(|e| format!("無法獲取日誌目錄: {}", e))?;
+
+    let log_dir_str = log_dir.to_string_lossy().to_string();
+    log::info!("[get_log_directory] 日誌目錄: {}", log_dir_str);
+
+    Ok(log_dir_str)
+}
+
+/// 打開日誌目錄（跨平台）
+#[tauri::command]
+pub async fn open_log_directory(app: AppHandle) -> Result<(), String> {
+    let log_dir = get_log_directory(app)?;
+
+    log::info!("[open_log_directory] 準備打開日誌目錄: {}", log_dir);
+
+    // 跨平台打開目錄
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(&log_dir)
+            .spawn()
+            .map_err(|e| format!("無法打開日誌目錄: {}", e))?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&log_dir)
+            .spawn()
+            .map_err(|e| format!("無法打開日誌目錄: {}", e))?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&log_dir)
+            .spawn()
+            .map_err(|e| format!("無法打開日誌目錄: {}", e))?;
+    }
+
+    log::info!("[open_log_directory] ✅ 已打開日誌目錄");
+    Ok(())
+}
+
+/// 獲取最近的日誌內容
+#[tauri::command]
+pub async fn get_recent_logs(app: AppHandle, lines: Option<usize>) -> Result<String, String> {
+    let log_dir = get_log_directory(app)?;
+    let log_path = std::path::Path::new(&log_dir);
+
+    log::info!("[get_recent_logs] 讀取日誌目錄: {}", log_dir);
+
+    // 確保日誌目錄存在
+    if !log_path.exists() {
+        let error_msg = format!("日誌目錄不存在: {}", log_dir);
+        log::warn!("[get_recent_logs] {}", error_msg);
+        return Err(error_msg);
+    }
+
+    // 找到所有 .log 檔案並按修改時間排序
+    let mut log_files: Vec<_> = std::fs::read_dir(&log_path)
+        .map_err(|e| format!("無法讀取日誌目錄: {}", e))?
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| {
+            entry.path().extension()
+                .and_then(|s| s.to_str())
+                .map(|s| s == "log")
+                .unwrap_or(false)
+        })
+        .collect();
+
+    if log_files.is_empty() {
+        let error_msg = "找不到日誌檔案".to_string();
+        log::warn!("[get_recent_logs] {}", error_msg);
+        return Err(error_msg);
+    }
+
+    // 按修改時間排序，最新的在最後
+    log_files.sort_by_key(|entry| {
+        entry.metadata()
+            .and_then(|m| m.modified())
+            .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+    });
+
+    let latest_log = log_files.last()
+        .ok_or("找不到最新的日誌檔案")?;
+
+    let log_file_path = latest_log.path();
+    log::info!("[get_recent_logs] 讀取檔案: {:?}", log_file_path);
+
+    // 讀取日誌內容
+    let content = std::fs::read_to_string(&log_file_path)
+        .map_err(|e| format!("無法讀取日誌檔案: {}", e))?;
+
+    // 取最後 N 行
+    let line_count = lines.unwrap_or(1000);
+    let all_lines: Vec<&str> = content.lines().collect();
+    let total_lines = all_lines.len();
+    let start = total_lines.saturating_sub(line_count);
+
+    let result = all_lines[start..].join("\n");
+
+    log::info!("[get_recent_logs] ✅ 成功讀取 {} 行 (共 {} 行)",
+        result.lines().count(), total_lines);
+
+    Ok(result)
 }

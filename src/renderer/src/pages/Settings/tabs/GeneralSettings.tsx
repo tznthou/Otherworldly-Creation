@@ -1,11 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { updateSettings, updateAISettings } from '../../../store/slices/settingsSlice';
 import { SettingsComponentProps } from '../types';
 import { useI18n } from '../../../hooks/useI18n';
+import { logsApi } from '../../../api/logs';
+import { logger } from '../../../services/logService';
 
 const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) => {
   const { t } = useI18n();
-  
+
+  // 日誌管理狀態 (v1.3.3)
+  const [logDirectory, setLogDirectory] = useState<string>('');
+  const [isExportingLogs, setIsExportingLogs] = useState(false);
+
+  // 載入日誌目錄
+  useEffect(() => {
+    logsApi.getLogDirectory()
+      .then(setLogDirectory)
+      .catch(err => {
+        console.error('獲取日誌目錄失敗:', err);
+        logger.error('Settings', '獲取日誌目錄失敗', err);
+      });
+  }, []);
+
+  // 處理打開日誌目錄
+  const handleOpenLogDirectory = async () => {
+    try {
+      await logsApi.openLogDirectory();
+      logger.info('Settings', '打開日誌目錄');
+    } catch (error) {
+      logger.error('Settings', '打開日誌目錄失敗', error);
+      alert('無法打開日誌目錄');
+    }
+  };
+
+  // 處理複製日誌
+  const handleCopyLogs = async () => {
+    setIsExportingLogs(true);
+    try {
+      const success = await logsApi.copyLogsToClipboard(2000);
+      if (success) {
+        alert('✅ 日誌已複製到剪貼板！\n\n請貼到 GitHub Issue 或提供給開發者。');
+        logger.info('Settings', '日誌已複製到剪貼板');
+      } else {
+        throw new Error('複製失敗');
+      }
+    } catch (error) {
+      logger.error('Settings', '複製日誌失敗', error);
+      alert('❌ 複製日誌失敗，請手動打開日誌目錄');
+    } finally {
+      setIsExportingLogs(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-cosmic text-gold-500 mb-6">{t('settings.general.title')}</h2>
@@ -357,6 +403,48 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* 日誌管理區塊 (v1.3.3) */}
+      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gold-400 mb-4">🗂️ 日誌管理</h3>
+        <div className="space-y-4">
+          <div>
+            <p className="text-gray-300 mb-2">
+              當應用出現問題時，日誌檔案可以幫助開發者診斷問題。
+            </p>
+            <div className="bg-cosmic-700 rounded px-3 py-2 mb-3">
+              <p className="text-xs text-gray-400">日誌位置：</p>
+              <code className="text-sm text-gold-300 break-all">{logDirectory || '載入中...'}</code>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleOpenLogDirectory}
+              className="flex-1 bg-cosmic-700 hover:bg-cosmic-600 border border-cosmic-600 hover:border-gold-500 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              📂 打開日誌目錄
+            </button>
+            <button
+              onClick={handleCopyLogs}
+              disabled={isExportingLogs}
+              className="flex-1 bg-gold-600 hover:bg-gold-500 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isExportingLogs ? '⏳ 複製中...' : '📋 複製最新日誌'}
+            </button>
+          </div>
+
+          <div className="bg-cosmic-700/50 border border-cosmic-600 rounded-lg p-3">
+            <p className="text-sm text-gray-300 mb-2">💡 如何使用日誌：</p>
+            <ul className="text-xs text-gray-400 space-y-1 list-disc list-inside ml-2">
+              <li>點擊「複製最新日誌」複製最近 2000 行日誌</li>
+              <li>將日誌貼到 GitHub Issue 或郵件中發給開發者</li>
+              <li>日誌包含錯誤資訊、操作記錄等診斷資料</li>
+              <li>不包含任何 API keys 或密碼等敏感資訊</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

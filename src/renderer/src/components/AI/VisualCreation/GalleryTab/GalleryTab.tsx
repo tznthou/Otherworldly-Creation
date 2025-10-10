@@ -16,6 +16,7 @@ import {
 import { addNotification } from '../../../../store/slices/uiSlice';
 import { api } from '../../../../api';
 import { formatDateTime } from '../../../../utils/dateUtils';
+import { logger } from '../../../../services/logService';
 import { useVersionManager } from '../../../../hooks/illustration/useVersionManager';
 import { 
   setCurrentVersion,
@@ -950,14 +951,13 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       ? item.image_url
       : (item.full_path ? convertFileSrc(item.full_path) : '');
 
-    // 🔍 DEBUG LOG - 圖片路徑診斷
-    console.log('[GalleryTab] Image Debug:', {
+    // 🔍 圖片路徑診斷 - 使用結構化日誌 (v1.3.3)
+    logger.imageDebug('GalleryTab', '生成 availableImages', {
       id: item.id,
       image_url: item.image_url,
       image_path: item.image_path,
       local_file_path: item.local_file_path,
       full_path: item.full_path,
-      isValidHttpUrl,
       finalUrl: imageUrl
     });
 
