@@ -950,6 +950,17 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       ? item.image_url
       : (item.full_path ? convertFileSrc(item.full_path) : '');
 
+    // 🔍 DEBUG LOG - 圖片路徑診斷
+    console.log('[GalleryTab] Image Debug:', {
+      id: item.id,
+      image_url: item.image_url,
+      image_path: item.image_path,
+      local_file_path: item.local_file_path,
+      full_path: item.full_path,
+      isValidHttpUrl,
+      finalUrl: imageUrl
+    });
+
     return {
       id: item.id,
       url: imageUrl || '',
@@ -1052,7 +1063,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
               <div className="flex-1 p-6 pb-0">
                 <SafeImage
                   imageUrl={previewImage.image_url}
-                  localFilePath={previewImage.image_path}
+                  localFilePath={previewImage.full_path || previewImage.image_path}
                   alt={previewImage.original_prompt}
                   className="w-full h-full object-contain max-h-[60vh] rounded"
                   onLoad={() => console.log('預覽圖像載入完成')}

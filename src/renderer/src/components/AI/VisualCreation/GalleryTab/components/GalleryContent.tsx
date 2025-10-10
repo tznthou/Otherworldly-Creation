@@ -274,12 +274,12 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
                     onClick={() => !isDeleting && onToggleSelection(item.id)}
                   >
                     <div className="relative w-32 h-32 flex-shrink-0 mr-4">
-                      {item.image_url || item.image_path ? (
+                      {item.image_url || item.image_path || item.full_path ? (
                         <>
                           <SafeImage
                             key={`safe-image-list-${item.id}`}
                             imageUrl={item.image_url && item.image_url.startsWith('http') ? item.image_url : undefined}
-                            localFilePath={item.image_path}
+                            localFilePath={item.full_path || item.image_path}
                             alt={item.original_prompt}
                             className="w-full h-full object-cover rounded"
                             loading="lazy"

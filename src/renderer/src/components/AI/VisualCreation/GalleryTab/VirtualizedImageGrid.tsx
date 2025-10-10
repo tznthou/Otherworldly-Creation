@@ -116,20 +116,22 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
               itemId: item.id,
               hasImageUrl: !!item.image_url,
               hasLocalFilePath: !!item.image_path,
+              hasFullPath: !!item.full_path,
               imageUrl: item.image_url,
               localFilePath: item.image_path,
+              fullPath: item.full_path,
               status: item.status,
               model: item.model,
               provider: item.provider
             });
-            
-            if (item.image_url || item.image_path) {
+
+            if (item.image_url || item.image_path || item.full_path) {
               console.log('✅ VirtualizedImageGrid: 渲染SafeImage組件', { itemId: item.id });
               return (
                 <SafeImage
                   key={`safe-image-${item.id}`}
                   imageUrl={item.image_url && item.image_url.startsWith('http') ? item.image_url : undefined}
-                  localFilePath={item.image_path}
+                  localFilePath={item.full_path || item.image_path}
                   alt={item.original_prompt}
                   className="w-full h-full object-cover"
                   loading="lazy"
