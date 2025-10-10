@@ -24,11 +24,11 @@ log = "0.4"
 # ⚠️ CRITICAL: All tauri versions MUST match package.json @tauri-apps versions EXACTLY
 # Use = for exact version pinning. See v1.2.8 & v1.3.3 lessons about version mismatch failures.
 tauri = { version = "=2.7.0", features = ["protocol-asset"] }
-tauri-plugin-log = "2"
-tauri-plugin-dialog = "2"
-tauri-plugin-shell = "2"
-tauri-plugin-opener = "2"
-tauri-plugin-store = "2"
+tauri-plugin-log = "=2.6.0"
+tauri-plugin-dialog = "=2.3.2"
+tauri-plugin-shell = "=2.3.0"
+tauri-plugin-opener = "=2.2.3"
+tauri-plugin-store = "=2.3.0"
 keyring = { version = "3.6", features = ["apple-native", "windows-native"] }
 rusqlite = { version = "0.32", features = ["bundled", "chrono"] }
 chrono = { version = "0.4", features = ["serde"] }
