@@ -187,11 +187,18 @@ pub fn from_relative_path(filename: &str) -> Result<PathBuf, Box<dyn Error>> {
 /// 為新生成的圖片建立臨時儲存路徑
 pub fn get_temp_image_path(image_id: &str) -> Result<PathBuf, Box<dyn Error>> {
     let temp_dir = get_temp_images_dir()?;
-    let filename = format!("{}.jpg", image_id);
+
+    // 🔧 修復重複副檔名問題：檢查是否已有 .jpg 副檔名
+    let filename = if image_id.ends_with(".jpg") {
+        image_id.to_string()
+    } else {
+        format!("{}.jpg", image_id)
+    };
+
     let full_path = temp_dir.join(filename);
-    
+
     log::debug!("[PathUtils] 臨時圖片路徑: {:?}", full_path);
-    
+
     Ok(full_path)
 }
 
@@ -200,11 +207,18 @@ pub fn get_temp_image_path(image_id: &str) -> Result<PathBuf, Box<dyn Error>> {
 /// 為確認後的圖片建立最終儲存路徑
 pub fn get_final_image_path(image_id: &str) -> Result<PathBuf, Box<dyn Error>> {
     let final_dir = get_final_images_dir()?;
-    let filename = format!("{}.jpg", image_id);
+
+    // 🔧 修復重複副檔名問題：檢查是否已有 .jpg 副檔名
+    let filename = if image_id.ends_with(".jpg") {
+        image_id.to_string()
+    } else {
+        format!("{}.jpg", image_id)
+    };
+
     let full_path = final_dir.join(filename);
-    
+
     log::debug!("[PathUtils] 最終圖片路徑: {:?}", full_path);
-    
+
     Ok(full_path)
 }
 
