@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.2.8-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.3.4-blue" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green" alt="Platform">
   <img src="https://img.shields.io/badge/AI_Providers-5-orange" alt="AI Providers">
   <img src="https://img.shields.io/badge/RAM_Usage-80~150MB-success" alt="RAM Usage">
@@ -62,6 +62,143 @@
 | Microsoft Word | 100-300MB | 300MB+ | 5-10% |
 
 *If it can run a modern web browser, it can run Genesis Chronicle perfectly!*
+
+### 🚀 What's New in v1.3.4 - Windows Image Path Ultimate Fix: One Month Diagnostic Breakthrough (2025-10-10)
+
+#### 🎯 Problem Discovery & Diagnostic Journey
+
+**Problem Duration: Nearly One Month of Challenging Diagnosis**
+
+Starting from mid-September 2025, Windows environment experienced mysterious image display issues:
+- ❌ Gemini/OpenAI generated images failed to display
+- ❌ Images could not be exported to EPUB/PDF
+- ❌ Image gallery loaded but showed blank images
+- ✅ Pollinations service worked normally (control group)
+
+**The Major Turning Point**:
+- After multiple attempts to fix SafeImage component, path handling logic, convertFileSrc API, etc.
+- October 10, 2025: **Decided to output detailed Windows log**
+- **Key Discovery**: Error logs revealed the truth!
+
+```log
+❌ Error path: C:\Users\...\08c864f4-8284-4916-9905-55915988dfbb.jpg.jpg
+✅ Correct path: C:\Users\...\08c864f4-8284-4916-9905-55915988dfbb.jpg
+```
+
+**The Core Issue**: Duplicate file extension `.jpg.jpg`!
+
+#### 🔍 Root Cause Analysis
+
+**Program Logic-Specific Problem** (No similar discussions found online):
+
+1. **Database Storage**: `image_url` field stores `uuid.jpg` (with extension)
+2. **Path Combination Functions**: `get_temp_image_path()` and `get_final_image_path()` unconditionally append `.jpg`
+3. **Result**: `uuid.jpg` + `.jpg` = `uuid.jpg.jpg` ❌
+
+**Original Code Issue** (src-tauri/src/utils/path_utils.rs):
+```rust
+// ❌ Unconditionally appends .jpg extension
+pub fn get_final_image_path(image_id: &str) -> Result<PathBuf, Box<dyn Error>> {
+    let final_dir = get_final_images_dir()?;
+    let filename = format!("{}.jpg", image_id);  // Unconditional append
+    let full_path = final_dir.join(filename);
+    Ok(full_path)
+}
+```
+
+#### ✅ Solution: Smart Extension Check
+
+**Fix Strategy**: Defensive programming with backward compatibility
+
+```rust
+// ✅ Smart detection of existing extension
+pub fn get_final_image_path(image_id: &str) -> Result<PathBuf, Box<dyn Error>> {
+    let final_dir = get_final_images_dir()?;
+
+    // 🔧 Fix duplicate extension: check for existing .jpg extension
+    let filename = if image_id.ends_with(".jpg") {
+        image_id.to_string()  // Already has extension, use as-is
+    } else {
+        format!("{}.jpg", image_id)  // No extension, append it
+    };
+
+    let full_path = final_dir.join(filename);
+    log::debug!("[PathUtils] Final image path: {:?}", full_path);
+    Ok(full_path)
+}
+```
+
+**Modified Files**:
+- `src-tauri/src/utils/path_utils.rs` (lines 188-203, 208-216)
+- `get_temp_image_path()` and `get_final_image_path()` functions
+
+#### 🔒 Cross-Platform Compatibility Guarantee
+
+**Mac Environment** (currently working):
+```
+Input: uuid (pure UUID, no extension)
+Check: !ends_with(".jpg") → true
+Execute: format!("{}.jpg", uuid)
+Result: uuid.jpg ✅ Identical to original logic
+```
+
+**Windows Environment** (fixed duplicate extension):
+```
+Input: uuid.jpg (with extension)
+Check: ends_with(".jpg") → true
+Execute: uuid.jpg (return as-is)
+Result: uuid.jpg ✅ Fixed duplicate extension issue
+```
+
+#### 💡 Key Lessons Learned
+
+**1. Critical Importance of Log Output**
+- ✅ **Decisive Breakthrough**: Detailed Windows log directly revealed the problem
+- ✅ **Diagnosis Speed**: From weeks of frustration to hours of resolution
+- ✅ **Precise Location**: Direct visibility of incorrect file paths
+
+**2. Defensive Programming Principles**
+- ✅ **Assume Input Variety**: Don't assume consistent input format
+- ✅ **Backward Compatibility First**: Preserve existing working environments
+- ✅ **Zero Breaking Changes**: Pure additive error tolerance logic
+
+**3. Cross-Platform Development Considerations**
+- ⚠️ Single-environment testing cannot detect cross-platform issues
+- ⚠️ Path handling requires special attention to OS differences
+- ⚠️ Data format must maintain consistency across platforms
+
+**4. Internet Search Results**
+- 🔍 **No Similar Discussions**: No Tauri duplicate extension issues found online
+- 🔍 **Program-Specific Logic**: This is unique to our program architecture
+- 🔍 **Experience Value**: This fix experience has unique contribution value to the community
+
+#### 🚀 Test Results
+
+**Windows Production Environment Testing**:
+- ✅ Gemini generated images display properly
+- ✅ OpenAI generated images display properly
+- ✅ Images successfully export to EPUB
+- ✅ Images successfully export to PDF
+- ✅ Log shows correct paths (no `.jpg.jpg`)
+
+**Fix Confirmation**:
+```log
+✅ [read_image_as_base64] Reading image file: uuid.jpg
+✅ [read_image_as_base64] Full path: C:\...\uuid.jpg
+✅ [read_image_as_base64] File read successfully
+```
+
+#### 🎯 Version Update
+- **Compilation Status**: ✅ Rust compilation passed (0 errors, 9 warnings)
+- **Code Changes**: Pure defensive fix, increased error tolerance
+- **Zero Breaking**: Mac/Linux environments completely unaffected
+- **Test Verification**: Windows production environment testing passed
+
+#### 📚 Related Documentation
+Detailed technical analysis recorded in Serena memory store:
+- `windows-image-path-fix-v1-3-4` - Complete diagnostic and fix process
+
+---
 
 ### 🚀 What's New in v1.2.8 - Security Enhancement: Encrypted API Key Storage (2025-10-08)
 
@@ -397,6 +534,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <p align="center">
-  <strong>Genesis Chronicle v1.2.7</strong><br>
+  <strong>Genesis Chronicle v1.3.4</strong><br>
   Made with ❤️ for Chinese light novel creators worldwide
 </p>

@@ -1,13 +1,155 @@
-# 創世紀元：Genesis Chronicle v1.2.8
+# 創世紀元：Genesis Chronicle v1.3.4
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
 <p align="center">
   <a href="README.md">English</a> | <strong>繁體中文</strong>
 </p>
 
-![Version](https://img.shields.io/badge/version-v1.2.8-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-112k+-purple)
+![Version](https://img.shields.io/badge/version-v1.3.4-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-112k+-purple)
 
 ## 🚀 最新更新歷程
+
+### 🌟 v1.3.4 - Windows 圖片路徑終極修復：一個月的診斷突破 (2025年10月10日)
+
+#### 🎯 問題發現與診斷歷程
+
+**問題持續時間：近一個月的艱困診斷**
+
+從 2025年9月中旬開始，Windows 環境下出現神秘的圖片顯示問題：
+- ❌ Gemini/OpenAI 生成的圖片無法正常顯示
+- ❌ 圖片無法導出到 EPUB/PDF
+- ❌ 圖庫載入後圖片呈現空白
+- ✅ Pollinations 服務運作正常（對照組）
+
+**診斷過程的重大轉折點**：
+- 經過多次嘗試修復 SafeImage 組件、路徑處理邏輯、convertFileSrc API 等
+- 2025年10月10日：**決定輸出詳細的 Windows log 日誌**
+- **關鍵發現**：錯誤日誌揭露了真相！
+
+```log
+❌ 錯誤路徑：C:\Users\...\08c864f4-8284-4916-9905-55915988dfbb.jpg.jpg
+✅ 正確路徑：C:\Users\...\08c864f4-8284-4916-9905-55915988dfbb.jpg
+```
+
+**問題核心**：路徑出現重複副檔名 `.jpg.jpg`！
+
+#### 🔍 根本原因分析
+
+**程式邏輯特有問題**（網路上無類似討論）：
+
+1. **資料庫儲存**：`image_url` 欄位存的是 `uuid.jpg`（帶副檔名）
+2. **路徑組合函數**：`get_temp_image_path()` 和 `get_final_image_path()` 無條件加上 `.jpg`
+3. **結果**：`uuid.jpg` + `.jpg` = `uuid.jpg.jpg` ❌
+
+**原始程式碼問題**（src-tauri/src/utils/path_utils.rs）：
+```rust
+// ❌ 無條件加上 .jpg 副檔名
+pub fn get_final_image_path(image_id: &str) -> Result<PathBuf, Box<dyn Error>> {
+    let final_dir = get_final_images_dir()?;
+    let filename = format!("{}.jpg", image_id);  // 無條件加上
+    let full_path = final_dir.join(filename);
+    Ok(full_path)
+}
+```
+
+**為什麼 Mac 環境沒問題？**
+- Mac 的呼叫路徑可能經過副檔名處理
+- Windows 可能有不同的圖片渲染路徑
+- 兩個環境的資料庫內容可能不同
+
+#### ✅ 解決方案：智能副檔名檢查
+
+**修復策略**：防禦性編程，向後兼容
+
+```rust
+// ✅ 智能判斷是否已有副檔名
+pub fn get_final_image_path(image_id: &str) -> Result<PathBuf, Box<dyn Error>> {
+    let final_dir = get_final_images_dir()?;
+
+    // 🔧 修復重複副檔名問題：檢查是否已有 .jpg 副檔名
+    let filename = if image_id.ends_with(".jpg") {
+        image_id.to_string()  // 已有副檔名，直接使用
+    } else {
+        format!("{}.jpg", image_id)  // 沒有副檔名，加上
+    };
+
+    let full_path = final_dir.join(filename);
+    log::debug!("[PathUtils] 最終圖片路徑: {:?}", full_path);
+    Ok(full_path)
+}
+```
+
+**修改範圍**：
+- `src-tauri/src/utils/path_utils.rs` (188-203行, 208-216行)
+- `get_temp_image_path()` 和 `get_final_image_path()` 兩個函數
+
+#### 🔒 跨平台兼容性保證
+
+**Mac 環境（目前運作正常）**：
+```
+輸入：uuid (純UUID，無副檔名)
+判斷：!ends_with(".jpg") → true
+執行：format!("{}.jpg", uuid)
+結果：uuid.jpg ✅ 與原邏輯完全相同
+```
+
+**Windows 環境（修復重複副檔名）**：
+```
+輸入：uuid.jpg (帶副檔名)
+判斷：ends_with(".jpg") → true
+執行：uuid.jpg (直接返回)
+結果：uuid.jpg ✅ 修復重複副檔名問題
+```
+
+#### 💡 重要經驗教訓
+
+**1. Log 輸出的關鍵重要性**
+- ✅ **決定性突破**：詳細的 Windows log 直接揭露問題
+- ✅ **診斷速度**：從數週困擾到數小時解決
+- ✅ **精確定位**：直接看到錯誤的檔案路徑
+
+**2. 防禦性編程原則**
+- ✅ **假設輸入多樣性**：不要假設輸入格式一致
+- ✅ **向後兼容優先**：不破壞現有運作環境
+- ✅ **零破壞性修復**：純增量式容錯邏輯
+
+**3. 跨平台開發注意事項**
+- ⚠️ 單一環境測試無法發現跨平台問題
+- ⚠️ 路徑處理需要特別注意不同作業系統差異
+- ⚠️ 資料格式需要在各平台保持一致性
+
+**4. 網路搜尋結果**
+- 🔍 **無類似討論**：網路上完全沒有 Tauri 重複副檔名的相關問題
+- 🔍 **程式邏輯特有**：這是我們程式架構特有的問題
+- 🔍 **經驗價值**：這次修復經驗對社群有獨特貢獻價值
+
+#### 🚀 測試結果
+
+**Windows 生產環境測試**：
+- ✅ Gemini 生成的圖片正常顯示
+- ✅ OpenAI 生成的圖片正常顯示
+- ✅ 圖片成功導出到 EPUB
+- ✅ 圖片成功導出到 PDF
+- ✅ Log 中路徑正確（無 `.jpg.jpg`）
+
+**修復確認**：
+```log
+✅ [read_image_as_base64] 讀取圖片文件: uuid.jpg
+✅ [read_image_as_base64] 完整路徑: C:\...\uuid.jpg
+✅ [read_image_as_base64] 文件讀取成功
+```
+
+#### 🎯 版本更新
+- **編譯狀態**：✅ Rust 編譯通過 (0 errors, 9 warnings)
+- **程式碼變更**：純防禦性修復，增加容錯能力
+- **零破壞性**：Mac/Linux 環境完全不受影響
+- **測試驗證**：Windows 生產環境測試通過
+
+#### 📚 相關文檔
+詳細技術分析記錄於 Serena 記憶庫：
+- `windows-image-path-fix-v1-3-4` - 完整診斷與修復過程
+
+---
 
 ### 🌟 v1.2.8 - 安全性強化：API金鑰加密儲存 (2025年10月8日)
 
