@@ -213,3 +213,9 @@ coverage/
 # Claude Code project configuration (contains personal instructions)
 CLAUDE.md*.backup.tsx
 pkg_debug/
+
+# Temporary cleanup scripts (tech debt batch processing)
+batch*.py
+batch*-final-todo.py
+cleanup-*.py
+tech-debt-*.py
