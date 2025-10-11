@@ -248,7 +248,10 @@
       "Bash(src/renderer/src/i18n/index.ts )",
       "Bash(src/renderer/src/components/AI/VisualCreation/CreateTab/CharacterSelector.tsx)",
       "Bash(cut:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(RELEASE_VERSION=1.3.5 node scripts/sync-version.js:*)",
+      "Bash(RELEASE_VERSION=1.3.6 node scripts/sync-version.js:*)",
+      "Bash(RELEASE_VERSION=1.3.7 node scripts/sync-version.js:*)"
     ],
     "deny": [],
     "ask": [],
