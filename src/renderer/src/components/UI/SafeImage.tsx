@@ -2,6 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { api } from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('SafeImage');
 
 interface SafeImageProps {
   imageUrl?: string;
@@ -67,7 +71,7 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
 
         // 檢查本地文件路徑
         if (localFilePath && typeof localFilePath === 'string' && localFilePath.trim() !== '') {
-          console.log('🔍 [SafeImageDebug] 處理本地檔案路徑:', {
+          log.debug('🔍 [SafeImageDebug] 處理本地檔案路徑:', {
             originalPath: localFilePath,
             pathType: typeof localFilePath,
             pathLength: localFilePath.length,
@@ -81,8 +85,8 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
           cleanPath = cleanPath.replace(/\\/g, '/');
           cleanPath = decodeURIComponent(cleanPath);
 
-          console.log('🔧 [SafeImageDebug] 清理後路徑:', cleanPath);
-          console.log('🔧 [SafeImageDebug] 路徑處理步驟:', {
+          log.debug('🔧 [SafeImageDebug] 清理後路徑:', cleanPath);
+          log.debug('🔧 [SafeImageDebug] 路徑處理步驟:', {
             step1_removedFileProtocol: localFilePath.replace(/^file:\/\//, ''),
             step2_normalizedSlashes: cleanPath.replace(/\\/g, '/'),
             step3_decoded: cleanPath,
@@ -97,16 +101,16 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
             const isImageFilename = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.jpg$/i.test(cleanPath);
             if (isImageFilename) {
               try {
-                console.log('🔧 [SafeImageDebug] 檢測到圖片檔案名，正在獲取完整路徑:', cleanPath);
+                log.debug('🔧 [SafeImageDebug] 檢測到圖片檔案名，正在獲取完整路徑:', cleanPath);
                 // 使用新的API動態獲取正確路徑（跨平台相容）
                 const fullPath = await api.system.getImagePath(cleanPath);
                 // 🔧 Windows兼容性：確保路徑格式統一（防禦性編程）
                 cleanPath = fullPath.replace(/\\/g, '/');
-                console.log('✅ [SafeImageDebug] API返回完整路徑（已正規化）:', cleanPath);
+                log.debug('✅ [SafeImageDebug] API返回完整路徑（已正規化）:', cleanPath);
               } catch (error) {
-                console.error('❌ [SafeImageDebug] 無法獲取圖片路徑:', error);
+                log.error('❌ [SafeImageDebug] 無法獲取圖片路徑:', error);
                 // 🔧 安全修復：移除hardcoded路徑，直接設置錯誤狀態
-                console.error('❌ [SafeImageDebug] API獲取失敗，無法顯示圖片');
+                log.error('❌ [SafeImageDebug] API獲取失敗，無法顯示圖片');
                 setHasError(true);
                 setIsLoading(false);
                 return;
@@ -116,7 +120,7 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
 
           try {
             const assetUrl = convertFileSrc(cleanPath);
-            console.log('✅ [SafeImageDebug] convertFileSrc 成功:', {
+            log.debug('✅ [SafeImageDebug] convertFileSrc 成功:', {
               inputPath: cleanPath,
               outputUrl: assetUrl,
               isProduction: process.env.NODE_ENV === 'production'
@@ -124,7 +128,7 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
             setSrc(assetUrl);
             setIsLoading(false);
           } catch (error) {
-            console.error('❌ [SafeImageDebug] convertFileSrc 失敗:', {
+            log.error('❌ [SafeImageDebug] convertFileSrc 失敗:', {
               error,
               inputPath: cleanPath,
               isProduction: process.env.NODE_ENV === 'production'
@@ -136,7 +140,7 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
         }
         setIsLoading(false);
       } catch (error) {
-        console.error('SafeImage: Image loading error', error);
+        log.error('SafeImage: Image loading error', error);
         if (isMounted) {
           setHasError(true);
           setIsLoading(false);
@@ -196,18 +200,18 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
 
         if (isWindows && localFilePath) {
           try {
-            console.log('🔧 [SafeImage] Windows圖片載入失敗，嘗試base64方式:', localFilePath);
+            log.debug('🔧 [SafeImage] Windows圖片載入失敗，嘗試base64方式:', localFilePath);
             // 從localFilePath提取檔名
             const filename = localFilePath.replace(/^file:\/\//, '').replace(/\\/g, '/').split('/').pop();
             // 🔧 修復：使用精確的UUID格式檢測
             if (filename && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\.jpg$/i.test(filename)) {
               const dataUrl = await api.system.getImageDataUrl(filename);
               setSrc(dataUrl);
-              console.log('✅ [SafeImage] Windows base64載入成功');
+              log.debug('✅ [SafeImage] Windows base64載入成功');
               return; // 成功則返回，不設置錯誤狀態
             }
           } catch (error) {
-            console.error('❌ [SafeImage] Windows base64載入失敗:', error);
+            log.error('❌ [SafeImage] Windows base64載入失敗:', error);
             // 繼續原有錯誤處理
           }
         }

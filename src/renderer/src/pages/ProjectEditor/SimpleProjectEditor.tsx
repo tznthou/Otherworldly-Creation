@@ -7,6 +7,10 @@ import { api } from '../../api';
 import SimpleAIWritingPanel from '../../components/Editor/SimpleAIWritingPanel';
 import { Chapter } from '../../api/models';
 import { Descendant } from 'slate';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('SimpleProjectEditor');
 
 const SimpleProjectEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,38 +33,38 @@ const SimpleProjectEditor: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       if (!id) {
-        console.log('No project ID provided');
+        log.debug('No project ID provided');
         setIsLoading(false);
         return;
       }
       
-      console.log('開始載入專案資料, ID:', id);
+      log.debug('開始載入專案資料, ID:', id);
       setIsLoading(true);
       
       try {
         // 載入專案資訊
-        console.log('載入專案資訊...');
+        log.debug('載入專案資訊...');
         await dispatch(fetchProjectById(id));
-        console.log('專案資訊載入完成');
+        log.debug('專案資訊載入完成');
         
         // 載入章節列表
-        console.log('載入章節列表...');
+        log.debug('載入章節列表...');
         const chapterList = await api.chapters.getByProjectId(id);
-        console.log('章節列表載入完成, 章節數量:', chapterList.length);
+        log.debug('章節列表載入完成, 章節數量:', chapterList.length);
         _setChapters(chapterList);
         
         // 如果有章節，載入第一個章節
         if (chapterList.length > 0) {
           const firstChapter = chapterList[0];
-          console.log('載入第一個章節:', firstChapter.title);
+          log.debug('載入第一個章節:', firstChapter.title);
           setCurrentChapter(firstChapter);
           setContent(firstChapter.content || [{
             type: 'paragraph',
             children: [{ text: '' }]
           }]);
-          console.log('章節內容載入完成');
+          log.debug('章節內容載入完成');
         } else {
-          console.log('沒有章節，創建第一個章節...');
+          log.debug('沒有章節，創建第一個章節...');
           // 如果沒有章節，創建第一個章節
           const _newChapter = await api.chapters.create({
             projectId: id,
@@ -98,7 +102,7 @@ const SimpleProjectEditor: React.FC = () => {
             order: 1
           });
           
-          console.log('新章節創建完成');
+          log.debug('新章節創建完成');
           
           // 重新載入章節列表
           const updatedChapters = await api.chapters.getByProjectId(id);
@@ -111,17 +115,17 @@ const SimpleProjectEditor: React.FC = () => {
               type: 'paragraph',
               children: [{ text: '' }]
             }]);
-            console.log('新創建章節載入完成');
+            log.debug('新創建章節載入完成');
           }
         }
         
-        console.log('所有載入完成，設置 isLoading = false');
+        log.debug('所有載入完成，設置 isLoading = false');
         
       } catch (error) {
-        console.error('載入資料失敗:', error);
+        log.error('載入資料失敗:', error);
       } finally {
         // 確保 isLoading 一定會被設為 false
-        console.log('執行 finally 區塊，設置 isLoading = false');
+        log.debug('執行 finally 區塊，設置 isLoading = false');
         setIsLoading(false);
       }
     };
@@ -144,7 +148,7 @@ const SimpleProjectEditor: React.FC = () => {
           content: content
         });
         setIsSaved(true);
-        console.log('自動儲存成功');
+        log.debug('自動儲存成功');
         
         // 如果 textarea 之前有焦點，恢復游標位置
         if (wasTextAreaFocused && savedCursorPosition !== undefined) {
@@ -156,7 +160,7 @@ const SimpleProjectEditor: React.FC = () => {
           }, 10);
         }
       } catch (error) {
-        console.error('自動儲存失敗:', error);
+        log.error('自動儲存失敗:', error);
       }
     }, 2000); // 2秒後自動儲存
 
@@ -176,7 +180,7 @@ const SimpleProjectEditor: React.FC = () => {
         content: content
       });
       setIsSaved(true);
-      console.log('手動儲存成功');
+      log.debug('手動儲存成功');
       
       // 恢復游標位置
       setTimeout(() => {
@@ -194,7 +198,7 @@ const SimpleProjectEditor: React.FC = () => {
         duration: 3000
       }));
     } catch (error) {
-      console.error('儲存失敗:', error);
+      log.error('儲存失敗:', error);
       
       // 顯示儲存失敗提示
       dispatch(addNotification({ 
@@ -257,7 +261,7 @@ const SimpleProjectEditor: React.FC = () => {
   };
 
   // Debug 資訊
-  console.log('SimpleProjectEditor render - isLoading:', isLoading, 'currentChapter:', currentChapter?.title);
+  log.debug('SimpleProjectEditor render', { isLoading, chapterTitle: currentChapter?.title });
 
   return (
     <div className="p-8">

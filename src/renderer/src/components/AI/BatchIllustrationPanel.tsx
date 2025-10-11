@@ -18,6 +18,10 @@ import BatchConfigurationSection from './BatchIllustration/BatchConfigurationSec
 import CharacterSelectionSection from './BatchIllustration/CharacterSelectionSection';
 import IllustrationRequestsSection, { BatchRequestItem } from './BatchIllustration/IllustrationRequestsSection';
 import BatchHistorySection from './BatchIllustration/BatchHistorySection';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('BatchIllustrationPanel');
 
 interface BatchIllustrationPanelProps {
   className?: string;
@@ -72,20 +76,20 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   // 載入活動批次
   const loadActiveBatches = useCallback(async () => {
     try {
-      console.log('[BatchIllustrationPanel] 開始載入活動批次...');
+      log.debug('[BatchIllustrationPanel] 開始載入活動批次...');
       const result = await api.illustration.getAllBatchesSummary();
-      console.log('[BatchIllustrationPanel] 批次摘要結果:', result);
+      log.debug('[BatchIllustrationPanel] 批次摘要結果:', result);
       
       if (result.success) {
-        console.log('[BatchIllustrationPanel] 成功載入批次列表:', result.batches || []);
+        log.debug('[BatchIllustrationPanel] 成功載入批次列表:', result.batches || []);
         setActiveBatches(result.batches || []);
       } else {
-        console.error('[BatchIllustrationPanel] 載入批次列表失敗:', result.message);
+        log.error('[BatchIllustrationPanel] 載入批次列表失敗:', result.message);
         batchSubmission.setError(result.message || '無法載入批次列表');
         setActiveBatches([]);
       }
     } catch (err) {
-      console.error('[BatchIllustrationPanel] 載入活動批次失敗:', err);
+      log.error('[BatchIllustrationPanel] 載入活動批次失敗:', err);
       batchSubmission.setError('載入批次列表失敗: ' + err);
       setActiveBatches([]);
     }
@@ -94,19 +98,19 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   // 初始化批次管理器
   const initializeBatchManager = useCallback(async () => {
     try {
-      console.log('[BatchIllustrationPanel] 開始初始化批次管理器...');
+      log.debug('[BatchIllustrationPanel] 開始初始化批次管理器...');
       const result = await api.illustration.initializeBatchManager();
-      console.log('[BatchIllustrationPanel] 批次管理器初始化結果:', result);
+      log.debug('[BatchIllustrationPanel] 批次管理器初始化結果:', result);
       
       if (result.success) {
-        console.log('[BatchIllustrationPanel] 批次管理器初始化成功，載入活動批次...');
+        log.debug('[BatchIllustrationPanel] 批次管理器初始化成功，載入活動批次...');
         await loadActiveBatches();
       } else {
-        console.error('[BatchIllustrationPanel] 批次管理器初始化失敗:', result.message);
+        log.error('[BatchIllustrationPanel] 批次管理器初始化失敗:', result.message);
         batchSubmission.setError(result.message || '批次管理器初始化失敗');
       }
     } catch (err) {
-      console.error('[BatchIllustrationPanel] 初始化批次管理器失敗:', err);
+      log.error('[BatchIllustrationPanel] 初始化批次管理器失敗:', err);
       batchSubmission.setError('初始化批次管理器失敗: ' + err);
     }
   }, [loadActiveBatches, batchSubmission]);
@@ -214,10 +218,10 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   //             const decodedApiKey = atob(geminiProvider.api_key_encrypted);
   //             batchConfig.setApiKey(decodedApiKey);
   //             batchConfig.setApiKeySource('gemini');
-  //             console.log('✅ 已自動載入並解碼 Gemini API 金鑰');
+  //             log.debug('✅ 已自動載入並解碼 Gemini API 金鑰');
   //             return;
   //           } catch (error) {
-  //             console.error('❌ 解碼 Gemini API 金鑰失敗:', error);
+  //             log.error('❌ 解碼 Gemini API 金鑰失敗:', error);
   //           }
   //         }
   //
@@ -233,15 +237,15 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   //               const decodedApiKey = atob(openrouterProvider.api_key_encrypted);
   //               batchConfig.setApiKey(decodedApiKey);
   //               batchConfig.setApiKeySource('openrouter');
-  //               console.log('✅ 已自動載入並解碼 OpenRouter API 金鑰');
+  //               log.debug('✅ 已自動載入並解碼 OpenRouter API 金鑰');
   //             } catch (error) {
-  //               console.error('❌ 解碼 OpenRouter API 金鑰失敗:', error);
+  //               log.error('❌ 解碼 OpenRouter API 金鑰失敗:', error);
   //             }
   //           }
   //         }
   //       }
   //     } catch (error) {
-  //       console.error('無法自動載入 API 金鑰:', error);
+  //       log.error('無法自動載入 API 金鑰:', error);
   //     }
   //   };
   //

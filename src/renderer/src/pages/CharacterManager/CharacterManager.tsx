@@ -10,6 +10,10 @@ import {
 import TutorialOverlay, { useTutorial } from '../../components/Tutorial/TutorialOverlay';
 import { characterTutorial } from '../../data/tutorialSteps';
 import { api } from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CharacterManager');
 
 // 角色一致性問題類型
 interface ConsistencyIssue {
@@ -62,7 +66,7 @@ const CharacterManager: React.FC = () => {
       // const issues = await api.characters.checkRelationshipConsistency(projectId);
       // setConsistencyIssues(issues);
     } catch (error) {
-      console.error('載入角色列表失敗:', error);
+      log.error('載入角色列表失敗:', error);
       setError('載入角色列表失敗，請稍後再試');
     } finally {
       setLoading(false);
@@ -83,7 +87,7 @@ const CharacterManager: React.FC = () => {
           // 載入角色列表
           await loadCharacters();
         } catch (error) {
-          console.error('載入專案資料失敗:', error);
+          log.error('載入專案資料失敗:', error);
           setError('載入專案資料失敗，請稍後再試');
         }
       }
@@ -130,8 +134,8 @@ const CharacterManager: React.FC = () => {
 
   const handleSaveCharacter = async (formData: CharacterFormData) => {
     try {
-      console.log('handleSaveCharacter called with formData:', formData);
-      console.log('formData.relationships:', formData.relationships);
+      log.debug('handleSaveCharacter called with formData:', formData);
+      log.debug('formData.relationships:', formData.relationships);
       
       if (selectedCharacter) {
         // 更新現有角色
@@ -150,15 +154,15 @@ const CharacterManager: React.FC = () => {
         
         // 更新關係 - 始終清除現有關係，然後保存新關係
         if (formData.relationships !== undefined) {
-          console.log('Updating relationships for character:', selectedCharacter.id);
-          console.log('Relationships to save:', formData.relationships);
+          log.debug('Updating relationships for character:', selectedCharacter.id);
+          log.debug('Relationships to save:', formData.relationships);
           
           // 先清除現有關係 - 臨時使用直接 SQL 查詢的方式
           try {
             if (typeof api.characters.clearRelationships === 'function') {
               await api.characters.clearRelationships(selectedCharacter.id);
             } else {
-              console.log('clearRelationships API not available, using alternative method');
+              log.debug('clearRelationships API not available, using alternative method');
               // 如果 clearRelationships API 不可用，先獲取現有關係然後逐一刪除
               const currentCharacter = await api.characters.getById(selectedCharacter.id);
               if (currentCharacter && currentCharacter.relationships) {
@@ -169,15 +173,15 @@ const CharacterManager: React.FC = () => {
                 }
               }
             }
-            console.log('Cleared existing relationships');
+            log.debug('Cleared existing relationships');
           } catch (error) {
-            console.warn('Failed to clear existing relationships:', error);
+            log.warn('Failed to clear existing relationships:', error);
           }
           
           // 保存新關係（如果有的話）
           if (formData.relationships.length > 0) {
             for (const relationship of formData.relationships) {
-              console.log('Creating relationship:', relationship);
+              log.debug('Creating relationship:', relationship);
               try {
                 await api.characters.createRelationship({
                   fromCharacterId: selectedCharacter.id,
@@ -186,15 +190,15 @@ const CharacterManager: React.FC = () => {
                   description: relationship.description,
                 });
               } catch (error) {
-                console.error('Failed to create relationship:', relationship, error);
+                log.error('Failed to create relationship', { relationship, error });
               }
             }
-            console.log('Finished saving relationships');
+            log.debug('Finished saving relationships');
           } else {
-            console.log('No relationships to save (empty array)');
+            log.debug('No relationships to save (empty array)');
           }
         } else {
-          console.log('Relationships field is undefined - skipping relationship update');
+          log.debug('Relationships field is undefined - skipping relationship update');
         }
       } else {
         // 創建新角色
@@ -213,11 +217,11 @@ const CharacterManager: React.FC = () => {
           // avatarUrl 屬性已移除
         };
         
-        console.log('Creating character with data:', characterData);
-        console.log('ProjectId:', projectId);
+        log.debug('Creating character with data:', characterData);
+        log.debug('ProjectId:', projectId);
         
         const characterId = await api.characters.create(characterData);
-        console.log('Character created with ID:', characterId);
+        log.debug('Character created with ID:', characterId);
         
         // 如果有關係資料，創建關係
         if (formData.relationships && formData.relationships.length > 0) {
@@ -247,7 +251,7 @@ const CharacterManager: React.FC = () => {
       setIsEditModalOpen(false);
       setSelectedCharacter(null);
     } catch (error) {
-      console.error('儲存角色失敗:', error);
+      log.error('儲存角色失敗:', error);
       throw error;
     }
   };

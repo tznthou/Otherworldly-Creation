@@ -3,6 +3,10 @@ import { SafeImage } from '../../../../UI/SafeImage';
 import type { IllustrationHistoryItem } from '../../../../../types/illustration';
 import VirtualizedImageGrid from '../VirtualizedImageGrid';
 import { formatDateTime } from '../../../../../utils/dateUtils';
+import { createLogger } from '../../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('GalleryContent');
 
 interface GalleryContentProps {
   illustrations: IllustrationHistoryItem[];
@@ -39,7 +43,7 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
 
   // 📐 超激進尺寸設置 - 立即生效，不等待ResizeObserver
   useEffect(() => {
-    console.log('🚀 [GalleryContent] 超激進尺寸設置開始...');
+    log.debug('🚀 [GalleryContent] 超激進尺寸設置開始...');
     
     // 立即設置合理的默認尺寸，不等待任何條件
     const immediateSize = {
@@ -47,17 +51,17 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
       height: Math.max(window.innerHeight - 300, 600)
     };
     
-    console.log('⚡ [GalleryContent] 立即設置預設尺寸:', immediateSize);
+    log.debug('⚡ [GalleryContent] 立即設置預設尺寸:', immediateSize);
     setDimensions(immediateSize);
     setIsObserverReady(true);
     
     if (!containerRef.current) {
-      console.warn('❌ [GalleryContent] containerRef.current 不存在，但已設置預設尺寸');
+      log.warn('❌ [GalleryContent] containerRef.current 不存在，但已設置預設尺寸');
       return;
     }
 
     const container = containerRef.current;
-    console.log('📦 [GalleryContent] 容器元素檢查:', {
+    log.debug('📦 [GalleryContent] 容器元素檢查:', {
       offsetWidth: container.offsetWidth,
       offsetHeight: container.offsetHeight,
       clientWidth: container.clientWidth,
@@ -87,17 +91,17 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
       )
     };
     
-    console.log('🎯 [GalleryContent] 智能備用尺寸:', smartFallback);
+    log.debug('🎯 [GalleryContent] 智能備用尺寸:', smartFallback);
 
     // 立即更新為智能尺寸（如果更大的話）
     if (smartFallback.width > immediateSize.width || smartFallback.height > immediateSize.height) {
-      console.log('📈 [GalleryContent] 更新為智能尺寸');
+      log.debug('📈 [GalleryContent] 更新為智能尺寸');
       setDimensions(smartFallback);
     }
 
     // 設置ResizeObserver（但不依賴它）
     const resizeObserver = new ResizeObserver((entries) => {
-      console.log('📏 [GalleryContent] ResizeObserver 觸發, entries數量:', entries.length);
+      log.debug('📏 [GalleryContent] ResizeObserver 觸發, entries數量:', entries.length);
       
       for (const entry of entries) {
         const observedDimensions = {
@@ -105,27 +109,27 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
           height: Math.max(entry.contentRect.height, 200),
         };
         
-        console.log('✅ [GalleryContent] ResizeObserver新尺寸:', observedDimensions);
+        log.debug('✅ [GalleryContent] ResizeObserver新尺寸:', observedDimensions);
         setDimensions(observedDimensions);
       }
     });
 
     try {
       resizeObserver.observe(container);
-      console.log('🔄 [GalleryContent] ResizeObserver 已啟動（作為輔助）');
+      log.debug('🔄 [GalleryContent] ResizeObserver 已啟動（作為輔助）');
     } catch (error) {
-      console.error('❌ [GalleryContent] ResizeObserver 錯誤（但不影響顯示）:', error);
+      log.error('❌ [GalleryContent] ResizeObserver 錯誤（但不影響顯示）:', error);
     }
 
     return () => {
-      console.log('🧹 [GalleryContent] 清理ResizeObserver');
+      log.debug('🧹 [GalleryContent] 清理ResizeObserver');
       resizeObserver.disconnect();
     };
   }, []);
   
   // 尺寸變化調試
   useEffect(() => {
-    console.log('📊 [GalleryContent] 尺寸狀態更新:', {
+    log.debug('📊 [GalleryContent] 尺寸狀態更新:', {
       dimensions,
       isObserverReady,
       shouldRender: dimensions.width > 0 && dimensions.height > 0,
@@ -234,7 +238,7 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
   const safeWidth = Math.max(dimensions.width, 300);
   const safeHeight = Math.max(dimensions.height, 200);
 
-  console.log('🎬 [GalleryContent] 激進渲染決策:', {
+  log.debug('🎬 [GalleryContent] 激進渲染決策:', {
     shouldRender,
     isLoading,
     originalDimensions: dimensions,
