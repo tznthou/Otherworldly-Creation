@@ -5,7 +5,7 @@ import { useSettingsActions } from './hooks/useSettingsActions';
 import SettingsSidebar from './components/SettingsSidebar';
 import SettingsLoadingView from './components/SettingsLoadingView';
 import UpdateSettings from '../../components/Update/UpdateSettings';
-import { createLogger } from from '../../utils/logger';
+import { createLogger } from '../../utils/logger';
 import {
 GeneralSettings,
   UISettings,
