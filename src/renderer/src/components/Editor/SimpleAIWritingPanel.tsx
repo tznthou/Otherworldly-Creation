@@ -10,7 +10,7 @@ import { api } from '../../api';
 import { AIGenerationProgress } from '../AI';
 import AIHistoryPanel from '../AI/AIHistoryPanel';
 import { ErrorSeverity } from '../../types/error';
-import { createLogger } from '../../../utils/logger';
+import { createLogger } from '../../utils/logger';
 import {
 analyzeWritingContext, 
   generateSmartParams, 

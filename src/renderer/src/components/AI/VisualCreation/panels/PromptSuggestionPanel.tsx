@@ -117,7 +117,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
 
       clearTimeout(timeoutId); // 成功時清除超時
       setSuggestions(suggestionCards);
-      log.debug('✅ 智能建議生成成功:', suggestionCards.length, '個建議');
+      log.debug('✅ 智能建議生成成功:', { count: suggestionCards.length });
     } catch (error) {
       clearTimeout(timeoutId); // 錯誤時清除超時
       log.error('❌ 智能建議生成失敗:', error);

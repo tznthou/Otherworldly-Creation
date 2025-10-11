@@ -216,7 +216,7 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
                 log.debug('🔧 [VisualCreation] 配置更新:', config);
                 // 同步提供者到 Redux 狀態
                 if (config.provider !== currentProvider) {
-                  log.debug('🔄 [VisualCreation] 提供者變更:', currentProvider, '->', config.provider);
+      log.debug('🔄 [VisualCreation] 提供者變更:', { from: currentProvider, to: config.provider });
                   dispatch(setCurrentProvider(config.provider));
                 }
               }}

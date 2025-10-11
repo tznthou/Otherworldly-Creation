@@ -1,10 +1,11 @@
-/**
 import { createLogger } from '../utils/logger';
 
 // 創建模組專用 logger
 const log = createLogger('features');
+
+/**
  * 功能開關配置
- * 
+ *
  * 用於控制實驗性功能和新功能的啟用/停用
  * 現在從用戶設定中讀取，而不是硬編碼
  */
