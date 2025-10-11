@@ -4,6 +4,10 @@
  */
 
 import { performanceMonitor } from './performanceMonitor';
+import { createLogger } from './/logger';
+
+// 創建模組專用 logger
+const log = createLogger('performanceBenchmark');
 
 // 關鍵組件列表
 const CRITICAL_COMPONENTS = [
@@ -53,7 +57,7 @@ export class PerformanceBenchmark {
    * 開始基準測試
    */
   startBenchmark() {
-    console.log('🏁 開始 Genesis Chronicle 性能基準測試...');
+    log.debug('🏁 開始 Genesis Chronicle 性能基準測試...');
     this.startTime = performance.now();
     
     // 清除之前的指標
@@ -62,13 +66,13 @@ export class PerformanceBenchmark {
     // 設置測試環境
     this.setupTestEnvironment();
     
-    console.log('📊 基準測試已啟動，請與應用程式互動以收集性能資料...');
-    console.log('💡 建議操作：');
-    console.log('  1. 打開角色分析面板');
-    console.log('  2. 切換不同的分析標籤');
-    console.log('  3. 開啟 AI 插畫生成面板');
-    console.log('  4. 在 Slate.js 編輯器中編輯文字');
-    console.log('  5. 查看統計圖表');
+    log.debug('📊 基準測試已啟動，請與應用程式互動以收集性能資料...');
+    log.debug('💡 建議操作：');
+    log.debug('  1. 打開角色分析面板');
+    log.debug('  2. 切換不同的分析標籤');
+    log.debug('  3. 開啟 AI 插畫生成面板');
+    log.debug('  4. 在 Slate.js 編輯器中編輯文字');
+    log.debug('  5. 查看統計圖表');
     
     return this;
   }
@@ -86,11 +90,11 @@ export class PerformanceBenchmark {
         export: () => this.exportResults()
       };
       
-      console.log('🛠️ 基準測試指令已安裝：');
-      console.log('  __BENCHMARK__.start() - 開始測試');
-      console.log('  __BENCHMARK__.stop() - 停止測試');  
-      console.log('  __BENCHMARK__.report() - 產生報告');
-      console.log('  __BENCHMARK__.export() - 導出結果');
+      log.debug('🛠️ 基準測試指令已安裝：');
+      log.debug('  __BENCHMARK__.start() - 開始測試');
+      log.debug('  __BENCHMARK__.stop() - 停止測試');  
+      log.debug('  __BENCHMARK__.report() - 產生報告');
+      log.debug('  __BENCHMARK__.export() - 導出結果');
     }
   }
 
@@ -99,7 +103,7 @@ export class PerformanceBenchmark {
    */
   stopBenchmark() {
     const testDuration = performance.now() - this.startTime;
-    console.log(`⏱️ 基準測試完成，總時長: ${(testDuration / 1000).toFixed(2)}秒`);
+    console.log(`⏱️ 基準測試完成，總時長: ${(testDuration / 1000).toFixed(2)}秒`); // TODO: 複雜模式，需人工轉換
     
     return this.generateReport();
   }
@@ -108,7 +112,7 @@ export class PerformanceBenchmark {
    * 生成性能基準報告
    */
   generateReport() {
-    console.log('📈 生成 Genesis Chronicle 性能基準報告...');
+    log.debug('📈 生成 Genesis Chronicle 性能基準報告...');
     
     const metrics = performanceMonitor.getPerformanceReport();
     const memoryUsage = this.getMemoryUsage();
@@ -128,19 +132,19 @@ export class PerformanceBenchmark {
       detailedMetrics: metrics
     };
 
-    console.log('🎯 關鍵組件性能分析:');
+    log.debug('🎯 關鍵組件性能分析:');
     console.table(criticalComponentsAnalysis);
     
     if (issues.length > 0) {
-      console.warn('⚠️ 發現的性能問題:');
-      issues.forEach(issue => console.warn(`  • ${issue}`));
+      log.warn('⚠️ 發現的性能問題:');
+      issues.forEach(issue => console.warn(`  • ${issue}`)); // TODO: 複雜模式，需人工轉換
     } else {
-      console.log('✅ 未發現明顯的性能問題');
+      log.debug('✅ 未發現明顯的性能問題');
     }
     
-    console.log('💡 性能優化建議:');
+    log.debug('💡 性能優化建議:');
     report.recommendations.forEach(rec => 
-      console.log(`  ${rec.priority === 'high' ? '🚨' : rec.priority === 'medium' ? '⚠️' : 'ℹ️'} ${rec.message}`)
+      console.log(`  ${rec.priority === 'high' ? '🚨' : rec.priority === 'medium' ? '⚠️' : 'ℹ️'} ${rec.message}`) // TODO: 複雜模式，需人工轉換
     );
 
     return report;
@@ -345,7 +349,7 @@ export class PerformanceBenchmark {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      console.log('📁 性能報告已導出為 JSON 文件');
+      log.debug('📁 性能報告已導出為 JSON 文件');
     }
     
     return exportData;
@@ -358,8 +362,8 @@ export const performanceBenchmark = new PerformanceBenchmark();
 // 自動啟動基準測試（僅開發環境）
 if (process.env.NODE_ENV === 'development') {
   setTimeout(() => {
-    console.log('🚀 自動啟動性能基準測試...');
-    console.log('💡 使用 __BENCHMARK__.stop() 查看結果');
+    log.debug('🚀 自動啟動性能基準測試...');
+    log.debug('💡 使用 __BENCHMARK__.stop() 查看結果');
     performanceBenchmark.startBenchmark();
   }, 2000);
 }

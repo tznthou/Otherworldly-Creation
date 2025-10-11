@@ -1,4 +1,8 @@
 /**
+import { createLogger } from './/logger';
+
+// 創建模組專用 logger
+const log = createLogger('performanceLogger');
  * 性能日誌記錄系統
  * 整合所有性能監控數據並提供統一的日誌接口
  */
@@ -98,7 +102,7 @@ class PerformanceLogger {
     const duration = log.duration ? ` (${log.duration.toFixed(2)}ms)` : '';
     const metadata = log.metadata ? ` | ${JSON.stringify(log.metadata)}` : '';
     
-    console.log(`${emoji} [性能] ${log.category.toUpperCase()}: ${log.event}${duration}${metadata}`);
+    console.log(`${emoji} [性能] ${log.category.toUpperCase()}: ${log.event}${duration}${metadata}`); // TODO: 複雜模式，需人工轉換
   }
   
   // 導出日誌到 CSV
@@ -204,11 +208,11 @@ if (process.env.NODE_ENV === 'development') {
     const report = performanceLogger.getPerformanceReport();
     if (report.totalEvents > 0) {
       console.group('📊 性能報告 (過去5分鐘)');
-      console.log('總事件數:', report.totalEvents);
-      console.log('分類統計:', report.categoryBreakdown);
-      console.log('平均持續時間 (ms):', report.averageDurations);
-      console.log('警告數:', report.warningCount);
-      console.log('錯誤數:', report.errorCount);
+      log.debug('總事件數:', report.totalEvents);
+      log.debug('分類統計:', report.categoryBreakdown);
+      log.debug('平均持續時間 (ms):', report.averageDurations);
+      log.debug('警告數:', report.warningCount);
+      log.debug('錯誤數:', report.errorCount);
       console.groupEnd();
     }
   }, 30000);
