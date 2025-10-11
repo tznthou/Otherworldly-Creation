@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAppSelector } from './redux';
 import { i18n, Language, tSync } from '../i18n';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useI18n');
 
 /**
  * 國際化 Hook
@@ -18,7 +22,7 @@ export const useI18n = () => {
         await i18n.initialize();
         setIsReady(true);
       } catch (error) {
-        console.error('Failed to initialize i18n:', error);
+        log.error('Failed to initialize i18n:', error);
         setIsReady(true); // 即使失敗也標記為準備就緒
       }
     };
@@ -37,9 +41,9 @@ export const useI18n = () => {
           // 更新 HTML 標籤的 lang 屬性
           document.documentElement.setAttribute('lang', settings.language);
           
-          console.log(`語言已切換至: ${settings.language}`);
+          console.log(`語言已切換至: ${settings.language}`); // TODO: 複雜模式，需人工轉換
         } catch (error) {
-          console.error(`Failed to switch language to ${settings.language}:`, error);
+          console.error(`Failed to switch language to ${settings.language}:`, error); // TODO: 複雜模式，需人工轉換
         }
       }
     };
@@ -68,7 +72,7 @@ export const useI18n = () => {
       try {
         await i18n.setLanguage(language);
       } catch (error) {
-        console.error(`Failed to set language to ${language}:`, error);
+        console.error(`Failed to set language to ${language}:`, error); // TODO: 複雜模式，需人工轉換
       }
     }
   };

@@ -12,6 +12,10 @@ import {
 } from '@dnd-kit/core';
 import { IllustrationHistoryItem } from '../../../../../types/illustration';
 import { SafeImage } from '../../../../UI/SafeImage';
+import { createLogger } from '../../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('DragDropClassificationPanelFixed');
 
 export interface ImageCategory {
   id: string;
@@ -317,7 +321,7 @@ const DragDropClassificationPanelFixed: React.FC<DragDropClassificationPanelProp
 
   // 處理拖曳開始
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    console.log('🟢 [DragDropFixed] DragStart', {
+    log.debug('🟢 [DragDropFixed] DragStart', {
       activeId: event.active.id,
       data: event.active.data.current
     });
@@ -327,7 +331,7 @@ const DragDropClassificationPanelFixed: React.FC<DragDropClassificationPanelProp
 
   // 處理拖曳結束
   const handleDragEnd = useCallback((event: DragEndEvent) => {
-    console.log('✅ [DragDropFixed] DragEnd', {
+    log.debug('✅ [DragDropFixed] DragEnd', {
       activeId: event.active.id,
       overId: event.over?.id,
       activeData: event.active.data.current,
@@ -338,7 +342,7 @@ const DragDropClassificationPanelFixed: React.FC<DragDropClassificationPanelProp
     setActiveDragId(null);
 
     if (!over) {
-      console.log('🚫 [DragDropFixed] 沒有有效的放置目標');
+      log.debug('🚫 [DragDropFixed] 沒有有效的放置目標');
       return;
     }
 
@@ -348,11 +352,11 @@ const DragDropClassificationPanelFixed: React.FC<DragDropClassificationPanelProp
     // 檢查是否是有效的分類
     const targetCategory = categories.find(cat => cat.id === categoryId);
     if (!targetCategory) {
-      console.log('🚫 [DragDropFixed] 無效的分類目標:', categoryId);
+      log.debug('🚫 [DragDropFixed] 無效的分類目標:', categoryId);
       return;
     }
 
-    console.log('✅ [DragDropFixed] 成功分類:', {
+    log.debug('✅ [DragDropFixed] 成功分類:', {
       imageId,
       categoryId,
       categoryName: targetCategory.name

@@ -1,5 +1,9 @@
 import { useReducer, useCallback } from 'react';
 import type { ImageNamingConfig } from '../../types/imageMetadata';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useExportManager');
 
 // 導出格式類型
 export type ExportFormat = 'png' | 'jpg' | 'webp';
@@ -493,7 +497,7 @@ export function useExportManager(options: UseExportManagerOptions = {}): UseExpo
       const dialogResult = result as { canceled: boolean; filePaths?: string[] };
       if (!dialogResult.canceled && dialogResult.filePaths && dialogResult.filePaths.length > 0) {
         const selectedPath = dialogResult.filePaths[0];
-        console.log(`📁 [ExportManager] 用戶選擇目錄: ${selectedPath}`);
+        console.log(`📁 [ExportManager] 用戶選擇目錄: ${selectedPath}`); // TODO: 複雜模式，需人工轉換
 
         // 更新配置中的輸出目錄
         updateConfig({ outputDirectory: selectedPath });
@@ -506,7 +510,7 @@ export function useExportManager(options: UseExportManagerOptions = {}): UseExpo
 
       return null;
     } catch (error) {
-      console.error('❌ [ExportManager] 選擇目錄失敗:', error);
+      log.error('❌ [ExportManager] 選擇目錄失敗:', error);
       return null;
     }
   }, [updateConfig]);
@@ -515,11 +519,11 @@ export function useExportManager(options: UseExportManagerOptions = {}): UseExpo
   const loadSavedDirectory = useCallback(() => {
     const savedDirectory = localStorage.getItem('exportOutputDirectory');
     if (savedDirectory) {
-      console.log(`💾 [ExportManager] 載入儲存的目錄: ${savedDirectory}`);
+      console.log(`💾 [ExportManager] 載入儲存的目錄: ${savedDirectory}`); // TODO: 複雜模式，需人工轉換
       updateConfig({ outputDirectory: savedDirectory });
       return savedDirectory;
     } else {
-      console.log(`💾 [ExportManager] 沒有儲存的目錄，使用默認配置`);
+      log.debug(`💾 [ExportManager] 沒有儲存的目錄，使用默認配置`);
       // 確保配置已正確初始化
       updateConfig({
         outputDirectory: DEFAULT_CONFIG.outputDirectory,

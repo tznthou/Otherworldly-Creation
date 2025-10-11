@@ -1,5 +1,9 @@
 import { GoogleGenAI, SafetyFilterLevel } from '@google/genai';
 import { IllustrationRequest } from '../types/illustration';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('imageGenerationService');
 
 // Google Imagen API 回應類型定義
 interface ImageResponseItem {
@@ -69,7 +73,7 @@ class ImageGenerationService {
       apiKey,
       // 可能需要自定義 baseUrl 來解決 CSP 問題
     });
-    console.log('🎨 Google GenAI SDK 初始化成功');
+    log.debug('🎨 Google GenAI SDK 初始化成功');
   }
 
   /**
@@ -80,7 +84,7 @@ class ImageGenerationService {
     projectId?: string,
     onProgress?: (progress: number) => void
   ): Promise<ImageGenerationResult[]> {
-    console.log('🎨 開始生成圖像:', request);
+    log.debug('🎨 開始生成圖像:', request);
     
     try {
       // 建構 API 請求
@@ -126,12 +130,12 @@ class ImageGenerationService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ API 錯誤回應:', errorText);
+        log.error('❌ API 錯誤回應:', errorText);
         throw new Error(`API 請求失敗 (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('📦 API 回應:', JSON.stringify(data, null, 2));
+      log.debug('📦 API 回應:', JSON.stringify(data, null, 2));
       
       onProgress?.(80);
 
@@ -151,13 +155,13 @@ class ImageGenerationService {
           raiFilteredReason: img.raiFilteredReason
         }));
 
-        console.log(`✅ 成功生成 ${results.length} 張圖像`);
+        console.log(`✅ 成功生成 ${results.length} 張圖像`); // TODO: 複雜模式，需人工轉換
         return results;
       }
       
       throw new Error('API 回應中沒有生成的圖像');
     } catch (error: unknown) {
-      console.error('❌ 圖像生成失敗:', error);
+      log.error('❌ 圖像生成失敗:', error);
       
       // 使用類型守衛安全存取錯誤屬性
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -191,7 +195,7 @@ class ImageGenerationService {
       throw new Error('批次請求列表不能為空');
     }
 
-    console.log(`🚀 開始批次生成 ${requests.length} 張圖像`);
+    console.log(`🚀 開始批次生成 ${requests.length} 張圖像`); // TODO: 複雜模式，需人工轉換
     
     // 初始化服務
     this.initialize(apiKey);
@@ -207,7 +211,7 @@ class ImageGenerationService {
           onProgress(i + 1, requests.length, request.prompt);
         }
 
-        console.log(`📝 處理第 ${i + 1}/${requests.length} 個請求`);
+        console.log(`📝 處理第 ${i + 1}/${requests.length} 個請求`); // TODO: 複雜模式，需人工轉換
         
         // 構建 IllustrationRequest 對象
         const illustrationRequest: IllustrationRequest = {
@@ -224,7 +228,7 @@ class ImageGenerationService {
         );
         
         results.push({ success: true, data: result });
-        console.log(`✅ 第 ${i + 1} 張圖像生成成功`);
+        console.log(`✅ 第 ${i + 1} 張圖像生成成功`); // TODO: 複雜模式，需人工轉換
         
         // 避免 API 限制，在請求間加入短暫延遲
         if (i < requests.length - 1) {
@@ -232,7 +236,7 @@ class ImageGenerationService {
         }
         
       } catch (error) {
-        console.error(`❌ 第 ${i + 1} 張圖像生成失敗:`, error);
+        console.error(`❌ 第 ${i + 1} 張圖像生成失敗:`, error); // TODO: 複雜模式，需人工轉換
         results.push({ success: false, error: error instanceof Error ? error.message : String(error) });
       }
     }
@@ -240,7 +244,7 @@ class ImageGenerationService {
     const successCount = results.filter(r => r.success).length;
     const failCount = results.length - successCount;
     
-    console.log(`🎯 批次生成完成: ${successCount} 成功, ${failCount} 失敗`);
+    console.log(`🎯 批次生成完成: ${successCount} 成功, ${failCount} 失敗`); // TODO: 複雜模式，需人工轉換
     
     return results;
   }
@@ -264,7 +268,7 @@ class ImageGenerationService {
       
       return true;
     } catch (error) {
-      console.error('API 金鑰驗證失敗:', error);
+      log.error('API 金鑰驗證失敗:', error);
       return false;
     }
   }

@@ -9,6 +9,10 @@ import {
 import { addNotification } from '../../../store/slices/uiSlice';
 import { AppSettings } from '../../../store/slices/settingsSlice';
 import { tSync } from '../../../i18n';
+import { createLogger } from '../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useSettingsActions');
 
 export const useSettingsActions = () => {
   const dispatch = useAppDispatch();
@@ -37,7 +41,7 @@ export const useSettingsActions = () => {
       
       dispatch(loadSettings(userSettings));
     } catch (error) {
-      console.error('載入設定失敗:', error);
+      log.error('載入設定失敗:', error);
       
       // 載入失敗時使用預設設定
       const { DEFAULT_SETTINGS } = await import('../../../store/slices/settingsSlice');
@@ -69,7 +73,7 @@ export const useSettingsActions = () => {
       }));
       return true;
     } catch (error) {
-      console.error('儲存設定失敗:', error);
+      log.error('儲存設定失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: tSync('common.error'),
@@ -93,7 +97,7 @@ export const useSettingsActions = () => {
         }));
         return true;
       } catch (error) {
-        console.error('重置設定失敗:', error);
+        log.error('重置設定失敗:', error);
         dispatch(addNotification({
           type: 'error',
           title: tSync('common.error'),
@@ -127,7 +131,7 @@ export const useSettingsActions = () => {
       }));
       return true;
     } catch (error) {
-      console.error('匯出設定失敗:', error);
+      log.error('匯出設定失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: tSync('common.error'),
@@ -158,7 +162,7 @@ export const useSettingsActions = () => {
             }));
             resolve(true);
           } catch (error) {
-            console.error('匯入設定失敗:', error);
+            log.error('匯入設定失敗:', error);
             dispatch(addNotification({
               type: 'error',
               title: tSync('common.error'),
