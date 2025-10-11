@@ -4,6 +4,10 @@ import { closeModal } from '../../store/slices/uiSlice';
 import { addNotification } from '../../store/slices/uiSlice';
 import { api } from '../../api';
 import type { PDFGenerationOptions, PageSizeType, PDFResult } from '../../api/models';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('PDFGenerationModal');
 
 interface PDFGenerationProgress {
   stage: 'preparing' | 'converting' | 'font-loading' | 'generating' | 'complete' | 'error';
@@ -99,7 +103,7 @@ const PDFGenerationModal: React.FC = () => {
         warnings
       });
     } catch (error) {
-      console.error('專案驗證失敗:', error);
+      log.error('專案驗證失敗:', error);
       setValidation({
         valid: false,
         errors: ['專案驗證時發生錯誤'],
@@ -143,7 +147,7 @@ const PDFGenerationModal: React.FC = () => {
     setProgress(null);
 
     try {
-      console.log('⚔️ 開始真理銘刻，專案 ID:', selectedProjectId);
+      log.debug('⚔️ 開始真理銘刻，專案 ID:', selectedProjectId);
       
       // 更真實的進度反映實際後端處理時間
       const progressSteps = [
@@ -224,7 +228,7 @@ const PDFGenerationModal: React.FC = () => {
             message: '下載資料夾已在 Finder 中開啟'
           }));
         } catch (error) {
-          console.error('開啟檔案夾失敗:', error);
+          log.error('開啟檔案夾失敗:', error);
           dispatch(addNotification({
             type: 'info',
             title: '📁 檔案已保存',
@@ -239,7 +243,7 @@ const PDFGenerationModal: React.FC = () => {
       }, 3000);
 
     } catch (error) {
-      console.error('絕對文書具現化失敗:', error);
+      log.error('絕對文書具現化失敗:', error);
       setProgress({
         stage: 'error',
         progress: 0,
@@ -583,7 +587,7 @@ const PDFGenerationModal: React.FC = () => {
                   };
 
                   const result = await api.pdf.generate(selectedProjectId, testOptions);
-                  console.log('✅ 測試PDF生成成功:', result);
+                  log.debug('✅ 測試PDF生成成功:', result);
                   
                   setProgress({
                     stage: 'complete',
@@ -598,7 +602,7 @@ const PDFGenerationModal: React.FC = () => {
                     message: 'PDF 測試生成成功！'
                   }));
                 } catch (error: unknown) {
-                  console.error('❌ 測試PDF生成失敗:', error);
+                  log.error('❌ 測試PDF生成失敗:', error);
                   const errorMessage = error instanceof Error ? error.message : '未知錯誤';
                   setProgress({
                     stage: 'error',

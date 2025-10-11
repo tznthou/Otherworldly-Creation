@@ -11,6 +11,10 @@ import {
 } from '../../store/slices/aiHistorySlice';
 import { AIGenerationHistory } from '../../api/models';
 import { useI18n } from '../../hooks/useI18n';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('AIHistoryPanel');
 
 interface AIHistoryPanelProps {
   projectId: string;
@@ -64,7 +68,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
           offset: (pagination.page - 1) * pagination.pageSize,
         }));
       } catch (error) {
-        console.error('載入 AI 歷史記錄失敗:', error);
+        log.error('載入 AI 歷史記錄失敗:', error);
       }
     };
 
@@ -76,7 +80,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
     try {
       await dispatch(markHistorySelected({ historyId, projectId }));
     } catch (error) {
-      console.error('標記歷史記錄失敗:', error);
+      log.error('標記歷史記錄失敗:', error);
     }
   };
 
@@ -86,7 +90,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
       try {
         await dispatch(deleteAIHistory(historyId));
       } catch (error) {
-        console.error('刪除歷史記錄失敗:', error);
+        log.error('刪除歷史記錄失敗:', error);
       }
     }
   };
@@ -106,7 +110,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
           offset: 0,
         }));
       } catch (error) {
-        console.error('清理歷史記錄失敗:', error);
+        log.error('清理歷史記錄失敗:', error);
       }
     }
   };
@@ -132,7 +136,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
         minute: '2-digit',
       }).format(dateObj);
     } catch (error) {
-      console.error('日期格式化錯誤:', error, date);
+      log.error('日期格式化錯誤', { error, date });
       return '格式錯誤';
     }
   };

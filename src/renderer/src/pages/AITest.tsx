@@ -3,6 +3,10 @@ import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { addNotification } from '../store/slices/uiSlice';
 import { setCurrentModel, fetchAvailableModels } from '../store/slices/aiSlice';
 import api from '../api';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('AITest');
 
 const AITest: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -34,7 +38,7 @@ const AITest: React.FC = () => {
     setResult('');
 
     try {
-      console.log('測試基本文本生成...');
+      log.debug('測試基本文本生成...');
       
       const params = {
         temperature: 0.7,
@@ -45,7 +49,7 @@ const AITest: React.FC = () => {
       };
 
       const response = await api.ai.generateText(prompt, currentModel, params);
-      console.log('生成結果:', response);
+      log.debug('生成結果:', response);
       
       setResult(response);
       
@@ -57,7 +61,7 @@ const AITest: React.FC = () => {
       }));
 
     } catch (error) {
-      console.error('生成失敗:', error);
+      log.error('生成失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '生成失敗',
@@ -84,7 +88,7 @@ const AITest: React.FC = () => {
     setResult('');
 
     try {
-      console.log('測試上下文生成...');
+      log.debug('測試上下文生成...');
       
       const params = {
         temperature: 0.7,
@@ -97,7 +101,7 @@ const AITest: React.FC = () => {
 
       // 使用假的 ID 進行測試
       const response = await api.ai.generateWithContext('test-project', 'test-chapter', 0, currentModel, params);
-      console.log('上下文生成結果:', response);
+      log.debug('上下文生成結果:', response);
       
       setResult(response);
       
@@ -109,7 +113,7 @@ const AITest: React.FC = () => {
       }));
 
     } catch (error) {
-      console.error('上下文生成失敗:', error);
+      log.error('上下文生成失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '上下文生成失敗',

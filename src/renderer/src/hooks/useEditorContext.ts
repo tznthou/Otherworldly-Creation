@@ -1,6 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import { Editor, Transforms, Range } from 'slate';
 import type { Selection } from 'slate';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useEditorContext');
 
 /**
  * 編輯器上下文狀態類型
@@ -81,7 +85,7 @@ export function useEditorContext(editor: Editor | null): EditorContextHook {
         try {
           selectedText = Editor.string(editor, selection);
         } catch (error) {
-          console.warn('獲取選擇文本失敗:', error);
+          log.warn('獲取選擇文本失敗:', error);
           selectedText = '';
         }
       }
@@ -121,7 +125,7 @@ export function useEditorContext(editor: Editor | null): EditorContextHook {
       const point = { path: [0], offset: safePosition };
       Transforms.select(editor, { anchor: point, focus: point });
     } catch (error) {
-      console.warn('設置游標位置失敗:', error);
+      log.warn('設置游標位置失敗:', error);
     }
   }, [editor]);
 
@@ -141,7 +145,7 @@ export function useEditorContext(editor: Editor | null): EditorContextHook {
     try {
       Transforms.collapse(editor, { edge });
     } catch (error) {
-      console.warn('折疊選擇失敗:', error);
+      log.warn('折疊選擇失敗:', error);
     }
   }, [editor]);
 
@@ -157,7 +161,7 @@ export function useEditorContext(editor: Editor | null): EditorContextHook {
         Transforms.select(editor, end);
         return !!editor.selection;
       } catch (error) {
-        console.warn('確保選擇失敗:', error);
+        log.warn('確保選擇失敗:', error);
         return false;
       }
     }
@@ -175,7 +179,7 @@ export function useEditorContext(editor: Editor | null): EditorContextHook {
       const end = Editor.end(editor, []);
       Transforms.select(editor, end);
     } catch (error) {
-      console.warn('移動到末尾失敗:', error);
+      log.warn('移動到末尾失敗:', error);
     }
   }, [editor]);
 
@@ -192,7 +196,7 @@ export function useEditorContext(editor: Editor | null): EditorContextHook {
       // 插入文本
       Transforms.insertText(editor, text);
     } catch (error) {
-      console.warn('插入文本失敗:', error);
+      log.warn('插入文本失敗:', error);
     }
   }, [editor, ensureSelection]);
 
