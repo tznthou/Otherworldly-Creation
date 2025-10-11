@@ -5,10 +5,6 @@
 
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
-import { createLogger } from './/logger';
-
-// 創建模組專用 logger
-const log = createLogger('componentOptimization');
 
 // 深度比較函數（僅用於必要時）
 export function deepEqual(a: unknown, b: unknown): boolean {

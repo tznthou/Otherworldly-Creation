@@ -410,7 +410,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
           .filter(r => r.success && r.tempImageData)
           .map(r => r.tempImageData!);
         
-        log.debug('生成的臨時圖像數據:', successfulTempImages.length, '張');
+        log.debug('生成的臨時圖像數據', { count: successfulTempImages.length });
         
         // 設置臨時圖像並顯示預覽
         setTempImages(successfulTempImages);

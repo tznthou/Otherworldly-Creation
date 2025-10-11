@@ -57,7 +57,7 @@ const waitForTauri = (): Promise<void> => {
         if (window.__TAURI_INVOKE__ || 
             (window.__TAURI__ && window.__TAURI__.invoke) ||
             (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke)) {
-          log.debug('Tauri API detected after', attempts, 'attempts');
+          log.debug('Tauri API detected after attempts', { attempts });
           resolve();
           return;
         }
@@ -521,7 +521,7 @@ export const tauriAPI: API = {
               description: rel.description || '',
             } as Relationship));
           } catch (e) {
-            log.warn('Failed to load relationships for character:', char.id, e);
+            log.warn('Failed to load relationships for character', { characterId: char.id, error: e });
           }
           
           return {
@@ -636,7 +636,7 @@ export const tauriAPI: API = {
           description: rel.description || '',
         } as Relationship));
       } catch (e) {
-        log.warn('Failed to load relationships for character:', char.id, e);
+        log.warn('Failed to load relationships for character', { characterId: char.id, error: e });
       }
       
       return {

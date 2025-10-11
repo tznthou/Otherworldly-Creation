@@ -104,9 +104,11 @@ class Logger {
     const formattedMessage = this.formatMessage(LogLevel.DEBUG, module, message);
 
     if (data !== undefined) {
-      log.debug(formattedMessage, data);
+      /* eslint-disable-next-line no-console */
+      console.log(formattedMessage, data);
     } else {
-      log.debug(formattedMessage);
+      /* eslint-disable-next-line no-console */
+      console.log(formattedMessage);
     }
   }
 
@@ -120,9 +122,11 @@ class Logger {
     const formattedMessage = this.formatMessage(LogLevel.INFO, module, message);
 
     if (data !== undefined) {
-      log.debug(formattedMessage, data);
+      /* eslint-disable-next-line no-console */
+      console.log(formattedMessage, data);
     } else {
-      log.debug(formattedMessage);
+      /* eslint-disable-next-line no-console */
+      console.log(formattedMessage);
     }
   }
 
@@ -136,9 +140,11 @@ class Logger {
     const formattedMessage = this.formatMessage(LogLevel.WARN, module, message);
 
     if (data !== undefined) {
-      log.warn(formattedMessage, data);
+      /* eslint-disable-next-line no-console */
+      console.warn(formattedMessage, data);
     } else {
-      log.warn(formattedMessage);
+      /* eslint-disable-next-line no-console */
+      console.warn(formattedMessage);
     }
   }
 
@@ -152,9 +158,11 @@ class Logger {
     const formattedMessage = this.formatMessage(LogLevel.ERROR, module, message);
 
     if (error !== undefined) {
-      log.error(formattedMessage, error);
+      /* eslint-disable-next-line no-console */
+      console.error(formattedMessage, error);
     } else {
-      log.error(formattedMessage);
+      /* eslint-disable-next-line no-console */
+      console.error(formattedMessage);
     }
   }
 
@@ -168,9 +176,11 @@ class Logger {
     const formattedMessage = this.formatMessage(LogLevel.FATAL, module, message);
 
     if (error !== undefined) {
-      log.error('🔥 FATAL:', formattedMessage, error);
+      /* eslint-disable-next-line no-console */
+      console.error('🔥 FATAL:', formattedMessage, error);
     } else {
-      log.error('🔥 FATAL:', formattedMessage);
+      /* eslint-disable-next-line no-console */
+      console.error('🔥 FATAL:', formattedMessage);
     }
   }
 
@@ -180,7 +190,7 @@ class Logger {
    * 使用方式：
    * ```typescript
    * const log = logger.createModuleLogger('ProjectService');
-   * log.debug('載入專案'); // 自動包含模組名
+   * console.log('載入專案'); // 自動包含模組名
    * ```
    */
   public createModuleLogger(moduleName: string) {
