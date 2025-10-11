@@ -1,5 +1,9 @@
 // 國際化系統
 import { translationLoader } from './translations';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('index');
 
 // 翻譯文件結構類型
 type TranslationRecord = Record<string, string | Record<string, string>>;
@@ -18,9 +22,9 @@ class I18nService {
       // 預載入所有翻譯檔案
       await translationLoader.preloadAllTranslations();
       this.isInitialized = true;
-      console.log('I18n system initialized successfully');
+      log.debug('I18n system initialized successfully');
     } catch (_error) {
-      console.error('Failed to initialize i18n system:', _error);
+      log.error('Failed to initialize i18n system:', _error);
       // 即使失敗也標記為已初始化，避免重複嘗試
       this.isInitialized = true;
     }
@@ -33,7 +37,7 @@ class I18nService {
     try {
       await translationLoader.loadTranslation(language);
     } catch (_error) {
-      console.warn(`Failed to load translation for ${language}, keeping current language`);
+      console.warn(`Failed to load translation for ${language}, keeping current language`); // TODO: 複雜模式，需人工轉換
     }
     
     this.listeners.forEach(listener => listener(language));
@@ -64,16 +68,16 @@ class I18nService {
         const fallbackValue = this.getValueByKey(fallbackTranslation, key);
         
         if (typeof fallbackValue === 'string') {
-          console.warn(`Translation missing for ${key} in ${this.currentLanguage}, using zh-TW`);
+          console.warn(`Translation missing for ${key} in ${this.currentLanguage}, using zh-TW`); // TODO: 複雜模式，需人工轉換
           return this.interpolateParams(fallbackValue, params);
         }
       }
 
       // 都找不到時返回 key 本身
-      console.warn(`找不到翻譯: ${key}`);
+      console.warn(`找不到翻譯: ${key}`); // TODO: 複雜模式，需人工轉換
       return key;
     } catch (_error) {
-      console.error(`Translation failed for key ${key}:`, _error);
+      console.error(`Translation failed for key ${key}:`, _error); // TODO: 複雜模式，需人工轉換
       return key;
     }
   }
@@ -82,7 +86,7 @@ class I18nService {
   translateSync(key: string, params?: Record<string, string>): string {
     const currentTranslation = translationLoader.getLoadedTranslation(this.currentLanguage);
     if (!currentTranslation) {
-      console.warn(`Translation not loaded for ${this.currentLanguage}, returning key`);
+      console.warn(`Translation not loaded for ${this.currentLanguage}, returning key`); // TODO: 複雜模式，需人工轉換
       return key;
     }
 
@@ -102,7 +106,7 @@ class I18nService {
       }
     }
 
-    console.warn(`找不到翻譯: ${key}`);
+    console.warn(`找不到翻譯: ${key}`); // TODO: 複雜模式，需人工轉換
     return key;
   }
 

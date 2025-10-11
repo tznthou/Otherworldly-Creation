@@ -244,7 +244,9 @@
       "Bash(src/renderer/src/hooks/illustration/usePromptIntelligence.ts )",
       "Bash(src/renderer/src/services/backupService.ts )",
       "Bash(src/renderer/src/utils/performanceMonitor.ts )",
-      "Bash(src/renderer/src/utils/reactScan.ts)"
+      "Bash(src/renderer/src/utils/reactScan.ts)",
+      "Bash(src/renderer/src/i18n/index.ts )",
+      "Bash(src/renderer/src/components/AI/VisualCreation/CreateTab/CharacterSelector.tsx)"
     ],
     "deny": [],
     "ask": [],

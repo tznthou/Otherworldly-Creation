@@ -4,6 +4,10 @@ import type { RootState, AppDispatch } from '../../../../store/store';
 import { toggleCharacterSelection, setSelectedCharacters } from '../../../../store/slices/visualCreationSlice';
 import Tooltip from '../../../UI/Tooltip';
 import { GUIDANCE_TEXTS } from '../shared/guidanceTexts';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CharacterSelector');
 
 const CharacterSelector: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -21,7 +25,7 @@ const CharacterSelector: React.FC = () => {
     const match = charProjectId === currentProjectId;
     
     if (!match && characters.length > 0) {
-      console.log(`🎯 [CharacterSelector] 角色過濾: ${c.name} - 角色ProjectId: "${charProjectId}" (${typeof c.projectId}), 當前ProjectId: "${currentProjectId}" (${typeof currentProject?.id}), 匹配: ${match}`);
+      console.log(`🎯 [CharacterSelector] 角色過濾: ${c.name} - 角色ProjectId: "${charProjectId}" (${typeof c.projectId}), 當前ProjectId: "${currentProjectId}" (${typeof currentProject?.id}), 匹配: ${match}`); // TODO: 複雜模式，需人工轉換
     }
     
     return match;
@@ -29,13 +33,13 @@ const CharacterSelector: React.FC = () => {
   
   // 調試信息 - 僅在必要時執行
   React.useEffect(() => {
-    console.log('🐛 [CharacterSelector] 組件狀態更新');
-    console.log('📂 currentProject:', currentProject?.name, '(ID:', currentProject?.id, ')');
-    console.log('📊 Redux characters總數:', characters.length);
-    console.log('🎯 projectCharacters總數 (過濾後):', projectCharacters.length);
+    log.debug('🐛 [CharacterSelector] 組件狀態更新');
+    console.log('📂 currentProject:', currentProject?.name, '(ID:', currentProject?.id, ')'); // TODO: 複雜模式，需人工轉換
+    log.debug('📊 Redux characters總數:', characters.length);
+    log.debug('🎯 projectCharacters總數 (過濾後):', projectCharacters.length);
     
     if (characters.length > 0 && projectCharacters.length === 0) {
-      console.log('❌ 沒有找到匹配的角色！');
+      log.debug('❌ 沒有找到匹配的角色！');
     }
   }, [currentProject?.id, currentProject?.name, characters.length, projectCharacters.length]);
   
