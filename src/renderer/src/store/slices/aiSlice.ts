@@ -1,6 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../../api';
 import type { AIProvider } from '../../api/models';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('aiSlice');
 
 interface AIState {
   // Legacy single provider state
@@ -95,16 +99,16 @@ export const checkOllamaService = createAsyncThunk(
   'ai/checkOllamaService',
   async (_, { rejectWithValue }) => {
     try {
-      console.log('Redux: 檢查 Ollama 服務...');
-      console.log('Redux: API 對象:', api);
-      console.log('Redux: AI API:', api.ai);
+      log.debug('Redux: 檢查 Ollama 服務...');
+      log.debug('Redux: API 對象:', api);
+      log.debug('Redux: AI API:', api.ai);
       
       const isConnected = await api.ai.checkOllamaService();
-      console.log('Redux: Ollama 服務結果:', isConnected);
+      log.debug('Redux: Ollama 服務結果:', isConnected);
       return isConnected;
     } catch (error) {
-      console.error('Redux: 檢查 Ollama 服務失敗:', error);
-      console.error('Redux: 錯誤詳情:', {
+      log.error('Redux: 檢查 Ollama 服務失敗:', error);
+      log.error('Redux: 錯誤詳情:', {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined
       });
@@ -118,20 +122,20 @@ export const initializeAIServiceLazy = createAsyncThunk(
   'ai/initializeAIServiceLazy',
   async (_, { dispatch }) => {
     try {
-      console.log('Redux: 開始延遲 AI 服務初始化...');
+      log.debug('Redux: 開始延遲 AI 服務初始化...');
       
       // 先快速檢查 Ollama 服務
       const isConnected = await dispatch(checkOllamaService()).unwrap();
       
       if (isConnected) {
         // 如果連接成功，背景載入模型列表
-        console.log('Redux: Ollama 已連接，載入模型列表...');
+        log.debug('Redux: Ollama 已連接，載入模型列表...');
         await dispatch(fetchModelsInfo());
       }
       
       return isConnected;
     } catch (error) {
-      console.warn('Redux: 延遲 AI 初始化失敗:', error);
+      log.warn('Redux: 延遲 AI 初始化失敗:', error);
       // 不返回錯誤，允許應用程式繼續運行
       return false;
     }
@@ -142,12 +146,12 @@ export const fetchServiceStatus = createAsyncThunk(
   'ai/fetchServiceStatus',
   async (_, { rejectWithValue }) => {
     try {
-      console.log('Redux: 獲取服務狀態...');
+      log.debug('Redux: 獲取服務狀態...');
       const status = await api.ai.getServiceStatus();
-      console.log('Redux: 服務狀態結果:', status);
+      log.debug('Redux: 服務狀態結果:', status);
       return status;
     } catch (error) {
-      console.error('Redux: 獲取服務狀態失敗:', error);
+      log.error('Redux: 獲取服務狀態失敗:', error);
       return rejectWithValue(null);
     }
   }
@@ -157,12 +161,12 @@ export const fetchAvailableModels = createAsyncThunk(
   'ai/fetchAvailableModels',
   async (_, { rejectWithValue }) => {
     try {
-      console.log('Redux: 獲取可用模型...');
+      log.debug('Redux: 獲取可用模型...');
       const models = await api.ai.listModels();
-      console.log('Redux: 可用模型結果:', models);
+      log.debug('Redux: 可用模型結果:', models);
       return models;
     } catch (error) {
-      console.error('Redux: 獲取可用模型失敗:', error);
+      log.error('Redux: 獲取可用模型失敗:', error);
       return rejectWithValue([]);
     }
   }
@@ -172,12 +176,12 @@ export const fetchModelsInfo = createAsyncThunk(
   'ai/fetchModelsInfo',
   async (_, { rejectWithValue }) => {
     try {
-      console.log('Redux: 獲取模型詳細資訊...');
+      log.debug('Redux: 獲取模型詳細資訊...');
       const modelsInfo = await api.ai.getModelsInfo();
-      console.log('Redux: 模型詳細資訊結果:', modelsInfo);
+      log.debug('Redux: 模型詳細資訊結果:', modelsInfo);
       return modelsInfo;
     } catch (error) {
-      console.error('Redux: 獲取模型詳細資訊失敗:', error);
+      log.error('Redux: 獲取模型詳細資訊失敗:', error);
       return rejectWithValue(null);
     }
   }
@@ -228,12 +232,12 @@ export const fetchAIProviders = createAsyncThunk(
 
       // 🛡️ 防重複調用：檢查是否在冷卻期內或正在執行
       if (isCurrentlyFetching) {
-        console.log('🛡️ fetchAIProviders 已在執行中，跳過重複調用');
+        log.debug('🛡️ fetchAIProviders 已在執行中，跳過重複調用');
         return rejectWithValue('Already fetching');
       }
 
       if (now - lastFetchTime < FETCH_COOLDOWN) {
-        console.log('🛡️ fetchAIProviders 在冷卻期內，跳過調用');
+        log.debug('🛡️ fetchAIProviders 在冷卻期內，跳過調用');
         return rejectWithValue('Too frequent calls');
       }
 
@@ -241,9 +245,9 @@ export const fetchAIProviders = createAsyncThunk(
       isCurrentlyFetching = true;
       lastFetchTime = now;
 
-      console.log('✅ fetchAIProviders 正常執行');
+      log.debug('✅ fetchAIProviders 正常執行');
       const response = await api.aiProviders.getAll();
-      console.log('Redux: AI 提供者列表結果:', response);
+      log.debug('Redux: AI 提供者列表結果:', response);
 
       if (response.success && response.providers) {
         // 🔓 成功後重置標誌
@@ -257,7 +261,7 @@ export const fetchAIProviders = createAsyncThunk(
     } catch (error) {
       // 🔓 異常後重置標誌
       isCurrentlyFetching = false;
-      console.error('Redux: 獲取 AI 提供者失敗:', error);
+      log.error('Redux: 獲取 AI 提供者失敗:', error);
       return rejectWithValue([]);
     }
   }
@@ -267,7 +271,7 @@ export const setActiveProvider = createAsyncThunk(
   'ai/setActiveProvider',
   async (providerId: string, { dispatch: _dispatch, getState: _getState }) => {
     try {
-      console.log('Redux: 設定活躍提供者:', providerId);
+      log.debug('Redux: 設定活躍提供者:', providerId);
       
       // 🔥 修復：使用動態模型獲取而非測試連接
       const modelsResult = await api.aiProviders.getAvailableModels(providerId);
@@ -288,7 +292,7 @@ export const setActiveProvider = createAsyncThunk(
         throw new Error(modelsResult.error || '無法獲取模型列表');
       }
     } catch (error) {
-      console.error('Redux: 設定活躍提供者失敗:', error);
+      log.error('Redux: 設定活躍提供者失敗:', error);
       return {
         providerId,
         models: [],
@@ -326,23 +330,23 @@ export const generateTextWithProvider = createAsyncThunk(
       frequency_penalty: params.aiParams.frequencyPenalty,
     });
     
-    console.log('🔍 後端回應結構:', result);
+    log.debug('🔍 後端回應結構:', result);
     
     // 🔥 修復：檢查 success 字段和錯誤處理
     if (typeof result === 'object' && result && 'success' in result) {
       if (!result.success) {
         // 後端明確返回失敗
         const errorMessage = result.error || 'AI生成失敗，原因未知';
-        console.error('❌ AI生成失敗:', errorMessage);
+        log.error('❌ AI生成失敗:', errorMessage);
         throw new Error(errorMessage);
       }
       
       // 成功情況：提取生成的文本
       const generatedText = result.generated_text || '';
-      console.log('✅ AI生成成功，文本長度:', generatedText.length);
+      log.debug('✅ AI生成成功，文本長度:', generatedText.length);
       
       if (!generatedText.trim()) {
-        console.warn('⚠️ 生成的文本為空');
+        log.warn('⚠️ 生成的文本為空');
         throw new Error('AI生成的文本為空，請重試');
       }
       
@@ -363,7 +367,7 @@ export const generateTextWithProvider = createAsyncThunk(
     } else {
       // 舊格式或字符串回應（向後兼容）
       const text = typeof result === 'string' ? result : '';
-      console.log('📝 使用舊格式，文本長度:', text.length);
+      log.debug('📝 使用舊格式，文本長度:', text.length);
       
       if (!text.trim()) {
         throw new Error('AI生成的文本為空，請檢查模型連接');
@@ -416,7 +420,7 @@ const aiSlice = createSlice({
       try {
         localStorage.setItem('ai_default_provider', action.payload);
       } catch (error) {
-        console.error('Failed to save default provider to localStorage:', error);
+        log.error('Failed to save default provider to localStorage:', error);
       }
       
       // 如果開啟自動使用預設，立即切換
@@ -436,7 +440,7 @@ const aiSlice = createSlice({
       try {
         localStorage.setItem('ai_default_model', action.payload);
       } catch (error) {
-        console.error('Failed to save default model to localStorage:', error);
+        log.error('Failed to save default model to localStorage:', error);
       }
       
       // 如果開啟自動使用預設，立即切換
@@ -647,10 +651,10 @@ const aiSlice = createSlice({
             // 如果當前模型在新的模型列表中，保持不變
             if (state.currentModel && modelList.includes(state.currentModel)) {
               // 用戶選擇的模型仍然可用，保持不變
-              console.log('Redux: 保持用戶選擇的模型:', state.currentModel);
+              log.debug('Redux: 保持用戶選擇的模型:', state.currentModel);
             } else {
               // 🎯 關鍵修復：不自動選擇第一個模型，設為null讓用戶手動選擇
-              console.log('Redux: 清空模型選擇，讓用戶手動選擇');
+              log.debug('Redux: 清空模型選擇，讓用戶手動選擇');
               state.currentModel = null;
             }
           }
