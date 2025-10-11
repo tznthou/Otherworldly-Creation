@@ -1,5 +1,9 @@
 import BackupService from './backupService';
 import { SettingsService } from './settingsService';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('autoBackupService');
 
 export interface AutoBackupStatus {
   enabled: boolean;
@@ -34,7 +38,7 @@ class AutoBackupServiceClass {
       // 載入上次備份資訊
       this.loadBackupHistory();
     } catch (error) {
-      console.error('自動備份服務初始化失敗:', error);
+      log.error('自動備份服務初始化失敗:', error);
       this.updateStatus({ error: '初始化失敗' });
     }
   }
@@ -59,7 +63,7 @@ class AutoBackupServiceClass {
       error: null,
     });
 
-    console.log(`自動備份已啟動，間隔: ${intervalHours} 小時`);
+    console.log(`自動備份已啟動，間隔: ${intervalHours} 小時`); // TODO: 複雜模式，需人工轉換
   }
 
   /**
@@ -76,7 +80,7 @@ class AutoBackupServiceClass {
       nextBackup: null,
     });
 
-    console.log('自動備份已停止');
+    log.debug('自動備份已停止');
   }
 
   /**
@@ -84,7 +88,7 @@ class AutoBackupServiceClass {
    */
   private async performAutoBackup(): Promise<void> {
     try {
-      console.log('開始執行自動備份...');
+      log.debug('開始執行自動備份...');
       
       const settings = await SettingsService.loadSettings();
       
@@ -108,14 +112,14 @@ class AutoBackupServiceClass {
       // 清理舊備份（如果啟用）
       await this.cleanupOldBackups(settings.backup.maxBackupFiles);
 
-      console.log(`自動備份完成: ${filename}`);
+      console.log(`自動備份完成: ${filename}`); // TODO: 複雜模式，需人工轉換
       
       // 通知用戶（可選）
       // TODO: 實現跨平台通知系統
-      console.log('自動備份完成:', filename);
+      log.debug('自動備份完成:', filename);
 
     } catch (error) {
-      console.error('自動備份失敗:', error);
+      log.error('自動備份失敗:', error);
       
       this.updateStatus({
         error: error instanceof Error ? error.message : '自動備份失敗',
@@ -123,7 +127,7 @@ class AutoBackupServiceClass {
 
       // 通知用戶備份失敗
       // TODO: 實現跨平台通知系統
-      console.error('自動備份失敗 - 請檢查應用程式狀態或手動創建備份');
+      log.error('自動備份失敗 - 請檢查應用程式狀態或手動創建備份');
     }
   }
 
@@ -135,9 +139,9 @@ class AutoBackupServiceClass {
       // 這裡需要實現清理邏輯
       // 由於我們使用下載方式，無法直接管理檔案
       // 可以考慮在未來版本中實現本地備份資料夾管理
-      console.log(`備份清理: 保留最近 ${maxFiles} 個備份檔案`);
+      console.log(`備份清理: 保留最近 ${maxFiles} 個備份檔案`); // TODO: 複雜模式，需人工轉換
     } catch (error) {
-      console.error('清理舊備份失敗:', error);
+      log.error('清理舊備份失敗:', error);
     }
   }
 
@@ -221,7 +225,7 @@ class AutoBackupServiceClass {
       try {
         callback(this.status);
       } catch (error) {
-        console.error('自動備份狀態監聽器執行失敗:', error);
+        log.error('自動備份狀態監聽器執行失敗:', error);
       }
     });
   }
@@ -240,7 +244,7 @@ class AutoBackupServiceClass {
         });
       }
     } catch (error) {
-      console.error('載入備份歷史失敗:', error);
+      log.error('載入備份歷史失敗:', error);
     }
   }
 
@@ -255,7 +259,7 @@ class AutoBackupServiceClass {
       };
       localStorage.setItem('genesis-chronicle-backup-history', JSON.stringify(history));
     } catch (error) {
-      console.error('儲存備份歷史失敗:', error);
+      log.error('儲存備份歷史失敗:', error);
     }
   }
 

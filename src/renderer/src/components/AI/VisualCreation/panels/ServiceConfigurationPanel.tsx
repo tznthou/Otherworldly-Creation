@@ -10,6 +10,10 @@ import type {
 } from '../../../../hooks/illustration';
 import { debugLog } from '../../../../config/features';
 import { api } from '../../../../api';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ServiceConfigurationPanel');
 
 interface ServiceConfigurationPanelProps {
   className?: string;
@@ -97,7 +101,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
             setPollinationsTokenInput(response);
           }
         } catch (error) {
-          console.warn('無法檢查 Pollinations Token:', error);
+          log.warn('無法檢查 Pollinations Token:', error);
           setHasPollinationsToken(false);
         }
       };
@@ -140,7 +144,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
           setServiceCapabilities(result.serviceCapabilities as Record<string, ServiceCapability>);
           debugLog('服務檢測完成:', result);
         } catch (error) {
-          console.error('❌ 服務檢測失敗:', error);
+          log.error('❌ 服務檢測失敗:', error);
           // 保持預設服務
           setAvailableServices(['pollinations']);
         } finally {
@@ -175,7 +179,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
         debugLog('ℹ️ 未找到已儲存的 Pollinations API Token');
       }
     } catch (error) {
-      console.error('❌ 載入 Pollinations Token 失敗:', error);
+      log.error('❌ 載入 Pollinations Token 失敗:', error);
       setHasPollinationsToken(false);
     } finally {
       setIsPollinationsLoading(false);
@@ -199,7 +203,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
       debugLog('✅ Pollinations API Token 儲存成功');
       alert('API Token 已成功儲存！');
     } catch (error) {
-      console.error('❌ 儲存 Pollinations Token 失敗:', error);
+      log.error('❌ 儲存 Pollinations Token 失敗:', error);
       alert(`儲存失敗: ${error}`);
     } finally {
       setIsPollinationsLoading(false);
@@ -217,7 +221,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
       debugLog('✅ Pollinations API Token 已清除');
       alert('API Token 已清除');
     } catch (error) {
-      console.error('❌ 清除 Pollinations Token 失敗:', error);
+      log.error('❌ 清除 Pollinations Token 失敗:', error);
       alert(`清除失敗: ${error}`);
     } finally {
       setIsPollinationsLoading(false);

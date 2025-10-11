@@ -1,5 +1,9 @@
 import { api } from '../api';
 import { Descendant } from 'slate';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('statisticsService');
 
 export interface ProjectStatistics {
   id: string;
@@ -80,18 +84,18 @@ class StatisticsService {
   // 計算專案統計
   static async getProjectStatistics(): Promise<ProjectStatistics[]> {
     try {
-      console.log('=== 開始獲取專案統計 ===');
+      log.debug('=== 開始獲取專案統計 ===');
       const projects = await api.projects.getAll();
-      console.log('獲取到的專案數量:', projects.length);
-      console.log('專案列表:', projects);
+      log.debug('獲取到的專案數量:', projects.length);
+      log.debug('專案列表:', projects);
       const statistics: ProjectStatistics[] = [];
 
       for (const project of projects) {
-        console.log(`處理專案: ${project.name} (ID: ${project.id})`);
+        console.log(`處理專案: ${project.name} (ID: ${project.id})`); // TODO: 複雜模式，需人工轉換
         const chapters = await api.chapters.getByProjectId(project.id);
         const characters = await api.characters.getByProjectId(project.id);
-        console.log(`  - 章節數量: ${chapters.length}`);
-        console.log(`  - 角色數量: ${characters.length}`);
+        console.log(`  - 章節數量: ${chapters.length}`); // TODO: 複雜模式，需人工轉換
+        console.log(`  - 角色數量: ${characters.length}`); // TODO: 複雜模式，需人工轉換
         
         const totalWords = chapters.reduce((sum, chapter) => {
           // 更精確的字數計算：將 Slate 內容轉換為純文字
@@ -122,8 +126,8 @@ class StatisticsService {
 
       return statistics.sort((a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime());
     } catch (error) {
-      console.error('獲取專案統計失敗:', error);
-      console.error('錯誤詳情:', JSON.stringify(error, null, 2));
+      log.error('獲取專案統計失敗:', error);
+      log.error('錯誤詳情:', JSON.stringify(error, null, 2));
       return [];
     }
   }
@@ -172,8 +176,8 @@ class StatisticsService {
         recentActivity: Array.isArray(recentActivity) ? recentActivity : []
       };
     } catch (error) {
-      console.error('獲取整體統計失敗:', error);
-      console.error('整體統計錯誤詳情:', JSON.stringify(error, null, 2));
+      log.error('獲取整體統計失敗:', error);
+      log.error('整體統計錯誤詳情:', JSON.stringify(error, null, 2));
       return {
         totalProjects: 0,
         totalChapters: 0,
@@ -244,7 +248,7 @@ class StatisticsService {
         }
       }
     } catch (error) {
-      console.error('獲取月度統計失敗:', error);
+      log.error('獲取月度統計失敗:', error);
       
       // 備用方案：生成基於現有數據的合理統計
       for (let i = 5; i >= 0; i--) {
@@ -346,7 +350,7 @@ class StatisticsService {
       }
       
     } catch (error) {
-      console.error('獲取真實寫作活動失敗，使用備用方案:', error);
+      log.error('獲取真實寫作活動失敗，使用備用方案:', error);
       
       // 備用方案：生成少量合理的模擬數據
       const today = new Date();
@@ -391,7 +395,7 @@ class StatisticsService {
       
       return longestChapter;
     } catch (error) {
-      console.error('找尋最長章節失敗:', error);
+      log.error('找尋最長章節失敗:', error);
       return { title: '', projectName: '', wordCount: 0 };
     }
   }

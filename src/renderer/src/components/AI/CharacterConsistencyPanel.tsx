@@ -16,6 +16,10 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 // 移除未使用的 ProgressIndicator 導入
 import { Alert } from '../UI/Alert';
 import { Card } from '../UI/Card';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CharacterConsistencyPanel');
 // import { Badge } from '../UI/Badge';
 
 interface CharacterConsistencyPanelProps {
@@ -82,7 +86,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
         setVisualTraits(null);
       }
     } catch (err) {
-      console.error('載入視覺特徵失敗:', err);
+      log.error('載入視覺特徵失敗:', err);
       setVisualTraits(null);
     } finally {
       setIsProcessing(false);
@@ -125,7 +129,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
             });
           }
         } catch (traitsErr) {
-          console.warn('載入視覺特徵失敗，使用默認值:', traitsErr);
+          log.warn('載入視覺特徵失敗，使用默認值:', traitsErr);
           setVisualTraits({
             character_id: selectedCharacter.id,
             character_name: selectedCharacter.name,
@@ -137,7 +141,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
           });
         }
         
-        console.log('角色一致性設定完成');
+        log.debug('角色一致性設定完成');
       } else {
         setError(result.message || '一致性設定失敗');
       }
@@ -168,7 +172,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
       const result = await api.illustration.setCharacterSeed(selectedCharacterId, seedValue, seedReason);
       
       if (result.success) {
-        console.log('種子值設定成功');
+        log.debug('種子值設定成功');
         setManualSeed('');
         setSeedReason('');
         loadVisualTraits(); // 重新載入特徵
@@ -201,7 +205,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
       );
       
       if (result.success) {
-        console.log('參考圖像添加成功');
+        log.debug('參考圖像添加成功');
         setReferenceImageUrl('');
         setReferenceTags([]);
       } else {

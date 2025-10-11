@@ -2,6 +2,10 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { toggleSidebar, openModal } from '../../store/slices/uiSlice';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('Sidebar');
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -117,7 +121,7 @@ const Sidebar: React.FC = () => {
           navigate(cleanPath);
         }, 0);
       } catch (error) {
-        console.error('Sidebar: 導航失敗:', error);
+        log.error('Sidebar: 導航失敗:', error);
       }
     }
   };
@@ -195,14 +199,14 @@ const Sidebar: React.FC = () => {
                     if (!item.disabled) {
                       if (item.isModal && item.id === 'illustrations') {
                         // 打開 AI 插畫 modal
-                        console.log('🎨 [Sidebar] AI插畫按鈕被點擊');
-                        console.log('🎨 [Sidebar] 準備派發 openModal action');
+                        log.debug('🎨 [Sidebar] AI插畫按鈕被點擊');
+                        log.debug('🎨 [Sidebar] 準備派發 openModal action');
                         dispatch(openModal('aiIllustration'));
-                        console.log('🎨 [Sidebar] openModal action 已派發完成');
+                        log.debug('🎨 [Sidebar] openModal action 已派發完成');
                       } else if (item.path) {
                         // 額外驗證路徑格式
                         if (item.path.includes('undefined') || item.path.includes('null')) {
-                          console.error('Sidebar: 路徑包含無效值:', item.path);
+                          log.error('Sidebar: 路徑包含無效值:', item.path);
                           alert('路徑錯誤：專案 ID 無效，請先選擇一個有效的專案');
                           return;
                         }
