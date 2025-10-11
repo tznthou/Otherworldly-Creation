@@ -10,6 +10,10 @@ import type { BatchRequest } from '../types/illustration';
 import type { Descendant } from 'slate';
 import { measureAsyncFunction, performanceLogger } from '../utils/performanceLogger';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('tauri');
 
 // Tauri 後端類型定義
 interface TauriProject {
@@ -53,7 +57,7 @@ const waitForTauri = (): Promise<void> => {
         if (window.__TAURI_INVOKE__ || 
             (window.__TAURI__ && window.__TAURI__.invoke) ||
             (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke)) {
-          console.log('Tauri API detected after', attempts, 'attempts');
+          log.debug('Tauri API detected after', attempts, 'attempts');
           resolve();
           return;
         }
@@ -62,14 +66,14 @@ const waitForTauri = (): Promise<void> => {
         if (attempts === 1) {
           try {
             import('@tauri-apps/api/core').then(() => {
-              console.log('Tauri API module available');
+              log.debug('Tauri API module available');
               resolve();
             }).catch(() => {
               // 繼續等待
               if (attempts < maxAttempts) {
                 setTimeout(checkTauri, 100);
               } else {
-                console.warn('Tauri API not available after waiting, proceeding anyway');
+                log.warn('Tauri API not available after waiting, proceeding anyway');
                 resolve(); // 不拒絕，讓後續代碼處理
               }
             });
@@ -83,7 +87,7 @@ const waitForTauri = (): Promise<void> => {
       if (attempts < maxAttempts) {
         setTimeout(checkTauri, 100);
       } else {
-        console.warn('Tauri API not detected after maximum attempts, proceeding anyway');
+        log.warn('Tauri API not detected after maximum attempts, proceeding anyway');
         resolve(); // 不拒絕，讓後續代碼處理
       }
     };
@@ -103,26 +107,26 @@ const loadTauriAPI = async (): Promise<TauriInvokeFunction> => {
     if (typeof window !== 'undefined') {
       // Tauri v2 的標準方式
       if (window.__TAURI_INVOKE__) {
-        console.log('使用 window.__TAURI_INVOKE__');
+        log.debug('使用 window.__TAURI_INVOKE__');
         tauriInvoke = window.__TAURI_INVOKE__ as TauriInvokeFunction;
         return window.__TAURI_INVOKE__ as TauriInvokeFunction;
       }
       
       // 嘗試從 __TAURI__ 對象獲取
       if (window.__TAURI__ && window.__TAURI__.invoke) {
-        console.log('使用 window.__TAURI__.invoke');
+        log.debug('使用 window.__TAURI__.invoke');
         tauriInvoke = window.__TAURI__.invoke as TauriInvokeFunction;
         return window.__TAURI__.invoke as TauriInvokeFunction;
       }
     }
     
     // 最後嘗試動態導入
-    console.log('嘗試動態導入 @tauri-apps/api/core');
+    log.debug('嘗試動態導入 @tauri-apps/api/core');
     const { invoke } = await import('@tauri-apps/api/core');
     tauriInvoke = invoke as TauriInvokeFunction;
     return invoke as TauriInvokeFunction;
   } catch (_error) {
-    console.warn('無法載入 Tauri API:', _error);
+    log.warn('無法載入 Tauri API:', _error);
     throw new Error('無法找到 Tauri invoke 函數 - 請確保在 Tauri 環境中運行');
   }
 };
@@ -134,12 +138,12 @@ const safeInvoke = async <T = unknown>(command: string, args?: Record<string, un
     'api',
     async () => {
       try {
-        console.log(`調用 Tauri 命令: ${command}`, args);
+        log.debug('調用 Tauri 命令', { command, args });
         
         const invoke = await loadTauriAPI();
         if (!invoke) {
           const errorMsg = 'Tauri invoke 函數不可用 - 可能不在 Tauri 環境中運行';
-          console.error(errorMsg);
+          log.error(errorMsg);
           throw new Error(errorMsg);
         }
         
@@ -147,7 +151,7 @@ const safeInvoke = async <T = unknown>(command: string, args?: Record<string, un
         const invokeArgs = args || {};
         const result = await invoke<T>(command, invokeArgs);
         
-        console.log(`Tauri 命令 ${command} 成功:`, result);
+        log.debug('Tauri 命令成功', { command, result });
         
         // 記錄 API 調用成功
         performanceLogger.log('api', `tauri_${command}_success`, {
@@ -157,7 +161,7 @@ const safeInvoke = async <T = unknown>(command: string, args?: Record<string, un
         return result as T;
         
       } catch (_error) {
-        console.error(`Tauri command ${command} failed:`, _error);
+        log.error('Tauri command failed', { command, error: _error });
         
         // 記錄 API 調用失敗
         performanceLogger.log('api', `tauri_${command}_error`, {
@@ -167,7 +171,7 @@ const safeInvoke = async <T = unknown>(command: string, args?: Record<string, un
         
         // 特別處理 callbackId 相關錯誤
         if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && _error.message.includes('callbackId')) {
-          console.error('檢測到 Tauri 回調錯誤，可能是版本不匹配問題');
+          log.error('檢測到 Tauri 回調錯誤，可能是版本不匹配問題');
           throw new Error(`Tauri 回調機制錯誤 - 命令: ${command}`);
         }
         
@@ -184,11 +188,11 @@ const safeInvoke = async <T = unknown>(command: string, args?: Record<string, un
 
 // 臨時的模擬資料回退
 const createFallbackData = (commandName: string) => {
-  console.warn(`使用 ${commandName} 的模擬資料回退`);
+  log.warn('使用模擬資料回退', { commandName });
   
   switch (commandName) {
     case 'get_all_projects':
-      console.error('get_all_projects fallback 被觸發 - 這表示 Tauri API 連接有問題');
+      log.error('get_all_projects fallback 被觸發 - 這表示 Tauri API 連接有問題');
       throw new Error('Tauri API 連接失敗，無法獲取專案資料');
     case 'get_all_settings':
       return Promise.resolve([]);
@@ -209,7 +213,7 @@ const createFallbackData = (commandName: string) => {
     case 'get_characters_by_project_id':
       return Promise.resolve([]);
     default:
-      console.warn(`命令 ${commandName} 沒有模擬資料，返回空結果`);
+      log.warn('命令沒有模擬資料，返回空結果', { commandName });
       return Promise.resolve(null);
   }
 };
@@ -222,17 +226,17 @@ const enhancedSafeInvoke = async <T = unknown>(command: string, args?: Record<st
     async () => {
       try {
         const result = await safeInvoke(command, args);
-        console.log(`✅ Tauri 命令成功: ${command}`, result);
+        log.debug('✅ Tauri 命令成功', { command, result });
         return result as T;
       } catch (_error) {
-        console.error(`❌ enhancedSafeInvoke 錯誤 (${command}):`, _error);
+        log.error('❌ enhancedSafeInvoke 錯誤', { command, error: _error });
         
         // 特別處理 callbackId 相關錯誤
         if (_error && typeof _error === 'object' && 'message' in _error && typeof _error.message === 'string' && (
           _error.message.includes('callbackId') || 
           _error.message.includes('undefined is not an object')
         )) {
-          console.warn(`檢測到 Tauri 回調機制錯誤，使用模擬資料 - 命令: ${command}`);
+          log.warn('檢測到 Tauri 回調機制錯誤，使用模擬資料', { command });
           performanceLogger.log('api', `tauri_fallback_${command}`, {
             severity: 'warning',
             metadata: { command, reason: 'callback_error' }
@@ -246,7 +250,7 @@ const enhancedSafeInvoke = async <T = unknown>(command: string, args?: Record<st
           _error.message.includes('not available') ||
           _error.message.includes('無法找到 Tauri invoke')
         )) {
-          console.warn(`Tauri 命令 ${command} 失敗，嘗試使用模擬資料`);
+          log.warn('Tauri 命令失敗，嘗試使用模擬資料', { command });
           performanceLogger.log('api', `tauri_fallback_${command}`, {
             severity: 'warning',
             metadata: { command, reason: 'api_unavailable' }
@@ -267,7 +271,7 @@ export const tauriAPI: API = {
       
       // 檢查返回值是否為有效陣列
       if (!Array.isArray(projects)) {
-        console.warn('getAll projects: API 返回無效資料，使用空陣列', projects);
+        log.warn('getAll projects: API 返回無效資料，使用空陣列', projects);
         return [];
       }
       
@@ -325,14 +329,14 @@ export const tauriAPI: API = {
   
   chapters: {
     getByProjectId: async (projectId) => {
-      console.log('🔍 [API] 調用 Tauri 後端獲取章節:', projectId);
+      log.debug('🔍 [API] 調用 Tauri 後端獲取章節:', projectId);
       
       const chapters = await safeInvoke<TauriChapter[]>('get_chapters_by_project_id', { projectId });
-      console.log('🔍 [API] Tauri 後端返回的原始數據數量:', chapters.length);
+      log.debug('🔍 [API] Tauri 後端返回的原始數據數量:', chapters.length);
       
       // 記錄原始數據格式
       chapters.forEach((rawChapter, index) => {
-        console.log(`🔍 [API] 原始章節 ${index + 1}:`, {
+        log.debug('🔍 [API] 原始章節', { chapterIndex: index + 1,
           id: rawChapter.id,
           title: rawChapter.title,
           content_type: typeof rawChapter.content,
@@ -358,7 +362,7 @@ export const tauriAPI: API = {
               // 如果不是有效陣列，使用預設空內容
               content = [{ type: 'paragraph', children: [{ text: '' }] }];
             }
-            console.log(`🔍 [API] 章節 ${index + 1} JSON 解析成功:`, {
+            log.debug('🔍 [API] 章節 JSON 解析成功', { chapterIndex: index + 1,
               解析後類型: typeof parsedContent,
               是否為陣列: Array.isArray(parsedContent),
               陣列長度: Array.isArray(parsedContent) ? parsedContent.length : 'N/A',
@@ -368,7 +372,7 @@ export const tauriAPI: API = {
             });
           } catch (error) {
             // 如果解析失敗，將純文字轉換為 Slate.js 格式
-            console.log(`🔍 [API] 章節 ${index + 1} JSON 解析失敗，轉換純文字:`, error);
+            log.debug('🔍 [API] 章節 JSON 解析失敗，轉換純文字', { chapterIndex: index + 1, error });
             const textLines = chapter.content.split('\n');
             content = textLines.map(line => ({
               type: 'paragraph' as const,
@@ -376,7 +380,7 @@ export const tauriAPI: API = {
             }));
           }
         } else {
-          console.log(`🔍 [API] 章節 ${index + 1} 內容為空`);
+          log.debug('🔍 [API] 章節內容為空', { chapterIndex: index + 1 });
         }
         
         const processedChapter = {
@@ -391,7 +395,7 @@ export const tauriAPI: API = {
           updatedAt: chapter.updated_at
         };
         
-        console.log(`🔍 [API] 處理後章節 ${index + 1}:`, {
+        log.debug('🔍 [API] 處理後章節', { chapterIndex: index + 1,
           id: processedChapter.id,
           title: processedChapter.title,
           content_type: typeof processedChapter.content,
@@ -407,7 +411,7 @@ export const tauriAPI: API = {
       // 檢查處理後是否有重複內容
       const processedContentHashes = processedChapters.map(c => JSON.stringify(c.content));
       const uniqueProcessedContents = new Set(processedContentHashes);
-      console.log('🔍 [API] 處理後內容唯一性檢查:', {
+      log.debug('🔍 [API] 處理後內容唯一性檢查:', {
         總章節數: processedChapters.length,
         唯一內容數: uniqueProcessedContents.size,
         是否有重複: processedChapters.length !== uniqueProcessedContents.size
@@ -453,7 +457,7 @@ export const tauriAPI: API = {
           }
         } catch (_error) {
           // 如果解析失敗，將純文字轉換為 Slate.js 格式
-          console.log('轉換純文字章節內容為 Slate 格式');
+          log.debug('轉換純文字章節內容為 Slate 格式');
           const textLines = chapter.content.split('\n');
           content = textLines.map(line => ({
             type: 'paragraph' as const,
@@ -503,7 +507,7 @@ export const tauriAPI: API = {
           try {
             attributes = char.attributes ? JSON.parse(char.attributes) : {};
           } catch {
-            console.warn('Failed to parse character attributes:', char.attributes);
+            log.warn('Failed to parse character attributes:', char.attributes);
           }
           
           // 載入該角色的關係資料
@@ -517,7 +521,7 @@ export const tauriAPI: API = {
               description: rel.description || '',
             } as Relationship));
           } catch (e) {
-            console.warn('Failed to load relationships for character:', char.id, e);
+            log.warn('Failed to load relationships for character:', char.id, e);
           }
           
           return {
@@ -543,7 +547,7 @@ export const tauriAPI: API = {
       return charactersWithRelationships as Character[];
     },
     create: async (character: Omit<Character, 'id' | 'createdAt' | 'updatedAt'> & { description?: string; avatarUrl?: string }) => {
-      console.log('Tauri API: create character called with:', character);
+      log.debug('Tauri API: create character called with:', character);
       
       // 構建 attributes 對象
       const attributes = {
@@ -564,13 +568,13 @@ export const tauriAPI: API = {
           avatar_url: character.avatarUrl
         }
       };
-      console.log('Tauri API: sending payload:', payload);
+      log.debug('Tauri API: sending payload:', payload);
       try {
         const result = await safeInvoke<string>('create_character', payload);
-        console.log('Tauri API: create character result:', result);
+        log.debug('Tauri API: create character result:', result);
         return result;
       } catch (_error) {
-        console.error('Tauri API: create character failed:', _error);
+        log.error('Tauri API: create character failed:', _error);
         throw _error;
       }
     },
@@ -618,7 +622,7 @@ export const tauriAPI: API = {
       try {
         attributes = char.attributes ? JSON.parse(char.attributes) : {};
       } catch {
-        console.warn('Failed to parse character attributes:', char.attributes);
+        log.warn('Failed to parse character attributes:', char.attributes);
       }
       
       // 載入該角色的關係資料
@@ -632,7 +636,7 @@ export const tauriAPI: API = {
           description: rel.description || '',
         } as Relationship));
       } catch (e) {
-        console.warn('Failed to load relationships for character:', char.id, e);
+        log.warn('Failed to load relationships for character:', char.id, e);
       }
       
       return {
@@ -671,7 +675,7 @@ export const tauriAPI: API = {
     checkModelAvailability: (modelName) => safeInvoke('check_model_availability', { modelName }),
     generateText: (prompt, model, params) => safeInvoke('generate_text', { prompt, model, params }),
     generateWithContext: (projectId, chapterId, position, model, params, language) => {
-      console.log('Tauri API: generateWithContext 被調用，參數:', { projectId, chapterId, position, model, params, language });
+      log.debug('Tauri API: generateWithContext 被調用，參數:', { projectId, chapterId, position, model, params, language });
       return safeInvoke('generate_with_context', { 
         projectId: String(projectId), 
         chapterId: String(chapterId), 
@@ -819,7 +823,7 @@ export const tauriAPI: API = {
         return convertFileSrc(path);
       } catch (_error) {
         // 🔧 修復：避免循環失敗，直接返回error狀態
-        console.error('❌ [getImageDataUrl] 所有獲取方式都失敗:', filename);
+        log.error('❌ [getImageDataUrl] 所有獲取方式都失敗:', filename);
         throw new Error(`無法獲取圖片: ${filename}`);
       }
     },
@@ -1005,7 +1009,7 @@ export const tauriAPI: API = {
         throw new Error('無效的專案 ID：專案 ID 不能為空');
       }
 
-      console.log('📚 API 調用 generate_epub，專案 ID:', projectId);
+      log.debug('📚 API 調用 generate_epub，專案 ID:', projectId);
       
       return safeInvoke('generate_epub', {
         projectId: projectId.trim(),
@@ -1038,7 +1042,7 @@ export const tauriAPI: API = {
         throw new Error('無效的專案 ID：專案 ID 不能為空');
       }
 
-      console.log('🌐 API 調用 generate_pdf_chrome (Chrome Headless 新方案)，專案 ID:', projectId);
+      log.debug('🌐 API 調用 generate_pdf_chrome (Chrome Headless 新方案)，專案 ID:', projectId);
       
       try {
         // 首先嘗試Chrome Headless方案
@@ -1052,10 +1056,10 @@ export const tauriAPI: API = {
           }
         });
       } catch (chromeError) {
-        console.warn('⚠️ Chrome Headless PDF生成失敗，嘗試lopdf fallback:', chromeError);
+        log.warn('⚠️ Chrome Headless PDF生成失敗，嘗試lopdf fallback:', chromeError);
         
         // Fallback到lopdf方案
-        console.log('📄 API Fallback調用 generate_pdf_v2 (lopdf 版本)，專案 ID:', projectId);
+        log.debug('📄 API Fallback調用 generate_pdf_v2 (lopdf 版本)，專案 ID:', projectId);
         return safeInvoke('generate_pdf_v2', {
           projectId: projectId.trim(),
           options: options || {
