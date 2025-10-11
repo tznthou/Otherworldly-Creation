@@ -21,6 +21,10 @@ interface RepairResult {
   warnings?: string[];
 }
 import { 
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('DatabaseMaintenance');
   Database, 
   CheckCircle, 
   AlertTriangle, 
@@ -134,7 +138,7 @@ const DatabaseMaintenance: React.FC = () => {
       setCheckResult(checkResult);
       setRepairResult(null);
     } catch (error) {
-      console.error('健康檢查失敗:', error);
+      log.error('健康檢查失敗:', error);
     } finally {
       setIsChecking(false);
     }
@@ -155,7 +159,7 @@ const DatabaseMaintenance: React.FC = () => {
         recommendations: Array.isArray(status.recommendations) ? [status.recommendations] : [status.recommendations || '']
       });
     } catch (error) {
-      console.error('載入 WAL 模式狀態失敗:', error);
+      log.error('載入 WAL 模式狀態失敗:', error);
       setWalModeStatus(null);
     } finally {
       setIsLoadingWalStatus(false);
@@ -214,7 +218,7 @@ const DatabaseMaintenance: React.FC = () => {
       ]);
       
     } catch (error) {
-      console.error('切換 WAL 模式失敗:', error);
+      log.error('切換 WAL 模式失敗:', error);
       const errorMessage = error instanceof Error ? error.message : '未知錯誤';
       
       // 🔥 根據錯誤類型提供不同的建議
@@ -254,12 +258,12 @@ const DatabaseMaintenance: React.FC = () => {
   };
 
   const performAutoRepair = async () => {
-    console.log('performAutoRepair called, checkResult:', checkResult);
-    console.log('checkResult?.issues:', checkResult?.issues);
-    console.log('checkResult?.issues.length:', checkResult?.issues?.length);
+    log.debug('performAutoRepair called, checkResult:', checkResult);
+    console.log('checkResult?.issues:', checkResult?.issues); // TODO: 複雜模式，需人工轉換
+    console.log('checkResult?.issues.length:', checkResult?.issues?.length); // TODO: 複雜模式，需人工轉換
     
     if (!checkResult || !checkResult.issues.length) {
-      console.log('Early return: no checkResult or no issues');
+      log.debug('Early return: no checkResult or no issues');
       dispatch(addNotification({
         type: 'warning',
         title: '無法執行自動修復',
@@ -273,7 +277,7 @@ const DatabaseMaintenance: React.FC = () => {
       // autoRepair 方法不存在，使用 runMaintenance 代替
       const result = await api.database.runMaintenance();
       
-      console.log('API result:', result);
+      log.debug('API result:', result);
       
       // 將 String 結果轉換為 RepairResult 格式
       const repairResult: RepairResult = {
@@ -283,7 +287,7 @@ const DatabaseMaintenance: React.FC = () => {
       };
       setRepairResult(repairResult);
       
-      console.log('repairResult:', repairResult);
+      log.debug('repairResult:', repairResult);
       
       // 🔥 簡化邏輯：API 成功就顯示成功通知
       dispatch(addNotification({
@@ -295,7 +299,7 @@ const DatabaseMaintenance: React.FC = () => {
       // 修復後重新檢查健康狀態
       await performHealthCheck();
     } catch (error) {
-      console.error('自動修復失敗:', error);
+      log.error('自動修復失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '自動修復失敗',
@@ -329,7 +333,7 @@ const DatabaseMaintenance: React.FC = () => {
         }));
       }
     } catch (error) {
-      console.error('資料庫優化失敗:', error);
+      log.error('資料庫優化失敗:', error);
     } finally {
       setIsOptimizing(false);
     }
@@ -351,7 +355,7 @@ const DatabaseMaintenance: React.FC = () => {
       await performHealthCheck();
       
     } catch (error) {
-      console.error('重建索引失敗:', error);
+      log.error('重建索引失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '索引重建失敗',
@@ -379,7 +383,7 @@ const DatabaseMaintenance: React.FC = () => {
       await performHealthCheck();
       
     } catch (error) {
-      console.error('漸進式清理失敗:', error);
+      log.error('漸進式清理失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '漸進式清理失敗',
@@ -407,7 +411,7 @@ const DatabaseMaintenance: React.FC = () => {
       await performHealthCheck();
       
     } catch (error) {
-      console.error('資料庫整理失敗:', error);
+      log.error('資料庫整理失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '資料庫整理失敗',
@@ -435,7 +439,7 @@ const DatabaseMaintenance: React.FC = () => {
       if (filePath) {
         // 執行備份操作
         await api.database.backup(filePath);
-        console.log('資料庫已成功備份至:', filePath);
+        log.debug('資料庫已成功備份至:', filePath);
         dispatch(addNotification({
           type: 'success',
           title: '備份成功',
@@ -443,10 +447,10 @@ const DatabaseMaintenance: React.FC = () => {
         }));
       } else {
         // 用戶取消了文件選擇
-        console.log('用戶取消了備份操作');
+        log.debug('用戶取消了備份操作');
       }
     } catch (error) {
-      console.error('匯出資料庫失敗:', error);
+      log.error('匯出資料庫失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '備份失敗',
@@ -474,11 +478,11 @@ const DatabaseMaintenance: React.FC = () => {
         setConfirmImport({show: true, filePath: filePath as string});
       } else {
         // 用戶取消了文件選擇
-        console.log('用戶取消了還原操作');
+        log.debug('用戶取消了還原操作');
         setIsImporting(false);
       }
     } catch (error) {
-      console.error('選擇還原檔案失敗:', error);
+      log.error('選擇還原檔案失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '選擇檔案失敗',
@@ -501,7 +505,7 @@ const DatabaseMaintenance: React.FC = () => {
         message: '資料庫統計報告已生成'
       }));
     } catch (error) {
-      console.error('生成報告失敗:', error);
+      log.error('生成報告失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '報告生成失敗',
@@ -528,7 +532,7 @@ const DatabaseMaintenance: React.FC = () => {
       await performHealthCheck();
       
     } catch (error) {
-      console.error('資料庫還原失敗:', error);
+      log.error('資料庫還原失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '還原失敗',
