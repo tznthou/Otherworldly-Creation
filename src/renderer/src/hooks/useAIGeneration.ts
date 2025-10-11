@@ -12,6 +12,10 @@ import { generationExecutor } from '../services/ai-generation/GenerationExecutor
 import { progressManager, type ProgressState } from '../services/ai-generation/ProgressManager';
 
 import type { AIParams } from '../services/ai-generation/ParameterOptimizer';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useAIGeneration');
 
 // 🐛 開發模式 debug logging (生產環境會被優化掉)
 const DEBUG_AI_GENERATION = process.env.NODE_ENV === 'development';
@@ -86,7 +90,7 @@ export function useAIGeneration(): AIGenerationHook {
    */
   const generate = useCallback(async (config: AIGenerationConfig): Promise<void> => {
     if (DEBUG_AI_GENERATION) {
-      console.log('🚀 開始AI生成流程:', config);
+      log.debug('🚀 開始AI生成流程:', config);
     }
     
     // 1. 驗證階段
@@ -182,7 +186,7 @@ export function useAIGeneration(): AIGenerationHook {
         });
 
         if (DEBUG_AI_GENERATION) {
-          console.log(`📋 版本${i + 1}參數:`, optimizedParams);
+          console.log(`📋 版本${i + 1}參數:`, optimizedParams); // TODO: 複雜模式，需人工轉換
         }
       }
 
@@ -233,7 +237,7 @@ export function useAIGeneration(): AIGenerationHook {
       }
 
     } catch (error) {
-      console.error('❌ AI生成流程失敗:', error);
+      log.error('❌ AI生成流程失敗:', error);
 
       // 🎯 智能錯誤分類
       let userFriendlyMessage = '生成文本時發生錯誤';

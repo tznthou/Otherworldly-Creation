@@ -236,7 +236,15 @@
       "Bash(src/renderer/src/components/AI/VisualCreation/panels/BatchExportPanel.tsx )",
       "Bash(src/renderer/src/components/Editor/AIWritingPanel.tsx )",
       "Bash(src/renderer/src/pages/ChapterStatus/ChapterStatusPage.tsx )",
-      "Bash(src/renderer/src/services/imageCompressionService.ts)"
+      "Bash(src/renderer/src/services/imageCompressionService.ts)",
+      "Bash(src/renderer/src/utils/performanceBenchmark.ts )",
+      "Bash(src/renderer/src/utils/performanceLogger.ts)",
+      "Bash(src/renderer/src/hooks/useAIGeneration.ts )",
+      "Bash(src/renderer/src/hooks/useEditorStats.ts )",
+      "Bash(src/renderer/src/hooks/illustration/usePromptIntelligence.ts )",
+      "Bash(src/renderer/src/services/backupService.ts )",
+      "Bash(src/renderer/src/utils/performanceMonitor.ts )",
+      "Bash(src/renderer/src/utils/reactScan.ts)"
     ],
     "deny": [],
     "ask": [],

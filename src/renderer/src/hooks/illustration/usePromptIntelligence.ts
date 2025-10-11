@@ -1,4 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('usePromptIntelligence');
 
 // 提示詞類型
 export type PromptCategory = 'character' | 'scene' | 'style' | 'mood' | 'lighting' | 'composition' | 'quality';
@@ -316,7 +320,7 @@ export function usePromptIntelligence(
         isGeneratingSuggestions: false
       }));
 
-      console.log(`🤖 [PromptIntelligence] 生成 ${suggestions.length} 個建議`);
+      console.log(`🤖 [PromptIntelligence] 生成 ${suggestions.length} 個建議`); // TODO: 複雜模式，需人工轉換
       return suggestions;
 
     } catch (error) {
@@ -347,7 +351,7 @@ export function usePromptIntelligence(
         isAnalyzing: false
       }));
 
-      console.log(`🔍 [PromptIntelligence] 分析完成: ${analysis.confidence * 100}% 信心度`);
+      console.log(`🔍 [PromptIntelligence] 分析完成: ${analysis.confidence * 100}% 信心度`); // TODO: 複雜模式，需人工轉換
       return analysis;
 
     } catch (error) {
@@ -363,7 +367,7 @@ export function usePromptIntelligence(
 
   // 應用建議
   const applySuggestion = useCallback((suggestion: PromptSuggestion) => {
-    console.log(`✨ [PromptIntelligence] 應用建議: ${suggestion.text}`);
+    console.log(`✨ [PromptIntelligence] 應用建議: ${suggestion.text}`); // TODO: 複雜模式，需人工轉換
     
     // 更新使用統計
     setState(prev => ({

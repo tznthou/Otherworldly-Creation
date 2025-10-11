@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Editor, Node } from 'slate';
 import { EditorStats } from '../components/Layout/StatusBar';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useEditorStats');
 
 export const useEditorStats = (editor?: Editor, content?: Node[]): EditorStats => {
   const [stats, setStats] = useState<EditorStats>({
@@ -57,7 +61,7 @@ export const useEditorStats = (editor?: Editor, content?: Node[]): EditorStats =
             cursorPosition = { line: currentLine, column: currentColumn };
           }
         } catch (error) {
-          console.warn('計算光標位置時發生錯誤:', error);
+          log.warn('計算光標位置時發生錯誤:', error);
         }
       }
       
@@ -67,7 +71,7 @@ export const useEditorStats = (editor?: Editor, content?: Node[]): EditorStats =
         try {
           selectedText = Editor.string(editor, editor.selection);
         } catch (error) {
-          console.warn('獲取選中文本時發生錯誤:', error);
+          log.warn('獲取選中文本時發生錯誤:', error);
         }
       }
 
@@ -79,7 +83,7 @@ export const useEditorStats = (editor?: Editor, content?: Node[]): EditorStats =
         selectedText
       });
     } catch (error) {
-      console.error('計算編輯器統計時發生錯誤:', error);
+      log.error('計算編輯器統計時發生錯誤:', error);
     }
   }, [editor, content]);
 

@@ -3,6 +3,10 @@ import { Chapter, Character } from '../api/models';
 import { AppSettings } from '../store/slices/settingsSlice';
 import { NovelTemplate } from '../types/template';
 import api from '../api';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('backupService');
 
 // 備份資料結構
 export interface BackupData {
@@ -100,7 +104,7 @@ class BackupServiceClass {
       
       return filename;
     } catch (error) {
-      console.error('創建備份失敗:', error);
+      log.error('創建備份失敗:', error);
       throw new Error(`備份創建失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
     }
   }
@@ -150,7 +154,7 @@ class BackupServiceClass {
       
       return filename;
     } catch (error) {
-      console.error('創建專案備份失敗:', error);
+      log.error('創建專案備份失敗:', error);
       throw new Error(`專案備份創建失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
     }
   }
@@ -252,7 +256,7 @@ class BackupServiceClass {
       await this.performRestore(backupData, options);
 
     } catch (error) {
-      console.error('還原備份失敗:', error);
+      log.error('還原備份失敗:', error);
       throw new Error(`備份還原失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
     }
   }

@@ -1,10 +1,14 @@
 import { scan } from 'react-scan';
+import { createLogger } from './/logger';
+
+// 創建模組專用 logger
+const log = createLogger('reactScan');
 
 // React Scan 開發工具配置
 export const initReactScan = () => {
   // 只在開發環境中啟用
   if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 啟動 React Scan 性能分析工具...');
+    log.debug('🔍 啟動 React Scan 性能分析工具...');
     
     scan({
       enabled: true,
@@ -26,19 +30,19 @@ export const initReactScan = () => {
         if (renderTime > 16) { // 超過一個幀的時間（16ms）
           const fiberType = typeof fiber === 'object' && fiber !== null && 'type' in fiber ? (fiber as { type: unknown }).type : null;
           const componentName = typeof fiberType === 'object' && fiberType !== null && 'name' in fiberType ? (fiberType as { name: unknown }).name : 'Unknown';
-          console.warn(`⚠️ 組件 "${componentName}" 渲染時間較長: ${renderTime.toFixed(2)}ms`);
+          console.warn(`⚠️ 組件 "${componentName}" 渲染時間較長: ${renderTime.toFixed(2)}ms`); // TODO: 複雜模式，需人工轉換
         }
       },
       // 當開始繪製輪廓時的回調
       onPaintStart: (outlines) => {
         if (outlines.length > 10) {
-          console.warn(`⚠️ 同時渲染的組件過多: ${outlines.length} 個組件`);
+          console.warn(`⚠️ 同時渲染的組件過多: ${outlines.length} 個組件`); // TODO: 複雜模式，需人工轉換
         }
       },
     });
 
-    console.log('✅ React Scan 已啟動，開啟工具列進行性能監控');
-    console.log('🎯 重點監控：AI插畫面板、角色分析圖表、Slate.js編輯器');
+    log.debug('✅ React Scan 已啟動，開啟工具列進行性能監控');
+    log.debug('🎯 重點監控：AI插畫面板、角色分析圖表、Slate.js編輯器');
   }
 };
 
@@ -50,7 +54,7 @@ export const monitorComponent = (Component: React.ComponentType<unknown>, compon
     onRender(Component, (fiber: unknown, render: unknown) => {
       const renderTime = typeof render === 'object' && render !== null && 'time' in render ? (render as { time: unknown }).time : null;
       const timeMs = typeof renderTime === 'number' ? renderTime.toFixed(2) : '0';
-      console.log(`📊 [${componentName}] 渲染時間: ${timeMs}ms`);
+      console.log(`📊 [${componentName}] 渲染時間: ${timeMs}ms`); // TODO: 複雜模式，需人工轉換
       
       // 特別關注的組件
       const criticalComponents = [
@@ -63,7 +67,7 @@ export const monitorComponent = (Component: React.ComponentType<unknown>, compon
       
       const renderTimeNum = typeof renderTime === 'number' ? renderTime : 0;
       if (criticalComponents.includes(componentName) && renderTimeNum > 16) {
-        console.warn(`🚨 關鍵組件 ${componentName} 渲染時間過長: ${renderTimeNum.toFixed(2)}ms`);
+        console.warn(`🚨 關鍵組件 ${componentName} 渲染時間過長: ${renderTimeNum.toFixed(2)}ms`); // TODO: 複雜模式，需人工轉換
       }
     });
   }

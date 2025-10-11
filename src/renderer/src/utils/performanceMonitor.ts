@@ -4,6 +4,10 @@
  */
 
 import React from 'react';
+import { createLogger } from './/logger';
+
+// 創建模組專用 logger
+const log = createLogger('performanceMonitor');
 
 // 性能指標接口
 interface PerformanceMetrics {
@@ -26,7 +30,7 @@ class PerformanceMonitor {
     if (this.enabled) {
       this.setupPerformanceObserver();
       this.startPeriodicReporting();
-      console.log('🔍 性能監控器已啟動');
+      log.debug('🔍 性能監控器已啟動');
     }
   }
 
@@ -40,7 +44,7 @@ class PerformanceMonitor {
         const longTaskObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             if (entry.duration > 50) {
-              console.warn(`⚠️ 檢測到長任務: ${entry.duration.toFixed(2)}ms`, {
+              console.warn(`⚠️ 檢測到長任務: ${entry.duration.toFixed(2)}ms`, { // TODO: 複雜模式，需人工轉換
                 name: entry.name,
                 startTime: entry.startTime,
                 duration: entry.duration
@@ -55,7 +59,7 @@ class PerformanceMonitor {
         const navigationObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             const navEntry = entry as PerformanceNavigationTiming;
-            console.log('📊 導航性能:', {
+            log.debug('📊 導航性能:', {
               domContentLoaded: navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart,
               loadComplete: navEntry.loadEventEnd - navEntry.loadEventStart,
               totalTime: navEntry.loadEventEnd - navEntry.fetchStart
@@ -66,7 +70,7 @@ class PerformanceMonitor {
         navigationObserver.observe({ entryTypes: ['navigation'] });
 
       } catch (error) {
-        console.warn('Performance Observer 設置失敗:', error);
+        log.warn('Performance Observer 設置失敗:', error);
       }
     }
   }
@@ -113,7 +117,7 @@ class PerformanceMonitor {
 
     // 如果渲染時間過長，發出警告
     if (renderTime > 16) {
-      console.warn(`🚨 組件 "${componentName}" 渲染時間過長: ${renderTime.toFixed(2)}ms`);
+      console.warn(`🚨 組件 "${componentName}" 渲染時間過長: ${renderTime.toFixed(2)}ms`); // TODO: 複雜模式，需人工轉換
     }
   }
 
@@ -147,7 +151,7 @@ class PerformanceMonitor {
   clearMetrics() {
     this.metrics.clear();
     this.renderStartTimes.clear();
-    console.log('📊 性能指標已清除');
+    log.debug('📊 性能指標已清除');
   }
 
   /**
@@ -207,13 +211,13 @@ class PerformanceMonitor {
       if (report.length > 0) {
         console.groupCollapsed('📊 性能報告 (最近60秒)');
         
-        console.log('🐌 最慢組件:', this.getSlowestComponents(3));
-        console.log('🔄 最頻繁渲染:', this.getMostRenderedComponents(3));
+        log.debug('🐌 最慢組件:', this.getSlowestComponents(3));
+        log.debug('🔄 最頻繁渲染:', this.getMostRenderedComponents(3));
         
         const memoryUsage = this.getMemoryUsage();
         if (memoryUsage) {
           const usedMB = (memoryUsage.usedJSHeapSize / 1024 / 1024).toFixed(1);
-          console.log(`💾 記憶體使用: ${usedMB}MB`);
+          console.log(`💾 記憶體使用: ${usedMB}MB`); // TODO: 複雜模式，需人工轉換
         }
         
         console.groupEnd();
@@ -277,7 +281,7 @@ export function withPerformanceMonitoring<T extends Record<string, unknown>>(
 // 導出到全局用於調試
 if (typeof window !== 'undefined') {
   (window as Window & { __PERFORMANCE_MONITOR__?: unknown }).__PERFORMANCE_MONITOR__ = performanceMonitor;
-  console.log('🔍 性能監控器已掛載到 window.__PERFORMANCE_MONITOR__');
+  log.debug('🔍 性能監控器已掛載到 window.__PERFORMANCE_MONITOR__');
 }
 
 export default performanceMonitor;
