@@ -3,6 +3,10 @@ import nlp from 'compromise';
 import compromiseDates from 'compromise-dates';
 import compromiseStats from 'compromise-stats';
 import type { Descendant } from 'slate';
+import { createLogger } from './/logger';
+
+// 創建模組專用 logger
+const log = createLogger('nlpUtils');
 
 // 擴展 Compromise 功能
 nlp.plugin(compromiseDates);
@@ -645,7 +649,7 @@ function identifySpeaker(context: string, _dialoguePos: number, _fullText: strin
     
     return inferredSpeaker;
   } catch (error) {
-    console.warn('🚨 [對話分析] 識別說話者時發生錯誤:', error);
+    log.warn('🚨 [對話分析] 識別說話者時發生錯誤:', error);
     return {};
   }
 }
@@ -686,7 +690,7 @@ function extractSpeakerName(speakerText: string): string | undefined {
     
     return undefined;
   } catch (error) {
-    console.warn('🚨 [對話分析] 提取說話者姓名時發生錯誤:', error);
+    log.warn('🚨 [對話分析] 提取說話者姓名時發生錯誤:', error);
     return undefined;
   }
 }
@@ -720,7 +724,7 @@ function inferSpeakerFromContext(context: string, _dialoguePos: number): {
       }
     }
   } catch (error) {
-    console.warn('🚨 [NLP] 推斷說話者時發生錯誤:', error);
+    log.warn('🚨 [NLP] 推斷說話者時發生錯誤:', error);
   }
   
   return {};
@@ -830,38 +834,38 @@ function removeDuplicateDialogues(dialogues: DialogueExtraction[]): DialogueExtr
  */
 export function slateToPlainText(nodes: Descendant[]): string {
   try {
-    console.log('🔄 [文本轉換] 輸入節點:', nodes);
+    log.debug('🔄 [文本轉換] 輸入節點:', nodes);
     
     if (!Array.isArray(nodes)) {
-      console.warn('⚠️ [文本轉換] 輸入不是數組，嘗試轉換:', typeof nodes);
+      log.warn('⚠️ [文本轉換] 輸入不是數組，嘗試轉換:', typeof nodes);
       // 如果不是數組，嘗試包裝成數組
       nodes = [nodes as Descendant];
     }
     
     const result = nodes
       .map((node: Descendant, index) => {
-        console.log(`📝 [文本轉換] 處理節點 ${index}:`, node);
+        log.debug('📝 [文本轉換] 處理節點', { index, node });
         
         if (!node) {
-          console.warn(`⚠️ [文本轉換] 節點 ${index} 為空`);
+          log.warn('⚠️ [文本轉換] 節點為空', { index });
           return '';
         }
         
         // 處理段落類型
         if ((node as SlateElement).type === 'paragraph') {
           const element = node as SlateElement;
-          console.log(`📄 [文本轉換] 段落節點，子元素數量:`, element.children?.length || 0);
+          log.debug(`📄 [文本轉換] 段落節點，子元素數量:`, element.children?.length || 0);
           
           if (!element.children || !Array.isArray(element.children)) {
-            console.warn(`⚠️ [文本轉換] 段落節點沒有有效的children`);
+            log.warn(`⚠️ [文本轉換] 段落節點沒有有效的children`);
             return '';
           }
           
           return element.children
             .map((child: SlateText | SlateElement, childIndex) => {
-              console.log(`  📝 [文本轉換] 子元素 ${childIndex}:`, child);
+              log.debug('  📝 [文本轉換] 子元素', { childIndex, child });
               const text = (child as SlateText).text || '';
-              console.log(`  ✏️ [文本轉換] 提取文本: "${text}"`);
+              log.debug('  ✏️ [文本轉換] 提取文本', { text });
               return text;
             })
             .join('');
@@ -870,23 +874,23 @@ export function slateToPlainText(nodes: Descendant[]): string {
         // 處理其他類型的節點
         if ((node as SlateText).text) {
           const text = (node as SlateText).text;
-          console.log(`📝 [文本轉換] 文本節點: "${text}"`);
+          log.debug('📝 [文本轉換] 文本節點', { text });
           return text;
         }
         
-        console.warn(`⚠️ [文本轉換] 未知節點類型:`, node);
+        log.warn(`⚠️ [文本轉換] 未知節點類型:`, node);
         return '';
       })
       .join('\n');
     
-    console.log('✅ [文本轉換] 轉換完成，結果長度:', result.length);
-    console.log('📄 [文本轉換] 轉換結果預覽:', result.substring(0, 200));
+    log.debug('✅ [文本轉換] 轉換完成，結果長度:', result.length);
+    log.debug('📄 [文本轉換] 轉換結果預覽:', result.substring(0, 200));
     
     return result;
     
   } catch (error) {
-    console.error('💥 [文本轉換] 轉換失敗:', error);
-    console.error('💥 [文本轉換] 輸入數據:', nodes);
+    log.error('💥 [文本轉換] 轉換失敗:', error);
+    log.error('💥 [文本轉換] 輸入數據:', nodes);
     return '';
   }
 }
@@ -1208,7 +1212,7 @@ export function trackForeshadowing(text: string): ForeshadowingAnalysis {
  * 執行完整的劇情分析
  */
 export function analyzePlot(text: string): PlotAnalysis {
-  console.log('🎭 開始劇情分析...');
+  log.debug('🎭 開始劇情分析...');
   
   const conflicts = detectConflictPoints(text);
   const pace = analyzePace(text);
@@ -1243,7 +1247,7 @@ export function analyzePlot(text: string): PlotAnalysis {
     recommendations.push(`發現 ${foreshadowing.orphanedSetups.length} 個未回收的伏筆，建議安排回收`);
   }
   
-  console.log('✅ 劇情分析完成', {
+  log.debug('✅ 劇情分析完成', {
     衝突點: conflicts.length,
     節奏評分: pace.paceScore,
     伏筆設置: foreshadowing.setups.length,
