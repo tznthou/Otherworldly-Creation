@@ -1,5 +1,9 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import ErrorFallback from './ErrorFallback';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('SimpleErrorBoundary');
 
 interface Props {
   children: ReactNode;
@@ -22,7 +26,7 @@ class SimpleErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    log.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
   override render() {

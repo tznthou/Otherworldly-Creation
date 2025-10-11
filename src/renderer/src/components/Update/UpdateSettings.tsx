@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, Settings, Bell, Download, Shield } from 'lucide-react';
 import api from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('UpdateSettings');
 
 interface UpdateSettings {
   autoCheck: boolean;
@@ -34,7 +38,7 @@ const UpdateSettings: React.FC = () => {
         setLastCheckTime(new Date(appSettings.lastUpdateCheck).toLocaleString('zh-TW'));
       }
     } catch (error) {
-      console.error('載入更新設置失敗:', error);
+      log.error('載入更新設置失敗:', error);
     }
   }, [settings]);
 
@@ -43,7 +47,7 @@ const UpdateSettings: React.FC = () => {
       const version = await api.system.getAppVersion();
       setCurrentVersion(version);
     } catch (error) {
-      console.error('獲取版本失敗:', error);
+      log.error('獲取版本失敗:', error);
     }
   };
 
@@ -61,7 +65,7 @@ const UpdateSettings: React.FC = () => {
       setSettings(newSettings);
       setLastCheckTime(new Date().toLocaleString('zh-TW'));
     } catch (error) {
-      console.error('保存更新設置失敗:', error);
+      log.error('保存更新設置失敗:', error);
     }
   };
 
@@ -76,7 +80,7 @@ const UpdateSettings: React.FC = () => {
       await api.updates.checkForUpdates();
       setLastCheckTime(new Date().toLocaleString('zh-TW'));
     } catch (error) {
-      console.error('手動檢查更新失敗:', error);
+      log.error('手動檢查更新失敗:', error);
     } finally {
       setIsChecking(false);
     }

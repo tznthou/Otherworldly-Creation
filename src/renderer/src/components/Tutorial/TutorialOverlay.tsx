@@ -2,6 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import CosmicButton from '../UI/CosmicButton';
 import { useNotification } from '../UI/NotificationSystem';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('TutorialOverlay');
 
 export interface TutorialStep {
   id: string;
@@ -134,11 +138,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   };
 
   if (!isActive || !currentStepData) {
-    console.log('Tutorial not active:', { isActive, currentStepData });
+    log.debug('Tutorial not active:', { isActive, currentStepData });
     return null;
   }
   
-  console.log('Tutorial is active:', { isActive, currentStepData });
+  log.debug('Tutorial is active:', { isActive, currentStepData });
 
   const overlayContent = (
     <>

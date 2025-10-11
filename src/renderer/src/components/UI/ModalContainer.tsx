@@ -20,6 +20,10 @@ import PDFGenerationModal from '../Modals/PDFGenerationModal';
 import AiIllustrationModal from '../Modals/AiIllustrationModal';
 import CharacterAnalysisModal from '../Modals/CharacterAnalysisModal';
 import PlotAnalysisModal from '../Modals/PlotAnalysisModal';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ModalContainer');
 
 const ModalContainer: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -29,13 +33,13 @@ const ModalContainer: React.FC = () => {
 
   // 調試日誌：追蹤 modal 狀態變化
   React.useEffect(() => {
-    console.log('🔄 [ModalContainer] Modal 狀態更新:', {
+    log.debug('🔄 [ModalContainer] Modal 狀態更新:', {
       aiIllustration: modals.aiIllustration,
       allModals: modals
     });
     
     // 強制顯示當前所有 modal 狀態
-    console.log('🎯 [ModalContainer] 當前所有 modal 狀態:', JSON.stringify(modals, null, 2));
+    log.debug('🎯 [ModalContainer] 當前所有 modal 狀態:', JSON.stringify(modals, null, 2));
   }, [modals]);
 
 
@@ -51,7 +55,7 @@ const ModalContainer: React.FC = () => {
       // Redux state 已經通過 updateChapter 更新了
       
     } catch (error) {
-      console.error('重新排序章節失敗:', error);
+      log.error('重新排序章節失敗:', error);
     }
   }, [dispatch]);
 

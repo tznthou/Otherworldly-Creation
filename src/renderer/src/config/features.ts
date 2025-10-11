@@ -1,4 +1,8 @@
 /**
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('features');
  * 功能開關配置
  * 
  * 用於控制實驗性功能和新功能的啟用/停用
@@ -11,11 +15,11 @@ const getSettingsFeatureFlags = () => {
     const stored = localStorage.getItem('genesis-chronicle-settings');
     if (stored) {
       const settings = JSON.parse(stored);
-      console.log('📖 [FeatureFlags] 讀取設定:', settings.features);
+      log.debug('📖 [FeatureFlags] 讀取設定:', settings.features);
       return settings.features || {};
     }
   } catch (error) {
-    console.warn('無法讀取設定中的功能開關:', error);
+    log.warn('無法讀取設定中的功能開關:', error);
   }
   return {};
 };
@@ -80,7 +84,7 @@ class FeatureFlagsManager {
   // 調試日志函數
   debugLog(message: string, ...args: unknown[]) {
     if (this._flags.DEBUG_ILLUSTRATION_SERVICES) {
-      console.log(`[IllustrationServices] ${message}`, ...args);
+      console.log(`[IllustrationServices] ${message}`, ...args); // TODO: 複雜模式，需人工轉換
     }
   }
 }
@@ -101,13 +105,13 @@ export const debugLog = (message: string, ...args: unknown[]) => {
 // 監聽設定變更事件，自動重載功能開關
 window.addEventListener('settings-updated', () => {
   featureFlagsManager.reload();
-  console.log('🔄 功能開關已重新載入');
+  log.debug('🔄 功能開關已重新載入');
 });
 
 // 也監聽 localStorage 變更作為後備
 window.addEventListener('storage', (event) => {
   if (event.key === 'genesis-chronicle-settings') {
     featureFlagsManager.reload();
-    console.log('🔄 功能開關已重新載入 (storage event)');
+    log.debug('🔄 功能開關已重新載入 (storage event)');
   }
 });

@@ -1,3 +1,8 @@
+import { createLogger } from './logger';
+
+// 創建模組專用 logger
+const log = createLogger('dateUtils');
+
 /**
  * 日期格式化工具函數
  */
@@ -60,7 +65,7 @@ export function formatDate(
     // 使用 undefined 讓瀏覽器自動檢測用戶的語言和時區設定
     return date.toLocaleDateString(undefined, options);
   } catch (error) {
-    console.error('Date formatting error:', error);
+    log.error('Date formatting error:', error);
     return '無效日期';
   }
 }
@@ -83,7 +88,7 @@ export function formatDateTime(
     // JavaScript 會自動處理 UTC 到本地時區的轉換
     return date.toLocaleString(undefined, options);
   } catch (error) {
-    console.error('DateTime formatting error:', error);
+    log.error('DateTime formatting error:', error);
     return '無效日期時間';
   }
 }
