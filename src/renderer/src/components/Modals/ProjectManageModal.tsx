@@ -4,6 +4,10 @@ import { updateProject, deleteProject } from '../../store/slices/projectsSlice';
 import { closeModal } from '../../store/slices/uiSlice';
 import { Project } from '../../store/slices/projectsSlice';
 import ConfirmDialog from '../UI/ConfirmDialog';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ProjectManageModal');
 
 interface ProjectManageModalProps {
   project: Project;
@@ -62,7 +66,7 @@ const ProjectManageModal: React.FC<ProjectManageModalProps> = ({ project }) => {
 
       handleClose();
     } catch (error) {
-      console.error('更新專案失敗:', error);
+      log.error('更新專案失敗:', error);
       setErrors({
         name: '更新專案失敗，請稍後再試',
       });
@@ -78,7 +82,7 @@ const ProjectManageModal: React.FC<ProjectManageModalProps> = ({ project }) => {
       await dispatch(deleteProject(project.id)).unwrap();
       handleClose();
     } catch (error) {
-      console.error('刪除專案失敗:', error);
+      log.error('刪除專案失敗:', error);
     } finally {
       setIsSubmitting(false);
       setShowDeleteConfirm(false);

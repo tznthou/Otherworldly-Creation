@@ -5,6 +5,10 @@ import { addNotification } from '../../store/slices/uiSlice';
 import { EPubService, EPubGenerationProgress } from '../../services/epubService';
 import { api } from '../../api';
 import type { EPubGenerationOptions } from '../../api/models';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('EPubGenerationModal');
 
 const EPubGenerationModal: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -37,7 +41,7 @@ const EPubGenerationModal: React.FC = () => {
       const result = await EPubService.validateProject(selectedProjectId);
       setValidation(result);
     } catch (error) {
-      console.error('專案驗證失敗:', error);
+      log.error('專案驗證失敗:', error);
     }
   }, [selectedProjectId]);
 
@@ -78,7 +82,7 @@ const EPubGenerationModal: React.FC = () => {
     setProgress(null);
 
     try {
-      console.log('🌟 開始展開虛數空間，專案 ID:', selectedProjectId);
+      log.debug('🌟 開始展開虛數空間，專案 ID:', selectedProjectId);
       const result = await EPubService.generateEPub(
         selectedProjectId,
         options,
@@ -107,7 +111,7 @@ const EPubGenerationModal: React.FC = () => {
             message: '下載資料夾已在 Finder 中開啟'
           }));
         } catch (error) {
-          console.error('開啟檔案夾失敗:', error);
+          log.error('開啟檔案夾失敗:', error);
           dispatch(addNotification({
             type: 'info',
             title: '📁 檔案已保存',
@@ -122,7 +126,7 @@ const EPubGenerationModal: React.FC = () => {
       }, 3000);
 
     } catch (error) {
-      console.error('次元物語展開失敗:', error);
+      log.error('次元物語展開失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '虛數空間展開失敗',

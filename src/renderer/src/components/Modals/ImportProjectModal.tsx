@@ -2,6 +2,10 @@ import React, { useState, useRef } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { createProject } from '../../store/slices/projectsSlice';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ImportProjectModal');
 
 const ImportProjectModal: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -119,7 +123,7 @@ const ImportProjectModal: React.FC = () => {
 
       handleClose();
     } catch (error) {
-      console.error('匯入專案失敗:', error);
+      log.error('匯入專案失敗:', error);
       setError('匯入專案失敗，請稍後再試');
     } finally {
       setIsSubmitting(false);

@@ -4,6 +4,10 @@ import { createProject } from '../../store/slices/projectsSlice';
 import { closeModal } from '../../store/slices/uiSlice';
 import { fetchAvailableModels } from '../../store/slices/aiSlice';
 import { fetchAllTemplates } from '../../store/slices/templatesSlice';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CreateProjectModal');
 
 interface ProjectType {
   id: 'isekai' | 'school' | 'scifi' | 'fantasy';
@@ -106,7 +110,7 @@ interface AISettings {
 }
 
 const CreateProjectModal: React.FC = () => {
-  console.log('CreateProjectModal 被渲染');
+  log.debug('CreateProjectModal 被渲染');
   const dispatch = useAppDispatch();
   const { availableModels, isOllamaConnected } = useAppSelector(state => state.ai);
   
@@ -282,17 +286,17 @@ const CreateProjectModal: React.FC = () => {
         );
 
         if (!applicationResult.success) {
-          console.warn('模板應用失敗:', applicationResult.message);
+          log.warn('模板應用失敗:', applicationResult.message);
           // 不阻止專案創建，只是記錄警告
         }
       } catch (templateError) {
-        console.error('應用模板失敗:', templateError);
+        log.error('應用模板失敗:', templateError);
         // 不阻止專案創建，模板應用失敗不影響專案創建
       }
 
       handleClose();
     } catch (error) {
-      console.error('創建專案失敗:', error);
+      log.error('創建專案失敗:', error);
       setErrors({
         name: '創建專案失敗，請稍後再試',
       });

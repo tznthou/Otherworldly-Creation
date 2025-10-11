@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { createChapter } from '../../store/slices/chaptersSlice';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CreateChapterModal');
 
 interface CreateChapterModalProps {
   projectId: string;
@@ -56,7 +60,7 @@ const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
 
       handleClose();
     } catch (error) {
-      console.error('創建章節失敗:', error);
+      log.error('創建章節失敗:', error);
       setErrors({
         title: '創建章節失敗，請稍後再試',
       });

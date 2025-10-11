@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
 import api from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('BackupManagerModal');
 
 const BackupManagerModal: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -44,7 +48,7 @@ const BackupManagerModal: React.FC = () => {
       
       setMessage({ type: 'success', text: `備份已成功建立至：${saveResult.filePath || saveResult.filePath}` });
     } catch (error: unknown) {
-      console.error('備份失敗:', error);
+      log.error('備份失敗:', error);
       setMessage({ type: 'error', text: (error as Error)?.message || '備份建立失敗，請稍後再試' });
     } finally {
       setIsBackingUp(false);
@@ -85,7 +89,7 @@ const BackupManagerModal: React.FC = () => {
         window.location.reload();
       }, 2000);
     } catch (error: unknown) {
-      console.error('還原失敗:', error);
+      log.error('還原失敗:', error);
       setMessage({ type: 'error', text: (error as Error)?.message || '還原失敗，請稍後再試' });
     } finally {
       setIsRestoring(false);

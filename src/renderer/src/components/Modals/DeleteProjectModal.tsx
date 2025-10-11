@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { deleteProject } from '../../store/slices/projectsSlice';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('DeleteProjectModal');
 
 const DeleteProjectModal: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -29,7 +33,7 @@ const DeleteProjectModal: React.FC = () => {
       
       handleClose();
     } catch (error) {
-      console.error('刪除專案失敗:', error);
+      log.error('刪除專案失敗:', error);
       
       dispatch(addNotification({
         type: 'error',
