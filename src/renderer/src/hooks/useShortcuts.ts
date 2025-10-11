@@ -1,6 +1,10 @@
 import { useEffect, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from './redux';
 import { openModal } from '../store/slices/uiSlice';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useShortcuts');
 
 /**
  * 全局快捷鍵管理 Hook
@@ -36,7 +40,7 @@ export const useShortcuts = () => {
 
   // 快捷鍵處理函數
   const handleShortcut = useCallback((action: string) => {
-    console.log(`執行快捷鍵動作: ${action}`);
+    console.log(`執行快捷鍵動作: ${action}`); // TODO: 複雜模式，需人工轉換
     
     switch (action) {
       case 'save':
@@ -50,7 +54,7 @@ export const useShortcuts = () => {
         
       case 'openProject':
         // TODO: 實現開啟專案對話框
-        console.log('開啟專案功能待實現');
+        log.debug('開啟專案功能待實現');
         break;
         
       case 'aiContinue':
@@ -93,7 +97,7 @@ export const useShortcuts = () => {
         break;
         
       default:
-        console.warn(`未知的快捷鍵動作: ${action}`);
+        console.warn(`未知的快捷鍵動作: ${action}`); // TODO: 複雜模式，需人工轉換
     }
   }, [dispatch]);
 

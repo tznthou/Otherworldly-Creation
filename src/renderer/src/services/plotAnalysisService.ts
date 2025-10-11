@@ -11,6 +11,10 @@ import {
   ForeshadowingAnalysis
 } from '../utils/nlpUtils';
 import { slateToPlainText } from '../utils/nlpUtils';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('plotAnalysisService');
 
 /**
  * 劇情分析服務 - 整合劇情分析功能的統一入口
@@ -20,13 +24,13 @@ export class PlotAnalysisService {
    * 分析單個章節的劇情
    */
   static analyzeChapterPlot(chapterContent: Descendant[]): PlotAnalysis {
-    console.log('📖 開始章節劇情分析...');
+    log.debug('📖 開始章節劇情分析...');
     
     // 將 Slate.js 內容轉換為純文字
     const plainText = slateToPlainText(chapterContent);
     
     if (!plainText || plainText.length < 100) {
-      console.warn('⚠️ 章節內容過短，跳過劇情分析');
+      log.warn('⚠️ 章節內容過短，跳過劇情分析');
       return this.getEmptyAnalysis();
     }
     
@@ -38,7 +42,7 @@ export class PlotAnalysisService {
    * 分析專案整體劇情
    */
   static analyzeProjectPlot(chapters: Array<{ content: Descendant[] }>): PlotAnalysis {
-    console.log('📚 開始專案整體劇情分析...');
+    log.debug('📚 開始專案整體劇情分析...');
     
     // 合併所有章節內容
     const allContent = chapters
@@ -47,7 +51,7 @@ export class PlotAnalysisService {
       .join('\n\n');
     
     if (!allContent || allContent.length < 500) {
-      console.warn('⚠️ 專案內容過少，無法進行有效的劇情分析');
+      log.warn('⚠️ 專案內容過少，無法進行有效的劇情分析');
       return this.getEmptyAnalysis();
     }
     
@@ -80,7 +84,7 @@ export class PlotAnalysisService {
    * 批量分析多個章節的劇情趨勢
    */
   static analyzeChapterTrends(chapters: Array<{ id: string; title: string; content: Descendant[] }>): ChapterTrendAnalysis[] {
-    console.log('📈 開始章節劇情趨勢分析...');
+    log.debug('📈 開始章節劇情趨勢分析...');
     
     return chapters.map((chapter, index) => {
       const plainText = slateToPlainText(chapter.content);

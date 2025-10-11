@@ -2,21 +2,25 @@ import React from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
 import { VisualCreationCenter } from '../AI/VisualCreation';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('AiIllustrationModal');
 
 const AiIllustrationModal: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const handleClose = () => {
-    console.log('🚪 [AiIllustrationModal] 用戶主動關閉模態框');
+    log.debug('🚪 [AiIllustrationModal] 用戶主動關閉模態框');
     dispatch(closeModal('aiIllustration'));
   };
 
   // 調試：確認組件渲染（僅在組件首次渲染時）
   React.useEffect(() => {
-    console.log('🎨 [AiIllustrationModal] 組件已掛載');
+    log.debug('🎨 [AiIllustrationModal] 組件已掛載');
     return () => {
-      console.log('🎨 [AiIllustrationModal] 組件即將卸載');
-      console.warn('⚠️ 如果這不是用戶主動關閉，可能存在意外的模態框關閉');
+      log.debug('🎨 [AiIllustrationModal] 組件即將卸載');
+      log.warn('⚠️ 如果這不是用戶主動關閉，可能存在意外的模態框關閉');
     };
   }, []);
 
@@ -25,7 +29,7 @@ const AiIllustrationModal: React.FC = () => {
   
   React.useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      console.error('🚨 [AiIllustrationModal] 捕獲錯誤:', event.error);
+      log.error('🚨 [AiIllustrationModal] 捕獲錯誤:', event.error);
       setHasError(true);
     };
     

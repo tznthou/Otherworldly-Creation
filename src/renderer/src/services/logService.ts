@@ -1,4 +1,8 @@
 import { debug, info, warn, error as logError, trace, attachConsole } from '@tauri-apps/plugin-log';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('logService');
 
 /**
  * 敏感資訊過濾器
@@ -67,7 +71,7 @@ export class LogService {
     if (!this.consoleAttached) {
       attachConsole();
       this.consoleAttached = true;
-      console.log('📝 [LogService] 日誌系統已初始化，所有 console.* 自動轉發到日誌檔案');
+      log.debug('📝 [LogService] 日誌系統已初始化，所有 console.* 自動轉發到日誌檔案');
     }
   }
 
@@ -81,7 +85,7 @@ export class LogService {
     const logMessage = this.formatMessage(component, sanitizedMessage, sanitizedData);
 
     if (!this.isProduction) {
-      console.log(`🔍 [DEBUG] ${logMessage}`, sanitizedData || '');
+      console.log(`🔍 [DEBUG] ${logMessage}`, sanitizedData || ''); // TODO: 複雜模式，需人工轉換
     }
 
     debug(logMessage);
@@ -96,7 +100,7 @@ export class LogService {
     const sanitizedData = data ? SensitiveDataFilter.sanitizeObject(data) : undefined;
     const logMessage = this.formatMessage(component, sanitizedMessage, sanitizedData);
 
-    console.log(`ℹ️ [INFO] ${logMessage}`, sanitizedData || '');
+    console.log(`ℹ️ [INFO] ${logMessage}`, sanitizedData || ''); // TODO: 複雜模式，需人工轉換
     info(logMessage);
   }
 
@@ -109,7 +113,7 @@ export class LogService {
     const sanitizedData = data ? SensitiveDataFilter.sanitizeObject(data) : undefined;
     const logMessage = this.formatMessage(component, sanitizedMessage, sanitizedData);
 
-    console.warn(`⚠️ [WARN] ${logMessage}`, sanitizedData || '');
+    console.warn(`⚠️ [WARN] ${logMessage}`, sanitizedData || ''); // TODO: 複雜模式，需人工轉換
     warn(logMessage);
   }
 
@@ -125,7 +129,7 @@ export class LogService {
     const sanitizedError = SensitiveDataFilter.sanitizeObject(errorInfo);
     const logMessage = this.formatMessage(component, sanitizedMessage, sanitizedError);
 
-    console.error(`❌ [ERROR] ${logMessage}`, sanitizedError || '');
+    console.error(`❌ [ERROR] ${logMessage}`, sanitizedError || ''); // TODO: 複雜模式，需人工轉換
     logError(logMessage);
   }
 

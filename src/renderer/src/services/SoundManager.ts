@@ -1,4 +1,8 @@
 class SoundManager {
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('SoundManager');
   private context: AudioContext | null = null;
   private sounds: Map<string, AudioBuffer> = new Map();
   private enabled: boolean = true;
@@ -14,13 +18,13 @@ class SoundManager {
       const AudioCtx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       this.context = new AudioCtx();
     } catch (error) {
-      console.warn('無法初始化 AudioContext:', error);
+      log.warn('無法初始化 AudioContext:', error);
     }
   }
 
   async loadSound(name: string, url: string): Promise<void> {
     if (!this.context) {
-      console.warn('AudioContext 未初始化，無法載入音效');
+      log.warn('AudioContext 未初始化，無法載入音效');
       return;
     }
 
@@ -30,7 +34,7 @@ class SoundManager {
       const audioBuffer = await this.context.decodeAudioData(arrayBuffer);
       this.sounds.set(name, audioBuffer);
     } catch (error) {
-      console.warn(`載入音效失敗: ${name}`, error);
+      console.warn(`載入音效失敗: ${name}`, error); // TODO: 複雜模式，需人工轉換
     }
   }
 
@@ -59,7 +63,7 @@ class SoundManager {
       // 播放音效
       source.start();
     } catch (error) {
-      console.warn(`播放音效失敗: ${name}`, error);
+      console.warn(`播放音效失敗: ${name}`, error); // TODO: 複雜模式，需人工轉換
     }
   }
 
@@ -91,7 +95,7 @@ class SoundManager {
       oscillator.start(this.context.currentTime);
       oscillator.stop(this.context.currentTime + duration);
     } catch (error) {
-      console.warn('生成音效失敗:', error);
+      log.warn('生成音效失敗:', error);
     }
   }
 
@@ -150,7 +154,7 @@ class SoundManager {
   async preloadDefaultSounds(): Promise<void> {
     // 這個方法可以在應用啟動時調用來預載入常用音效
     // 由於我們使用生成音效，不需要實際載入文件
-    console.log('SoundManager: 準備就緒，支援生成音效');
+    log.debug('SoundManager: 準備就緒，支援生成音效');
   }
 }
 
