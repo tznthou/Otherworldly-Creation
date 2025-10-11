@@ -2,6 +2,10 @@ import React, { memo, useCallback, useState } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { useBatchExportProcessor } from '../../../../hooks/illustration/useBatchExportProcessor';
 import type { ExportFormat, ExportTaskStatus, OrganizationMethod } from '../../../../hooks/illustration/useExportManager';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('BatchExportPanel');
 
 interface BatchExportPanelProps {
   className?: string;
@@ -41,13 +45,13 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
     autoStart: false,
     enableBackgroundProcessing: false,
     onTaskComplete: (task) => {
-      console.log(`✅ 導出完成: ${task.fileName}`);
+      console.log(`✅ 導出完成: ${task.fileName}`); // TODO: 複雜模式，需人工轉換
     },
     onTaskFailed: (task, error) => {
-      console.error(`❌ 導出失敗: ${task.fileName} - ${error}`);
+      console.error(`❌ 導出失敗: ${task.fileName} - ${error}`); // TODO: 複雜模式，需人工轉換
     },
     onBatchComplete: (total, completed, failed) => {
-      console.log(`🎉 批次導出完成: ${completed}/${total} 成功, ${failed} 失敗`);
+      console.log(`🎉 批次導出完成: ${completed}/${total} 成功, ${failed} 失敗`); // TODO: 複雜模式，需人工轉換
     }
   });
 
@@ -70,7 +74,7 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
       if (isUuidFilename) {
         // 🔧 修復：對於批次導出，直接使用檔名（後端會處理路徑解析）
         // 這裡不需要異步處理，因為批次導出器會在處理時動態解析路徑
-        console.log('🔧 [BatchExportPanel] 檢測到UUID檔名，交由後端處理:', url);
+        log.debug('🔧 [BatchExportPanel] 檢測到UUID檔名，交由後端處理:', url);
         return url; // 直接返回檔名，讓後端處理
       }
       // 其他檔案直接轉換
@@ -119,7 +123,7 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
   const handleSelectDirectory = useCallback(async (): Promise<string | null> => {
     const selectedPath = await selectOutputDirectory();
     if (selectedPath) {
-      console.log(`📁 [BatchExportPanel] 目錄選擇成功: ${selectedPath}`);
+      console.log(`📁 [BatchExportPanel] 目錄選擇成功: ${selectedPath}`); // TODO: 複雜模式，需人工轉換
     }
     return selectedPath;
   }, [selectOutputDirectory]);
@@ -138,7 +142,7 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
   // 調試信息
   React.useEffect(() => {
     const savedDirectory = localStorage.getItem('exportOutputDirectory');
-    console.log('🐛 [BatchExportPanel] State Debug:', {
+    log.debug('🐛 [BatchExportPanel] State Debug:', {
       outputDirectory: state.config.outputDirectory,
       defaultFormat: state.config.defaultFormat,
       defaultQuality: state.config.defaultQuality,
@@ -154,15 +158,15 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
   const handleAddSelectedImagesWithCheck = useCallback(async () => {
     // 先檢查是否有有效的輸出目錄
     if (!hasValidOutputPath) {
-      console.log('🔔 [BatchExportPanel] 沒有輸出目錄，先選擇目錄');
+      log.debug('🔔 [BatchExportPanel] 沒有輸出目錄，先選擇目錄');
       const selectedPath = await handleSelectDirectory();
       if (!selectedPath) {
-        console.log('❌ [BatchExportPanel] 用戶取消選擇目錄');
+        log.debug('❌ [BatchExportPanel] 用戶取消選擇目錄');
         return; // 用戶取消選擇，不添加圖片
       }
       // 等待狀態更新完成
       await new Promise(resolve => setTimeout(resolve, 200));
-      console.log('✅ [BatchExportPanel] 目錄選擇完成，狀態已更新');
+      log.debug('✅ [BatchExportPanel] 目錄選擇完成，狀態已更新');
     }
 
     const imagesToAdd = availableImages.filter(img => selectedImageIds.includes(img.id));
@@ -176,15 +180,15 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
   const handleAddAllImagesWithCheck = useCallback(async () => {
     // 先檢查是否有有效的輸出目錄
     if (!hasValidOutputPath) {
-      console.log('🔔 [BatchExportPanel] 沒有輸出目錄，先選擇目錄');
+      log.debug('🔔 [BatchExportPanel] 沒有輸出目錄，先選擇目錄');
       const selectedPath = await handleSelectDirectory();
       if (!selectedPath) {
-        console.log('❌ [BatchExportPanel] 用戶取消選擇目錄');
+        log.debug('❌ [BatchExportPanel] 用戶取消選擇目錄');
         return; // 用戶取消選擇，不添加圖片
       }
       // 等待狀態更新完成
       await new Promise(resolve => setTimeout(resolve, 200));
-      console.log('✅ [BatchExportPanel] 目錄選擇完成，狀態已更新');
+      log.debug('✅ [BatchExportPanel] 目錄選擇完成，狀態已更新');
     }
 
     addMultipleImages(availableImages.map(img => ({
@@ -197,16 +201,16 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
   // 顯示導出確認對話框
   const handleShowExportConfirm = useCallback(() => {
     if (!hasPendingTasks) {
-      console.log('❌ [BatchExportPanel] 沒有待處理任務');
+      log.debug('❌ [BatchExportPanel] 沒有待處理任務');
       return;
     }
     if (!hasValidOutputPath) {
-      console.log('❌ [BatchExportPanel] 沒有有效的輸出路徑');
+      log.debug('❌ [BatchExportPanel] 沒有有效的輸出路徑');
       return;
     }
 
     // 調試：顯示當前配置狀態
-    console.log('📊 [BatchExportPanel] 顯示確認對話框，當前配置:', {
+    log.debug('📊 [BatchExportPanel] 顯示確認對話框，當前配置:', {
       outputDirectory: state.config.outputDirectory,
       defaultFormat: state.config.defaultFormat,
       defaultQuality: state.config.defaultQuality,
@@ -647,7 +651,7 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
                       onClick={async () => {
                         const newPath = await handleSelectDirectory();
                         if (newPath) {
-                          console.log('✅ [BatchExportPanel] 確認對話框中更換目錄成功:', newPath);
+                          log.debug('✅ [BatchExportPanel] 確認對話框中更換目錄成功:', newPath);
                         }
                       }}
                       className="text-xs text-gold-600 hover:text-gold-700 font-medium"

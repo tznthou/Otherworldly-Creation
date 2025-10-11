@@ -232,7 +232,11 @@
       "Bash(src/renderer/src/pages/Settings/hooks/useSettingsActions.ts )",
       "Bash(src/renderer/src/hooks/illustration/useExportManager.ts )",
       "Bash(src/renderer/src/hooks/useI18n.ts )",
-      "Bash(src/renderer/src/services/imageGenerationService.ts)"
+      "Bash(src/renderer/src/services/imageGenerationService.ts)",
+      "Bash(src/renderer/src/components/AI/VisualCreation/panels/BatchExportPanel.tsx )",
+      "Bash(src/renderer/src/components/Editor/AIWritingPanel.tsx )",
+      "Bash(src/renderer/src/pages/ChapterStatus/ChapterStatusPage.tsx )",
+      "Bash(src/renderer/src/services/imageCompressionService.ts)"
     ],
     "deny": [],
     "ask": [],

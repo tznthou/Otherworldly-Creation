@@ -1,4 +1,8 @@
 import type { ExportQuality, ExportFormat, ResizeOptions } from '../hooks/illustration/useExportManager';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('imageCompressionService');
 
 /**
  * 圖片壓縮服務
@@ -25,14 +29,14 @@ export class ImageCompressionService {
     canvas: HTMLCanvasElement,
     quality: ExportQuality
   ): Promise<Blob> {
-    console.log(`🔄 [ImageCompressionService] 開始壓縮圖片: ${quality.format}, 品質: ${quality.quality}`);
+    console.log(`🔄 [ImageCompressionService] 開始壓縮圖片: ${quality.format}, 品質: ${quality.quality}`); // TODO: 複雜模式，需人工轉換
 
     let processedCanvas = canvas;
 
     // 1. 調整尺寸（如需要）
     if (quality.resize?.enabled) {
       processedCanvas = await this.resizeCanvas(canvas, quality.resize);
-      console.log(`📐 [ImageCompressionService] 尺寸調整完成: ${processedCanvas.width}x${processedCanvas.height}`);
+      console.log(`📐 [ImageCompressionService] 尺寸調整完成: ${processedCanvas.width}x${processedCanvas.height}`); // TODO: 複雜模式，需人工轉換
     }
 
     // 2. 根據格式選擇壓縮策略
@@ -51,7 +55,7 @@ export class ImageCompressionService {
         throw new Error(`不支援的格式: ${quality.format}`);
     }
 
-    console.log(`✅ [ImageCompressionService] 壓縮完成: ${result.size} bytes (${result.type})`);
+    console.log(`✅ [ImageCompressionService] 壓縮完成: ${result.size} bytes (${result.type})`); // TODO: 複雜模式，需人工轉換
     return result;
   }
 
@@ -124,7 +128,7 @@ export class ImageCompressionService {
 
     // PNG 特殊處理：色彩量化（如果啟用調色板優化）
     if (quality.advanced?.optimizePalette) {
-      console.log('🎨 [ImageCompressionService] 執行 PNG 調色板優化');
+      log.debug('🎨 [ImageCompressionService] 執行 PNG 調色板優化');
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const optimizedImageData = this.quantizeColors(imageData, 256);
       ctx.putImageData(optimizedImageData, 0, 0);
@@ -153,7 +157,7 @@ export class ImageCompressionService {
 
     // 如果有目標檔案大小，使用二分法找最佳品質
     if (targetFileSize) {
-      console.log(`🎯 [ImageCompressionService] 使用目標檔案大小優化: ${targetFileSize} bytes`);
+      console.log(`🎯 [ImageCompressionService] 使用目標檔案大小優化: ${targetFileSize} bytes`); // TODO: 複雜模式，需人工轉換
       return await this.optimizeForTargetSize(canvas, 'image/jpeg', targetFileSize);
     }
 
@@ -181,13 +185,13 @@ export class ImageCompressionService {
 
     // 檢查 WebP 支援
     if (!this.isWebPSupported()) {
-      console.warn('⚠️ [ImageCompressionService] WebP 不支援，降級到 JPEG');
+      log.warn('⚠️ [ImageCompressionService] WebP 不支援，降級到 JPEG');
       return await this.compressJPEG(canvas, { ...quality, format: 'jpg' });
     }
 
     // 如果有目標檔案大小
     if (targetFileSize) {
-      console.log(`🎯 [ImageCompressionService] 使用目標檔案大小優化: ${targetFileSize} bytes`);
+      console.log(`🎯 [ImageCompressionService] 使用目標檔案大小優化: ${targetFileSize} bytes`); // TODO: 複雜模式，需人工轉換
       return await this.optimizeForTargetSize(canvas, 'image/webp', targetFileSize);
     }
 
@@ -223,7 +227,7 @@ export class ImageCompressionService {
       });
 
       if (blob) {
-        console.log(`🔍 [ImageCompressionService] 嘗試品質 ${(mid * 100).toFixed(1)}%: ${blob.size} bytes`);
+        console.log(`🔍 [ImageCompressionService] 嘗試品質 ${(mid * 100).toFixed(1)}%: ${blob.size} bytes`); // TODO: 複雜模式，需人工轉換
 
         if (blob.size <= targetSize) {
           bestBlob = blob;
@@ -237,12 +241,12 @@ export class ImageCompressionService {
     }
 
     if (bestBlob) {
-      console.log(`✅ [ImageCompressionService] 找到最佳壓縮: ${bestBlob.size} bytes (目標: ${targetSize} bytes)`);
+      console.log(`✅ [ImageCompressionService] 找到最佳壓縮: ${bestBlob.size} bytes (目標: ${targetSize} bytes)`); // TODO: 複雜模式，需人工轉換
       return bestBlob;
     }
 
     // 如果找不到合適的壓縮，使用最低品質
-    console.warn('⚠️ [ImageCompressionService] 無法達到目標檔案大小，使用最低品質');
+    log.warn('⚠️ [ImageCompressionService] 無法達到目標檔案大小，使用最低品質');
     return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
         if (blob) {

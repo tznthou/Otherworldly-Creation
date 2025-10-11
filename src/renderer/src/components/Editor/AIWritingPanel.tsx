@@ -10,6 +10,10 @@ import { useAppSelector as useAppSelectorTyped } from '../../hooks/redux';
 // 導入新的modular架構
 import { useAIGeneration } from '../../hooks/useAIGeneration';
 import { useEditorContext } from '../../hooks/useEditorContext';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('AIWritingPanel');
 
 interface AIWritingPanelProps {
   projectId: string;
@@ -467,7 +471,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }));
       
     } catch (error) {
-      console.error('載入設定失敗:', error);
+      log.error('載入設定失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '載入設定失敗',
@@ -528,10 +532,10 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         const notes = metadata.notes?.trim() || '';
         setHasChapterNotes(notes.length > 0);
         if (notes.length > 0) {
-          console.log('✅ 檢測到章節筆記，長度:', notes.length);
+          log.debug('✅ 檢測到章節筆記，長度:', notes.length);
         }
       } catch (_e) {
-        console.warn('無法解析章節 metadata');
+        log.warn('無法解析章節 metadata');
         setHasChapterNotes(false);
       }
     } else {
@@ -556,7 +560,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   
   // ✅ AI 提供者列表由 App.tsx 統一載入，這裡不需要重複載入
   useEffect(() => {
-    console.log('[AIWritingPanel] AI 提供者列表由 App.tsx 統一管理');
+    log.debug('[AIWritingPanel] AI 提供者列表由 App.tsx 統一管理');
   }, []);
 
   // 🔧 修復：簡化 Ollama 兼容性檢查
@@ -565,16 +569,16 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
     if (!currentProviderId && availableModels.length === 0) {
       const checkOllama = async () => {
         try {
-          console.log('[AIWritingPanel] 檢查 Ollama 服務狀態...');
+          log.debug('[AIWritingPanel] 檢查 Ollama 服務狀態...');
           const result = await dispatch(checkOllamaService()).unwrap();
-          console.log('[AIWritingPanel] Ollama 服務檢查結果:', result);
+          log.debug('[AIWritingPanel] Ollama 服務檢查結果:', result);
           
           if (result) {
-            console.log('[AIWritingPanel] 載入可用模型...');
+            log.debug('[AIWritingPanel] 載入可用模型...');
             await dispatch(fetchAvailableModels());
           }
         } catch (error) {
-          console.error('[AIWritingPanel] Ollama 服務檢查失敗:', error);
+          log.error('[AIWritingPanel] Ollama 服務檢查失敗:', error);
         }
       };
       checkOllama();
@@ -606,9 +610,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           case 'gemini':
           case 'claude': {
             // 🔥 修復：動態獲取各提供者的模型列表，而非硬編碼
-            console.log(`[AIWritingPanel] 動態獲取 ${provider.provider_type} 提供者的模型列表...`);
+            console.log(`[AIWritingPanel] 動態獲取 ${provider.provider_type} 提供者的模型列表...`); // TODO: 複雜模式，需人工轉換
             const result = await api.aiProviders.getAvailableModels(provider.id);
-            console.log(`[AIWritingPanel] ${provider.provider_type} 模型列表結果:`, result);
+            console.log(`[AIWritingPanel] ${provider.provider_type} 模型列表結果:`, result); // TODO: 複雜模式，需人工轉換
             
             if (result.success && result.models) {
               // 🔥 修復：處理模型對象格式，提取模型名稱
@@ -627,9 +631,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               });
               
               setProviderModels(modelList);
-              console.log(`[AIWritingPanel] 成功設置 ${modelList.length} 個模型:`, modelList.slice(0, 5)); // 只顯示前5個避免日誌過長
+              console.log(`[AIWritingPanel] 成功設置 ${modelList.length} 個模型:`, modelList.slice(0, 5)); // 只顯示前5個避免日誌過長 // TODO: 複雜模式，需人工轉換
             } else {
-              console.warn(`[AIWritingPanel] 獲取模型失敗:`, result.error);
+              log.warn(`[AIWritingPanel] 獲取模型失敗:`, result.error);
               setProviderModels([]);
             }
             break;
@@ -638,7 +642,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
             setProviderModels([]);
         }
       } catch (error) {
-        console.error(`[AIWritingPanel] 獲取提供者 ${provider.provider_type} 的模型列表失敗:`, error);
+        console.error(`[AIWritingPanel] 獲取提供者 ${provider.provider_type} 的模型列表失敗:`, error); // TODO: 複雜模式，需人工轉換
         // 發生錯誤時回退到空列表
         setProviderModels([]);
         
@@ -728,7 +732,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         }, 3000);
       }
     } catch (error) {
-      console.error('插入文本失敗:', error);
+      log.error('插入文本失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '插入失敗',
@@ -781,7 +785,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       const filteredText = filterThinkingTags(genResult.result);
 
       // 更新該選項 - 目前暫時移除此功能，需要在useAIGeneration hook中實現
-      console.log('重新生成完成，新文本:', filteredText.substring(0, 50) + '...');
+      log.debug('重新生成完成，新文本:', filteredText.substring(0, 50) + '...');
 
       dispatch(addNotification({
         type: 'success',
@@ -791,7 +795,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       }));
 
     } catch (error) {
-      console.error('重新生成失敗:', error);
+      log.error('重新生成失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '重新生成失敗',

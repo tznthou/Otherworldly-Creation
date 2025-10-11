@@ -5,6 +5,10 @@ import { addNotification } from '../../store/slices/uiSlice';
 import { Card, CardContent } from '../../components/UI/Card';
 import { chapterStatusService, ChapterStatus } from '../../services/chapterStatusService';
 import { Chapter } from '../../api/models';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ChapterStatusPage');
 
 const ChapterStatusPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -62,7 +66,7 @@ const ChapterStatusPage: React.FC = () => {
           try {
             if (chapter.metadata) {
               const metadata = JSON.parse(chapter.metadata);
-              console.log(`🔍 [狀態解析] 章節 ${chapter.title}:`, {
+              console.log(`🔍 [狀態解析] 章節 ${chapter.title}:`, { // TODO: 複雜模式，需人工轉換
                 metadata: metadata,
                 metadataStatus: metadata.status,
                 chapterStatus: chapter.status,
@@ -71,13 +75,13 @@ const ChapterStatusPage: React.FC = () => {
               // 優先使用 metadata 中的狀態，只有當它不存在時才使用 chapter.status
               status = metadata.status as ChapterStatus || chapter.status as ChapterStatus || ChapterStatus.DRAFT;
             } else if (chapter.status) {
-              console.log(`🔍 [狀態解析] 章節 ${chapter.title} 無 metadata，使用 chapter.status:`, chapter.status);
+              console.log(`🔍 [狀態解析] 章節 ${chapter.title} 無 metadata，使用 chapter.status:`, chapter.status); // TODO: 複雜模式，需人工轉換
               status = chapter.status as ChapterStatus;
             } else {
-              console.log(`🔍 [狀態解析] 章節 ${chapter.title} 無狀態信息，使用預設草稿狀態`);
+              console.log(`🔍 [狀態解析] 章節 ${chapter.title} 無狀態信息，使用預設草稿狀態`); // TODO: 複雜模式，需人工轉換
             }
           } catch (error) {
-            console.warn(`❌ [狀態解析] 章節 ${chapter.title} metadata 解析失敗:`, error, 'Raw metadata:', chapter.metadata);
+            console.warn(`❌ [狀態解析] 章節 ${chapter.title} metadata 解析失敗:`, error, 'Raw metadata:', chapter.metadata); // TODO: 複雜模式，需人工轉換
             status = (chapter.status as ChapterStatus) || ChapterStatus.DRAFT;
           }
 
@@ -109,7 +113,7 @@ const ChapterStatusPage: React.FC = () => {
         });
         
       } catch (err) {
-        console.error('載入章節失敗:', err);
+        log.error('載入章節失敗:', err);
         setError('載入章節資料失敗，請稍後再試');
       } finally {
         setLoading(false);
@@ -158,7 +162,7 @@ const ChapterStatusPage: React.FC = () => {
         metadata: JSON.stringify(newMetadata)
       };
 
-      console.log(`🔧 [Redux更新請求] 章節 ${chapter.title} 狀態更新:`, {
+      console.log(`🔧 [Redux更新請求] 章節 ${chapter.title} 狀態更新:`, { // TODO: 複雜模式，需人工轉換
         chapterId: chapter.id,
         oldStatus: oldMetadata.status,
         newStatus: newStatus,
@@ -172,10 +176,10 @@ const ChapterStatusPage: React.FC = () => {
       await dispatch(updateChapter(updatedChapter)).unwrap();
       
       // 驗證數據庫更新 - 立即重新獲取章節數據
-      console.log(`🔍 [驗證] 立即重新查詢章節 ${chapter.title} 數據...`);
+      console.log(`🔍 [驗證] 立即重新查詢章節 ${chapter.title} 數據...`); // TODO: 複雜模式，需人工轉換
       const { api } = await import('../../api');
       const verifyChapter = await api.chapters.getById(chapter.id);
-      console.log(`🔍 [驗證] 數據庫中的實際數據:`, {
+      log.debug(`🔍 [驗證] 數據庫中的實際數據:`, {
         chapterId: verifyChapter.id,
         title: verifyChapter.title,
         metadata: verifyChapter.metadata,
@@ -209,7 +213,7 @@ const ChapterStatusPage: React.FC = () => {
         }
       });
 
-      console.log(`✅ [Redux成功] 章節 ${chapter.title} 狀態已通過Redux更新為: ${newStatus}`);
+      console.log(`✅ [Redux成功] 章節 ${chapter.title} 狀態已通過Redux更新為: ${newStatus}`); // TODO: 複雜模式，需人工轉換
       
       // 顯示成功通知
       dispatch(addNotification({
@@ -220,7 +224,7 @@ const ChapterStatusPage: React.FC = () => {
       }));
       
       // 🔄 觸發全局統計重計算通知
-      console.log('📊 [全局通知] 章節狀態已更新，Dashboard等組件將自動重新計算統計');
+      log.debug('📊 [全局通知] 章節狀態已更新，Dashboard等組件將自動重新計算統計');
       
       // 發送自定義事件通知Dashboard重新計算統計
       window.dispatchEvent(new CustomEvent('refreshGlobalStats', {
@@ -232,7 +236,7 @@ const ChapterStatusPage: React.FC = () => {
       }));
       
     } catch (error) {
-      console.error('更新章節狀態失敗:', error);
+      log.error('更新章節狀態失敗:', error);
       
       // 顯示錯誤通知
       const chapter = chapters.find(c => c.id === chapterId);
