@@ -24,6 +24,10 @@ import { imageGenerationService } from '../../services/imageGenerationService';
 import type { ImageGenerationOptions } from '../../services/imageGenerationService';
 import { SafetyFilterLevel } from '@google/genai';
 import { useBatchConfiguration, useCharacterSelection } from '../../hooks/illustration';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('BatchIllustrationPanel.backup');
 
 interface BatchIllustrationPanelProps {
   className?: string;
@@ -109,20 +113,20 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   // 載入活動批次
   const loadActiveBatches = useCallback(async () => {
     try {
-      console.log('[BatchIllustrationPanel] 開始載入活動批次...');
+      log.debug('[BatchIllustrationPanel] 開始載入活動批次...');
       const result = await api.illustration.getAllBatchesSummary();
-      console.log('[BatchIllustrationPanel] 批次摘要結果:', result);
+      log.debug('[BatchIllustrationPanel] 批次摘要結果:', result);
       
       if (result.success) {
-        console.log('[BatchIllustrationPanel] 成功載入批次列表:', result.batches || []);
+        log.debug('[BatchIllustrationPanel] 成功載入批次列表:', result.batches || []);
         setActiveBatches(result.batches || []);
       } else {
-        console.error('[BatchIllustrationPanel] 載入批次列表失敗:', result.message);
+        log.error('[BatchIllustrationPanel] 載入批次列表失敗:', result.message);
         setError(result.message || '無法載入批次列表');
         setActiveBatches([]);
       }
     } catch (err) {
-      console.error('[BatchIllustrationPanel] 載入活動批次失敗:', err);
+      log.error('[BatchIllustrationPanel] 載入活動批次失敗:', err);
       setError('載入批次列表失敗: ' + err);
       setActiveBatches([]);
     }
@@ -131,20 +135,20 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   // 初始化批次管理器
   const initializeBatchManager = useCallback(async () => {
     try {
-      console.log('[BatchIllustrationPanel] 開始初始化批次管理器...');
+      log.debug('[BatchIllustrationPanel] 開始初始化批次管理器...');
       const result = await api.illustration.initializeBatchManager();
-      console.log('[BatchIllustrationPanel] 批次管理器初始化結果:', result);
+      log.debug('[BatchIllustrationPanel] 批次管理器初始化結果:', result);
       
       if (result.success) {
-        console.log('[BatchIllustrationPanel] 批次管理器初始化成功，載入活動批次...');
+        log.debug('[BatchIllustrationPanel] 批次管理器初始化成功，載入活動批次...');
         // 初始化成功後再載入批次
         await loadActiveBatches();
       } else {
-        console.error('[BatchIllustrationPanel] 批次管理器初始化失敗:', result.message);
+        log.error('[BatchIllustrationPanel] 批次管理器初始化失敗:', result.message);
         setError(result.message || '批次管理器初始化失敗');
       }
     } catch (err) {
-      console.error('[BatchIllustrationPanel] 初始化批次管理器失敗:', err);
+      log.error('[BatchIllustrationPanel] 初始化批次管理器失敗:', err);
       setError('初始化批次管理器失敗: ' + err);
     }
   }, [loadActiveBatches]);
@@ -243,10 +247,10 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     setError('');
 
     try {
-      console.log(`🚀 開始批次插畫生成：${batchConfig.batchName}`);
-      console.log(`🎨 色彩模式：${batchConfig.globalColorMode === 'color' ? '彩色' : '黑白'}`);
-      console.log(`🤖 使用服務：${batchConfig.illustrationProvider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}`);
-      console.log(`📋 共 ${requestsCount} 個請求`);
+      log.debug('🚀 開始批次插畫生成', { batchName: batchConfig.batchName });
+      log.debug('🎨 色彩模式', { colorMode: batchConfig.globalColorMode === 'color' ? '彩色' : '黑白' });
+      log.debug('🤖 使用服務', { provider: batchConfig.illustrationProvider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)' });
+      log.debug('📋 請求總數', { count: requestsCount });
 
       let results: Array<{
         success: boolean;
@@ -257,13 +261,13 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
 
       if (batchConfig.illustrationProvider === 'pollinations') {
         // === Pollinations.AI 免費生成 ===
-        console.log(`🌟 使用 Pollinations.AI，模型：${batchConfig.pollinationsModel}，風格：${batchConfig.pollinationsStyle}`);
+        log.debug('🌟 使用 Pollinations.AI', { model: batchConfig.pollinationsModel, style: batchConfig.pollinationsStyle });
         
         results = [];
         
         for (let i = 0; i < requestsCount; i++) {
           const req = requests[i];
-          console.log(`🎨 生成進度: ${i + 1}/${requestsCount} - ${req.scene_description.substring(0, 50)}...`);
+          log.debug('🎨 生成進度', { current: i + 1, total: requestsCount, scene: req.scene_description.substring(0, 50) });
           
           try {
             // 構建增強提示詞
@@ -310,14 +314,14 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                 tempImageData: result, // 存儲完整的臨時圖像數據
                 request: req
               });
-              console.log(`✅ 第 ${i + 1} 張圖像生成成功（臨時）`);
+              log.debug('✅ 圖像生成成功（臨時）', { index: i + 1 });
             } else {
               results.push({
                 success: false,
                 error: result.message || '生成失敗',
                 request: req
               });
-              console.error(`❌ 第 ${i + 1} 張圖像生成失敗:`, result.message);
+              log.error('❌ 圖像生成失敗', { index: i + 1, message: result.message });
             }
           } catch (error) {
             results.push({
@@ -325,7 +329,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
               error: error instanceof Error ? error.message : String(error),
               request: req
             });
-            console.error(`❌ 第 ${i + 1} 張圖像生成異常:`, error);
+            log.error('❌ 圖像生成異常', { index: i + 1, error });
           }
 
           // 避免過於頻繁的請求，每個請求間隔1秒
@@ -335,7 +339,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         }
       } else {
         // === Google Imagen 付費生成 ===
-        console.log('🔷 使用 Google Imagen');
+        log.debug('🔷 使用 Google Imagen');
         
         // 準備圖像生成請求
         const imageRequests = requests.map(req => {
@@ -380,7 +384,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
           imageRequests,
           batchConfig.apiKey,
           (current, total, currentPrompt) => {
-            console.log(`🎨 生成進度: ${current}/${total} - ${currentPrompt?.substring(0, 50)}...`);
+            console.log(`🎨 生成進度: ${current}/${total} - ${currentPrompt?.substring(0, 50)}...`); // TODO: 複雜模式，需人工轉換
             // 可以在這裡更新 UI 顯示進度
           }
         );
@@ -399,14 +403,14 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       const failCount = results.filter(r => !r.success).length;
       
       if (successCount > 0) {
-        console.log(`✅ 成功生成 ${successCount} 張圖像（臨時）`);
+        console.log(`✅ 成功生成 ${successCount} 張圖像（臨時）`); // TODO: 複雜模式，需人工轉換
         
         // 收集所有成功的臨時圖像數據
         const successfulTempImages = results
           .filter(r => r.success && r.tempImageData)
           .map(r => r.tempImageData!);
         
-        console.log('生成的臨時圖像數據:', successfulTempImages.length, '張');
+        log.debug('生成的臨時圖像數據:', successfulTempImages.length, '張');
         
         // 設置臨時圖像並顯示預覽
         setTempImages(successfulTempImages);
@@ -420,7 +424,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         setError(''); // 清除錯誤
         
         if (failCount > 0) {
-          console.warn(`⚠️ ${failCount} 張圖像生成失敗`);
+          console.warn(`⚠️ ${failCount} 張圖像生成失敗`); // TODO: 複雜模式，需人工轉換
           setError(`部分圖像生成失敗：成功 ${successCount}，失敗 ${failCount}`);
         }
       } else {
@@ -428,7 +432,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       }
 
     } catch (err: unknown) {
-      console.error('❌ 批次生成失敗:', err);
+      log.error('❌ 批次生成失敗:', err);
       
       // 檢查是否為 Google Cloud 計費問題
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -522,7 +526,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         _setBatchDetails(mockBatchDetails);
       }
     } catch (err) {
-      console.error('載入批次詳情失敗:', err);
+      log.error('載入批次詳情失敗:', err);
     }
   }, []);
 
@@ -531,7 +535,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     try {
       const result = await api.illustration.cancelBatch(batchId);
       if (result.success) {
-        console.log('批次已取消');
+        log.debug('批次已取消');
         loadActiveBatches();
       } else {
         setError('取消批次失敗');
@@ -546,7 +550,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
     try {
       const result = await api.illustration.retryFailedTasks(batchId);
       if (result.success) {
-        console.log('失敗任務已重新提交');
+        log.debug('失敗任務已重新提交');
         loadBatchDetails(batchId);
       } else {
         setError('重試失敗');
@@ -626,10 +630,10 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
               const decodedApiKey = atob(geminiProvider.api_key_encrypted);
               batchConfig.setApiKey(decodedApiKey);
               batchConfig.setApiKeySource('gemini');
-              console.log('✅ 已自動載入並解碼 Gemini API 金鑰');
+              log.debug('✅ 已自動載入並解碼 Gemini API 金鑰');
               return;
             } catch (error) {
-              console.error('❌ 解碼 Gemini API 金鑰失敗:', error);
+              log.error('❌ 解碼 Gemini API 金鑰失敗:', error);
             }
           }
           
@@ -646,15 +650,15 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                 const decodedApiKey = atob(openrouterProvider.api_key_encrypted);
                 batchConfig.setApiKey(decodedApiKey);
                 batchConfig.setApiKeySource('openrouter');
-                console.log('✅ 已自動載入並解碼 OpenRouter API 金鑰');
+                log.debug('✅ 已自動載入並解碼 OpenRouter API 金鑰');
               } catch (error) {
-                console.error('❌ 解碼 OpenRouter API 金鑰失敗:', error);
+                log.error('❌ 解碼 OpenRouter API 金鑰失敗:', error);
               }
             }
           }
         }
       } catch (error) {
-        console.error('無法自動載入 API 金鑰:', error);
+        log.error('無法自動載入 API 金鑰:', error);
       }
     };
     
