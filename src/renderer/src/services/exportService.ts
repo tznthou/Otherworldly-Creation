@@ -1,5 +1,9 @@
 import type { ExportTask, ExportFormat, ExportQuality, BatchExportConfig } from '../hooks/illustration/useExportManager';
 import { imageCompressionService } from './imageCompressionService';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('exportService');
 
 // 導出錯誤類型
 export class ExportError extends Error {
@@ -81,11 +85,11 @@ export class ExportService {
 
       onStatusChange(taskId, 'completed');
       
-      console.log(`✅ [ExportService] 導出完成: ${fileName}`);
+      log.debug('✅ [ExportService] 導出完成', { fileName });
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown export error';
-      console.error(`❌ [ExportService] 導出失敗 (${taskId}):`, errorMessage);
+      log.error('❌ [ExportService] 導出失敗', { taskId, errorMessage });
       onStatusChange(taskId, 'failed', errorMessage);
     } finally {
       this.processingQueue.delete(taskId);
@@ -102,7 +106,7 @@ export class ExportService {
     onStatusChange: StatusCallback,
     maxConcurrent: number = 3
   ): Promise<void> {
-    console.log(`🚀 [ExportService] 開始批次導出 ${tasks.length} 個任務，最大並行數: ${maxConcurrent}`);
+    log.debug('🚀 [ExportService] 開始批次導出', { taskCount: tasks.length, maxConcurrent });
 
     // 使用 Promise 池限制並行數
     const executeTask = async (task: ExportTask): Promise<void> => {
@@ -119,14 +123,14 @@ export class ExportService {
       await Promise.allSettled(batch.map(executeTask));
     }
 
-    console.log(`✅ [ExportService] 批次導出完成`);
+    log.debug(`✅ [ExportService] 批次導出完成`);
   }
 
   /**
    * 載入圖片
    */
   private async loadImage(url: string): Promise<HTMLImageElement> {
-    console.log(`🔄 [ExportService] 開始載入圖片: ${url.substring(0, 80)}...`);
+    log.debug('🔄 [ExportService] 開始載入圖片', { urlPreview: url.substring(0, 80) });
 
     // 對於 asset:// 協議，使用 Tauri API 讀取檔案
     if (url.startsWith('asset://')) {
@@ -135,7 +139,7 @@ export class ExportService {
         const encodedPath = url.replace('asset://localhost/', '');
         const decodedFullPath = decodeURIComponent(encodedPath);
         
-        console.log(`📁 [ExportService] 解碼路徑: ${decodedFullPath}`);
+        log.debug('📁 [ExportService] 解碼路徑', { decodedFullPath });
         
         // 提取檔案名（最後一個 / 之後的內容）
         const fileName = decodedFullPath.split('/').pop();
@@ -146,8 +150,8 @@ export class ExportService {
         // 移除副檔名，只保留檔案 ID（因為 get_final_image_path 會自動加 .jpg）
         const fileId = fileName.replace(/\.[^/.]+$/, '');
         
-        console.log(`📁 [ExportService] 檔案 ID: ${fileId}`);
-        console.log(`📁 [ExportService] 原檔案名: ${fileName}`);
+        log.debug('📁 [ExportService] 檔案 ID', { fileId });
+        log.debug('📁 [ExportService] 原檔案名', { fileName });
 
         // 動態導入 Tauri API
         const { invoke } = await import('@tauri-apps/api/core');
@@ -157,7 +161,7 @@ export class ExportService {
           imagePath: fileId 
         });
         
-        console.log(`📄 [ExportService] Base64 數據獲取成功，長度: ${base64Data.length}`);
+        log.debug('📄 [ExportService] Base64 數據獲取成功', { dataLength: base64Data.length });
 
         // 偵測檔案格式（基於原檔案名的擴展名）
         const extension = fileName.split('.').pop()?.toLowerCase();
@@ -182,19 +186,19 @@ export class ExportService {
 
         // 創建 data URL
         const dataUrl = `data:${mimeType};base64,${base64Data}`;
-        console.log(`🔄 [ExportService] Data URL 創建完成，MIME: ${mimeType}`);
+        log.debug('🔄 [ExportService] Data URL 創建完成', { mimeType });
 
         // 創建圖片元素並載入
         return new Promise((resolve, reject) => {
           const img = new Image();
           
           img.onload = () => {
-            console.log(`✅ [ExportService] 圖片載入成功: ${img.naturalWidth}x${img.naturalHeight}`);
+            log.debug('✅ [ExportService] 圖片載入成功', { width: img.naturalWidth, height: img.naturalHeight });
             resolve(img);
           };
 
           img.onerror = () => {
-            console.error(`❌ [ExportService] Data URL 圖片載入失敗`);
+            log.error(`❌ [ExportService] Data URL 圖片載入失敗`);
             reject(new Error(`Failed to load image from data URL: ${fileName}`));
           };
 
@@ -202,7 +206,7 @@ export class ExportService {
         });
 
       } catch (apiError) {
-        console.error(`❌ [ExportService] Tauri API 讀取失敗:`, apiError);
+        log.error(`❌ [ExportService] Tauri API 讀取失敗:`, apiError);
         throw new Error(`Failed to read image file via Tauri API: ${url} - ${apiError}`);
       }
     }
@@ -217,12 +221,12 @@ export class ExportService {
       }
 
       img.onload = () => {
-        console.log(`✅ [ExportService] 傳統方法載入成功: ${img.naturalWidth}x${img.naturalHeight}`);
+        log.debug('✅ [ExportService] 傳統方法載入成功', { width: img.naturalWidth, height: img.naturalHeight });
         resolve(img);
       };
 
       img.onerror = () => {
-        console.error(`❌ [ExportService] 傳統方法載入失敗: ${url}`);
+        log.error('❌ [ExportService] 傳統方法載入失敗', { url });
         reject(new Error(`Failed to load image: ${url}`));
       };
 
@@ -248,7 +252,7 @@ export class ExportService {
       // 繪製圖片
       this.ctx.drawImage(image, 0, 0);
 
-      console.log(`🖼️ [ExportService] 開始圖片處理: ${this.canvas.width}x${this.canvas.height}, 格式: ${quality.format}`);
+      log.debug('🖼️ [ExportService] 開始圖片處理', { width: this.canvas.width, height: this.canvas.height, format: quality.format });
 
       // 使用新的壓縮服務處理圖片
       const compressedBlob = await imageCompressionService.compressImage(this.canvas, quality);
@@ -258,7 +262,7 @@ export class ExportService {
         const reader = new FileReader();
         reader.onload = () => {
           if (typeof reader.result === 'string') {
-            console.log(`✅ [ExportService] 圖片處理完成: ${compressedBlob.size} bytes`);
+            log.debug('✅ [ExportService] 圖片處理完成', { size: compressedBlob.size });
             resolve(reader.result);
           } else {
             reject(new Error('讀取 Blob 失敗'));
@@ -269,10 +273,10 @@ export class ExportService {
       });
 
     } catch (error) {
-      console.error('❌ [ExportService] 圖片處理失敗:', error);
+      log.error('❌ [ExportService] 圖片處理失敗:', error);
 
       // 如果壓縮失敗，降級到傳統方法
-      console.warn('⚠️ [ExportService] 降級到傳統壓縮方法');
+      log.warn('⚠️ [ExportService] 降級到傳統壓縮方法');
       return this.fallbackProcessImage(quality);
     }
   }
@@ -304,7 +308,7 @@ export class ExportService {
     // 導出為 Data URL，添加 Canvas 污染檢測
     try {
       const dataUrl = this.canvas.toDataURL(mimeType, qualityValue);
-      console.log(`✅ [ExportService] 降級處理完成`);
+      log.debug(`✅ [ExportService] 降級處理完成`);
       return dataUrl;
     } catch (error) {
       if (error instanceof Error && error.message.includes('insecure')) {
@@ -337,7 +341,7 @@ export class ExportService {
       return `${baseName}.${task.format}`;
 
     } catch (error) {
-      console.warn('使用 ImageNamingService 生成檔案名失敗，使用後備方案:', error);
+      log.warn('使用 ImageNamingService 生成檔案名失敗，使用後備方案:', error);
 
       // 後備方案：簡單檔案名
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
@@ -401,7 +405,7 @@ export class ExportService {
     outputPath: string,
     format: ExportFormat
   ): Promise<void> {
-    console.log(`💾 [ExportService] 保存檔案: ${outputPath} (${format})`);
+    log.debug('💾 [ExportService] 保存檔案', { outputPath, format });
 
     try {
       // 動態導入 Tauri API
@@ -413,11 +417,11 @@ export class ExportService {
         outputPath
       });
 
-      console.log(`✅ [ExportService] 檔案保存成功: ${savedPath}`);
+      log.debug('✅ [ExportService] 檔案保存成功', { savedPath });
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`❌ [ExportService] 檔案保存失敗:`, error);
+      log.error(`❌ [ExportService] 檔案保存失敗:`, error);
 
       throw new ExportError(
         `Failed to save file: ${errorMessage}`,
