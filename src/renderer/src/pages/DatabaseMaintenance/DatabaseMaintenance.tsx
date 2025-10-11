@@ -20,7 +20,7 @@ interface RepairResult {
   errors?: string[];
   warnings?: string[];
 }
-import { createLogger } from '../../../utils/logger';
+import { createLogger } from '../../utils/logger';
 import {
 Database, 
   CheckCircle, 

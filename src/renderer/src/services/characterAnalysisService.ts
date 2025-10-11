@@ -82,7 +82,7 @@ class CharacterAnalysisService {
       
       // 1. 獲取專案中的所有角色
       const characters = await api.characters.getByProjectId(projectId);
-      log.debug('👥 [對話分析] 載入角色:', characters.length, '個');
+      log.debug('👥 [對話分析] 載入角色:', { count: characters.length });
       
       // 2. 轉換角色格式，包含可能的別名
       const knownCharacters = characters.map(char => ({
@@ -144,7 +144,7 @@ class CharacterAnalysisService {
       }
       
       console.log(`📖 [角色分析] 章節載入成功: ${chapter.title || chapterId}`); // TODO: 複雜模式，需人工轉換
-      log.debug(`📝 [角色分析] 原始章節內容類型:`, typeof chapter.content, '內容:', chapter.content);
+      log.debug(`📝 [角色分析] 原始章節內容類型:`, { contentType: typeof chapter.content, content: chapter.content });
       
       // 2. 【重要修復】解析章節內容
       let chapterContent: Descendant[];
@@ -153,7 +153,7 @@ class CharacterAnalysisService {
         try {
           log.debug('🔧 [角色分析] 章節內容是字符串，嘗試JSON解析...');
           chapterContent = JSON.parse(chapter.content);
-          log.debug('✅ [角色分析] JSON解析成功，類型:', typeof chapterContent, '是否為陣列:', Array.isArray(chapterContent));
+          log.debug('✅ [角色分析] JSON解析成功，類型:', { type: typeof chapterContent, isArray: Array.isArray(chapterContent) });
         } catch (parseError) {
           log.error('💥 [角色分析] JSON解析失敗:', parseError);
           log.error('💥 [角色分析] 原始內容:', chapter.content);
@@ -283,8 +283,8 @@ class CharacterAnalysisService {
       api.characters.getByProjectId(projectId)
     ]);
     
-    log.debug('📚 [專案角色分析] 找到章節:', chapters.length, '個');
-    log.debug('👥 [專案角色分析] 找到角色:', characters.length, '個');
+    log.debug('📚 [專案角色分析] 找到章節:', { count: chapters.length });
+    log.debug('👥 [專案角色分析] 找到角色:', { count: characters.length });
     
     if (characters.length === 0) {
       log.warn('⚠️ [專案角色分析] 專案中沒有角色設定');

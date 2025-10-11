@@ -208,11 +208,11 @@ if (process.env.NODE_ENV === 'development') {
     const report = performanceLogger.getPerformanceReport();
     if (report.totalEvents > 0) {
       console.group('📊 性能報告 (過去5分鐘)');
-      log.debug('總事件數:', report.totalEvents);
-      log.debug('分類統計:', report.categoryBreakdown);
-      log.debug('平均持續時間 (ms):', report.averageDurations);
-      log.debug('警告數:', report.warningCount);
-      log.debug('錯誤數:', report.errorCount);
+      log.debug('總事件數:', { totalEvents: report.totalEvents });
+      log.debug('分類統計:', { categoryBreakdown: report.categoryBreakdown });
+      log.debug('平均持續時間 (ms):', { averageDurations: report.averageDurations });
+      log.debug('警告數:', { warningCount: report.warningCount });
+      log.debug('錯誤數:', { errorCount: report.errorCount });
       console.groupEnd();
     }
   }, 30000);
