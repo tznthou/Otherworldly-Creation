@@ -33,6 +33,10 @@ import GuidanceCard from '../shared/GuidanceCard';
 import Tooltip from '../../../UI/Tooltip';
 import { SafeImage } from '../../../UI/SafeImage';
 import { GUIDANCE_TEXTS } from '../shared/guidanceTexts';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CreateTab');
 
 interface CreateTabProps {
   className?: string;
@@ -100,7 +104,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     const count = tempImages.length;
     dispatch(clearTempImages());
     notification.info('✅ 已刪除', `已清空 ${count} 張臨時圖片，可繼續生成新圖片`);
-    console.log(`🗑️ [CreateTab] 已清空 ${count} 張臨時圖片`);
+    log.debug('🗑️ [CreateTab] 已清空臨時圖片', { count });
   }, [tempImages, dispatch, notification]);
 
   // 自動版本創建 Hook - 現已改用收藏功能替代
@@ -178,7 +182,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     // 清空場景描述，但保留角色和場景類型選擇
     setSceneDescription('');
     
-    console.log('📋 [CreateTab] 已添加批次請求:', request);
+    log.debug('📋 [CreateTab] 已添加批次請求:', request);
   }, [selectedCharacters, sceneType, sceneDescription, artStyle, batchRequests, buildEnrichedPrompt, dispatch]);
 
   // 獲取AI服務提供者的正確模型名稱
@@ -213,7 +217,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       try {
         return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
       } catch (_error) {
-        console.warn('🔍 [SmartSeed] 無法獲取時區，使用UTC');
+        log.warn('🔍 [SmartSeed] 無法獲取時區，使用UTC');
         return 'UTC';
       }
     })();
@@ -246,7 +250,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     // 確保seed為正數且在Pollinations API支持範圍內（1-999999999）
     const seed = Math.abs(hash) % 999999999 + 1;
     
-    console.log(`🎲 [CreateTab] 智能Seed生成: ${seed}`, {
+    log.debug('🎲 [CreateTab] 智能Seed生成', { seed,
       characterCount: characterIds.length,
       promptLength: prompt.length,
       templateId,
@@ -270,10 +274,10 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
     }
 
     try {
-      console.log('🚀 [CreateTab] 開始批次生成，請求數量:', batchRequests.length);
+      log.debug('🚀 [CreateTab] 開始批次生成，請求數量:', batchRequests.length);
       
       for (const request of batchRequests) {
-        console.log(`🎯 [CreateTab] 處理請求: ${request.id}`);
+        log.debug('🎯 [CreateTab] 處理請求', { requestId: request.id });
 
         // 🎲 生成智能Seed：確保不同環境產生不同插畫
         const smartSeed = generateSmartSeed(
@@ -292,11 +296,11 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
             enhancedPrompt += ', pencil sketch, grayscale drawing, soft shading, hand-drawn, artistic sketch, charcoal effect';
           }
         }
-        console.log(`🎨 [CreateTab] 插畫風格: ${globalColorMode}, 智能Seed: ${smartSeed}, 增強後prompt:`, enhancedPrompt);
+        log.debug('🎨 [CreateTab] 插畫風格設定', { globalColorMode, smartSeed, enhancedPrompt });
 
         // 根據 provider 選擇不同的 API
         let result;
-        console.log(`🔍 [CreateTab] 使用插畫服務: ${illustrationProvider} (${serviceDisplayName})`);
+        log.debug('🔍 [CreateTab] 使用插畫服務', { illustrationProvider, serviceDisplayName });
         
         if (illustrationProvider === 'gemini') {
           // 使用 Gemini API
@@ -337,7 +341,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
           );
         }
         
-        console.log(`✅ [CreateTab] 請求 ${request.id} 完成:`, result);
+        log.debug('✅ [CreateTab] 請求完成', { requestId: request.id, result });
         
         // 將生成的圖片添加到臨時圖片列表
         if (result && typeof result === 'object' && 'success' in result && result.success) {
@@ -358,7 +362,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
 
           // 🔧 統一字段：所有 AI 提供商都返回 image_path
           const imagePath = resultWithData.image_path || '';
-          console.log('🔍 [CreateTab] 圖片路徑處理:', {
+          log.debug('🔍 [CreateTab] 圖片路徑處理:', {
             image_path: resultWithData.image_path,
             使用路徑: imagePath
           });
@@ -390,17 +394,17 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       }
       
       // 批次完成後的後續處理
-      console.log('🎉 [CreateTab] 所有批次請求完成');
+      log.debug('🎉 [CreateTab] 所有批次請求完成');
 
       // 🚀 自動開啟大圖預覽 Modal
       // 確保currentImageIndex 正確設置，然後開啟預覽
       dispatch(setCurrentImageIndex(0));
       dispatch(setShowImagePreview(true));
-      console.log('🖼️ [CreateTab] 自動開啟大圖預覽 Modal');
+      log.debug('🖼️ [CreateTab] 自動開啟大圖預覽 Modal');
 
       // 🔍 調試：檢查 Redux state
       setTimeout(() => {
-        console.log('🔍 [CreateTab] Redux State 檢查:', {
+        log.debug('🔍 [CreateTab] Redux State 檢查:', {
           tempImagesLength: tempImages.length,
           showImagePreview: showImagePreview,
           currentImageIndex: currentImageIndex,
@@ -418,7 +422,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       // dispatch(generateBatchRequests([]));
       
     } catch (error) {
-      console.error('❌ [CreateTab] 批次生成失敗:', error);
+      log.error('❌ [CreateTab] 批次生成失敗:', error);
       
       // 智能錯誤處理：解析Rust後端的友善錯誤格式
       const handleSmartError = (errorMessage: string) => {
@@ -430,8 +434,8 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
             const subtitle = parts[2];
             const actions = parts.slice(3);
             
-            console.log(`📋 [SmartError] 友善錯誤: ${title} | ${subtitle}`);
-            console.log(`🛠️ [SmartError] 建議操作:`, actions);
+            log.debug('📋 [SmartError] 友善錯誤', { title, subtitle });
+            log.debug(`🛠️ [SmartError] 建議操作:`, actions);
             
             // 顯示詳細的錯誤訊息，包含建議操作
             let fullMessage = `${title}\n${subtitle}`;
@@ -474,13 +478,13 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
   const handleRemoveBatchRequest = useCallback((requestId: string) => {
     const updatedRequests = batchRequests.filter((req: BatchRequest) => req.id !== requestId);
     setBatchRequests(updatedRequests);
-    console.log('🗑️ [CreateTab] 已移除批次請求:', requestId);
+    log.debug('🗑️ [CreateTab] 已移除批次請求:', requestId);
   }, [batchRequests]);
 
   // 清空所有批次請求
   const handleClearBatch = useCallback(() => {
     setBatchRequests([]);
-    console.log('🧹 [CreateTab] 已清空所有批次請求');
+    log.debug('🧹 [CreateTab] 已清空所有批次請求');
   }, []);
 
   // AI 翻譯和優化提示詞
@@ -549,7 +553,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       notification.success('✨ 優化完成', '已自動生成英文提示詞！');
 
     } catch (error) {
-      console.error('翻譯優化失敗:', error);
+      log.error('翻譯優化失敗:', error);
       notification.error('優化失敗', '請稍後重試');
     } finally {
       setIsTranslating(false);
@@ -862,7 +866,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                         onClick={async () => {
                           try {
                             setIsCollecting(true);
-                            console.log('🔍 [Collection] 🚀 開始收藏流程...');
+                            log.debug('🔍 [Collection] 🚀 開始收藏流程...');
                             
                             if (!tempImages || tempImages.length === 0) {
                               notification.warning('沒有可收藏的圖片', '請先生成圖片再進行收藏');
@@ -894,7 +898,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                             // 🛡️ 安全調用API，使用完整的錯誤處理
                             const result = await api.illustration.addToCollectionWithData(imageData);
                             
-                            console.log('🔍 [Collection] 收到後端回應:', result);
+                            log.debug('🔍 [Collection] 收到後端回應:', result);
                             
                             // 🎉 使用通知系統替代 console.log
                             if (result && result.success && ((result.collected_count || 0) > 0 || (result.skipped_duplicates || 0) > 0)) {
@@ -932,13 +936,13 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                               // 🎯 收藏成功後自動清空預覽區
                               if (hasNewCollections || hasSkipped) {
                                 dispatch(clearTempImages());
-                                console.log('✨ [Collection] 已自動清空預覽區，可繼續生成新圖片');
+                                log.debug('✨ [Collection] 已自動清空預覽區，可繼續生成新圖片');
                               }
 
                               // 記錄詳細信息到控制台
-                              console.log(`✅ [Collection] 收藏處理完成: 新收藏${result.collected_count || 0}張，跳過${result.skipped_duplicates || 0}張重複`);
+                              log.debug('✅ [Collection] 收藏處理完成', { collected: result.collected_count || 0, skipped: result.skipped_duplicates || 0 });
                               if (result.errors && result.errors.length > 0) {
-                                console.warn('⚠️ [Collection] 處理錯誤詳情:', result.errors);
+                                log.warn('⚠️ [Collection] 處理錯誤詳情:', result.errors);
                               }
                               
                             } else if (result && !result.success) {
@@ -949,9 +953,9 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                                 failMsg,
                                 5000
                               );
-                              console.warn(`⚠️ [Collection] ${failMsg}`);
+                              log.warn('⚠️ [Collection] 操作失敗', { failMsg });
                               if (result.errors && result.errors.length > 0) {
-                                console.warn('⚠️ [Collection] 錯誤詳情:', result.errors);
+                                log.warn('⚠️ [Collection] 錯誤詳情:', result.errors);
                               }
                             } else {
                               // ❌ 完全失敗
@@ -960,12 +964,12 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                                 '服務器回應異常，請稍後再試',
                                 5000
                               );
-                              console.error('❌ [Collection] 收藏失敗，回應格式異常:', result);
+                              log.error('❌ [Collection] 收藏失敗，回應格式異常:', result);
                             }
                             
                           } catch (error) {
                             // 🛡️ 全面的錯誤捕獲和處理
-                            console.error('💥 [Collection] 收藏操作發生錯誤:', error);
+                            log.error('💥 [Collection] 收藏操作發生錯誤:', error);
                             
                             let errorMessage = '收藏失敗';
                             if (error instanceof Error) {
@@ -983,7 +987,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                             );
                             
                             // 🔍 記錄詳細的錯誤信息以便調試
-                            console.error('🔍 [Collection] 錯誤詳情:', {
+                            log.error('🔍 [Collection] 錯誤詳情:', {
                               error,
                               tempImages: tempImages?.length || 0,
                               currentProject: currentProject?.id
@@ -1034,7 +1038,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                       <button
                         onClick={() => {
                           // TODO: 實現變體創建邏輯
-                          console.log('創建變體功能');
+                          log.debug('創建變體功能');
                         }}
                         className="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
                       >
@@ -1078,7 +1082,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                       <button
                         onClick={() => {
                           // 繼續為其他角色生成
-                          console.log('為其他角色生成');
+                          log.debug('為其他角色生成');
                         }}
                         className="px-3 py-2 bg-cosmic-700 hover:bg-cosmic-600 text-white text-xs rounded transition-colors"
                       >
