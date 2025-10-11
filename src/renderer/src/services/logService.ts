@@ -85,7 +85,7 @@ export class LogService {
     const logMessage = this.formatMessage(component, sanitizedMessage, sanitizedData);
 
     if (!this.isProduction) {
-      console.log(`🔍 [DEBUG] ${logMessage}`, sanitizedData || ''); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      console.log(`🔍 [DEBUG] ${logMessage}`, sanitizedData || ''); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
     }
 
     debug(logMessage);
@@ -100,7 +100,7 @@ export class LogService {
     const sanitizedData = data ? SensitiveDataFilter.sanitizeObject(data) : undefined;
     const logMessage = this.formatMessage(component, sanitizedMessage, sanitizedData);
 
-    console.log(`ℹ️ [INFO] ${logMessage}`, sanitizedData || ''); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    console.log(`ℹ️ [INFO] ${logMessage}`, sanitizedData || ''); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
     info(logMessage);
   }
 
@@ -113,7 +113,7 @@ export class LogService {
     const sanitizedData = data ? SensitiveDataFilter.sanitizeObject(data) : undefined;
     const logMessage = this.formatMessage(component, sanitizedMessage, sanitizedData);
 
-    console.warn(`⚠️ [WARN] ${logMessage}`, sanitizedData || ''); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    console.warn(`⚠️ [WARN] ${logMessage}`, sanitizedData || ''); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
     warn(logMessage);
   }
 
@@ -129,7 +129,7 @@ export class LogService {
     const sanitizedError = SensitiveDataFilter.sanitizeObject(errorInfo);
     const logMessage = this.formatMessage(component, sanitizedMessage, sanitizedError);
 
-    console.error(`❌ [ERROR] ${logMessage}`, sanitizedError || ''); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    console.error(`❌ [ERROR] ${logMessage}`, sanitizedError || ''); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
     logError(logMessage);
   }
 

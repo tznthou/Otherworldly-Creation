@@ -1,5 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('visualCreationSlice');
 
 // 類型定義
 export interface TempImageData {
@@ -200,7 +204,7 @@ export const initializeVisualCreation = createAsyncThunk(
       try {
         await api.illustration.cleanupExpiredTempImages();
       } catch (error) {
-        console.warn('清理臨時圖像失敗:', error);
+        log.warn('清理臨時圖像失敗:', error);
       }
       
       // 載入插畫歷史 (如果需要的話)
@@ -271,7 +275,7 @@ export const saveSelectedImages = createAsyncThunk(
           savedImages.push(imageData);
         }
       } catch (error) {
-        console.error(`保存圖像失敗: ${imageData.id}`, error);
+        console.error(`保存圖像失敗: ${imageData.id}`, error); // TODO: 複雜模式，需人工轉換
       }
     }
     
@@ -284,7 +288,7 @@ export const saveSelectedImages = createAsyncThunk(
       try {
         await api.illustration.deleteTempImage(imageData.temp_path);
       } catch (error) {
-        console.error(`清理臨時圖像失敗: ${imageData.id}`, error);
+        console.error(`清理臨時圖像失敗: ${imageData.id}`, error); // TODO: 複雜模式，需人工轉換
       }
     }
     
@@ -584,7 +588,7 @@ export const visualCreationSlice = createSlice({
         state.showImageDetails = false;
         
         // 可以在這裡添加成功保存的通知
-        console.log(`成功保存 ${action.payload.length} 張圖像`);
+        console.log(`成功保存 ${action.payload.length} 張圖像`); // TODO: 複雜模式，需人工轉換
       })
       .addCase(saveSelectedImages.rejected, (state, action) => {
         state.loading.savingImages = false;
