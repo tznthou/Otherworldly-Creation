@@ -2,7 +2,6 @@ import React from 'react';
 import { TaskPriority } from '../../../types/illustration';
 import { useBatchConfiguration } from '../../../hooks/illustration';
 import CosmicInput from '../../UI/CosmicInput';
-// import { Alert } from '../../UI/Alert'; // TODO: Remove if not needed
 
 interface BatchConfigurationSectionProps {
   batchConfig: ReturnType<typeof useBatchConfiguration>;

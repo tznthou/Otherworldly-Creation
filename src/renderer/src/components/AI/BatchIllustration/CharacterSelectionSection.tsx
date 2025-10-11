@@ -1,7 +1,6 @@
 import React from 'react';
 import { Character } from '../../../api/models';
 import { useCharacterSelection } from '../../../hooks/illustration';
-// import CosmicButton from '../../UI/CosmicButton'; // TODO: Remove if not needed
 
 interface CharacterSelectionSectionProps {
   characterSelection: ReturnType<typeof useCharacterSelection>;

@@ -21,9 +21,14 @@ module.exports = {
   rules: {
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
-    'no-console': 'off',
+    // 🧹 Tech Debt Prevention: Warn about console usage (2025-10-11)
+    // Allow console.warn and console.error for important logging
+    // Block console.log in production code (use logger instead)
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-undef': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
+    // 🧹 Tech Debt Prevention: Warn about TODO comments (2025-10-11)
+    'no-warning-comments': ['warn', { terms: ['TODO', 'FIXME', 'XXX', 'HACK'], location: 'start' }],
     'react/react-in-jsx-scope': 'off',
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',

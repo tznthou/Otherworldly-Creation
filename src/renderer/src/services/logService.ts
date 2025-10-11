@@ -58,7 +58,8 @@ class SensitiveDataFilter {
  * logger.info('Component', '訊息', { data: 'value' });
  */
 export class LogService {
-  private isProduction = (import.meta as any).env?.PROD ?? false;
+  // 在測試環境使用 process.env，在瀏覽器環境使用 import.meta.env
+  private isProduction = process.env.NODE_ENV === 'production';
   private consoleAttached = false;
 
   constructor() {
