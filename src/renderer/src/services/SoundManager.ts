@@ -1,8 +1,9 @@
-class SoundManager {
 import { createLogger } from '../utils/logger';
 
 // 創建模組專用 logger
 const log = createLogger('SoundManager');
+
+class SoundManager {
   private context: AudioContext | null = null;
   private sounds: Map<string, AudioBuffer> = new Map();
   private enabled: boolean = true;
