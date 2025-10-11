@@ -13,6 +13,10 @@ import type { NovelParseResult } from './novelParserService';
 // 重新匯出相關類型
 export type { NovelParseResult } from './novelParserService';
 import { novelParserService } from './novelParserService';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('novelAnalysisService');
 
 export interface AnalysisProgress {
   stage: 'preparing' | 'analyzing' | 'aggregating' | 'generating' | 'complete';
@@ -247,7 +251,7 @@ export class NovelAnalysisService {
         analysis.worldSetting = this.parseWorldSetting(worldResult);
         successCount++;
       } catch (error) {
-        console.error('世界觀分析失敗:', error);
+        log.error('世界觀分析失敗:', error);
       }
       onAreaComplete?.('世界觀');
     }
@@ -262,7 +266,7 @@ export class NovelAnalysisService {
         analysis.characters = this.parseCharacters(characterResult);
         successCount++;
       } catch (error) {
-        console.error('角色分析失敗:', error);
+        log.error('角色分析失敗:', error);
       }
       onAreaComplete?.('角色');
     }
@@ -277,7 +281,7 @@ export class NovelAnalysisService {
         analysis.plotStructure = this.parsePlotStructure(plotResult);
         successCount++;
       } catch (error) {
-        console.error('劇情分析失敗:', error);
+        log.error('劇情分析失敗:', error);
       }
       onAreaComplete?.('劇情');
     }
@@ -292,7 +296,7 @@ export class NovelAnalysisService {
         analysis.writingStyle = this.parseWritingStyle(styleResult);
         successCount++;
       } catch (error) {
-        console.error('風格分析失敗:', error);
+        log.error('風格分析失敗:', error);
       }
       onAreaComplete?.('風格');
     }
@@ -320,7 +324,7 @@ export class NovelAnalysisService {
 
       return response;
     } catch (error) {
-      console.error('AI 分析失敗:', error);
+      log.error('AI 分析失敗:', error);
       throw error;
     }
   }
@@ -347,7 +351,7 @@ export class NovelAnalysisService {
         culture: parsed.culture
       };
     } catch (error) {
-      console.error('解析世界觀設定失敗:', error);
+      log.error('解析世界觀設定失敗:', error);
       return {
         era: '未知時代',
         technology: '普通',
@@ -379,7 +383,7 @@ export class NovelAnalysisService {
         tags: this.generateCharacterTags(char)
       }));
     } catch (error) {
-      console.error('解析角色資訊失敗:', error);
+      log.error('解析角色資訊失敗:', error);
       return [];
     }
   }
@@ -401,7 +405,7 @@ export class NovelAnalysisService {
         characterDevelopment: parsed.turningPoints?.join('、') || ''
       }];
     } catch (error) {
-      console.error('解析劇情結構失敗:', error);
+      log.error('解析劇情結構失敗:', error);
       return [];
     }
   }
@@ -427,7 +431,7 @@ export class NovelAnalysisService {
         avoidances: []
       };
     } catch (error) {
-      console.error('解析寫作風格失敗:', error);
+      log.error('解析寫作風格失敗:', error);
       return this.getDefaultWritingGuidelines();
     }
   }

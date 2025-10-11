@@ -10,6 +10,10 @@ import CreateProjectModal from './modals/CreateProjectModal';
 import CharacterManagerModal from './modals/CharacterManagerModal';
 import TemplateManagerModal from './modals/TemplateManagerModal';
 import { DashboardPage, EditorPage } from './pages';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('StableApp');
 
 const StableApp: React.FC = () => {
   // 頁面狀態
@@ -34,7 +38,7 @@ const StableApp: React.FC = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log('開始初始化 React 應用程式...');
+        log.debug('開始初始化 React 應用程式...');
         
         // 模擬初始化過程（檢查 IPC 連接等）
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -43,14 +47,14 @@ const StableApp: React.FC = () => {
         const loadingElement = document.getElementById('loading');
         if (loadingElement) {
           loadingElement.style.display = 'none';
-          console.log('載入畫面已隱藏');
+          log.debug('載入畫面已隱藏');
         }
         
         setIsLoading(false);
-        console.log('React 應用程式初始化完成');
+        log.debug('React 應用程式初始化完成');
         
       } catch (error) {
-        console.error('應用程式初始化失敗:', error);
+        log.error('應用程式初始化失敗:', error);
         setError(`初始化失敗: ${error}`);
         setIsLoading(false);
       }
@@ -62,12 +66,12 @@ const StableApp: React.FC = () => {
   // 錯誤處理
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      console.error('組件錯誤:', event.error);
+      log.error('組件錯誤:', event.error);
       setError(`錯誤: ${event.error?.message || '未知錯誤'}`);
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error('未處理的 Promise 拒絕:', event.reason);
+      log.error('未處理的 Promise 拒絕:', event.reason);
       event.preventDefault();
     };
 
@@ -143,7 +147,7 @@ const StableApp: React.FC = () => {
     try {
       return pageContent();
     } catch (err) {
-      console.error('頁面渲染錯誤:', err);
+      log.error('頁面渲染錯誤:', err);
       return (
         <div style={{ padding: baseStyles.paddingXLarge, textAlign: 'center' }}>
           <h2>頁面載入錯誤</h2>

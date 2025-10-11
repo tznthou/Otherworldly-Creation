@@ -13,6 +13,10 @@ import {
   updateTemplate
 } from '../../store/slices/templatesSlice';
 import { TemplateImportWizard } from './TemplateImportWizard';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('TemplateManager');
 
 interface TemplateManagerProps {
   onEditTemplate?: (template: NovelTemplate) => void;
@@ -39,11 +43,11 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
     // 添加錯誤處理，避免卡住整個設定頁面
     const loadTemplates = async () => {
       try {
-        console.log('TemplateManager: 開始載入模板...');
+        log.debug('TemplateManager: 開始載入模板...');
         await dispatch(fetchAllTemplates()).unwrap();
-        console.log('TemplateManager: 模板載入成功');
+        log.debug('TemplateManager: 模板載入成功');
       } catch (error) {
-        console.error('TemplateManager: 模板載入失敗，使用空列表:', error);
+        log.error('TemplateManager: 模板載入失敗，使用空列表:', error);
         // 不要讓錯誤傳播，使用空列表繼續運行
       }
     };
@@ -88,7 +92,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
         setShowDeleteConfirm(false);
         setSelectedTemplate(null);
       } catch (error) {
-        console.error('刪除模板失敗:', error);
+        log.error('刪除模板失敗:', error);
       }
     }
   };
@@ -105,7 +109,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
         newName: `${template.name} (副本)` 
       })).unwrap();
     } catch (error) {
-      console.error('複製模板失敗:', error);
+      log.error('複製模板失敗:', error);
     }
   };
 
@@ -116,7 +120,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
         updates: { isActive: !template.isActive }
       })).unwrap();
     } catch (error) {
-      console.error('更新模板狀態失敗:', error);
+      log.error('更新模板狀態失敗:', error);
     }
   };
 
@@ -427,7 +431,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
         isOpen={showImportWizard}
         onClose={() => setShowImportWizard(false)}
         onComplete={(template) => {
-          console.log('模板匯入完成:', template);
+          log.debug('模板匯入完成:', template);
           setShowImportWizard(false);
           // 重新載入模板列表
           dispatch(fetchAllTemplates());

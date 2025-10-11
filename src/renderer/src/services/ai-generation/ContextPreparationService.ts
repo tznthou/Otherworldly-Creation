@@ -70,6 +70,10 @@ export interface ContextOptimizationConfig {
  * - 建構智能化的prompt
  */
 import { IntelligentContextBuilder, type OptimizedContext } from './IntelligentContextBuilder';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ContextPreparationService');
 
 export class ContextPreparationService {
   private intelligentContextBuilder: IntelligentContextBuilder;
@@ -125,7 +129,7 @@ export class ContextPreparationService {
         const metadata = JSON.parse(chapter.metadata);
         notes = metadata.notes?.trim() || null;
       } catch (parseError) {
-        console.warn('解析章節metadata失敗:', parseError);
+        log.warn('解析章節metadata失敗:', parseError);
         return null;
       }
 
@@ -138,7 +142,7 @@ export class ContextPreparationService {
         analysis: analyzeChapterNotes(notes)
       };
     } catch (error) {
-      console.warn('獲取章節筆記失敗:', error);
+      log.warn('獲取章節筆記失敗:', error);
       return null;
     }
   }
@@ -165,7 +169,7 @@ export class ContextPreparationService {
 
       return optimized.content || originalContext;
     } catch (error) {
-      console.warn('上下文優化失敗，使用原始內容:', error);
+      log.warn('上下文優化失敗，使用原始內容:', error);
       return originalContext;
     }
   }
@@ -203,7 +207,7 @@ export class ContextPreparationService {
 
     try {
       if (DEBUG_INTELLIGENT_CONTEXT) {
-        console.log('🧠 開始智能多維度上下文建構:', {
+        log.debug('🧠 開始智能多維度上下文建構:', {
           projectId,
           chapterId,
           maxTokenBudget: intelligentConfig.maxTokenBudget,
@@ -218,7 +222,7 @@ export class ContextPreparationService {
       );
 
       if (DEBUG_INTELLIGENT_CONTEXT) {
-        console.log('✅ 智能上下文建構完成:', {
+        log.debug('✅ 智能上下文建構完成:', {
           tokenCount: optimizedContext.tokenCount,
           compressionRatio: optimizedContext.compressionRatio,
           usedChapters: optimizedContext.usedChapters.length,
@@ -229,7 +233,7 @@ export class ContextPreparationService {
       return optimizedContext;
 
     } catch (error) {
-      console.error('🔥 智能上下文建構失敗:', error);
+      log.error('🔥 智能上下文建構失敗:', error);
       throw new Error(`智能上下文建構失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
     }
   }
@@ -316,7 +320,7 @@ export class ContextPreparationService {
     if (optimizationConfig.enableIntelligentOptimization) {
       try {
         if (DEBUG_INTELLIGENT_CONTEXT) {
-          console.log('🧠 使用智能多維度上下文建構模式');
+          log.debug('🧠 使用智能多維度上下文建構模式');
         }
         
         const intelligentResult = await this.prepareIntelligentContext(
@@ -329,7 +333,7 @@ export class ContextPreparationService {
         optimizedContext = intelligentResult.optimizedContent;
         
         if (DEBUG_INTELLIGENT_CONTEXT) {
-          console.log('✅ 智能上下文建構成功:', {
+          log.debug('✅ 智能上下文建構成功:', {
             originalMode: false,
             tokenCount: intelligentResult.tokenCount,
             compression: `${(intelligentResult.compressionRatio * 100).toFixed(1)}%`,
@@ -338,7 +342,7 @@ export class ContextPreparationService {
         }
 
       } catch (error) {
-        console.warn('⚠️ 智能上下文建構失敗，回退到傳統模式:', error);
+        log.warn('⚠️ 智能上下文建構失敗，回退到傳統模式:', error);
         
         // 回退到傳統優化模式
         if (optimizationConfig.enableOptimization && editorContext.textLength > 50000) {

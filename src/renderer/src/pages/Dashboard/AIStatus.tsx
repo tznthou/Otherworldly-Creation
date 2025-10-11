@@ -1,6 +1,10 @@
 import React, { useEffect, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { checkOllamaService, fetchServiceStatus, fetchModelsInfo, fetchAvailableModels } from '../../store/slices/aiSlice';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('AIStatus');
 
 const AIStatus: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -8,11 +12,11 @@ const AIStatus: React.FC = () => {
 
 
   const handleRefreshConnection = useCallback(async () => {
-    console.log('重新檢測 AI 服務...');
+    log.debug('重新檢測 AI 服務...');
     try {
       // 檢查服務狀態
       const serviceResult = await dispatch(checkOllamaService());
-      console.log('服務檢查結果:', serviceResult);
+      log.debug('服務檢查結果:', serviceResult);
       
       // 獲取詳細狀態
       await dispatch(fetchServiceStatus());
@@ -20,7 +24,7 @@ const AIStatus: React.FC = () => {
       // 如果連接成功，獲取模型信息
       const checkResult = serviceResult.payload;
       if (checkResult) {
-        console.log('服務已連接，獲取模型信息...');
+        log.debug('服務已連接，獲取模型信息...');
         
         // 延遲獲取模型，避免並發問題
         setTimeout(async () => {
@@ -28,14 +32,14 @@ const AIStatus: React.FC = () => {
             await dispatch(fetchModelsInfo());
             await dispatch(fetchAvailableModels());
           } catch (modelError) {
-            console.error('獲取模型信息失敗:', modelError);
+            log.error('獲取模型信息失敗:', modelError);
           }
         }, 500);
       } else {
-        console.log('服務未連接');
+        log.debug('服務未連接');
       }
     } catch (error) {
-      console.error('重新檢測失敗:', error);
+      log.error('重新檢測失敗:', error);
     }
   }, [dispatch]);
 
@@ -43,13 +47,13 @@ const AIStatus: React.FC = () => {
   useEffect(() => {
     const initAIStatus = async () => {
       try {
-        console.log('AIStatus 組件初始化...');
+        log.debug('AIStatus 組件初始化...');
         // 延遲執行防止競狀態
         setTimeout(() => {
           handleRefreshConnection();
         }, 1000);
       } catch (error) {
-        console.error('AIStatus 初始化失敗:', error);
+        log.error('AIStatus 初始化失敗:', error);
       }
     };
     
