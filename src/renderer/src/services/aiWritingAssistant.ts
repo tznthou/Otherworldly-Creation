@@ -1,17 +1,17 @@
 // AI 寫作助手 - 整合 Compromise.js NLP 分析的智能續寫服務
-import { 
-import { createLogger } from '../utils/logger';
-
-// 創建模組專用 logger
-const log = createLogger('aiWritingAssistant');
-  analyzeText, 
+import { createLogger } from from '../utils/logger';
+import {
+analyzeText, 
   extractEntities, 
   calculateWritingMetrics, 
   getPartOfSpeech as _getPartOfSpeech,
   type TextAnalysis,
   type EntityExtraction,
-  type WritingMetrics 
+  type WritingMetrics
 } from '../utils/nlpUtils';
+
+// 創建模組專用 logger
+const log = createLogger('aiWritingAssistant');
 
 export interface ContextAnalysis {
   textAnalysis: TextAnalysis;
