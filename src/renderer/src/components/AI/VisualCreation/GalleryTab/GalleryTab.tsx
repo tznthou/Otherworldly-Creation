@@ -33,6 +33,10 @@ import type { DeleteIllustrationRequest } from '../../../../api/types';
 import { useGalleryData } from '../../../../hooks/gallery/useGalleryData';
 import GalleryHeader from './components/GalleryHeader';
 import { GalleryContent } from './components/GalleryContent';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('GalleryTab');
 
 interface GalleryTabProps {
   className?: string;
@@ -89,9 +93,9 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
 
   // 自動獲取插畫歷史數據
   useEffect(() => {
-    console.log('🔍 [GalleryTab] useEffect 觸發 - currentProject:', currentProject?.id);
+    log.debug('🔍 [GalleryTab] useEffect 觸發 - currentProject:', currentProject?.id);
     if (currentProject) {
-      console.log('🔍 [GalleryTab] 開始調用 fetchIllustrationHistory...');
+      log.debug('🔍 [GalleryTab] 開始調用 fetchIllustrationHistory...');
       fetchIllustrationHistory();
     }
   }, [currentProject, fetchIllustrationHistory]);
@@ -200,7 +204,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
   const filteredIllustrations = getFilteredIllustrations();
   
   // 🔍 調試：檢查篩選過程
-  console.log('🔍 GalleryTab: 篩選過程調試', {
+  log.debug('🔍 GalleryTab: 篩選過程調試', {
     原始數據長度: illustrationHistory.length,
     當前項目ID: currentProject?.id,
     篩選器狀態: { filterProvider, filterStatus, filterVersions, searchTerm },
@@ -263,13 +267,13 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       
       const result = await createVersion(variantData);
       if (result.success) {
-        console.log('✅ 創建變體成功');
+        log.debug('✅ 創建變體成功');
         refetchData();
       } else {
-        console.error('❌ 創建變體失敗:', result.message);
+        log.error('❌ 創建變體失敗:', result.message);
       }
     } catch (error) {
-      console.error('❌ 創建變體時發生錯誤:', error);
+      log.error('❌ 創建變體時發生錯誤:', error);
     }
   };
   
@@ -284,14 +288,14 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
         dispatch(setVersionSelectedIds([illustration.versionId]));
       }
       dispatch(setActiveTab('versions'));
-      console.log('✅ 切換到版本管理標籤頁:', {
+      log.debug('✅ 切換到版本管理標籤頁:', {
         imageId: imageId,
         versionId: illustration.versionId,
         rootVersionId: illustration.rootVersionId,
         prompt: illustration.original_prompt.slice(0, 50)
       });
     } catch (error) {
-      console.error('❌ 查看版本歷史時發生錯誤:', error);
+      log.error('❌ 查看版本歷史時發生錯誤:', error);
     }
   };
 
@@ -318,7 +322,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     try {
       const imageUrl = illustration.image_url || (illustration.image_path ? convertFileSrc(illustration.image_path) : '');
       if (!imageUrl) {
-        console.error('圖像 URL 不存在');
+        log.error('圖像 URL 不存在');
         return;
       }
 
@@ -335,9 +339,9 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       link.click();
       document.body.removeChild(link);
 
-      console.log('✅ 圖像下載已觸發:', filename);
+      log.debug('✅ 圖像下載已觸發:', filename);
     } catch (error) {
-      console.error('❌ 下載圖像時發生錯誤:', error);
+      log.error('❌ 下載圖像時發生錯誤:', error);
     }
   };
 
@@ -361,7 +365,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     
     try {
       setIsDeleting(true);
-      console.log('🔍 [UltraSafeDelete] 開始超級安全刪除流程:', request);
+      log.debug('🔍 [UltraSafeDelete] 開始超級安全刪除流程:', request);
       
       // 防護性檢查
       if (!request || !request.imageIds || request.imageIds.length === 0) {
@@ -369,7 +373,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       }
       
       // 🚨 階段1：預防性UI標記 - 標記要刪除的項目但不移除
-      console.log('🎯 [UltraSafeDelete] 階段1: 預防性UI標記');
+      log.debug('🎯 [UltraSafeDelete] 階段1: 預防性UI標記');
       const imagesToDelete = new Set(request.imageIds);
       setDeletingImages(imagesToDelete); // 假設我們添加這個狀態來標記正在刪除的圖片
       
@@ -377,7 +381,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       dispatch(setSelectedImageIds([]));
       
       // 🚨 階段2：強制重新渲染和DOM清理
-      console.log('⚡ [UltraSafeDelete] 階段2: 強制DOM更新');
+      log.debug('⚡ [UltraSafeDelete] 階段2: 強制DOM更新');
       await new Promise<void>(resolve => {
         // 使用 flushSync 強制立即渲染
         startTransition(() => {
@@ -388,23 +392,23 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       });
       
       // 等待DOM完全更新
-      console.log('⏳ [UltraSafeDelete] 等待DOM完全更新...');
+      log.debug('⏳ [UltraSafeDelete] 等待DOM完全更新...');
       await new Promise(resolve => setTimeout(resolve, 2000)); // 等待2秒確保DOM清理
       
       // 🚨 階段3：從UI數據中移除項目
-      console.log('🗑️ [UltraSafeDelete] 階段3: 從數據中移除項目');
+      log.debug('🗑️ [UltraSafeDelete] 階段3: 從數據中移除項目');
       updateIllustrationHistory(prev => {
         const filtered = prev.filter(item => !imagesToDelete.has(item.id));
-        console.log(`📊 [UltraSafeDelete] 數據過濾: ${prev.length} -> ${filtered.length}`);
+        console.log(`📊 [UltraSafeDelete] 數據過濾: ${prev.length} -> ${filtered.length}`); // TODO: 複雜模式，需人工轉換
         return filtered;
       });
       
       // 再次等待確保虛擬化網格完成重新渲染
-      console.log('⏳ [UltraSafeDelete] 等待虛擬化網格完成渲染...');
+      log.debug('⏳ [UltraSafeDelete] 等待虛擬化網格完成渲染...');
       await new Promise(resolve => setTimeout(resolve, 1500)); // 額外1.5秒
       
       // 🚨 階段4：呼叫後端安全刪除API
-      console.log('🔄 [UltraSafeDelete] 階段4: 調用後端安全刪除API');
+      log.debug('🔄 [UltraSafeDelete] 階段4: 調用後端安全刪除API');
       const safeDeletePromise = api.illustration.deleteIllustrationsSafe({
         imageIds: request.imageIds,
         deleteType: request.deleteType,
@@ -419,10 +423,10 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       });
       
       const response = await Promise.race([safeDeletePromise, timeoutPromise]) as DeleteIllustrationResponse;
-      console.log('✅ [UltraSafeDelete] 後端API響應:', response);
+      log.debug('✅ [UltraSafeDelete] 後端API響應:', response);
       
       if (response && response.success) {
-        console.log('🎉 [UltraSafeDelete] 超級安全刪除成功');
+        log.debug('🎉 [UltraSafeDelete] 超級安全刪除成功');
         
         // 顯示成功通知
         startTransition(() => {
@@ -434,21 +438,21 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
               duration: 4000
             }));
             setShowDeleteConfirmation(false);
-            console.log('✅ [UltraSafeDelete] 成功通知已發送');
+            log.debug('✅ [UltraSafeDelete] 成功通知已發送');
           } catch (notificationError) {
-            console.error('❌ [UltraSafeDelete] 通知發送失敗:', notificationError);
+            log.error('❌ [UltraSafeDelete] 通知發送失敗:', notificationError);
             alert(`超級安全刪除完成: ${response.message}`);
             setShowDeleteConfirmation(false);
           }
         });
       } else {
-        console.log('⚠️ [UltraSafeDelete] 後端刪除失敗:', response);
+        log.debug('⚠️ [UltraSafeDelete] 後端刪除失敗:', response);
         
         // 恢復UI狀態（重新獲取數據）
         try {
           await fetchIllustrationHistory();
         } catch (refetchError) {
-          console.error('❌ [UltraSafeDelete] 恢復數據失敗:', refetchError);
+          log.error('❌ [UltraSafeDelete] 恢復數據失敗:', refetchError);
         }
         
         startTransition(() => {
@@ -460,20 +464,20 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
               duration: 0
             }));
           } catch (notificationError) {
-            console.error('❌ [UltraSafeDelete] 錯誤通知發送失敗:', notificationError);
+            log.error('❌ [UltraSafeDelete] 錯誤通知發送失敗:', notificationError);
             alert(`超級安全刪除失敗: ${response?.message || '未知錯誤'}`);
           }
         });
       }
       isOperationComplete = true;
     } catch (error) {
-      console.error('💥 [UltraSafeDelete] 超級安全刪除發生嚴重錯誤:', error);
+      log.error('💥 [UltraSafeDelete] 超級安全刪除發生嚴重錯誤:', error);
       
       // 恢復UI狀態
       try {
         await fetchIllustrationHistory();
       } catch (refetchError) {
-        console.error('❌ [UltraSafeDelete] 錯誤後恢復數據失敗:', refetchError);
+        log.error('❌ [UltraSafeDelete] 錯誤後恢復數據失敗:', refetchError);
       }
       
       // 嘗試發送錯誤通知
@@ -487,16 +491,16 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
           }));
         });
       } catch (notificationError) {
-        console.error('❌ [UltraSafeDelete] 嚴重錯誤通知發送失敗:', notificationError);
+        log.error('❌ [UltraSafeDelete] 嚴重錯誤通知發送失敗:', notificationError);
         alert(`超級安全刪除嚴重錯誤: ${error instanceof Error ? error.message : '未知錯誤'}`);
       }
     } finally {
       if (!isOperationComplete) {
-        console.warn('⚠️ [UltraSafeDelete] 操作未正常完成，強制清理狀態');
+        log.warn('⚠️ [UltraSafeDelete] 操作未正常完成，強制清理狀態');
       }
       setDeletingImages(new Set()); // 清理刪除標記狀態
       setIsDeleting(false);
-      console.log('🏁 [UltraSafeDelete] 超級安全刪除流程完成');
+      log.debug('🏁 [UltraSafeDelete] 超級安全刪除流程完成');
     }
   };
 
@@ -506,7 +510,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
     
     try {
       setIsDeleting(true);
-      console.log('🔍 [DEBUG] 開始執行刪除操作:', request);
+      log.debug('🔍 [DEBUG] 開始執行刪除操作:', request);
       
       // 防護性檢查
       if (!request || !request.imageIds || request.imageIds.length === 0) {
@@ -520,12 +524,12 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       
       const deletePromise = api.illustration.deleteIllustrations(request);
       
-      console.log('🔄 [DEBUG] 開始 API 調用...');
+      log.debug('🔄 [DEBUG] 開始 API 調用...');
       const response = await Promise.race([deletePromise, timeoutPromise]) as DeleteIllustrationResponse;
-      console.log('✅ [DEBUG] API 調用完成:', response);
+      log.debug('✅ [DEBUG] API 調用完成:', response);
       
       if (response && response.success) {
-        console.log('🎉 [DEBUG] 刪除成功，更新 UI 狀態');
+        log.debug('🎉 [DEBUG] 刪除成功，更新 UI 狀態');
         
         // 安全地更新列表狀態
         try {
@@ -534,7 +538,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
           );
           dispatch(setSelectedImageIds([]));
         } catch (stateError) {
-          console.error('❌ [DEBUG] 狀態更新失敗:', stateError);
+          log.error('❌ [DEBUG] 狀態更新失敗:', stateError);
         }
         
         const successMessage = response.deletedToPath ? 
@@ -551,16 +555,16 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
               duration: 4000
             }));
             setShowDeleteConfirmation(false);
-            console.log('✅ [DEBUG] 成功通知已發送');
+            log.debug('✅ [DEBUG] 成功通知已發送');
           } catch (notificationError) {
-            console.error('❌ [DEBUG] 通知發送失敗:', notificationError);
+            log.error('❌ [DEBUG] 通知發送失敗:', notificationError);
             // 使用原生 alert 作為備用
             alert(`刪除完成: ${response.message}`);
             setShowDeleteConfirmation(false);
           }
         });
       } else {
-        console.log('⚠️ [DEBUG] 刪除操作失敗:', response);
+        log.debug('⚠️ [DEBUG] 刪除操作失敗:', response);
         // 使用 startTransition 避免重啟
         startTransition(() => {
           try {
@@ -571,7 +575,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
               duration: 0
             }));
           } catch (notificationError) {
-            console.error('❌ [DEBUG] 錯誤通知發送失敗:', notificationError);
+            log.error('❌ [DEBUG] 錯誤通知發送失敗:', notificationError);
             // 使用原生 alert 作為備用
             alert(`刪除失敗: ${response?.message || '未知錯誤'}`);
           }
@@ -579,7 +583,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       }
       isOperationComplete = true;
     } catch (error) {
-      console.error('💥 [DEBUG] 刪除操作發生嚴重錯誤:', error);
+      log.error('💥 [DEBUG] 刪除操作發生嚴重錯誤:', error);
       
       // 嘗試發送錯誤通知
       try {
@@ -592,7 +596,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
           }));
         });
       } catch (notificationError) {
-        console.error('❌ [DEBUG] 緊急錯誤通知也失敗了:', notificationError);
+        log.error('❌ [DEBUG] 緊急錯誤通知也失敗了:', notificationError);
         // 最後手段：使用原生 alert
         alert(`系統錯誤: ${error instanceof Error ? error.message : '操作失敗，請重新啟動應用程式'}`);
       }
@@ -603,16 +607,16 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       try {
         if (isOperationComplete) {
           setIsDeleting(false);
-          console.log('🧹 [DEBUG] 清理操作狀態完成');
+          log.debug('🧹 [DEBUG] 清理操作狀態完成');
         }
       } catch (cleanupError) {
-        console.error('❌ [DEBUG] 狀態清理失敗:', cleanupError);
+        log.error('❌ [DEBUG] 狀態清理失敗:', cleanupError);
         // 強制清理
         setTimeout(() => {
           try {
             setIsDeleting(false);
           } catch (_) {
-            console.error('❌ [DEBUG] 強制狀態清理也失敗');
+            log.error('❌ [DEBUG] 強制狀態清理也失敗');
           }
         }, 100);
       }
@@ -785,7 +789,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       }));
       
     } catch (error) {
-      console.error('設定封面失敗:', error);
+      log.error('設定封面失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '設定封面失敗',
@@ -799,7 +803,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
   // 應用批次重命名
   const handleApplyRename = async (operation: BatchRenameOperation) => {
     try {
-      console.log('應用批次重命名:', operation);
+      log.debug('應用批次重命名:', operation);
       
       // 根據命名規則生成新名稱
       const renameOperations = operation.imageIds.map((imageId, index) => {
@@ -861,7 +865,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       
       setShowImageNamingPanel(false);
     } catch (error) {
-      console.error('批次重命名失敗:', error);
+      log.error('批次重命名失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '重命名失敗',
@@ -874,7 +878,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
   // 匯出到電子書
   const handleExportToEbook = async (config: EbookExportConfig) => {
     try {
-      console.log('匯出到電子書:', config);
+      log.debug('匯出到電子書:', config);
       const enabledPlacements = Object.entries(config.imagePlacementRules)
         .filter(([_, rule]) => rule.enabled)
         .map(([placement]) => placement)
@@ -888,7 +892,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       }));
       setShowEbookIntegrationPanel(false);
     } catch (error) {
-      console.error('電子書整合失敗:', error);
+      log.error('電子書整合失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '電子書整合失敗',
@@ -1066,8 +1070,8 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
                   localFilePath={previewImage.full_path || previewImage.image_path}
                   alt={previewImage.original_prompt}
                   className="w-full h-full object-contain max-h-[60vh] rounded"
-                  onLoad={() => console.log('預覽圖像載入完成')}
-                  onError={() => console.error('預覽圖像載入失敗')}
+                  onLoad={() => log.debug('預覽圖像載入完成')}
+                  onError={() => log.error('預覽圖像載入失敗')}
                   fallbackIcon="🖼️"
                 />
               </div>

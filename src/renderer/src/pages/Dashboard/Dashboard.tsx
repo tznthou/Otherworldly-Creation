@@ -9,6 +9,10 @@ import type { Chapter } from '../../api/models';
 // import { initStatusManager } from '../../modules/chapterStatus';
 // import { useStatusStatistics } from '../../modules/chapterStatus/hooks';
 import QuickActions from './QuickActions';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('Dashboard');
 
 const Dashboard: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -32,7 +36,7 @@ const Dashboard: React.FC = () => {
   const currentProviderName = currentProvider?.name || '未選擇';
   
   // 🐛 調試：記錄關鍵數據
-  console.log('Dashboard: AI狀態調試 -', {
+  log.debug('Dashboard: AI狀態調試 -', {
     currentProviderId,
     currentProviderName,
     availableModelsLength: availableModels.length,
@@ -49,7 +53,7 @@ const Dashboard: React.FC = () => {
   // 計算章節統計
   const calculateChapterStats = useCallback(async () => {
     try {
-      console.log('Dashboard: 開始計算章節統計...');
+      log.debug('Dashboard: 開始計算章節統計...');
       const { api } = await import('../../api');
       const { chapterStatusService } = await import('../../services/chapterStatusService');
       
@@ -70,7 +74,7 @@ const Dashboard: React.FC = () => {
                 status = chapter.status;
               }
             } catch (error) {
-              console.warn(`Dashboard: 章節 ${chapter.title} metadata 解析失敗:`, error);
+              console.warn(`Dashboard: 章節 ${chapter.title} metadata 解析失敗:`, error); // TODO: 複雜模式，需人工轉換
               status = chapter.status || 'draft';
             }
             
@@ -82,7 +86,7 @@ const Dashboard: React.FC = () => {
           
           allChapters = [...allChapters, ...chaptersWithStatus];
         } catch (error) {
-          console.warn(`無法載入專案 ${project.name} 的章節:`, error);
+          console.warn(`無法載入專案 ${project.name} 的章節:`, error); // TODO: 複雜模式，需人工轉換
         }
       }
       
@@ -112,7 +116,7 @@ const Dashboard: React.FC = () => {
         return acc;
       }, {} as Record<string, number>);
 
-      console.log('Dashboard: 章節統計計算完成', {
+      log.debug('Dashboard: 章節統計計算完成', {
         totalChapters,
         completedCount,
         completionRate,
@@ -124,7 +128,7 @@ const Dashboard: React.FC = () => {
         })) // 顯示前3個章節的狀態信息
       });
     } catch (error) {
-      console.error('Dashboard: 章節統計計算失敗:', error);
+      log.error('Dashboard: 章節統計計算失敗:', error);
     }
   }, [projects]);
 
@@ -132,21 +136,21 @@ const Dashboard: React.FC = () => {
     // 初始化狀態管理系統
     const initStatusSystem = async () => {
       try {
-        console.log('Dashboard: 初始化狀態管理系統...');
-        console.log('Dashboard: 狀態管理系統初始化完成');
+        log.debug('Dashboard: 初始化狀態管理系統...');
+        log.debug('Dashboard: 狀態管理系統初始化完成');
       } catch (error) {
-        console.error('Dashboard: 狀態管理系統初始化失敗:', error);
+        log.error('Dashboard: 狀態管理系統初始化失敗:', error);
       }
     };
     
     // 載入專案列表，添加錯誤處理
     const loadProjects = async () => {
       try {
-        console.log('Dashboard: 開始載入專案...');
+        log.debug('Dashboard: 開始載入專案...');
         const result = await dispatch(fetchProjects()).unwrap();
-        console.log('Dashboard: 專案載入成功，數量:', result.length);
+        log.debug('Dashboard: 專案載入成功，數量:', result.length);
       } catch (error) {
-        console.error('Dashboard: 專案載入失敗:', error);
+        log.error('Dashboard: 專案載入失敗:', error);
       }
     };
     
@@ -154,30 +158,30 @@ const Dashboard: React.FC = () => {
     loadProjects();
     
     // ✅ AI 提供者列表由 App.tsx 統一載入，這裡不需要重複載入
-    console.log('Dashboard: AI 提供者列表由 App.tsx 統一管理');
+    log.debug('Dashboard: AI 提供者列表由 App.tsx 統一管理');
     
     // 從 localStorage 載入保存的 AI 設定
     const loadSavedAISettings = () => {
-      console.log('Dashboard: 開始載入保存的 AI 設定...');
+      log.debug('Dashboard: 開始載入保存的 AI 設定...');
       try {
         const savedProvider = localStorage.getItem('ai_default_provider');
         const savedModel = localStorage.getItem('ai_default_model');
         
-        console.log('Dashboard: localStorage 值:', { savedProvider, savedModel });
+        log.debug('Dashboard: localStorage 值:', { savedProvider, savedModel });
         
         if (savedProvider) {
-          console.log('Dashboard: 載入保存的預設提供者:', savedProvider);
+          log.debug('Dashboard: 載入保存的預設提供者:', savedProvider);
           dispatch(setDefaultProvider(savedProvider));
         }
         
         if (savedModel) {
-          console.log('Dashboard: 載入保存的預設模型:', savedModel);
+          log.debug('Dashboard: 載入保存的預設模型:', savedModel);
           dispatch(setDefaultModel(savedModel));
         }
       } catch (error) {
-        console.error('Dashboard: 載入保存的 AI 設定失敗:', error);
+        log.error('Dashboard: 載入保存的 AI 設定失敗:', error);
       }
-      console.log('Dashboard: AI 設定載入完成');
+      log.debug('Dashboard: AI 設定載入完成');
     };
     
     // 只在首次載入時執行，避免重複載入
@@ -187,8 +191,8 @@ const Dashboard: React.FC = () => {
     }
     
     // AI 服務狀態完全由 App.tsx 處理，這裡不再重複調用
-    console.log('Dashboard: AI 服務由 App.tsx 統一管理');
-    console.log('Dashboard: AI 狀態 -', {
+    log.debug('Dashboard: AI 服務由 App.tsx 統一管理');
+    log.debug('Dashboard: AI 狀態 -', {
       isOllamaConnected,
       availableModels: availableModels.length,
       modelsInfo: modelsInfo?.success,
@@ -208,7 +212,7 @@ const Dashboard: React.FC = () => {
   // 🔄 監聽全局統計更新通知
   useEffect(() => {
     const handleStatsRefresh = () => {
-      console.log('📊 [Dashboard] 收到全局統計更新通知，重新計算統計...');
+      log.debug('📊 [Dashboard] 收到全局統計更新通知，重新計算統計...');
       if (projects.length > 0) {
         calculateChapterStats();
       }

@@ -18,6 +18,10 @@ import SimpleErrorBoundary from './components/UI/SimpleErrorBoundary';
 import ProgressContainer from './components/Progress/ProgressContainer';
 import { i18n } from './i18n';
 import { initReactScan } from './utils/reactScan';
+import { createLogger } from './utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('App');
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -30,27 +34,27 @@ const App: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
-        console.log('🚀 開始應用程式初始化...');
+        log.debug('🚀 開始應用程式初始化...');
 
         // 🔐 強制測試加密設定遷移
-        console.log('🔐 [FORCE TEST] 開始測試加密設定遷移...');
+        log.debug('🔐 [FORCE TEST] 開始測試加密設定遷移...');
         const { SettingsService } = await import('./services/settingsService');
-        console.log('🔐 [FORCE TEST] SettingsService imported');
+        log.debug('🔐 [FORCE TEST] SettingsService imported');
         const testSettings = await SettingsService.loadSettings();
-        console.log('🔐 [FORCE TEST] 設定載入完成:', testSettings);
+        log.debug('🔐 [FORCE TEST] 設定載入完成:', testSettings);
         const lcCheck = localStorage.getItem('genesis-chronicle-settings');
-        console.log('🔐 [FORCE TEST] localStorage check:', lcCheck ? `❌ 仍存在 (${lcCheck.length} chars)` : '✅ 已清除');
+        console.log('🔐 [FORCE TEST] localStorage check:', lcCheck ? `❌ 仍存在 (${lcCheck.length} chars)` : '✅ 已清除'); // TODO: 複雜模式，需人工轉換
 
         // 初始化 React Scan 性能監控（僅開發環境）
         initReactScan();
 
         // 初始化 i18n 系統
-        console.log('🌐 初始化國際化系統...');
+        log.debug('🌐 初始化國際化系統...');
         try {
           await i18n.initialize();
-          console.log('✅ 國際化系統初始化完成');
+          log.debug('✅ 國際化系統初始化完成');
         } catch (error) {
-          console.warn('⚠️  國際化系統初始化失敗，使用預設語言:', error);
+          log.warn('⚠️  國際化系統初始化失敗，使用預設語言:', error);
         }
         
         // 最小延遲確保所有系統就緒
@@ -67,45 +71,45 @@ const App: React.FC = () => {
         // 背景載入資料（不阻塞 UI）
         setTimeout(async () => {
           try {
-            console.log('📂 載入專案資料...');
+            log.debug('📂 載入專案資料...');
             await dispatch(fetchProjects()).unwrap();
-            console.log('✅ 專案資料載入完成');
+            log.debug('✅ 專案資料載入完成');
           } catch (error) {
-            console.warn('⚠️  專案資料載入失敗:', error);
+            log.warn('⚠️  專案資料載入失敗:', error);
           }
         }, 100);
         
         // 背景初始化 AI 服務
         setTimeout(async () => {
           try {
-            console.log('🤖 初始化 AI 提供者系統...');
+            log.debug('🤖 初始化 AI 提供者系統...');
             
             const providers = await dispatch(fetchAIProviders()).unwrap();
-            console.log('✅ AI 提供者列表載入完成，數量:', providers.length);
+            log.debug('✅ AI 提供者列表載入完成，數量:', providers.length);
             
             const savedProvider = localStorage.getItem('ai_default_provider');
             const currentProvider = savedProvider || (providers.find(p => p.is_enabled)?.id);
             
-            console.log('🎯 當前提供者:', currentProvider);
+            log.debug('🎯 當前提供者:', currentProvider);
             
             if (currentProvider) {
-              console.log('📡 載入提供者模型:', currentProvider);
+              log.debug('📡 載入提供者模型:', currentProvider);
               
               try {
                 await dispatch(fetchModelsInfo()).unwrap();
                 await dispatch(setActiveProvider(currentProvider)).unwrap();
-                console.log('✅ AI 提供者系統初始化完成');
+                log.debug('✅ AI 提供者系統初始化完成');
               } catch (error) {
-                console.warn('⚠️  AI 提供者系統初始化部分失敗:', error);
+                log.warn('⚠️  AI 提供者系統初始化部分失敗:', error);
               }
             }
           } catch (error) {
-            console.warn('⚠️  AI 提供者系統初始化失敗:', error);
+            log.warn('⚠️  AI 提供者系統初始化失敗:', error);
           }
         }, 500);
         
       } catch (error) {
-        console.error('❌ 應用程式初始化失敗:', error);
+        log.error('❌ 應用程式初始化失敗:', error);
         setInitError(error instanceof Error ? error.message : '未知錯誤');
       }
     };
