@@ -5,17 +5,17 @@ import { SafeImage } from '../../UI/SafeImage';
 import type { RootState, AppDispatch } from '../../../store/store';
 
 // Redux actions
-import {
 import { createLogger } from '../../../utils/logger';
-
-// 創建模組專用 logger
-const log = createLogger('ImagePreviewModal');
+import {
   setShowImagePreview,
   setCurrentImageIndex,
   setShowImageDetails,
   toggleImageSelection,
   setSelectedImageIds,
 } from '../../../store/slices/visualCreationSlice';
+
+// 創建模組專用 logger
+const log = createLogger('ImagePreviewModal');
 
 interface ImagePreviewModalProps {
   onClose?: () => void;

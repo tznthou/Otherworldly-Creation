@@ -20,12 +20,9 @@ interface RepairResult {
   errors?: string[];
   warnings?: string[];
 }
-import { 
-import { createLogger } from '../../utils/logger';
-
-// 創建模組專用 logger
-const log = createLogger('DatabaseMaintenance');
-  Database, 
+import { createLogger } from '../../../utils/logger';
+import {
+Database, 
   CheckCircle, 
   AlertTriangle, 
   XCircle, 
@@ -39,6 +36,9 @@ const log = createLogger('DatabaseMaintenance');
   ToggleLeft,
   ToggleRight
 } from 'lucide-react';
+
+// 創建模組專用 logger
+const log = createLogger('DatabaseMaintenance');
 
 interface DatabaseIssue {
   type: 'integrity' | 'orphan' | 'corruption' | 'constraint' | 'performance';

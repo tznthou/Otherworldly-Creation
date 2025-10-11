@@ -10,18 +10,18 @@ import { api } from '../../api';
 import { AIGenerationProgress } from '../AI';
 import AIHistoryPanel from '../AI/AIHistoryPanel';
 import { ErrorSeverity } from '../../types/error';
-import { 
-import { createLogger } from '../../utils/logger';
-
-// 創建模組專用 logger
-const log = createLogger('SimpleAIWritingPanel');
-  analyzeWritingContext, 
+import { createLogger } from '../../../utils/logger';
+import {
+analyzeWritingContext, 
   generateSmartParams, 
   checkGeneratedQuality,
   type ContextAnalysis,
   type SmartGenerationParams,
-  type QualityCheck 
+  type QualityCheck
 } from '../../services/aiWritingAssistant';
+
+// 創建模組專用 logger
+const log = createLogger('SimpleAIWritingPanel');
 
 interface SimpleAIWritingPanelProps {
   projectId: string;

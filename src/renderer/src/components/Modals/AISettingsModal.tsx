@@ -4,16 +4,16 @@ import { closeModal, addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, setCurrentProvider, setDefaultProvider, setDefaultModel } from '../../store/slices/aiSlice';
 import ConfirmDialog from '../UI/ConfirmDialog';
 import { api } from '../../api';
-import type { 
 import { createLogger } from '../../utils/logger';
-
-// 創建模組專用 logger
-const log = createLogger('AISettingsModal');
-  AIProvider, 
-  CreateAIProviderRequest, 
+import type {
+  AIProvider,
+  CreateAIProviderRequest,
   UpdateAIProviderRequest,
   AIProviderTestResult
 } from '../../api/models';
+
+// 創建模組專用 logger
+const log = createLogger('AISettingsModal');
 
 const AISettingsModal: React.FC = () => {
   const dispatch = useAppDispatch();
