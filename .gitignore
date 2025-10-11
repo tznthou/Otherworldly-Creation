@@ -219,3 +219,11 @@ batch*.py
 batch*-final-todo.py
 cleanup-*.py
 tech-debt-*.py
+
+# Temporary shell scripts (development/testing only)
+batch*.sh
+count-*.sh
+final-*.sh
+init-db.sh
+start-dev.sh
+security-check.sh  # Duplicate of scripts/security-check.sh
