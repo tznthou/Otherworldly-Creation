@@ -3,6 +3,10 @@ import { AppError, ErrorSeverity } from '../../types/error';
 import { useAppDispatch } from '../../hooks/redux';
 import { dismissError, resolveError } from '../../store/slices/errorSlice';
 import CosmicButton from '../UI/CosmicButton';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ErrorDisplay');
 
 interface ErrorDisplayProps {
   error: AppError;
@@ -65,7 +69,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
       await handler();
       dispatch(resolveError(error.id));
     } catch (err) {
-      console.error('執行建議失敗:', err);
+      log.error('執行建議失敗:', err);
     } finally {
       setExecutingSuggestion(null);
     }

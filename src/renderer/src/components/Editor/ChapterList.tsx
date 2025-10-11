@@ -5,6 +5,10 @@ import { openModal, addNotification } from '../../store/slices/uiSlice';
 import { Menu, MenuItem } from '../UI/Menu';
 import ChapterBatchActions from './ChapterBatchActions';
 import ConfirmDialog from '../UI/ConfirmDialog';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ChapterList');
 
 interface ChapterListProps {
   chapters: Chapter[];
@@ -108,7 +112,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
       
       setDeleteConfirm({ show: false, chapter: null });
     } catch (error) {
-      console.error('刪除章節失敗:', error);
+      log.error('刪除章節失敗:', error);
       
       dispatch(addNotification({
         type: 'error',
@@ -269,7 +273,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
                     <MenuItem 
                       icon="🗑️" 
                       onClick={() => {
-                        console.log('刪除按鈕被點擊', chapter);
+                        log.debug('刪除按鈕被點擊', chapter);
                         setDeleteConfirm({ show: true, chapter });
                       }}
                       className="text-red-500 hover:text-red-400"

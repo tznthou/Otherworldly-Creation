@@ -4,6 +4,10 @@ import { selectEditorSettings, selectIsReadingMode, toggleReadingMode } from '..
 import { Descendant } from 'slate';
 import { ReactEditor } from 'slate-react';
 import SlateEditor from './SlateEditor';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ReadingModeOverlay');
 
 interface ReadingModeOverlayProps {
   children: React.ReactNode;
@@ -79,11 +83,11 @@ const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({
   }, [hideTimeout]);
 
   if (!isReadingMode) {
-    console.log('ReadingModeOverlay: Not in reading mode, rendering children normally');
+    log.debug('ReadingModeOverlay: Not in reading mode, rendering children normally');
     return <>{children}</>;
   }
   
-  console.log('ReadingModeOverlay: In reading mode, applying overlay');
+  log.debug('ReadingModeOverlay: In reading mode, applying overlay');
 
   // 計算字數
   const getWordCount = () => {

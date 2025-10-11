@@ -1,5 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { Character } from '../../types/character';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CharacterDeleteModal');
 
 interface CharacterReference {
   type: 'chapter' | 'relationship';
@@ -55,7 +59,7 @@ export const CharacterDeleteModal: React.FC<CharacterDeleteModalProps> = ({
       setReferenceCheck(result);
       setShowReferences(result.references.length > 0);
     } catch (error) {
-      console.error('檢查角色引用失敗:', error);
+      log.error('檢查角色引用失敗:', error);
     } finally {
       setCheckingReferences(false);
     }
@@ -67,7 +71,7 @@ export const CharacterDeleteModal: React.FC<CharacterDeleteModalProps> = ({
       await onConfirm(forceDelete);
       onClose();
     } catch (error) {
-      console.error('刪除角色失敗:', error);
+      log.error('刪除角色失敗:', error);
     } finally {
       setLoading(false);
     }

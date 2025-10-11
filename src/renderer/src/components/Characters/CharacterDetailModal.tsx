@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Character } from '../../types/character';
 import { CharacterDeleteModal } from './CharacterDeleteModal';
 import api from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CharacterDetailModal');
 
 interface CharacterDetailModalProps {
   isOpen: boolean;
@@ -41,7 +45,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
       // 通知父組件重新載入列表
       window.location.reload();
     } catch (error) {
-      console.error('刪除角色失敗:', error);
+      log.error('刪除角色失敗:', error);
       throw error;
     }
   };

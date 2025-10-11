@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { Chapter, updateChapter } from '../../store/slices/chaptersSlice';
 import { addNotification } from '../../store/slices/uiSlice';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ChapterNotes');
 
 interface ChapterNotesProps {
   chapter: Chapter;
@@ -24,7 +28,7 @@ const ChapterNotes: React.FC<ChapterNotesProps> = ({ chapter }) => {
         setNotes('');
       }
     } catch (error) {
-      console.error('讀取章節筆記失敗:', error);
+      log.error('讀取章節筆記失敗:', error);
       setNotes('');
     }
   }, [chapter]);
@@ -39,7 +43,7 @@ const ChapterNotes: React.FC<ChapterNotesProps> = ({ chapter }) => {
         try {
           existingMetadata = JSON.parse(chapter.metadata);
         } catch (_e) {
-          console.warn('無法解析現有 metadata，使用空對象');
+          log.warn('無法解析現有 metadata，使用空對象');
         }
       }
       
@@ -63,7 +67,7 @@ const ChapterNotes: React.FC<ChapterNotesProps> = ({ chapter }) => {
         duration: 3000,
       }));
     } catch (error) {
-      console.error('儲存章節筆記失敗:', error);
+      log.error('儲存章節筆記失敗:', error);
       
       dispatch(addNotification({
         type: 'error',

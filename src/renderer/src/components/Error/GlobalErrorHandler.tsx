@@ -4,6 +4,10 @@ import { addError, selectActiveErrors, selectCriticalErrors, cleanupOldErrors } 
 import { ERROR_CODES } from '../../types/error';
 import ErrorDisplay from './ErrorDisplay';
 import { isElectron } from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('GlobalErrorHandler');
 
 interface GlobalErrorHandlerProps {
   children: React.ReactNode;
@@ -106,7 +110,7 @@ const GlobalErrorHandler: React.FC<GlobalErrorHandlerProps> = ({ children }) => 
       try {
         window.electronAPI.onError(handleMainProcessError);
       } catch (error) {
-        console.warn('設置主進程錯誤監聽器失敗:', error);
+        log.warn('設置主進程錯誤監聽器失敗:', error);
       }
     }
   }, [dispatch]);
