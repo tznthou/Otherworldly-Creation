@@ -1,5 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { NovelTemplate } from '../../types/template';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('uiSlice');
 
 interface UIState {
   sidebarCollapsed: boolean;
@@ -128,13 +132,13 @@ const uiSlice = createSlice({
     
     // 模態框管理
     openModal: (state, action: PayloadAction<keyof UIState['modals']>) => {
-      console.log('🔄 [uiSlice] openModal reducer 被調用:', {
+      log.debug('🔄 [uiSlice] openModal reducer 被調用:', {
         modalName: action.payload,
         currentState: state.modals[action.payload],
         allModals: { ...state.modals }
       });
       state.modals[action.payload] = true;
-      console.log('🔄 [uiSlice] openModal reducer 完成:', {
+      log.debug('🔄 [uiSlice] openModal reducer 完成:', {
         modalName: action.payload,
         newState: state.modals[action.payload],
         allModals: { ...state.modals }
