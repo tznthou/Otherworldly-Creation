@@ -12,6 +12,10 @@ import { DetailedGenerationResult } from '../../types/illustration';
 import { Card } from '../../components/UI/Card';
 import CosmicButton from '../../components/UI/CosmicButton';
 import { Alert } from '../../components/UI/Alert';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('IllustrationManager');
 
 // interface IllustrationManagerProps {}
 
@@ -66,7 +70,7 @@ const IllustrationManager: React.FC = () => {
   ];
 
   const handleGenerationComplete = (result: DetailedGenerationResult) => {
-    console.log('插畫生成完成:', result);
+    log.debug('插畫生成完成:', result);
     // 可以添加成功通知或自動切換到歷史頁面
     setActiveTab('history');
   };
@@ -159,7 +163,7 @@ const IllustrationManager: React.FC = () => {
         {activeTab === 'consistency' && (
           <CharacterConsistencyPanel
             onReportGenerated={(report) => {
-              console.log('一致性報告已生成:', report);
+              log.debug('一致性報告已生成:', report);
             }}
           />
         )}

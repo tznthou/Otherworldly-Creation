@@ -2,6 +2,10 @@ import React from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { openModal } from '../../store/slices/uiSlice';
 import { useNavigate } from 'react-router-dom';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('QuickActions');
 
 const QuickActions: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -98,9 +102,9 @@ const QuickActions: React.FC = () => {
       icon: '🖼️',
       color: 'from-pink-500 to-rose-600',
       action: () => {
-        console.log('🎨 [QuickActions] 幻想具現卡片被點擊');
+        log.debug('🎨 [QuickActions] 幻想具現卡片被點擊');
         dispatch(openModal('aiIllustration'));
-        console.log('🎨 [QuickActions] openModal action 已派發完成');
+        log.debug('🎨 [QuickActions] openModal action 已派發完成');
       },
     },
     {

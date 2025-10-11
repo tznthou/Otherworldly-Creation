@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import SaveManager, { SaveOperation } from '../../services/saveManager';
 import { useAutoSave } from '../../hooks/useAutoSave';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('SaveStatusPanel');
 
 interface SaveStatusPanelProps {
   isOpen: boolean;
@@ -40,7 +44,7 @@ const SaveStatusPanel: React.FC<SaveStatusPanelProps> = ({ isOpen, onClose }) =>
     try {
       await SaveManager.forceSaveAll();
     } catch (error) {
-      console.error('強制儲存失敗:', error);
+      log.error('強制儲存失敗:', error);
     }
   };
 

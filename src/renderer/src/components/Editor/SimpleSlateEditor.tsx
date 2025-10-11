@@ -2,6 +2,10 @@ import React, { useCallback, useMemo } from 'react';
 import { createEditor, Descendant } from 'slate';
 import { Slate, Editable, withReact, RenderElementProps, RenderLeafProps } from 'slate-react';
 import { withHistory } from 'slate-history';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('SimpleSlateEditor');
 
 // 定義編輯器節點類型
 type CustomElement = {
@@ -39,7 +43,7 @@ const SimpleSlateEditor: React.FC<SimpleSlateEditorProps> = ({
   // isGenerating = false,
   // showToolbar = true
 }) => {
-  console.log('[SimpleSlateEditor] Received value:', {
+  log.debug('[SimpleSlateEditor] Received value:', {
     type: typeof value,
     isArray: Array.isArray(value),
     length: Array.isArray(value) ? value.length : 'N/A',
@@ -49,7 +53,7 @@ const SimpleSlateEditor: React.FC<SimpleSlateEditorProps> = ({
   // 確保 value 是有效的
   const safeValue = useMemo(() => {
     if (!Array.isArray(value) || value.length === 0) {
-      console.log('[SimpleSlateEditor] Using default value');
+      log.debug('[SimpleSlateEditor] Using default value');
       return [{ type: 'paragraph' as const, children: [{ text: '' }] } as CustomElement];
     }
     return value;
@@ -61,7 +65,7 @@ const SimpleSlateEditor: React.FC<SimpleSlateEditorProps> = ({
   }, []);
 
   const handleChange = useCallback((newValue: Descendant[]) => {
-    console.log('[SimpleSlateEditor] Content changed:', newValue);
+    log.debug('[SimpleSlateEditor] Content changed:', newValue);
     onChange(newValue);
   }, [onChange]);
 
@@ -87,7 +91,7 @@ const SimpleSlateEditor: React.FC<SimpleSlateEditorProps> = ({
       </div>
     );
   } catch (error) {
-    console.error('[SimpleSlateEditor] Render error:', error);
+    log.error('[SimpleSlateEditor] Render error:', error);
     return (
       <div className="w-full p-6 bg-red-900/20 border border-red-500 rounded-lg">
         <h3 className="text-red-400 text-lg font-bold mb-2">編輯器錯誤</h3>

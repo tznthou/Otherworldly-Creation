@@ -1,4 +1,8 @@
 import { Language } from './index';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('translations');
 
 // 翻譯文件結構類型
 type TranslationRecord = Record<string, string | Record<string, string>>;
@@ -27,7 +31,7 @@ class TranslationLoader {
       this.loadedTranslations[language] = translation;
       return translation;
     } catch (error) {
-      console.error(`Failed to load translation for ${language}:`, error);
+      console.error(`Failed to load translation for ${language}:`, error); // TODO: 複雜模式，需人工轉換
       // 載入失敗時清除 Promise，下次可以重新嘗試
       delete this.loadingPromises[language];
       throw error;
@@ -40,11 +44,11 @@ class TranslationLoader {
       const module = await import(`./locales/${language}.json`);
       return module.default || module;
     } catch (error) {
-      console.error(`Failed to import translation file for ${language}:`, error);
+      console.error(`Failed to import translation file for ${language}:`, error); // TODO: 複雜模式，需人工轉換
       
       // 回退到預設的繁體中文
       if (language !== 'zh-TW') {
-        console.warn(`Falling back to zh-TW for ${language}`);
+        console.warn(`Falling back to zh-TW for ${language}`); // TODO: 複雜模式，需人工轉換
         return this.loadTranslation('zh-TW');
       }
       
@@ -71,9 +75,9 @@ class TranslationLoader {
       await Promise.all(
         languages.map(lang => this.loadTranslation(lang))
       );
-      console.log('All translations preloaded successfully');
+      log.debug('All translations preloaded successfully');
     } catch (error) {
-      console.warn('Some translations failed to preload:', error);
+      log.warn('Some translations failed to preload:', error);
     }
   }
 

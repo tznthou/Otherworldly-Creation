@@ -3,6 +3,10 @@ import { FixedSizeGrid as Grid, GridChildComponentProps } from 'react-window';
 import { IllustrationHistoryItem } from '../../../../types/illustration';
 import { SafeImage } from '../../../UI/SafeImage';
 import { formatDateTime } from '../../../../utils/dateUtils';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('VirtualizedImageGrid');
 
 interface VirtualizedImageGridProps {
   illustrations: IllustrationHistoryItem[];
@@ -103,7 +107,7 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
           {(() => {
             // 🚨 如果正在刪除，顯示刪除中狀態而不是實際圖片
             if (isDeleting) {
-              console.log('🗑️ VirtualizedImageGrid: 顯示刪除中狀態', { itemId: item.id });
+              log.debug('🗑️ VirtualizedImageGrid: 顯示刪除中狀態', { itemId: item.id });
               return (
                 <div className="flex flex-col items-center justify-center text-red-400 text-center p-4">
                   <div className="text-2xl mb-2 animate-spin">🗑️</div>
@@ -112,7 +116,7 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
               );
             }
             
-            console.log('🔍 VirtualizedImageGrid: 檢查圖片渲染條件', {
+            log.debug('🔍 VirtualizedImageGrid: 檢查圖片渲染條件', {
               itemId: item.id,
               hasImageUrl: !!item.image_url,
               hasLocalFilePath: !!item.image_path,
@@ -126,7 +130,7 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
             });
 
             if (item.image_url || item.image_path || item.full_path) {
-              console.log('✅ VirtualizedImageGrid: 渲染SafeImage組件', { itemId: item.id });
+              log.debug('✅ VirtualizedImageGrid: 渲染SafeImage組件', { itemId: item.id });
               return (
                 <SafeImage
                   key={`safe-image-${item.id}`}
@@ -139,7 +143,7 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
                 />
               );
             } else {
-              console.log('❌ VirtualizedImageGrid: 顯示狀態圖標', { itemId: item.id, status: item.status });
+              log.debug('❌ VirtualizedImageGrid: 顯示狀態圖標', { itemId: item.id, status: item.status });
               return (
                 <div className="text-cosmic-400 text-xl">
                   {getStatusIcon(item.status)}

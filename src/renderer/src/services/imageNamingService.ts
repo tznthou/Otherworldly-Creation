@@ -10,6 +10,10 @@ import {
   EbookImagePlacement 
 } from '../types/imageMetadata';
 import { api } from '../api';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('imageNamingService');
 
 export class ImageNamingService {
   private static instance: ImageNamingService;
@@ -87,7 +91,7 @@ export class ImageNamingService {
       
       return name;
     } catch (error) {
-      console.error('圖片命名生成失敗:', error);
+      log.error('圖片命名生成失敗:', error);
       // 回退到基本命名
       return this.generateFallbackName(metadata);
     }
@@ -188,7 +192,7 @@ export class ImageNamingService {
       const value = context[varName];
       
       if (value === undefined || value === null) {
-        console.warn(`命名模板變數未找到: ${varName}`);
+        console.warn(`命名模板變數未找到: ${varName}`); // TODO: 複雜模式，需人工轉換
         return varName; // 回退到變數名
       }
       
@@ -286,7 +290,7 @@ export class ImageNamingService {
           warnings
         });
       } catch (error) {
-        console.error(`預覽重命名失敗 (${imageId}):`, error);
+        console.error(`預覽重命名失敗 (${imageId}):`, error); // TODO: 複雜模式，需人工轉換
         results.push({
           originalName: `image_${imageId}`,
           newName: `error_${imageId}`,

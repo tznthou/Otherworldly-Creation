@@ -3,6 +3,10 @@ import { useAppDispatch } from '../../hooks/redux';
 import { updateChapter, deleteChapter, Chapter } from '../../store/slices/chaptersSlice';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
 import ConfirmDialog from '../UI/ConfirmDialog';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ChapterManageModal');
 
 interface ChapterManageModalProps {
   chapter: Chapter;
@@ -106,7 +110,7 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
 
       handleClose();
     } catch (error) {
-      console.error('更新章節失敗:', error);
+      log.error('更新章節失敗:', error);
       setErrors({
         title: '更新章節失敗，請稍後再試',
       });
@@ -130,7 +134,7 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
       
       handleClose();
     } catch (error) {
-      console.error('刪除章節失敗:', error);
+      log.error('刪除章節失敗:', error);
       
       dispatch(addNotification({
         type: 'error',

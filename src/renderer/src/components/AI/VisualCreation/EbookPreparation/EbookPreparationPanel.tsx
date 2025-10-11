@@ -3,6 +3,10 @@ import { IllustrationHistoryItem } from '../../../../types/illustration';
 import BatchRenamePanel from './components/BatchRenamePanel';
 import MetadataAnalysisPanel from './components/MetadataAnalysisPanel';
 import DragDropClassificationPanel, { ImageCategory } from './components/DragDropClassificationPanel';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('EbookPreparationPanel');
 
 interface EbookPreparationPanelProps {
   selectedImageIds: string[];
@@ -89,7 +93,7 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
   ];
 
   useEffect(() => {
-    console.log('🚀 [EbookPreparationPanel] 初始化，選中圖片：', selectedImages.length);
+    log.debug('🚀 [EbookPreparationPanel] 初始化，選中圖片：', selectedImages.length);
   }, [selectedImages.length]);
 
   const formatFileSize = (bytes: number): string => {
@@ -101,13 +105,13 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
   };
 
   const handleRename = (imageId: string, newName: string) => {
-    console.log('🏷️ [批次重命名]', { imageId, newName });
+    log.debug('🏷️ [批次重命名]', { imageId, newName });
     // TODO: 實現重命名邏輯
   };
 
   const handleClassificationChange = (classifications: Record<string, ImageCategory>) => {
     setImageClassifications(classifications);
-    console.log('🗂️ [拖放分類]', classifications);
+    log.debug('🗂️ [拖放分類]', classifications);
   };
 
   const renderOrganizeContent = () => {

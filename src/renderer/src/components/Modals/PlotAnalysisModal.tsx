@@ -11,6 +11,10 @@ import { Badge } from '../UI/Badge';
 import { plotAnalysisService, PlotSuggestion, ChapterTrendAnalysis } from '../../services/plotAnalysisService';
 import { PlotAnalysis } from '../../utils/nlpUtils';
 import { addNotification } from '../../store/slices/notificationSlice';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('PlotAnalysisModal');
 
 interface PlotAnalysisModalProps {
   projectId?: string;
@@ -45,7 +49,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
   const performAnalysis = async () => {
     setIsAnalyzing(true);
     try {
-      console.log('🎭 開始執行劇情分析...', {
+      log.debug('🎭 開始執行劇情分析...', {
         analysisScope,
         currentChapter: !!currentChapter,
         chapters: chapters.length
@@ -73,7 +77,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
       const improvementSuggestions = plotAnalysisService.generatePlotImprovementSuggestions(analysisResult);
       setSuggestions(improvementSuggestions);
 
-      console.log('✅ 劇情分析完成', analysisResult);
+      log.debug('✅ 劇情分析完成', analysisResult);
 
       dispatch(addNotification({
         id: Date.now().toString(),
@@ -84,7 +88,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
       }));
 
     } catch (error) {
-      console.error('❌ 劇情分析失敗:', error);
+      log.error('❌ 劇情分析失敗:', error);
       dispatch(addNotification({
         id: Date.now().toString(),
         type: 'error',

@@ -155,7 +155,7 @@ class ImageGenerationService {
           raiFilteredReason: img.raiFilteredReason
         }));
 
-        console.log(`✅ 成功生成 ${results.length} 張圖像`); // TODO: 複雜模式，需人工轉換
+        console.log(`✅ 成功生成 ${results.length} 張圖像`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
         return results;
       }
       
@@ -195,7 +195,7 @@ class ImageGenerationService {
       throw new Error('批次請求列表不能為空');
     }
 
-    console.log(`🚀 開始批次生成 ${requests.length} 張圖像`); // TODO: 複雜模式，需人工轉換
+    console.log(`🚀 開始批次生成 ${requests.length} 張圖像`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
     
     // 初始化服務
     this.initialize(apiKey);
@@ -211,7 +211,7 @@ class ImageGenerationService {
           onProgress(i + 1, requests.length, request.prompt);
         }
 
-        console.log(`📝 處理第 ${i + 1}/${requests.length} 個請求`); // TODO: 複雜模式，需人工轉換
+        console.log(`📝 處理第 ${i + 1}/${requests.length} 個請求`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
         
         // 構建 IllustrationRequest 對象
         const illustrationRequest: IllustrationRequest = {
@@ -228,7 +228,7 @@ class ImageGenerationService {
         );
         
         results.push({ success: true, data: result });
-        console.log(`✅ 第 ${i + 1} 張圖像生成成功`); // TODO: 複雜模式，需人工轉換
+        console.log(`✅ 第 ${i + 1} 張圖像生成成功`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
         
         // 避免 API 限制，在請求間加入短暫延遲
         if (i < requests.length - 1) {
@@ -236,7 +236,7 @@ class ImageGenerationService {
         }
         
       } catch (error) {
-        console.error(`❌ 第 ${i + 1} 張圖像生成失敗:`, error); // TODO: 複雜模式，需人工轉換
+        console.error(`❌ 第 ${i + 1} 張圖像生成失敗:`, error); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
         results.push({ success: false, error: error instanceof Error ? error.message : String(error) });
       }
     }
@@ -244,7 +244,7 @@ class ImageGenerationService {
     const successCount = results.filter(r => r.success).length;
     const failCount = results.length - successCount;
     
-    console.log(`🎯 批次生成完成: ${successCount} 成功, ${failCount} 失敗`); // TODO: 複雜模式，需人工轉換
+    console.log(`🎯 批次生成完成: ${successCount} 成功, ${failCount} 失敗`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
     
     return results;
   }

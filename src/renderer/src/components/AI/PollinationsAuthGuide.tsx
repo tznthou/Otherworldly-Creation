@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { api } from '../../api/tauri';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('PollinationsAuthGuide');
 
 interface PollinationsAuthGuideProps {
   isOpen: boolean;
@@ -98,7 +102,7 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
         alert(`Token 無效: ${testResponse.message}`);
       }
     } catch (error) {
-      console.error('儲存 token 失敗:', error);
+      log.error('儲存 token 失敗:', error);
       alert(`儲存失敗: ${error}`);
     } finally {
       setLoading(false);
@@ -115,7 +119,7 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
       setTestResult(null);
       onAuthUpdate?.();
     } catch (error) {
-      console.error('移除 token 失敗:', error);
+      log.error('移除 token 失敗:', error);
       alert(`移除失敗: ${error}`);
     } finally {
       setLoading(false);

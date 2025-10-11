@@ -4,6 +4,10 @@ import { CharacterArchetypeTemplate } from '../../types/template';
 import { Character } from '../../types/character';
 import { templateService } from '../../services/templateService';
 import { templateCharacterService } from '../../services/templateCharacterService';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('TemplateApplicationWizard');
 
 interface TemplateApplicationWizardProps {
   template: NovelTemplate;
@@ -69,7 +73,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
       setApplicationResult(result);
       setCurrentStep('complete');
     } catch (error) {
-      console.error('應用模板失敗:', error);
+      log.error('應用模板失敗:', error);
       setApplicationResult({
         success: false,
         message: `應用模板失敗: ${error instanceof Error ? error.message : '未知錯誤'}`,

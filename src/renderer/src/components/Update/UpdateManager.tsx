@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Download, RefreshCw, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { api, isTauri } from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('UpdateManager');
 
 interface UpdateInfo {
   version: string;
@@ -39,7 +43,7 @@ const UpdateManager: React.FC = () => {
   useEffect(() => {
     // 在 Tauri 環境中，更新功能暫不支援
     if (isTauri()) {
-      console.log('Tauri 環境中更新功能暫不支援');
+      log.debug('Tauri 環境中更新功能暫不支援');
       return;
     }
 
@@ -70,11 +74,11 @@ const UpdateManager: React.FC = () => {
               window.electronAPI.update.removeAllListeners();
             }
           } catch (error) {
-            console.warn('清理更新監聽器時發生錯誤:', error);
+            log.warn('清理更新監聽器時發生錯誤:', error);
           }
         };
       } catch (error) {
-        console.warn('設置更新監聽器時發生錯誤:', error);
+        log.warn('設置更新監聽器時發生錯誤:', error);
       }
     }
   }, []);
@@ -94,7 +98,7 @@ const UpdateManager: React.FC = () => {
         setIsVisible(true);
       }
     } catch (error) {
-      console.error('檢查待安裝更新失敗:', error);
+      log.error('檢查待安裝更新失敗:', error);
     }
   };
 

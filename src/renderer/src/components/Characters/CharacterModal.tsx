@@ -3,6 +3,10 @@ import { Character, CharacterFormData, GENDER_OPTIONS, Relationship } from '../.
 import { getArchetypeTemplateByName, CharacterArchetypeTemplate } from '../../data/characterArchetypes';
 import { ArchetypeSelector } from './ArchetypeSelector';
 import { RelationshipEditor } from './RelationshipEditor';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CharacterModal');
 
 interface CharacterModalProps {
   isOpen: boolean;
@@ -113,7 +117,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
     if (formData.archetype && selectedTemplate) {
       if (formData.archetype !== selectedTemplate.name) {
         // 這是一個內部一致性檢查，通常不會發生
-        console.warn('原型與選中的模板不一致');
+        log.warn('原型與選中的模板不一致');
       }
     }
 
@@ -133,7 +137,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
       await onSave(formData);
       onClose();
     } catch (error) {
-      console.error('儲存角色失敗:', error);
+      log.error('儲存角色失敗:', error);
       setErrors({ submit: '儲存失敗，請稍後再試' });
     } finally {
       setLoading(false);
@@ -191,12 +195,12 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
   };
 
   const handleRelationshipSave = async (relationships: Relationship[]) => {
-    console.log('CharacterModal - handleRelationshipSave called with:', relationships);
+    log.debug('CharacterModal - handleRelationshipSave called with:', relationships);
     setFormData(prev => ({
       ...prev,
       relationships,
     }));
-    console.log('CharacterModal - formData updated with relationships');
+    log.debug('CharacterModal - formData updated with relationships');
     setShowRelationshipEditor(false);
   };
 

@@ -2,6 +2,10 @@ import type { Chapter } from '../../api/models';
 import { PlotAnalysisService } from '../plotAnalysisService';
 import { ChapterStatusService, ChapterStatus } from '../chapterStatusService';
 import { api } from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('IntelligentContextBuilder');
 
 /**
  * 章節分析結果
@@ -149,7 +153,7 @@ export class IntelligentContextBuilder {
       };
 
     } catch (error) {
-      console.error('🔥 IntelligentContextBuilder.buildMultiDimensionalContext 失敗:', error);
+      log.error('🔥 IntelligentContextBuilder.buildMultiDimensionalContext 失敗:', error);
       throw error;
     }
   }
@@ -335,7 +339,7 @@ export class IntelligentContextBuilder {
       return Math.min(importance, 1.0);
 
     } catch (error) {
-      console.warn('分析劇情重要性失敗:', error);
+      log.warn('分析劇情重要性失敗:', error);
       return 0.5; // 默認中等重要性
     }
   }

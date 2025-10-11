@@ -2,6 +2,10 @@ import { AppSettings, DEFAULT_SETTINGS } from '../store/slices/settingsSlice';
 import { api } from '../api';
 import { Language } from '../i18n';
 import { Store } from '@tauri-apps/plugin-store';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('settingsService');
 
 // 🔐 使用加密的 Tauri Store 取代 localStorage
 const SETTINGS_STORE_FILE = '.settings.dat';
@@ -28,7 +32,7 @@ export class SettingsService {
       const oldSettings = localStorage.getItem(OLD_SETTINGS_KEY);
 
       if (oldSettings) {
-        console.log('🔄 檢測到舊版 localStorage 設定，開始遷移...');
+        log.debug('🔄 檢測到舊版 localStorage 設定，開始遷移...');
         const parsed = JSON.parse(oldSettings);
         const store = await getStore();
 
@@ -40,13 +44,13 @@ export class SettingsService {
         localStorage.removeItem(OLD_SETTINGS_KEY);
         localStorage.removeItem(`${OLD_SETTINGS_KEY}-history`);
 
-        console.log('✅ 設定遷移完成！已從 localStorage 移至加密儲存');
+        log.debug('✅ 設定遷移完成！已從 localStorage 移至加密儲存');
         return parsed;
       }
 
       return null;
     } catch (error) {
-      console.warn('⚠️ localStorage 遷移失敗:', error);
+      log.warn('⚠️ localStorage 遷移失敗:', error);
       return null;
     }
   }
@@ -55,7 +59,7 @@ export class SettingsService {
    * 載入設定
    */
   static async loadSettings(): Promise<AppSettings> {
-    console.log('開始載入設定...');
+    log.debug('開始載入設定...');
 
     try {
       const store = await getStore();
@@ -64,7 +68,7 @@ export class SettingsService {
       const migratedSettings = await this.migrateFromLocalStorage();
       if (migratedSettings) {
         const mergedSettings = this.mergeWithDefaults(migratedSettings);
-        console.log('✅ 從 localStorage 遷移設定成功');
+        log.debug('✅ 從 localStorage 遷移設定成功');
         return mergedSettings;
       }
 
@@ -72,19 +76,19 @@ export class SettingsService {
       const stored = await store.get<AppSettings>(SETTINGS_KEY);
       if (stored) {
         const mergedSettings = this.mergeWithDefaults(stored);
-        console.log('✅ 從加密儲存載入設定成功');
+        log.debug('✅ 從加密儲存載入設定成功');
         return mergedSettings;
       }
 
       // 如果沒有設定，使用預設設定並儲存
-      console.log('📝 使用預設設定');
+      log.debug('📝 使用預設設定');
       await store.set(SETTINGS_KEY, DEFAULT_SETTINGS);
       await store.save();
 
       return DEFAULT_SETTINGS;
 
     } catch (error) {
-      console.error('❌ 設定載入完全失敗，使用預設設定:', error);
+      log.error('❌ 設定載入完全失敗，使用預設設定:', error);
       return DEFAULT_SETTINGS;
     }
   }
@@ -99,14 +103,14 @@ export class SettingsService {
       // 🔐 儲存到加密 store
       await store.set(SETTINGS_KEY, settings);
       await store.save();
-      console.log('✅ 設定已儲存到加密儲存（AES-256）');
+      log.debug('✅ 設定已儲存到加密儲存（AES-256）');
 
       // 儲存設定變更歷史
       await this.saveSettingsHistory(settings);
 
       // 後台同步到後端（不阻塞主流程）
       this.syncSettingsToBackend(settings).catch(error => {
-        console.warn('⚠️ 背景同步設定到後端失敗:', error);
+        log.warn('⚠️ 背景同步設定到後端失敗:', error);
       });
 
       // 通知監聽器
@@ -115,7 +119,7 @@ export class SettingsService {
       // 觸發功能開關重載
       this.notifyFeatureFlagsUpdate();
     } catch (error) {
-      console.error('❌ 儲存設定失敗:', error);
+      log.error('❌ 儲存設定失敗:', error);
       throw error;
     }
   }
@@ -128,9 +132,9 @@ export class SettingsService {
       for (const [key, value] of Object.entries(settings)) {
         await api.settings.set(key, value);
       }
-      console.log('✅ 設定已同步到後端');
+      log.debug('✅ 設定已同步到後端');
     } catch (error) {
-      console.warn('⚠️ 同步設定到後端失敗:', error);
+      log.warn('⚠️ 同步設定到後端失敗:', error);
     }
   }
 
@@ -150,12 +154,12 @@ export class SettingsService {
       try {
         await api.settings.reset();
       } catch (error) {
-        console.warn('⚠️ 重置後端設定失敗:', error);
+        log.warn('⚠️ 重置後端設定失敗:', error);
       }
 
-      console.log('✅ 設定已重置');
+      log.debug('✅ 設定已重置');
     } catch (error) {
-      console.error('❌ 重置設定失敗:', error);
+      log.error('❌ 重置設定失敗:', error);
       throw error;
     }
   }
@@ -168,7 +172,7 @@ export class SettingsService {
       const settings = await this.loadSettings();
       return JSON.stringify(settings, null, 2);
     } catch (error) {
-      console.error('❌ 匯出設定失敗:', error);
+      log.error('❌ 匯出設定失敗:', error);
       throw error;
     }
   }
@@ -183,7 +187,7 @@ export class SettingsService {
       await this.saveSettings(mergedSettings);
       return mergedSettings;
     } catch (error) {
-      console.error('❌ 匯入設定失敗:', error);
+      log.error('❌ 匯入設定失敗:', error);
       throw error;
     }
   }
@@ -196,9 +200,9 @@ export class SettingsService {
       window.dispatchEvent(new CustomEvent('settings-updated', {
         detail: { timestamp: Date.now() }
       }));
-      console.log('🔄 已通知功能開關系統更新');
+      log.debug('🔄 已通知功能開關系統更新');
     } catch (error) {
-      console.warn('⚠️ 通知功能開關更新失敗:', error);
+      log.warn('⚠️ 通知功能開關更新失敗:', error);
     }
   }
 
@@ -295,7 +299,7 @@ export class SettingsService {
       }
       return [];
     } catch (error) {
-      console.error('❌ 獲取設定歷史失敗:', error);
+      log.error('❌ 獲取設定歷史失敗:', error);
       return [];
     }
   }
@@ -319,7 +323,7 @@ export class SettingsService {
       await store.set(SETTINGS_HISTORY_KEY, trimmedHistory);
       await store.save();
     } catch (error) {
-      console.error('❌ 儲存設定歷史失敗:', error);
+      log.error('❌ 儲存設定歷史失敗:', error);
     }
   }
 
@@ -340,16 +344,16 @@ export class SettingsService {
   static async getSecureApiKey(key: string): Promise<string | null> {
     try {
       // 1️⃣ 優先嘗試從 Keyring 讀取
-      console.log(`🔐 [getSecureApiKey] 嘗試從 Keyring 讀取: ${key}`);
+      log.debug('🔐 [getSecureApiKey] 嘗試從 Keyring 讀取', { key });
       const result = await api.getSecureKey(key);
 
       if (result) {
-        console.log(`✅ [getSecureApiKey] Keyring 讀取成功: ${key}`);
+        log.debug('✅ [getSecureApiKey] Keyring 讀取成功', { key });
         return result;
       }
 
       // 2️⃣ Keyring 沒有資料，降級到 localStorage (向後相容)
-      console.log(`⚠️ [getSecureApiKey] Keyring 無資料，降級到 localStorage: ${key}`);
+      log.warn('⚠️ [getSecureApiKey] Keyring 無資料，降級到 localStorage', { key });
       const settings = await this.loadSettings();
 
       // 根據 key 路徑取得值 (例如: "ai.openaiApiKey" -> settings.ai.openaiApiKey)
@@ -357,23 +361,23 @@ export class SettingsService {
 
       if (value && typeof value === 'string') {
         // 🔄 自動遷移：發現 localStorage 有資料，同步到 Keyring
-        console.log(`🔄 [getSecureApiKey] 自動遷移到 Keyring: ${key}`);
+        log.debug('🔄 [getSecureApiKey] 自動遷移到 Keyring', { key });
         await this.setSecureApiKey(key, value);
         return value;
       }
 
-      console.log(`ℹ️ [getSecureApiKey] 未找到資料: ${key}`);
+      log.info('ℹ️ [getSecureApiKey] 未找到資料', { key });
       return null;
 
     } catch (error) {
-      console.error(`❌ [getSecureApiKey] 讀取失敗: ${key}`, error);
+      log.error('❌ [getSecureApiKey] 讀取失敗', { key, error });
       // 發生任何錯誤都回退到 localStorage
       try {
         const settings = await this.loadSettings();
         const value = this.getNestedValue(settings, key);
         return (value && typeof value === 'string') ? value : null;
       } catch (fallbackError) {
-        console.error(`❌ [getSecureApiKey] localStorage fallback 也失敗:`, fallbackError);
+        log.error(`❌ [getSecureApiKey] localStorage fallback 也失敗:`, fallbackError);
         return null;
       }
     }
@@ -391,24 +395,24 @@ export class SettingsService {
    */
   static async setSecureApiKey(key: string, value: string): Promise<void> {
     try {
-      console.log(`🔐 [setSecureApiKey] 開始寫入: ${key}`);
+      log.debug('🔐 [setSecureApiKey] 開始寫入', { key });
 
       // 1️⃣ 寫入 Keyring (主要儲存)
       try {
         await api.setSecureKey(key, value);
-        console.log(`✅ [setSecureApiKey] Keyring 寫入成功: ${key}`);
+        log.debug('✅ [setSecureApiKey] Keyring 寫入成功', { key });
       } catch (keyringError) {
-        console.warn(`⚠️ [setSecureApiKey] Keyring 寫入失敗 (將僅使用 localStorage): ${key}`, keyringError);
+        log.warn('⚠️ [setSecureApiKey] Keyring 寫入失敗 (將僅使用 localStorage)', { key, error: keyringError });
       }
 
       // 2️⃣ 同時寫入 localStorage (備份 + 向後相容)
       const settings = await this.loadSettings();
       this.setNestedValue(settings, key, value);
       await this.saveSettings(settings);
-      console.log(`✅ [setSecureApiKey] localStorage 備份成功: ${key}`);
+      log.debug('✅ [setSecureApiKey] localStorage 備份成功', { key });
 
     } catch (error) {
-      console.error(`❌ [setSecureApiKey] 寫入完全失敗: ${key}`, error);
+      log.error('❌ [setSecureApiKey] 寫入完全失敗', { key, error });
       throw new Error(`無法儲存 API Key: ${error}`);
     }
   }
@@ -424,24 +428,24 @@ export class SettingsService {
    */
   static async deleteSecureApiKey(key: string): Promise<void> {
     try {
-      console.log(`🔐 [deleteSecureApiKey] 開始刪除: ${key}`);
+      log.debug('🔐 [deleteSecureApiKey] 開始刪除', { key });
 
       // 1️⃣ 從 Keyring 刪除
       try {
         await api.deleteSecureKey(key);
-        console.log(`✅ [deleteSecureApiKey] Keyring 刪除成功: ${key}`);
+        log.debug('✅ [deleteSecureApiKey] Keyring 刪除成功', { key });
       } catch (keyringError) {
-        console.warn(`⚠️ [deleteSecureApiKey] Keyring 刪除失敗 (可能不存在): ${key}`, keyringError);
+        log.warn('⚠️ [deleteSecureApiKey] Keyring 刪除失敗 (可能不存在)', { key, error: keyringError });
       }
 
       // 2️⃣ 從 localStorage 刪除
       const settings = await this.loadSettings();
       this.setNestedValue(settings, key, ''); // 設為空字串
       await this.saveSettings(settings);
-      console.log(`✅ [deleteSecureApiKey] localStorage 刪除成功: ${key}`);
+      log.debug('✅ [deleteSecureApiKey] localStorage 刪除成功', { key });
 
     } catch (error) {
-      console.error(`❌ [deleteSecureApiKey] 刪除失敗: ${key}`, error);
+      log.error('❌ [deleteSecureApiKey] 刪除失敗', { key, error });
     }
   }
 
@@ -504,7 +508,7 @@ export class SettingsWatcher {
       try {
         callback(settings);
       } catch (error) {
-        console.error('❌ 設定監聽器執行失敗:', error);
+        log.error('❌ 設定監聽器執行失敗:', error);
       }
     });
   }

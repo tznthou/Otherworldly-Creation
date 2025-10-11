@@ -122,7 +122,7 @@ export const useIllustrationService = (
     }
 
     const providerToUse = targetProvider || illustrationProvider;
-    console.log(`🔑 開始為 ${providerToUse} 載入 API Key...`); // TODO: 複雜模式，需人工轉換
+    console.log(`🔑 開始為 ${providerToUse} 載入 API Key...`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
 
     try {
       const response = await api.aiProviders.getAll();
@@ -363,7 +363,7 @@ export const useIllustrationService = (
   // 自動載入 API Key
   useEffect(() => {
     if (autoLoadApiKey && currentProject && !isApiKeyLoaded && !isLoadingApiKey) {
-      console.log(`🔄 開始為 ${illustrationProvider} 自動載入 API Key...`); // TODO: 複雜模式，需人工轉換
+      console.log(`🔄 開始為 ${illustrationProvider} 自動載入 API Key...`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
       setIsLoadingApiKey(true);
       loadApiKeyFromProviders(illustrationProvider).finally(() => {
         setIsLoadingApiKey(false);
@@ -373,7 +373,7 @@ export const useIllustrationService = (
 
   // 服務切換時的處理
   useEffect(() => {
-    console.log(`🔄 插畫服務切換至: ${serviceDisplayName}`); // TODO: 複雜模式，需人工轉換
+    console.log(`🔄 插畫服務切換至: ${serviceDisplayName}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
 
     // 當切換服務時重新載入適當的 API Key
     if (currentProject && autoLoadApiKey) {

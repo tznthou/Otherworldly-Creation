@@ -6,6 +6,10 @@ import {
   ImageCategory
 } from '../../../../types/imageMetadata';
 import { IllustrationHistoryItem } from '../../../../types/illustration';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('EbookIntegrationPanel');
 
 interface EbookIntegrationPanelProps {
   projectId: string;
@@ -150,7 +154,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
         // 生成整合數據
         generateIntegrationData(mockImages);
       } catch (error) {
-        console.error('載入專案圖片失敗:', error);
+        log.error('載入專案圖片失敗:', error);
       } finally {
         setIsLoading(false);
       }

@@ -2,6 +2,10 @@ import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { ImageVersion, VersionComparison } from '../../../../types/versionManagement';
 import { useVersionComparison } from '../../../../hooks/illustration';
 import { VERSION_MANAGEMENT_CONSTANTS } from './index';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('VersionComparisonView');
 
 // 比較模式
 export type ComparisonMode = 'visual' | 'parameters' | 'metadata' | 'all';
@@ -150,7 +154,7 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
     try {
       await compareVersions(version1.id, version2.id);
     } catch (error) {
-      console.error('比較失敗:', error);
+      log.error('比較失敗:', error);
     }
   }, [version1, version2, compareVersions]);
 

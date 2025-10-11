@@ -36,6 +36,10 @@ export interface UseVersionHistoryReturn {
   exportHistory: (imageId: string, format: 'json' | 'csv') => Promise<string>;
 }
 import {
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useVersionHistory');
   loadStatistics,
   setSearchKeyword,
   clearFilter,
@@ -212,7 +216,7 @@ export const useVersionHistory = (): UseVersionHistoryReturn => {
   // 應用篩選
   const applyFilter = useCallback((filterOptions: VersionFilter) => {
     // TODO: 實現篩選功能
-    console.log('Apply filter:', filterOptions);
+    log.debug('Apply filter:', filterOptions);
   }, []);
 
   // 清除篩選

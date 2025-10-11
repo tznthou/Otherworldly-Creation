@@ -1,23 +1,27 @@
 import React from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('TestModal');
 
 const TestModal: React.FC = () => {
   const dispatch = useAppDispatch();
 
   // 添加調試日誌
-  console.log('TestModal: 組件正在渲染');
+  log.debug('TestModal: 組件正在渲染');
 
   const handleClose = () => {
-    console.log('TestModal: 關閉按鈕被點擊');
+    log.debug('TestModal: 關閉按鈕被點擊');
     dispatch(closeModal('testModal'));
   };
 
   // 添加 useEffect 來確認組件掛載
   React.useEffect(() => {
-    console.log('TestModal: 組件已掛載');
+    log.debug('TestModal: 組件已掛載');
     return () => {
-      console.log('TestModal: 組件即將卸載');
+      log.debug('TestModal: 組件即將卸載');
     };
   }, []);
 

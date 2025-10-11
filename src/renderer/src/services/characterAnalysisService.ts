@@ -3,6 +3,10 @@ import type { Descendant } from 'slate';
 import { analyzeChapterDialogues, ChapterDialogueAnalysis, DialogueExtraction, slateToPlainText } from '../utils/nlpUtils';
 import { api } from '../api';
 import type { Character } from '../types/character';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('characterAnalysisService');
 
 export interface CharacterPersonality {
   // Big Five 人格特徵
@@ -73,12 +77,12 @@ class CharacterAnalysisService {
   ): Promise<ChapterDialogueAnalysis> {
     
     try {
-      console.log('📋 [對話分析] 開始分析章節對話');
-      console.log('📄 [對話分析] 章節內容:', chapterContent);
+      log.debug('📋 [對話分析] 開始分析章節對話');
+      log.debug('📄 [對話分析] 章節內容:', chapterContent);
       
       // 1. 獲取專案中的所有角色
       const characters = await api.characters.getByProjectId(projectId);
-      console.log('👥 [對話分析] 載入角色:', characters.length, '個');
+      log.debug('👥 [對話分析] 載入角色:', characters.length, '個');
       
       // 2. 轉換角色格式，包含可能的別名
       const knownCharacters = characters.map(char => ({
@@ -87,13 +91,13 @@ class CharacterAnalysisService {
         aliases: this.extractCharacterAliases(char.name, char.background || '')
       }));
       
-      console.log('🔧 [對話分析] 處理後的角色列表:', knownCharacters);
+      log.debug('🔧 [對話分析] 處理後的角色列表:', knownCharacters);
       
       // 3. 分析章節對話
-      console.log('🔍 [對話分析] 開始提取對話...');
+      log.debug('🔍 [對話分析] 開始提取對話...');
       const analysis = analyzeChapterDialogues(chapterContent, chapterId, knownCharacters);
       
-      console.log('✅ [對話分析] 對話分析完成:', {
+      log.debug('✅ [對話分析] 對話分析完成:', {
         總對話數: analysis.totalDialogues,
         已分配: analysis.characterDialogues.size,
         未分配: analysis.unassignedDialogues.length
@@ -102,8 +106,8 @@ class CharacterAnalysisService {
       return analysis;
       
     } catch (error) {
-      console.error('💥 [對話分析] 對話分析失敗:', error);
-      console.error('💥 [對話分析] 錯誤詳情:', error instanceof Error ? error.stack : String(error));
+      log.error('💥 [對話分析] 對話分析失敗:', error);
+      console.error('💥 [對話分析] 錯誤詳情:', error instanceof Error ? error.stack : String(error)); // TODO: 複雜模式，需人工轉換
       
       // 返回空的分析結果而不是拋出錯誤
       return {
@@ -130,60 +134,60 @@ class CharacterAnalysisService {
   ): Promise<CharacterAnalysisResult | null> {
     
     try {
-      console.log(`🎭 [角色分析] 開始分析角色 ${characterId} 在章節 ${chapterId}`);
+      console.log(`🎭 [角色分析] 開始分析角色 ${characterId} 在章節 ${chapterId}`); // TODO: 複雜模式，需人工轉換
       
       // 1. 獲取章節內容
       const chapter = await api.chapters.getById(chapterId);
       if (!chapter) {
-        console.error('❌ [角色分析] 章節不存在:', chapterId);
+        log.error('❌ [角色分析] 章節不存在:', chapterId);
         throw new Error('章節不存在');
       }
       
-      console.log(`📖 [角色分析] 章節載入成功: ${chapter.title || chapterId}`);
-      console.log(`📝 [角色分析] 原始章節內容類型:`, typeof chapter.content, '內容:', chapter.content);
+      console.log(`📖 [角色分析] 章節載入成功: ${chapter.title || chapterId}`); // TODO: 複雜模式，需人工轉換
+      log.debug(`📝 [角色分析] 原始章節內容類型:`, typeof chapter.content, '內容:', chapter.content);
       
       // 2. 【重要修復】解析章節內容
       let chapterContent: Descendant[];
       
       if (typeof chapter.content === 'string') {
         try {
-          console.log('🔧 [角色分析] 章節內容是字符串，嘗試JSON解析...');
+          log.debug('🔧 [角色分析] 章節內容是字符串，嘗試JSON解析...');
           chapterContent = JSON.parse(chapter.content);
-          console.log('✅ [角色分析] JSON解析成功，類型:', typeof chapterContent, '是否為陣列:', Array.isArray(chapterContent));
+          log.debug('✅ [角色分析] JSON解析成功，類型:', typeof chapterContent, '是否為陣列:', Array.isArray(chapterContent));
         } catch (parseError) {
-          console.error('💥 [角色分析] JSON解析失敗:', parseError);
-          console.error('💥 [角色分析] 原始內容:', chapter.content);
+          log.error('💥 [角色分析] JSON解析失敗:', parseError);
+          log.error('💥 [角色分析] 原始內容:', chapter.content);
           throw new Error('章節內容JSON解析失敗');
         }
       } else if (Array.isArray(chapter.content)) {
-        console.log('✅ [角色分析] 章節內容已是陣列格式');
+        log.debug('✅ [角色分析] 章節內容已是陣列格式');
         chapterContent = chapter.content;
       } else {
-        console.error('❌ [角色分析] 未知的章節內容格式:', typeof chapter.content);
+        log.error('❌ [角色分析] 未知的章節內容格式:', typeof chapter.content);
         throw new Error('未知的章節內容格式');
       }
       
-      console.log(`📄 [角色分析] 解析後章節內容:`, chapterContent);
-      console.log(`📊 [角色分析] 章節內容陣列長度:`, chapterContent.length);
+      log.debug(`📄 [角色分析] 解析後章節內容:`, chapterContent);
+      log.debug(`📊 [角色分析] 章節內容陣列長度:`, chapterContent.length);
       
       // 3. 獲取角色信息
       const character = await api.characters.getById(characterId);
       if (!character) {
-        console.error('❌ [角色分析] 角色不存在:', characterId);
+        log.error('❌ [角色分析] 角色不存在:', characterId);
         throw new Error('角色不存在');
       }
       
-      console.log(`👤 [角色分析] 角色載入成功: ${character.name}`);
+      console.log(`👤 [角色分析] 角色載入成功: ${character.name}`); // TODO: 複雜模式，需人工轉換
       
       // 4. 分析章節對話
-      console.log('🗣️ [角色分析] 開始分析章節對話...');
+      log.debug('🗣️ [角色分析] 開始分析章節對話...');
       const dialogueAnalysis = await this.analyzeChapterDialogues(
         chapterContent, 
         chapterId, 
         projectId
       );
       
-      console.log(`📊 [角色分析] 對話分析結果:`, {
+      log.debug(`📊 [角色分析] 對話分析結果:`, {
         總對話數: dialogueAnalysis.totalDialogues,
         已分配對話: dialogueAnalysis.characterDialogues.size,
         未分配對話: dialogueAnalysis.unassignedDialogues.length,
@@ -192,7 +196,7 @@ class CharacterAnalysisService {
       
       // 5. 提取該角色的對話（包含推斷對話）
       const characterDialogues = dialogueAnalysis.characterDialogues.get(characterId) || [];
-      console.log(`💬 [角色分析] ${character.name} 的確定對話數:`, characterDialogues.length);
+      console.log(`💬 [角色分析] ${character.name} 的確定對話數:`, characterDialogues.length); // TODO: 複雜模式，需人工轉換
       
       // 6. 【新增】智能推斷可能屬於該角色的未分配對話
       const possibleDialogues = this.inferCharacterDialogues(
@@ -201,22 +205,22 @@ class CharacterAnalysisService {
         chapterContent
       );
       
-      console.log(`🔮 [角色分析] ${character.name} 的推斷對話數:`, possibleDialogues.length);
+      console.log(`🔮 [角色分析] ${character.name} 的推斷對話數:`, possibleDialogues.length); // TODO: 複雜模式，需人工轉換
       
       // 合併確定的和推斷的對話
       const allDialogues = [...characterDialogues, ...possibleDialogues];
-      console.log(`📈 [角色分析] ${character.name} 的總對話數:`, allDialogues.length);
+      console.log(`📈 [角色分析] ${character.name} 的總對話數:`, allDialogues.length); // TODO: 複雜模式，需人工轉換
       
       // 7. 【放寬限制】即使對話很少也嘗試分析
       if (allDialogues.length === 0) {
-        console.log(`🔧 [角色分析] 沒有對話，嘗試基礎文本分析...`);
+        log.debug(`🔧 [角色分析] 沒有對話，嘗試基礎文本分析...`);
         // 如果完全沒有對話，嘗試基於全文進行基礎分析
         const basicResult = this.performBasicAnalysis(character, chapterContent, chapterId, projectId);
-        console.log(`✅ [角色分析] 基礎分析完成，置信度: ${(basicResult.confidence * 100).toFixed(1)}%`);
+        console.log(`✅ [角色分析] 基礎分析完成，置信度: ${(basicResult.confidence * 100).toFixed(1)}%`); // TODO: 複雜模式，需人工轉換
         return basicResult;
       }
       
-      console.log(`🧠 [角色分析] 開始詳細特徵分析...`);
+      log.debug(`🧠 [角色分析] 開始詳細特徵分析...`);
       
       // 8. 分析角色特徵
       const personality = this.analyzePersonality(allDialogues);
@@ -248,7 +252,7 @@ class CharacterAnalysisService {
         analyzedAt: new Date()
       };
       
-      console.log(`🎯 [角色分析] ${character.name} 分析完成:`, {
+      console.log(`🎯 [角色分析] ${character.name} 分析完成:`, { // TODO: 複雜模式，需人工轉換
         對話數: result.dialogueCount,
         置信度: (result.confidence * 100).toFixed(1) + '%',
         情感色調: result.emotionalTone,
@@ -258,8 +262,8 @@ class CharacterAnalysisService {
       return result;
       
     } catch (error) {
-      console.error('💥 [角色分析] 分析失敗:', error);
-      console.error('💥 [角色分析] 錯誤堆棧:', error instanceof Error ? error.stack : String(error));
+      log.error('💥 [角色分析] 分析失敗:', error);
+      console.error('💥 [角色分析] 錯誤堆棧:', error instanceof Error ? error.stack : String(error)); // TODO: 複雜模式，需人工轉換
       return null;
     }
   }
@@ -271,7 +275,7 @@ class CharacterAnalysisService {
    */
   async analyzeProjectCharacters(projectId: string): Promise<ProjectCharacterAnalysis> {
     
-    console.log('🔍 [專案角色分析] 開始分析專案:', projectId);
+    log.debug('🔍 [專案角色分析] 開始分析專案:', projectId);
     
     // 1. 獲取專案的所有章節和角色
     const [chapters, characters] = await Promise.all([
@@ -279,11 +283,11 @@ class CharacterAnalysisService {
       api.characters.getByProjectId(projectId)
     ]);
     
-    console.log('📚 [專案角色分析] 找到章節:', chapters.length, '個');
-    console.log('👥 [專案角色分析] 找到角色:', characters.length, '個');
+    log.debug('📚 [專案角色分析] 找到章節:', chapters.length, '個');
+    log.debug('👥 [專案角色分析] 找到角色:', characters.length, '個');
     
     if (characters.length === 0) {
-      console.warn('⚠️ [專案角色分析] 專案中沒有角色設定');
+      log.warn('⚠️ [專案角色分析] 專案中沒有角色設定');
       return {
         projectId,
         characterAnalyses: [],
@@ -293,7 +297,7 @@ class CharacterAnalysisService {
     }
     
     if (chapters.length === 0) {
-      console.warn('⚠️ [專案角色分析] 專案中沒有章節內容');
+      log.warn('⚠️ [專案角色分析] 專案中沒有章節內容');
       return {
         projectId,
         characterAnalyses: [],
@@ -306,10 +310,10 @@ class CharacterAnalysisService {
     
     // 2. 為每個角色分析每個章節
     for (const character of characters) {
-      console.log(`🎭 [專案角色分析] 開始分析角色: ${character.name}`);
+      console.log(`🎭 [專案角色分析] 開始分析角色: ${character.name}`); // TODO: 複雜模式，需人工轉換
       
       for (const chapter of chapters) {
-        console.log(`  📖 分析章節: ${chapter.title || chapter.id}`);
+        console.log(`  📖 分析章節: ${chapter.title || chapter.id}`); // TODO: 複雜模式，需人工轉換
         
         try {
           const analysis = await this.analyzeCharacterInChapter(
@@ -319,18 +323,18 @@ class CharacterAnalysisService {
           );
           
           if (analysis) {
-            console.log(`  ✅ 分析成功，對話數: ${analysis.dialogueCount}, 置信度: ${(analysis.confidence * 100).toFixed(1)}%`);
+            console.log(`  ✅ 分析成功，對話數: ${analysis.dialogueCount}, 置信度: ${(analysis.confidence * 100).toFixed(1)}%`); // TODO: 複雜模式，需人工轉換
             characterAnalyses.push(analysis);
           } else {
-            console.log(`  ❌ 分析失敗，返回null`);
+            log.debug(`  ❌ 分析失敗，返回null`);
           }
         } catch (error) {
-          console.error(`  💥 分析異常:`, error);
+          log.error(`  💥 分析異常:`, error);
         }
       }
     }
     
-    console.log(`🎯 [專案角色分析] 完成分析，總結果數: ${characterAnalyses.length}`);
+    console.log(`🎯 [專案角色分析] 完成分析，總結果數: ${characterAnalyses.length}`); // TODO: 複雜模式，需人工轉換
     
     // 3. 計算整體一致性
     const overallConsistency = this.calculateOverallConsistency(characterAnalyses);
@@ -342,7 +346,7 @@ class CharacterAnalysisService {
       analysisDate: new Date()
     };
     
-    console.log('📊 [專案角色分析] 最終結果:', result);
+    log.debug('📊 [專案角色分析] 最終結果:', result);
     
     return result;
   }
@@ -396,7 +400,7 @@ class CharacterAnalysisService {
     // TODO: 實現儲存到資料庫的 API 調用
     // await api.characterAnalysis.save(analysisData);
     
-    console.log('角色分析結果已準備儲存:', analysisData);
+    log.debug('角色分析結果已準備儲存:', analysisData);
   }
   
   // ==============================================

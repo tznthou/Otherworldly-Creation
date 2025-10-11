@@ -1,4 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('logs');
 
 /**
  * 日誌管理 API
@@ -36,7 +40,7 @@ export const logsApi = {
       await navigator.clipboard.writeText(logs);
       return true;
     } catch (error) {
-      console.error('複製日誌失敗:', error);
+      log.error('複製日誌失敗:', error);
       return false;
     }
   }

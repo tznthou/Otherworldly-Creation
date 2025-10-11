@@ -2,6 +2,10 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { ImageVersion, VersionTag } from '../../../../types/versionManagement';
 import { useVersionManager } from '../../../../hooks/illustration';
 import { VERSION_MANAGEMENT_CONSTANTS } from './index';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('VersionDetailsPanel');
 
 // 詳細面板標籤頁
 export type DetailTab = 'overview' | 'technical' | 'history' | 'tags' | 'relationships' | 'actions';
@@ -119,7 +123,7 @@ const VersionDetailsPanel: React.FC<VersionDetailsPanelProps> = ({
       onVersionDelete?.(version);
       setShowConfirmDelete(false);
     } catch (error) {
-      console.error('刪除版本失敗:', error);
+      log.error('刪除版本失敗:', error);
     }
   }, [version, deleteVersion, onVersionDelete]);
 
@@ -131,7 +135,7 @@ const VersionDetailsPanel: React.FC<VersionDetailsPanelProps> = ({
       await duplicateVersion(version.id);
       onVersionDuplicate?.(version);
     } catch (error) {
-      console.error('複製版本失敗:', error);
+      log.error('複製版本失敗:', error);
     }
   }, [version, duplicateVersion, onVersionDuplicate]);
 

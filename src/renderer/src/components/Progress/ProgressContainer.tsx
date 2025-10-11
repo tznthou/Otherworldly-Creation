@@ -2,11 +2,15 @@ import React from 'react';
 import { useAppSelector } from '../../hooks/redux';
 import { selectActiveProgress } from '../../store/slices/errorSlice';
 import ProgressIndicator from './ProgressIndicator';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ProgressContainer');
 
 const ProgressContainer: React.FC = () => {
   const activeProgress = useAppSelector(selectActiveProgress);
 
-  console.log('ProgressContainer - 活躍進度:', activeProgress);
+  log.debug('ProgressContainer - 活躍進度:', activeProgress);
 
   if (activeProgress.length === 0) {
     return null;

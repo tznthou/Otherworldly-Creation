@@ -1,4 +1,8 @@
 // 章節筆記智能分析器
+import { createLogger } from './logger';
+
+// 創建模組專用 logger
+const log = createLogger('chapterNotesAnalyzer');
 // Phase 4: 智慧續寫策略系統
 
 export interface ChapterNotesAnalysis {
@@ -28,7 +32,7 @@ export interface ChapterNotesAnalysis {
  * 分析章節筆記，提取寫作策略指導
  */
 export function analyzeChapterNotes(notes: string): ChapterNotesAnalysis {
-  console.log('📝 開始分析章節筆記:', notes.substring(0, 100) + '...');
+  log.debug('📝 開始分析章節筆記:', notes.substring(0, 100) + '...');
   
   const lowerNotes = notes.toLowerCase();
   
@@ -187,7 +191,7 @@ export function analyzeChapterNotes(notes: string): ChapterNotesAnalysis {
     suggestions: suggestions.slice(0, 3) // 限制建議數量
   };
   
-  console.log('📊 章節筆記分析完成:', {
+  log.debug('📊 章節筆記分析完成:', {
     主要風格: maxStyle[0],
     主要基調: maxTone[0],
     主要內容: maxContent[0],
@@ -246,7 +250,7 @@ export function adjustParametersBasedOnNotes(
     adjusted.maxTokens = Math.min(850, adjusted.maxTokens + 100); // 給予更多篇幅發展
   }
   
-  console.log('🎯 參數調整完成:', {
+  log.debug('🎯 參數調整完成:', {
     '溫度變化': (adjusted.temperature - baseParams.temperature).toFixed(2),
     'Token變化': adjusted.maxTokens - baseParams.maxTokens,
     'TopP變化': (adjusted.topP - baseParams.topP).toFixed(2)

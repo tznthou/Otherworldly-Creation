@@ -4,6 +4,10 @@ import { CharacterCard } from './CharacterCard';
 import { CharacterFiltersComponent } from './CharacterFilters';
 import { CharacterDeleteModal } from './CharacterDeleteModal';
 import { api } from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CharacterList');
 
 interface CharacterListProps {
   _projectId: string;
@@ -132,7 +136,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
       setCharacterToDelete(null);
     } catch (err: unknown) {
       const error = err as Error;
-      console.error('刪除角色失敗:', error);
+      log.error('刪除角色失敗:', error);
       
       if (error.message === 'CHARACTER_HAS_REFERENCES') {
         // 這個錯誤應該由 CharacterDeleteModal 處理

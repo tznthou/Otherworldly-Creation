@@ -5,6 +5,10 @@ import {
   BatchRenameOperation 
 } from '../../../../types/imageMetadata';
 import { imageNamingService } from '../../../../services/imageNamingService';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ImageNamingPanel');
 
 interface ImageNamingPanelProps {
   selectedImageIds: string[];
@@ -78,7 +82,7 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
       const results = await imageNamingService.previewBatchRename(operation);
       setPreviewResults(results);
     } catch (error) {
-      console.error('生成重命名預覽失敗:', error);
+      log.error('生成重命名預覽失敗:', error);
       setPreviewResults([]);
     } finally {
       setIsPreviewLoading(false);

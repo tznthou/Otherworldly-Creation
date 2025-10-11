@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
 import { api } from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('UpdateManagerModal');
 
 interface UpdateInfo {
   hasUpdate: boolean;
@@ -32,7 +36,7 @@ const UpdateManagerModal: React.FC = () => {
         latestVersion: version
       }));
     } catch (error) {
-      console.error('獲取當前版本失敗:', error);
+      log.error('獲取當前版本失敗:', error);
     }
   };
 

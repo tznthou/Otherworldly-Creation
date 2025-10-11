@@ -2,6 +2,10 @@ import { Chapter, Character } from '../api/models';
 import { Project } from '../store/slices/projectsSlice';
 import { AppSettings } from '../store/slices/settingsSlice';
 import api from '../api';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('saveManager');
 
 // 儲存資料類型聯合
 type SaveData = Chapter | Character | Project | AppSettings | Record<string, unknown>;
@@ -81,7 +85,7 @@ class SaveManagerClass {
         await this.processSingle();
       }
     } catch (error) {
-      console.error('處理儲存佇列時發生錯誤:', error);
+      log.error('處理儲存佇列時發生錯誤:', error);
     } finally {
       this.isProcessing = false;
       
@@ -301,7 +305,7 @@ class SaveManagerClass {
       try {
         await this.processByType(operation.type, [operation]);
       } catch (error) {
-        console.error(`強制儲存操作 ${operation.id} 失敗:`, error);
+        console.error(`強制儲存操作 ${operation.id} 失敗:`, error); // TODO: 複雜模式，需人工轉換
       }
     }
   }
@@ -332,7 +336,7 @@ class SaveManagerClass {
       try {
         callback(operations);
       } catch (error) {
-        console.error('儲存管理器監聽器執行失敗:', error);
+        log.error('儲存管理器監聽器執行失敗:', error);
       }
     });
   }

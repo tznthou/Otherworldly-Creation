@@ -98,7 +98,7 @@ export function useBatchExportProcessor(
     };
 
     exportManager.addTask(task);
-    console.log(`📥 [BatchExportProcessor] 添加圖片到導出佇列: ${imageId}`); // TODO: 複雜模式，需人工轉換
+    console.log(`📥 [BatchExportProcessor] 添加圖片到導出佇列: ${imageId}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
   }, [exportManager]);
 
   // 批次添加多張圖片
@@ -113,7 +113,7 @@ export function useBatchExportProcessor(
     }));
 
     exportManager.addBatchTasks(tasks);
-    console.log(`📥 [BatchExportProcessor] 批次添加 ${images.length} 張圖片到導出佇列`); // TODO: 複雜模式，需人工轉換
+    console.log(`📥 [BatchExportProcessor] 批次添加 ${images.length} 張圖片到導出佇列`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
   }, [exportManager]);
 
   // 處理當前佇列
@@ -134,7 +134,7 @@ export function useBatchExportProcessor(
       shouldStopRef.current = false;
       exportManager.startProcessing();
 
-      console.log(`🚀 [BatchExportProcessor] 開始處理 ${pendingTasks.length} 個任務`); // TODO: 複雜模式，需人工轉換
+      console.log(`🚀 [BatchExportProcessor] 開始處理 ${pendingTasks.length} 個任務`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
 
       // 並行處理任務
       const maxConcurrent = exportManager.state.config.maxConcurrent;
@@ -152,7 +152,7 @@ export function useBatchExportProcessor(
       const completedCount = exportManager.getTasksByStatus('completed').length;
       const failedCount = exportManager.getTasksByStatus('failed').length;
 
-      console.log(`✅ [BatchExportProcessor] 批次處理完成: ${completedCount} 成功, ${failedCount} 失敗`); // TODO: 複雜模式，需人工轉換
+      console.log(`✅ [BatchExportProcessor] 批次處理完成: ${completedCount} 成功, ${failedCount} 失敗`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
 
       // 觸發完成回調
       if (onBatchComplete) {
