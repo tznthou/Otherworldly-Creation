@@ -1,4 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('VirtualizedContainer');
 
 interface VirtualizedContainerProps {
   children: (dimensions: { width: number; height: number }) => React.ReactNode;
@@ -16,7 +20,7 @@ const VirtualizedContainer: React.FC<VirtualizedContainerProps> = ({
     const updateDimensions = () => {
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect();
-        console.log('📏 VirtualizedContainer: 尺寸更新', {
+        log.debug('📏 VirtualizedContainer: 尺寸更新', {
           width,
           height,
           containerExists: !!containerRef.current,
@@ -46,7 +50,7 @@ const VirtualizedContainer: React.FC<VirtualizedContainerProps> = ({
   }, []);
 
   // 📏 組件渲染時的調試信息
-  console.log('📏 VirtualizedContainer: 組件渲染', {
+  log.debug('📏 VirtualizedContainer: 組件渲染', {
     dimensions,
     willRenderChildren: dimensions.width > 0 && dimensions.height > 0,
     className
@@ -56,12 +60,12 @@ const VirtualizedContainer: React.FC<VirtualizedContainerProps> = ({
     <div ref={containerRef} className={`w-full h-full min-h-[500px] ${className}`}>
       {dimensions.width > 0 && dimensions.height > 0 ? (
         <>
-          {console.log('✅ VirtualizedContainer: 渲染子組件', dimensions)}
+          {log.debug('✅ VirtualizedContainer: 渲染子組件', dimensions)}
           {children(dimensions)}
         </>
       ) : (
         <>
-          {console.log('❌ VirtualizedContainer: 尺寸無效，不渲染子組件', dimensions)}
+          {log.debug('❌ VirtualizedContainer: 尺寸無效，不渲染子組件', dimensions)}
           <div className="flex items-center justify-center h-full text-cosmic-400">
             📏 等待容器尺寸計算...
           </div>

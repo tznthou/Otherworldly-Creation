@@ -2,6 +2,10 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
 import { IllustrationHistoryItem } from '../../../../../types/illustration';
+import { createLogger } from '../../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('BatchRenamePanel');
 
 interface BatchRenamePanelProps {
   selectedImages: IllustrationHistoryItem[];
@@ -188,7 +192,7 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
       // 虛擬檔名模式：儲存到資料庫，不修改原始檔案
       previews.forEach(({ image, newName }) => {
         // TODO: 實作虛擬檔名儲存到 ebook_mappings 表
-        console.log('📚 [虛擬檔名]', {
+        log.debug('📚 [虛擬檔名]', {
           imageId: image.id,
           physicalId: image.id,
           sourceTable: image.provider === 'pollinations' ? 'pollinations_generations' : 'illustration_generations',

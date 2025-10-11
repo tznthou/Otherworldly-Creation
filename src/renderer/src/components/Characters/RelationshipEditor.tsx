@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Character, Relationship, RelationshipFormData, RELATIONSHIP_TYPES, RelationshipValidationError } from '../../types/character';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('RelationshipEditor');
 
 interface RelationshipEditorProps {
   character: Character;
@@ -139,11 +143,11 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
   const handleSaveAll = async () => {
     try {
       setLoading(true);
-      console.log('RelationshipEditor - handleSaveAll called with relationships:', relationships);
+      log.debug('RelationshipEditor - handleSaveAll called with relationships:', relationships);
       await onSave(relationships);
-      console.log('RelationshipEditor - onSave completed successfully');
+      log.debug('RelationshipEditor - onSave completed successfully');
     } catch (error) {
-      console.error('RelationshipEditor - 儲存關係失敗:', error);
+      log.error('RelationshipEditor - 儲存關係失敗:', error);
     } finally {
       setLoading(false);
     }

@@ -29,6 +29,10 @@ import ServiceConfigurationPanel from './panels/ServiceConfigurationPanel';
 import TutorialOverlay from './shared/TutorialOverlay';
 import PollinationsAuthStatus from '../PollinationsAuthStatus';
 import PollinationsAuthGuide from '../PollinationsAuthGuide';
+import { createLogger } from '../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('VisualCreationCenter');
 
 // 版本管理組件已移除，功能簡化
 
@@ -209,10 +213,10 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
             <ServiceConfigurationPanel 
               className="mb-4"
               onConfigurationChange={(config) => {
-                console.log('🔧 [VisualCreation] 配置更新:', config);
+                log.debug('🔧 [VisualCreation] 配置更新:', config);
                 // 同步提供者到 Redux 狀態
                 if (config.provider !== currentProvider) {
-                  console.log('🔄 [VisualCreation] 提供者變更:', currentProvider, '->', config.provider);
+                  log.debug('🔄 [VisualCreation] 提供者變更:', currentProvider, '->', config.provider);
                   dispatch(setCurrentProvider(config.provider));
                 }
               }}
