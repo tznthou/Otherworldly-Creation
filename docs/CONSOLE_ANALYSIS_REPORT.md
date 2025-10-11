@@ -2,25 +2,25 @@
 
 **分析日期**: 2025-10-11
 **掃描目錄**: src/renderer/src
-**總檔案數**: 127 個（包含 console 調用的檔案）
+**總檔案數**: 125 個（包含 console 調用的檔案）
 
 ---
 
 ## 📊 總體統計
 
-### Console 調用總數：700 個
+### Console 調用總數：653 個
 
 #### 按類型分布
-- `console.log`: 415 個 (59.3%)
-- `console.error`: 190 個 (27.1%)
-- `console.warn`: 95 個 (13.6%)
+- `console.log`: 385 個 (59.0%)
+- `console.error`: 183 個 (28.0%)
+- `console.warn`: 85 個 (13.0%)
 - `console.info`: 0 個 (0.0%)
 - `console.debug`: 0 個 (0.0%)
 
 #### 按複雜度分布
-- 🟢 **簡單** (可自動化): 436 個 (62.3%)
-- 🟡 **中等** (半自動): 27 個 (3.9%)
-- 🔴 **複雜** (需人工): 237 個 (33.9%)
+- 🟢 **簡單** (可自動化): 391 個 (59.9%)
+- 🟡 **中等** (半自動): 25 個 (3.8%)
+- 🔴 **複雜** (需人工): 237 個 (36.3%)
 
 ---
 
@@ -38,16 +38,16 @@
 | 8 | /pages/DatabaseMaintenance/DatabaseMaintenance.tsx | 21 | ❌ | 🟡 中 |
 | 9 | /utils/nlpUtils.ts | 19 | ❌ | 🟡 中 |
 | 10 | /hooks/useBatchSubmission.ts | 18 | ✅ | 🟡 中 |
-| 11 | /components/AI/VisualCreation/panels/BatchExportPanel.tsx | 16 | ❌ | 🟡 中 |
-| 12 | /components/Editor/AIWritingPanel.tsx | 16 | ❌ | 🟡 中 |
-| 13 | /components/Editor/SimpleAIWritingPanel.tsx | 14 | ❌ | 🟢 低 |
-| 14 | /services/ai-generation/GenerationExecutor.ts | 12 | ✅ | 🟢 低 |
-| 15 | /pages/ChapterStatus/ChapterStatusPage.tsx | 11 | ❌ | 🟢 低 |
-| 16 | /utils/logger.ts | 11 | ✅ | 🟢 低 |
-| 17 | /services/imageCompressionService.ts | 10 | ❌ | 🟢 低 |
-| 18 | /utils/performanceMonitor.ts | 10 | ❌ | 🟢 低 |
-| 19 | /services/aiWritingAssistant.ts | 9 | ❌ | 🟢 低 |
-| 20 | /components/Modals/AISettingsModal.tsx | 8 | ❌ | 🟢 低 |
+| 11 | /components/Editor/SimpleAIWritingPanel.tsx | 14 | ❌ | 🟢 低 |
+| 12 | /services/ai-generation/GenerationExecutor.ts | 12 | ✅ | 🟢 低 |
+| 13 | /utils/logger.ts | 11 | ✅ | 🟢 低 |
+| 14 | /utils/performanceMonitor.ts | 10 | ❌ | 🟢 低 |
+| 15 | /services/aiWritingAssistant.ts | 9 | ❌ | 🟢 低 |
+| 16 | /components/Modals/AISettingsModal.tsx | 8 | ❌ | 🟢 低 |
+| 17 | /i18n/index.ts | 8 | ❌ | 🟢 低 |
+| 18 | /hooks/illustration/useAutoVersionCreation.ts | 7 | ✅ | 🟢 低 |
+| 19 | /pages/ChapterStatus/ChapterStatusPage.tsx | 7 | ✅ | 🟢 低 |
+| 20 | /services/imageCompressionService.ts | 7 | ✅ | 🟢 低 |
 
 ---
 
@@ -55,16 +55,16 @@
 
 | 排名 | 目錄 | Console 數量 |
 |------|------|-------------|
-| 1 | /services | 171 |
+| 1 | /services | 158 |
 | 2 | /utils | 86 |
 | 3 | /api | 45 |
-| 4 | /components/Editor | 41 |
-| 5 | /components/AI | 39 |
-| 6 | /components/AI/VisualCreation/CreateTab | 38 |
-| 7 | /hooks | 35 |
-| 8 | /components/Modals | 34 |
-| 9 | /components/AI/VisualCreation/panels | 25 |
-| 10 | /hooks/illustration | 22 |
+| 4 | /components/AI | 39 |
+| 5 | /components/AI/VisualCreation/CreateTab | 38 |
+| 6 | /hooks | 34 |
+| 7 | /components/Editor | 29 |
+| 8 | /components/Modals | 29 |
+| 9 | /hooks/illustration | 22 |
+| 10 | /pages/DatabaseMaintenance | 21 |
 
 ---
 
@@ -81,8 +81,6 @@
 | /components/Editor/SimpleAIWritingPanel.tsx | 14 | 13 | 93% |
 | /components/Modals/AISettingsModal.tsx | 8 | 7 | 88% |
 | /utils/performanceLogger.ts | 6 | 5 | 83% |
-| /components/Modals/AiIllustrationModal.tsx | 5 | 5 | 100% |
-| /services/plotAnalysisService.ts | 5 | 5 | 100% |
 
 ### 優先級 2：Hooks 目錄（已驗證模式）
 
@@ -97,8 +95,8 @@
 - /hooks/useAIGeneration.ts (3 個)
 - /hooks/useEditorStats.ts (3 個)
 - /hooks/useI18n.ts (3 個)
-- /hooks/useShortcuts.ts (3 個)
 - /hooks/visual-creation/useVisualCreationHandlers.ts (3 個)
+- /hooks/illustration/useExportManager.ts (2 個)
 
 ### 優先級 3：Services 目錄（需謹慎）
 
@@ -107,12 +105,12 @@ Services 層通常有業務邏輯，需要小心處理：
 - /services/settingsService.ts (40 個)
 - /services/exportService.ts (24 個)
 - /services/ai-generation/GenerationExecutor.ts (12 個)
-- /services/imageCompressionService.ts (10 個)
 - /services/aiWritingAssistant.ts (9 個)
-- /services/SoundManager.ts (6 個)
+- /services/imageCompressionService.ts (7 個)
 - /services/imageGenerationService.ts (6 個)
-- /services/logService.ts (5 個)
-- /services/plotAnalysisService.ts (5 個)
+- /services/logService.ts (4 個)
+- /services/autoBackupService.ts (3 個)
+- /services/backupService.ts (3 個)
 
 ---
 
@@ -174,5 +172,5 @@ Services 層通常有業務邏輯，需要小心處理：
 
 ---
 
-**報告生成時間**: 2025-10-11T06:58:39.947Z
+**報告生成時間**: 2025-10-11T07:12:15.859Z
 **下次更新建議**: 清理一批後重新分析進度
