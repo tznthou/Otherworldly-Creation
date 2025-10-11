@@ -41,9 +41,9 @@ export const useI18n = () => {
           // 更新 HTML 標籤的 lang 屬性
           document.documentElement.setAttribute('lang', settings.language);
           
-          console.log(`語言已切換至: ${settings.language}`); // TODO: 複雜模式，需人工轉換
+          console.log(`語言已切換至: ${settings.language}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
         } catch (error) {
-          console.error(`Failed to switch language to ${settings.language}:`, error); // TODO: 複雜模式，需人工轉換
+          console.error(`Failed to switch language to ${settings.language}:`, error); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
         }
       }
     };
@@ -72,7 +72,7 @@ export const useI18n = () => {
       try {
         await i18n.setLanguage(language);
       } catch (error) {
-        console.error(`Failed to set language to ${language}:`, error); // TODO: 複雜模式，需人工轉換
+        console.error(`Failed to set language to ${language}:`, error); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
       }
     }
   };

@@ -610,9 +610,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           case 'gemini':
           case 'claude': {
             // 🔥 修復：動態獲取各提供者的模型列表，而非硬編碼
-            console.log(`[AIWritingPanel] 動態獲取 ${provider.provider_type} 提供者的模型列表...`); // TODO: 複雜模式，需人工轉換
+            console.log(`[AIWritingPanel] 動態獲取 ${provider.provider_type} 提供者的模型列表...`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
             const result = await api.aiProviders.getAvailableModels(provider.id);
-            console.log(`[AIWritingPanel] ${provider.provider_type} 模型列表結果:`, result); // TODO: 複雜模式，需人工轉換
+            console.log(`[AIWritingPanel] ${provider.provider_type} 模型列表結果:`, result); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
             
             if (result.success && result.models) {
               // 🔥 修復：處理模型對象格式，提取模型名稱
@@ -631,7 +631,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               });
               
               setProviderModels(modelList);
-              console.log(`[AIWritingPanel] 成功設置 ${modelList.length} 個模型:`, modelList.slice(0, 5)); // 只顯示前5個避免日誌過長 // TODO: 複雜模式，需人工轉換
+              console.log(`[AIWritingPanel] 成功設置 ${modelList.length} 個模型:`, modelList.slice(0, 5)); // 只顯示前5個避免日誌過長 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
             } else {
               log.warn(`[AIWritingPanel] 獲取模型失敗:`, result.error);
               setProviderModels([]);
@@ -642,7 +642,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
             setProviderModels([]);
         }
       } catch (error) {
-        console.error(`[AIWritingPanel] 獲取提供者 ${provider.provider_type} 的模型列表失敗:`, error); // TODO: 複雜模式，需人工轉換
+        console.error(`[AIWritingPanel] 獲取提供者 ${provider.provider_type} 的模型列表失敗:`, error); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
         // 發生錯誤時回退到空列表
         setProviderModels([]);
         

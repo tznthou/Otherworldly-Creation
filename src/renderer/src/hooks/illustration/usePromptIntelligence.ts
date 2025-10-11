@@ -320,7 +320,7 @@ export function usePromptIntelligence(
         isGeneratingSuggestions: false
       }));
 
-      console.log(`🤖 [PromptIntelligence] 生成 ${suggestions.length} 個建議`); // TODO: 複雜模式，需人工轉換
+      console.log(`🤖 [PromptIntelligence] 生成 ${suggestions.length} 個建議`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
       return suggestions;
 
     } catch (error) {
@@ -351,7 +351,7 @@ export function usePromptIntelligence(
         isAnalyzing: false
       }));
 
-      console.log(`🔍 [PromptIntelligence] 分析完成: ${analysis.confidence * 100}% 信心度`); // TODO: 複雜模式，需人工轉換
+      console.log(`🔍 [PromptIntelligence] 分析完成: ${analysis.confidence * 100}% 信心度`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
       return analysis;
 
     } catch (error) {
@@ -367,7 +367,7 @@ export function usePromptIntelligence(
 
   // 應用建議
   const applySuggestion = useCallback((suggestion: PromptSuggestion) => {
-    console.log(`✨ [PromptIntelligence] 應用建議: ${suggestion.text}`); // TODO: 複雜模式，需人工轉換
+    console.log(`✨ [PromptIntelligence] 應用建議: ${suggestion.text}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
     
     // 更新使用統計
     setState(prev => ({
