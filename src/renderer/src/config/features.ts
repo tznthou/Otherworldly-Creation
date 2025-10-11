@@ -85,7 +85,7 @@ class FeatureFlagsManager {
   // 調試日志函數
   debugLog(message: string, ...args: unknown[]) {
     if (this._flags.DEBUG_ILLUSTRATION_SERVICES) {
-      console.log(`[IllustrationServices] ${message}`, ...args); // TODO: 複雜模式，需人工轉換
+      log.debug(`[IllustrationServices] ${message}`, ...args);
     }
   }
 }

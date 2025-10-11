@@ -40,7 +40,7 @@ export const useShortcuts = () => {
 
   // 快捷鍵處理函數
   const handleShortcut = useCallback((action: string) => {
-    console.log(`執行快捷鍵動作: ${action}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    log.debug(`執行快捷鍵動作: ${action}`);
     
     switch (action) {
       case 'save':
@@ -97,7 +97,7 @@ export const useShortcuts = () => {
         break;
         
       default:
-        console.warn(`未知的快捷鍵動作: ${action}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+        log.warn(`未知的快捷鍵動作: ${action}`);
     }
   }, [dispatch]);
 

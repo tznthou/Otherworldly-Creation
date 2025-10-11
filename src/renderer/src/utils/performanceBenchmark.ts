@@ -103,7 +103,7 @@ export class PerformanceBenchmark {
    */
   stopBenchmark() {
     const testDuration = performance.now() - this.startTime;
-    console.log(`⏱️ 基準測試完成，總時長: ${(testDuration / 1000).toFixed(2)}秒`); // TODO: 複雜模式，需人工轉換
+    log.debug(`⏱️ 基準測試完成，總時長: ${(testDuration / 1000).toFixed(2)}秒`);
     
     return this.generateReport();
   }
@@ -137,14 +137,14 @@ export class PerformanceBenchmark {
     
     if (issues.length > 0) {
       log.warn('⚠️ 發現的性能問題:');
-      issues.forEach(issue => console.warn(`  • ${issue}`)); // TODO: 複雜模式，需人工轉換
+      issues.forEach(issue => log.warn(`  • ${issue}`));
     } else {
       log.debug('✅ 未發現明顯的性能問題');
     }
     
     log.debug('💡 性能優化建議:');
     report.recommendations.forEach(rec => 
-      console.log(`  ${rec.priority === 'high' ? '🚨' : rec.priority === 'medium' ? '⚠️' : 'ℹ️'} ${rec.message}`) // TODO: 複雜模式，需人工轉換
+      log.debug(`  ${rec.priority === 'high' ? '🚨' : rec.priority === 'medium' ? '⚠️' : 'ℹ️'} ${rec.message}`)
     );
 
     return report;

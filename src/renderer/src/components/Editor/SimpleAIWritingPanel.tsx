@@ -410,7 +410,7 @@ ${smartParams.locationNames.length > 0 ? `
           // 在每次生成之間添加小延遲，確保資料庫操作完成
           await new Promise(resolve => setTimeout(resolve, 100));
         } catch (error) {
-          console.error(`生成第 ${index + 1} 個版本失敗:`, error); // TODO: 複雜模式，需人工轉換
+          log.error(`生成第 ${index + 1} 個版本失敗:`, error);
           results.push(null);
         }
       }

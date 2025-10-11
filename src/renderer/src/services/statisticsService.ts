@@ -91,11 +91,11 @@ class StatisticsService {
       const statistics: ProjectStatistics[] = [];
 
       for (const project of projects) {
-        console.log(`處理專案: ${project.name} (ID: ${project.id})`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+        log.debug(`處理專案: ${project.name} (ID: ${project.id})`);
         const chapters = await api.chapters.getByProjectId(project.id);
         const characters = await api.characters.getByProjectId(project.id);
-        console.log(`  - 章節數量: ${chapters.length}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
-        console.log(`  - 角色數量: ${characters.length}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+        log.debug(`  - 章節數量: ${chapters.length}`);
+        log.debug(`  - 角色數量: ${characters.length}`);
         
         const totalWords = chapters.reduce((sum, chapter) => {
           // 更精確的字數計算：將 Slate 內容轉換為純文字

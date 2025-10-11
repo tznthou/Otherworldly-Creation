@@ -18,13 +18,13 @@ export const useVisualCreationHandlers = () => {
   // 供應商切換處理
   const handleProviderChange = useCallback((provider: IllustrationProvider) => {
     dispatch(setCurrentProvider(provider));
-    console.log(`🔄 插畫服務切換至: ${provider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    log.debug(`🔄 插畫服務切換至: ${provider === 'pollinations' ? 'Pollinations.AI (免費)' : 'Google Imagen (付費)'}`);
   }, [dispatch]);
 
   // 標籤切換處理
   const handleTabChange = useCallback((tab: ActiveTab) => {
     dispatch(setActiveTab(tab));
-    console.log(`🎯 切換至標籤頁: ${tab}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    log.debug(`🎯 切換至標籤頁: ${tab}`);
   }, [dispatch]);
 
   // 儲存選中的圖片（確認功能）
@@ -48,7 +48,7 @@ export const useVisualCreationHandlers = () => {
       dispatch(removeTempImages(imageIds));
       
       // 添加成功通知
-      console.log(`✅ 成功保存 ${imageIds.length} 張圖片到圖庫！`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.debug(`✅ 成功保存 ${imageIds.length} 張圖片到圖庫！`);
       
       // TODO: 將來可以添加 toast 通知組件
       

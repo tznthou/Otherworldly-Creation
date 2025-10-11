@@ -35,7 +35,7 @@ class SoundManager {
       const audioBuffer = await this.context.decodeAudioData(arrayBuffer);
       this.sounds.set(name, audioBuffer);
     } catch (error) {
-      console.warn(`載入音效失敗: ${name}`, error); // TODO: 複雜模式，需人工轉換
+      log.warn(`載入音效失敗: ${name}`, error);
     }
   }
 
@@ -64,7 +64,7 @@ class SoundManager {
       // 播放音效
       source.start();
     } catch (error) {
-      console.warn(`播放音效失敗: ${name}`, error); // TODO: 複雜模式，需人工轉換
+      log.warn(`播放音效失敗: ${name}`, error);
     }
   }
 

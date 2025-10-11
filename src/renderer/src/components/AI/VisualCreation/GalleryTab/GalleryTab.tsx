@@ -399,7 +399,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       log.debug('🗑️ [UltraSafeDelete] 階段3: 從數據中移除項目');
       updateIllustrationHistory(prev => {
         const filtered = prev.filter(item => !imagesToDelete.has(item.id));
-        console.log(`📊 [UltraSafeDelete] 數據過濾: ${prev.length} -> ${filtered.length}`); // TODO: 複雜模式，需人工轉換
+        log.debug(`📊 [UltraSafeDelete] 數據過濾: ${prev.length} -> ${filtered.length}`);
         return filtered;
       });
       

@@ -1,5 +1,8 @@
 import { useAppSelector, useAppDispatch } from './redux';
 import { updateSettings } from '../store/slices/settingsSlice';
+import { createLogger } from '@/utils/logger';
+const log = createLogger('useLanguage');
+
 
 export type SupportedLanguage = 'zh-TW' | 'zh-CN' | 'en' | 'ja';
 
@@ -68,7 +71,7 @@ export const useLanguage = () => {
     const targetLanguage = SUPPORTED_LANGUAGES.find(lang => lang.code === languageCode);
     
     if (!targetLanguage?.implemented) {
-      console.warn(`語言 ${languageCode} 尚未實現`);
+      log.warn(`語言 ${languageCode} 尚未實現`);
       return;
     }
     

@@ -497,7 +497,7 @@ export function useExportManager(options: UseExportManagerOptions = {}): UseExpo
       const dialogResult = result as { canceled: boolean; filePaths?: string[] };
       if (!dialogResult.canceled && dialogResult.filePaths && dialogResult.filePaths.length > 0) {
         const selectedPath = dialogResult.filePaths[0];
-        console.log(`📁 [ExportManager] 用戶選擇目錄: ${selectedPath}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+        log.debug(`📁 [ExportManager] 用戶選擇目錄: ${selectedPath}`);
 
         // 更新配置中的輸出目錄
         updateConfig({ outputDirectory: selectedPath });
@@ -519,7 +519,7 @@ export function useExportManager(options: UseExportManagerOptions = {}): UseExpo
   const loadSavedDirectory = useCallback(() => {
     const savedDirectory = localStorage.getItem('exportOutputDirectory');
     if (savedDirectory) {
-      console.log(`💾 [ExportManager] 載入儲存的目錄: ${savedDirectory}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.debug(`💾 [ExportManager] 載入儲存的目錄: ${savedDirectory}`);
       updateConfig({ outputDirectory: savedDirectory });
       return savedDirectory;
     } else {

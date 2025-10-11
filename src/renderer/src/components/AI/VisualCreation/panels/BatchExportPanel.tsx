@@ -45,13 +45,13 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
     autoStart: false,
     enableBackgroundProcessing: false,
     onTaskComplete: (task) => {
-      console.log(`✅ 導出完成: ${task.fileName}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.debug(`✅ 導出完成: ${task.fileName}`);
     },
     onTaskFailed: (task, error) => {
-      console.error(`❌ 導出失敗: ${task.fileName} - ${error}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.error(`❌ 導出失敗: ${task.fileName} - ${error}`);
     },
     onBatchComplete: (total, completed, failed) => {
-      console.log(`🎉 批次導出完成: ${completed}/${total} 成功, ${failed} 失敗`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.debug(`🎉 批次導出完成: ${completed}/${total} 成功, ${failed} 失敗`);
     }
   });
 
@@ -123,7 +123,7 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
   const handleSelectDirectory = useCallback(async (): Promise<string | null> => {
     const selectedPath = await selectOutputDirectory();
     if (selectedPath) {
-      console.log(`📁 [BatchExportPanel] 目錄選擇成功: ${selectedPath}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.debug(`📁 [BatchExportPanel] 目錄選擇成功: ${selectedPath}`);
     }
     return selectedPath;
   }, [selectOutputDirectory]);

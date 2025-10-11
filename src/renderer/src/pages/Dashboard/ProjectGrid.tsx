@@ -1,4 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ProjectGrid');
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { openModal } from '../../store/slices/uiSlice';
 import ProjectCard from './ProjectCard';
@@ -31,7 +34,7 @@ const ProjectGrid: React.FC = () => {
               characterCount: characters.length,
             };
           } catch (error) {
-            console.error(`Failed to load stats for project ${project.id}:`, error);
+            log.error(`Failed to load stats for project ${project.id}:`, error);
             stats[project.id] = {
               chapterCount: 0,
               characterCount: 0,
@@ -49,9 +52,9 @@ const ProjectGrid: React.FC = () => {
   }, [projects]);
 
   const handleCreateProject = () => {
-    console.log('創建專案按鈕被點擊');
+    log.debug('創建專案按鈕被點擊');
     dispatch(openModal('createProject'));
-    console.log('已 dispatch openModal action');
+    log.debug('已 dispatch openModal action');
   };
 
   // 過濾和排序專案

@@ -31,7 +31,7 @@ class TranslationLoader {
       this.loadedTranslations[language] = translation;
       return translation;
     } catch (error) {
-      console.error(`Failed to load translation for ${language}:`, error); // TODO: 複雜模式，需人工轉換
+      log.error(`Failed to load translation for ${language}:`, error);
       // 載入失敗時清除 Promise，下次可以重新嘗試
       delete this.loadingPromises[language];
       throw error;
@@ -44,11 +44,11 @@ class TranslationLoader {
       const module = await import(`./locales/${language}.json`);
       return module.default || module;
     } catch (error) {
-      console.error(`Failed to import translation file for ${language}:`, error); // TODO: 複雜模式，需人工轉換
+      log.error(`Failed to import translation file for ${language}:`, error);
       
       // 回退到預設的繁體中文
       if (language !== 'zh-TW') {
-        console.warn(`Falling back to zh-TW for ${language}`); // TODO: 複雜模式，需人工轉換
+        log.warn(`Falling back to zh-TW for ${language}`);
         return this.loadTranslation('zh-TW');
       }
       

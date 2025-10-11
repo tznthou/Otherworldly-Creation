@@ -220,7 +220,7 @@ class PerformanceMonitor {
         if (memoryUsage) {
           const usedMB = (memoryUsage.usedJSHeapSize / 1024 / 1024).toFixed(1);
           /* eslint-disable-next-line no-console */
-          console.log(`💾 記憶體使用: ${usedMB}MB`);
+          log.debug(`💾 記憶體使用: ${usedMB}MB`);
         }
         
         /* eslint-disable-next-line no-console */

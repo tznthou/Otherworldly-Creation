@@ -43,7 +43,7 @@ const App: React.FC = () => {
         const testSettings = await SettingsService.loadSettings();
         log.debug('🔐 [FORCE TEST] 設定載入完成:', testSettings);
         const lcCheck = localStorage.getItem('genesis-chronicle-settings');
-        console.log('🔐 [FORCE TEST] localStorage check:', lcCheck ? `❌ 仍存在 (${lcCheck.length} chars)` : '✅ 已清除'); // TODO: 複雜模式，需人工轉換
+        log.debug('🔐 [FORCE TEST] localStorage check:', lcCheck ? `❌ 仍存在 (${lcCheck.length} chars)` : '✅ 已清除');
 
         // 初始化 React Scan 性能監控（僅開發環境）
         initReactScan();

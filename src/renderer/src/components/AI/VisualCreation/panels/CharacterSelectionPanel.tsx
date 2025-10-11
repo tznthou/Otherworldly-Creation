@@ -1,4 +1,7 @@
 import React, { memo } from 'react';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('CharacterSelectionPanel');
 import { useCharacterSelection } from '../../../../hooks/illustration';
 import type { Character } from '../../../../api/models';
 import CosmicButton from '../../../UI/CosmicButton';
@@ -70,7 +73,7 @@ export const CharacterSelectionPanel: React.FC<CharacterSelectionPanelProps> = m
     
     // 檢查最大選擇數限制
     if (!isSelected && maxSelection && selectedCharacterCount >= maxSelection) {
-      console.warn(`最多只能選擇 ${maxSelection} 個角色`);
+      log.warn(`最多只能選擇 ${maxSelection} 個角色`);
       return;
     }
     

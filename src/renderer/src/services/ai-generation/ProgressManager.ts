@@ -1,3 +1,7 @@
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ProgressManager');
+
 /**
  * 進度狀態類型
  */
@@ -179,7 +183,7 @@ export class ProgressManager {
     this.notifyCallbacks();
 
     // 記錄統計信息
-    console.log(`📊 生成完成統計:`, {
+    log.debug(`📊 生成完成統計:`, {
       總版本: this.currentProgress.totalVersions,
       成功: this.currentProgress.completedVersions,
       失敗: this.currentProgress.failedVersions,
@@ -301,7 +305,7 @@ export class ProgressManager {
       try {
         callback(progressCopy);
       } catch (error) {
-        console.error('進度回調執行失敗:', error);
+        log.error('進度回調執行失敗:', error);
       }
     });
   }

@@ -37,7 +37,7 @@ class I18nService {
     try {
       await translationLoader.loadTranslation(language);
     } catch (_error) {
-      console.warn(`Failed to load translation for ${language}, keeping current language`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.warn(`Failed to load translation for ${language}, keeping current language`);
     }
     
     this.listeners.forEach(listener => listener(language));
@@ -68,16 +68,16 @@ class I18nService {
         const fallbackValue = this.getValueByKey(fallbackTranslation, key);
         
         if (typeof fallbackValue === 'string') {
-          console.warn(`Translation missing for ${key} in ${this.currentLanguage}, using zh-TW`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+          log.warn(`Translation missing for ${key} in ${this.currentLanguage}, using zh-TW`);
           return this.interpolateParams(fallbackValue, params);
         }
       }
 
       // 都找不到時返回 key 本身
-      console.warn(`找不到翻譯: ${key}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.warn(`找不到翻譯: ${key}`);
       return key;
     } catch (_error) {
-      console.error(`Translation failed for key ${key}:`, _error); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.error(`Translation failed for key ${key}:`, _error);
       return key;
     }
   }
@@ -86,7 +86,7 @@ class I18nService {
   translateSync(key: string, params?: Record<string, string>): string {
     const currentTranslation = translationLoader.getLoadedTranslation(this.currentLanguage);
     if (!currentTranslation) {
-      console.warn(`Translation not loaded for ${this.currentLanguage}, returning key`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.warn(`Translation not loaded for ${this.currentLanguage}, returning key`);
       return key;
     }
 
@@ -106,7 +106,7 @@ class I18nService {
       }
     }
 
-    console.warn(`找不到翻譯: ${key}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    log.warn(`找不到翻譯: ${key}`);
     return key;
   }
 

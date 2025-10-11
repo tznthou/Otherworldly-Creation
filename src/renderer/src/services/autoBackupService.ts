@@ -63,7 +63,7 @@ class AutoBackupServiceClass {
       error: null,
     });
 
-    console.log(`自動備份已啟動，間隔: ${intervalHours} 小時`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    log.debug(`自動備份已啟動，間隔: ${intervalHours} 小時`);
   }
 
   /**
@@ -112,7 +112,7 @@ class AutoBackupServiceClass {
       // 清理舊備份（如果啟用）
       await this.cleanupOldBackups(settings.backup.maxBackupFiles);
 
-      console.log(`自動備份完成: ${filename}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.debug(`自動備份完成: ${filename}`);
       
       // 通知用戶（可選）
       // TODO: 實現跨平台通知系統
@@ -139,7 +139,7 @@ class AutoBackupServiceClass {
       // 這裡需要實現清理邏輯
       // 由於我們使用下載方式，無法直接管理檔案
       // 可以考慮在未來版本中實現本地備份資料夾管理
-      console.log(`備份清理: 保留最近 ${maxFiles} 個備份檔案`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.debug(`備份清理: 保留最近 ${maxFiles} 個備份檔案`);
     } catch (error) {
       log.error('清理舊備份失敗:', error);
     }

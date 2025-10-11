@@ -259,8 +259,8 @@ const DatabaseMaintenance: React.FC = () => {
 
   const performAutoRepair = async () => {
     log.debug('performAutoRepair called, checkResult:', checkResult);
-    console.log('checkResult?.issues:', checkResult?.issues); // TODO: 複雜模式，需人工轉換
-    console.log('checkResult?.issues.length:', checkResult?.issues?.length); // TODO: 複雜模式，需人工轉換
+    log.debug('checkResult?.issues:', checkResult?.issues);
+    log.debug('checkResult?.issues.length:', checkResult?.issues?.length);
     
     if (!checkResult || !checkResult.issues.length) {
       log.debug('Early return: no checkResult or no issues');

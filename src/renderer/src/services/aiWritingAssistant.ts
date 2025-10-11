@@ -161,23 +161,23 @@ export function generateSmartParams(
   if (currentModel && currentModel.includes('gemini-2.5-flash')) {
     // Gemini 2.5 Flash 實際支持更高的輸出 tokens
     maxTokens = Math.max(maxTokens, 1000); // 🚀 從 650 提升到 1000
-    console.log(`🎯 檢測到 Gemini 2.5 Flash，使用優化 token 限制: ${maxTokens}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    log.debug(`🎯 檢測到 Gemini 2.5 Flash，使用優化 token 限制: ${maxTokens}`);
   } else if (currentModel && currentModel.includes('gemini-2.5-pro')) {
     // Gemini 2.5 Pro 支持更高的 token 數
     maxTokens = Math.max(maxTokens, 1200); // 🚀 從 1000 提升到 1200
-    console.log(`🧠 檢測到 Gemini 2.5 Pro，使用高性能 token 限制: ${maxTokens}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    log.debug(`🧠 檢測到 Gemini 2.5 Pro，使用高性能 token 限制: ${maxTokens}`);
   } else if (currentModel && (currentModel.includes('gemini-1.5-pro') || currentModel.includes('gemini-pro'))) {
     // Gemini 1.5 Pro 系列：較舊但穩定的模型
     maxTokens = Math.max(maxTokens, 1000); // 保持 1000
-    console.log(`✨ 檢測到 Gemini 1.5 Pro 系列，使用標準 token 限制: ${maxTokens}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    log.debug(`✨ 檢測到 Gemini 1.5 Pro 系列，使用標準 token 限制: ${maxTokens}`);
   } else if (currentModel && currentModel.includes('claude')) {
     // Claude 模型通常支持較長的輸出
     maxTokens = Math.max(maxTokens, 1500);
-    console.log(`🤖 檢測到 Claude 模型，使用擴展 token 限制: ${maxTokens}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    log.debug(`🤖 檢測到 Claude 模型，使用擴展 token 限制: ${maxTokens}`);
   } else if (currentModel && currentModel.includes('gpt-4')) {
     // GPT-4 模型
     maxTokens = Math.max(maxTokens, 1200);
-    console.log(`🚀 檢測到 GPT-4 模型，使用擴展 token 限制: ${maxTokens}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    log.debug(`🚀 檢測到 GPT-4 模型，使用擴展 token 限制: ${maxTokens}`);
   }
   
   // 確保最小值

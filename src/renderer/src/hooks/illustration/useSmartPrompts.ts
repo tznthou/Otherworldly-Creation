@@ -1,4 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('useSmartPrompts');
 import type { Character } from '../../api/models';
 
 // 提示詞建議類型
@@ -281,7 +284,7 @@ export const useSmartPrompts = (
     setCurrentPrompt(prompt);
     if (enableAutoAnalysis && prompt.trim()) {
       const timeoutId = setTimeout(() => {
-        analyzePrompt(prompt).catch(console.error);
+        analyzePrompt(prompt).catch(err => log.error('分析提示詞失敗', err));
       }, analysisDelay);
       
       return () => clearTimeout(timeoutId);

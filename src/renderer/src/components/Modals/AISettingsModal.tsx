@@ -224,7 +224,7 @@ const AISettingsModal: React.FC = () => {
         
         // 記錄到控制台供檢查
         result.models.forEach((model, index) => {
-          console.log(`模型 ${index + 1}:`, model); // TODO: 複雜模式，需人工轉換
+          log.debug(`模型 ${index + 1}:`, model);
         });
       } else {
         dispatch(addNotification({

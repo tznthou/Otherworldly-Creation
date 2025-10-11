@@ -74,7 +74,7 @@ const Dashboard: React.FC = () => {
                 status = chapter.status;
               }
             } catch (error) {
-              console.warn(`Dashboard: 章節 ${chapter.title} metadata 解析失敗:`, error); // TODO: 複雜模式，需人工轉換
+              log.warn(`Dashboard: 章節 ${chapter.title} metadata 解析失敗:`, error);
               status = chapter.status || 'draft';
             }
             
@@ -86,7 +86,7 @@ const Dashboard: React.FC = () => {
           
           allChapters = [...allChapters, ...chaptersWithStatus];
         } catch (error) {
-          console.warn(`無法載入專案 ${project.name} 的章節:`, error); // TODO: 複雜模式，需人工轉換
+          log.warn(`無法載入專案 ${project.name} 的章節:`, error);
         }
       }
       

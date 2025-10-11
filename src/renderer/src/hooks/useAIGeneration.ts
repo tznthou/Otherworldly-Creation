@@ -186,7 +186,7 @@ export function useAIGeneration(): AIGenerationHook {
         });
 
         if (DEBUG_AI_GENERATION) {
-          console.log(`📋 版本${i + 1}參數:`, optimizedParams); // TODO: 複雜模式，需人工轉換
+          log.debug(`📋 版本${i + 1}參數:`, optimizedParams);
         }
       }
 

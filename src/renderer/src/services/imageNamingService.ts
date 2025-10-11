@@ -192,7 +192,7 @@ export class ImageNamingService {
       const value = context[varName];
       
       if (value === undefined || value === null) {
-        console.warn(`命名模板變數未找到: ${varName}`); // TODO: 複雜模式，需人工轉換
+        log.warn(`命名模板變數未找到: ${varName}`);
         return varName; // 回退到變數名
       }
       
@@ -290,7 +290,7 @@ export class ImageNamingService {
           warnings
         });
       } catch (error) {
-        console.error(`預覽重命名失敗 (${imageId}):`, error); // TODO: 複雜模式，需人工轉換
+        log.error(`預覽重命名失敗 (${imageId}):`, error);
         results.push({
           originalName: `image_${imageId}`,
           newName: `error_${imageId}`,

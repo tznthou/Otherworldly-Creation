@@ -49,10 +49,11 @@ const log = createLogger('main-stable');
 })();
 
 // 🛡️ 超早期錯誤攔截器 - 在任何其他代碼運行之前設置
+/* eslint-disable no-console */
 (() => {
   const originalConsoleError = console.error;
   const originalConsoleWarn = console.warn;
-  
+
   // 重寫 console.error 來過濾 Tauri 錯誤
   console.error = (...args: unknown[]) => {
     const errorString = args.join(' ');

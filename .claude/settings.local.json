@@ -247,7 +247,8 @@
       "Bash(src/renderer/src/utils/reactScan.ts)",
       "Bash(src/renderer/src/i18n/index.ts )",
       "Bash(src/renderer/src/components/AI/VisualCreation/CreateTab/CharacterSelector.tsx)",
-      "Bash(cut:*)"
+      "Bash(cut:*)",
+      "Bash(bash:*)"
     ],
     "deny": [],
     "ask": [],

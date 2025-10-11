@@ -38,7 +38,7 @@ export const fetchChaptersByProjectId = createAsyncThunk(
     // 詳細記錄每個章節的數據
     log.debug('🔍 [chaptersSlice] API 返回的章節數量:', chapters.length);
     chapters.forEach((chapter, index) => {
-      console.log(`🔍 [chaptersSlice] 章節 ${index + 1}:`, { // TODO: 複雜模式，需人工轉換
+      log.debug(`🔍 [chaptersSlice] 章節 ${index + 1}:`, {
         id: chapter.id,
         title: chapter.title,
         contentType: typeof chapter.content,

@@ -533,7 +533,7 @@ export const useBatchConfiguration = (
   useEffect(() => {
     const recommended = getRecommendedMaxParallel();
     if (maxParallel > recommended) {
-      console.log(`⚠️ [useBatchConfiguration] ${illustrationProvider} 建議最大並行數為 ${recommended}，當前設定 ${maxParallel} 可能過高`); // TODO: 複雜模式，需人工轉換
+      log.debug(`⚠️ [useBatchConfiguration] ${illustrationProvider} 建議最大並行數為 ${recommended}，當前設定 ${maxParallel} 可能過高`);
     }
   }, [illustrationProvider, maxParallel, getRecommendedMaxParallel]);
 

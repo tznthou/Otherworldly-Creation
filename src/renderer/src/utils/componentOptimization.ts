@@ -5,6 +5,9 @@
 
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
+import { createLogger } from './logger';
+
+const log = createLogger('componentOptimization');
 
 // 深度比較函數（僅用於必要時）
 export function deepEqual(a: unknown, b: unknown): boolean {
@@ -41,7 +44,7 @@ export function smartMemoCompare<T extends Record<string, unknown>>(
   for (const prop of criticalProps) {
     if (prop in prevProps || prop in nextProps) {
       if (!deepEqual(prevProps[prop], nextProps[prop])) {
-        console.log(`🔄 [組件優化] ${prop} 屬性變更，需要重新渲染`); // TODO: 複雜模式，需人工轉換
+        log.debug(`🔄 [組件優化] ${prop} 屬性變更，需要重新渲染`);
         return false;
       }
     }
@@ -60,7 +63,7 @@ export function withSmartMemo<P extends Record<string, unknown>>(
   
   if (process.env.NODE_ENV === 'development') {
     // 開發環境下添加重新渲染計數器 (簡化版)
-    console.log(`🎭 [${Component.displayName || Component.name}] 已應用記憶化優化`); // TODO: 複雜模式，需人工轉換
+    log.debug(`🎭 [${Component.displayName || Component.name}] 已應用記憶化優化`);
   }
   
   return MemorizedComponent;
@@ -210,11 +213,11 @@ export function withPerformanceTracking<P extends Record<string, unknown>>(
       const renderTime = performance.now() - (renderStartTime.current || 0);
       
       if (renderTime > 16) {
-        console.warn(`⚠️ [性能追蹤] ${componentName} 渲染時間較長: ${renderTime.toFixed(2)}ms (第${renderCount.current}次渲染)`); // TODO: 複雜模式，需人工轉換
+        log.warn(`⚠️ [性能追蹤] ${componentName} 渲染時間較長: ${renderTime.toFixed(2)}ms (第${renderCount.current}次渲染)`);
       }
       
       if (process.env.NODE_ENV === 'development' && renderCount.current % 10 === 0) {
-        console.log(`📊 [性能追蹤] ${componentName} 已渲染 ${renderCount.current} 次`); // TODO: 複雜模式，需人工轉換
+        log.debug(`📊 [性能追蹤] ${componentName} 已渲染 ${renderCount.current} 次`);
       }
     });
 

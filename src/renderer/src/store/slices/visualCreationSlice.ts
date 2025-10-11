@@ -275,7 +275,7 @@ export const saveSelectedImages = createAsyncThunk(
           savedImages.push(imageData);
         }
       } catch (error) {
-        console.error(`保存圖像失敗: ${imageData.id}`, error); // TODO: 複雜模式，需人工轉換
+        log.error(`保存圖像失敗: ${imageData.id}`, error);
       }
     }
     
@@ -288,7 +288,7 @@ export const saveSelectedImages = createAsyncThunk(
       try {
         await api.illustration.deleteTempImage(imageData.temp_path);
       } catch (error) {
-        console.error(`清理臨時圖像失敗: ${imageData.id}`, error); // TODO: 複雜模式，需人工轉換
+        log.error(`清理臨時圖像失敗: ${imageData.id}`, error);
       }
     }
     
@@ -588,7 +588,7 @@ export const visualCreationSlice = createSlice({
         state.showImageDetails = false;
         
         // 可以在這裡添加成功保存的通知
-        console.log(`成功保存 ${action.payload.length} 張圖像`); // TODO: 複雜模式，需人工轉換
+        log.debug(`成功保存 ${action.payload.length} 張圖像`);
       })
       .addCase(saveSelectedImages.rejected, (state, action) => {
         state.loading.savingImages = false;

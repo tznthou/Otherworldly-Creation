@@ -2,6 +2,9 @@
 import { CharacterArchetypeTemplate, NovelTemplate } from '../types/template';
 import { Character, CharacterFormData } from '../types/character';
 import { api } from '../api';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('templateCharacterService');
 
 export interface TemplateCharacterCreationResult {
   success: boolean;
@@ -37,7 +40,7 @@ export class TemplateCharacterService {
         } catch (error) {
           const errorMessage = `創建角色「${archetype.name}」失敗: ${error instanceof Error ? error.message : '未知錯誤'}`;
           result.errors.push(errorMessage);
-          console.error(errorMessage, error);
+          log.error(errorMessage, error);
         }
       }
 
@@ -265,13 +268,13 @@ export class TemplateCharacterService {
                 description: relationship.description
               });
             } catch (error) {
-              console.warn(`建立角色關係失敗: ${sourceChar.name} -> ${relationship.targetId}`, error);
+              log.warn(`建立角色關係失敗: ${sourceChar.name} -> ${relationship.targetId}`, error);
             }
           }
         }
       }
     } catch (error) {
-      console.error('建立角色關係失敗:', error);
+      log.error('建立角色關係失敗:', error);
       // 不拋出錯誤，因為關係建立失敗不應該影響角色創建
     }
   }

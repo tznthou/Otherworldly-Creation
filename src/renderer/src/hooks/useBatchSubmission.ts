@@ -247,14 +247,14 @@ export const useBatchSubmission = ({
                 tempImageData: result,
                 request: req
               });
-              console.log(`✅ 第 ${i + 1} 張 Gemini 圖像生成成功`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+              log.debug(`✅ 第 ${i + 1} 張 Gemini 圖像生成成功`);
             } else {
               results.push({
                 success: false,
                 error: result.message || 'Gemini 生成失敗',
                 request: req
               });
-              console.error(`❌ 第 ${i + 1} 張 Gemini 圖像生成失敗:`, result.message); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+              log.error(`❌ 第 ${i + 1} 張 Gemini 圖像生成失敗:`, result.message);
             }
           } catch (error) {
             results.push({
@@ -262,7 +262,7 @@ export const useBatchSubmission = ({
               error: error instanceof Error ? error.message : String(error),
               request: req
             });
-            console.error(`❌ 第 ${i + 1} 張 Gemini 圖像生成異常:`, error); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+            log.error(`❌ 第 ${i + 1} 張 Gemini 圖像生成異常:`, error);
           }
 
           // 避免過於頻繁的請求，每個請求間隔1秒
@@ -317,7 +317,7 @@ export const useBatchSubmission = ({
           imageRequests,
           batchConfig.apiKey,
           (current, total, currentPrompt) => {
-            console.log(`🎨 生成進度: ${current}/${total} - ${currentPrompt?.substring(0, 50)}...`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+            log.debug(`🎨 生成進度: ${current}/${total} - ${currentPrompt?.substring(0, 50)}...`);
             // 可以在這裡更新 UI 顯示進度
           }
         );
@@ -337,7 +337,7 @@ export const useBatchSubmission = ({
       const failCount = results.filter(r => !r.success).length;
       
       if (successCount > 0) {
-        console.log(`✅ 成功生成 ${successCount} 張圖像（臨時）`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+        log.debug(`✅ 成功生成 ${successCount} 張圖像（臨時）`);
         
         // 收集所有成功的臨時圖像數據
         const successfulTempImages: TempImage[] = results
@@ -394,7 +394,7 @@ export const useBatchSubmission = ({
         setError(''); // 清除錯誤
         
         if (failCount > 0) {
-          console.warn(`⚠️ ${failCount} 張圖像生成失敗`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+          log.warn(`⚠️ ${failCount} 張圖像生成失敗`);
           setError(`部分圖像生成失敗：成功 ${successCount}，失敗 ${failCount}`);
         }
       } else {

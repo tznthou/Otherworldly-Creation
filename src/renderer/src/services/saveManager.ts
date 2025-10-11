@@ -305,7 +305,7 @@ class SaveManagerClass {
       try {
         await this.processByType(operation.type, [operation]);
       } catch (error) {
-        console.error(`強制儲存操作 ${operation.id} 失敗:`, error); // TODO: 複雜模式，需人工轉換
+        log.error(`強制儲存操作 ${operation.id} 失敗:`, error);
       }
     }
   }

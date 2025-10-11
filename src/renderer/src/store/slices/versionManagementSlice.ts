@@ -1,3 +1,6 @@
+import { createLogger } from '@/utils/logger';
+const log = createLogger('versionManagementSlice');
+
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import {
   ImageVersion,
@@ -682,7 +685,7 @@ export const versionManagementSlice = createSlice({
         state.operationProgress = 100;
         state.showExportPanel = false;
         // TODO: 顯示成功訊息或下載連結
-        console.log(`版本導出成功: ${action.payload}`);
+        log.debug(`版本導出成功: ${action.payload}`);
         state.error = null;
       })
       .addCase(exportVersions.rejected, (state, action) => {

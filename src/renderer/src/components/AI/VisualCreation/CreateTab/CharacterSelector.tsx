@@ -25,7 +25,7 @@ const CharacterSelector: React.FC = () => {
     const match = charProjectId === currentProjectId;
     
     if (!match && characters.length > 0) {
-      console.log(`🎯 [CharacterSelector] 角色過濾: ${c.name} - 角色ProjectId: "${charProjectId}" (${typeof c.projectId}), 當前ProjectId: "${currentProjectId}" (${typeof currentProject?.id}), 匹配: ${match}`); // TODO: 複雜模式，需人工轉換
+      log.debug(`🎯 [CharacterSelector] 角色過濾: ${c.name} - 角色ProjectId: "${charProjectId}" (${typeof c.projectId}), 當前ProjectId: "${currentProjectId}" (${typeof currentProject?.id}), 匹配: ${match}`);
     }
     
     return match;
@@ -34,7 +34,7 @@ const CharacterSelector: React.FC = () => {
   // 調試信息 - 僅在必要時執行
   React.useEffect(() => {
     log.debug('🐛 [CharacterSelector] 組件狀態更新');
-    console.log('📂 currentProject:', currentProject?.name, '(ID:', currentProject?.id, ')'); // TODO: 複雜模式，需人工轉換
+    log.debug('📂 currentProject', { name: currentProject?.name, id: currentProject?.id });
     log.debug('📊 Redux characters總數:', characters.length);
     log.debug('🎯 projectCharacters總數 (過濾後):', projectCharacters.length);
     
