@@ -6,6 +6,10 @@ import { withHistory } from 'slate-history';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { selectEditorSettings, toggleSettings, toggleReadingMode, selectIsReadingMode, toggleFocusWritingMode, selectIsFocusWritingMode } from '../../store/slices/editorSlice';
 import SaveStatusIndicator from '../UI/SaveStatusIndicator';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('SlateEditor');
 
 // 定義編輯器節點類型
 type CustomElement = {
@@ -93,7 +97,7 @@ const useSelectionPersist = (editor: Editor) => {
           isRestoring.current = false;
         }, 0);
       } catch (error) {
-        console.warn('[SelectionPersist] Failed to restore selection:', error);
+        log.warn('[SelectionPersist] Failed to restore selection:', error);
         isRestoring.current = false;
       }
     }
@@ -135,7 +139,7 @@ interface SlateEditorProps {
 const SafeSlateEditor: React.FC<SlateEditorProps> = (props) => {
   try {
     // 立即記錄和驗證 props
-    console.log('[SafeSlateEditor] Props received:', {
+    log.debug('[SafeSlateEditor] Props received:', {
       hasValue: 'value' in props,
       valueType: typeof props.value,
       isArray: Array.isArray(props.value),
@@ -152,7 +156,7 @@ const SafeSlateEditor: React.FC<SlateEditorProps> = (props) => {
 
     return <SlateEditorCore {...safeProps} />;
   } catch (error) {
-    console.error('[SafeSlateEditor] Props validation error:', error);
+    log.error('[SafeSlateEditor] Props validation error:', error);
     return (
       <div className="w-full p-6 bg-red-900/20 border border-red-500 rounded-lg">
         <h3 className="text-red-400 text-lg font-bold mb-2">編輯器初始化錯誤</h3>
@@ -177,7 +181,7 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
   isGenerating = false,
   showToolbar = true
 }) => {
-  console.log('[SlateEditorCore] Initializing with value:', {
+  log.debug('[SlateEditorCore] Initializing with value:', {
     type: typeof value,
     isArray: Array.isArray(value),
     length: Array.isArray(value) ? value.length : 'N/A'
@@ -187,7 +191,7 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
     try {
       // 先檢查 value 是否存在且為陣列
       if (!value || !Array.isArray(value) || value.length === 0) {
-        console.log('[SlateEditor] Value is invalid, using default:', value);
+        log.debug('[SlateEditor] Value is invalid, using default:', value);
         return [{ type: 'paragraph' as const, children: [{ text: '' }] } as CustomElement];
       }
       
@@ -197,7 +201,7 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
         const node = value[i];
         
         if (!node || typeof node !== 'object') {
-          console.warn('[SlateEditor] Invalid node at index', i, ':', node);
+          log.warn('[SlateEditor] Invalid node at index', { index: i, node });
           validatedValue.push({ type: 'paragraph' as const, children: [{ text: '' }] } as CustomElement);
           continue;
         }
@@ -209,7 +213,7 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
           if ('text' in node) {
             validatedValue.push(node as CustomText);
           } else {
-            console.warn('[SlateEditor] Unknown node type at index', i, ':', node);
+            log.warn('[SlateEditor] Unknown node type at index', { index: i, node });
             validatedValue.push({ type: 'paragraph' as const, children: [{ text: '' }] } as CustomElement);
           }
           continue;
@@ -219,7 +223,7 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
         
         // 確保至少有一個子節點
         if (elementNode.children.length === 0) {
-          console.warn('[SlateEditor] Node has empty children at index', i);
+          log.warn('[SlateEditor] Node has empty children at index', i);
           validatedValue.push({ ...elementNode, children: [{ text: '' }] } as CustomElement);
           continue;
         }
@@ -229,7 +233,7 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
       
       return validatedValue;
     } catch (error) {
-      console.error('[SlateEditor] Error validating value:', error, 'Value:', value);
+      log.error('[SlateEditor] Error validating value', { error, value });
       return [{ type: 'paragraph' as const, children: [{ text: '' }] } as CustomElement];
     }
   }, [value]);
@@ -475,8 +479,8 @@ const SlateEditorCore: React.FC<SlateEditorProps> = ({
     </div>
   );
   } catch (error) {
-    console.error('[SlateEditor] Render error:', error);
-    console.error('[SlateEditor] Error details:', {
+    log.error('[SlateEditor] Render error:', error);
+    log.error('[SlateEditor] Error details:', {
       value,
       safeValue,
       error: error instanceof Error ? error.message : String(error)

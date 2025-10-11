@@ -33,6 +33,10 @@ import { SimpleProgressBar } from '../../components/UI/ProgressIndicator';
 import { MiniErrorFallback } from '../../components/UI/ErrorFallback';
 import TutorialOverlay, { useTutorial } from '../../components/Tutorial/TutorialOverlay';
 import { editorTutorial, aiTutorial } from '../../data/tutorialSteps';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ProjectEditor');
 
 const ProjectEditorContent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -87,7 +91,7 @@ const ProjectEditorContent: React.FC = () => {
   } = useTutorial();
   
   // 添加調試日誌
-  console.log('ProjectEditor tutorial state:', { 
+  log.debug('ProjectEditor tutorial state:', { 
     isTutorialActive, 
     currentTutorialId, 
     currentStep,
@@ -198,8 +202,8 @@ const ProjectEditorContent: React.FC = () => {
 
   // 處理章節選擇
   const handleChapterSelect = useCallback((chapterId: string) => {
-    console.log('🔍 [ProjectEditor] 用戶選擇章節:', chapterId);
-    console.log('🔍 [ProjectEditor] 可用章節列表:', chapters.map(c => ({
+    log.debug('🔍 [ProjectEditor] 用戶選擇章節:', chapterId);
+    log.debug('🔍 [ProjectEditor] 可用章節列表:', chapters.map(c => ({
       id: c.id,
       title: c.title,
       contentType: typeof c.content,
@@ -207,7 +211,7 @@ const ProjectEditorContent: React.FC = () => {
     })));
     
     const chapter = chapters.find(c => c.id === chapterId);
-    console.log('🔍 [ProjectEditor] 找到的章節:', chapter ? {
+    log.debug('🔍 [ProjectEditor] 找到的章節:', chapter ? {
       id: chapter.id,
       title: chapter.title,
       contentType: typeof chapter.content,
@@ -219,9 +223,9 @@ const ProjectEditorContent: React.FC = () => {
     
     if (chapter) {
       setSelectedChapterId(chapterId);
-      console.log('🔍 [ProjectEditor] 更新 selectedChapterId 為:', chapterId);
+      log.debug('🔍 [ProjectEditor] 更新 selectedChapterId 為:', chapterId);
       dispatch(setCurrentChapter(chapter));
-      console.log('🔍 [ProjectEditor] 已分派 setCurrentChapter action');
+      log.debug('🔍 [ProjectEditor] 已分派 setCurrentChapter action');
     }
   }, [chapters, dispatch]);
   
@@ -259,7 +263,7 @@ const ProjectEditorContent: React.FC = () => {
       
       // 異步更新數據庫
       dispatch(updateChapter(updatedChapter)).catch((error) => {
-        console.error('章節內容同步失敗:', error);
+        log.error('章節內容同步失敗:', error);
       });
     }
   }, [dispatch, currentChapter]);
@@ -280,7 +284,7 @@ const ProjectEditorContent: React.FC = () => {
     if (selectionMethods) {
       editorSelectionRef.current = selectionMethods;
     }
-    console.log('編輯器已準備好:', editor);
+    log.debug('編輯器已準備好:', editor);
   }, []);
 
   // 處理 AI 續寫 - 開啟 AI 面板
@@ -407,7 +411,7 @@ const ProjectEditorContent: React.FC = () => {
           {(() => {
             // 調試：記錄當前要渲染的章節
             if (currentChapter) {
-              console.log('🔍 [ProjectEditor] 準備渲染章節:', {
+              log.debug('🔍 [ProjectEditor] 準備渲染章節:', {
                 id: currentChapter.id,
                 title: currentChapter.title,
                 contentType: typeof currentChapter.content,
@@ -464,7 +468,7 @@ const ProjectEditorContent: React.FC = () => {
                     
                     <button
                       onClick={() => {
-                        console.log('上一章按鈕點擊', chapters, currentChapter);
+                        log.debug('上一章按鈕點擊', { chapters, currentChapter });
                         const currentIndex = chapters.findIndex(c => c.id === currentChapter?.id);
                         if (currentIndex > 0) {
                           handleChapterSelect(chapters[currentIndex - 1].id);
@@ -478,7 +482,7 @@ const ProjectEditorContent: React.FC = () => {
                     </button>
                     <button
                       onClick={() => {
-                        console.log('下一章按鈕點擊', chapters, currentChapter);
+                        log.debug('下一章按鈕點擊', { chapters, currentChapter });
                         const currentIndex = chapters.findIndex(c => c.id === currentChapter?.id);
                         if (currentIndex < chapters.length - 1) {
                           handleChapterSelect(chapters[currentIndex + 1].id);
@@ -499,7 +503,7 @@ const ProjectEditorContent: React.FC = () => {
                 {/* 主編輯器 */}
                 <div className="flex-1 overflow-auto">
                   {(() => {
-                    console.log('🔍 [ProjectEditor] 準備傳遞給 SlateEditor 的數據:', {
+                    log.debug('🔍 [ProjectEditor] 準備傳遞給 SlateEditor 的數據:', {
                       chapterId: currentChapter.id,
                       contentType: typeof currentChapter.content,
                       isArray: Array.isArray(currentChapter.content),
@@ -510,7 +514,7 @@ const ProjectEditorContent: React.FC = () => {
                     });
                     
                     const editorValue = currentChapter.content || [{ type: 'paragraph', children: [{ text: '' }] }];
-                    console.log('🔍 [ProjectEditor] 處理後的 editorValue:', editorValue);
+                    log.debug('🔍 [ProjectEditor] 處理後的 editorValue:', editorValue);
                     
                     return (
                       <SlateEditor

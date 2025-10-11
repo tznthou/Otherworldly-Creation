@@ -11,6 +11,10 @@ import { fetchCharactersByProjectId } from '../../store/slices/charactersSlice';
 import PersonalityRadarChart from '../Charts/PersonalityRadarChart';
 import EmotionTrendChart from '../Charts/EmotionTrendChart';
 import ConsistencyScoreChart from '../Charts/ConsistencyScoreChart';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CharacterAnalysisPanel');
 
 // 分析標籤類型
 type AnalysisTab = 'overview' | 'personality' | 'language' | 'emotion' | 'consistency' | 'suggestions';
@@ -53,7 +57,10 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
   
   // 調試：監控Redux狀態變化
   useEffect(() => {
-    console.log('🔄 [角色分析] Redux狀態更新，角色數量:', characters.length, '角色列表:', characters.map(c => ({id: c.id, name: c.name, projectId: c.projectId})));
+    log.debug('🔄 [角色分析] Redux狀態更新', {
+      count: characters.length,
+      characters: characters.map(c => ({id: c.id, name: c.name, projectId: c.projectId}))
+    });
   }, [characters]);
   
   // 狀態管理
@@ -68,17 +75,20 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
   useEffect(() => {
     const loadCharacters = async () => {
       try {
-        console.log('🔍 [角色分析] 開始載入角色，專案ID:', projectId);
+        log.debug('🔍 [角色分析] 開始載入角色', { projectId });
         // 使用Redux action載入角色
         const result = await dispatch(fetchCharactersByProjectId(projectId)).unwrap();
-        console.log('✅ [角色分析] 載入角色成功，數量:', result.length, '角色:', result.map(c => ({id: c.id, name: c.name})));
+        log.debug('✅ [角色分析] 載入角色成功', {
+          count: result.length,
+          characters: result.map(c => ({id: c.id, name: c.name}))
+        });
         
         if (result.length > 0 && !selectedCharacterId) {
           setSelectedCharacterId(result[0].id);
-          console.log('🎯 [角色分析] 自動選中第一個角色:', result[0].name);
+          log.debug('🎯 [角色分析] 自動選中第一個角色:', result[0].name);
         }
       } catch (error) {
-        console.error('❌ [角色分析] 載入角色列表失敗:', error);
+        log.error('❌ [角色分析] 載入角色列表失敗:', error);
       }
     };
     
@@ -102,7 +112,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
 
     setIsAnalyzing(true);
     try {
-      console.log('🎭 開始執行角色分析...', { 
+      log.debug('🎭 開始執行角色分析...', { 
         analysisScope, 
         selectedCharacterId, 
         currentChapter: !!currentChapter, 
@@ -119,7 +129,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
         
         if (result) {
           setAnalysisResult(result);
-          console.log('✅ 角色分析完成', result);
+          log.debug('✅ 角色分析完成', result);
         } else {
           dispatch(addNotification({
             id: Date.now().toString(),
@@ -142,13 +152,13 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
           setAnalysisResult(characterResult);
         }
         
-        console.log('✅ 專案角色分析完成', projectResult);
+        log.debug('✅ 專案角色分析完成', projectResult);
       } else {
         throw new Error('沒有可用的內容進行分析');
       }
       
     } catch (error) {
-      console.error('❌ 角色分析失敗:', error);
+      log.error('❌ 角色分析失敗:', error);
       dispatch(addNotification({
         id: Date.now().toString(),
         type: 'error',
@@ -736,7 +746,7 @@ function generateSuggestions(result: CharacterAnalysisResult): Suggestion[] {
 function handleApplySuggestion(suggestion: Suggestion): void {
   // 這裡可以實現具體的建議應用邏輯
   // 例如：跳轉到相關章節、打開編輯器、顯示詳細修改建議等
-  console.log('應用建議:', suggestion.title);
+  log.debug('應用建議:', suggestion.title);
   
   // 實際項目中可以調用相關的編輯器API或顯示模態框
   // 例如：

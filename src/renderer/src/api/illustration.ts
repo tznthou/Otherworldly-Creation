@@ -1,4 +1,8 @@
 import { api } from './tauri';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('illustration');
 
 export interface IllustrationGenerationParams {
   prompt: string;
@@ -61,7 +65,7 @@ export const illustrationAPI = {
     provider: string;
     apiKey: string;
   }) => {
-    console.log('🎨 [API] 生成 Gemini 圖片:', params);
+    log.debug('🎨 [API] 生成 Gemini 圖片:', params);
     
     const result = await api.invoke('generate_gemini_illustration', {
       prompt: params.prompt,
@@ -74,7 +78,7 @@ export const illustrationAPI = {
       style: params.style,
     });
     
-    console.log('✅ [API] Gemini 圖片生成完成:', result);
+    log.debug('✅ [API] Gemini 圖片生成完成:', result);
     
     return result;
   },
@@ -83,14 +87,14 @@ export const illustrationAPI = {
    * 測試 Gemini 連接
    */
   testGeminiConnection: async (apiKey: string, provider: string) => {
-    console.log('🔗 [API] 測試 Gemini 連接:', provider);
+    log.debug('🔗 [API] 測試 Gemini 連接:', provider);
     
     const result = await api.invoke('test_gemini_connection', {
       apiKey,
       provider,
     });
     
-    console.log('✅ [API] Gemini 連接測試完成:', result);
+    log.debug('✅ [API] Gemini 連接測試完成:', result);
     
     return result;
   },
@@ -99,7 +103,7 @@ export const illustrationAPI = {
    * 優化的圖片生成：直接儲存到最終位置，標記為未確認
    */
   generateOptimized: async (params: IllustrationGenerationParams): Promise<IllustrationResponse> => {
-    console.log('🎨 [API] 生成優化圖片:', params);
+    log.debug('🎨 [API] 生成優化圖片:', params);
     
     const result = await api.invoke<IllustrationResponse>('generate_illustration_optimized', {
       prompt: params.prompt,
@@ -113,7 +117,7 @@ export const illustrationAPI = {
       characterId: params.characterId,
     });
     
-    console.log('✅ [API] 圖片生成完成:', {
+    log.debug('✅ [API] 圖片生成完成:', {
       id: result.id,
       is_confirmed: result.is_confirmed,
       file_size: result.file_size_bytes
@@ -126,7 +130,7 @@ export const illustrationAPI = {
    * 確認圖片：將選中的圖片標記為已確認
    */
   confirm: async (imageIds: string[]): Promise<ConfirmationResponse> => {
-    console.log('✅ [API] 確認圖片:', imageIds);
+    log.debug('✅ [API] 確認圖片:', imageIds);
     
     if (imageIds.length === 0) {
       throw new Error('沒有選中的圖片');
@@ -136,7 +140,7 @@ export const illustrationAPI = {
       imageIds
     });
     
-    console.log('✅ [API] 圖片確認完成:', result);
+    log.debug('✅ [API] 圖片確認完成:', result);
     
     return result;
   },
@@ -169,7 +173,7 @@ export const illustrationAPI = {
    * 重命名單個插畫
    */
   rename: async (id: string, newName: string): Promise<RenameResponse> => {
-    console.log('🏷️ [API] 重命名插畫:', { id, newName });
+    log.debug('🏷️ [API] 重命名插畫:', { id, newName });
     
     if (!id || !newName.trim()) {
       throw new Error('插畫ID和新名稱不能為空');
@@ -184,7 +188,7 @@ export const illustrationAPI = {
       throw new Error('重命名失敗');
     }
     
-    console.log('✅ [API] 插畫重命名完成:', result.data);
+    log.debug('✅ [API] 插畫重命名完成:', result.data);
     return result.data;
   },
 
@@ -192,7 +196,7 @@ export const illustrationAPI = {
    * 批次重命名插畫
    */
   batchRename: async (operations: RenameRequest[]): Promise<BatchRenameResponse> => {
-    console.log('🏷️ [API] 批次重命名插畫:', operations);
+    log.debug('🏷️ [API] 批次重命名插畫:', operations);
     
     if (operations.length === 0) {
       throw new Error('沒有重命名操作');
@@ -206,7 +210,7 @@ export const illustrationAPI = {
       throw new Error('批次重命名失敗');
     }
     
-    console.log('✅ [API] 批次重命名完成:', result.data);
+    log.debug('✅ [API] 批次重命名完成:', result.data);
     return result.data;
   }
 };
