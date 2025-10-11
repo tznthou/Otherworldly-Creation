@@ -5,6 +5,10 @@ import { addNotification } from '../store/slices/uiSlice';
 import { selectEditorSettings } from '../store/slices/editorSlice';
 import { useSettings } from './useSettings';
 import { soundManager } from '../services/SoundManager';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useAutoSave');
 
 interface UseAutoSaveOptions {
   delay?: number; // 延遲時間（毫秒）
@@ -128,7 +132,7 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '儲存時發生未知錯誤';
-      console.error('儲存失敗:', error);
+      log.error('儲存失敗:', error);
       
       saveAttemptRef.current += 1;
       
@@ -276,7 +280,7 @@ export const useAutoSave = (options: UseAutoSaveOptions = {}) => {
             });
             navigator.sendBeacon('/api/emergency-save', data);
           } catch (error) {
-            console.error('緊急儲存失敗:', error);
+            log.error('緊急儲存失敗:', error);
           }
         }
         

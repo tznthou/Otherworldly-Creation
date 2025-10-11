@@ -6,6 +6,10 @@ import SettingsSidebar from './components/SettingsSidebar';
 import SettingsLoadingView from './components/SettingsLoadingView';
 import UpdateSettings from '../../components/Update/UpdateSettings';
 import {
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('SettingsMain');
   GeneralSettings,
   UISettings,
   TemplateManagementSettings,
@@ -38,17 +42,17 @@ const SettingsMain: React.FC = () => {
   }, [saveSettings, settings]);
 
   useEffect(() => {
-    console.log('SettingsMain: 開始載入設定...');
+    log.debug('SettingsMain: 開始載入設定...');
     let mounted = true;
     
     const loadSettings = async () => {
       try {
         if (mounted) {
           await loadUserSettings();
-          console.log('SettingsMain: 設定載入完成');
+          log.debug('SettingsMain: 設定載入完成');
         }
       } catch (error) {
-        console.error('SettingsMain: 設定載入失敗:', error);
+        log.error('SettingsMain: 設定載入失敗:', error);
       }
     };
     
@@ -126,7 +130,7 @@ const SettingsMain: React.FC = () => {
     </div>
   );
   } catch (error) {
-    console.error('SettingsMain: 渲染錯誤:', error);
+    log.error('SettingsMain: 渲染錯誤:', error);
     return (
       <div className="h-full flex items-center justify-center bg-cosmic-900">
         <div className="text-center">

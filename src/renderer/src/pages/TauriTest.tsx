@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { api, isElectron, isTauri } from '../api';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('TauriTest');
 
 const TauriTest: React.FC = () => {
   const [version, setVersion] = useState<string>('');
@@ -18,15 +22,15 @@ const TauriTest: React.FC = () => {
     // 獲取應用版本
     api.system.getAppVersion()
       .then(setVersion)
-      .catch(err => console.error('獲取版本失敗:', err));
+      .catch(err => log.error('獲取版本失敗:', err));
   }, []);
 
   const handleQuit = () => {
-    api.system.quitApp().catch(err => console.error('退出應用失敗:', err));
+    api.system.quitApp().catch(err => log.error('退出應用失敗:', err));
   };
 
   const handleReload = () => {
-    api.system.reloadApp().catch(err => console.error('重載應用失敗:', err));
+    api.system.reloadApp().catch(err => log.error('重載應用失敗:', err));
   };
 
   return (

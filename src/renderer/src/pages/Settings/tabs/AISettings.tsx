@@ -2,6 +2,10 @@ import React from 'react';
 import { updateAISettings, resetAISettings } from '../../../store/slices/settingsSlice';
 import { SettingsComponentProps } from '../types';
 import { api } from '../../../api';
+import { createLogger } from '../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('AISettings');
 
 const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) => (
   <div className="space-y-6">
@@ -184,7 +188,7 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
                 });
                 // 可以在這裡添加成功通知
               } catch (error) {
-                console.error('更新 Ollama 配置失敗:', error);
+                log.error('更新 Ollama 配置失敗:', error);
                 // 可以在這裡添加錯誤通知
               }
             }}

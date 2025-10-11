@@ -1,7 +1,11 @@
 import React from 'react';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('SettingsDebug');
 
 const SettingsDebug: React.FC = () => {
-  console.log('SettingsDebug 組件正在渲染');
+  log.debug('SettingsDebug 組件正在渲染');
   
   return (
     <div className="h-full flex items-center justify-center bg-cosmic-950">

@@ -3,6 +3,10 @@ import { useAppDispatch } from './redux';
 import { createProject } from '../store/slices/projectsSlice';
 import { NovelTemplate } from '../types/template';
 import api from '../api';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useTemplateApplication');
 
 export interface TemplateApplicationOptions {
   projectName: string;
@@ -71,7 +75,7 @@ export const useTemplateApplication = () => {
                 archetype: archetype.name
               });
             } catch (charError) {
-              console.warn('創建角色失敗:', charError);
+              log.warn('創建角色失敗:', charError);
             }
           }
         }
@@ -90,7 +94,7 @@ export const useTemplateApplication = () => {
             order: 1
           });
         } catch (chapterError) {
-          console.warn('創建範例章節失敗:', chapterError);
+          log.warn('創建範例章節失敗:', chapterError);
         }
       }
 

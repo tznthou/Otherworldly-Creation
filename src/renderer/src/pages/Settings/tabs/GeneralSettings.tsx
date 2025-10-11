@@ -4,6 +4,10 @@ import { SettingsComponentProps } from '../types';
 import { useI18n } from '../../../hooks/useI18n';
 import { logsApi } from '../../../api/logs';
 import { logger } from '../../../services/logService';
+import { createLogger } from '../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('GeneralSettings');
 
 const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) => {
   const { t } = useI18n();
@@ -17,7 +21,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
     logsApi.getLogDirectory()
       .then(setLogDirectory)
       .catch(err => {
-        console.error('獲取日誌目錄失敗:', err);
+        log.error('獲取日誌目錄失敗:', err);
         logger.error('Settings', '獲取日誌目錄失敗', err);
       });
   }, []);

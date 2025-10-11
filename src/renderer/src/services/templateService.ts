@@ -2,6 +2,10 @@
 import { NovelTemplate, TemplateType, TemplateApplicationResult, TemplateValidationError, WorldSetting } from '../types/template';
 import { defaultTemplates } from '../data/defaultTemplates';
 import { api } from '../api';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('templateService');
 
 export class TemplateService {
   private templates: Map<string, NovelTemplate> = new Map();
@@ -344,7 +348,7 @@ export class TemplateService {
 
           results.appliedSettings.projectSettings = projectSettings;
         } catch (error) {
-          console.error('更新專案設定失敗:', error);
+          log.error('更新專案設定失敗:', error);
           results.errors = results.errors || [];
           results.errors.push('更新專案設定失敗');
         }
@@ -375,7 +379,7 @@ export class TemplateService {
             results.errors.push(...characterResult.errors);
           }
         } catch (error) {
-          console.error('創建角色失敗:', error);
+          log.error('創建角色失敗:', error);
           results.errors = results.errors || [];
           results.errors.push(`創建角色失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
         }

@@ -7,6 +7,10 @@ import StatisticsService, {
 } from '../../services/statisticsService';
 import WritingTrendChart from '../../components/Charts/WritingTrendChart';
 import MonthlyStatsChart from '../../components/Charts/MonthlyStatsChart';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('Statistics');
 
 const Statistics: React.FC = () => {
   const navigate = useNavigate();
@@ -33,7 +37,7 @@ const Statistics: React.FC = () => {
       setProjectStats(projects);
       setMonthlyStats(monthly);
     } catch (error) {
-      console.error('載入統計數據失敗:', error);
+      log.error('載入統計數據失敗:', error);
     } finally {
       setLoading(false);
     }

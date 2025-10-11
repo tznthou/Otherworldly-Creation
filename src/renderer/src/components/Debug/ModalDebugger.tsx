@@ -1,6 +1,10 @@
 import React from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { openModal } from '../../store/slices/uiSlice';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ModalDebugger');
 
 const ModalDebugger: React.FC = () => {
   const { modals } = useAppSelector(state => state.ui);
@@ -8,11 +12,11 @@ const ModalDebugger: React.FC = () => {
 
   // 記錄當前狀態到控制台
   React.useEffect(() => {
-    console.log('ModalDebugger: 模態框狀態更新:', modals);
+    log.debug('ModalDebugger: 模態框狀態更新:', modals);
   }, [modals]);
 
   const testRedux = () => {
-    console.log('ModalDebugger: 測試 Redux dispatch');
+    log.debug('ModalDebugger: 測試 Redux dispatch');
     dispatch(openModal('testModal'));
   };
 
