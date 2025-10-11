@@ -3,6 +3,10 @@ import { useSelector } from 'react-redux';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { RootState } from '../../../store/store';
 import { api } from '../../../api';
+import { createLogger } from '../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('BatchHistorySection');
 
 interface BatchHistorySectionProps {
   className?: string;
@@ -34,13 +38,13 @@ const BatchHistorySection: React.FC<BatchHistorySectionProps> = ({
   useEffect(() => {
     const loadHistory = async () => {
       if (!currentProject?.id) {
-        console.log('[BatchHistorySection] 沒有當前專案，跳過載入');
+        log.debug('[BatchHistorySection] 沒有當前專案，跳過載入');
         setLoading(false);
         return;
       }
 
       try {
-        console.log('[BatchHistorySection] 開始載入插畫歷史，專案ID:', currentProject.id);
+        log.debug('[BatchHistorySection] 開始載入插畫歷史，專案ID:', currentProject.id);
         setLoading(true);
         setError('');
         
@@ -51,17 +55,17 @@ const BatchHistorySection: React.FC<BatchHistorySectionProps> = ({
           0   // offset
         );
 
-        console.log('[BatchHistorySection] API 回應:', response);
+        log.debug('[BatchHistorySection] API 回應:', response);
 
         if (response && response.length >= 0) {
-          console.log('[BatchHistorySection] 成功載入', response.length, '張插畫');
+          log.debug('[BatchHistorySection] 成功載入', { count: response.length });
           setIllustrations(response.map(item => ({ ...item, enhanced_prompt: item.enhanced_prompt || '' })));
         } else {
-          console.error('[BatchHistorySection] API 回應失敗或無資料');
+          log.error('[BatchHistorySection] API 回應失敗或無資料');
           setError('載入插畫歷史失敗');
         }
       } catch (err) {
-        console.error('[BatchHistorySection] 載入插畫歷史錯誤:', err);
+        log.error('[BatchHistorySection] 載入插畫歷史錯誤:', err);
         setError(`載入插畫歷史時發生錯誤: ${err}`);
       } finally {
         setLoading(false);

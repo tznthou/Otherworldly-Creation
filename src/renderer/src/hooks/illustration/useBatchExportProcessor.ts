@@ -1,6 +1,10 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useExportManager, type UseExportManagerReturn, type ExportTask } from './useExportManager';
 import { getExportService, type ExportService } from '../../services/exportService';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useBatchExportProcessor');
 
 /**
  * 批次導出處理器選項
@@ -94,7 +98,7 @@ export function useBatchExportProcessor(
     };
 
     exportManager.addTask(task);
-    console.log(`📥 [BatchExportProcessor] 添加圖片到導出佇列: ${imageId}`);
+    console.log(`📥 [BatchExportProcessor] 添加圖片到導出佇列: ${imageId}`); // TODO: 複雜模式，需人工轉換
   }, [exportManager]);
 
   // 批次添加多張圖片
@@ -109,19 +113,19 @@ export function useBatchExportProcessor(
     }));
 
     exportManager.addBatchTasks(tasks);
-    console.log(`📥 [BatchExportProcessor] 批次添加 ${images.length} 張圖片到導出佇列`);
+    console.log(`📥 [BatchExportProcessor] 批次添加 ${images.length} 張圖片到導出佇列`); // TODO: 複雜模式，需人工轉換
   }, [exportManager]);
 
   // 處理當前佇列
   const processCurrentQueue = useCallback(async () => {
     if (processingRef.current) {
-      console.warn('⚠️ [BatchExportProcessor] 已有處理程序在運行');
+      log.warn('⚠️ [BatchExportProcessor] 已有處理程序在運行');
       return;
     }
 
     const pendingTasks = exportManager.getTasksByStatus('pending');
     if (pendingTasks.length === 0) {
-      console.log('ℹ️ [BatchExportProcessor] 沒有待處理的任務');
+      log.debug('ℹ️ [BatchExportProcessor] 沒有待處理的任務');
       return;
     }
 
@@ -130,7 +134,7 @@ export function useBatchExportProcessor(
       shouldStopRef.current = false;
       exportManager.startProcessing();
 
-      console.log(`🚀 [BatchExportProcessor] 開始處理 ${pendingTasks.length} 個任務`);
+      console.log(`🚀 [BatchExportProcessor] 開始處理 ${pendingTasks.length} 個任務`); // TODO: 複雜模式，需人工轉換
 
       // 並行處理任務
       const maxConcurrent = exportManager.state.config.maxConcurrent;
@@ -148,7 +152,7 @@ export function useBatchExportProcessor(
       const completedCount = exportManager.getTasksByStatus('completed').length;
       const failedCount = exportManager.getTasksByStatus('failed').length;
 
-      console.log(`✅ [BatchExportProcessor] 批次處理完成: ${completedCount} 成功, ${failedCount} 失敗`);
+      console.log(`✅ [BatchExportProcessor] 批次處理完成: ${completedCount} 成功, ${failedCount} 失敗`); // TODO: 複雜模式，需人工轉換
 
       // 觸發完成回調
       if (onBatchComplete) {
@@ -156,7 +160,7 @@ export function useBatchExportProcessor(
       }
 
     } catch (error) {
-      console.error('❌ [BatchExportProcessor] 批次處理失敗:', error);
+      log.error('❌ [BatchExportProcessor] 批次處理失敗:', error);
       exportManager.clearError();
     } finally {
       processingRef.current = false;
@@ -169,7 +173,7 @@ export function useBatchExportProcessor(
     if (processingRef.current) {
       shouldStopRef.current = true;
       exportManager.pauseProcessing();
-      console.log('⏸️ [BatchExportProcessor] 暫停處理');
+      log.debug('⏸️ [BatchExportProcessor] 暫停處理');
     }
   }, [exportManager]);
 
@@ -178,7 +182,7 @@ export function useBatchExportProcessor(
     if (exportManager.state.isPaused) {
       shouldStopRef.current = false;
       exportManager.resumeProcessing();
-      console.log('▶️ [BatchExportProcessor] 恢復處理');
+      log.debug('▶️ [BatchExportProcessor] 恢復處理');
     }
   }, [exportManager]);
 

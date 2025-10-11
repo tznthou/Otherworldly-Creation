@@ -7,6 +7,10 @@ import {
   clearPendingVersionCreation 
 } from '../../store/slices/visualCreationSlice';
 import { tempImageToVersion, generateNextVersionNumber } from '../../utils/versionUtils';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useAutoVersionCreation');
 
 /**
  * 自動版本創建 Hook
@@ -33,7 +37,7 @@ export function useAutoVersionCreation() {
   const createVersionForImage = useCallback(async (imageId: string) => {
     const tempImage = tempImages.find(img => img.id === imageId);
     if (!tempImage) {
-      console.warn(`找不到臨時圖片 ID: ${imageId}`);
+      console.warn(`找不到臨時圖片 ID: ${imageId}`); // TODO: 複雜模式，需人工轉換
       return;
     }
 
@@ -52,7 +56,7 @@ export function useAutoVersionCreation() {
       const result = await dispatch(createVersion(versionData)).unwrap();
       
       if (result.success) {
-        console.log(`✅ 自動創建版本成功：圖片 ${imageId} → 版本 ${result.versionId}`);
+        console.log(`✅ 自動創建版本成功：圖片 ${imageId} → 版本 ${result.versionId}`); // TODO: 複雜模式，需人工轉換
         
         // 從待創建列表中移除
         dispatch(removePendingVersionCreation(imageId));
@@ -62,7 +66,7 @@ export function useAutoVersionCreation() {
         throw new Error(result.message || '版本創建失敗');
       }
     } catch (error) {
-      console.error(`❌ 自動創建版本失敗：圖片 ${imageId}`, error);
+      console.error(`❌ 自動創建版本失敗：圖片 ${imageId}`, error); // TODO: 複雜模式，需人工轉換
       
       // 即使失敗也要從待創建列表中移除，避免無限重試
       dispatch(removePendingVersionCreation(imageId));
@@ -132,7 +136,7 @@ export function useAutoVersionCreation() {
       const result = await dispatch(createVersion(versionData)).unwrap();
       
       if (result.success) {
-        console.log(`✅ 手動創建版本成功：圖片 ${imageId} → 版本 ${result.versionId}`);
+        console.log(`✅ 手動創建版本成功：圖片 ${imageId} → 版本 ${result.versionId}`); // TODO: 複雜模式，需人工轉換
         
         // 從待創建列表中移除（如果存在）
         dispatch(removePendingVersionCreation(imageId));
@@ -142,7 +146,7 @@ export function useAutoVersionCreation() {
         throw new Error(result.message || '版本創建失敗');
       }
     } catch (error) {
-      console.error(`❌ 手動創建版本失敗：圖片 ${imageId}`, error);
+      console.error(`❌ 手動創建版本失敗：圖片 ${imageId}`, error); // TODO: 複雜模式，需人工轉換
       throw error;
     }
   }, [dispatch, tempImages, versions]);
@@ -161,13 +165,13 @@ export function useAutoVersionCreation() {
     }
 
     const processPendingVersions = async () => {
-      console.log(`🔄 開始自動處理 ${pendingVersionCreation.length} 個待創建版本...`);
+      console.log(`🔄 開始自動處理 ${pendingVersionCreation.length} 個待創建版本...`); // TODO: 複雜模式，需人工轉換
       
       try {
         await createVersionsForImages(pendingVersionCreation);
-        console.log(`✅ 自動版本創建處理完成`);
+        log.debug(`✅ 自動版本創建處理完成`);
       } catch (error) {
-        console.error(`❌ 自動版本創建處理失敗:`, error);
+        log.error(`❌ 自動版本創建處理失敗:`, error);
       }
     };
 
@@ -180,7 +184,7 @@ export function useAutoVersionCreation() {
   // 監聽最後生成的圖片，提供即時反饋
   useEffect(() => {
     if (lastGeneratedImageId && autoCreateVersions) {
-      console.log(`🎨 新圖片生成完成：${lastGeneratedImageId}，即將自動創建版本...`);
+      console.log(`🎨 新圖片生成完成：${lastGeneratedImageId}，即將自動創建版本...`); // TODO: 複雜模式，需人工轉換
     }
   }, [lastGeneratedImageId, autoCreateVersions]);
 

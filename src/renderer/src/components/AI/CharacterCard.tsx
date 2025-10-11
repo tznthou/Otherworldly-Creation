@@ -1,5 +1,9 @@
 import React from 'react';
 import { Character } from '../../api/models';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('CharacterCard');
 
 interface CharacterCardProps {
   character: Character;
@@ -54,12 +58,12 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
         ${className}
       `}
       onClick={(e) => {
-        console.log('🚨 點擊事件詳情:');
-        console.log('角色名稱:', character.name);
-        console.log('角色ID:', character.id);
-        console.log('點擊座標:', e.clientX, e.clientY);
-        console.log('目標元素:', e.currentTarget);
-        console.log('事件階段:', e.eventPhase);
+        log.debug('🚨 點擊事件詳情:');
+        log.debug('角色名稱:', character.name);
+        log.debug('角色ID:', character.id);
+        log.debug('點擊座標', { x: e.clientX, y: e.clientY });
+        log.debug('目標元素:', e.currentTarget);
+        log.debug('事件階段:', e.eventPhase);
         onSelect(character.id);
       }}
     >

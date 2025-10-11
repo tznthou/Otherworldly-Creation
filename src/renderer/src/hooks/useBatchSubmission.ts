@@ -13,6 +13,10 @@ import { imageGenerationService } from '../services/imageGenerationService';
 import type { ImageGenerationOptions } from '../services/imageGenerationService';
 import { SafetyFilterLevel } from '@google/genai';
 import { Project } from '../store/slices/projectsSlice';
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useBatchSubmission');
 
 interface TempImage {
   id: string;
@@ -78,8 +82,8 @@ export const useBatchSubmission = ({
     setError('');
 
     try {
-      console.log(`🚀 開始批次插畫生成：${batchConfig.batchName}`);
-      console.log(`🎨 色彩模式：${batchConfig.globalColorMode === 'color' ? '彩色' : '黑白'}`);
+      console.log(`🚀 開始批次插畫生成：${batchConfig.batchName}`); // TODO: 複雜模式，需人工轉換
+      console.log(`🎨 色彩模式：${batchConfig.globalColorMode === 'color' ? '彩色' : '黑白'}`); // TODO: 複雜模式，需人工轉換
       
       // 確定服務名稱
       let serviceName = '';
@@ -99,8 +103,8 @@ export const useBatchSubmission = ({
         default:
           serviceName = '未知服務';
       }
-      console.log(`🤖 使用服務：${serviceName}`);
-      console.log(`📋 共 ${requests.length} 個請求`);
+      console.log(`🤖 使用服務：${serviceName}`); // TODO: 複雜模式，需人工轉換
+      console.log(`📋 共 ${requests.length} 個請求`); // TODO: 複雜模式，需人工轉換
 
       interface BatchSubmissionResult {
         success: boolean;
@@ -115,13 +119,13 @@ export const useBatchSubmission = ({
 
       if (batchConfig.illustrationProvider === 'pollinations') {
         // === Pollinations.AI 免費生成 ===
-        console.log(`🌟 使用 Pollinations.AI，模型：${batchConfig.pollinationsModel}，風格：${batchConfig.pollinationsStyle}`);
+        console.log(`🌟 使用 Pollinations.AI，模型：${batchConfig.pollinationsModel}，風格：${batchConfig.pollinationsStyle}`); // TODO: 複雜模式，需人工轉換
         
         results = [];
         
         for (let i = 0; i < requests.length; i++) {
           const req = requests[i];
-          console.log(`🎨 生成進度: ${i + 1}/${requests.length} - ${req.scene_description.substring(0, 50)}...`);
+          console.log(`🎨 生成進度: ${i + 1}/${requests.length} - ${req.scene_description.substring(0, 50)}...`); // TODO: 複雜模式，需人工轉換
           
           try {
             // 構建增強提示詞
@@ -168,14 +172,14 @@ export const useBatchSubmission = ({
                 tempImageData: result, // 存儲完整的臨時圖像數據
                 request: req
               });
-              console.log(`✅ 第 ${i + 1} 張圖像生成成功（臨時）`);
+              console.log(`✅ 第 ${i + 1} 張圖像生成成功（臨時）`); // TODO: 複雜模式，需人工轉換
             } else {
               results.push({
                 success: false,
                 error: result.message || '生成失敗',
                 request: req
               });
-              console.error(`❌ 第 ${i + 1} 張圖像生成失敗:`, result.message);
+              console.error(`❌ 第 ${i + 1} 張圖像生成失敗:`, result.message); // TODO: 複雜模式，需人工轉換
             }
           } catch (error) {
             results.push({
@@ -183,7 +187,7 @@ export const useBatchSubmission = ({
               error: error instanceof Error ? error.message : String(error),
               request: req
             });
-            console.error(`❌ 第 ${i + 1} 張圖像生成異常:`, error);
+            console.error(`❌ 第 ${i + 1} 張圖像生成異常:`, error); // TODO: 複雜模式，需人工轉換
           }
 
           // 避免過於頻繁的請求，每個請求間隔1秒
@@ -195,14 +199,14 @@ export const useBatchSubmission = ({
                  batchConfig.illustrationProvider === 'gemini-paid') {
         // === Gemini 2.5 Flash Image 生成 ===
         const isFreeTier = batchConfig.illustrationProvider === 'gemini-free';
-        console.log(`💎 使用 Gemini 2.5 Flash Image (${isFreeTier ? '免費版' : '付費版'})`);
-        console.log(`🔧 模型：${batchConfig.geminiModel}，品質：${batchConfig.geminiQuality}，風格：${batchConfig.geminiStyle}`);
+        console.log(`💎 使用 Gemini 2.5 Flash Image (${isFreeTier ? '免費版' : '付費版'})`); // TODO: 複雜模式，需人工轉換
+        console.log(`🔧 模型：${batchConfig.geminiModel}，品質：${batchConfig.geminiQuality}，風格：${batchConfig.geminiStyle}`); // TODO: 複雜模式，需人工轉換
         
         results = [];
         
         for (let i = 0; i < requests.length; i++) {
           const req = requests[i];
-          console.log(`💎 生成進度: ${i + 1}/${requests.length} - ${req.scene_description.substring(0, 50)}...`);
+          console.log(`💎 生成進度: ${i + 1}/${requests.length} - ${req.scene_description.substring(0, 50)}...`); // TODO: 複雜模式，需人工轉換
           
           try {
             // 構建增強提示詞
@@ -243,14 +247,14 @@ export const useBatchSubmission = ({
                 tempImageData: result,
                 request: req
               });
-              console.log(`✅ 第 ${i + 1} 張 Gemini 圖像生成成功`);
+              console.log(`✅ 第 ${i + 1} 張 Gemini 圖像生成成功`); // TODO: 複雜模式，需人工轉換
             } else {
               results.push({
                 success: false,
                 error: result.message || 'Gemini 生成失敗',
                 request: req
               });
-              console.error(`❌ 第 ${i + 1} 張 Gemini 圖像生成失敗:`, result.message);
+              console.error(`❌ 第 ${i + 1} 張 Gemini 圖像生成失敗:`, result.message); // TODO: 複雜模式，需人工轉換
             }
           } catch (error) {
             results.push({
@@ -258,7 +262,7 @@ export const useBatchSubmission = ({
               error: error instanceof Error ? error.message : String(error),
               request: req
             });
-            console.error(`❌ 第 ${i + 1} 張 Gemini 圖像生成異常:`, error);
+            console.error(`❌ 第 ${i + 1} 張 Gemini 圖像生成異常:`, error); // TODO: 複雜模式，需人工轉換
           }
 
           // 避免過於頻繁的請求，每個請求間隔1秒
@@ -268,7 +272,7 @@ export const useBatchSubmission = ({
         }
       } else if (batchConfig.illustrationProvider === 'imagen') {
         // === Google Imagen 付費生成 ===
-        console.log('🔷 使用 Google Imagen');
+        log.debug('🔷 使用 Google Imagen');
         
         // 準備圖像生成請求
         const imageRequests = requests.map(req => {
@@ -313,7 +317,7 @@ export const useBatchSubmission = ({
           imageRequests,
           batchConfig.apiKey,
           (current, total, currentPrompt) => {
-            console.log(`🎨 生成進度: ${current}/${total} - ${currentPrompt?.substring(0, 50)}...`);
+            console.log(`🎨 生成進度: ${current}/${total} - ${currentPrompt?.substring(0, 50)}...`); // TODO: 複雜模式，需人工轉換
             // 可以在這裡更新 UI 顯示進度
           }
         );
@@ -333,7 +337,7 @@ export const useBatchSubmission = ({
       const failCount = results.filter(r => !r.success).length;
       
       if (successCount > 0) {
-        console.log(`✅ 成功生成 ${successCount} 張圖像（臨時）`);
+        console.log(`✅ 成功生成 ${successCount} 張圖像（臨時）`); // TODO: 複雜模式，需人工轉換
         
         // 收集所有成功的臨時圖像數據
         const successfulTempImages: TempImage[] = results
@@ -357,7 +361,7 @@ export const useBatchSubmission = ({
             }
           });
         
-        console.log('生成的臨時圖像數據:', successfulTempImages.length, '張');
+        log.debug('生成的臨時圖像數據', { count: successfulTempImages.length });
         
         // 設置臨時圖像並顯示預覽
         setTempImages(successfulTempImages);
@@ -390,7 +394,7 @@ export const useBatchSubmission = ({
         setError(''); // 清除錯誤
         
         if (failCount > 0) {
-          console.warn(`⚠️ ${failCount} 張圖像生成失敗`);
+          console.warn(`⚠️ ${failCount} 張圖像生成失敗`); // TODO: 複雜模式，需人工轉換
           setError(`部分圖像生成失敗：成功 ${successCount}，失敗 ${failCount}`);
         }
       } else {
@@ -398,7 +402,7 @@ export const useBatchSubmission = ({
       }
 
     } catch (err: unknown) {
-      console.error('❌ 批次生成失敗:', err);
+      log.error('❌ 批次生成失敗:', err);
       
       // 檢查是否為 Google Cloud 計費問題
       const errorMessage = err instanceof Error ? err.message : String(err);
