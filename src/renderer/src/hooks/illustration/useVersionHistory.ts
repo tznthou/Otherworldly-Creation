@@ -35,16 +35,17 @@ export interface UseVersionHistoryReturn {
   // 導出功能
   exportHistory: (imageId: string, format: 'json' | 'csv') => Promise<string>;
 }
-import {
-import { createLogger } from '../../utils/logger';
 
-// 創建模組專用 logger
-const log = createLogger('useVersionHistory');
+import { createLogger } from '../../utils/logger';
+import {
   loadStatistics,
   setSearchKeyword,
   clearFilter,
   clearError,
 } from '../../store/slices/versionManagementSlice';
+
+// 創建模組專用 logger
+const log = createLogger('useVersionHistory');
 
 /**
  * 版本歷史 Hook
