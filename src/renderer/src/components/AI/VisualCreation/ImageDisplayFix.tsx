@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { createLogger } from '../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ImageDisplayFix');
 
 interface ImageDisplayFixProps {
   imagePath: string;
@@ -43,7 +47,7 @@ const ImageDisplayFix: React.FC<ImageDisplayFixProps> = ({
         setImageSrc(dataUrl);
         
       } catch (error) {
-        console.error('❌ 圖片載入失敗:', error);
+        log.error('❌ 圖片載入失敗:', error);
         setHasError(true);
       } finally {
         setIsLoading(false);

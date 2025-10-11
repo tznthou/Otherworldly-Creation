@@ -6,6 +6,10 @@ import type { RootState, AppDispatch } from '../../../store/store';
 
 // Redux actions
 import {
+import { createLogger } from '../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ImagePreviewModal');
   setShowImagePreview,
   setCurrentImageIndex,
   setShowImageDetails,
@@ -146,7 +150,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
   }, [showImagePreview, currentImageIndex, tempImages, handleClose, setCurrentIndex, toggleImageSelectionLocal, selectAll, deselectAll]);
 
   // 🔍 調試：記錄 Modal 渲染條件
-  console.log('🔍 [ImagePreviewModal] 渲染條件檢查:', {
+  log.debug('🔍 [ImagePreviewModal] 渲染條件檢查:', {
     showImagePreview,
     tempImagesLength: tempImages.length,
     currentImageIndex,
@@ -154,7 +158,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
   });
 
   if (!showImagePreview || tempImages.length === 0 || currentImageIndex === -1) {
-    console.log('❌ [ImagePreviewModal] Modal 不顯示，原因:', {
+    log.debug('❌ [ImagePreviewModal] Modal 不顯示，原因:', {
       showImagePreview: !showImagePreview ? '❌ showImagePreview=false' : '✅',
       tempImages: tempImages.length === 0 ? '❌ tempImages 為空' : '✅',
       currentImageIndex: currentImageIndex === -1 ? '❌ currentImageIndex=-1' : '✅'
@@ -162,7 +166,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
     return null;
   }
 
-  console.log('✅ [ImagePreviewModal] Modal 應該顯示!');
+  log.debug('✅ [ImagePreviewModal] Modal 應該顯示!');
 
   const currentImage = tempImages[currentImageIndex];
   if (!currentImage) return null;

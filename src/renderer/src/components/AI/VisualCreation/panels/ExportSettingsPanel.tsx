@@ -6,6 +6,10 @@ import {
   setShowExportPanel,
 } from '../../../../store/slices/visualCreationSlice';
 import type { ExportFormat } from '../../../../store/slices/visualCreationSlice';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ExportSettingsPanel');
 
 interface ExportSettingsPanelProps {
   selectedImageIds: string[];
@@ -54,7 +58,7 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
 
   const handleExport = async () => {
     // TODO: 改為使用新的批次導出系統
-    console.log('導出功能已移至 BatchExportPanel');
+    log.debug('導出功能已移至 BatchExportPanel');
     handleClose();
   };
 

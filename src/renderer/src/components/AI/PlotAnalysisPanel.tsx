@@ -7,6 +7,10 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 import { Badge } from '../UI/Badge';
 import { plotAnalysisService, PlotSuggestion, ChapterTrendAnalysis } from '../../services/plotAnalysisService';
 import { PlotAnalysis } from '../../utils/nlpUtils';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('PlotAnalysisPanel');
 
 interface PlotAnalysisPanelProps {
   _projectId?: string;
@@ -34,7 +38,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
   const performAnalysis = async () => {
     setIsAnalyzing(true);
     try {
-      console.log('🎭 開始執行劇情分析...', { analysisScope, currentChapter: !!currentChapter, chapters: chapters.length });
+      log.debug('🎭 開始執行劇情分析...', { analysisScope, currentChapter: !!currentChapter, chapters: chapters.length });
       
       let analysisResult: PlotAnalysis;
       
@@ -58,9 +62,9 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
       const improvementSuggestions = plotAnalysisService.generatePlotImprovementSuggestions(analysisResult);
       setSuggestions(improvementSuggestions);
       
-      console.log('✅ 劇情分析完成', analysisResult);
+      log.debug('✅ 劇情分析完成', analysisResult);
     } catch (error) {
-      console.error('❌ 劇情分析失敗:', error);
+      log.error('❌ 劇情分析失敗:', error);
     } finally {
       setIsAnalyzing(false);
     }

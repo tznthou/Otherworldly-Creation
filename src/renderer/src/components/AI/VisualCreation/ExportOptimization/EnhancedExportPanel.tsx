@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { EbookExportConfig } from '../../../../types/imageMetadata';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('EnhancedExportPanel');
 // EPUB 導出選項類型 (基於 Rust 後端定義)
 interface EPubGenerationOptions {
   include_cover?: boolean;
@@ -217,7 +221,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
 
       onClose();
     } catch (error) {
-      console.error('導出失敗:', error);
+      log.error('導出失敗:', error);
       alert('導出失敗，請稍後再試');
     }
   };

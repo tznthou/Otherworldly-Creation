@@ -5,6 +5,10 @@ import CharacterSelectionPanel from './CharacterSelectionPanel';
 import ServiceConfigurationPanel from './ServiceConfigurationPanel';
 import CosmicButton from '../../../UI/CosmicButton';
 import type { Character } from '../../../../api/models';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('ModularizedBatchPanel');
 
 /**
  * 模組化後的批次面板組件 - 演示版本
@@ -26,7 +30,7 @@ export const ModularizedBatchPanel: React.FC = () => {
   ) => {
     setSelectedCharacters(selectedIds);
     setSelectedCharacterData(characters);
-    console.log('🎭 角色選擇更新:', {
+    log.debug('🎭 角色選擇更新:', {
       count: selectedIds.length,
       characters: characters.map(c => c.name)
     });
@@ -35,7 +39,7 @@ export const ModularizedBatchPanel: React.FC = () => {
   // 處理服務配置變更
   const handleServiceConfigChange = useCallback((config: Record<string, unknown>) => {
     setServiceConfig(config);
-    console.log('🤖 服務配置更新:', config);
+    log.debug('🤖 服務配置更新:', config);
   }, []);
 
   // 生成演示請求
@@ -58,7 +62,7 @@ export const ModularizedBatchPanel: React.FC = () => {
       timestamp: new Date().toISOString()
     };
 
-    console.log('🚀 生成演示請求:', demoRequest);
+    log.debug('🚀 生成演示請求:', demoRequest);
     alert('演示請求已生成！請查看控制台日誌。');
   }, [selectedCharacterData, sceneType, serviceConfig]);
 

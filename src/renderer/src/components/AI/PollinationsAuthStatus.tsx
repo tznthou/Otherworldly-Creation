@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../api/tauri';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('PollinationsAuthStatus');
 
 // 認證層級類型
 export type AuthTier = 'anonymous' | 'seed' | 'flower' | 'nectar';
@@ -103,7 +107,7 @@ const PollinationsAuthStatus: React.FC<PollinationsAuthStatusProps> = ({
           });
         }
       } catch (error) {
-        console.warn('[PollinationsAuthStatus] 檢查認證狀態失敗:', error);
+        log.warn('[PollinationsAuthStatus] 檢查認證狀態失敗:', error);
         setAuthStatus({
           tier: 'anonymous',
           hasToken: false

@@ -2,6 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { usePromptIntelligence, type PromptSuggestionRequest, type PromptSuggestion } from '../../../../hooks/illustration/usePromptIntelligence';
 import type { Character } from '../../../../types/character';
 import type { StyleTemplate } from '../../../../types/styleTemplate';
+import { createLogger } from '../../../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('PromptSuggestionPanel');
 
 interface PromptSuggestionPanelProps {
   selectedCharacters: Character[];
@@ -113,10 +117,10 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
 
       clearTimeout(timeoutId); // 成功時清除超時
       setSuggestions(suggestionCards);
-      console.log('✅ 智能建議生成成功:', suggestionCards.length, '個建議');
+      log.debug('✅ 智能建議生成成功:', suggestionCards.length, '個建議');
     } catch (error) {
       clearTimeout(timeoutId); // 錯誤時清除超時
-      console.error('❌ 智能建議生成失敗:', error);
+      log.error('❌ 智能建議生成失敗:', error);
       setError(error instanceof Error ? error.message : '智能建議生成失敗，請重試');
     } finally {
       setIsLoading(false);
@@ -131,7 +135,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
       const analysis = await promptIntelligence.analyzePrompt(currentPrompt);
       setAnalysisResult(analysis as unknown as Record<string, unknown>);
     } catch (error) {
-      console.error('Failed to analyze prompt:', error);
+      log.error('Failed to analyze prompt:', error);
     }
   }, [currentPrompt, promptIntelligence]);
 
@@ -144,7 +148,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
       // 添加到歷史記錄
       promptIntelligence.addToHistory(optimized, { user_rating: 5 });
     } catch (error) {
-      console.error('Failed to optimize prompt:', error);
+      log.error('Failed to optimize prompt:', error);
     }
   }, [onPromptOptimize, promptIntelligence]);
 
