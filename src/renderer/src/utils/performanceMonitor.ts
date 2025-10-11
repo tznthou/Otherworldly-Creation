@@ -44,10 +44,11 @@ class PerformanceMonitor {
         const longTaskObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             if (entry.duration > 50) {
-              console.warn(`⚠️ 檢測到長任務: ${entry.duration.toFixed(2)}ms`, { // TODO: 複雜模式，需人工轉換
+              log.warn('⚠️ 檢測到長任務', {
+                duration: `${entry.duration.toFixed(2)}ms`,
                 name: entry.name,
                 startTime: entry.startTime,
-                duration: entry.duration
+                durationRaw: entry.duration
               });
             }
           }
@@ -117,7 +118,7 @@ class PerformanceMonitor {
 
     // 如果渲染時間過長，發出警告
     if (renderTime > 16) {
-      console.warn(`🚨 組件 "${componentName}" 渲染時間過長: ${renderTime.toFixed(2)}ms`); // TODO: 複雜模式，需人工轉換
+      log.warn('🚨 組件渲染時間過長', { componentName, renderTime: `${renderTime.toFixed(2)}ms` });
     }
   }
 
@@ -209,6 +210,7 @@ class PerformanceMonitor {
     setInterval(() => {
       const report = this.getPerformanceReport();
       if (report.length > 0) {
+        /* eslint-disable-next-line no-console */
         console.groupCollapsed('📊 性能報告 (最近60秒)');
         
         log.debug('🐌 最慢組件:', this.getSlowestComponents(3));
@@ -217,9 +219,11 @@ class PerformanceMonitor {
         const memoryUsage = this.getMemoryUsage();
         if (memoryUsage) {
           const usedMB = (memoryUsage.usedJSHeapSize / 1024 / 1024).toFixed(1);
-          console.log(`💾 記憶體使用: ${usedMB}MB`); // TODO: 複雜模式，需人工轉換
+          /* eslint-disable-next-line no-console */
+          console.log(`💾 記憶體使用: ${usedMB}MB`);
         }
         
+        /* eslint-disable-next-line no-console */
         console.groupEnd();
       }
     }, 60000); // 每60秒報告一次
