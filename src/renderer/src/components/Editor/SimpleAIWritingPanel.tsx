@@ -11,6 +11,10 @@ import { AIGenerationProgress } from '../AI';
 import AIHistoryPanel from '../AI/AIHistoryPanel';
 import { ErrorSeverity } from '../../types/error';
 import { 
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('SimpleAIWritingPanel');
   analyzeWritingContext, 
   generateSmartParams, 
   checkGeneratedQuality,
@@ -116,16 +120,16 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     // 在組件掛載時檢查 Ollama 服務狀態
     const checkOllama = async () => {
       try {
-        console.log('[SimpleAIWritingPanel] 檢查 Ollama 服務狀態...');
+        log.debug('[SimpleAIWritingPanel] 檢查 Ollama 服務狀態...');
         const result = await dispatch(checkOllamaService()).unwrap();
-        console.log('[SimpleAIWritingPanel] Ollama 服務檢查結果:', result);
+        log.debug('[SimpleAIWritingPanel] Ollama 服務檢查結果:', result);
         
         if (result && availableModels.length === 0) {
-          console.log('[SimpleAIWritingPanel] 載入可用模型...');
+          log.debug('[SimpleAIWritingPanel] 載入可用模型...');
           await dispatch(fetchAvailableModels());
         }
       } catch (error) {
-        console.error('[SimpleAIWritingPanel] Ollama 服務檢查失敗:', error);
+        log.error('[SimpleAIWritingPanel] Ollama 服務檢查失敗:', error);
       }
     };
     
@@ -145,7 +149,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
   const performContextAnalysis = useCallback(async () => {
     try {
       setIsAnalyzing(true);
-      console.log('🔍 開始 NLP 智能分析...');
+      log.debug('🔍 開始 NLP 智能分析...');
       
       // 獲取當前章節內容
       const chapter = await api.chapters.getById(chapterId);
@@ -158,7 +162,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         .join('\n');
       
       if (currentText.trim().length < 50) {
-        console.log('📝 文本過短，跳過 NLP 分析');
+        log.debug('📝 文本過短，跳過 NLP 分析');
         return;
       }
       
@@ -178,7 +182,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
         setMaxTokens(params.maxTokens);
       }
       
-      console.log('✨ NLP 分析完成，參數已優化');
+      log.debug('✨ NLP 分析完成，參數已優化');
       
       // 根據模型提供不同的提示
       let notificationMessage = `檢測到${analysis.emotionalTone}風格，已優化生成參數`;
@@ -194,7 +198,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
       }));
       
     } catch (error) {
-      console.error('NLP 分析失敗:', error);
+      log.error('NLP 分析失敗:', error);
       dispatch(addNotification({
         type: 'warning',
         title: 'NLP 分析失敗',
@@ -229,7 +233,7 @@ const SimpleAIWritingPanel: React.FC<SimpleAIWritingPanelProps> = ({
     
     // 設置超時（6分鐘），給 AI 充足的生成時間
     timeoutId = setTimeout(() => {
-      console.error('AI 生成超時');
+      log.error('AI 生成超時');
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -369,11 +373,11 @@ ${smartParams.locationNames.length > 0 ? `
               
               // 如果品質檢查發現問題，給予提示
               if (qualityCheck.warnings.length > 0) {
-                console.warn('⚠️ 品質檢查發現問題:', qualityCheck.warnings);
+                log.warn('⚠️ 品質檢查發現問題:', qualityCheck.warnings);
               }
               
             } catch (qualityError) {
-              console.warn('品質檢測失敗:', qualityError);
+              log.warn('品質檢測失敗:', qualityError);
             }
           }
           
@@ -392,7 +396,7 @@ ${smartParams.locationNames.length > 0 ? `
               position: currentPosition,
             })).unwrap();
           } catch (historyError) {
-            console.error('保存 AI 歷史記錄失敗:', historyError);
+            log.error('保存 AI 歷史記錄失敗:', historyError);
             // 不中斷主流程
           }
           
@@ -406,7 +410,7 @@ ${smartParams.locationNames.length > 0 ? `
           // 在每次生成之間添加小延遲，確保資料庫操作完成
           await new Promise(resolve => setTimeout(resolve, 100));
         } catch (error) {
-          console.error(`生成第 ${index + 1} 個版本失敗:`, error);
+          console.error(`生成第 ${index + 1} 個版本失敗:`, error); // TODO: 複雜模式，需人工轉換
           results.push(null);
         }
       }
@@ -461,7 +465,7 @@ ${smartParams.locationNames.length > 0 ? `
       }));
       
     } catch (error) {
-      console.error('AI 續寫失敗:', error);
+      log.error('AI 續寫失敗:', error);
       
       // 標記進度失敗
       if (newProgressId) {

@@ -5,6 +5,10 @@ import { setCurrentModel, setCurrentProvider, setDefaultProvider, setDefaultMode
 import ConfirmDialog from '../UI/ConfirmDialog';
 import { api } from '../../api';
 import type { 
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('AISettingsModal');
   AIProvider, 
   CreateAIProviderRequest, 
   UpdateAIProviderRequest,
@@ -56,7 +60,7 @@ const AISettingsModal: React.FC = () => {
         }
       }
     } catch (_error) {
-      console.error('載入AI提供者失敗:', _error);
+      log.error('載入AI提供者失敗:', _error);
       dispatch(addNotification({
         type: 'error',
         title: '載入失敗',
@@ -73,7 +77,7 @@ const AISettingsModal: React.FC = () => {
       const types = await api.aiProviders.getSupportedTypes();
       setSupportedTypes(types);
     } catch (_error) {
-      console.error('載入支援類型失敗:', _error);
+      log.error('載入支援類型失敗:', _error);
     }
   }, []);
 
@@ -160,7 +164,7 @@ const AISettingsModal: React.FC = () => {
       }
       
     } catch (error) {
-      console.error('搜尋模型失敗:', error);
+      log.error('搜尋模型失敗:', error);
       dispatch(addNotification({
         type: 'error',
         title: '模型搜尋失敗',
@@ -210,7 +214,7 @@ const AISettingsModal: React.FC = () => {
       const result = await api.aiProviders.getAvailableModels(providerId);
       
       if (result.success && result.models) {
-        console.log('🔥 動態模型獲取成功:', result.models);
+        log.debug('🔥 動態模型獲取成功:', result.models);
         dispatch(addNotification({
           type: 'success',
           title: '模型獲取成功',
@@ -220,7 +224,7 @@ const AISettingsModal: React.FC = () => {
         
         // 記錄到控制台供檢查
         result.models.forEach((model, index) => {
-          console.log(`模型 ${index + 1}:`, model);
+          console.log(`模型 ${index + 1}:`, model); // TODO: 複雜模式，需人工轉換
         });
       } else {
         dispatch(addNotification({
@@ -231,7 +235,7 @@ const AISettingsModal: React.FC = () => {
         }));
       }
     } catch (error) {
-      console.error('模型獲取錯誤:', error);
+      log.error('模型獲取錯誤:', error);
       dispatch(addNotification({
         type: 'error',
         title: '模型獲取失敗',
@@ -431,7 +435,7 @@ const AISettingsModal: React.FC = () => {
     const currentAvailableModels = availableModels[formId] || [];
     const isSearchingModels = isLoadingModels[formId] || false;
     
-    console.log('renderProviderForm 狀態:', {
+    log.debug('renderProviderForm 狀態:', {
       formId,
       providerType: formData.provider_type,
       isEdit,
@@ -452,7 +456,7 @@ const AISettingsModal: React.FC = () => {
             formData.endpoint
           );
           
-          console.log(`獲取到模型列表:`, models);
+          log.debug(`獲取到模型列表:`, models);
           
           // 直接設置模型列表到當前表單ID
           setAvailableModels(prev => ({

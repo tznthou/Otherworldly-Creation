@@ -2,25 +2,25 @@
 
 **分析日期**: 2025-10-11
 **掃描目錄**: src/renderer/src
-**總檔案數**: 123 個（包含 console 調用的檔案）
+**總檔案數**: 54 個（包含 console 調用的檔案）
 
 ---
 
 ## 📊 總體統計
 
-### Console 調用總數：609 個
+### Console 調用總數：335 個
 
 #### 按類型分布
-- `console.log`: 350 個 (57.5%)
-- `console.error`: 178 個 (29.2%)
-- `console.warn`: 81 個 (13.3%)
+- `console.log`: 200 個 (59.7%)
+- `console.error`: 85 個 (25.4%)
+- `console.warn`: 50 個 (14.9%)
 - `console.info`: 0 個 (0.0%)
 - `console.debug`: 0 個 (0.0%)
 
 #### 按複雜度分布
-- 🟢 **簡單** (可自動化): 347 個 (57.0%)
-- 🟡 **中等** (半自動): 25 個 (4.1%)
-- 🔴 **複雜** (需人工): 237 個 (38.9%)
+- 🟢 **簡單** (可自動化): 136 個 (40.6%)
+- 🟡 **中等** (半自動): 20 個 (6.0%)
+- 🔴 **複雜** (需人工): 179 個 (53.4%)
 
 ---
 
@@ -30,24 +30,24 @@
 |------|------|-------------|------------|--------|
 | 1 | /services/characterAnalysisService.ts | 46 | ❌ | 🔴 高 |
 | 2 | /api/tauri.ts | 44 | ❌ | 🔴 高 |
-| 3 | /services/settingsService.ts | 40 | ❌ | 🔴 高 |
-| 4 | /components/AI/BatchIllustrationPanel.backup.tsx | 33 | ❌ | 🔴 高 |
-| 5 | /components/AI/VisualCreation/CreateTab/CreateTab.tsx | 32 | ❌ | 🔴 高 |
-| 6 | /services/exportService.ts | 24 | ❌ | 🟡 中 |
-| 7 | /pages/DatabaseMaintenance/DatabaseMaintenance.tsx | 21 | ❌ | 🟡 中 |
-| 8 | /utils/nlpUtils.ts | 19 | ❌ | 🟡 中 |
-| 9 | /hooks/useBatchSubmission.ts | 18 | ✅ | 🟡 中 |
-| 10 | /components/Editor/SimpleAIWritingPanel.tsx | 14 | ❌ | 🟢 低 |
-| 11 | /services/ai-generation/GenerationExecutor.ts | 12 | ✅ | 🟢 低 |
-| 12 | /utils/logger.ts | 11 | ✅ | 🟢 低 |
-| 13 | /services/aiWritingAssistant.ts | 9 | ❌ | 🟢 低 |
-| 14 | /components/Modals/AISettingsModal.tsx | 8 | ❌ | 🟢 低 |
-| 15 | /i18n/index.ts | 8 | ❌ | 🟢 低 |
-| 16 | /hooks/illustration/useAutoVersionCreation.ts | 7 | ✅ | 🟢 低 |
-| 17 | /pages/ChapterStatus/ChapterStatusPage.tsx | 7 | ✅ | 🟢 低 |
-| 18 | /services/imageCompressionService.ts | 7 | ✅ | 🟢 低 |
-| 19 | /components/AI/VisualCreation/CreateTab/CharacterSelector.tsx | 6 | ❌ | 🟢 低 |
-| 20 | /services/imageGenerationService.ts | 6 | ✅ | 🟢 低 |
+| 3 | /components/AI/BatchIllustrationPanel.backup.tsx | 33 | ❌ | 🔴 高 |
+| 4 | /pages/DatabaseMaintenance/DatabaseMaintenance.tsx | 21 | ❌ | 🟡 中 |
+| 5 | /components/Editor/SimpleAIWritingPanel.tsx | 14 | ❌ | 🟢 低 |
+| 6 | /services/ai-generation/GenerationExecutor.ts | 12 | ✅ | 🟢 低 |
+| 7 | /utils/logger.ts | 11 | ✅ | 🟢 低 |
+| 8 | /services/aiWritingAssistant.ts | 9 | ❌ | 🟢 低 |
+| 9 | /components/Modals/AISettingsModal.tsx | 8 | ❌ | 🟢 低 |
+| 10 | /hooks/illustration/useAutoVersionCreation.ts | 7 | ✅ | 🟢 低 |
+| 11 | /pages/ChapterStatus/ChapterStatusPage.tsx | 7 | ✅ | 🟢 低 |
+| 12 | /services/imageCompressionService.ts | 7 | ✅ | 🟢 低 |
+| 13 | /hooks/useBatchSubmission.ts | 6 | ✅ | 🟢 低 |
+| 14 | /i18n/index.ts | 6 | ✅ | 🟢 低 |
+| 15 | /services/imageGenerationService.ts | 6 | ✅ | 🟢 低 |
+| 16 | /i18n/translations.ts | 5 | ❌ | 🟢 低 |
+| 17 | /main-stable.tsx | 5 | ✅ | 🟢 低 |
+| 18 | /components/AI/VisualCreation/panels/BatchExportPanel.tsx | 4 | ✅ | 🟢 低 |
+| 19 | /components/Editor/AIWritingPanel.tsx | 4 | ✅ | 🟢 低 |
+| 20 | /hooks/illustration/useBatchExportProcessor.ts | 4 | ✅ | 🟢 低 |
 
 ---
 
@@ -55,16 +55,16 @@
 
 | 排名 | 目錄 | Console 數量 |
 |------|------|-------------|
-| 1 | /services | 155 |
-| 2 | /utils | 50 |
-| 3 | /api | 45 |
-| 4 | /components/AI | 39 |
-| 5 | /components/AI/VisualCreation/CreateTab | 38 |
-| 6 | /components/Editor | 29 |
-| 7 | /components/Modals | 29 |
-| 8 | /hooks | 29 |
-| 9 | /hooks/illustration | 22 |
-| 10 | /pages/DatabaseMaintenance | 21 |
+| 1 | /services | 89 |
+| 2 | /api | 44 |
+| 3 | /components/AI | 33 |
+| 4 | /utils | 26 |
+| 5 | /hooks/illustration | 21 |
+| 6 | /pages/DatabaseMaintenance | 21 |
+| 7 | /components/Editor | 18 |
+| 8 | /services/ai-generation | 14 |
+| 9 | /hooks | 13 |
+| 10 | /i18n | 11 |
 
 ---
 
@@ -85,23 +85,21 @@
 ✅ useCharacterSelection.ts 已完成（19 個 console → 0）
 
 建議繼續清理：
-- /hooks/useBatchSubmission.ts (18 個)
 - /hooks/illustration/useAutoVersionCreation.ts (7 個)
+- /hooks/useBatchSubmission.ts (6 個)
 - /hooks/illustration/useBatchExportProcessor.ts (4 個)
 - /hooks/illustration/useIllustrationService.ts (3 個)
 - /hooks/illustration/usePromptIntelligence.ts (3 個)
 - /hooks/useI18n.ts (3 個)
 - /hooks/visual-creation/useVisualCreationHandlers.ts (3 個)
 - /hooks/illustration/useExportManager.ts (2 個)
-- /hooks/useAutoSave.ts (2 個)
 - /hooks/useShortcuts.ts (2 個)
+- /hooks/illustration/useBatchConfiguration.ts (1 個)
 
 ### 優先級 3：Services 目錄（需謹慎）
 
 Services 層通常有業務邏輯，需要小心處理：
 - /services/characterAnalysisService.ts (46 個)
-- /services/settingsService.ts (40 個)
-- /services/exportService.ts (24 個)
 - /services/ai-generation/GenerationExecutor.ts (12 個)
 - /services/aiWritingAssistant.ts (9 個)
 - /services/imageCompressionService.ts (7 個)
@@ -109,6 +107,8 @@ Services 層通常有業務邏輯，需要小心處理：
 - /services/logService.ts (4 個)
 - /services/autoBackupService.ts (3 個)
 - /services/imageNamingService.ts (3 個)
+- /services/saveManager.ts (3 個)
+- /services/statisticsService.ts (3 個)
 
 ---
 
@@ -170,5 +170,5 @@ Services 層通常有業務邏輯，需要小心處理：
 
 ---
 
-**報告生成時間**: 2025-10-11T07:18:20.522Z
+**報告生成時間**: 2025-10-11T07:51:20.834Z
 **下次更新建議**: 清理一批後重新分析進度

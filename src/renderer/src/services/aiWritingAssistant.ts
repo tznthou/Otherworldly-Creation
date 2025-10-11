@@ -1,5 +1,9 @@
 // AI 寫作助手 - 整合 Compromise.js NLP 分析的智能續寫服務
 import { 
+import { createLogger } from '../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('aiWritingAssistant');
   analyzeText, 
   extractEntities, 
   calculateWritingMetrics, 
@@ -38,7 +42,7 @@ export interface QualityCheck {
  * 分析文本上下文，提取寫作風格和關鍵信息
  */
 export function analyzeWritingContext(text: string): ContextAnalysis {
-  console.log('🔍 開始 NLP 上下文分析...');
+  log.debug('🔍 開始 NLP 上下文分析...');
   
   // 基礎文本分析
   const textAnalysis = analyzeText(text);
@@ -54,7 +58,7 @@ export function analyzeWritingContext(text: string): ContextAnalysis {
   // 分析情感基調
   const emotionalTone = analyzeEmotionalTone(text);
   
-  console.log('📊 NLP 分析完成:', {
+  log.debug('📊 NLP 分析完成:', {
     words: textAnalysis.words,
     entities: Object.keys(entities).length,
     tense: dominantTense,
@@ -157,23 +161,23 @@ export function generateSmartParams(
   if (currentModel && currentModel.includes('gemini-2.5-flash')) {
     // Gemini 2.5 Flash 實際支持更高的輸出 tokens
     maxTokens = Math.max(maxTokens, 1000); // 🚀 從 650 提升到 1000
-    console.log(`🎯 檢測到 Gemini 2.5 Flash，使用優化 token 限制: ${maxTokens}`);
+    console.log(`🎯 檢測到 Gemini 2.5 Flash，使用優化 token 限制: ${maxTokens}`); // TODO: 複雜模式，需人工轉換
   } else if (currentModel && currentModel.includes('gemini-2.5-pro')) {
     // Gemini 2.5 Pro 支持更高的 token 數
     maxTokens = Math.max(maxTokens, 1200); // 🚀 從 1000 提升到 1200
-    console.log(`🧠 檢測到 Gemini 2.5 Pro，使用高性能 token 限制: ${maxTokens}`);
+    console.log(`🧠 檢測到 Gemini 2.5 Pro，使用高性能 token 限制: ${maxTokens}`); // TODO: 複雜模式，需人工轉換
   } else if (currentModel && (currentModel.includes('gemini-1.5-pro') || currentModel.includes('gemini-pro'))) {
     // Gemini 1.5 Pro 系列：較舊但穩定的模型
     maxTokens = Math.max(maxTokens, 1000); // 保持 1000
-    console.log(`✨ 檢測到 Gemini 1.5 Pro 系列，使用標準 token 限制: ${maxTokens}`);
+    console.log(`✨ 檢測到 Gemini 1.5 Pro 系列，使用標準 token 限制: ${maxTokens}`); // TODO: 複雜模式，需人工轉換
   } else if (currentModel && currentModel.includes('claude')) {
     // Claude 模型通常支持較長的輸出
     maxTokens = Math.max(maxTokens, 1500);
-    console.log(`🤖 檢測到 Claude 模型，使用擴展 token 限制: ${maxTokens}`);
+    console.log(`🤖 檢測到 Claude 模型，使用擴展 token 限制: ${maxTokens}`); // TODO: 複雜模式，需人工轉換
   } else if (currentModel && currentModel.includes('gpt-4')) {
     // GPT-4 模型
     maxTokens = Math.max(maxTokens, 1200);
-    console.log(`🚀 檢測到 GPT-4 模型，使用擴展 token 限制: ${maxTokens}`);
+    console.log(`🚀 檢測到 GPT-4 模型，使用擴展 token 限制: ${maxTokens}`); // TODO: 複雜模式，需人工轉換
   }
   
   // 確保最小值
@@ -217,7 +221,7 @@ export function generateSmartParams(
  * 檢查生成文本的品質和一致性
  */
 export function checkGeneratedQuality(originalText: string, generatedText: string, context: ContextAnalysis): QualityCheck {
-  console.log('🔍 檢查生成文本品質...');
+  log.debug('🔍 檢查生成文本品質...');
   
   const generatedAnalysis = analyzeWritingContext(generatedText);
   const suggestions: string[] = [];
@@ -277,7 +281,7 @@ export function checkGeneratedQuality(originalText: string, generatedText: strin
     warnings.push('生成文本過短，內容可能不足');
   }
   
-  console.log('📋 品質檢查完成:', {
+  log.debug('📋 品質檢查完成:', {
     coherence: Math.max(0, coherence),
     styleConsistency: Math.max(0, styleConsistency),
     suggestions: suggestions.length,
