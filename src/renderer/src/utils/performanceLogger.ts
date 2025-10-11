@@ -1,8 +1,9 @@
-/**
-import { createLogger } from './/logger';
+import { createLogger } from './logger';
 
 // 創建模組專用 logger
 const log = createLogger('performanceLogger');
+
+/**
  * 性能日誌記錄系統
  * 整合所有性能監控數據並提供統一的日誌接口
  */
