@@ -66,7 +66,7 @@ const ChapterStatusPage: React.FC = () => {
           try {
             if (chapter.metadata) {
               const metadata = JSON.parse(chapter.metadata);
-              console.log(`🔍 [狀態解析] 章節 ${chapter.title}:`, { // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+              log.debug(`🔍 [狀態解析] 章節: ${chapter.title}`, {
                 metadata: metadata,
                 metadataStatus: metadata.status,
                 chapterStatus: chapter.status,
@@ -75,13 +75,13 @@ const ChapterStatusPage: React.FC = () => {
               // 優先使用 metadata 中的狀態，只有當它不存在時才使用 chapter.status
               status = metadata.status as ChapterStatus || chapter.status as ChapterStatus || ChapterStatus.DRAFT;
             } else if (chapter.status) {
-              console.log(`🔍 [狀態解析] 章節 ${chapter.title} 無 metadata，使用 chapter.status:`, chapter.status); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+              log.debug('🔍 [狀態解析] 章節無 metadata', { title: chapter.title, status: chapter.status });
               status = chapter.status as ChapterStatus;
             } else {
-              console.log(`🔍 [狀態解析] 章節 ${chapter.title} 無狀態信息，使用預設草稿狀態`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+              log.debug('🔍 [狀態解析] 章節無狀態信息', { title: chapter.title });
             }
           } catch (error) {
-            console.warn(`❌ [狀態解析] 章節 ${chapter.title} metadata 解析失敗:`, error, 'Raw metadata:', chapter.metadata); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+            log.warn('❌ [狀態解析] metadata 解析失敗', { title: chapter.title, error, metadata: chapter.metadata });
             status = (chapter.status as ChapterStatus) || ChapterStatus.DRAFT;
           }
 
@@ -162,7 +162,7 @@ const ChapterStatusPage: React.FC = () => {
         metadata: JSON.stringify(newMetadata)
       };
 
-      console.log(`🔧 [Redux更新請求] 章節 ${chapter.title} 狀態更新:`, { // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.debug(`🔧 [Redux更新請求] 章節狀態更新: ${chapter.title}`, {
         chapterId: chapter.id,
         oldStatus: oldMetadata.status,
         newStatus: newStatus,
@@ -176,7 +176,7 @@ const ChapterStatusPage: React.FC = () => {
       await dispatch(updateChapter(updatedChapter)).unwrap();
       
       // 驗證數據庫更新 - 立即重新獲取章節數據
-      console.log(`🔍 [驗證] 立即重新查詢章節 ${chapter.title} 數據...`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.debug('🔍 [驗證] 立即重新查詢章節數據', { title: chapter.title });
       const { api } = await import('../../api');
       const verifyChapter = await api.chapters.getById(chapter.id);
       log.debug(`🔍 [驗證] 數據庫中的實際數據:`, {
@@ -213,7 +213,7 @@ const ChapterStatusPage: React.FC = () => {
         }
       });
 
-      console.log(`✅ [Redux成功] 章節 ${chapter.title} 狀態已通過Redux更新為: ${newStatus}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      log.debug('✅ [Redux成功] 章節狀態已更新', { title: chapter.title, newStatus });
       
       // 顯示成功通知
       dispatch(addNotification({
