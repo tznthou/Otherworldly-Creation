@@ -104,9 +104,9 @@ class Logger {
     const formattedMessage = this.formatMessage(LogLevel.DEBUG, module, message);
 
     if (data !== undefined) {
-      console.log(formattedMessage, data);
+      log.debug(formattedMessage, data);
     } else {
-      console.log(formattedMessage);
+      log.debug(formattedMessage);
     }
   }
 
@@ -120,9 +120,9 @@ class Logger {
     const formattedMessage = this.formatMessage(LogLevel.INFO, module, message);
 
     if (data !== undefined) {
-      console.log(formattedMessage, data);
+      log.debug(formattedMessage, data);
     } else {
-      console.log(formattedMessage);
+      log.debug(formattedMessage);
     }
   }
 
@@ -136,9 +136,9 @@ class Logger {
     const formattedMessage = this.formatMessage(LogLevel.WARN, module, message);
 
     if (data !== undefined) {
-      console.warn(formattedMessage, data);
+      log.warn(formattedMessage, data);
     } else {
-      console.warn(formattedMessage);
+      log.warn(formattedMessage);
     }
   }
 
@@ -152,9 +152,9 @@ class Logger {
     const formattedMessage = this.formatMessage(LogLevel.ERROR, module, message);
 
     if (error !== undefined) {
-      console.error(formattedMessage, error);
+      log.error(formattedMessage, error);
     } else {
-      console.error(formattedMessage);
+      log.error(formattedMessage);
     }
   }
 
@@ -168,9 +168,9 @@ class Logger {
     const formattedMessage = this.formatMessage(LogLevel.FATAL, module, message);
 
     if (error !== undefined) {
-      console.error('🔥 FATAL:', formattedMessage, error);
+      log.error('🔥 FATAL:', formattedMessage, error);
     } else {
-      console.error('🔥 FATAL:', formattedMessage);
+      log.error('🔥 FATAL:', formattedMessage);
     }
   }
 

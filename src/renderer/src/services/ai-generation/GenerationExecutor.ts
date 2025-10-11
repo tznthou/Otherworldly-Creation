@@ -81,7 +81,7 @@ export class GenerationExecutor {
     const generationId = `${startTime}-${Math.random().toString(36).slice(2, 11)}`;
 
     try {
-      console.log(`🚀 開始生成 [${generationId}]:`, { // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      console.log(`🚀 開始生成 [${generationId}]:`, { // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
         model: config.model,
         provider: config.providerId,
         temperature: config.params.temperature,
@@ -111,13 +111,13 @@ export class GenerationExecutor {
         rawResponse: genResult
       };
 
-      console.log(`✅ 生成成功 [${generationId}]: ${filteredText.length} 字符`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      console.log(`✅ 生成成功 [${generationId}]: ${filteredText.length} 字符`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
       return result;
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       
-      console.error(`❌ 生成失敗 [${generationId}]:`, error); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+      console.error(`❌ 生成失敗 [${generationId}]:`, error); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
       
       return {
         id: generationId,
@@ -145,7 +145,7 @@ export class GenerationExecutor {
         // 如果不是第一次嘗試，等待一段時間
         if (attempt > 0) {
           const delay = finalRetryConfig.delayMs * Math.pow(finalRetryConfig.backoffMultiplier, attempt - 1);
-          console.log(`⏳ 第${attempt}次重試，等待 ${delay}ms...`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+          console.log(`⏳ 第${attempt}次重試，等待 ${delay}ms...`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
           await new Promise(resolve => setTimeout(resolve, delay));
         }
 
@@ -153,14 +153,14 @@ export class GenerationExecutor {
         
         if (result.success) {
           if (attempt > 0) {
-            console.log(`🔄 重試成功 [${result.id}] - 第${attempt}次嘗試`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+            console.log(`🔄 重試成功 [${result.id}] - 第${attempt}次嘗試`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
           }
           return result;
         }
 
         // 檢查是否為可重試的錯誤
         if (!this.isRetryableError(result.error, finalRetryConfig)) {
-          console.log(`🚫 不可重試的錯誤: ${result.error}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+          console.log(`🚫 不可重試的錯誤: ${result.error}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
           return result;
         }
 
@@ -174,7 +174,7 @@ export class GenerationExecutor {
       }
     }
 
-    console.error(`💥 重試耗盡，最終失敗: ${lastError}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    console.error(`💥 重試耗盡，最終失敗: ${lastError}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
     return {
       id: `failed-${Date.now()}`,
       text: '',
@@ -197,7 +197,7 @@ export class GenerationExecutor {
     let successCount = 0;
     let failureCount = 0;
 
-    console.log(`📊 開始批次生成 ${configs.length} 個版本`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    console.log(`📊 開始批次生成 ${configs.length} 個版本`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
 
     for (let i = 0; i < configs.length; i++) {
       const config = configs[i];
@@ -215,11 +215,11 @@ export class GenerationExecutor {
 
         if (result.success) {
           successCount++;
-          console.log(`✅ 批次進度 ${i + 1}/${configs.length} - 成功`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+          console.log(`✅ 批次進度 ${i + 1}/${configs.length} - 成功`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
         } else {
           failureCount++;
           if (result.error) errors.push(result.error);
-          console.log(`❌ 批次進度 ${i + 1}/${configs.length} - 失敗: ${result.error}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+          console.log(`❌ 批次進度 ${i + 1}/${configs.length} - 失敗: ${result.error}`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
           
           // 檢查是否為配額錯誤，如果是則停止後續生成
           if (this.isQuotaError(result.error)) {
@@ -235,7 +235,7 @@ export class GenerationExecutor {
         failureCount++;
         const errorMsg = error instanceof Error ? error.message : String(error);
         errors.push(errorMsg);
-        console.error(`💥 批次生成第${i + 1}項發生未捕獲錯誤:`, error); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+        console.error(`💥 批次生成第${i + 1}項發生未捕獲錯誤:`, error); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
         
         // 為未成功的項目添加失敗結果
         results.push({
@@ -259,7 +259,7 @@ export class GenerationExecutor {
       totalRequested: configs.length
     };
 
-    console.log(`📈 批次生成完成: ${successCount}成功, ${failureCount}失敗`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
+    console.log(`📈 批次生成完成: ${successCount}成功, ${failureCount}失敗`); // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換 // TODO: 複雜模式，需人工轉換
     return batchResult;
   }
 
