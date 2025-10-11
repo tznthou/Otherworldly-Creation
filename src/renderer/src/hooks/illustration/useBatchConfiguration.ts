@@ -9,6 +9,10 @@ import type {
   UpdateStyleTemplateRequest,
 } from '../../types/styleTemplate';
 import { useStyleTemplates } from './useStyleTemplates';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useBatchConfiguration');
 
 // 批次配置選項介面
 export interface UseBatchConfigurationOptions {
@@ -427,16 +431,16 @@ export const useBatchConfiguration = (
     setPollinationsStyle(DEFAULT_CONFIGURATION.pollinationsStyle);
     setApiKey(DEFAULT_CONFIGURATION.apiKey);
     
-    console.log('🔄 [useBatchConfiguration] 已重置為預設配置');
+    log.debug('🔄 [useBatchConfiguration] 已重置為預設配置');
   }, []);
 
   const exportConfiguration = useCallback((): BatchConfiguration => {
-    console.log('📤 [useBatchConfiguration] 匯出配置:', currentConfiguration);
+    log.debug('📤 [useBatchConfiguration] 匯出配置:', currentConfiguration);
     return { ...currentConfiguration };
   }, [currentConfiguration]);
 
   const importConfiguration = useCallback((config: Partial<BatchConfiguration>) => {
-    console.log('📥 [useBatchConfiguration] 匯入配置:', config);
+    log.debug('📥 [useBatchConfiguration] 匯入配置:', config);
     
     if (config.batchName !== undefined) setBatchName(config.batchName);
     if (config.batchDescription !== undefined) setBatchDescription(config.batchDescription);
@@ -498,7 +502,7 @@ export const useBatchConfiguration = (
       }
     }
     
-    console.log('🎨 [useBatchConfiguration] 已應用風格模板:', template.name);
+    log.debug('🎨 [useBatchConfiguration] 已應用風格模板:', template.name);
   }, []);
 
   // 從當前配置創建模板
@@ -529,26 +533,26 @@ export const useBatchConfiguration = (
   useEffect(() => {
     const recommended = getRecommendedMaxParallel();
     if (maxParallel > recommended) {
-      console.log(`⚠️ [useBatchConfiguration] ${illustrationProvider} 建議最大並行數為 ${recommended}，當前設定 ${maxParallel} 可能過高`);
+      console.log(`⚠️ [useBatchConfiguration] ${illustrationProvider} 建議最大並行數為 ${recommended}，當前設定 ${maxParallel} 可能過高`); // TODO: 複雜模式，需人工轉換
     }
   }, [illustrationProvider, maxParallel, getRecommendedMaxParallel]);
 
   // === 調試資訊 ===
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🐛 [useBatchConfiguration] Debug Info:');
-      console.log('   📝 批次名稱:', batchName);
-      console.log('   📄 批次描述:', batchDescription.slice(0, 50) + (batchDescription.length > 50 ? '...' : ''));
-      console.log('   ⭐ 優先級:', batchPriority);
-      console.log('   🔢 最大並行:', maxParallel);
-      console.log('   🎨 色彩模式:', globalColorMode);
-      console.log('   🔑 API 來源:', apiKeySource);
-      console.log('   🖼️ 服務商:', illustrationProvider);
-      console.log('   🤖 模型:', pollinationsModel);
-      console.log('   🎭 風格:', pollinationsStyle);
-      console.log('   ✅ 配置有效:', isValidConfiguration);
-      console.log('   ❌ 錯誤數量:', validation.errors.length);
-      console.log('   ⚠️ 警告數量:', validation.warnings.length);
+      log.debug('🐛 [useBatchConfiguration] Debug Info:');
+      log.debug('   📝 批次名稱:', batchName);
+      log.debug('   📄 批次描述:', batchDescription.slice(0, 50) + (batchDescription.length > 50 ? '...' : ''));
+      log.debug('   ⭐ 優先級:', batchPriority);
+      log.debug('   🔢 最大並行:', maxParallel);
+      log.debug('   🎨 色彩模式:', globalColorMode);
+      log.debug('   🔑 API 來源:', apiKeySource);
+      log.debug('   🖼️ 服務商:', illustrationProvider);
+      log.debug('   🤖 模型:', pollinationsModel);
+      log.debug('   🎭 風格:', pollinationsStyle);
+      log.debug('   ✅ 配置有效:', isValidConfiguration);
+      log.debug('   ❌ 錯誤數量:', validation.errors.length);
+      log.debug('   ⚠️ 警告數量:', validation.warnings.length);
     }
   }, [
     batchName, batchDescription, batchPriority, maxParallel,

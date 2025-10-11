@@ -2,6 +2,10 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Descendant } from 'slate';
 import { api } from '../../api';
 import { Chapter } from '../../api/models';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('chaptersSlice');
 
 interface ChaptersState {
   chapters: Chapter[];
@@ -27,14 +31,14 @@ export type { Chapter } from '../../api/models';
 export const fetchChaptersByProjectId = createAsyncThunk(
   'chapters/fetchByProjectId',
   async (projectId: string) => {
-    console.log('🔍 [chaptersSlice] 開始載入專案章節:', projectId);
+    log.debug('🔍 [chaptersSlice] 開始載入專案章節:', projectId);
     
     const chapters = await api.chapters.getByProjectId(projectId);
     
     // 詳細記錄每個章節的數據
-    console.log('🔍 [chaptersSlice] API 返回的章節數量:', chapters.length);
+    log.debug('🔍 [chaptersSlice] API 返回的章節數量:', chapters.length);
     chapters.forEach((chapter, index) => {
-      console.log(`🔍 [chaptersSlice] 章節 ${index + 1}:`, {
+      console.log(`🔍 [chaptersSlice] 章節 ${index + 1}:`, { // TODO: 複雜模式，需人工轉換
         id: chapter.id,
         title: chapter.title,
         contentType: typeof chapter.content,
@@ -50,7 +54,7 @@ export const fetchChaptersByProjectId = createAsyncThunk(
     // 檢查是否有重複內容
     const contentHashes = chapters.map(c => JSON.stringify(c.content));
     const uniqueContents = new Set(contentHashes);
-    console.log('🔍 [chaptersSlice] 內容唯一性檢查:', {
+    log.debug('🔍 [chaptersSlice] 內容唯一性檢查:', {
       總章節數: chapters.length,
       唯一內容數: uniqueContents.size,
       是否有重複: chapters.length !== uniqueContents.size
@@ -83,7 +87,7 @@ export const updateChapter = createAsyncThunk(
   async (chapter: Chapter) => {
     await api.chapters.update(chapter);
     // API 層會處理序列化，這裡直接返回原始的 chapter 物件
-    console.log('更新章節:', {
+    log.debug('更新章節:', {
       id: chapter.id,
       title: chapter.title,
       contentType: typeof chapter.content
@@ -106,7 +110,7 @@ export const fetchChapterById = createAsyncThunk(
   async (chapterId: string) => {
     const chapter = await api.chapters.getById(chapterId);
     // API 層已經處理了資料轉換，直接返回
-    console.log('載入單一章節:', {
+    log.debug('載入單一章節:', {
       id: chapter.id,
       title: chapter.title,
       contentType: typeof chapter.content,
@@ -126,15 +130,15 @@ const chaptersSlice = createSlice({
   initialState,
   reducers: {
     setCurrentChapter: (state, action: PayloadAction<Chapter | null>) => {
-      console.log('🔍 [Redux] setCurrentChapter reducer 被調用');
-      console.log('🔍 [Redux] 之前的 currentChapter:', state.currentChapter ? {
+      log.debug('🔍 [Redux] setCurrentChapter reducer 被調用');
+      log.debug('🔍 [Redux] 之前的 currentChapter:', state.currentChapter ? {
         id: state.currentChapter.id,
         title: state.currentChapter.title,
         contentType: typeof state.currentChapter.content,
         contentLength: Array.isArray(state.currentChapter.content) ? state.currentChapter.content.length : 'not array'
       } : 'null');
       
-      console.log('🔍 [Redux] 新的 currentChapter payload:', action.payload ? {
+      log.debug('🔍 [Redux] 新的 currentChapter payload:', action.payload ? {
         id: action.payload.id,
         title: action.payload.title,
         contentType: typeof action.payload.content,
@@ -145,7 +149,7 @@ const chaptersSlice = createSlice({
       } : 'null');
       
       state.currentChapter = action.payload;
-      console.log('🔍 [Redux] currentChapter 已更新');
+      log.debug('🔍 [Redux] currentChapter 已更新');
     },
     updateCurrentChapterContent: (state, action: PayloadAction<Descendant[]>) => {
       if (state.currentChapter) {
@@ -174,7 +178,7 @@ const chaptersSlice = createSlice({
     triggerGlobalStatsRefresh: (_state) => {
       // 這是一個純粹的通知action，不修改state
       // Dashboard會監聽這個action來重新計算全局統計
-      console.log('📊 [Redux] 觸發全局統計重新計算通知');
+      log.debug('📊 [Redux] 觸發全局統計重新計算通知');
     },
   },
   extraReducers: (builder) => {

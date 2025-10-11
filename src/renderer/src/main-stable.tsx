@@ -24,23 +24,27 @@ import { initReactScan } from './utils/reactScan';
 // import { performanceMonitor } from './utils/performanceMonitor';
 // import { performanceBenchmark } from './utils/performanceBenchmark';
 import './index.css';
+import { createLogger } from './utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('main-stable');
 
 // 🔐 最早期設定遷移 - 在任何組件渲染之前執行
 (async () => {
   try {
-    console.log('🔐 [EARLY INIT] 開始早期設定遷移檢查...');
+    log.debug('🔐 [EARLY INIT] 開始早期設定遷移檢查...');
     const { SettingsService } = await import('./services/settingsService');
     await SettingsService.loadSettings();
-    console.log('🔐 [EARLY INIT] 設定載入完成');
+    log.debug('🔐 [EARLY INIT] 設定載入完成');
 
     const lcCheck = localStorage.getItem('genesis-chronicle-settings');
     if (lcCheck) {
-      console.log('⚠️ [EARLY INIT] localStorage 仍有設定，遷移可能失敗');
+      log.debug('⚠️ [EARLY INIT] localStorage 仍有設定，遷移可能失敗');
     } else {
-      console.log('✅ [EARLY INIT] localStorage 已清除，遷移成功！');
+      log.debug('✅ [EARLY INIT] localStorage 已清除，遷移成功！');
     }
   } catch (error) {
-    console.error('❌ [EARLY INIT] 早期設定遷移失敗:', error);
+    log.error('❌ [EARLY INIT] 早期設定遷移失敗:', error);
   }
 })();
 
@@ -55,7 +59,7 @@ import './index.css';
     if (errorString.includes('callbackId') || 
         errorString.includes('undefined is not an object') ||
         errorString.includes('evaluating')) {
-      console.warn('🛡️  [已攔截] Tauri 錯誤:', ...args);
+      log.warn('🛡️  [已攔截] Tauri 錯誤:', ...args);
       return;
     }
     originalConsoleError.apply(console, args);
@@ -76,7 +80,7 @@ import './index.css';
     if (errorMessage.includes('callbackId') || 
         errorMessage.includes('undefined is not an object') ||
         errorMessage.includes('evaluating')) {
-      console.warn('🛡️  [超早期攔截] Tauri 錯誤已被攔截');
+      log.warn('🛡️  [超早期攔截] Tauri 錯誤已被攔截');
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
@@ -90,7 +94,7 @@ import './index.css';
     if (errorMessage.includes('callbackId') || 
         errorMessage.includes('undefined is not an object') ||
         errorMessage.includes('evaluating')) {
-      console.warn('🛡️  [超早期攔截] Tauri Promise 拒絕已被攔截');
+      log.warn('🛡️  [超早期攔截] Tauri Promise 拒絕已被攔截');
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
@@ -101,7 +105,7 @@ import './index.css';
   window.addEventListener('error', earlyErrorHandler, true);
   window.addEventListener('unhandledrejection', earlyPromiseHandler, true);
   
-  console.log('🛡️  超早期錯誤攔截器已啟用');
+  log.debug('🛡️  超早期錯誤攔截器已啟用');
 })();
 
 
@@ -123,7 +127,7 @@ const SimpleApp: React.FC = () => {
   useEffect(() => {
     // 🛡️ 雙重保護：檢查全局標誌和組件標誌
     if (GLOBAL_INIT_FLAG || hasInitialized.current) {
-      console.log('🛡️ 初始化已完成，跳過重複調用');
+      log.debug('🛡️ 初始化已完成，跳過重複調用');
       return;
     }
 
@@ -133,18 +137,18 @@ const SimpleApp: React.FC = () => {
 
     const initApp = async () => {
       try {
-        console.log('🚀 開始應用程式初始化...');
+        log.debug('🚀 開始應用程式初始化...');
 
         // 初始化 React Scan 性能監控（僅開發環境）
         initReactScan();
 
         // 初始化 i18n 系統
-        console.log('🌐 初始化國際化系統...');
+        log.debug('🌐 初始化國際化系統...');
         try {
           await i18n.initialize();
-          console.log('✅ 國際化系統初始化完成');
+          log.debug('✅ 國際化系統初始化完成');
         } catch (error) {
-          console.warn('⚠️  國際化系統初始化失敗，使用預設語言:', error);
+          log.warn('⚠️  國際化系統初始化失敗，使用預設語言:', error);
         }
 
         // 最小延遲確保所有系統就緒
@@ -161,34 +165,34 @@ const SimpleApp: React.FC = () => {
         // 背景載入資料（不阻塞 UI）
         setTimeout(async () => {
           try {
-            console.log('📂 載入專案資料...');
+            log.debug('📂 載入專案資料...');
             await dispatch(fetchProjects()).unwrap();
-            console.log('✅ 專案資料載入完成');
+            log.debug('✅ 專案資料載入完成');
           } catch (error) {
-            console.warn('⚠️  專案資料載入失敗:', error);
+            log.warn('⚠️  專案資料載入失敗:', error);
           }
         }, 100);
 
         // 背景初始化 AI 服務（多提供者支援）
         setTimeout(async () => {
           try {
-            console.log('🤖 初始化 AI 提供者系統...');
+            log.debug('🤖 初始化 AI 提供者系統...');
 
             // 1. 載入 AI 提供者列表
             const providers = await dispatch(fetchAIProviders()).unwrap();
-            console.log('✅ AI 提供者列表載入完成，數量:', providers.length);
+            log.debug('✅ AI 提供者列表載入完成，數量:', providers.length);
 
             // 2. 從 localStorage 獲取當前選中的提供者
             const savedProvider = localStorage.getItem('ai_default_provider');
             const currentProvider = savedProvider || (providers.find(p => p.is_enabled)?.id);
 
-            console.log('🎯 當前提供者:', currentProvider);
+            log.debug('🎯 當前提供者:', currentProvider);
 
             if (currentProvider) {
               // 3. 載入當前提供者的模型列表 - 關鍵修復！
-              console.log('📡 載入提供者模型:', currentProvider);
+              log.debug('📡 載入提供者模型:', currentProvider);
               await dispatch(setActiveProvider(currentProvider)).unwrap();
-              console.log('✅ 提供者模型載入完成');
+              log.debug('✅ 提供者模型載入完成');
             }
 
             // 4. 向後兼容：也檢查 Ollama 服務（如果是 Ollama 提供者）
@@ -196,34 +200,34 @@ const SimpleApp: React.FC = () => {
               try {
                 const isOllamaConnected = await dispatch(checkOllamaService()).unwrap();
                 if (isOllamaConnected) {
-                  console.log('✅ Ollama 服務額外驗證通過');
+                  log.debug('✅ Ollama 服務額外驗證通過');
                   await dispatch(fetchModelsInfo()).unwrap();
-                  console.log('✅ Ollama 詳細模型資訊載入完成');
+                  log.debug('✅ Ollama 詳細模型資訊載入完成');
                 }
               } catch (error) {
-                console.warn('⚠️  Ollama 服務額外檢查失敗:', error);
+                log.warn('⚠️  Ollama 服務額外檢查失敗:', error);
               }
             }
 
           } catch (error) {
-            console.warn('⚠️  AI 系統初始化失敗:', error);
+            log.warn('⚠️  AI 系統初始化失敗:', error);
             // 降級處理：如果多提供者初始化失敗，回退到 Ollama 單一檢查
             try {
-              console.log('🔄 降級到 Ollama 單一檢查...');
+              log.debug('🔄 降級到 Ollama 單一檢查...');
               const isConnected = await dispatch(checkOllamaService()).unwrap();
               if (isConnected) {
                 await dispatch(fetchModelsInfo()).unwrap();
-                console.log('✅ Ollama 降級初始化完成');
+                log.debug('✅ Ollama 降級初始化完成');
               }
             } catch (fallbackError) {
-              console.warn('⚠️  Ollama 降級初始化也失敗:', fallbackError);
+              log.warn('⚠️  Ollama 降級初始化也失敗:', fallbackError);
             }
           }
         }, 1000);
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error('❌ 應用程式初始化失敗:', error);
+        log.error('❌ 應用程式初始化失敗:', error);
         setInitError(errorMessage);
         setIsLoading(false);
       }
@@ -377,23 +381,23 @@ window.addEventListener('error', (event) => {
                       errorMessage.includes('evaluating');
   
   if (isTauriError) {
-    console.warn('🛡️  攔截 Tauri 相關錯誤，防止顯示到控制台');
+    log.warn('🛡️  攔截 Tauri 相關錯誤，防止顯示到控制台');
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    console.warn('全域錯誤處理器-已攔截:', event.error);
+    log.warn('全域錯誤處理器-已攔截:', event.error);
     return false;
   }
   
   // 安全地記錄錯誤
   const safeErrorLog = event.error ? event.error : 'Unknown error event';
-  console.error('🚨 全域錯誤:', safeErrorLog);
+  log.error('🚨 全域錯誤:', safeErrorLog);
   
   // 記錄錯誤詳情
   if (event.error) {
-    console.error('全域錯誤處理器:', event.error);
+    log.error('全域錯誤處理器:', event.error);
   } else {
-    console.warn('全域錯誤處理器: 接收到未定義的錯誤事件');
+    log.warn('全域錯誤處理器: 接收到未定義的錯誤事件');
   }
   
   event.preventDefault();
@@ -411,21 +415,21 @@ window.addEventListener('unhandledrejection', (event) => {
                       errorMessage.includes('evaluating');
   
   if (isTauriError) {
-    console.warn('🛡️  攔截 Tauri 相關 Promise 拒絕，防止顯示到控制台');
+    log.warn('🛡️  攔截 Tauri 相關 Promise 拒絕，防止顯示到控制台');
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    console.warn('Promise拒絕處理器-已攔截:', errorMessage);
+    log.warn('Promise拒絕處理器-已攔截:', errorMessage);
     return false;
   }
   
-  console.error('🚨 未處理的 Promise 拒絕:', event.reason);
+  log.error('🚨 未處理的 Promise 拒絕:', event.reason);
   
   // 記錄錯誤
   const safeErrorMessage = event.reason instanceof Error ? event.reason.message : 
                           typeof event.reason === 'string' ? event.reason : 
                           'Unknown promise rejection';
-  console.error('Promise拒絕處理器:', safeErrorMessage);
+  log.error('Promise拒絕處理器:', safeErrorMessage);
   
   event.preventDefault();
 }, true); // 使用捕獲階段

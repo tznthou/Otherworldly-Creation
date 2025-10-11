@@ -3,6 +3,10 @@ import type { IllustrationHistoryItem } from '../../types/illustration';
 import type { ImageVersion } from '../../types/versionManagement';
 import type { Project } from '../../api/models';
 import { api } from '../../api';
+import { createLogger } from '../../utils/logger';
+
+// 創建模組專用 logger
+const log = createLogger('useGalleryData');
 
 /**
  * 圖庫數據管理 Hook
@@ -93,21 +97,21 @@ export const useGalleryData = (
         // 如果是物件格式包含 illustrations 陣列（新格式）
         history = (response as { illustrations: unknown[] }).illustrations;
       } else {
-        console.error('API 回傳格式不正確:', response);
+        log.error('API 回傳格式不正確:', response);
         throw new Error('API 回傳的數據格式不正確');
       }
       
       // 整合版本管理數據
-      console.log('[useGalleryData] 原始歷史數據:', history.length, '條記錄');
-      console.log('[useGalleryData] 原始數據內容:', history.slice(0, 2)); // 顯示前2筆詳細內容
+      log.debug('[useGalleryData] 原始歷史數據', { count: history.length });
+      log.debug('[useGalleryData] 原始數據內容', history.slice(0, 2)); // 顯示前2筆詳細內容
       const enrichedHistory = history.map((illustration: unknown) => enrichWithVersionData(illustration as IllustrationHistoryItem));
-      console.log('[useGalleryData] 處理後歷史數據:', enrichedHistory.length, '條記錄');
-      console.log('[useGalleryData] 處理後數據內容:', enrichedHistory.slice(0, 2)); // 顯示前2筆處理後內容
+      log.debug('[useGalleryData] 處理後歷史數據', { count: enrichedHistory.length });
+      log.debug('[useGalleryData] 處理後數據內容', enrichedHistory.slice(0, 2)); // 顯示前2筆處理後內容
       
       setIllustrationHistory(enrichedHistory);
-      console.log('[useGalleryData] 已設置插畫歷史狀態');
+      log.debug('[useGalleryData] 已設置插畫歷史狀態');
     } catch (err) {
-      console.error('獲取插畫歷史失敗:', err);
+      log.error('獲取插畫歷史失敗:', err);
       setError(err instanceof Error ? err.message : '獲取插畫歷史失敗');
     } finally {
       setLoading(false);
