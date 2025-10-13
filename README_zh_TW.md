@@ -1,13 +1,78 @@
-# 創世紀元：Genesis Chronicle v1.3.7
+# 創世紀元：Genesis Chronicle v1.3.8
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
 <p align="center">
   <a href="README.md">English</a> | <strong>繁體中文</strong>
 </p>
 
-![Version](https://img.shields.io/badge/version-v1.3.7-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-112.7k-purple)
+![Version](https://img.shields.io/badge/version-v1.3.8-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-112.7k-purple)
 
 ## 🚀 最新更新歷程
+
+### 🎉 v1.3.8 - 新手引導文檔增強 (2025年10月13日)
+
+#### 📚 幫助中心文檔全面改進
+
+**問題發現**：使用者反饋顯示，新使用者下載創世紀元後不知道需要先配置 AI 服務才能使用核心功能。之前的幫助中心直接跳到功能使用，沒有說明環境準備步驟。
+
+**使用者痛點**：
+- ❌ "下載了軟體但不知道怎麼開始"
+- ❌ "不是每個人家裡都有安裝 Ollama 或懂得要先安裝 LLM API"
+- ❌ "AI 功能無法使用，但沒有清楚的說明為什麼"
+
+#### ✨ 重大文檔改進
+
+**1. 快速入門指南增強** ([QuickStartGuide.tsx](src/renderer/src/components/Help/QuickStartGuide.tsx))：
+- **新增步驟 2**：「環境準備：配置 AI 服務」（插入在歡迎之後）
+- **⚠️ 重要警告**：清楚說明創世紀元本身不包含 AI 模型
+- **提供商比較表**：更新 2025 年最新數據
+  - Google Gemini：每天 1,500 次免費額度，15 RPM，允許商業使用
+  - Ollama：100+ 模型（包含 DeepSeek-R1、Gemma 3、Llama 3.2），完全免費
+  - OpenRouter：300+ 模型，每天 50-1,000 次免費額度，零資料保留
+  - OpenAI 與 Claude：專業付費選項
+- **分步教學**：每個提供商的完整 6-9 步驟設定指南
+- **使用者類型推薦**：針對性建議（學生 → Gemini 免費版，注重隱私 → Ollama 等）
+
+**2. 使用手冊全面更新** ([UserManual.tsx](src/renderer/src/components/Help/UserManual.tsx))：
+- **新增第 1 章**：「🤖 AI 環境配置指南」（380+ 行）
+  - 架構說明：平台 + 提供商 + API Key 關係
+  - 所有 5 個提供商的詳細設定教學與外部連結
+  - 常見問題解答區域處理常見配置問題
+- **快速開始更新**：顯眼的 API 配置警告與視覺提醒
+- **完整 2025 資訊**：所有免費額度限制與價格更新
+
+**3. 網頁版文檔** ([QUICK_START_GUIDE_WEB.md](QUICK_START_GUIDE_WEB.md))：
+- **新檔案**：為宣傳網站準備的 Markdown 版本 (https://genesis-chronicle.zeabur.app/)
+- **完整快速入門**：所有 5 個步驟格式化為網頁顯示
+- **SEO 優化**：正確的標題結構與格式
+- **即可部署**：可直接用於外部文檔網站
+
+#### 🎯 預期影響
+
+**使用者引導成功率**：
+- 快速入門指南的步驟 2 清楚說明 API 需求
+- 預計減少約 80% 的「安裝後卡住」問題
+- 透過 2025 年最新免費額度資訊，更好的提供商選擇
+
+**文檔覆蓋範圍**：
+- ✅ 應用程式內幫助中心（QuickStartGuide + UserManual）
+- ✅ 網頁文檔（QUICK_START_GUIDE_WEB.md）
+- ✅ 2025 最新資訊（Gemini 1,500/天，Ollama 100+ 模型）
+
+#### 📊 程式碼變更
+- **修改檔案**：2 個（QuickStartGuide.tsx、UserManual.tsx）
+- **新增檔案**：1 個（QUICK_START_GUIDE_WEB.md）
+- **新增行數**：約 600 行全面文檔
+- **外部資源**：連結到 Google AI Studio、Ollama、OpenAI、Claude、OpenRouter
+
+#### 💡 關鍵改進
+1. **必要的 API 設定步驟**：使用者不會再錯過環境準備
+2. **2025 更新資訊**：精確的免費額度數據（Gemini 1,500/天非常棒！）
+3. **使用者類型指導**：根據使用情境的清楚建議
+4. **完整教學**：逐步說明與截圖參考
+5. **網頁版本可用**：文檔可在下載前接觸使用者
+
+---
 
 ### 🎉 v1.3.7 - 技術債清理 100% 完成里程碑 (2025年10月11日)
 
@@ -1336,7 +1401,7 @@ MIT License - 詳見 [LICENSE](./LICENSE) 檔案
 ---
 
 <p align="center">
-  <strong>Genesis Chronicle v1.2.1</strong><br>
+  <strong>Genesis Chronicle v1.3.8</strong><br>
   為全球華語輕小說創作者傾心打造 ❤️
 </p>
 - **重大更新**: 視覺創作中心完整重構，新增32個組件(8,032行) + 14個Hooks(4,134行)

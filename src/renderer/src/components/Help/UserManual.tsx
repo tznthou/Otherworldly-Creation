@@ -39,26 +39,352 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
             </p>
           </div>
 
+          <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4 mb-4">
+            <h4 className="text-amber-400 font-semibold mb-2">⚠️ 重要：使用 AI 功能前必須先配置 AI 服務</h4>
+            <p className="text-gray-300 text-sm mb-2">
+              創世紀元的核心功能（AI 續寫、角色分析、劇情建議等）依賴外部 AI 服務。
+              請先完成 AI 環境配置，再開始使用其他功能。
+            </p>
+            <p className="text-gold-400 text-sm font-semibold">
+              → 請參閱「🤖 AI 環境配置指南」章節完成設定
+            </p>
+          </div>
+
           <div>
             <h4 className="text-lg font-semibold text-gold-400 mb-3">系統需求</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• 作業系統：Windows 10+、macOS 10.14+、Linux Ubuntu 18.04+</li>
-              <li>• 記憶體：建議 4GB RAM 以上</li>
+              <li>• 記憶體：建議 4GB RAM 以上（Ollama 本地模型需 8GB+）</li>
               <li>• 硬碟空間：至少 2GB 可用空間</li>
-              <li>• 網路連線：AI 功能需要穩定的網路連線</li>
-              <li>• Ollama 服務：使用 AI 功能需要安裝並執行 Ollama</li>
+              <li>• 網路連線：雲端 AI 服務需要穩定的網路連線</li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gold-400 mb-3">第一次使用</h4>
             <ol className="text-gray-300 space-y-2">
-              <li>1. 啟動應用程式後，系統會自動檢查 AI 服務狀態</li>
-              <li>2. 如果是第一次使用，建議先完成新手教學</li>
-              <li>3. 創建您的第一個專案，選擇合適的小說類型</li>
-              <li>4. 設定基本的專案資訊和世界觀</li>
-              <li>5. 開始您的創作之旅！</li>
+              <li><strong>1. 配置 AI 服務</strong>（必需步驟，請參閱「AI 環境配置指南」）</li>
+              <li>2. 啟動應用程式後，系統會自動檢查 AI 服務狀態</li>
+              <li>3. 如果是第一次使用，建議先完成新手教學</li>
+              <li>4. 創建您的第一個專案，選擇合適的小說類型</li>
+              <li>5. 設定基本的專案資訊和世界觀</li>
+              <li>6. 開始您的創作之旅！</li>
             </ol>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'ai-setup-guide',
+      title: '🤖 AI 環境配置指南',
+      content: (
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-4">理解 AI 服務架構</h3>
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+              <div className="space-y-3 text-gray-300">
+                <p><strong className="text-white">創世紀元</strong> = 寫作平台（不含 AI 模型）</p>
+                <p><strong className="text-white">AI 提供商</strong> = 提供 AI 模型的第三方服務</p>
+                <p><strong className="text-white">API Key</strong> = 連接兩者的「鑰匙」</p>
+              </div>
+            </div>
+            <p className="text-gray-300 mt-4">
+              創世紀元本身不包含 AI 模型，而是透過 API 連接到外部 AI 服務。
+              這種設計讓您可以選擇最適合自己需求的 AI 提供商，無論是免費的、付費的、本地的或雲端的。
+            </p>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">五大提供商完整對比（2025 最新）</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-cosmic-700">
+                    <th className="border border-cosmic-600 p-3 text-left text-white">提供商</th>
+                    <th className="border border-cosmic-600 p-3 text-left text-white">費用</th>
+                    <th className="border border-cosmic-600 p-3 text-left text-white">免費層</th>
+                    <th className="border border-cosmic-600 p-3 text-left text-white">性能</th>
+                    <th className="border border-cosmic-600 p-3 text-left text-white">隱私</th>
+                    <th className="border border-cosmic-600 p-3 text-left text-white">適用場景</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="bg-green-900/10">
+                    <td className="border border-cosmic-600 p-3 text-green-400 font-semibold">🟢 Gemini</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">免費+付費</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">1,500/天<br/>15 RPM</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐⭐</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">雲端存儲</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">新手、學生、原型開發</td>
+                  </tr>
+                  <tr className="bg-blue-900/10">
+                    <td className="border border-cosmic-600 p-3 text-blue-400 font-semibold">🔵 Ollama</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">完全免費</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">無限制</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">完全本地</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">隱私優先、離線使用</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-cosmic-600 p-3 text-yellow-400 font-semibold">🟡 OpenAI</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">付費</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">無</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐⭐⭐</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">雲端存儲</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">專業作家、商業用途</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-cosmic-600 p-3 text-purple-400 font-semibold">🟣 Claude</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">付費</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">無</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐⭐⭐</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">雲端存儲</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">長篇創作、深度理解</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-cosmic-600 p-3 text-orange-400 font-semibold">🟠 OpenRouter</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">付費</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">50-1000/天</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐⭐</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">雲端存儲</td>
+                    <td className="border border-cosmic-600 p-3 text-gray-300">多模型測試、成本優化</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">針對不同用戶類型的推薦</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+                <h5 className="text-green-400 font-semibold mb-2">🎓 學生 / 業餘愛好者</h5>
+                <p className="text-gray-300 text-sm mb-2">推薦：<strong>Gemini Free</strong> 或 <strong>Ollama</strong></p>
+                <ul className="text-gray-300 text-xs space-y-1">
+                  <li>• Gemini：1,500 請求/天完全免費</li>
+                  <li>• Ollama：無限制但需要較好硬體</li>
+                </ul>
+              </div>
+
+              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+                <h5 className="text-yellow-400 font-semibold mb-2">✍️ 專業作家</h5>
+                <p className="text-gray-300 text-sm mb-2">推薦：<strong>OpenAI GPT-4o</strong> 或 <strong>Claude Sonnet 4.5</strong></p>
+                <ul className="text-gray-300 text-xs space-y-1">
+                  <li>• 最高品質輸出，適合商業作品</li>
+                  <li>• Claude 特別適合長篇小說（200K 上下文）</li>
+                </ul>
+              </div>
+
+              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+                <h5 className="text-blue-400 font-semibold mb-2">🔐 隱私優先用戶</h5>
+                <p className="text-gray-300 text-sm mb-2">推薦：<strong>Ollama</strong>（完全本地）</p>
+                <ul className="text-gray-300 text-xs space-y-1">
+                  <li>• 數據完全不離開電腦</li>
+                  <li>• 支援 100+ 模型（DeepSeek-R1、Llama 3.2 等）</li>
+                </ul>
+              </div>
+
+              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+                <h5 className="text-orange-400 font-semibold mb-2">💰 預算有限</h5>
+                <p className="text-gray-300 text-sm mb-2">推薦：<strong>Gemini Free</strong> + <strong>OpenRouter 免費模型</strong></p>
+                <ul className="text-gray-300 text-xs space-y-1">
+                  <li>• 結合兩者可獲得更多每日額度</li>
+                  <li>• OpenRouter 提供多種免費模型選擇</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">詳細配置教學</h4>
+
+            <div className="space-y-6">
+              <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-5">
+                <h5 className="text-green-400 font-semibold text-lg mb-3">1. Google Gemini 配置</h5>
+                <ol className="text-gray-300 space-y-2 text-sm">
+                  <li><strong>步驟 1：</strong>訪問 <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Google AI Studio</a></li>
+                  <li><strong>步驟 2：</strong>使用 Google 帳號登入（若無帳號需先註冊）</li>
+                  <li><strong>步驟 3：</strong>點擊「Get API Key」按鈕</li>
+                  <li><strong>步驟 4：</strong>選擇「Create API Key」創建新的 API 金鑰</li>
+                  <li><strong>步驟 5：</strong>複製顯示的 API Key</li>
+                  <li><strong>步驟 6：</strong>開啟創世紀元 → 設定 → AI 供應商配置 → Gemini</li>
+                  <li><strong>步驟 7：</strong>貼上 API Key 並點擊「測試連接」</li>
+                  <li><strong>步驟 8：</strong>選擇模型（推薦：gemini-2.5-flash）</li>
+                  <li><strong>步驟 9：</strong>儲存設定，完成！</li>
+                </ol>
+                <div className="bg-amber-900/20 border border-amber-500/30 rounded p-3 mt-3 text-xs text-gray-300">
+                  <p className="font-semibold mb-1">⚠️ 免費層限制：</p>
+                  <ul className="space-y-1 ml-4">
+                    <li>• 每天 1,500 請求</li>
+                    <li>• 每分鐘 15 請求</li>
+                    <li>• 允許商業使用</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-5">
+                <h5 className="text-blue-400 font-semibold text-lg mb-3">2. Ollama 配置</h5>
+                <ol className="text-gray-300 space-y-2 text-sm">
+                  <li><strong>步驟 1：</strong>訪問 <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">ollama.com/download</a></li>
+                  <li><strong>步驟 2：</strong>選擇您的作業系統（Windows/macOS/Linux）並下載安裝檔</li>
+                  <li><strong>步驟 3：</strong>執行安裝程式（通常會自動啟動 Ollama 服務）</li>
+                  <li><strong>步驟 4：</strong>開啟終端機（Terminal/Command Prompt）</li>
+                  <li><strong>步驟 5：</strong>下載模型：<code className="bg-cosmic-700 px-2 py-1 rounded">ollama pull llama3.2</code></li>
+                  <li><strong>步驟 6：</strong>等待模型下載完成（首次下載需要較長時間）</li>
+                  <li><strong>步驟 7：</strong>開啟創世紀元，Ollama 會自動檢測並連接</li>
+                  <li><strong>步驟 8：</strong>無需手動配置 API Key，系統會自動使用本地服務</li>
+                </ol>
+                <div className="bg-cosmic-800/50 rounded p-3 mt-3 text-xs text-gray-300">
+                  <p className="font-semibold mb-1">📋 推薦模型列表：</p>
+                  <ul className="space-y-1 ml-4">
+                    <li>• <code>llama3.2</code> - 最新 Llama 模型（7B）</li>
+                    <li>• <code>mistral</code> - 高效能通用模型（7B）</li>
+                    <li>• <code>qwen2.5</code> - 中文優化模型（7B）</li>
+                    <li>• <code>deepseek-r1</code> - 深度推理模型（最新）</li>
+                  </ul>
+                  <p className="mt-2 font-semibold">💻 系統需求：</p>
+                  <ul className="space-y-1 ml-4">
+                    <li>• 7B 模型：8GB RAM（最低 4GB）</li>
+                    <li>• 13B 模型：16GB RAM（最低 8GB）</li>
+                    <li>• 建議使用 SSD 硬碟</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-5">
+                <h5 className="text-yellow-400 font-semibold text-lg mb-3">3. OpenAI 配置</h5>
+                <ol className="text-gray-300 space-y-2 text-sm">
+                  <li><strong>步驟 1：</strong>訪問 <a href="https://platform.openai.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">OpenAI Platform</a></li>
+                  <li><strong>步驟 2：</strong>註冊帳號並登入</li>
+                  <li><strong>步驟 3：</strong>綁定信用卡（OpenAI 要求付款方式才能使用 API）</li>
+                  <li><strong>步驟 4：</strong>點擊「API Keys」創建新的 API Key</li>
+                  <li><strong>步驟 5：</strong>複製 API Key（只會顯示一次，請妥善保存）</li>
+                  <li><strong>步驟 6：</strong>開啟創世紀元 → 設定 → AI 供應商配置 → OpenAI</li>
+                  <li><strong>步驟 7：</strong>貼上 API Key 並測試連接</li>
+                  <li><strong>步驟 8：</strong>選擇模型（推薦：gpt-4o-mini 經濟實惠）</li>
+                </ol>
+                <div className="bg-amber-900/20 border border-amber-500/30 rounded p-3 mt-3 text-xs text-gray-300">
+                  <p className="font-semibold mb-1">💰 費用說明：</p>
+                  <ul className="space-y-1 ml-4">
+                    <li>• 按 token 計費（輸入 + 輸出）</li>
+                    <li>• GPT-4o-mini：最經濟的選擇</li>
+                    <li>• GPT-4o：最高品質但較昂貴</li>
+                    <li>• 建議設定使用限額避免超支</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-5">
+                <h5 className="text-purple-400 font-semibold text-lg mb-3">4. Claude 配置</h5>
+                <ol className="text-gray-300 space-y-2 text-sm">
+                  <li><strong>步驟 1：</strong>訪問 <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Anthropic Console</a></li>
+                  <li><strong>步驟 2：</strong>註冊並登入帳號</li>
+                  <li><strong>步驟 3：</strong>進行帳號充值（Claude 採用預付費制）</li>
+                  <li><strong>步驟 4：</strong>在 API Keys 頁面創建新的 API Key</li>
+                  <li><strong>步驟 5：</strong>複製 API Key</li>
+                  <li><strong>步驟 6：</strong>開啟創世紀元 → 設定 → AI 供應商配置 → Claude</li>
+                  <li><strong>步驟 7：</strong>貼上 API Key 並測試連接</li>
+                  <li><strong>步驟 8：</strong>選擇模型（推薦：claude-sonnet-4-5）</li>
+                </ol>
+                <div className="bg-cosmic-800/50 rounded p-3 mt-3 text-xs text-gray-300">
+                  <p className="font-semibold mb-1">🎯 Claude 特色：</p>
+                  <ul className="space-y-1 ml-4">
+                    <li>• 200K token 超長上下文視窗</li>
+                    <li>• 特別適合長篇小說創作</li>
+                    <li>• 深度理解和推理能力優異</li>
+                    <li>• 安全性和可靠性高</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-5">
+                <h5 className="text-orange-400 font-semibold text-lg mb-3">5. OpenRouter 配置</h5>
+                <ol className="text-gray-300 space-y-2 text-sm">
+                  <li><strong>步驟 1：</strong>訪問 <a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">OpenRouter.ai</a></li>
+                  <li><strong>步驟 2：</strong>註冊並登入帳號</li>
+                  <li><strong>步驟 3：</strong>在 Keys 頁面創建新的 API Key</li>
+                  <li><strong>步驟 4：</strong>充值（或選擇使用免費模型）</li>
+                  <li><strong>步驟 5：</strong>複製 API Key</li>
+                  <li><strong>步驟 6：</strong>開啟創世紀元 → 設定 → AI 供應商配置 → OpenRouter</li>
+                  <li><strong>步驟 7：</strong>貼上 API Key 並測試連接</li>
+                  <li><strong>步驟 8：</strong>從 300+ 模型中選擇合適的模型</li>
+                </ol>
+                <div className="bg-cosmic-800/50 rounded p-3 mt-3 text-xs text-gray-300">
+                  <p className="font-semibold mb-1">💡 OpenRouter 優勢：</p>
+                  <ul className="space-y-1 ml-4">
+                    <li>• 統一 API 訪問 300+ 模型</li>
+                    <li>• 自動降級和成本優化</li>
+                    <li>• 免費模型：50-1000 請求/天</li>
+                    <li>• 隱私保護（ZDR 零數據保留）</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">常見配置問題 FAQ</h4>
+            <div className="space-y-3">
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                <h5 className="text-red-400 font-semibold mb-2">Q: API Key 顯示無效怎麼辦？</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• 確認 API Key 複製完整（沒有多餘空格）</li>
+                  <li>• 檢查 API Key 是否已過期或被撤銷</li>
+                  <li>• 確認使用的提供商正確（不要混淆 Gemini 和 OpenAI 的 Key）</li>
+                  <li>• 某些提供商需要先充值才能使用 API</li>
+                </ul>
+              </div>
+
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                <h5 className="text-red-400 font-semibold mb-2">Q: 連接失敗（網路錯誤）</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• 檢查網路連線是否正常</li>
+                  <li>• 確認防火牆沒有阻擋應用程式</li>
+                  <li>• 某些地區可能需要使用代理服務</li>
+                  <li>• Ollama：確認服務正在運行（`ollama serve`）</li>
+                </ul>
+              </div>
+
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                <h5 className="text-red-400 font-semibold mb-2">Q: Ollama 找不到模型</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• 確認已經使用 `ollama pull` 下載模型</li>
+                  <li>• 檢查模型名稱拼寫是否正確</li>
+                  <li>• 使用 `ollama list` 查看已下載的模型列表</li>
+                  <li>• 確保有足夠的硬碟空間（模型檔案較大）</li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <h5 className="text-blue-400 font-semibold mb-2">Q: 超過免費層限制怎麼辦？</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• Gemini：每天重置，等待隔天或升級付費方案</li>
+                  <li>• OpenRouter：使用不同的免費模型輪換</li>
+                  <li>• 考慮配置多個提供商作為備援</li>
+                  <li>• Ollama 無限制，可作為主力或備用選項</li>
+                </ul>
+              </div>
+
+              <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                <h5 className="text-green-400 font-semibold mb-2">Q: 可以同時配置多個提供商嗎？</h5>
+                <p className="text-gray-300 text-sm">
+                  可以！創世紀元支援同時配置所有 5 個提供商。您可以根據不同需求切換使用：
+                  </p>
+                <ul className="text-gray-300 text-sm space-y-1 mt-2">
+                  <li>• 日常創作：使用 Gemini Free 或 Ollama</li>
+                  <li>• 重要章節：使用 OpenAI 或 Claude 提升品質</li>
+                  <li>• 測試不同風格：使用 OpenRouter 快速切換模型</li>
+                </ul>
+              </div>
+
+              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+                <h5 className="text-purple-400 font-semibold mb-2">Q: 如何切換 AI 提供商？</h5>
+                <p className="text-gray-300 text-sm">
+                  在編輯器的 AI 面板中，您可以隨時切換提供商和模型。配置完成後，
+                  系統會記住您的選擇，下次使用時自動套用。
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )

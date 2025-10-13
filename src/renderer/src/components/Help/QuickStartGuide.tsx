@@ -85,6 +85,170 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
       )
     },
     {
+      id: 'api-setup',
+      title: '環境準備：配置 AI 服務',
+      description: '選擇並配置 AI 提供商（必需步驟）',
+      content: (
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-4">重要：為什麼需要配置 AI 服務？</h3>
+            <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4 mb-4">
+              <p className="text-amber-200 font-semibold mb-2">⚠️ 創世紀元本身不包含 AI 模型</p>
+              <p className="text-gray-300 text-sm">
+                軟體需要連接外部 AI 服務才能提供續寫、角色分析、劇情建議等核心功能。
+                未配置 AI 服務將無法使用這些功能。
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">五大 AI 提供商對比（2025 最新）</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-cosmic-700">
+                    <th className="border border-cosmic-600 p-2 text-left text-white">提供商</th>
+                    <th className="border border-cosmic-600 p-2 text-left text-white">類型</th>
+                    <th className="border border-cosmic-600 p-2 text-left text-white">免費選項</th>
+                    <th className="border border-cosmic-600 p-2 text-left text-white">難度</th>
+                    <th className="border border-cosmic-600 p-2 text-left text-white">推薦對象</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="bg-green-900/10">
+                    <td className="border border-cosmic-600 p-2 text-green-400 font-semibold">🟢 Gemini</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">雲端</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">1,500 請求/天</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">⭐ 簡單</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">新手首選</td>
+                  </tr>
+                  <tr className="bg-blue-900/10">
+                    <td className="border border-cosmic-600 p-2 text-blue-400 font-semibold">🔵 Ollama</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">本地</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">完全免費</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">⭐⭐ 中等</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">隱私優先</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-cosmic-600 p-2 text-yellow-400 font-semibold">🟡 OpenAI</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">雲端</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">無（付費）</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">⭐ 簡單</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">專業作家</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-cosmic-600 p-2 text-purple-400 font-semibold">🟣 Claude</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">雲端</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">無（付費）</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">⭐ 簡單</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">長文本創作</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-cosmic-600 p-2 text-orange-400 font-semibold">🟠 OpenRouter</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">網關</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">50-1000/天</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">⭐ 簡單</td>
+                    <td className="border border-cosmic-600 p-2 text-gray-300">多模型切換</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">🎯 新手快速開始推薦</h4>
+
+            <div className="space-y-4">
+              <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                <h5 className="text-green-400 font-semibold mb-2 flex items-center">
+                  <span className="mr-2">✅</span>
+                  推薦選項 1：Google Gemini（最簡單）
+                </h5>
+                <ul className="text-gray-300 text-sm space-y-1 mb-3">
+                  <li>✓ 完全免費（1,500 請求/天）</li>
+                  <li>✓ 無需安裝軟體</li>
+                  <li>✓ 5 分鐘完成配置</li>
+                  <li>✓ 允許商業使用</li>
+                </ul>
+                <div className="bg-cosmic-800/50 rounded p-3 text-xs text-gray-300">
+                  <p className="font-semibold mb-1">快速步驟：</p>
+                  <ol className="space-y-1 ml-4">
+                    <li>1. 訪問 <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Google AI Studio</a></li>
+                    <li>2. 登入 Google 帳號</li>
+                    <li>3. 點擊「Get API Key」→「Create API Key」</li>
+                    <li>4. 複製 API Key</li>
+                    <li>5. 回到創世紀元 → 設定 → AI 供應商配置 → Gemini</li>
+                    <li>6. 貼上 API Key → 測試連接 → 完成！</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                <h5 className="text-blue-400 font-semibold mb-2 flex items-center">
+                  <span className="mr-2">✅</span>
+                  推薦選項 2：Ollama（完全本地）
+                </h5>
+                <ul className="text-gray-300 text-sm space-y-1 mb-3">
+                  <li>✓ 完全免費且無限制</li>
+                  <li>✓ 完全隱私（數據不離開電腦）</li>
+                  <li>✓ 支援 100+ 模型</li>
+                  <li>⚠️ 需要較好硬體（8GB+ RAM）</li>
+                </ul>
+                <div className="bg-cosmic-800/50 rounded p-3 text-xs text-gray-300">
+                  <p className="font-semibold mb-1">快速步驟：</p>
+                  <ol className="space-y-1 ml-4">
+                    <li>1. 訪問 <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">ollama.com/download</a></li>
+                    <li>2. 下載並安裝（Windows/macOS/Linux）</li>
+                    <li>3. 開啟終端機，執行：<code className="bg-cosmic-700 px-1 rounded">ollama pull llama3.2</code></li>
+                    <li>4. 回到創世紀元，Ollama 會自動檢測並連接</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-lg font-semibold text-gold-400 mb-3">其他提供商簡介</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded p-3 text-sm">
+                <h5 className="text-yellow-400 font-semibold mb-1">OpenAI</h5>
+                <p className="text-gray-300 text-xs">業界標準，需信用卡，適合專業用途</p>
+              </div>
+              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded p-3 text-sm">
+                <h5 className="text-purple-400 font-semibold mb-1">Claude</h5>
+                <p className="text-gray-300 text-xs">超長上下文（200K tokens），適合長篇小說</p>
+              </div>
+              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded p-3 text-sm">
+                <h5 className="text-orange-400 font-semibold mb-1">OpenRouter</h5>
+                <p className="text-gray-300 text-xs">300+ 模型統一網關，適合多模型切換</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+            <h5 className="text-amber-400 font-semibold mb-2">💡 稍後配置？</h5>
+            <p className="text-gray-300 text-sm mb-2">
+              您可以選擇跳過此步驟，稍後在「設定 → AI 供應商配置」中完成設定。
+            </p>
+            <p className="text-amber-200 text-sm">
+              ⚠️ 但請注意：未配置 AI 服務將無法使用 AI 續寫、角色分析、劇情建議等功能。
+            </p>
+          </div>
+        </div>
+      ),
+      action: {
+        label: '前往設定 AI',
+        onClick: () => {
+          // 這裡不實際跳轉，只是標記完成步驟
+          const currentStepId = steps[currentStep].id;
+          if (!completedSteps.includes(currentStepId)) {
+            setCompletedSteps([...completedSteps, currentStepId]);
+          }
+          setCurrentStep(currentStep + 1);
+        }
+      }
+    },
+    {
       id: 'create-project',
       title: '創建您的第一個專案',
       description: '選擇小說類型，設定基本資訊',

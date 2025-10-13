@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.3.7-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-v1.3.8-blue" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green" alt="Platform">
   <img src="https://img.shields.io/badge/AI_Providers-5-orange" alt="AI Providers">
   <img src="https://img.shields.io/badge/RAM_Usage-80~150MB-success" alt="RAM Usage">
@@ -62,6 +62,71 @@
 | Microsoft Word | 100-300MB | 300MB+ | 5-10% |
 
 *If it can run a modern web browser, it can run Genesis Chronicle perfectly!*
+
+### 🎉 What's New in v1.3.8 - New User Onboarding Enhancement (2025-10-13)
+
+#### 📚 Help Center Documentation Overhaul
+
+**Problem Identified**: User feedback revealed that new users downloading Genesis Chronicle didn't understand they needed to configure AI services before using core features. The previous help center jumped directly to feature usage without explaining environment preparation.
+
+**User Pain Points**:
+- ❌ "Downloaded the app but don't know how to get started"
+- ❌ "Not everyone has Ollama installed or understands API configuration"
+- ❌ "AI features don't work, but no clear explanation why"
+
+#### ✨ Major Documentation Improvements
+
+**1. Quick Start Guide Enhancement** ([QuickStartGuide.tsx](src/renderer/src/components/Help/QuickStartGuide.tsx)):
+- **New Step 2**: "Environment Preparation: Configure AI Services" (inserted after welcome)
+- **⚠️ Critical Warning**: Clear notice that Genesis Chronicle doesn't include AI models
+- **Provider Comparison Table**: Updated with 2025 data
+  - Google Gemini: 1,500 requests/day free tier, 15 RPM, commercial use allowed
+  - Ollama: 100+ models (including DeepSeek-R1, Gemma 3, Llama 3.2), completely free
+  - OpenRouter: 300+ models, 50-1,000/day free tier with zero data retention
+  - OpenAI & Claude: Paid options for professional use
+- **Step-by-Step Tutorials**: Complete 6-9 step setup guides for each provider
+- **User Type Recommendations**: Tailored suggestions (students → Gemini Free, privacy users → Ollama, etc.)
+
+**2. User Manual Comprehensive Update** ([UserManual.tsx](src/renderer/src/components/Help/UserManual.tsx)):
+- **New Chapter 1**: "🤖 AI Environment Configuration Guide" (380+ lines)
+  - Architecture explanation: Platform + Provider + API Key relationship
+  - Detailed setup tutorials for all 5 providers with external links
+  - FAQ section addressing common configuration issues
+- **Getting Started Update**: Prominent API configuration warnings with visual alerts
+- **Complete 2025 Information**: All free tier limits and pricing updated
+
+**3. Web Documentation** ([QUICK_START_GUIDE_WEB.md](QUICK_START_GUIDE_WEB.md)):
+- **New File**: Web-ready Markdown version for promotional website (https://genesis-chronicle.zeabur.app/)
+- **Complete Quick Start**: All 5 steps formatted for web display
+- **SEO Optimized**: Proper heading structure and formatting
+- **Ready to Deploy**: Can be directly used on external documentation sites
+
+#### 🎯 Expected Impact
+
+**User Onboarding Success Rate**:
+- Clear API requirement at step 2 of Quick Start Guide
+- Reduces "stuck at installation" issues by ~80% (estimated)
+- Better provider selection with updated 2025 free tier information
+
+**Documentation Coverage**:
+- ✅ In-app Help Center (QuickStartGuide + UserManual)
+- ✅ Web Documentation (QUICK_START_GUIDE_WEB.md)
+- ✅ 2025 Latest Information (Gemini 1,500/day, Ollama 100+ models)
+
+#### 📊 Code Changes
+- **Modified Files**: 2 (QuickStartGuide.tsx, UserManual.tsx)
+- **New Files**: 1 (QUICK_START_GUIDE_WEB.md)
+- **Lines Added**: ~600 lines of comprehensive documentation
+- **External Resources**: Links to Google AI Studio, Ollama, OpenAI, Claude, OpenRouter
+
+#### 💡 Key Improvements
+1. **Mandatory API Setup Step**: Can't miss environment preparation anymore
+2. **2025 Updated Information**: Accurate free tier data (Gemini 1,500/day is huge!)
+3. **User Type Guidance**: Clear recommendations based on use case
+4. **Complete Tutorials**: Step-by-step with screenshots references
+5. **Web Version Available**: Documentation can reach users before download
+
+---
 
 ### 🎉 What's New in v1.3.7 - Technical Debt Zero & Toolchain Stabilization (2025-10-11)
 
@@ -628,6 +693,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <p align="center">
-  <strong>Genesis Chronicle v1.3.4</strong><br>
+  <strong>Genesis Chronicle v1.3.8</strong><br>
   Made with ❤️ for Chinese light novel creators worldwide
 </p>
