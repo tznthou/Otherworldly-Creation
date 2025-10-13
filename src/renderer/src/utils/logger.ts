@@ -47,10 +47,11 @@ class Logger {
   constructor() {
     // 根據環境自動配置
     // 使用 process.env 因為它在所有環境都可用
-    const isDevelopment = process.env.NODE_ENV !== 'production';
+    // 📝 調整策略：開發和生產環境都只記錄警告和錯誤，減少日誌空間浪費
+    // 如需調試，可使用 logger.enableDebugMode() 臨時啟用詳細日誌
 
     this.config = {
-      minLevel: isDevelopment ? LogLevel.DEBUG : LogLevel.WARN,
+      minLevel: LogLevel.WARN, // 統一為 WARN 級別，節省日誌空間
       enabled: true,
       includeTimestamp: true,
       includeModule: true,

@@ -35,7 +35,12 @@ const SettingsMain: React.FC = () => {
   const handleSaveSettings = useCallback(async () => {
     setIsSaving(true);
     try {
-      await saveSettings(settings);
+      const result = await saveSettings(settings);
+      if (!result) {
+        log.error('❌ 設定儲存失敗');
+      }
+    } catch (error) {
+      log.error('❌ 儲存設定時發生錯誤:', error);
     } finally {
       setIsSaving(false);
     }

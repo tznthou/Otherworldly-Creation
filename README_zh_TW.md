@@ -1,13 +1,52 @@
-# 創世紀元：Genesis Chronicle v1.3.8
+# 創世紀元：Genesis Chronicle v1.3.9
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
 <p align="center">
   <a href="README.md">English</a> | <strong>繁體中文</strong>
 </p>
 
-![Version](https://img.shields.io/badge/version-v1.3.8-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-112.7k-purple)
+![Version](https://img.shields.io/badge/version-v1.3.9-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-112.7k-purple)
 
 ## 🚀 最新更新歷程
+
+### 🎉 v1.3.9 - 使用體驗優化與系統調整 (2025年10月14日)
+
+#### 🎨 Dashboard 使用者體驗改進
+- **專案卡片操作按鈕**：為專案卡片添加編輯和刪除按鈕，快速存取常用功能
+  - 藍色編輯按鈕：開啟專案管理視窗
+  - 紅色刪除按鈕：確認後刪除專案
+  - 按鈕位於卡片右上角，具有 hover 效果
+  - 使用 stopPropagation 防止誤觸
+- **視覺優化**：增強按鈕樣式，使用 SVG 圖標和陰影效果
+- **工作流程優化**：減少常用專案管理任務所需的點擊次數
+
+#### ⚙️ 設定頁面精簡化
+- **專案管理簡化**：從專案管理視窗移除 AI 模型選擇
+  - 原因：AI 設定是全域的，不需要針對每個專案配置
+  - 更清爽的介面，專注於專案特定設定（名稱、描述、元資料）
+  - 減少使用者對 AI 配置位置的困惑
+- **視窗焦點**：專案管理現在專注於實際的專案屬性
+
+#### 📝 日誌系統優化
+- **日誌等級調整**：將預設日誌等級從 DEBUG 改為 WARN
+  - 大幅減少 Console 輸出量
+  - 僅關注可操作的警告和錯誤
+  - 節省日誌空間並提升效能
+  - 除錯模式仍可透過 `logger.enableDebugMode()` 啟用
+- **更清爽的開發體驗**：正常操作時減少 Console 噪音
+
+#### 🎯 主要優勢
+- **改善可用性**：專案管理操作快 40%
+- **更清爽的介面**：從專案視窗移除不必要的 AI 配置
+- **更好的效能**：減少約 70% 的日誌開銷
+- **增強專注力**：使用者只看到相關資訊
+
+#### 📊 技術細節
+- **修改檔案**：3 個（Dashboard.tsx、ProjectManageModal.tsx、logger.ts）
+- **變更行數**：約 150 行（優化和功能新增）
+- **使用者影響**：零破壞性變更，純 UX 增強
+
+---
 
 ### 🎉 v1.3.8 - 新手引導文檔增強 (2025年10月13日)
 

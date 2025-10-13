@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
-import { fetchProjects } from '../../store/slices/projectsSlice';
+import { fetchProjects, setCurrentProject } from '../../store/slices/projectsSlice';
 import { setDefaultProvider, setDefaultModel } from '../../store/slices/aiSlice';
+import { openModal } from '../../store/slices/uiSlice';
 import { Card, CardContent } from '../../components/UI/Card';
 import CosmicBackground from '../../components/UI/CosmicBackground';
 import type { Chapter } from '../../api/models';
@@ -349,34 +350,67 @@ const Dashboard: React.FC = () => {
             {projects.slice(0, 6).map((project) => (
               <div
                 key={project.id}
-                onClick={() => navigate(`/project/${project.id}`)}
-                className="cursor-pointer group"
+                className="group"
               >
-                <Card className="bg-midnight-800 border-gray-700 hover:border-gold-500 hover:shadow-xl hover:shadow-gold-500/20 transition-all duration-300 transform group-hover:scale-105 group-active:scale-95 relative overflow-hidden">
+                <Card className="bg-midnight-800 border-gray-700 hover:border-gold-500 hover:shadow-xl hover:shadow-gold-500/20 transition-all duration-300 transform group-hover:scale-105 group-active:scale-95 relative">
                   {/* 魔法光暈效果 */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-gold-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  
+                  <div className="absolute inset-0 bg-gradient-to-br from-gold-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg pointer-events-none"></div>
+
                   {/* 邊框發光效果 */}
-                  <div className="absolute inset-0 rounded-lg ring-1 ring-gold-500/0 group-hover:ring-gold-500/30 transition-all duration-300"></div>
-                  
+                  <div className="absolute inset-0 rounded-lg ring-1 ring-gold-500/0 group-hover:ring-gold-500/30 transition-all duration-300 pointer-events-none"></div>
+
                   <CardContent className="p-4 relative z-10">
-                    <h3 className="font-semibold text-gray-200 mb-2 line-clamp-1 group-hover:text-gold-300 transition-colors duration-300">{project.name}</h3>
-                    <p className="text-sm text-gray-400 mb-3 line-clamp-2 group-hover:text-gray-300 transition-colors duration-300">
-                      {project.description || '暫無描述'}
-                    </p>
-                    <div className="flex justify-between items-center text-xs text-gray-500 group-hover:text-gray-400 transition-colors duration-300">
-                      <span>
-                        更新: {new Date(project.updatedAt).toLocaleDateString('zh-TW')}
-                      </span>
-                      {/* 小箭頭指示器 */}
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-gold-400">
-                        →
+                    {/* 操作按鈕群組 - 放在內容區域內，使用絕對定位 */}
+                    <div className="absolute -top-1 -right-1 z-50 flex gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dispatch(setCurrentProject(project));
+                          dispatch(openModal('projectManage'));
+                        }}
+                        className="w-7 h-7 rounded-full bg-blue-600/95 hover:bg-blue-500 flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 backdrop-blur-sm border border-blue-500/30"
+                        title="編輯專案"
+                      >
+                        <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dispatch(setCurrentProject(project));
+                          dispatch(openModal('deleteProject'));
+                        }}
+                        className="w-7 h-7 rounded-full bg-red-600/95 hover:bg-red-500 flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 backdrop-blur-sm border border-red-500/30"
+                        title="刪除專案"
+                      >
+                        <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* 可點擊區域包裹內容 */}
+                    <div
+                      onClick={() => navigate(`/project/${project.id}`)}
+                      className="cursor-pointer"
+                    >
+                      {/* 添加右邊距避免標題被按鈕遮擋 */}
+                      <h3 className="font-semibold text-gray-200 mb-2 line-clamp-1 group-hover:text-gold-300 transition-colors duration-300 pr-20">{project.name}</h3>
+                      <p className="text-sm text-gray-400 mb-3 line-clamp-2 group-hover:text-gray-300 transition-colors duration-300">
+                        {project.description || '暫無描述'}
+                      </p>
+                      <div className="flex justify-between items-center text-xs text-gray-500 group-hover:text-gray-400 transition-colors duration-300">
+                        <span>
+                          更新: {new Date(project.updatedAt).toLocaleDateString('zh-TW')}
+                        </span>
+                        {/* 小箭頭指示器 */}
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-gold-400">
+                          →
+                        </div>
                       </div>
                     </div>
                   </CardContent>
-                  
-                  {/* 頂部魔法光點 */}
-                  <div className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full opacity-0 group-hover:opacity-100 animate-pulse transition-opacity duration-300"></div>
                 </Card>
               </div>
             ))}

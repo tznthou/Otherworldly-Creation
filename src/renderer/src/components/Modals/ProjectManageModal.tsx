@@ -15,23 +15,14 @@ interface ProjectManageModalProps {
 
 const ProjectManageModal: React.FC<ProjectManageModalProps> = ({ project }) => {
   const dispatch = useAppDispatch();
-  const { availableModels, isOllamaConnected } = useAppSelector(state => state.ai);
-  
+
   const [projectName, setProjectName] = useState(project.name);
   const [projectDescription, setProjectDescription] = useState(project.description || '');
-  const [aiModel, setAiModel] = useState(project.settings?.aiModel || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
   }>({});
-
-  // 載入可用的 AI 模型
-  useEffect(() => {
-    if (isOllamaConnected && !aiModel && availableModels.length > 0) {
-      setAiModel(availableModels[0]);
-    }
-  }, [isOllamaConnected, availableModels, aiModel]);
 
   const handleClose = () => {
     dispatch(closeModal('projectManage'));
@@ -60,7 +51,6 @@ const ProjectManageModal: React.FC<ProjectManageModalProps> = ({ project }) => {
         description: projectDescription,
         settings: {
           ...project.settings,
-          aiModel,
         },
       })).unwrap();
 
@@ -160,34 +150,6 @@ const ProjectManageModal: React.FC<ProjectManageModalProps> = ({ project }) => {
                 rows={3}
                 className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
               ></textarea>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-300 mb-2">AI 模型</label>
-              <select
-                value={aiModel}
-                onChange={(e) => setAiModel(e.target.value)}
-                className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
-                disabled={!isOllamaConnected || availableModels.length === 0}
-              >
-                {!isOllamaConnected ? (
-                  <option value="">Ollama 未連接</option>
-                ) : availableModels.length === 0 ? (
-                  <option value="">無可用模型</option>
-                ) : (
-                  <>
-                    <option value="">選擇 AI 模型</option>
-                    {availableModels.map(model => (
-                      <option key={model} value={model}>{model}</option>
-                    ))}
-                  </>
-                )}
-              </select>
-              {!isOllamaConnected && (
-                <p className="text-yellow-500 text-sm mt-1">
-                  Ollama 服務未連接，請先安裝並啟動 Ollama
-                </p>
-              )}
             </div>
 
             <div className="mb-6">

@@ -4,7 +4,6 @@ import { useAppDispatch } from '../../hooks/redux';
 import { setCurrentProject } from '../../store/slices/projectsSlice';
 import { Project } from '../../store/slices/projectsSlice';
 import { openModal } from '../../store/slices/uiSlice';
-import { Menu, MenuItem } from '../../components/UI/Menu';
 import ConfirmDialog from '../../components/UI/ConfirmDialog';
 import { formatDate, safeParseDate, isRecentDate } from '../../utils/dateUtils';
 
@@ -94,7 +93,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     <>
       <div
         onClick={handleProjectClick}
-        className="card card-hover cursor-pointer group min-h-[200px] flex flex-col relative"
+        className="card card-hover cursor-pointer group min-h-[200px] flex flex-col relative overflow-visible"
       >
         {/* 專案類型標籤 */}
         <div className="flex items-center justify-between mb-4">
@@ -131,22 +130,35 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
         </div>
 
-        {/* 操作選單 */}
-        <div className="absolute top-2 right-2 z-10">
-          <Menu
-            trigger={
-              <button
-                className="w-8 h-8 rounded-full bg-cosmic-800 hover:bg-cosmic-700 flex items-center justify-center transition-colors"
-              >
-                <span className="text-gray-400 hover:text-gold-400">⋮</span>
-              </button>
-            }
-            position="bottom-right"
+        {/* 操作按鈕群組 - 確保顯示在最上層 */}
+        <div className="absolute top-2 right-2 z-50 flex gap-2" style={{ zIndex: 999 }}>
+          <button
+            onClick={handleEditProject}
+            className="w-9 h-9 rounded-lg bg-blue-600 hover:bg-blue-500 flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 border border-blue-700"
+            title="編輯專案設定"
           >
-          <MenuItem icon="✏️" onClick={handleEditProject}>編輯專案</MenuItem>
-          <MenuItem icon="📤" onClick={handleExportProject}>匯出專案</MenuItem>
-          <MenuItem icon="🗑️" onClick={handleDeleteProject} className="text-red-400">刪除專案</MenuItem>
-        </Menu>
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button
+            onClick={handleExportProject}
+            className="w-9 h-9 rounded-lg bg-green-600 hover:bg-green-500 flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 border border-green-700"
+            title="匯出專案資料"
+          >
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+          </button>
+          <button
+            onClick={handleDeleteProject}
+            className="w-9 h-9 rounded-lg bg-red-600 hover:bg-red-500 flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 border border-red-700"
+            title="刪除專案"
+          >
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
       </div>
 
