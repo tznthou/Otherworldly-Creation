@@ -10,7 +10,9 @@ fn is_production_environment() -> bool {
         // 診斷輸出：總是顯示執行路徑用於除錯
         println!("🔍 [診斷] 執行路徑: {}", path_str);
         
-        // macOS: 精確檢查是否在 Applications 目錄中
+        // macOS: 檢查是否為生產環境
+        // 生產條件：在 /Applications/ 目錄
+        // 開發條件：在專案的 src-tauri 目錄下（包含 npm run dev 和本地構建測試）
         #[cfg(target_os = "macos")]
         {
             let is_production = path_str.contains("/Applications/");
@@ -41,13 +43,21 @@ pub fn get_db_path() -> Result<PathBuf> {
         .unwrap_or_else(|_| "無法獲取執行路徑".to_string());
     
     if is_production_environment() {
-        // 生產環境：使用系統用戶資料目錄
-        let data_dir = dirs::data_dir()
-            .ok_or_else(|| anyhow::anyhow!("無法獲取用戶資料目錄"))?;
-        
-        let app_dir = data_dir.join("genesis-chronicle");
+        // 生產環境：使用系統用戶資料目錄，若失敗則回退到 home 目錄
+        let app_dir = if let Some(data_dir) = dirs::data_dir() {
+            data_dir.join("genesis-chronicle")
+        } else if let Some(home_dir) = dirs::home_dir() {
+            // 回退方案：使用 home 目錄
+            log::warn!("⚠️ 無法獲取標準資料目錄，使用 home 目錄作為回退");
+            home_dir.join(".genesis-chronicle")
+        } else {
+            // 最終回退：使用臨時目錄（不推薦但至少能運行）
+            log::error!("❌ 無法獲取任何標準目錄，使用臨時目錄（資料可能丟失）");
+            std::env::temp_dir().join("genesis-chronicle")
+        };
+
         std::fs::create_dir_all(&app_dir)?;
-        
+
         let prod_db_path = app_dir.join("genesis-chronicle.db");
         log::info!("🚀 生產環境檢測 - 執行路徑: {}", exe_path_info);
         log::info!("📁 使用用戶資料庫: {:?}", prod_db_path);
