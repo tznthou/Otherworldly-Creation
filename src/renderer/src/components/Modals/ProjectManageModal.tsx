@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux';
+import React, { useState } from 'react';
+import { useAppDispatch } from '../../hooks/redux';
 import { updateProject, deleteProject } from '../../store/slices/projectsSlice';
 import { closeModal } from '../../store/slices/uiSlice';
 import { Project } from '../../store/slices/projectsSlice';
