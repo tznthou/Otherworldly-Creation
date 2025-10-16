@@ -164,25 +164,25 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
         isFullscreen ? 'w-full h-full' : 'w-[95vw] h-[90vh] max-w-7xl'
       }`}>
         {/* 模態框頭部 */}
-        <div className="flex items-center justify-between p-6 border-b border-gold-600/20 bg-cosmic-800/50">
+        <div className="flex items-center justify-between p-6 border-b border-gold-600/20 bg-bg-light/50 backdrop-blur-sm/50">
           <div className="flex items-center space-x-3">
             <span className="text-3xl">🎭</span>
             <div>
-              <h2 className="text-2xl font-bold text-gold-400">劇情分析引擎</h2>
+              <h2 className="text-2xl font-bold text-warm-gold">劇情分析引擎</h2>
               <p className="text-sm text-gray-400">深度分析故事結構與劇情發展</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             <button
               onClick={toggleFullscreen}
-              className="p-2 rounded-lg bg-cosmic-700 hover:bg-cosmic-600 text-gray-300 hover:text-white transition-colors"
+              className="p-2 rounded-lg bg-bg-dark/80 hover:bg-cosmic-600 text-gray-300 hover:text-white transition-colors"
               title={isFullscreen ? '退出全屏' : '全屏顯示'}
             >
               {isFullscreen ? '🗗' : '⛶'}
             </button>
             <button
               onClick={handleClose}
-              className="p-2 rounded-lg bg-cosmic-700 hover:bg-red-600 text-gray-300 hover:text-white transition-colors"
+              className="p-2 rounded-lg bg-bg-dark/80 hover:bg-red-600 text-gray-300 hover:text-white transition-colors"
             >
               ✕
             </button>
@@ -192,7 +192,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
         {/* 主內容區域 */}
         <div className="flex h-full">
           {/* 左側導航欄 */}
-          <div className="w-80 bg-cosmic-800/30 border-r border-gold-600/20 flex flex-col">
+          <div className="w-80 bg-bg-light/50 backdrop-blur-sm/30 border-r border-gold-600/20 flex flex-col">
             {/* 控制面板 */}
             <div className="p-6 space-y-4 border-b border-gold-600/20">
               {/* 分析範圍選擇 */}
@@ -243,7 +243,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
 
               {/* 分析狀態 */}
               {isAnalyzing && (
-                <div className="p-3 bg-cosmic-700/30 rounded-lg">
+                <div className="p-3 bg-bg-dark/80/30 rounded-lg">
                   <div className="text-white text-sm font-medium mb-2">
                     正在分析劇情結構...
                   </div>
@@ -265,7 +265,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                     activeTab === tab.key
                       ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-cosmic-900 shadow-lg'
-                      : 'text-gray-400 hover:text-white hover:bg-cosmic-700/50'
+                      : 'text-gray-400 hover:text-white hover:bg-bg-dark/80/50'
                   } ${tab.key === 'trends' && analysisScope !== 'project' ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <span className="text-lg">{tab.icon}</span>
@@ -320,7 +320,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                   {activeTab === 'overview' && (
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-                        <Card className="bg-cosmic-700/30 border-gold-600/20 rounded-xl">
+                        <Card className="bg-bg-dark/80/30 border-gold-600/20 rounded-xl">
                           <div className="text-center p-6">
                             <div className={`text-4xl font-bold mb-2 ${getScoreColor(analysis.overallScore)}`}>
                               {analysis.overallScore}/10
@@ -329,7 +329,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                           </div>
                         </Card>
 
-                        <Card className="bg-cosmic-700/30 border-gold-600/20 rounded-xl">
+                        <Card className="bg-bg-dark/80/30 border-gold-600/20 rounded-xl">
                           <div className="p-6">
                             <div className="text-gold-300 font-medium mb-4">核心指標</div>
                             <div className="space-y-3">
@@ -355,7 +355,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                           </div>
                         </Card>
 
-                        <Card className="bg-cosmic-700/30 border-gold-600/20 rounded-xl">
+                        <Card className="bg-bg-dark/80/30 border-gold-600/20 rounded-xl">
                           <div className="p-6">
                             <div className="text-gold-300 font-medium mb-4">分析摘要</div>
                             <div className="space-y-3 text-sm">
@@ -392,14 +392,14 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                           檢測到 {analysis.conflicts.length} 個衝突點
                         </h3>
                         {analysis.conflicts.length > 0 && (
-                          <Badge variant="secondary" className="bg-cosmic-700">
+                          <Badge variant="secondary" className="bg-bg-dark/80">
                             平均強度 {(analysis.conflicts.reduce((sum, c) => sum + c.intensity, 0) / analysis.conflicts.length).toFixed(1)}/10
                           </Badge>
                         )}
                       </div>
 
                       {analysis.conflicts.length === 0 ? (
-                        <Card className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-8">
+                        <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-8">
                           <div className="text-center text-gray-400">
                             <div className="text-6xl mb-4">🕊️</div>
                             <div className="text-lg font-medium mb-2">未檢測到明顯的戲劇衝突</div>
@@ -409,7 +409,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                       ) : (
                         <div className="grid gap-6">
                           {analysis.conflicts.map((conflict, index) => (
-                            <Card key={index} className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-6">
+                            <Card key={index} className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-6">
                               <div className="flex items-start justify-between mb-4">
                                 <div className="flex-1">
                                   <div className="flex items-center space-x-3 mb-3">
@@ -419,7 +419,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                                       強度 {conflict.intensity}/10
                                     </Badge>
                                   </div>
-                                  <div className="text-gray-300 mb-4 p-3 bg-cosmic-800/50 rounded-lg italic">
+                                  <div className="text-gray-300 mb-4 p-3 bg-bg-light/50 backdrop-blur-sm/50 rounded-lg italic">
                                     "{conflict.context}"
                                   </div>
                                   <div className="flex flex-wrap gap-2">
@@ -441,7 +441,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                   {/* 節奏分析標籤 */}
                   {activeTab === 'pace' && (
                     <div className="space-y-8">
-                      <Card className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-8">
+                      <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-8">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                           <div>
                             <div className={`text-3xl font-bold mb-2 ${getPaceColor(analysis.pace.overallPace)}`}>
@@ -467,11 +467,11 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
 
                       {/* 節奏片段分析 */}
                       {analysis.pace.segments.length > 0 && (
-                        <Card className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-8">
+                        <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-8">
                           <div className="text-gold-300 font-medium text-lg mb-6">節奏片段分析</div>
                           <div className="grid gap-4">
                             {analysis.pace.segments.map((segment, index) => (
-                              <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-cosmic-800/50">
+                              <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-bg-light/50 backdrop-blur-sm/50">
                                 <div className="flex items-center space-x-4">
                                   <div className="text-gray-400 font-medium">片段 {index + 1}</div>
                                   <div className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -498,19 +498,19 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                   {activeTab === 'foreshadowing' && (
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <Card className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-6 text-center">
+                        <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-6 text-center">
                           <div className="text-3xl font-bold text-purple-400 mb-2">
                             {analysis.foreshadowing.setups.length}
                           </div>
                           <div className="text-gold-300">伏筆設置</div>
                         </Card>
-                        <Card className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-6 text-center">
+                        <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-6 text-center">
                           <div className="text-3xl font-bold text-green-400 mb-2">
                             {analysis.foreshadowing.connections.length}
                           </div>
                           <div className="text-gold-300">成功回收</div>
                         </Card>
-                        <Card className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-6 text-center">
+                        <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-6 text-center">
                           <div className="text-3xl font-bold text-orange-400 mb-2">
                             {analysis.foreshadowing.orphanedSetups.length}
                           </div>
@@ -553,7 +553,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                       </div>
 
                       {suggestions.length === 0 ? (
-                        <Card className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-8">
+                        <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-8">
                           <div className="text-center text-green-400">
                             <div className="text-6xl mb-4">🎉</div>
                             <div className="text-lg font-medium">劇情品質良好，暫無改善建議</div>
@@ -562,7 +562,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                       ) : (
                         <div className="grid gap-6">
                           {suggestions.map((suggestion, index) => (
-                            <Card key={index} className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-6">
+                            <Card key={index} className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-6">
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center space-x-3 mb-4">
@@ -612,7 +612,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                       </h3>
 
                       {chapterTrends.length === 0 ? (
-                        <Card className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-8">
+                        <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-8">
                           <div className="text-center text-gray-400">
                             <div className="text-6xl mb-4">📈</div>
                             <div className="text-lg">暫無章節趨勢數據</div>
@@ -621,7 +621,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                       ) : (
                         <div className="grid gap-4">
                           {chapterTrends.map((trend) => (
-                            <Card key={trend.chapterId} className="bg-cosmic-700/20 border-gold-600/20 rounded-xl p-6">
+                            <Card key={trend.chapterId} className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-6">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
                                   <div className="text-gold-300 font-medium text-lg">

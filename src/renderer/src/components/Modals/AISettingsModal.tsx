@@ -486,7 +486,7 @@ const AISettingsModal: React.FC = () => {
             value={isEdit ? (editProvider?.name || provider?.name) : formData.name}
             onChange={(e) => setFormData({ name: e.target.value })}
             placeholder="例如: OpenAI GPT-4"
-            className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             required
           />
         </div>
@@ -496,7 +496,7 @@ const AISettingsModal: React.FC = () => {
           <select
             value={formData.provider_type}
             onChange={(e) => setFormData({ provider_type: e.target.value })}
-            className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             disabled={isEdit} // 編輯時不允許修改類型
           >
             {supportedTypes.map(type => (
@@ -522,7 +522,7 @@ const AISettingsModal: React.FC = () => {
               value={formData.api_key || ''}
               onChange={(e) => setFormData({ api_key: e.target.value })}
               placeholder={isEdit ? "留空保持原有金鑰，或輸入新金鑰" : "輸入您的 API 金鑰"}
-              className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             />
           </div>
         )}
@@ -539,7 +539,7 @@ const AISettingsModal: React.FC = () => {
                   ? 'http://127.0.0.1:11434' 
                   : 'https://openrouter.ai/api/v1'
               }
-              className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             />
           </div>
         )}
@@ -569,7 +569,7 @@ const AISettingsModal: React.FC = () => {
               <select
                 value={formData.model}
                 onChange={(e) => setFormData({ model: e.target.value })}
-                className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
               >
                 <option value="">請選擇模型...</option>
                 {currentAvailableModels.map(model => (
@@ -594,7 +594,7 @@ const AISettingsModal: React.FC = () => {
                 formData.provider_type === 'openrouter' ? '例如: openai/gpt-4' :
                 '例如: llama3.2'
               }
-              className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
               required
             />
           )}
@@ -665,7 +665,7 @@ const AISettingsModal: React.FC = () => {
                 {/* 提供者列表 */}
                 <div>
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium text-gold-400">已配置的提供者</h3>
+                    <h3 className="text-lg font-medium text-warm-gold">已配置的提供者</h3>
                     <button
                       onClick={() => setShowAddForm(true)}
                       className="btn-primary text-sm"
@@ -675,7 +675,7 @@ const AISettingsModal: React.FC = () => {
                   </div>
 
                   {providers.length === 0 ? (
-                    <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6 text-center">
+                    <div className="bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg p-6 text-center">
                       <p className="text-gray-300">尚未配置任何 AI 提供者</p>
                       <button
                         onClick={() => setShowAddForm(true)}
@@ -689,7 +689,7 @@ const AISettingsModal: React.FC = () => {
                       {providers.map((provider) => (
                         <div
                           key={provider.id}
-                          className={`bg-cosmic-800 border rounded-lg p-4 transition-colors ${
+                          className={`bg-bg-light/50 backdrop-blur-sm border rounded-lg p-4 transition-colors ${
                             selectedProvider?.id === provider.id 
                               ? 'border-gold-500' 
                               : 'border-cosmic-700 hover:border-cosmic-600'
@@ -769,7 +769,7 @@ const AISettingsModal: React.FC = () => {
                                 <>
                                   <button
                                     onClick={() => handleSetCurrentModel(provider)}
-                                    className="text-gold-400 hover:text-gold-300 text-xs px-3 py-1 border border-gold-600 rounded hover:bg-gold-600 hover:text-cosmic-900 transition-colors"
+                                    className="text-warm-gold hover:text-gold-300 text-xs px-3 py-1 border border-gold-600 rounded hover:bg-gold-600 hover:text-cosmic-900 transition-colors"
                                   >
                                     設為當前
                                   </button>
@@ -811,28 +811,28 @@ const AISettingsModal: React.FC = () => {
 
                 {/* 新增提供者表單 */}
                 {showAddForm && (
-                  <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-                    <h4 className="text-lg font-medium text-gold-400 mb-4">新增 AI 提供者</h4>
+                  <div className="bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg p-6">
+                    <h4 className="text-lg font-medium text-warm-gold mb-4">新增 AI 提供者</h4>
                     {renderProviderForm()}
                   </div>
                 )}
 
                 {/* 編輯提供者表單 */}
                 {editProvider && (
-                  <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-                    <h4 className="text-lg font-medium text-gold-400 mb-4">編輯 AI 提供者</h4>
+                  <div className="bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg p-6">
+                    <h4 className="text-lg font-medium text-warm-gold mb-4">編輯 AI 提供者</h4>
                     {renderProviderForm(providers.find(p => p.id === editProvider.id), true)}
                   </div>
                 )}
 
                 {/* AI插畫功能與提供者指南 */}
                 <div>
-                  <h3 className="text-lg font-medium text-gold-400 mb-4">🎨 AI插畫功能指南</h3>
-                  <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4 text-sm text-gray-300">
+                  <h3 className="text-lg font-medium text-warm-gold mb-4">🎨 AI插畫功能指南</h3>
+                  <div className="bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg p-4 text-sm text-gray-300">
 
                     {/* 智能推薦系統說明 */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-cosmic-700 to-cosmic-600 rounded-lg">
-                      <h4 className="text-gold-400 font-medium text-base mb-3 flex items-center">
+                      <h4 className="text-warm-gold font-medium text-base mb-3 flex items-center">
                         <span className="text-xl mr-2">🧠</span>
                         智能推薦系統
                       </h4>
@@ -844,7 +844,7 @@ const AISettingsModal: React.FC = () => {
                     {/* 提供者詳細說明 */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
-                        <h5 className="text-gold-400 mb-3 font-medium text-base flex items-center">
+                        <h5 className="text-warm-gold mb-3 font-medium text-base flex items-center">
                           <span className="text-xl mr-2">🦙</span>
                           Ollama (本地隱私)
                         </h5>
@@ -868,7 +868,7 @@ const AISettingsModal: React.FC = () => {
                         </ul>
                       </div>
                       <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
-                        <h5 className="text-gold-400 mb-3 font-medium text-base flex items-center">
+                        <h5 className="text-warm-gold mb-3 font-medium text-base flex items-center">
                           <span className="text-xl mr-2">✨</span>
                           Gemini (多模態之王)
                         </h5>
@@ -908,7 +908,7 @@ const AISettingsModal: React.FC = () => {
                         </ul>
                       </div>
                       <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
-                        <h5 className="text-gold-400 mb-3 font-medium text-base flex items-center">
+                        <h5 className="text-warm-gold mb-3 font-medium text-base flex items-center">
                           <span className="text-xl mr-2">🤖</span>
                           OpenAI (商業級穩定)
                         </h5>
@@ -932,7 +932,7 @@ const AISettingsModal: React.FC = () => {
                         </ul>
                       </div>
                       <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
-                        <h5 className="text-gold-400 mb-3 font-medium text-base flex items-center">
+                        <h5 className="text-warm-gold mb-3 font-medium text-base flex items-center">
                           <span className="text-xl mr-2">🧠</span>
                           Claude (深度理解)
                         </h5>
@@ -956,7 +956,7 @@ const AISettingsModal: React.FC = () => {
                         </ul>
                       </div>
                       <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
-                        <h5 className="text-gold-400 mb-3 font-medium text-base flex items-center">
+                        <h5 className="text-warm-gold mb-3 font-medium text-base flex items-center">
                           <span className="text-xl mr-2">🔄</span>
                           OpenRouter (百模聚合)
                         </h5>
@@ -999,8 +999,8 @@ const AISettingsModal: React.FC = () => {
 
                     {/* 使用建議 */}
                     <div className="mt-8 mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="p-5 bg-cosmic-700 rounded-lg border border-cosmic-600">
-                        <p className="text-gold-400 font-medium text-base mb-3 flex items-center">
+                      <div className="p-5 bg-bg-dark/80 rounded-lg border border-cosmic-600">
+                        <p className="text-warm-gold font-medium text-base mb-3 flex items-center">
                           <span className="text-xl mr-2">💡</span>
                           插圖服務建議組合
                         </p>
@@ -1026,13 +1026,13 @@ const AISettingsModal: React.FC = () => {
                             <span><strong>專業創作:</strong> OpenRouter 付費模型最全</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-gold-400 mr-2 mt-1">⭐</span>
+                            <span className="text-warm-gold mr-2 mt-1">⭐</span>
                             <span><strong>中文小說:</strong> Gemini 理解度最佳</span>
                           </li>
                         </ul>
                       </div>
-                      <div className="p-5 bg-cosmic-700 rounded-lg border border-cosmic-600">
-                        <p className="text-gold-400 font-medium text-base mb-3 flex items-center">
+                      <div className="p-5 bg-bg-dark/80 rounded-lg border border-cosmic-600">
+                        <p className="text-warm-gold font-medium text-base mb-3 flex items-center">
                           <span className="text-xl mr-2">🎯</span>
                           插圖功能亮點
                         </p>

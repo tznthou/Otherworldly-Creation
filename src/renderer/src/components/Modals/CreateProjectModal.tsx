@@ -289,7 +289,7 @@ const CreateProjectModal: React.FC = () => {
           <h2 className="text-xl font-cosmic text-gold-500">創建新專案</h2>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-white hover:bg-cosmic-700 text-2xl p-2 rounded-lg transition-colors"
+            className="text-gray-400 hover:text-white hover:bg-bg-dark/80 text-2xl p-2 rounded-lg transition-colors"
             aria-label="關閉"
           >
             ✕
@@ -301,15 +301,15 @@ const CreateProjectModal: React.FC = () => {
           {/* 步驟指示器 */}
           <div className="flex items-center mb-8">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              step === 1 ? 'bg-gold-500 text-cosmic-900' : 'bg-cosmic-700 text-gold-500'
+              step === 1 ? 'bg-gold-500 text-cosmic-900' : 'bg-bg-dark/80 text-gold-500'
             }`}>
               1
             </div>
             <div className={`h-1 flex-1 mx-2 ${
-              step >= 2 ? 'bg-gold-500' : 'bg-cosmic-700'
+              step >= 2 ? 'bg-gold-500' : 'bg-bg-dark/80'
             }`}></div>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              step === 2 ? 'bg-gold-500 text-cosmic-900' : 'bg-cosmic-700 text-gray-300'
+              step === 2 ? 'bg-gold-500 text-cosmic-900' : 'bg-bg-dark/80 text-gray-300'
             }`}>
               2
             </div>
@@ -325,7 +325,7 @@ const CreateProjectModal: React.FC = () => {
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   placeholder="輸入專案名稱"
-                  className={`w-full bg-cosmic-800 border ${
+                  className={`w-full bg-bg-light/50 backdrop-blur-sm border ${
                     errors.name ? 'border-red-500' : 'border-cosmic-700'
                   } rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500`}
                 />
@@ -343,8 +343,8 @@ const CreateProjectModal: React.FC = () => {
                       onClick={() => setSelectedType(type.id)}
                       className={`p-4 rounded-lg cursor-pointer border ${
                         selectedType === type.id
-                          ? 'border-gold-500 bg-cosmic-800'
-                          : 'border-cosmic-700 bg-cosmic-900 hover:bg-cosmic-800'
+                          ? 'border-gold-500 bg-bg-light/50 backdrop-blur-sm'
+                          : 'border-cosmic-700 bg-cosmic-900 hover:bg-bg-light/50 backdrop-blur-sm'
                       }`}
                     >
                       <div className="flex items-center mb-2">
@@ -375,8 +375,8 @@ const CreateProjectModal: React.FC = () => {
                       onClick={() => setSelectedNovelLength(length.id)}
                       className={`p-4 rounded-lg cursor-pointer border ${
                         selectedNovelLength === length.id
-                          ? 'border-gold-500 bg-cosmic-800'
-                          : 'border-cosmic-700 bg-cosmic-900 hover:bg-cosmic-800'
+                          ? 'border-gold-500 bg-bg-light/50 backdrop-blur-sm'
+                          : 'border-cosmic-700 bg-cosmic-900 hover:bg-bg-light/50 backdrop-blur-sm'
                       }`}
                     >
                       <div className="flex items-center mb-2">
@@ -414,13 +414,13 @@ const CreateProjectModal: React.FC = () => {
                   onChange={(e) => setProjectDescription(e.target.value)}
                   placeholder="輸入專案描述..."
                   rows={3}
-                  className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                 ></textarea>
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-medium text-gold-400 mb-4">模板設定</h3>
-                <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-warm-gold mb-4">模板設定</h3>
+                <div className="bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg p-4">
                   {selectedType === 'isekai' && (
                     <div className="space-y-4">
                       <div>

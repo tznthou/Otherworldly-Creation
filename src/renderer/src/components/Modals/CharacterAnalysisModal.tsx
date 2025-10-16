@@ -282,25 +282,25 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
         isFullscreen ? 'w-full h-full' : 'w-[95vw] h-[90vh] max-w-7xl'
       }`}>
         {/* 模態框頭部 */}
-        <div className="flex items-center justify-between p-6 border-b border-gold-600/20 bg-cosmic-800/50">
+        <div className="flex items-center justify-between p-6 border-b border-gold-600/20 bg-bg-light/50 backdrop-blur-sm/50">
           <div className="flex items-center space-x-3">
             <span className="text-3xl">🎭</span>
             <div>
-              <h2 className="text-2xl font-bold text-gold-400">角色分析詳情</h2>
+              <h2 className="text-2xl font-bold text-warm-gold">角色分析詳情</h2>
               <p className="text-sm text-gray-400">深度分析角色特徵與發展軌跡</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             <button
               onClick={toggleFullscreen}
-              className="p-2 rounded-lg bg-cosmic-700 hover:bg-cosmic-600 text-gray-300 hover:text-white transition-colors"
+              className="p-2 rounded-lg bg-bg-dark/80 hover:bg-bg-light text-gray-300 hover:text-white transition-colors"
               title={isFullscreen ? '退出全屏' : '全屏顯示'}
             >
               {isFullscreen ? '🗗' : '⛶'}
             </button>
             <button
               onClick={handleClose}
-              className="p-2 rounded-lg bg-cosmic-700 hover:bg-red-600 text-gray-300 hover:text-white transition-colors"
+              className="p-2 rounded-lg bg-bg-dark/80 hover:bg-red-600 text-gray-300 hover:text-white transition-colors"
             >
               ✕
             </button>
@@ -310,7 +310,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
         {/* 主內容區域 */}
         <div className="flex h-full">
           {/* 左側導航欄 */}
-          <div className="w-80 bg-cosmic-800/30 border-r border-gold-600/20 flex flex-col">
+          <div className="w-80 bg-bg-light/50 backdrop-blur-sm/30 border-r border-gold-600/20 flex flex-col">
             {/* 控制面板 */}
             <div className="p-6 space-y-4 border-b border-gold-600/20">
               {/* 角色選擇器 */}
@@ -321,7 +321,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                 <select
                   value={selectedCharacterId}
                   onChange={(e) => setSelectedCharacterId(e.target.value)}
-                  className="w-full bg-cosmic-700/80 backdrop-blur border border-gold-600/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+                  className="w-full bg-bg-dark/80/80 backdrop-blur border border-gold-600/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                 >
                   <option value="">請選擇角色</option>
                   {characters.map(character => (
@@ -343,7 +343,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                     className={`px-4 py-3 rounded-lg font-medium transition-all text-sm ${
                       analysisScope === 'current'
                         ? 'bg-gold-600 text-cosmic-900'
-                        : 'bg-cosmic-700/80 text-gray-300 hover:bg-cosmic-600 border border-gold-600/30'
+                        : 'bg-bg-dark/80/80 text-gray-300 hover:bg-bg-light border border-gold-600/30'
                     }`}>
                     當前章節
                   </button>
@@ -352,7 +352,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                     className={`px-4 py-3 rounded-lg font-medium transition-all text-sm ${
                       analysisScope === 'project'
                         ? 'bg-gold-600 text-cosmic-900'
-                        : 'bg-cosmic-700/80 text-gray-300 hover:bg-cosmic-600 border border-gold-600/30'
+                        : 'bg-bg-dark/80/80 text-gray-300 hover:bg-bg-light border border-gold-600/30'
                     }`}>
                     全專案
                   </button>
@@ -380,7 +380,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                     activeTab === tab.key
                       ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-cosmic-900 shadow-lg'
-                      : 'text-gray-400 hover:text-white hover:bg-cosmic-700/50'
+                      : 'text-gray-400 hover:text-white hover:bg-bg-dark/80/50'
                   }`}
                 >
                   <span className="text-lg">{tab.icon}</span>
@@ -394,7 +394,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* 分析進度指示器 */}
             {isAnalyzing && (
-              <div className="p-6 bg-cosmic-700/30 border-b border-gold-600/20">
+              <div className="p-6 bg-bg-dark/80/30 border-b border-gold-600/20">
                 <div className="flex items-center space-x-3">
                   <LoadingSpinner size="small" />
                   <div className="text-white">
@@ -446,8 +446,8 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   {activeTab === 'overview' && (
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                        <div className="bg-cosmic-700/30 rounded-xl p-6">
-                          <h4 className="text-gold-400 font-bold mb-4 flex items-center">
+                        <div className="bg-bg-dark/80/30 rounded-xl p-6">
+                          <h4 className="text-warm-gold font-bold mb-4 flex items-center">
                             <span className="mr-2">ℹ️</span>基本信息
                           </h4>
                           <div className="space-y-3">
@@ -472,8 +472,8 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="bg-cosmic-700/30 rounded-xl p-6">
-                          <h4 className="text-gold-400 font-bold mb-4 flex items-center">
+                        <div className="bg-bg-dark/80/30 rounded-xl p-6">
+                          <h4 className="text-warm-gold font-bold mb-4 flex items-center">
                             <span className="mr-2">🎯</span>人格特徵
                           </h4>
                           <div className="space-y-3 text-sm">
@@ -510,8 +510,8 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="bg-cosmic-700/30 rounded-xl p-6">
-                          <h4 className="text-gold-400 font-bold mb-4 flex items-center">
+                        <div className="bg-bg-dark/80/30 rounded-xl p-6">
+                          <h4 className="text-warm-gold font-bold mb-4 flex items-center">
                             <span className="mr-2">💭</span>情感行為
                           </h4>
                           <div className="space-y-3 text-sm">
@@ -549,7 +549,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   {/* 人格分析標籤 */}
                   {activeTab === 'personality' && (
                     <div className="space-y-8">
-                      <div className="bg-cosmic-700/20 rounded-xl p-8">
+                      <div className="bg-bg-dark/80/20 rounded-xl p-8">
                         <PersonalityRadarChart
                           personality={analysisResult.personality}
                           confidence={analysisResult.confidence}
@@ -562,7 +562,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   {/* 一致性檢查標籤 */}
                   {activeTab === 'consistency' && (
                     <div className="space-y-8">
-                      <div className="bg-cosmic-700/20 rounded-xl p-8">
+                      <div className="bg-bg-dark/80/20 rounded-xl p-8">
                         <ConsistencyScoreChart
                           behaviorConsistency={analysisResult.behaviorConsistency}
                           consistencyDetails={{
@@ -589,7 +589,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   {/* 情感分析標籤 */}
                   {activeTab === 'emotion' && (
                     <div className="space-y-8">
-                      <div className="bg-cosmic-700/20 rounded-xl p-8">
+                      <div className="bg-bg-dark/80/20 rounded-xl p-8">
                         <EmotionTrendChart
                           emotionalTone={analysisResult.emotionalTone}
                           emotionalIntensity={analysisResult.emotionalIntensity}
@@ -602,14 +602,14 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   {/* 語言風格標籤 */}
                   {activeTab === 'language' && (
                     <div className="space-y-8">
-                      <div className="bg-cosmic-700/20 rounded-xl p-8">
-                        <h4 className="text-gold-400 font-bold mb-6 flex items-center text-xl">
+                      <div className="bg-bg-dark/80/20 rounded-xl p-8">
+                        <h4 className="text-warm-gold font-bold mb-6 flex items-center text-xl">
                           <span className="mr-3">💬</span>語言風格分析
                         </h4>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                          <div className="bg-cosmic-700/30 rounded-lg p-6">
-                            <h5 className="text-gold-300 font-medium mb-4">說話風格特徵</h5>
+                          <div className="bg-bg-dark/80/30 rounded-lg p-6">
+                            <h5 className="text-warm-gold font-medium mb-4">說話風格特徵</h5>
                             <div className="text-white text-lg font-medium mb-4">
                               {analysisResult.linguisticPattern.speakingStyle}
                             </div>
@@ -631,13 +631,13 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                             </div>
                           </div>
 
-                          <div className="bg-cosmic-700/30 rounded-lg p-6">
-                            <h5 className="text-gold-300 font-medium mb-4">詞彙豐富度指標</h5>
+                          <div className="bg-bg-dark/80/30 rounded-lg p-6">
+                            <h5 className="text-warm-gold font-medium mb-4">詞彙豐富度指標</h5>
                             <div className="space-y-4">
                               <div className="flex items-center justify-between">
                                 <span className="text-gray-300 text-sm font-medium">整體豐富度</span>
                                 <div className="flex items-center space-x-3">
-                                  <div className="w-32 h-4 bg-cosmic-600 rounded-full overflow-hidden">
+                                  <div className="w-32 h-4 bg-bg-light rounded-full overflow-hidden">
                                     <div
                                       className="h-full bg-gradient-to-r from-gold-600 to-gold-400 transition-all duration-300"
                                       style={{ width: `${analysisResult.linguisticPattern.vocabularyRichness * 100}%` }}
@@ -652,17 +652,17 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="bg-cosmic-700/20 rounded-lg p-6 border border-gold-600/20">
-                          <h5 className="text-gold-300 font-medium mb-4">語言特色分析</h5>
+                        <div className="bg-bg-dark/80/20 rounded-lg p-6 border border-gold-600/20">
+                          <h5 className="text-warm-gold font-medium mb-4">語言特色分析</h5>
                           <div className="text-gray-300 leading-relaxed space-y-3">
                             <p>
                               角色的語言表達呈現 <strong className="text-white">{analysisResult.linguisticPattern.speakingStyle}</strong> 的特點。
                             </p>
                             <p>
-                              平均每段對話 <strong className="text-gold-300">{analysisResult.linguisticPattern.averageDialogueLength}字</strong> 的表達長度反映了角色的{analysisResult.linguisticPattern.averageDialogueLength > 30 ? '詳細縝密' : '簡潔直接'}表達習慣。
+                              平均每段對話 <strong className="text-warm-gold">{analysisResult.linguisticPattern.averageDialogueLength}字</strong> 的表達長度反映了角色的{analysisResult.linguisticPattern.averageDialogueLength > 30 ? '詳細縝密' : '簡潔直接'}表達習慣。
                             </p>
                             <p>
-                              詞彙豐富度達到 <strong className="text-gold-300">{(analysisResult.linguisticPattern.vocabularyRichness * 100).toFixed(0)}%</strong>，顯示角色具有{analysisResult.linguisticPattern.vocabularyRichness >= 0.8 ? '豐富多樣' : analysisResult.linguisticPattern.vocabularyRichness >= 0.6 ? '中等程度' : '相對簡單'}的語言表達能力。
+                              詞彙豐富度達到 <strong className="text-warm-gold">{(analysisResult.linguisticPattern.vocabularyRichness * 100).toFixed(0)}%</strong>，顯示角色具有{analysisResult.linguisticPattern.vocabularyRichness >= 0.8 ? '豐富多樣' : analysisResult.linguisticPattern.vocabularyRichness >= 0.6 ? '中等程度' : '相對簡單'}的語言表達能力。
                             </p>
                           </div>
                         </div>
@@ -673,18 +673,18 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   {/* 改進建議標籤 */}
                   {activeTab === 'suggestions' && (
                     <div className="space-y-8">
-                      <div className="bg-cosmic-700/20 rounded-xl p-8">
-                        <h4 className="text-gold-400 font-bold mb-6 flex items-center text-xl">
+                      <div className="bg-bg-dark/80/20 rounded-xl p-8">
+                        <h4 className="text-warm-gold font-bold mb-6 flex items-center text-xl">
                           <span className="mr-3">💡</span>改進建議
                         </h4>
 
                         <div className="space-y-6">
                           {generateSuggestions(analysisResult).map((suggestion, index) => (
-                            <div key={index} className="bg-cosmic-700/30 rounded-lg p-6 border border-gold-600/20">
+                            <div key={index} className="bg-bg-dark/80/30 rounded-lg p-6 border border-gold-600/20">
                               <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center">
                                   <span className="text-2xl mr-3">{suggestion.icon}</span>
-                                  <h5 className="text-gold-300 font-medium text-lg">{suggestion.title}</h5>
+                                  <h5 className="text-warm-gold font-medium text-lg">{suggestion.title}</h5>
                                 </div>
                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                   suggestion.priority === 'high' ? 'bg-red-600 text-white' :
@@ -713,20 +713,20 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                           ))}
                         </div>
 
-                        <div className="mt-8 p-6 bg-cosmic-700/20 rounded-lg border border-gold-600/20">
-                          <h5 className="text-gold-400 font-medium text-lg mb-4 flex items-center">
+                        <div className="mt-8 p-6 bg-bg-dark/80/20 rounded-lg border border-gold-600/20">
+                          <h5 className="text-warm-gold font-medium text-lg mb-4 flex items-center">
                             <span className="mr-2">📈</span>整體改善方向
                           </h5>
                           <div className="text-gray-300 leading-relaxed space-y-3">
                             <p>
-                              基於分析結果，建議重點關注 <strong className="text-gold-300">
+                              基於分析結果，建議重點關注 <strong className="text-warm-gold">
                               {analysisResult.confidence < 0.7 ? '提升角色一致性' :
                                analysisResult.behaviorConsistency < 0.8 ? '強化行為邏輯' :
                                '深化人物層次'}
                               </strong>，同時保持角色的核心特徵不變。
                             </p>
                             <p>
-                              可以考慮在對話中更多展現角色的 <strong className="text-gold-300">{analysisResult.linguisticPattern.speakingStyle}</strong> 特點，讓讀者更容易識別和記住這個角色。
+                              可以考慮在對話中更多展現角色的 <strong className="text-warm-gold">{analysisResult.linguisticPattern.speakingStyle}</strong> 特點，讓讀者更容易識別和記住這個角色。
                             </p>
                           </div>
                         </div>
