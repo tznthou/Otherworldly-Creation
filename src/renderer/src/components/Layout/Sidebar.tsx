@@ -128,7 +128,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <div 
-      className={`fixed left-0 top-0 h-full bg-cosmic-900/80 backdrop-blur-sm border-r border-cosmic-700 transition-all duration-300 ${
+      className={`fixed left-0 top-0 h-full bg-bg-dark/80 backdrop-blur-sm border-r border-cosmic-700 transition-all duration-300 ${
         sidebarCollapsed ? 'w-16' : 'w-64'
       }`}
       style={{ 
@@ -147,7 +147,7 @@ const Sidebar: React.FC = () => {
               <span className="text-cosmic-950 font-bold text-sm">創</span>
             </div>
             <div>
-              <h1 className="font-cosmic text-gold-500 text-lg font-bold title-cosmic">創世紀元</h1>
+              <h1 className="font-cosmic text-warm-gold text-lg font-bold title-cosmic">創世紀元</h1>
               <p className="text-xs text-gray-400">異世界創作神器</p>
             </div>
           </div>
@@ -155,9 +155,9 @@ const Sidebar: React.FC = () => {
         
         <button
           onClick={() => dispatch(toggleSidebar())}
-          className="p-2 rounded-lg hover:bg-cosmic-800 transition-colors"
+          className="p-2 rounded-lg hover:bg-bg-light/50 backdrop-blur-sm transition-colors"
         >
-          <span className="text-gold-500">
+          <span className="text-warm-gold">
             {sidebarCollapsed ? '→' : '←'}
           </span>
         </button>
@@ -166,9 +166,9 @@ const Sidebar: React.FC = () => {
       {/* 當前專案資訊 */}
       {!sidebarCollapsed && currentProject && (
         <div className="p-4 border-b border-cosmic-700">
-          <div className="bg-cosmic-800/50 rounded-lg p-3 card-hover animate-fade-in">
+          <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-3 card-hover animate-fade-in">
             <p className="text-xs text-gray-400 mb-1">當前專案</p>
-            <p className="text-gold-400 font-medium truncate">{currentProject.name}</p>
+            <p className="text-warm-gold font-medium truncate">{currentProject.name}</p>
             <p className="text-xs text-gray-500 capitalize">{currentProject.type}</p>
             <div className="w-full bg-cosmic-700 rounded-full h-1 mt-2">
               <div className="bg-gradient-to-r from-gold-500 to-gold-600 h-1 rounded-full animate-pulse" style={{ width: '60%' }} />
@@ -216,7 +216,7 @@ const Sidebar: React.FC = () => {
                   }}
                   disabled={item.disabled}
                   className={`w-full nav-item ${isActive ? 'active' : ''} ${
-                    item.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-cosmic-800 cursor-pointer'
+                    item.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-bg-light/50 backdrop-blur-sm cursor-pointer'
                   } ${sidebarCollapsed ? 'justify-center px-2' : ''}`}
                   title={sidebarCollapsed ? item.label : undefined}
                   style={{ 
