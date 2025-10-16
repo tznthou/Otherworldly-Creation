@@ -104,7 +104,7 @@ const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
   const getStatusColor = () => {
     switch (autoSaveStatus.status) {
       case 'saving':
-        return 'text-blue-500';
+        return 'text-warm-gold';
       case 'saved':
         return 'text-green-500';
       case 'error':

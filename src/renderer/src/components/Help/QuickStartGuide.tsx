@@ -52,8 +52,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
             <h4 className="text-lg font-semibold text-gold-400 mb-4">您將學到什麼：</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
-                  <span className="text-blue-400 text-sm">1</span>
+                <div className="w-8 h-8 bg-warm-gold/20 rounded-full flex items-center justify-center">
+                  <span className="text-warm-gold text-sm">1</span>
                 </div>
                 <span className="text-gray-300">創建您的第一個專案</span>
               </div>
@@ -64,8 +64,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                 <span className="text-gray-300">使用編輯器寫作</span>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
-                  <span className="text-purple-400 text-sm">3</span>
+                <div className="w-8 h-8 bg-clay-orange/20 rounded-full flex items-center justify-center">
+                  <span className="text-clay-orange text-sm">3</span>
                 </div>
                 <span className="text-gray-300">管理角色和設定</span>
               </div>
@@ -122,8 +122,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                     <td className="border border-cosmic-600 p-2 text-gray-300">⭐ 簡單</td>
                     <td className="border border-cosmic-600 p-2 text-gray-300">新手首選</td>
                   </tr>
-                  <tr className="bg-blue-900/10">
-                    <td className="border border-cosmic-600 p-2 text-blue-400 font-semibold">🔵 Ollama</td>
+                  <tr className="bg-warm-gold/5">
+                    <td className="border border-cosmic-600 p-2 text-warm-gold font-semibold">🔵 Ollama</td>
                     <td className="border border-cosmic-600 p-2 text-gray-300">本地</td>
                     <td className="border border-cosmic-600 p-2 text-gray-300">完全免費</td>
                     <td className="border border-cosmic-600 p-2 text-gray-300">⭐⭐ 中等</td>
@@ -137,7 +137,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                     <td className="border border-cosmic-600 p-2 text-gray-300">專業作家</td>
                   </tr>
                   <tr>
-                    <td className="border border-cosmic-600 p-2 text-purple-400 font-semibold">🟣 Claude</td>
+                    <td className="border border-cosmic-600 p-2 text-clay-orange font-semibold">🟣 Claude</td>
                     <td className="border border-cosmic-600 p-2 text-gray-300">雲端</td>
                     <td className="border border-cosmic-600 p-2 text-gray-300">無（付費）</td>
                     <td className="border border-cosmic-600 p-2 text-gray-300">⭐ 簡單</td>
@@ -173,7 +173,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                 <div className="bg-cosmic-800/50 rounded p-3 text-xs text-gray-300">
                   <p className="font-semibold mb-1">快速步驟：</p>
                   <ol className="space-y-1 ml-4">
-                    <li>1. 訪問 <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Google AI Studio</a></li>
+                    <li>1. 訪問 <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-warm-gold underline">Google AI Studio</a></li>
                     <li>2. 登入 Google 帳號</li>
                     <li>3. 點擊「Get API Key」→「Create API Key」</li>
                     <li>4. 複製 API Key</li>
@@ -183,8 +183,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                 </div>
               </div>
 
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                <h5 className="text-blue-400 font-semibold mb-2 flex items-center">
+              <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
+                <h5 className="text-warm-gold font-semibold mb-2 flex items-center">
                   <span className="mr-2">✅</span>
                   推薦選項 2：Ollama（完全本地）
                 </h5>
@@ -197,7 +197,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                 <div className="bg-cosmic-800/50 rounded p-3 text-xs text-gray-300">
                   <p className="font-semibold mb-1">快速步驟：</p>
                   <ol className="space-y-1 ml-4">
-                    <li>1. 訪問 <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">ollama.com/download</a></li>
+                    <li>1. 訪問 <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" className="text-warm-gold underline">ollama.com/download</a></li>
                     <li>2. 下載並安裝（Windows/macOS/Linux）</li>
                     <li>3. 開啟終端機，執行：<code className="bg-cosmic-700 px-1 rounded">ollama pull llama3.2</code></li>
                     <li>4. 回到創世紀元，Ollama 會自動檢測並連接</li>
@@ -215,7 +215,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                 <p className="text-gray-300 text-xs">業界標準，需信用卡，適合專業用途</p>
               </div>
               <div className="bg-cosmic-800/50 border border-cosmic-600 rounded p-3 text-sm">
-                <h5 className="text-purple-400 font-semibold mb-1">Claude</h5>
+                <h5 className="text-clay-orange font-semibold mb-1">Claude</h5>
                 <p className="text-gray-300 text-xs">超長上下文（200K tokens），適合長篇小說</p>
               </div>
               <div className="bg-cosmic-800/50 border border-cosmic-600 rounded p-3 text-sm">
@@ -265,11 +265,11 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
             <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
               <h4 className="text-lg font-semibold text-gold-400 mb-3">選擇小說類型</h4>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-lg p-3">
+                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-clay-orange/20 rounded-lg p-3">
                   <h5 className="text-white font-semibold">🌟 異世界轉生</h5>
                   <p className="text-gray-300 text-sm">包含轉生設定、魔法系統</p>
                 </div>
-                <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-lg p-3">
+                <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-warm-gold/20 rounded-lg p-3">
                   <h5 className="text-white font-semibold">🏫 校園戀愛</h5>
                   <p className="text-gray-300 text-sm">現代校園背景故事</p>
                 </div>
@@ -303,8 +303,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
             </div>
           </div>
 
-          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-            <h4 className="text-blue-400 font-semibold mb-2">💡 小提示</h4>
+          <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
+            <h4 className="text-warm-gold font-semibold mb-2">💡 小提示</h4>
             <p className="text-gray-300 text-sm">
               不用擔心一開始就要設定得很完美。您可以隨時修改專案資訊，
               系統的模板會幫助您快速建立基礎設定。
@@ -343,8 +343,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               <h4 className="text-lg font-semibold text-gold-400 mb-3">界面佈局</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-blue-500/20 rounded-lg flex items-center justify-center mx-auto mb-2">
-                    <span className="text-blue-400 text-2xl">📚</span>
+                  <div className="w-16 h-16 bg-warm-gold/20 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <span className="text-warm-gold text-2xl">📚</span>
                   </div>
                   <h5 className="text-white font-semibold">章節列表</h5>
                   <p className="text-gray-300 text-sm">管理所有章節</p>
@@ -357,8 +357,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                   <p className="text-gray-300 text-sm">主要編輯區域</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-2">
-                    <span className="text-purple-400 text-2xl">🤖</span>
+                  <div className="w-16 h-16 bg-clay-orange/20 rounded-lg flex items-center justify-center mx-auto mb-2">
+                    <span className="text-clay-orange text-2xl">🤖</span>
                   </div>
                   <h5 className="text-white font-semibold">AI 面板</h5>
                   <p className="text-gray-300 text-sm">AI 輔助工具</p>
@@ -375,11 +375,11 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                 </div>
                 <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
                   <span className="text-gray-300">字數統計</span>
-                  <span className="text-blue-400 text-sm">即時顯示進度</span>
+                  <span className="text-warm-gold text-sm">即時顯示進度</span>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
                   <span className="text-gray-300">格式工具</span>
-                  <span className="text-purple-400 text-sm">豐富的文字格式</span>
+                  <span className="text-clay-orange text-sm">豐富的文字格式</span>
                 </div>
               </div>
             </div>
@@ -458,7 +458,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                   <h5 className="text-white font-semibold text-sm">主角類型</h5>
                   <p className="text-gray-300 text-xs">熱血、冷靜、天才、平凡</p>
                 </div>
-                <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded p-3">
+                <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-warm-gold/20 rounded p-3">
                   <h5 className="text-white font-semibold text-sm">女主角類型</h5>
                   <p className="text-gray-300 text-xs">溫柔、傲嬌、天然、強勢</p>
                 </div>
@@ -477,16 +477,16 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               <h4 className="text-lg font-semibold text-gold-400 mb-3">角色關係</h4>
               <p className="text-gray-300 text-sm mb-3">設定角色間的關係有助於故事發展：</p>
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">家人</span>
+                <span className="px-3 py-1 bg-warm-gold/20 text-warm-gold rounded-full text-sm">家人</span>
                 <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">朋友</span>
                 <span className="px-3 py-1 bg-pink-500/20 text-pink-400 rounded-full text-sm">戀人</span>
                 <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm">敵人</span>
-                <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm">師徒</span>
+                <span className="px-3 py-1 bg-clay-orange/20 text-clay-orange rounded-full text-sm">師徒</span>
                 <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">同事</span>
               </div>
               
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
-                <h5 className="text-blue-400 font-semibold text-sm mb-2">💡 關係設計巧思</h5>
+              <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-3">
+                <h5 className="text-warm-gold font-semibold text-sm mb-2">💡 關係設計巧思</h5>
                 <p className="text-gray-300 text-xs leading-relaxed">
                   系統採用<strong>單向關係</strong>設計：為角色A設定對角色B的關係時，不會自動為B創建對A的反向關係。
                   這樣可以表達不對等的複雜關係（如單戀、敵視等），讓故事更具現實感和戲劇張力。
@@ -521,8 +521,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               <h4 className="text-lg font-semibold text-gold-400 mb-3">多供應商AI系統特色</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-blue-400 text-sm">🧠</span>
+                  <div className="w-8 h-8 bg-warm-gold/20 rounded-full flex items-center justify-center mt-1">
+                    <span className="text-warm-gold text-sm">🧠</span>
                   </div>
                   <div>
                     <h5 className="text-white font-semibold">上下文理解</h5>
@@ -539,8 +539,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-purple-400 text-sm">📝</span>
+                  <div className="w-8 h-8 bg-clay-orange/20 rounded-full flex items-center justify-center mt-1">
+                    <span className="text-clay-orange text-sm">📝</span>
                   </div>
                   <div>
                     <h5 className="text-white font-semibold">風格延續</h5>
@@ -563,11 +563,11 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               <h4 className="text-lg font-semibold text-gold-400 mb-3">使用步驟</h4>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
+                  <div className="w-6 h-6 bg-warm-gold/30 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
                   <span className="text-gray-300">配置AI供應商（系統設定 → AI供應商配置）</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
+                  <div className="w-6 h-6 bg-warm-gold/30 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
                   <span className="text-gray-300">選擇合適的AI供應商和模型</span>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -575,7 +575,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                   <span className="text-gray-300">將游標放在想要續寫的位置</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">4</div>
+                  <div className="w-6 h-6 bg-clay-orange/30 rounded-full flex items-center justify-center text-white text-xs font-bold">4</div>
                   <span className="text-gray-300">點擊「AI 續寫」按鈕或按 Alt+A</span>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -598,7 +598,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
                   <span className="text-gray-300">生成長度</span>
-                  <span className="text-blue-400 text-sm">短 / 中 / 長</span>
+                  <span className="text-warm-gold text-sm">短 / 中 / 長</span>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
                   <span className="text-gray-300">創意程度</span>
@@ -606,7 +606,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                 </div>
                 <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
                   <span className="text-gray-300">寫作風格</span>
-                  <span className="text-purple-400 text-sm">描述 / 對話 / 動作</span>
+                  <span className="text-clay-orange text-sm">描述 / 對話 / 動作</span>
                 </div>
               </div>
             </div>
@@ -672,8 +672,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
             </div>
           </div>
 
-          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-            <h4 className="text-blue-400 font-semibold mb-2">📚 持續學習</h4>
+          <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
+            <h4 className="text-warm-gold font-semibold mb-2">📚 持續學習</h4>
             <p className="text-gray-300 text-sm">
               創作是一個持續學習的過程。隨時使用幫助中心查看詳細文檔，
               或重新觀看教學指南來掌握更多技巧。

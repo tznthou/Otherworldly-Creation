@@ -45,8 +45,8 @@ export const TemplatePreview = memo<TemplatePreviewProps>(({
   const getCategoryColor = (category: string): string => {
     const colorMap: Record<string, string> = {
       'anime': 'bg-pink-100 text-pink-800 border-pink-200',
-      'realistic': 'bg-blue-100 text-blue-800 border-blue-200',
-      'fantasy': 'bg-purple-100 text-purple-800 border-purple-200',
+      'realistic': 'bg-warm-gold/10 text-warm-gold border-warm-gold/20',
+      'fantasy': 'bg-clay-orange/10 text-clay-orange border-clay-orange/20',
       'watercolor': 'bg-green-100 text-green-800 border-green-200',
       'digital_art': 'bg-yellow-100 text-yellow-800 border-yellow-200',
     };
@@ -73,7 +73,7 @@ export const TemplatePreview = memo<TemplatePreviewProps>(({
             {template.category}
           </span>
           {template.isBuiltIn && (
-            <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
+            <span className="px-2 py-1 bg-warm-gold text-white text-xs rounded-full">
               內建模板
             </span>
           )}
@@ -180,7 +180,7 @@ export const TemplatePreview = memo<TemplatePreviewProps>(({
                 {template.supportedProviders.map((provider) => (
                   <span
                     key={provider}
-                    className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-200"
+                    className="px-3 py-1 bg-warm-gold/5 text-warm-gold rounded-lg text-sm border border-warm-gold/20"
                   >
                     {getProviderName(provider)}
                   </span>

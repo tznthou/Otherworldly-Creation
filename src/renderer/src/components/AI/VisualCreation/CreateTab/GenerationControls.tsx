@@ -173,11 +173,11 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
       
       {/* 批次操作提示 */}
       {requests.length > 0 && (
-        <div className="mt-4 p-3 bg-blue-900/20 border border-blue-700/50 rounded-lg">
-          <p className="text-blue-300 text-sm font-medium mb-1">
+        <div className="mt-4 p-3 bg-warm-gold/10 border border-warm-gold/40 rounded-lg">
+          <p className="text-warm-gold text-sm font-medium mb-1">
             🚀 準備生成 {requests.length} 張插畫
           </p>
-          <div className="text-xs text-blue-400 space-y-1">
+          <div className="text-xs text-warm-gold space-y-1">
             <p>• 每張圖像大約需要 3-10 秒生成時間</p>
             <p>• 生成完成後可預覽並選擇要保存的圖像</p>
             {currentProvider === 'pollinations' && (

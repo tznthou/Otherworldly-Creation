@@ -138,7 +138,7 @@ const DatabaseTest: React.FC = () => {
             <button
               onClick={loadProjects}
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded text-white transition-colors"
+              className="px-4 py-2 bg-warm-gold hover:bg-warm-gold disabled:bg-gray-600 rounded text-white transition-colors"
             >
               {loading ? '載入中...' : '重新載入'}
             </button>

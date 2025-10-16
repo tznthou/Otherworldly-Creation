@@ -339,7 +339,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
               <h5 className="text-green-400 font-medium mb-2">備份內容預覽</h5>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div className="bg-cosmic-700 rounded p-3">
-                  <div className="text-2xl font-bold text-blue-400">{backupPreview.totalProjects}</div>
+                  <div className="text-2xl font-bold text-warm-gold">{backupPreview.totalProjects}</div>
                   <div className="text-gray-400">專案</div>
                 </div>
                 <div className="bg-cosmic-700 rounded p-3">
@@ -347,7 +347,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
                   <div className="text-gray-400">章節</div>
                 </div>
                 <div className="bg-cosmic-700 rounded p-3">
-                  <div className="text-2xl font-bold text-purple-400">{backupPreview.totalCharacters}</div>
+                  <div className="text-2xl font-bold text-clay-orange">{backupPreview.totalCharacters}</div>
                   <div className="text-gray-400">角色</div>
                 </div>
                 <div className="bg-cosmic-700 rounded p-3">

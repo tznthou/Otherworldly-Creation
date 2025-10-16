@@ -592,12 +592,12 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
         />
 
         {/* 角色選擇器 */}
-        <div className="bg-gradient-to-r from-blue-900/20 to-cosmic-800/30 rounded-lg p-4 border border-blue-500/30">
+        <div className="bg-gradient-to-r from-blue-900/20 to-cosmic-800/30 rounded-lg p-4 border border-warm-gold/20">
           <div className="flex items-center mb-3">
-            <h3 className="text-lg font-semibold text-blue-400 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-warm-gold flex items-center gap-2">
               👥 選擇角色
             </h3>
-            <span className="ml-2 text-xs px-2 py-1 bg-blue-600/20 text-blue-300 rounded">
+            <span className="ml-2 text-xs px-2 py-1 bg-warm-gold/20 text-warm-gold rounded">
               步驟 1/4
             </span>
           </div>
@@ -999,8 +999,8 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                         className={`
                           text-xs px-3 py-1 rounded transition-all duration-300
                           ${isCollecting 
-                            ? 'bg-purple-700 opacity-70 cursor-wait' 
-                            : 'bg-purple-600 hover:bg-purple-700 active:scale-95'
+                            ? 'bg-clay-orange/50 opacity-70 cursor-wait' 
+                            : 'bg-clay-orange hover:bg-clay-orange active:scale-95'
                           }
                           disabled:bg-gray-600 disabled:opacity-50 text-white
                         `}
@@ -1040,7 +1040,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                           // TODO: 實現變體創建邏輯
                           log.debug('創建變體功能');
                         }}
-                        className="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                        className="text-xs px-3 py-1 bg-warm-gold hover:bg-warm-gold text-white rounded transition-colors"
                       >
                         創建變體
                       </button>

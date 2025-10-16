@@ -40,8 +40,8 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
     
     if (archetype.includes('主角') || archetype.includes('英雄')) return 'bg-gold-600';
     if (archetype.includes('反派') || archetype.includes('敵人')) return 'bg-red-600';
-    if (archetype.includes('魔法') || archetype.includes('法師')) return 'bg-purple-600';
-    if (archetype.includes('戰士') || archetype.includes('騎士')) return 'bg-blue-600';
+    if (archetype.includes('魔法') || archetype.includes('法師')) return 'bg-clay-orange';
+    if (archetype.includes('戰士') || archetype.includes('騎士')) return 'bg-warm-gold';
     if (archetype.includes('配角') || archetype.includes('朋友')) return 'bg-green-600';
     return 'bg-cosmic-600';
   };

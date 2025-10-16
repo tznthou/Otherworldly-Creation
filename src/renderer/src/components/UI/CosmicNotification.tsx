@@ -63,10 +63,10 @@ const CosmicNotification: React.FC<CosmicNotificationProps> = ({
     },
     info: {
       icon: 'ℹ️',
-      bgColor: 'bg-blue-900/80',
-      borderColor: 'border-blue-500',
-      textColor: 'text-blue-400',
-      glowColor: 'shadow-blue-500/20',
+      bgColor: 'bg-warm-gold/20',
+      borderColor: 'border-warm-gold',
+      textColor: 'text-warm-gold',
+      glowColor: 'shadow-warm-gold/20',
     },
     magic: {
       icon: '🔮',

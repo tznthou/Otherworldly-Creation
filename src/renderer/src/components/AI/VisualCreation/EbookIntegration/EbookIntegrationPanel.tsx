@@ -291,11 +291,11 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                 <div className="text-sm text-cosmic-400">已處理</div>
               </div>
               <div className="bg-cosmic-800/50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-blue-400">{enabledPlacements}</div>
+                <div className="text-2xl font-bold text-warm-gold">{enabledPlacements}</div>
                 <div className="text-sm text-cosmic-400">啟用位置</div>
               </div>
               <div className="bg-cosmic-800/50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-purple-400">{totalEstimatedSize.toFixed(1)} MB</div>
+                <div className="text-2xl font-bold text-clay-orange">{totalEstimatedSize.toFixed(1)} MB</div>
                 <div className="text-sm text-cosmic-400">預估大小</div>
               </div>
             </div>

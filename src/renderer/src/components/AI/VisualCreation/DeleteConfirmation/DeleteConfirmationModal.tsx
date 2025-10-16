@@ -109,11 +109,11 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
                 <div className="text-sm text-cosmic-400">檔案大小</div>
               </div>
               <div className="bg-cosmic-800/50 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-purple-400">{Object.keys(stats.byProvider).length}</div>
+                <div className="text-2xl font-bold text-clay-orange">{Object.keys(stats.byProvider).length}</div>
                 <div className="text-sm text-cosmic-400">個提供商</div>
               </div>
               <div className="bg-cosmic-800/50 rounded-lg p-3 text-center">
-                <div className="text-2xl font-bold text-blue-400">
+                <div className="text-2xl font-bold text-warm-gold">
                   {stats.hasVersions ? '有' : '無'}
                 </div>
                 <div className="text-sm text-cosmic-400">多版本</div>
@@ -274,14 +274,14 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
           )}
 
           {stats.hasVersions && (
-            <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3 mb-6">
+            <div className="bg-warm-gold/10 border border-warm-gold rounded-lg p-3 mb-6">
               <div className="flex items-start space-x-2">
-                <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-warm-gold flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div>
-                  <div className="font-medium text-blue-300">版本管理提醒</div>
-                  <div className="text-sm text-blue-400 mt-1">
+                  <div className="font-medium text-warm-gold">版本管理提醒</div>
+                  <div className="text-sm text-warm-gold mt-1">
                     部分圖片具有多個版本。刪除操作將影響所有相關版本。
                     請確認您要刪除整個版本樹，還是只刪除當前選中的版本。
                   </div>

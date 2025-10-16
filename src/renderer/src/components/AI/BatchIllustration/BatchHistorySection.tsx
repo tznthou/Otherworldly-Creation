@@ -80,7 +80,7 @@ const BatchHistorySection: React.FC<BatchHistorySectionProps> = ({
       <div className={`bg-gray-800 p-4 rounded-lg ${className}`}>
         <h3 className="text-lg font-semibold text-white mb-4">插畫歷史</h3>
         <div className="text-center py-8 text-gray-400">
-          <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+          <div className="animate-spin w-8 h-8 border-2 border-clay-orange border-t-transparent rounded-full mx-auto mb-2"></div>
           <p>載入中...</p>
         </div>
       </div>

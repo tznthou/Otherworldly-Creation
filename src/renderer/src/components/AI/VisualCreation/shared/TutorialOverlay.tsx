@@ -195,7 +195,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         {/* 裝飾性元素 */}
         <div className="absolute -top-2 -right-2 w-4 h-4 bg-gold-500 rounded-full animate-pulse" />
-        <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-clay-orange/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
     </div>,
     document.body

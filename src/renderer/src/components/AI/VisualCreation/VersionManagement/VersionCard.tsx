@@ -158,7 +158,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
             onClick={(e) => { stopPropagation(e); onCompare(version); }}
             className={`p-1.5 rounded-md transition-colors ${
               isComparing 
-                ? 'bg-blue-500 text-white' 
+                ? 'bg-warm-gold/30 text-white' 
                 : 'bg-black/60 hover:bg-black/80 text-white'
             }`}
             title="比較"
@@ -272,7 +272,7 @@ const VersionCard: React.FC<VersionCardProps> = ({
     <div
       className={`group relative bg-white rounded-lg shadow-sm border-2 cursor-pointer transition-all ${VERSION_MANAGEMENT_CONSTANTS.ANIMATION_CONFIG.easing} ${
         isSelected 
-          ? 'border-blue-500 shadow-md' 
+          ? 'border-warm-gold shadow-md' 
           : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
       } ${isLoading ? 'opacity-50 pointer-events-none' : ''} ${className}`}
       style={{

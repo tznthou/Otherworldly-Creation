@@ -618,13 +618,13 @@ ${smartParams.locationNames.length > 0 ? `
                 <span className="px-2 py-1 bg-cosmic-700 rounded text-gold-300">
                   {contextAnalysis.emotionalTone}風格
                 </span>
-                <span className="px-2 py-1 bg-cosmic-700 rounded text-blue-300">
+                <span className="px-2 py-1 bg-cosmic-700 rounded text-warm-gold">
                   {contextAnalysis.dominantTense}式
                 </span>
                 <span className="px-2 py-1 bg-cosmic-700 rounded text-green-300">
                   {contextAnalysis.narrativeStyle === 'first' ? '第一人稱' : contextAnalysis.narrativeStyle === 'third' ? '第三人稱' : '混合視角'}
                 </span>
-                <span className="px-2 py-1 bg-cosmic-700 rounded text-purple-300">
+                <span className="px-2 py-1 bg-cosmic-700 rounded text-clay-orange">
                   {contextAnalysis.textAnalysis.complexity}程度
                 </span>
               </div>
@@ -662,7 +662,7 @@ ${smartParams.locationNames.length > 0 ? `
           <div className="space-y-2 text-xs">
             <div className="flex gap-4">
               <span className="text-green-400">連貫性: {(lastQualityCheck.coherence * 100).toFixed(0)}%</span>
-              <span className="text-blue-400">風格一致性: {(lastQualityCheck.styleConsistency * 100).toFixed(0)}%</span>
+              <span className="text-warm-gold">風格一致性: {(lastQualityCheck.styleConsistency * 100).toFixed(0)}%</span>
             </div>
             
             {lastQualityCheck.warnings.length > 0 && (
@@ -676,9 +676,9 @@ ${smartParams.locationNames.length > 0 ? `
             
             {lastQualityCheck.suggestions.length > 0 && (
               <div>
-                <div className="text-blue-400 font-medium">💡 建議:</div>
+                <div className="text-warm-gold font-medium">💡 建議:</div>
                 {lastQualityCheck.suggestions.map((suggestion, i) => (
-                  <div key={i} className="text-blue-300 ml-4">• {suggestion}</div>
+                  <div key={i} className="text-warm-gold ml-4">• {suggestion}</div>
                 ))}
               </div>
             )}

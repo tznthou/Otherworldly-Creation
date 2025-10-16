@@ -77,10 +77,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClo
         };
       case 'info':
         return {
-          bg: 'bg-blue-900/90',
-          border: 'border-blue-500',
+          bg: 'bg-warm-gold/20',
+          border: 'border-warm-gold',
           icon: 'ℹ️',
-          iconBg: 'bg-blue-500'
+          iconBg: 'bg-warm-gold/30'
         };
       default:
         return {

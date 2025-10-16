@@ -38,8 +38,8 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
         icon: '⏳'
       },
       running: {
-        color: 'text-blue-400',
-        bgColor: 'bg-blue-600',
+        color: 'text-warm-gold',
+        bgColor: 'bg-warm-gold',
         icon: '⚡'
       },
       completed: {

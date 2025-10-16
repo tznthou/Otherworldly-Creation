@@ -111,7 +111,7 @@ const IllustrationRequestsSection: React.FC<IllustrationRequestsSectionProps> = 
                   onChange={(e) => onUpdateRequest(request.id, 'scene_description', e.target.value)}
                   placeholder="請描述要生成的插畫場景"
                   rows={3}
-                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-clay-orange resize-none"
                 />
               </div>
 
@@ -122,7 +122,7 @@ const IllustrationRequestsSection: React.FC<IllustrationRequestsSectionProps> = 
                 <select
                   value={request.scene_type}
                   onChange={(e) => onUpdateRequest(request.id, 'scene_type', e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-clay-orange"
                 >
                   <option value="portrait">🎭 角色肖像</option>
                   <option value="interaction">💬 角色互動</option>
@@ -137,7 +137,7 @@ const IllustrationRequestsSection: React.FC<IllustrationRequestsSectionProps> = 
                 <select
                   value={request.style_template}
                   onChange={(e) => onUpdateRequest(request.id, 'style_template', e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-clay-orange"
                 >
                   <option value="anime-portrait">動漫人物肖像</option>
                   <option value="fantasy-scene">奇幻場景</option>

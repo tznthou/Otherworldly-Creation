@@ -118,7 +118,7 @@ export const CharacterSelectionPanel: React.FC<CharacterSelectionPanelProps> = m
         </h3>
         <div className="flex items-center space-x-2">
           {charactersLoading && (
-            <div className="text-blue-400 text-sm animate-pulse">載入中...</div>
+            <div className="text-warm-gold text-sm animate-pulse">載入中...</div>
           )}
           <CosmicButton
             onClick={loadCharactersDirectly}
@@ -192,7 +192,7 @@ export const CharacterSelectionPanel: React.FC<CharacterSelectionPanelProps> = m
       <div className="character-grid flex flex-wrap gap-6">
         {/* 載入狀態 */}
         {charactersLoading && (
-          <div className="w-full text-center py-8 text-blue-400">
+          <div className="w-full text-center py-8 text-warm-gold">
             <div className="text-6xl mb-4 animate-spin">🔄</div>
             <p>載入角色中...</p>
           </div>

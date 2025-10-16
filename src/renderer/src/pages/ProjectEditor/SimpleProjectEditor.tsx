@@ -277,7 +277,7 @@ const SimpleProjectEditor: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           {isLoading ? (
-            <span className="text-sm text-blue-400">📖 載入中...</span>
+            <span className="text-sm text-warm-gold">📖 載入中...</span>
           ) : (
             <span className={`text-sm ${isSaved ? 'text-green-400' : 'text-yellow-400'}`}>
               {isSaved ? '✓ 已儲存至資料庫' : '● 未儲存'}

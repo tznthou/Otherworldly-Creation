@@ -114,7 +114,7 @@ const Statistics: React.FC = () => {
             </div>
             
             <div className="card text-center">
-              <div className="text-3xl font-bold text-purple-400 mb-2">
+              <div className="text-3xl font-bold text-clay-orange mb-2">
                 {StatisticsService.formatNumber(overallStats.totalWords)}
               </div>
               <div className="text-gray-400">總字數</div>
@@ -149,7 +149,7 @@ const Statistics: React.FC = () => {
                 
                 <div className="flex justify-between items-center">
                   <span className="text-gray-300">最高產的一天</span>
-                  <span className="text-purple-400 font-bold">
+                  <span className="text-clay-orange font-bold">
                     {overallStats.mostProductiveDay || '尚無數據'}
                   </span>
                 </div>
@@ -243,7 +243,7 @@ const Statistics: React.FC = () => {
                     </div>
                     
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-400">
+                      <div className="text-2xl font-bold text-clay-orange">
                         {StatisticsService.formatNumber(project.totalWords)}
                       </div>
                       <div className="text-xs text-gray-400">字數</div>
@@ -370,10 +370,10 @@ const Statistics: React.FC = () => {
           <div className="card">
             <h3 className="text-xl font-cosmic text-gold-400 mb-4">💡 創作建議</h3>
             <div className="space-y-4">
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+              <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
                 <div className="flex items-center mb-2">
-                  <span className="text-blue-400 mr-2">🎯</span>
-                  <span className="font-medium text-blue-400">每日目標</span>
+                  <span className="text-warm-gold mr-2">🎯</span>
+                  <span className="font-medium text-warm-gold">每日目標</span>
                 </div>
                 <p className="text-sm text-gray-300">
                   建議每天寫作 500-1000 字，保持創作習慣。持續的小進步比偶爾的大突破更有效。
@@ -390,10 +390,10 @@ const Statistics: React.FC = () => {
                 </p>
               </div>
               
-              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+              <div className="bg-clay-orange/10 border border-clay-orange/20 rounded-lg p-4">
                 <div className="flex items-center mb-2">
-                  <span className="text-purple-400 mr-2">⚡</span>
-                  <span className="font-medium text-purple-400">效率提升</span>
+                  <span className="text-clay-orange mr-2">⚡</span>
+                  <span className="font-medium text-clay-orange">效率提升</span>
                 </div>
                 <p className="text-sm text-gray-300">
                   使用 AI 續寫功能來克服寫作瓶頸，但記得保持您的獨特風格和創意。

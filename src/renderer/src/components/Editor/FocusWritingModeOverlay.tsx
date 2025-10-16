@@ -161,7 +161,7 @@ const FocusWritingModeOverlay: React.FC<FocusWritingModeOverlayProps> = ({
                 </div>
                 <div className="flex items-center space-x-4 text-sm" style={{ color: settings.textColor }}>
                   <span>{wordCount} 字</span>
-                  {isSaving && <span className="text-blue-400">儲存中...</span>}
+                  {isSaving && <span className="text-warm-gold">儲存中...</span>}
                 </div>
               </div>
             )}

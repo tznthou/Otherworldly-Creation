@@ -52,9 +52,9 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClo
       case 'warning':
         return 'bg-yellow-900/90 border-yellow-500 text-yellow-100';
       case 'info':
-        return 'bg-blue-900/90 border-blue-500 text-blue-100';
+        return 'bg-warm-gold/20 backdrop-blur-sm border-warm-gold text-warm-gold';
       default:
-        return 'bg-cosmic-900/90 border-cosmic-500 text-white';
+        return 'bg-bg-light/90 backdrop-blur-sm border-warm-gold/30 text-text-primary';
     }
   };
 

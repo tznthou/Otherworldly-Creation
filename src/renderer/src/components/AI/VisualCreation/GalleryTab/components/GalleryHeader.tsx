@@ -204,7 +204,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
               <button
                 onClick={onOpenBatchExport}
                 disabled={isExporting}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded text-sm transition-colors flex items-center gap-2"
+                className="px-3 py-1 bg-warm-gold hover:bg-warm-gold disabled:bg-warm-gold/25 text-white rounded text-sm transition-colors flex items-center gap-2"
                 title="開啟導出功能，支援快速導出和批次處理"
               >
                 {isExporting ? (

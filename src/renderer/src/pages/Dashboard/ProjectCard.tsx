@@ -134,7 +134,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         <div className="absolute top-2 right-2 z-50 flex gap-2" style={{ zIndex: 999 }}>
           <button
             onClick={handleEditProject}
-            className="w-9 h-9 rounded-lg bg-blue-600 hover:bg-blue-500 flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 border border-blue-700"
+            className="w-9 h-9 rounded-lg bg-warm-gold hover:bg-warm-gold flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 border border-warm-gold"
             title="編輯專案設定"
           >
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

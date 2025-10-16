@@ -140,7 +140,7 @@ export const SimpleHelpButton: React.FC<{ className?: string }> = ({ className }
     <div className={className}>
       <button
         onClick={() => setShowHelpCenter(true)}
-        className="flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        className="flex items-center space-x-2 px-3 py-2 bg-warm-gold hover:bg-warm-gold text-white rounded-lg transition-colors"
         title="打開幫助中心"
       >
         <HelpCircle className="w-4 h-4" />

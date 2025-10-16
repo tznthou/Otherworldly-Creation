@@ -177,7 +177,7 @@ const UpdateManager: React.FC = () => {
         <button
           onClick={handleCheckForUpdates}
           disabled={isChecking}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2 transition-colors"
+          className="bg-warm-gold hover:bg-warm-gold text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2 transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
           <span>{isChecking ? '檢查中...' : '檢查更新'}</span>
@@ -223,7 +223,7 @@ const UpdateManager: React.FC = () => {
               <div className="flex space-x-3">
                 <button
                   onClick={handleInstallUpdate}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
+                  className="flex-1 bg-warm-gold hover:bg-warm-gold text-white py-2 px-4 rounded-lg transition-colors"
                 >
                   立即安裝
                 </button>
@@ -239,7 +239,7 @@ const UpdateManager: React.FC = () => {
             // 更新可用界面
             <div>
               <div className="flex items-center mb-4">
-                <AlertCircle className="w-8 h-8 text-blue-500 mr-3" />
+                <AlertCircle className="w-8 h-8 text-warm-gold mr-3" />
                 <div>
                   <h4 className="text-lg font-medium text-gray-900">
                     發現新版本 {updateResult.latestVersion}
@@ -265,7 +265,7 @@ const UpdateManager: React.FC = () => {
                       <ul className="text-sm text-gray-600 space-y-1">
                         {updateResult.updateInfo.changelog.map((item, index) => (
                           <li key={index} className="flex items-start">
-                            <span className="text-blue-500 mr-2">•</span>
+                            <span className="text-warm-gold mr-2">•</span>
                             {item}
                           </li>
                         ))}
@@ -283,7 +283,7 @@ const UpdateManager: React.FC = () => {
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                     <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      className="bg-warm-gold h-2 rounded-full transition-all duration-300"
                       style={{ width: `${downloadProgress.percent}%` }}
                     />
                   </div>
@@ -306,7 +306,7 @@ const UpdateManager: React.FC = () => {
                 <button
                   onClick={handleDownloadUpdate}
                   disabled={isDownloading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  className="flex-1 bg-warm-gold hover:bg-warm-gold disabled:bg-warm-gold/25 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
                 >
                   <Download className="w-4 h-4" />
                   <span>{isDownloading ? '下載中...' : '下載更新'}</span>

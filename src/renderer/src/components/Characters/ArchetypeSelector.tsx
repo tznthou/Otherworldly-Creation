@@ -37,7 +37,7 @@ export const ArchetypeSelector: React.FC<ArchetypeSelectorProps> = ({
           <button
             type="button"
             onClick={() => setShowAll(!showAll)}
-            className="text-xs text-blue-600 hover:text-blue-800"
+            className="text-xs text-warm-gold hover:text-warm-gold"
           >
             {showAll ? '顯示推薦' : '顯示全部'}
           </button>
@@ -56,7 +56,7 @@ export const ArchetypeSelector: React.FC<ArchetypeSelectorProps> = ({
               className={`
                 relative p-3 border rounded-lg cursor-pointer transition-all duration-200
                 ${isSelected 
-                  ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
+                  ? 'border-warm-gold bg-warm-gold/5 ring-2 ring-blue-200' 
                   : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                 }
               `}
@@ -64,19 +64,19 @@ export const ArchetypeSelector: React.FC<ArchetypeSelectorProps> = ({
               {/* 選中指示器 */}
               {isSelected && (
                 <div className="absolute top-2 right-2">
-                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 text-warm-gold" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
               )}
               
               {/* 原型名稱 */}
-              <h5 className={`font-medium mb-1 ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+              <h5 className={`font-medium mb-1 ${isSelected ? 'text-warm-gold' : 'text-gray-900'}`}>
                 {template.name}
               </h5>
               
               {/* 原型描述 */}
-              <p className={`text-xs mb-2 line-clamp-2 ${isSelected ? 'text-blue-700' : 'text-gray-600'}`}>
+              <p className={`text-xs mb-2 line-clamp-2 ${isSelected ? 'text-warm-gold' : 'text-gray-600'}`}>
                 {template.description}
               </p>
               
@@ -88,7 +88,7 @@ export const ArchetypeSelector: React.FC<ArchetypeSelectorProps> = ({
                     className={`
                       inline-block px-1.5 py-0.5 text-xs font-medium rounded-full
                       ${isSelected 
-                        ? 'bg-blue-100 text-blue-800' 
+                        ? 'bg-warm-gold/10 text-warm-gold' 
                         : 'bg-gray-100 text-gray-700'
                       }
                     `}
@@ -100,7 +100,7 @@ export const ArchetypeSelector: React.FC<ArchetypeSelectorProps> = ({
                   <span className={`
                     inline-block px-1.5 py-0.5 text-xs font-medium rounded-full
                     ${isSelected 
-                      ? 'bg-blue-100 text-blue-800' 
+                      ? 'bg-warm-gold/10 text-warm-gold' 
                       : 'bg-gray-100 text-gray-700'
                     }
                   `}>

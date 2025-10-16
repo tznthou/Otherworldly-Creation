@@ -376,7 +376,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
           <select
             value={selectedCharacterId}
             onChange={(e) => setSelectedCharacterId(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-clay-orange focus:border-transparent"
           >
             <option value="">請選擇角色</option>
             {projectCharacters.map(character => (
@@ -401,7 +401,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-clay-orange text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
             >
@@ -532,7 +532,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                     <select
                       value={referenceImageType}
                       onChange={(e) => setReferenceImageType(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-clay-orange focus:border-transparent"
                     >
                       <option value="full_body">全身</option>
                       <option value="half_body">半身</option>
@@ -593,7 +593,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                     type="checkbox"
                     checked={strictMode}
                     onChange={(e) => setStrictMode(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                    className="w-4 h-4 text-clay-orange bg-gray-700 border-gray-600 rounded focus:ring-clay-orange"
                   />
                   <span className="text-sm text-gray-300">嚴格模式</span>
                 </label>
@@ -662,7 +662,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                           <div className="font-medium text-white">{rec.title}</div>
                           <div className="text-sm text-gray-300 mt-1">{rec.description}</div>
                           {rec.suggested_action && (
-                            <div className="text-sm text-purple-400 mt-2">
+                            <div className="text-sm text-clay-orange mt-2">
                               建議操作: {rec.suggested_action}
                             </div>
                           )}
@@ -698,7 +698,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                       type="checkbox"
                       checked={selectedCharacters.includes(character.id)}
                       onChange={() => toggleCharacterSelection(character.id)}
-                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                      className="w-4 h-4 text-clay-orange bg-gray-700 border-gray-600 rounded focus:ring-clay-orange"
                     />
                     <span className="text-white text-sm">{character.name}</span>
                   </label>
@@ -755,7 +755,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                     type="checkbox"
                     checked={strictMode}
                     onChange={(e) => setStrictMode(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                    className="w-4 h-4 text-clay-orange bg-gray-700 border-gray-600 rounded focus:ring-clay-orange"
                   />
                   <span className="text-sm text-gray-300">嚴格模式</span>
                 </label>
@@ -818,7 +818,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                       {report.recommendations.length > 0 && (
                         <div className="mt-3 text-sm">
                           <span className="text-gray-400">主要建議:</span>
-                          <span className="ml-2 text-purple-400">
+                          <span className="ml-2 text-clay-orange">
                             {report.recommendations[0].title}
                           </span>
                         </div>

@@ -214,22 +214,22 @@ export const TemplateFilters = memo<TemplateFiltersProps>(({
       {hasActiveFilters && (
         <div className="flex flex-wrap gap-2">
           {filter.searchTerm && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-warm-gold/10 text-warm-gold">
               搜索: "{filter.searchTerm}"
               <button
                 onClick={() => onFilterChange({ ...filter, searchTerm: undefined })}
-                className="ml-2 hover:text-blue-600"
+                className="ml-2 hover:text-warm-gold"
               >
                 ×
               </button>
             </span>
           )}
           {filter.category && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-clay-orange/10 text-clay-orange">
               類別: {STYLE_CATEGORIES.find(c => c.id === filter.category)?.name}
               <button
                 onClick={() => onFilterChange({ ...filter, category: undefined })}
-                className="ml-2 hover:text-purple-600"
+                className="ml-2 hover:text-clay-orange"
               >
                 ×
               </button>

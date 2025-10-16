@@ -246,7 +246,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
                         <span title="空白章節" className="text-yellow-500">⚠️</span>
                       )}
                       {new Date(chapter.updatedAt).getTime() > Date.now() - 86400000 && (
-                        <span title="最近更新" className="text-blue-400">🆕</span>
+                        <span title="最近更新" className="text-warm-gold">🆕</span>
                       )}
                     </div>
                   </div>

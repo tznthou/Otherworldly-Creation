@@ -252,7 +252,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
           </button>
           <button
             onClick={() => optimizePrompt(suggestion.prompt)}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+            className="px-3 py-1 bg-warm-gold hover:bg-warm-gold text-white text-xs rounded transition-colors"
           >
             優化
           </button>
@@ -360,7 +360,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
               </button>
               <button
                 onClick={() => toggleFavorite(entry.prompt)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                className="px-3 py-1 bg-warm-gold hover:bg-warm-gold text-white text-xs rounded transition-colors"
               >
                 加入最愛
               </button>
@@ -419,7 +419,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
               </button>
               <button
                 onClick={() => optimizePrompt(favorite.text)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                className="px-3 py-1 bg-warm-gold hover:bg-warm-gold text-white text-xs rounded transition-colors"
               >
                 優化
               </button>
@@ -439,7 +439,7 @@ const PromptSuggestionPanel: React.FC<PromptSuggestionPanelProps> = ({
           <button
             onClick={generateSuggestions}
             disabled={isLoading || selectedCharacters.length === 0}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-cosmic-600 disabled:cursor-not-allowed text-white text-xs rounded transition-colors"
+            className="px-3 py-1 bg-warm-gold hover:bg-warm-gold disabled:bg-cosmic-600 disabled:cursor-not-allowed text-white text-xs rounded transition-colors"
           >
             {isLoading ? '生成中...' : '重新生成建議'}
           </button>

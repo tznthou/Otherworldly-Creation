@@ -269,7 +269,7 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
                 <span className="text-cosmic-200">{stats.qualityDistribution.high}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-blue-400">超高品質 🔵</span>
+                <span className="text-warm-gold">超高品質 🔵</span>
                 <span className="text-cosmic-200">{stats.qualityDistribution.ultra}</span>
               </div>
             </div>
@@ -299,7 +299,7 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
                   <h5 className="font-medium text-cosmic-200 truncate flex-1 mr-2">{fileName}</h5>
                   <div className="flex space-x-1 text-xs">
                     <span className={`px-2 py-1 rounded ${
-                      analysis.resolution === 'ultra' ? 'bg-blue-600 text-white' :
+                      analysis.resolution === 'ultra' ? 'bg-warm-gold text-white' :
                       analysis.resolution === 'high' ? 'bg-green-600 text-white' :
                       analysis.resolution === 'medium' ? 'bg-yellow-600 text-black' :
                       'bg-red-600 text-white'

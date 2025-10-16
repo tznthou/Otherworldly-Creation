@@ -275,7 +275,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
               onClick={() => setActiveTab(tab.id as 'create' | 'history')}
               className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-clay-orange text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
             >

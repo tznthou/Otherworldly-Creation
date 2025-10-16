@@ -76,9 +76,9 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   const getTemplateTypeColor = (type: TemplateType): string => {
     const colors = {
-      isekai: 'bg-purple-100 text-purple-800',
+      isekai: 'bg-clay-orange/10 text-clay-orange',
       school: 'bg-pink-100 text-pink-800',
-      scifi: 'bg-blue-100 text-blue-800',
+      scifi: 'bg-warm-gold/10 text-warm-gold',
       fantasy: 'bg-green-100 text-green-800'
     };
     return colors[type] || 'bg-gray-100 text-gray-800';
@@ -87,7 +87,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-gold"></div>
         <span className="ml-2 text-gray-600">載入模板中...</span>
       </div>
     );
@@ -118,7 +118,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
         <div className="flex items-center justify-between">
           <button
             onClick={handleBackToList}
-            className="flex items-center text-blue-600 hover:text-blue-800"
+            className="flex items-center text-warm-gold hover:text-warm-gold"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -168,7 +168,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
               {selectedTemplate.worldSetting.specialElements.map((element, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full"
+                  className="px-3 py-1 text-sm bg-warm-gold/10 text-warm-gold rounded-full"
                 >
                   {element}
                 </span>
@@ -231,14 +231,14 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
           {onCancel && (
             <button
               onClick={onCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warm-gold"
             >
               取消
             </button>
           )}
           <button
             onClick={handleConfirmSelection}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 text-sm font-medium text-white bg-warm-gold border border-transparent rounded-md hover:bg-warm-gold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warm-gold"
           >
             選擇此模板
           </button>
@@ -273,7 +273,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
               key={template.id}
               className={`bg-white rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
                 selectedTemplate?.id === template.id
-                  ? 'border-blue-500 shadow-md'
+                  ? 'border-warm-gold shadow-md'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
               onClick={() => handleTemplateClick(template)}
@@ -325,7 +325,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
           {onCancel && (
             <button
               onClick={onCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warm-gold"
             >
               取消
             </button>
@@ -333,7 +333,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
           <button
             onClick={handleConfirmSelection}
             disabled={!selectedTemplate}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-white bg-warm-gold border border-transparent rounded-md hover:bg-warm-gold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warm-gold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             選擇模板
           </button>

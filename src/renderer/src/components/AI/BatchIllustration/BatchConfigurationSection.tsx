@@ -48,7 +48,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             onClick={() => batchConfig.setGlobalColorMode('color')}
             className={`p-4 rounded-lg border-2 transition-all ${
               batchConfig.globalColorMode === 'color'
-                ? 'border-purple-500 bg-gradient-to-br from-red-500/10 via-purple-500/10 to-blue-500/10'
+                ? 'border-clay-orange bg-gradient-to-br from-red-500/10 via-purple-500/10 to-blue-500/10'
                 : 'border-gray-600 bg-gray-700 hover:border-gray-500'
             }`}
           >
@@ -102,14 +102,14 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             onClick={() => batchConfig.setIllustrationProvider('imagen')}
             className={`p-4 rounded-lg border-2 transition-all ${
               batchConfig.illustrationProvider === 'imagen'
-                ? 'border-blue-500 bg-gradient-to-br from-blue-500/20 to-cyan-500/20'
+                ? 'border-warm-gold bg-gradient-to-br from-blue-500/20 to-cyan-500/20'
                 : 'border-gray-600 bg-gray-700 hover:border-gray-500'
             }`}
           >
             <div className="text-center">
               <div className="text-3xl mb-2">💎</div>
               <div className="font-medium text-white">Google Imagen</div>
-              <div className="text-xs text-blue-400 mt-1">高品質專業級</div>
+              <div className="text-xs text-warm-gold mt-1">高品質專業級</div>
               <div className="text-xs text-gray-400 mt-1">需要 API Key</div>
             </div>
           </button>
@@ -193,7 +193,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
           <select
             value={batchConfig.batchPriority}
             onChange={(e) => batchConfig.setBatchPriority(parseInt(e.target.value) as TaskPriority)}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-clay-orange"
           >
             <option value={TaskPriority.Low}>低</option>
             <option value={TaskPriority.Normal}>普通</option>
@@ -217,7 +217,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             <button
               type="button"
               onClick={() => batchConfig.setMaxParallel(batchConfig.getRecommendedMaxParallel())}
-              className="text-xs text-purple-400 hover:text-purple-300 underline"
+              className="text-xs text-clay-orange hover:text-clay-orange underline"
             >
               建議: {batchConfig.getRecommendedMaxParallel()}
             </button>
@@ -329,7 +329,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
           onChange={(e) => batchConfig.setBatchDescription(e.target.value)}
           placeholder="可選：描述這個批次的用途"
           rows={2}
-          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+          className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-clay-orange resize-none"
         />
       </div>
 
@@ -398,7 +398,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
                 };
                 input.click();
               }}
-              className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-blue-100 text-xs rounded transition-colors"
+              className="px-3 py-1 bg-warm-gold hover:bg-warm-gold text-warm-gold/60 text-xs rounded transition-colors"
               title="從檔案匯入配置"
             >
               📥 匯入

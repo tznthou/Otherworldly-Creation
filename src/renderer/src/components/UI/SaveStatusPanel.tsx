@@ -53,7 +53,7 @@ const SaveStatusPanel: React.FC<SaveStatusPanelProps> = ({ isOpen, onClose }) =>
       case 'pending':
         return <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>;
       case 'saving':
-        return <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>;
+        return <div className="w-2 h-2 bg-warm-gold/30 rounded-full animate-pulse"></div>;
       case 'saved':
         return <div className="w-2 h-2 bg-green-500 rounded-full"></div>;
       case 'error':
@@ -129,7 +129,7 @@ const SaveStatusPanel: React.FC<SaveStatusPanelProps> = ({ isOpen, onClose }) =>
               <div className="text-sm text-gray-400">等待中</div>
             </div>
             <div className="bg-cosmic-800 rounded-lg p-4">
-              <div className="text-2xl font-bold text-blue-500">{statistics.saving}</div>
+              <div className="text-2xl font-bold text-warm-gold">{statistics.saving}</div>
               <div className="text-sm text-gray-400">儲存中</div>
             </div>
             <div className="bg-cosmic-800 rounded-lg p-4">
@@ -218,7 +218,7 @@ const SaveStatusPanel: React.FC<SaveStatusPanelProps> = ({ isOpen, onClose }) =>
                     <div className="flex items-center space-x-2">
                       <span className={`text-xs px-2 py-1 rounded ${
                         operation.status === 'saved' ? 'bg-green-500/20 text-green-400' :
-                        operation.status === 'saving' ? 'bg-blue-500/20 text-blue-400' :
+                        operation.status === 'saving' ? 'bg-warm-gold/20 text-warm-gold' :
                         operation.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
                         operation.status === 'error' ? 'bg-red-500/20 text-red-400' :
                         'bg-gray-500/20 text-gray-400'

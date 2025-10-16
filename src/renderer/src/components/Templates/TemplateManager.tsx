@@ -126,9 +126,9 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
 
   const getTemplateTypeColor = (type: TemplateType): string => {
     const colors = {
-      isekai: 'bg-purple-100 text-purple-800',
+      isekai: 'bg-clay-orange/10 text-clay-orange',
       school: 'bg-pink-100 text-pink-800',
-      scifi: 'bg-blue-100 text-blue-800',
+      scifi: 'bg-warm-gold/10 text-warm-gold',
       fantasy: 'bg-green-100 text-green-800'
     };
     return colors[type] || 'bg-gray-100 text-gray-800';
@@ -348,7 +348,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                         {/* 複製 */}
                         <button
                           onClick={() => handleCloneTemplate(template)}
-                          className="text-blue-400 hover:text-blue-300 text-xs"
+                          className="text-warm-gold hover:text-warm-gold text-xs"
                         >
                           複製
                         </button>

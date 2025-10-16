@@ -28,9 +28,9 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   const getSeverityConfig = (severity: ErrorSeverity) => {
     const configs = {
       low: {
-        bgColor: 'bg-blue-900/20',
-        borderColor: 'border-blue-500/30',
-        textColor: 'text-blue-400',
+        bgColor: 'bg-warm-gold/10',
+        borderColor: 'border-warm-gold/20',
+        textColor: 'text-warm-gold',
         icon: 'ℹ️'
       },
       medium: {

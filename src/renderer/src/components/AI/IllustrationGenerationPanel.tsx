@@ -387,7 +387,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
             onChange={(e) => setSceneDescription(e.target.value)}
             placeholder="請用中文詳細描述您想要生成的插畫場景，例如：一位穿著藍色連衣裙的少女站在櫻花樹下，陽光透過花瓣灑落在她的臉上..."
             rows={4}
-            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-clay-orange focus:border-transparent resize-none"
             maxLength={500}
           />
           <div className="text-right text-xs text-gray-400 mt-1">
@@ -404,7 +404,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
             <select
               value={selectedCharacter}
               onChange={(e) => setSelectedCharacter(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-clay-orange focus:border-transparent"
             >
               <option value="">不選擇特定角色</option>
               {projectCharacters.map(character => (
@@ -416,7 +416,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
             </select>
             
             {selectedCharacter && useCharacterConsistency && (
-              <div className="mt-2 text-sm text-blue-400">
+              <div className="mt-2 text-sm text-warm-gold">
                 <span className="mr-1">ℹ️</span>
                 將使用角色的視覺一致性設定和種子值
               </div>
@@ -434,7 +434,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
             <select
               value={selectedTemplate}
               onChange={(e) => setSelectedTemplate(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-clay-orange focus:border-transparent"
             >
               {STYLE_TEMPLATES.map(template => (
                 <option key={template.id} value={template.id}>
@@ -452,7 +452,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
             <select
               value={aspectRatio}
               onChange={(e) => setAspectRatio(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-clay-orange focus:border-transparent"
             >
               {ASPECT_RATIOS.map(ratio => (
                 <option key={ratio.value} value={ratio.value}>
@@ -470,7 +470,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
             <select
               value={qualityPreset}
               onChange={(e) => setQualityPreset(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-clay-orange focus:border-transparent"
             >
               {QUALITY_PRESETS.map(preset => (
                 <option key={preset.value} value={preset.value}>
@@ -512,7 +512,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
                     id="consistency"
                     checked={useCharacterConsistency}
                     onChange={(e) => setUseCharacterConsistency(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                    className="w-4 h-4 text-clay-orange bg-gray-700 border-gray-600 rounded focus:ring-clay-orange"
                   />
                   <label htmlFor="consistency" className="text-sm text-gray-300">
                     啟用角色視覺一致性
@@ -571,7 +571,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
                     <div className={`font-medium ${
                       step.status === 'completed' ? 'text-green-400' :
                       step.status === 'error' ? 'text-red-400' :
-                      step.status === 'active' ? 'text-blue-400' :
+                      step.status === 'active' ? 'text-warm-gold' :
                       'text-gray-400'
                     }`}>
                       {step.title}
@@ -595,13 +595,13 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
             {/* 基本資訊 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-400">
+                <div className="text-2xl font-bold text-clay-orange">
                   {generationResult.basic_response.quality_score?.toFixed(1) || 'N/A'}
                 </div>
                 <div className="text-sm text-gray-400">品質分數</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">
+                <div className="text-2xl font-bold text-warm-gold">
                   {generationResult.basic_response.consistency_score?.toFixed(1) || 'N/A'}
                 </div>
                 <div className="text-sm text-gray-400">一致性分數</div>

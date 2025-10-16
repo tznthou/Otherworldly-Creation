@@ -165,7 +165,7 @@ const ParameterHelp: React.FC<{
       <div className="text-gray-400 mb-1">{config.description}</div>
       
       {/* 當前建議 */}
-      <div className="text-blue-300 mb-1">{getCurrentTip()}</div>
+      <div className="text-warm-gold mb-1">{getCurrentTip()}</div>
       
       {/* 警告訊息 */}
       {warningLevel !== 'safe' && (
@@ -943,7 +943,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               <div>
                 <button
                   onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center"
+                  className="text-xs text-warm-gold hover:text-warm-gold transition-colors flex items-center"
                 >
                   <span className="mr-1">{showAdvancedSettings ? '🔽' : '▶️'}</span>
                   {showAdvancedSettings ? '隱藏' : '顯示'}高級設置
@@ -952,8 +952,8 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               
               {hasChapterNotes && (
                 <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                  <span className="text-xs text-purple-400">筆記優化</span>
+                  <div className="w-2 h-2 rounded-full bg-clay-orange/30"></div>
+                  <span className="text-xs text-clay-orange">筆記優化</span>
                 </div>
               )}
             </div>
@@ -1112,7 +1112,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                   <div className="flex items-center space-x-1">
                     <button
                       onClick={() => handleRegenerateOption(option.id)}
-                      className="text-xs text-blue-400 hover:text-blue-300 transition-colors p-1"
+                      className="text-xs text-warm-gold hover:text-warm-gold transition-colors p-1"
                       title="重新生成此版本"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

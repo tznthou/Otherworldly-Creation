@@ -761,7 +761,7 @@ const AISettingsModal: React.FC = () => {
                               </button>
                               <button
                                 onClick={() => handleTestModels(provider.id)}
-                                className="btn-secondary text-xs px-3 py-1 bg-blue-600 hover:bg-blue-500"
+                                className="btn-secondary text-xs px-3 py-1 bg-warm-gold hover:bg-warm-gold"
                               >
                                 獲取模型
                               </button>
@@ -775,7 +775,7 @@ const AISettingsModal: React.FC = () => {
                                   </button>
                                   <button
                                     onClick={() => handleSetDefaultProvider(provider)}
-                                    className="text-purple-400 hover:text-purple-300 text-xs px-3 py-1 border border-purple-600 rounded hover:bg-purple-600 hover:text-cosmic-900 transition-colors"
+                                    className="text-clay-orange hover:text-clay-orange text-xs px-3 py-1 border border-clay-orange rounded hover:bg-clay-orange hover:text-cosmic-900 transition-colors"
                                   >
                                     設為預設
                                   </button>
@@ -791,7 +791,7 @@ const AISettingsModal: React.FC = () => {
                                   endpoint: provider.endpoint,
                                   api_key: undefined, // API key is encrypted in the provider object
                                 })}
-                                className="text-blue-400 hover:text-blue-300 text-sm"
+                                className="text-warm-gold hover:text-warm-gold text-sm"
                               >
                                 編輯
                               </button>
@@ -854,7 +854,7 @@ const AISettingsModal: React.FC = () => {
                             <span>完全本地運行，無隱私風險</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-blue-400 mr-2 mt-1">•</span>
+                            <span className="text-warm-gold mr-2 mt-1">•</span>
                             <span>最新推薦: llama3.2, qwen2.5</span>
                           </li>
                           <li className="flex items-start">
@@ -862,7 +862,7 @@ const AISettingsModal: React.FC = () => {
                             <span><strong>插畫特色:</strong> 離線可用，速度快</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-purple-400 mr-2 mt-1">💡</span>
+                            <span className="text-clay-orange mr-2 mt-1">💡</span>
                             <span>點擊「🔍 搜尋模型」自動獲取</span>
                           </li>
                         </ul>
@@ -878,7 +878,7 @@ const AISettingsModal: React.FC = () => {
                             <span>需要 Google AI API 金鑰</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-blue-400 mr-2 mt-1">•</span>
+                            <span className="text-warm-gold mr-2 mt-1">•</span>
                             <span>最新推薦: gemini-2.0-flash (2024)</span>
                           </li>
                           <li className="flex items-start">
@@ -890,7 +890,7 @@ const AISettingsModal: React.FC = () => {
                             <span><strong>高速生成:</strong> Flash版本針對插圖優化</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-purple-400 mr-2 mt-1">💡</span>
+                            <span className="text-clay-orange mr-2 mt-1">💡</span>
                             <span><strong>文化理解:</strong> 對中式奇幻元素理解極佳</span>
                           </li>
                           <li className="flex items-start">
@@ -918,7 +918,7 @@ const AISettingsModal: React.FC = () => {
                             <span>需要 OpenAI API 金鑰</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-blue-400 mr-2 mt-1">•</span>
+                            <span className="text-warm-gold mr-2 mt-1">•</span>
                             <span>最新推薦: gpt-4o, gpt-image-1</span>
                           </li>
                           <li className="flex items-start">
@@ -942,7 +942,7 @@ const AISettingsModal: React.FC = () => {
                             <span>需要 Anthropic API 金鑰</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-blue-400 mr-2 mt-1">•</span>
+                            <span className="text-warm-gold mr-2 mt-1">•</span>
                             <span>推薦模型: claude-3.5-sonnet, claude-3.5-haiku</span>
                           </li>
                           <li className="flex items-start">
@@ -974,11 +974,11 @@ const AISettingsModal: React.FC = () => {
                             <span><strong>Gemini Flash Image:</strong> $0.03/圖，高品質</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-blue-400 mr-2 mt-1">🆓</span>
+                            <span className="text-warm-gold mr-2 mt-1">🆓</span>
                             <span><strong>免費模型:</strong> Stable Diffusion 系列可用</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-purple-400 mr-2 mt-1">💎</span>
+                            <span className="text-clay-orange mr-2 mt-1">💎</span>
                             <span><strong>頂級選擇:</strong> DALL-E、Midjourney 等</span>
                           </li>
                           <li className="flex items-start">
@@ -1010,11 +1010,11 @@ const AISettingsModal: React.FC = () => {
                             <span><strong>新手推薦:</strong> Gemini + Pollinations (免費開始)</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-blue-400 mr-2 mt-1">✅</span>
+                            <span className="text-warm-gold mr-2 mt-1">✅</span>
                             <span><strong>隱私優先:</strong> 主用 Ollama (完全本地)</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-purple-400 mr-2 mt-1">✅</span>
+                            <span className="text-clay-orange mr-2 mt-1">✅</span>
                             <span><strong>品質穩定:</strong> OpenAI + Gemini 組合</span>
                           </li>
                           <li className="flex items-start">
@@ -1042,11 +1042,11 @@ const AISettingsModal: React.FC = () => {
                             <span><strong>Gemini Flash:</strong> 2秒生成，理解中文情境</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-purple-400 mr-2 mt-1">💎</span>
+                            <span className="text-clay-orange mr-2 mt-1">💎</span>
                             <span><strong>OpenRouter:</strong> 一個API調用百種模型</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-blue-400 mr-2 mt-1">🔧</span>
+                            <span className="text-warm-gold mr-2 mt-1">🔧</span>
                             <span><strong>模型搜尋:</strong> 輸入API金鑰自動獲取模型</span>
                           </li>
                           <li className="flex items-start">

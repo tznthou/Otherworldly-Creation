@@ -213,14 +213,14 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
                 className={`p-4 rounded-lg border-l-4 ${
                   issue.severity === 'high' ? 'bg-red-900/20 border-red-500' :
                   issue.severity === 'medium' ? 'bg-yellow-900/20 border-yellow-500' :
-                  'bg-blue-900/20 border-blue-500'
+                  'bg-warm-gold/10 border-warm-gold'
                 }`}
               >
                 <div className="flex items-start justify-between mb-2">
                   <span className={`text-sm font-medium ${
                     issue.severity === 'high' ? 'text-red-400' :
                     issue.severity === 'medium' ? 'text-yellow-400' :
-                    'text-blue-400'
+                    'text-warm-gold'
                   }`}>
                     {issue.category === 'personality' ? '人格問題' :
                      issue.category === 'speech' ? '言語問題' :
@@ -231,7 +231,7 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     issue.severity === 'high' ? 'bg-red-600 text-white' :
                     issue.severity === 'medium' ? 'bg-yellow-600 text-white' :
-                    'bg-blue-600 text-white'
+                    'bg-warm-gold text-white'
                   }`}>
                     {issue.severity === 'high' ? '嚴重' :
                      issue.severity === 'medium' ? '中等' : '輕微'}

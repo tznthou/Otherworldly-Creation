@@ -164,7 +164,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             <div className="flex-1 mr-4">
               <div className="flex items-center space-x-2 mb-2">
                 <span className="text-text-primary font-medium">電子書虛擬檔名對應系統</span>
-                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-900/30 text-blue-400 border border-blue-700/50">
+                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-warm-gold/20 text-warm-gold border border-warm-gold/40">
                   🧪 實驗功能
                 </div>
               </div>
@@ -190,8 +190,8 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
           </div>
 
           {settings.ebookVirtualNaming && (
-            <div className="border-t border-warm-gold/20 pt-4 bg-blue-900/10 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-blue-300 mb-3">⚙️ 功能配置</h4>
+            <div className="border-t border-warm-gold/20 pt-4 bg-warm-gold/5 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-warm-gold mb-3">⚙️ 功能配置</h4>
               <div className="space-y-3 text-xs text-gray-400">
                 <div className="flex items-center justify-between">
                   <span>自動生成語意化檔名</span>
@@ -242,7 +242,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             <div className="flex-1 mr-4">
               <div className="flex items-center space-x-2 mb-2">
                 <span className="text-text-primary font-medium">啟用智能多維度上下文優化</span>
-                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-400 border border-purple-700/50">
+                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-clay-orange/20 text-clay-orange border border-clay-orange/40">
                   🚀 最新功能
                 </div>
               </div>
@@ -268,13 +268,13 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                 }))}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-warm-gold/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-warm-gold"></div>
             </label>
           </div>
 
           {settings.features?.intelligentContextOptimization && (
-            <div className="border-t border-warm-gold/20 pt-4 bg-purple-900/10 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-purple-300 mb-3">⚙️ 智能上下文配置</h4>
+            <div className="border-t border-warm-gold/20 pt-4 bg-warm-gold/5 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-warm-gold mb-3">⚙️ 智能上下文配置</h4>
 
               <div className="space-y-4">
                 {/* 主要開關 */}
@@ -295,7 +295,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                       }))}
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-500"></div>
+                    <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-warm-gold/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-warm-gold"></div>
                   </label>
                 </div>
 
@@ -312,7 +312,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                             optimizationLevel: e.target.value as 'basic' | 'advanced' | 'experimental'
                           }
                         }))}
-                        className="w-full bg-bg-dark border border-warm-gold/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+                        className="w-full bg-bg-dark border border-warm-gold/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-clay-orange appearance-none cursor-pointer"
                       >
                         <option value="basic">基礎 - 簡單摘要</option>
                         <option value="advanced">高級 - 多維度分析（推薦）</option>
@@ -347,7 +347,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                     </div>
 
                     {/* 高級設定 */}
-                    <div className="border-t border-purple-700/30 pt-4">
+                    <div className="border-t border-warm-gold/20 pt-4">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-text-primary text-sm">保留對話內容</span>
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -362,7 +362,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                             }))}
                             className="sr-only peer"
                           />
-                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-500"></div>
+                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-warm-gold/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-warm-gold"></div>
                         </label>
                       </div>
 
@@ -380,7 +380,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                             }))}
                             className="sr-only peer"
                           />
-                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-500"></div>
+                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-warm-gold/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-warm-gold"></div>
                         </label>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
@@ -391,14 +391,14 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                 )}
               </div>
 
-              <div className="mt-4 p-3 bg-purple-900/20 border border-purple-700/50 rounded">
+              <div className="mt-4 p-3 bg-warm-gold/10 border border-warm-gold/30 rounded">
                 <div className="flex items-start space-x-2">
-                  <svg className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-warm-gold mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div>
-                    <p className="text-purple-400 text-xs font-medium">智能上下文提醒</p>
-                    <p className="text-purple-300 text-xs mt-1">
+                    <p className="text-warm-gold text-xs font-medium">智能上下文提醒</p>
+                    <p className="text-warm-gold text-xs mt-1">
                       此功能會分析專案中的所有章節來建構智能上下文。
                       第一次啟用時可能需要較長的處理時間來建立分析緩存。
                     </p>

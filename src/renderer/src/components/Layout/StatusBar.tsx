@@ -35,7 +35,7 @@ const StatusBar: React.FC<StatusBarProps> = ({ stats, currentChapterTitle }) => 
       
       {/* 字數統計 */}
       <div className="flex items-center space-x-1">
-        <span className="text-blue-400">字</span>
+        <span className="text-warm-gold">字</span>
         <span>{wordCount.toLocaleString()}</span>
       </div>
       
@@ -47,7 +47,7 @@ const StatusBar: React.FC<StatusBarProps> = ({ stats, currentChapterTitle }) => 
       
       {/* 行數統計 */}
       <div className="flex items-center space-x-1">
-        <span className="text-purple-400">行</span>
+        <span className="text-clay-orange">行</span>
         <span>{lineCount}</span>
       </div>
       

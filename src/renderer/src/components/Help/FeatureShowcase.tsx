@@ -261,8 +261,8 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isOpen, onClos
                 {renderDemo(selectedFeature)}
 
                 {/* 使用建議 */}
-                <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-                  <h5 className="text-blue-400 font-semibold mb-2">💡 使用建議</h5>
+                <div className="mt-6 p-4 bg-warm-gold/10 border border-warm-gold/20 rounded-lg">
+                  <h5 className="text-warm-gold font-semibold mb-2">💡 使用建議</h5>
                   <p className="text-gray-300 text-sm">
                     {selectedFeature.id === 'ai-writing' && '建議先完善角色設定和故事背景，這樣 AI 能提供更準確的續寫建議。'}
                     {selectedFeature.id === 'character-management' && '為主要角色創建詳細檔案，包括外貌、性格、背景等，有助於保持角色一致性。'}

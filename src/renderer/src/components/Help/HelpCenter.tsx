@@ -110,8 +110,8 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-6">
-                <h4 className="text-blue-400 font-semibold mb-4">💡 如何開始教學</h4>
+              <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-6">
+                <h4 className="text-warm-gold font-semibold mb-4">💡 如何開始教學</h4>
                 <div className="space-y-3 text-gray-300 text-sm">
                   <p>• <strong>首次使用教學</strong>：點擊右下角的 ❓ 幫助按鈕 → 互動教學 → 首次使用教學</p>
                   <p>• <strong>編輯器教學</strong>：在專案編輯器頁面，點擊 ❓ 幫助按鈕 → 互動教學 → 編輯器使用教學</p>

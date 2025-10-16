@@ -20,10 +20,10 @@ const SelectProjectForPlotAnalysisModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
-          <h2 className="text-xl font-cosmic text-gold-500">🎭 選擇專案進行劇情分析</h2>
+        <div className="p-6 border-b border-warm-gold/10 flex items-center justify-between">
+          <h2 className="text-xl font-serif-tc font-bold text-warm-gold">🎭 選擇專案進行劇情分析</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-white"
@@ -37,7 +37,7 @@ const SelectProjectForPlotAnalysisModal: React.FC = () => {
           {projects.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-6xl mb-4">📝</div>
-              <h3 className="text-xl font-cosmic text-gold-400 mb-4">還沒有專案</h3>
+              <h3 className="text-xl font-serif-tc font-bold text-warm-gold mb-4">還沒有專案</h3>
               <p className="text-gray-300 mb-6">
                 請先建立一個專案並寫入一些內容，然後就可以進行劇情分析了。
               </p>
@@ -54,12 +54,12 @@ const SelectProjectForPlotAnalysisModal: React.FC = () => {
           ) : (
             <div className="space-y-3">
               <p className="text-gray-300 mb-4">請選擇要進行劇情分析的專案：</p>
-              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3 mb-4">
+              <div className="bg-warm-gold/5 border border-warm-gold/20 rounded-2xl p-3 mb-4">
                 <div className="flex items-start space-x-2">
-                  <span className="text-purple-400 text-lg">🎭</span>
+                  <span className="text-warm-gold text-lg">🎭</span>
                   <div className="text-sm">
-                    <div className="text-purple-300 font-medium mb-1">劇情分析引擎功能</div>
-                    <ul className="text-purple-200 space-y-1 text-xs">
+                    <div className="text-warm-gold font-sans-tc font-medium mb-1">劇情分析引擎功能</div>
+                    <ul className="text-text-secondary font-sans-tc space-y-1 text-xs">
                       <li>• <strong>衝突檢測</strong> - 自動識別內在、外在、人際、社會衝突</li>
                       <li>• <strong>節奏分析</strong> - 評估故事節奏快慢和事件密度分布</li>
                       <li>• <strong>伏筆追蹤</strong> - 追蹤伏筆設置和回收狀況</li>
@@ -73,9 +73,9 @@ const SelectProjectForPlotAnalysisModal: React.FC = () => {
                 <button
                   key={project.id}
                   onClick={() => handleSelectProject(project.id)}
-                  className="w-full text-left p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg hover:border-purple-500 transition-colors group"
+                  className="w-full text-left p-4 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-2xl hover:border-warm-gold/30 hover:-translate-y-0.5 transition-all duration-300 group"
                 >
-                  <h4 className="font-medium text-white group-hover:text-purple-400">
+                  <h4 className="font-sans-tc font-medium text-text-primary group-hover:text-warm-gold">
                     {project.name}
                   </h4>
                   {project.description && (
@@ -88,14 +88,14 @@ const SelectProjectForPlotAnalysisModal: React.FC = () => {
                       <span className="text-xs text-gray-500">
                         建立於 {new Date(project.createdAt).toLocaleDateString()}
                       </span>
-                      <span className="text-xs px-2 py-1 rounded-full bg-cosmic-800 text-purple-400">
+                      <span className="text-xs px-2 py-1 rounded-full bg-warm-gold/10 text-warm-gold font-sans-tc">
                         {project?.novelLength === 'short' && '短篇'}
                         {project?.novelLength === 'medium' && '中篇'}
                         {project?.novelLength === 'long' && '長篇'}
                         {!project?.novelLength && '中篇'}
                       </span>
                     </div>
-                    <span className="text-xs text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs text-warm-gold font-sans-tc opacity-0 group-hover:opacity-100 transition-opacity">
                       開始分析 🎭 →
                     </span>
                   </div>
@@ -106,7 +106,7 @@ const SelectProjectForPlotAnalysisModal: React.FC = () => {
         </div>
 
         {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-end">
+        <div className="p-6 border-t border-warm-gold/10 flex justify-end">
           <button
             onClick={handleClose}
             className="btn-secondary"

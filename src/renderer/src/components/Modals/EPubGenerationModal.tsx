@@ -307,7 +307,7 @@ const EPubGenerationModal: React.FC = () => {
               )}
 
               {progress.currentChapter && (
-                <p className="text-sm text-blue-400 mt-2 bg-blue-500/10 px-2 py-1 rounded">
+                <p className="text-sm text-warm-gold mt-2 bg-warm-gold/10 px-2 py-1 rounded">
                   📖 處理章節：{progress.currentChapter}
                 </p>
               )}

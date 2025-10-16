@@ -375,7 +375,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
           <div className="flex items-center space-x-3">
             <button
               onClick={handleRegenerate}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-warm-gold hover:bg-warm-gold text-white rounded-lg transition-colors disabled:opacity-50"
               disabled={loading.savingImages}
             >
               🔄 重新生成

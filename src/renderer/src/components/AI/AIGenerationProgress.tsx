@@ -64,8 +64,8 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
         name: '準備階段',
         description: '正在建構上下文和系統提示...',
         icon: '📝',
-        color: 'text-blue-400',
-        bgColor: 'bg-blue-600/20'
+        color: 'text-warm-gold',
+        bgColor: 'bg-warm-gold/20'
       },
       generating: {
         name: '生成階段',
@@ -235,7 +235,7 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
                   i < (progress.completedSteps || 0) 
                     ? 'bg-green-500' 
                     : i === progress.completedSteps && progress.status === 'running'
-                    ? 'bg-blue-500 animate-pulse'
+                    ? 'bg-warm-gold/30 animate-pulse'
                     : 'bg-cosmic-600'
                 }`}
               />

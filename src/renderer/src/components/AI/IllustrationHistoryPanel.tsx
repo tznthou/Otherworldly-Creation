@@ -293,7 +293,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
   // 獲取品質顏色
   const getQualityColor = (score: number) => {
     if (score >= 9) return 'text-green-400';
-    if (score >= 8) return 'text-blue-400';
+    if (score >= 8) return 'text-warm-gold';
     if (score >= 7) return 'text-yellow-400';
     return 'text-red-400';
   };
@@ -326,7 +326,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                 onClick={() => setViewMode(view.type)}
                 className={`px-3 py-1 text-sm rounded-md transition-colors ${
                   viewMode === view.type
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-clay-orange text-white'
                     : 'text-gray-300 hover:text-white hover:bg-gray-700'
                 }`}
                 title={view.label}
@@ -366,7 +366,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                   const values = Array.from(e.target.selectedOptions, option => option.value);
                   updateFilter('character_ids', values);
                 }}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-clay-orange"
                 size={3}
               >
                 {projectCharacters.map(character => (
@@ -389,7 +389,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                   const values = Array.from(e.target.selectedOptions, option => option.value);
                   updateFilter('style_types', values);
                 }}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-clay-orange"
                 size={3}
               >
                 <option value="動漫人物肖像">動漫人物肖像</option>
@@ -435,7 +435,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
               <select
                 value={filter.sort_by}
                 onChange={(e) => updateFilter('sort_by', e.target.value)}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 mb-2"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-clay-orange mb-2"
               >
                 <option value="created_at">創建時間</option>
                 <option value="quality_score">品質分數</option>
@@ -445,7 +445,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
               <select
                 value={filter.sort_order}
                 onChange={(e) => updateFilter('sort_order', e.target.value)}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-clay-orange"
               >
                 <option value="desc">降序</option>
                 <option value="asc">升序</option>
@@ -494,7 +494,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                       </h3>
                       
                       {item.character_name && (
-                        <p className="text-xs text-purple-400 mb-1">
+                        <p className="text-xs text-clay-orange mb-1">
                           {item.character_name}
                         </p>
                       )}
@@ -550,7 +550,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                               {item.title}
                             </h3>
                             {item.character_name && (
-                              <p className="text-sm text-purple-400 mb-1">
+                              <p className="text-sm text-clay-orange mb-1">
                                 {item.character_name}
                               </p>
                             )}
@@ -598,7 +598,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                   <div className="space-y-6">
                     {illustrations.map(item => (
                       <div key={item.id} className="relative flex items-start space-x-6">
-                        <div className="absolute left-3.5 w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <div className="absolute left-3.5 w-2 h-2 bg-clay-orange/30 rounded-full"></div>
                         
                         <div className="ml-8 bg-gray-800 p-4 rounded-lg flex-1 hover:bg-gray-700 transition-colors cursor-pointer"
                              onClick={() => setSelectedIllustration(item)}>
@@ -623,7 +623,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                               </div>
                               
                               {item.character_name && (
-                                <p className="text-sm text-purple-400 mb-2">
+                                <p className="text-sm text-clay-orange mb-2">
                                   {item.character_name}
                                 </p>
                               )}
@@ -745,7 +745,7 @@ const IllustrationHistoryPanel: React.FC<IllustrationHistoryPanelProps> = ({
                     {selectedIllustration.character_name && (
                       <div>
                         <h4 className="font-medium text-gray-300 mb-2">關聯角色</h4>
-                        <p className="text-purple-400 text-sm">
+                        <p className="text-clay-orange text-sm">
                           {selectedIllustration.character_name}
                         </p>
                       </div>

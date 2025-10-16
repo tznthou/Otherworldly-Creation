@@ -318,13 +318,13 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                     onClick={() => setQualityPreset(key as QualityPreset)}
                     className={`p-3 text-left rounded-lg border transition-all ${
                       qualityPreset === key
-                        ? 'border-purple-500 bg-purple-600/10 ring-1 ring-purple-500/50'
+                        ? 'border-clay-orange bg-clay-orange/10 ring-1 ring-purple-500/50'
                         : 'border-cosmic-600 bg-cosmic-800/50 hover:border-cosmic-500'
                     }`}
                   >
                     <h6 className="font-medium text-cosmic-200 mb-1">{preset.name}</h6>
                     <p className="text-xs text-cosmic-400 mb-2">{preset.description}</p>
-                    <div className="text-xs text-purple-400">
+                    <div className="text-xs text-clay-orange">
                       {preset.imageQuality}% • {preset.maxWidth}x{preset.maxHeight}
                     </div>
                   </button>
@@ -557,7 +557,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                   <div className="text-sm text-cosmic-400">導出格式</div>
                 </div>
                 <div className="text-center p-3 bg-cosmic-700/50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-400">{imageConfig.imageQuality}%</div>
+                  <div className="text-2xl font-bold text-warm-gold">{imageConfig.imageQuality}%</div>
                   <div className="text-sm text-cosmic-400">圖片品質</div>
                 </div>
                 <div className="text-center p-3 bg-cosmic-700/50 rounded-lg">

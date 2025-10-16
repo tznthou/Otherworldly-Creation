@@ -306,7 +306,7 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
             </h4>
             <button
               onClick={addCustomRule}
-              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+              className="px-3 py-1 bg-warm-gold text-white text-sm rounded hover:bg-warm-gold transition-colors"
             >
               添加規則
             </button>

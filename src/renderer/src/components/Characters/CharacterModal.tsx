@@ -425,15 +425,15 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
 
             {/* 模板預覽和應用 */}
             {showTemplatePreview && selectedTemplate && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-warm-gold/20 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-lg font-medium text-blue-900">
+                  <h4 className="text-lg font-medium text-warm-gold">
                     🎭 {selectedTemplate.name} 模板預覽
                   </h4>
                   <button
                     type="button"
                     onClick={dismissTemplate}
-                    className="text-blue-400 hover:text-blue-600"
+                    className="text-warm-gold hover:text-warm-gold"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -443,33 +443,33 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 
                 <div className="space-y-3 text-sm">
                   <div>
-                    <span className="font-medium text-blue-800">描述：</span>
-                    <p className="text-blue-700 mt-1">{selectedTemplate.description}</p>
+                    <span className="font-medium text-warm-gold">描述：</span>
+                    <p className="text-warm-gold mt-1">{selectedTemplate.description}</p>
                   </div>
                   
                   <div>
-                    <span className="font-medium text-blue-800">預設性格：</span>
-                    <p className="text-blue-700 mt-1">{selectedTemplate.defaultPersonality}</p>
+                    <span className="font-medium text-warm-gold">預設性格：</span>
+                    <p className="text-warm-gold mt-1">{selectedTemplate.defaultPersonality}</p>
                   </div>
                   
                   {selectedTemplate.defaultAppearance && (
                     <div>
-                      <span className="font-medium text-blue-800">預設外觀：</span>
-                      <p className="text-blue-700 mt-1">{selectedTemplate.defaultAppearance}</p>
+                      <span className="font-medium text-warm-gold">預設外觀：</span>
+                      <p className="text-warm-gold mt-1">{selectedTemplate.defaultAppearance}</p>
                     </div>
                   )}
                   
                   {selectedTemplate.defaultBackground && (
                     <div>
-                      <span className="font-medium text-blue-800">預設背景：</span>
-                      <p className="text-blue-700 mt-1">{selectedTemplate.defaultBackground}</p>
+                      <span className="font-medium text-warm-gold">預設背景：</span>
+                      <p className="text-warm-gold mt-1">{selectedTemplate.defaultBackground}</p>
                     </div>
                   )}
                   
                   {selectedTemplate.suggestedAge && (
                     <div>
-                      <span className="font-medium text-blue-800">建議年齡：</span>
-                      <span className="text-blue-700 ml-1">
+                      <span className="font-medium text-warm-gold">建議年齡：</span>
+                      <span className="text-warm-gold ml-1">
                         {selectedTemplate.suggestedAge.min} - {selectedTemplate.suggestedAge.max} 歲
                       </span>
                     </div>
@@ -477,8 +477,8 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                   
                   {selectedTemplate.suggestedGender && selectedTemplate.suggestedGender.length > 0 && (
                     <div>
-                      <span className="font-medium text-blue-800">建議性別：</span>
-                      <span className="text-blue-700 ml-1">
+                      <span className="font-medium text-warm-gold">建議性別：</span>
+                      <span className="text-warm-gold ml-1">
                         {selectedTemplate.suggestedGender.join('、')}
                       </span>
                     </div>
@@ -488,7 +488,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                     {selectedTemplate.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                        className="inline-block px-2 py-1 text-xs font-medium bg-warm-gold/10 text-warm-gold rounded-full"
                       >
                         {tag}
                       </span>
@@ -496,18 +496,18 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-end space-x-2 mt-4 pt-3 border-t border-blue-200">
+                <div className="flex items-center justify-end space-x-2 mt-4 pt-3 border-t border-warm-gold/20">
                   <button
                     type="button"
                     onClick={dismissTemplate}
-                    className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800"
+                    className="px-3 py-1 text-sm text-warm-gold hover:text-warm-gold"
                   >
                     稍後再說
                   </button>
                   <button
                     type="button"
                     onClick={applyTemplate}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 text-sm font-medium text-white bg-warm-gold rounded-md hover:bg-warm-gold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warm-gold"
                   >
                     應用模板
                   </button>

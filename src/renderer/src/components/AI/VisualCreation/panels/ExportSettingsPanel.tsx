@@ -241,14 +241,14 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
 
           {/* 導出進度（當正在導出時） */}
           {isExporting && exportTask && (
-            <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
+            <div className="bg-warm-gold/10 border border-warm-gold rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-white font-medium">正在導出...</span>
-                <span className="text-blue-400">{exportProgress}%</span>
+                <span className="text-warm-gold">{exportProgress}%</span>
               </div>
               <div className="w-full bg-cosmic-700 rounded-full h-2">
                 <div 
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-warm-gold/30 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${exportProgress}%` }}
                 />
               </div>

@@ -229,7 +229,7 @@ export const TemplateImportWizard: React.FC<TemplateImportWizardProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">小說模板匯入精靈</h2>
-              <p className="text-blue-100 mt-1">從小說內容自動生成創作模板</p>
+              <p className="text-warm-gold/60 mt-1">從小說內容自動生成創作模板</p>
             </div>
             <button
               onClick={handleClose}
@@ -254,23 +254,23 @@ export const TemplateImportWizard: React.FC<TemplateImportWizardProps> = ({
                 <div key={step.key} className="flex items-center">
                   <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
                     currentStep === step.key
-                      ? 'bg-white text-blue-600 border-white'
+                      ? 'bg-white text-warm-gold border-white'
                       : index < ['upload', 'options', 'analyzing', 'preview', 'saving'].indexOf(currentStep)
-                      ? 'bg-blue-400 text-white border-blue-400'
-                      : 'border-blue-300 text-blue-300'
+                      ? 'bg-warm-gold/25 text-white border-warm-gold'
+                      : 'border-warm-gold/50 text-warm-gold'
                   }`}>
                     <span className="text-sm">{step.icon}</span>
                   </div>
                   <span className={`ml-2 text-sm ${
-                    currentStep === step.key ? 'text-white font-medium' : 'text-blue-200'
+                    currentStep === step.key ? 'text-white font-medium' : 'text-warm-gold/80'
                   }`}>
                     {step.label}
                   </span>
                   {index < 4 && (
                     <div className={`w-8 h-0.5 mx-4 ${
                       index < ['upload', 'options', 'analyzing', 'preview', 'saving'].indexOf(currentStep)
-                        ? 'bg-blue-400'
-                        : 'bg-blue-300'
+                        ? 'bg-warm-gold/25'
+                        : 'bg-warm-gold/15'
                     }`} />
                   )}
                 </div>
@@ -569,7 +569,7 @@ const OptionsStep: React.FC<{
       <div className="flex justify-between">
         <button
           onClick={onBack}
-          className="px-6 py-2 border border-cosmic-600 text-gray-300 rounded-md hover:bg-cosmic-700 focus:ring-2 focus:ring-blue-500"
+          className="px-6 py-2 border border-cosmic-600 text-gray-300 rounded-md hover:bg-cosmic-700 focus:ring-2 focus:ring-warm-gold"
         >
           上一步
         </button>
@@ -740,7 +740,7 @@ const PreviewStep: React.FC<{
       <div className="flex justify-between">
         <button
           onClick={onBack}
-          className="px-6 py-2 border border-cosmic-600 text-gray-300 rounded-md hover:bg-cosmic-700 focus:ring-2 focus:ring-blue-500"
+          className="px-6 py-2 border border-cosmic-600 text-gray-300 rounded-md hover:bg-cosmic-700 focus:ring-2 focus:ring-warm-gold"
         >
           重新分析
         </button>

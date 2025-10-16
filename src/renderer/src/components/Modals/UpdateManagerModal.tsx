@@ -124,7 +124,7 @@ const UpdateManagerModal: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-300">最新版本</span>
                   <span className={`font-medium ${
-                    updateInfo.hasUpdate ? 'text-blue-400' : 'text-green-400'
+                    updateInfo.hasUpdate ? 'text-warm-gold' : 'text-green-400'
                   }`}>
                     v{updateInfo.latestVersion || updateInfo.currentVersion}
                   </span>
@@ -136,7 +136,7 @@ const UpdateManagerModal: React.FC = () => {
                       {updateInfo.error}
                     </div>
                   ) : updateInfo.hasUpdate ? (
-                    <div className="flex items-center text-blue-400 mb-2">
+                    <div className="flex items-center text-warm-gold mb-2">
                       <span className="text-xl mr-2">🔔</span>
                       發現新版本可用
                     </div>

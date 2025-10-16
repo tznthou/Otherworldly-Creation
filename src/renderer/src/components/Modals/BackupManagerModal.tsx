@@ -117,7 +117,7 @@ const BackupManagerModal: React.FC = () => {
             <div className={`mb-6 p-4 rounded-lg border-l-4 ${
               message.type === 'success' ? 'bg-green-500/10 border-green-500 text-green-400' :
               message.type === 'error' ? 'bg-red-500/10 border-red-500 text-red-400' :
-              'bg-blue-500/10 border-blue-500 text-blue-400'
+              'bg-warm-gold/10 border-warm-gold text-warm-gold'
             }`}>
               <p className="text-sm">{message.text}</p>
             </div>

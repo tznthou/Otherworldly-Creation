@@ -577,7 +577,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
   const _getStatusColor = (status: TaskStatus) => {
     switch (status) {
       case TaskStatus.Completed: return 'text-green-400';
-      case TaskStatus.Running: return 'text-blue-400';
+      case TaskStatus.Running: return 'text-warm-gold';
       case TaskStatus.Failed: return 'text-red-400';
       case TaskStatus.Cancelled: return 'text-gray-400';
       case TaskStatus.Queued: return 'text-yellow-400';
@@ -689,7 +689,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
               onClick={() => setActiveTab(tab.id as 'create' | 'history')}
               className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-clay-orange text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
             >
@@ -744,7 +744,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                     onClick={() => batchConfig.setGlobalColorMode('color')}
                     className={`p-4 rounded-lg border-2 transition-all ${
                       batchConfig.globalColorMode === 'color'
-                        ? 'border-purple-500 bg-gradient-to-br from-red-500/10 via-purple-500/10 to-blue-500/10'
+                        ? 'border-clay-orange bg-gradient-to-br from-red-500/10 via-purple-500/10 to-blue-500/10'
                         : 'border-gray-600 bg-gray-700 hover:border-gray-500'
                     }`}
                   >
@@ -798,14 +798,14 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                     onClick={() => batchConfig.setIllustrationProvider('imagen')}
                     className={`p-4 rounded-lg border-2 transition-all ${
                       batchConfig.illustrationProvider === 'imagen'
-                        ? 'border-blue-500 bg-gradient-to-br from-blue-500/20 to-cyan-500/20'
+                        ? 'border-warm-gold bg-gradient-to-br from-blue-500/20 to-cyan-500/20'
                         : 'border-gray-600 bg-gray-700 hover:border-gray-500'
                     }`}
                   >
                     <div className="text-center">
                       <div className="text-3xl mb-2">💎</div>
                       <div className="font-medium text-white">Google Imagen</div>
-                      <div className="text-xs text-blue-400 mt-1">高品質專業級</div>
+                      <div className="text-xs text-warm-gold mt-1">高品質專業級</div>
                       <div className="text-xs text-gray-400 mt-1">需要 API Key</div>
                     </div>
                   </button>
@@ -889,7 +889,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   <select
                     value={batchConfig.batchPriority}
                     onChange={(e) => batchConfig.setBatchPriority(parseInt(e.target.value) as TaskPriority)}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-clay-orange"
                   >
                     <option value={TaskPriority.Low}>低</option>
                     <option value={TaskPriority.Normal}>普通</option>
@@ -913,7 +913,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => batchConfig.setMaxParallel(batchConfig.getRecommendedMaxParallel())}
-                      className="text-xs text-purple-400 hover:text-purple-300 underline"
+                      className="text-xs text-clay-orange hover:text-clay-orange underline"
                     >
                       建議: {batchConfig.getRecommendedMaxParallel()}
                     </button>
@@ -1022,7 +1022,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   onChange={(e) => batchConfig.setBatchDescription(e.target.value)}
                   placeholder="可選：描述這個批次的用途"
                   rows={2}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-clay-orange resize-none"
                 />
               </div>
 
@@ -1091,7 +1091,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                         };
                         input.click();
                       }}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-blue-100 text-xs rounded transition-colors"
+                      className="px-3 py-1 bg-warm-gold hover:bg-warm-gold text-warm-gold/60 text-xs rounded transition-colors"
                       title="從檔案匯入配置"
                     >
                       📥 匯入
@@ -1114,7 +1114,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                 </h3>
                 <div className="flex items-center space-x-2">
                   {charactersLoading && (
-                    <div className="text-blue-400 text-sm animate-pulse">載入中...</div>
+                    <div className="text-warm-gold text-sm animate-pulse">載入中...</div>
                   )}
                   <button
                     onClick={loadCharactersDirectly}
@@ -1134,7 +1134,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
               
               <div className="character-grid flex flex-wrap gap-6 mb-6">
                 {charactersLoading && (
-                  <div className="col-span-full text-center py-8 text-blue-400">
+                  <div className="col-span-full text-center py-8 text-warm-gold">
                     <div className="text-6xl mb-4 animate-spin">🔄</div>
                     <p>載入角色中...</p>
                   </div>
@@ -1373,7 +1373,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                           onChange={(e) => updateRequest(request.id, 'scene_description', e.target.value)}
                           placeholder="請描述要生成的插畫場景"
                           rows={3}
-                          className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                          className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-clay-orange resize-none"
                         />
                       </div>
 
@@ -1384,7 +1384,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                         <select
                           value={request.scene_type}
                           onChange={(e) => updateRequest(request.id, 'scene_type', e.target.value)}
-                          className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-clay-orange"
                         >
                           <option value="portrait">🎭 角色肖像</option>
                           <option value="interaction">💬 角色互動</option>
@@ -1399,7 +1399,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                         <select
                           value={request.style_template}
                           onChange={(e) => updateRequest(request.id, 'style_template', e.target.value)}
-                          className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:ring-2 focus:ring-clay-orange"
                         >
                           <option value="anime-portrait">動漫人物肖像</option>
                           <option value="fantasy-scene">奇幻場景</option>

@@ -281,7 +281,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
             onClick={() => setGlobalColorMode('color')}
             className={`p-3 rounded-lg border-2 transition-all ${
               globalColorMode === 'color'
-                ? 'border-purple-500 bg-gradient-to-br from-red-500/10 via-purple-500/10 to-blue-500/10'
+                ? 'border-clay-orange bg-gradient-to-br from-red-500/10 via-purple-500/10 to-blue-500/10'
                 : 'border-gray-600 bg-gray-700 hover:border-gray-500'
             }`}
           >
@@ -366,7 +366,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
                         serviceCapabilities[service]?.quality === 'premium'
                           ? 'bg-gold-500/20 text-gold-300'
                           : serviceCapabilities[service]?.quality === 'high'
-                          ? 'bg-blue-500/20 text-blue-300'
+                          ? 'bg-warm-gold/20 text-warm-gold'
                           : 'bg-green-500/20 text-green-300'
                       }`}>
                         {serviceCapabilities[service]?.quality === 'premium' ? '👑 頂級' :
@@ -381,10 +381,10 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
         </div>
 
         {/* 提示訊息 */}
-        <div className="mt-3 p-3 bg-blue-900/20 border border-blue-700 rounded-lg">
-          <div className="text-sm text-blue-300">
+        <div className="mt-3 p-3 bg-warm-gold/10 border border-warm-gold rounded-lg">
+          <div className="text-sm text-warm-gold">
             💡 <strong>提示：</strong> 需要更多 AI 插畫服務？請前往
-            <strong className="text-blue-200 mx-1">設定 → AI 提供者管理</strong> 新增 API 金鑰
+            <strong className="text-warm-gold/80 mx-1">設定 → AI 提供者管理</strong> 新增 API 金鑰
           </div>
         </div>
       </div>
@@ -487,10 +487,10 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
 
       {/* 簡化的 API 狀態顯示 */}
       {requiresApiKey && (
-        <div className="mb-6 p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
+        <div className="mb-6 p-4 bg-warm-gold/10 border border-warm-gold rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="text-blue-300 font-medium">🔑 API 配置</span>
+              <span className="text-warm-gold font-medium">🔑 API 配置</span>
               {isApiKeyLoaded && apiKeySource !== 'manual' ? (
                 <span className="text-green-400 text-sm">
                   ✅ 已從 {apiKeySource === 'gemini' ? 'Gemini' : 'OpenRouter'} 載入
@@ -501,12 +501,12 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
             </div>
             <button
               onClick={handleNavigateToAISettings}
-              className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded transition-colors"
+              className="px-3 py-1 bg-warm-gold hover:bg-warm-gold text-white text-sm rounded transition-colors"
             >
               前往設定
             </button>
           </div>
-          <p className="text-xs text-blue-200 mt-2">
+          <p className="text-xs text-warm-gold/80 mt-2">
             💡 在 AI 提供者管理中統一配置所有服務的 API 金鑰和詳細設定
           </p>
         </div>

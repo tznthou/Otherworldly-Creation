@@ -332,7 +332,7 @@ const Dashboard: React.FC = () => {
                           dispatch(setCurrentProject(project));
                           dispatch(openModal('projectManage'));
                         }}
-                        className="w-7 h-7 rounded-full bg-blue-600/95 hover:bg-blue-500 flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 backdrop-blur-sm border border-blue-500/30"
+                        className="w-7 h-7 rounded-full bg-clay-orange/95 hover:bg-warm-gold flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 backdrop-blur-sm border border-warm-gold/30"
                         title="編輯專案"
                       >
                         <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,7 +345,7 @@ const Dashboard: React.FC = () => {
                           dispatch(setCurrentProject(project));
                           dispatch(openModal('deleteProject'));
                         }}
-                        className="w-7 h-7 rounded-full bg-red-600/95 hover:bg-red-500 flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 backdrop-blur-sm border border-red-500/30"
+                        className="w-7 h-7 rounded-full bg-red-900/40 hover:bg-red-900/60 flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-110 backdrop-blur-sm border border-red-500/40"
                         title="刪除專案"
                       >
                         <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -449,7 +449,7 @@ const ProjectEditorContent: React.FC = () => {
                     {/* 劇情分析按鈕 */}
                     <button
                       onClick={handlePlotAnalysis}
-                      className="px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 bg-bg-dark/80 hover:bg-purple-600/20 text-purple-300 hover:text-purple-200 hover:scale-105 transform"
+                      className="px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 bg-bg-dark/80 hover:bg-clay-orange/20 text-clay-orange hover:text-clay-orange/80 hover:scale-105 transform"
                       title="劇情分析"
                     >
                       <span>🎭</span>
@@ -459,7 +459,7 @@ const ProjectEditorContent: React.FC = () => {
                     {/* 角色分析按鈕 */}
                     <button
                       onClick={handleCharacterAnalysis}
-                      className="px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 bg-bg-dark/80 hover:bg-blue-600/20 text-blue-300 hover:text-blue-200 hover:scale-105 transform"
+                      className="px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 bg-bg-dark/80 hover:bg-warm-gold/20 text-warm-gold hover:text-warm-gold/80 hover:scale-105 transform"
                       title="角色分析"
                     >
                       <span>👥</span>

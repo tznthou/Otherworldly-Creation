@@ -113,7 +113,7 @@ const ProgressManager: React.FC<ProgressManagerProps> = ({
             </div>
             <div className="w-full bg-cosmic-700 rounded-full h-1 mt-1">
               <div
-                className="h-1 rounded-full bg-blue-600 transition-all duration-300"
+                className="h-1 rounded-full bg-warm-gold transition-all duration-300"
                 style={{
                   width: `${
                     runningProgress.reduce((sum, p) => sum + p.progress, 0) / runningProgress.length

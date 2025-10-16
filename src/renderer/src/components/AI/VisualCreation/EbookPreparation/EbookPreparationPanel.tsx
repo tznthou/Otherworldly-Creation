@@ -146,15 +146,15 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
         </div>
 
         {/* 功能說明 */}
-        <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700/50 rounded-lg p-4">
-          <h4 className="text-blue-300 font-medium mb-2 flex items-center">
+        <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-warm-gold/40 rounded-lg p-4">
+          <h4 className="text-warm-gold font-medium mb-2 flex items-center">
             <span className="text-xl mr-2">💡</span>
             功能說明
           </h4>
-          <p className="text-blue-200 text-sm mb-3">
+          <p className="text-warm-gold/80 text-sm mb-3">
             這是一個獨立的電子書排版預備工具，幫助您組織和準備圖片，<strong>不會影響現有的完美 PDF 輸出功能</strong>。
           </p>
-          <ul className="text-blue-200 text-sm space-y-1">
+          <ul className="text-warm-gold/80 text-sm space-y-1">
             <li>• <strong>批次重命名：</strong>智能重命名和分類整理</li>
             <li>• <strong>元數據分析：</strong>圖片品質和電子書適用性評估</li>
             <li>• <strong>拖放分類：</strong>直觀的拖拽式圖片分類管理</li>

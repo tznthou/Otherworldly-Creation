@@ -149,7 +149,7 @@ const ReadingModeOverlay: React.FC<ReadingModeOverlayProps> = ({
                 </div>
                 <div className="flex items-center space-x-4 text-sm" style={{ color: settings.textColor }}>
                   <span>{wordCount} 字</span>
-                  <span className="text-blue-400">閱讀模式</span>
+                  <span className="text-warm-gold">閱讀模式</span>
                 </div>
               </div>
             )}

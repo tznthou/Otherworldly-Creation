@@ -555,7 +555,7 @@ const DatabaseMaintenance: React.FC = () => {
       case 'critical': return 'bg-red-500';
       case 'high': return 'bg-orange-500';
       case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-blue-500';
+      case 'low': return 'bg-warm-gold/30';
       default: return 'bg-gray-500';
     }
   };
@@ -582,7 +582,7 @@ const DatabaseMaintenance: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Database className="w-8 h-8 text-blue-400" />
+          <Database className="w-8 h-8 text-warm-gold" />
           <div>
             <h1 className="text-2xl font-bold text-white">資料庫維護</h1>
             <p className="text-gray-400">檢查和維護資料庫健康狀態</p>
@@ -593,7 +593,7 @@ const DatabaseMaintenance: React.FC = () => {
           <Button
             onClick={performHealthCheck}
             disabled={isChecking}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-warm-gold hover:bg-warm-gold"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
             {isChecking ? '檢查中...' : '重新檢查'}
@@ -621,7 +621,7 @@ const DatabaseMaintenance: React.FC = () => {
               <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-400">
+                    <div className="text-2xl font-bold text-warm-gold">
                       {checkResult.statistics.totalProjects || 0}
                     </div>
                     <div className="text-sm text-gray-400">專案</div>
@@ -633,7 +633,7 @@ const DatabaseMaintenance: React.FC = () => {
                     <div className="text-sm text-gray-400">章節</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-400">
+                    <div className="text-2xl font-bold text-clay-orange">
                       {checkResult.statistics.totalCharacters || 0}
                     </div>
                     <div className="text-sm text-gray-400">角色</div>
@@ -744,7 +744,7 @@ const DatabaseMaintenance: React.FC = () => {
                   ) : (
                     walModeStatus.benefits?.map((benefit: string, index: number) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-warm-gold flex-shrink-0" />
                         <span className="text-sm text-gray-300">{benefit}</span>
                       </div>
                     ))
@@ -785,7 +785,7 @@ const DatabaseMaintenance: React.FC = () => {
                 </Button>
                 <Button
                   onClick={generateReport}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-warm-gold hover:bg-warm-gold"
                   size="sm"
                 >
                   <FileText className="w-4 h-4 mr-2" />
@@ -844,7 +844,7 @@ const DatabaseMaintenance: React.FC = () => {
         <Button
           onClick={optimizeDatabase}
           disabled={isOptimizing}
-          className="bg-purple-600 hover:bg-purple-700 h-16"
+          className="bg-clay-orange hover:bg-clay-orange h-16"
         >
           <div className="text-center">
             <BarChart3 className={`w-6 h-6 mx-auto mb-1 ${isOptimizing ? 'animate-pulse' : ''}`} />
@@ -855,7 +855,7 @@ const DatabaseMaintenance: React.FC = () => {
         <Button
           onClick={reindexDatabase}
           disabled={isReindexing}
-          className="bg-indigo-600 hover:bg-indigo-700 h-16"
+          className="bg-warm-gold/40 hover:bg-warm-gold/50 h-16"
         >
           <div className="text-center">
             <Settings className={`w-6 h-6 mx-auto mb-1 ${isReindexing ? 'animate-spin' : ''}`} />
@@ -901,7 +901,7 @@ const DatabaseMaintenance: React.FC = () => {
         <Button
           onClick={exportDatabase}
           disabled={isExporting}
-          className="bg-blue-600 hover:bg-blue-700 h-16"
+          className="bg-warm-gold hover:bg-warm-gold h-16"
         >
           <div className="text-center">
             <Download className={`w-6 h-6 mx-auto mb-1 ${isExporting ? 'animate-bounce' : ''}`} />
@@ -1001,8 +1001,8 @@ const DatabaseMaintenance: React.FC = () => {
               </div>
 
               {/* 建議 */}
-              <div className="bg-blue-900/30 border border-blue-500/30 rounded p-3">
-                <h4 className="flex items-center text-blue-400 font-medium mb-1">
+              <div className="bg-warm-gold/20 border border-warm-gold/20 rounded p-3">
+                <h4 className="flex items-center text-warm-gold font-medium mb-1">
                   <CheckCircle className="w-4 h-4 mr-2" />
                   專業建議
                 </h4>
@@ -1018,7 +1018,7 @@ const DatabaseMaintenance: React.FC = () => {
                 <input
                   type="checkbox"
                   id="dontShowWalWarning"
-                  className="rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-600 bg-gray-700 text-warm-gold focus:ring-warm-gold"
                 />
                 <span>不要再次顯示此警告</span>
               </label>

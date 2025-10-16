@@ -594,7 +594,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                             suggestion.priority === 'high' ? 'bg-red-600 text-white' :
                             suggestion.priority === 'medium' ? 'bg-yellow-600 text-white' :
-                            'bg-blue-600 text-white'
+                            'bg-warm-gold text-white'
                           }`}>
                             {suggestion.priority === 'high' ? '高優先' :
                              suggestion.priority === 'medium' ? '中優先' : '低優先'}

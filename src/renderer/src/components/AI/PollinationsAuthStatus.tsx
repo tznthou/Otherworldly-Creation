@@ -43,9 +43,9 @@ const TIER_CONFIG = {
   },
   flower: {
     label: 'Flower',
-    color: 'text-purple-400',
-    bgColor: 'bg-purple-700',
-    borderColor: 'border-purple-600',
+    color: 'text-clay-orange',
+    bgColor: 'bg-clay-orange/50',
+    borderColor: 'border-clay-orange',
     icon: '🌸',
     rateLimit: '3秒',
     models: ['所有高級模型'],

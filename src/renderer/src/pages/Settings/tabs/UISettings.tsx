@@ -16,8 +16,8 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
     </div>
 
     {/* 開發狀態概覽 */}
-    <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-      <h3 className="text-sm font-medium text-blue-400 mb-2 flex items-center">
+    <div className="bg-warm-gold/10 border border-warm-gold/30 rounded-2xl p-4">
+      <h3 className="text-sm font-sans-tc font-medium text-warm-gold mb-2 flex items-center">
         <span className="mr-2">🚀</span>
         開發狀態概覽
       </h3>

@@ -177,7 +177,7 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
           </h3>
           <button
             onClick={() => version && onVersionChange?.(position, version)}
-            className="text-sm text-blue-600 hover:text-blue-700"
+            className="text-sm text-warm-gold hover:text-warm-gold"
           >
             更換版本
           </button>
@@ -341,9 +341,9 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
                   <p className="text-sm text-yellow-700 mt-1">欄位: {diff.field}</p>
                 </div>
                 <span className={`px-2 py-1 text-xs rounded-full ${
-                  diff.type === 'prompt' ? 'bg-blue-100 text-blue-800' :
+                  diff.type === 'prompt' ? 'bg-warm-gold/10 text-warm-gold' :
                   diff.type === 'parameters' ? 'bg-green-100 text-green-800' :
-                  diff.type === 'metadata' ? 'bg-purple-100 text-purple-800' :
+                  diff.type === 'metadata' ? 'bg-clay-orange/10 text-clay-orange' :
                   'bg-gray-100 text-gray-800'
                 }`}>
                   {diff.type}
@@ -385,7 +385,7 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
           <div className="flex-1">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">整體相似度</span>
-              <span className="text-lg font-bold text-blue-600">{similarityPercentage}%</span>
+              <span className="text-lg font-bold text-warm-gold">{similarityPercentage}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div 
@@ -478,7 +478,7 @@ const VersionComparisonView: React.FC<VersionComparisonViewProps> = ({
             <button
               onClick={handleStartComparison}
               disabled={isComparing}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-warm-gold text-white rounded hover:bg-warm-gold disabled:opacity-50"
             >
               {isComparing ? '比較中...' : '開始比較'}
             </button>

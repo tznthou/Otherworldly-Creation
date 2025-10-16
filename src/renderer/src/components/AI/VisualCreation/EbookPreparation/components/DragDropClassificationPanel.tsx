@@ -106,16 +106,16 @@ const DraggableImageItem: React.FC<DraggableImageProps> = ({ image, index, onIma
       {...attributes}
       className={`
         relative group cursor-grab active:cursor-grabbing
-        bg-white rounded-lg shadow-sm border-2 border-blue-200
-        hover:border-blue-400 hover:shadow-md transition-all duration-200
+        bg-white rounded-lg shadow-sm border-2 border-warm-gold/20
+        hover:border-warm-gold hover:shadow-md transition-all duration-200
         ${isDragging ? 'opacity-50 scale-95 shadow-lg ring-2 ring-blue-400' : ''}
       `}
       onClick={() => onImageClick?.(image)}
     >
       {/* 拖曳狀態指示器 */}
       {isDragging && (
-        <div className="absolute inset-0 bg-blue-500 bg-opacity-20 border-2 border-blue-500 rounded-lg flex items-center justify-center z-40">
-          <div className="bg-blue-600 text-white px-2 py-1 rounded text-sm font-bold">
+        <div className="absolute inset-0 bg-warm-gold/30 bg-opacity-20 border-2 border-warm-gold rounded-lg flex items-center justify-center z-40">
+          <div className="bg-warm-gold text-white px-2 py-1 rounded text-sm font-bold">
             🚀 拖曳中
           </div>
         </div>
@@ -409,9 +409,9 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
         </div>
 
         <div className="grid grid-cols-4 gap-4 text-center">
-          <div className="bg-blue-50 p-3 rounded">
-            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-            <div className="text-sm text-blue-500">總圖片</div>
+          <div className="bg-warm-gold/5 p-3 rounded">
+            <div className="text-2xl font-bold text-warm-gold">{stats.total}</div>
+            <div className="text-sm text-warm-gold">總圖片</div>
           </div>
           <div className="bg-green-50 p-3 rounded">
             <div className="text-2xl font-bold text-green-600">{stats.classified}</div>
@@ -421,9 +421,9 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
             <div className="text-2xl font-bold text-orange-600">{stats.unclassified}</div>
             <div className="text-sm text-orange-500">未分類</div>
           </div>
-          <div className="bg-purple-50 p-3 rounded">
-            <div className="text-2xl font-bold text-purple-600">{stats.progress}%</div>
-            <div className="text-sm text-purple-500">完成度</div>
+          <div className="bg-clay-orange/5 p-3 rounded">
+            <div className="text-2xl font-bold text-clay-orange">{stats.progress}%</div>
+            <div className="text-sm text-clay-orange">完成度</div>
           </div>
         </div>
 
@@ -431,7 +431,7 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
         <div className="mt-4">
           <div className="bg-gray-200 rounded-full h-2">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-warm-gold h-2 rounded-full transition-all duration-300"
               style={{ width: `${stats.progress}%` }}
             />
           </div>

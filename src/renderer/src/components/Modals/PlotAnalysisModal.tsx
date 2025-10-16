@@ -122,7 +122,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
   const getPaceColor = (pace: string) => {
     switch (pace) {
       case 'fast': return 'text-red-400';
-      case 'slow': return 'text-blue-400';
+      case 'slow': return 'text-warm-gold';
       default: return 'text-green-400';
     }
   };
@@ -457,7 +457,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                             <div className="text-gold-300">節奏評分</div>
                           </div>
                           <div>
-                            <div className="text-3xl font-bold mb-2 text-blue-400">
+                            <div className="text-3xl font-bold mb-2 text-warm-gold">
                               {analysis.pace.segments.length}
                             </div>
                             <div className="text-gold-300">分析片段</div>
@@ -476,7 +476,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                                   <div className="text-gray-400 font-medium">片段 {index + 1}</div>
                                   <div className={`px-3 py-1 rounded-full text-sm font-medium ${
                                     segment.pace === 'fast' ? 'bg-red-600/20 text-red-300' :
-                                    segment.pace === 'slow' ? 'bg-blue-600/20 text-blue-300' :
+                                    segment.pace === 'slow' ? 'bg-warm-gold/20 text-warm-gold' :
                                     'bg-green-600/20 text-green-300'
                                   }`}>
                                     {segment.pace === 'fast' ? '快節奏' :
@@ -499,7 +499,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-6 text-center">
-                          <div className="text-3xl font-bold text-purple-400 mb-2">
+                          <div className="text-3xl font-bold text-clay-orange mb-2">
                             {analysis.foreshadowing.setups.length}
                           </div>
                           <div className="text-gold-300">伏筆設置</div>
@@ -572,7 +572,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                                       className={`${
                                         suggestion.priority === 'high' ? 'bg-red-600 text-white' :
                                         suggestion.priority === 'medium' ? 'bg-yellow-600 text-white' :
-                                        'bg-blue-600 text-white'
+                                        'bg-warm-gold text-white'
                                       }`}
                                     >
                                       {suggestion.priority === 'high' ? '高優先級' :
@@ -581,7 +581,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                                     <span className="font-medium text-gold-300 text-lg">{suggestion.title}</span>
                                   </div>
                                   <div className="text-gray-300 mb-3 leading-relaxed">{suggestion.description}</div>
-                                  <div className="text-blue-300 mb-3 p-3 bg-blue-900/10 rounded-lg border border-blue-600/20">
+                                  <div className="text-warm-gold mb-3 p-3 bg-warm-gold/5 rounded-lg border border-warm-gold/20">
                                     💡 <strong>建議:</strong> {suggestion.suggestion}
                                   </div>
                                   <div className="text-green-300 p-3 bg-green-900/10 rounded-lg border border-green-600/20">

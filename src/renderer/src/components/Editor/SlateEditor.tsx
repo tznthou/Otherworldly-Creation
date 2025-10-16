@@ -710,7 +710,7 @@ const InlineToolbar: React.FC<InlineToolbarProps> = ({
           onClick={() => dispatch(toggleFocusWritingMode())}
           className={`p-2 rounded-lg transition-colors ${
             isFocusWritingMode 
-              ? 'bg-purple-500 text-white' 
+              ? 'bg-clay-orange/30 text-white' 
               : 'bg-cosmic-800 text-gray-300 hover:bg-cosmic-700 hover:text-white'
           }`}
           title="專注寫作模式"

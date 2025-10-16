@@ -144,7 +144,7 @@ export const ModularizedBatchPanel: React.FC = () => {
 
               {/* 服務配置狀態 */}
               <div className="bg-gray-700 p-3 rounded">
-                <h4 className="font-medium text-blue-400 mb-2">服務配置狀態</h4>
+                <h4 className="font-medium text-warm-gold mb-2">服務配置狀態</h4>
                 <div className="text-sm text-gray-300 space-y-1">
                   {serviceConfig ? (
                     <>

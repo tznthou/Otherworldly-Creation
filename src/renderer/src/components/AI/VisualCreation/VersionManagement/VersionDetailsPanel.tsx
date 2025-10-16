@@ -321,11 +321,11 @@ const VersionDetailsPanel: React.FC<VersionDetailsPanelProps> = ({
 
         {/* 統計資訊 */}
         {showStatistics && (
-          <div className="bg-blue-50 rounded-lg p-4">
+          <div className="bg-warm-gold/5 rounded-lg p-4">
             <h4 className="text-lg font-medium mb-4">統計資訊</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{version.metadata.viewCount}</div>
+                <div className="text-2xl font-bold text-warm-gold">{version.metadata.viewCount}</div>
                 <div className="text-sm text-gray-600">查看次數</div>
               </div>
               <div className="text-center">
@@ -333,7 +333,7 @@ const VersionDetailsPanel: React.FC<VersionDetailsPanelProps> = ({
                 <div className="text-sm text-gray-600">喜歡次數</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{version.metadata.exportCount}</div>
+                <div className="text-2xl font-bold text-clay-orange">{version.metadata.exportCount}</div>
                 <div className="text-sm text-gray-600">導出次數</div>
               </div>
               <div className="text-center">
@@ -472,7 +472,7 @@ const VersionDetailsPanel: React.FC<VersionDetailsPanelProps> = ({
             <button
               onClick={handleAddTag}
               disabled={!newTag.name.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-warm-gold text-white rounded text-sm hover:bg-warm-gold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               新增
             </button>
@@ -504,7 +504,7 @@ const VersionDetailsPanel: React.FC<VersionDetailsPanelProps> = ({
 
             <button
               onClick={() => onVersionExport?.(version)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-warm-gold text-white rounded hover:bg-warm-gold"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -541,7 +541,7 @@ const VersionDetailsPanel: React.FC<VersionDetailsPanelProps> = ({
         </div>
 
         {/* 版本資訊 */}
-        <div className="bg-blue-50 rounded-lg p-4">
+        <div className="bg-warm-gold/5 rounded-lg p-4">
           <h4 className="text-lg font-medium mb-4">版本資訊</h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -619,7 +619,7 @@ const VersionDetailsPanel: React.FC<VersionDetailsPanelProps> = ({
             onClick={() => handleTabChange(tab.id as DetailTab)}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               currentTab === tab.id
-                ? 'text-blue-600 border-b-2 border-blue-600'
+                ? 'text-warm-gold border-b-2 border-warm-gold'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >

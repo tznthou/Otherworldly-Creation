@@ -445,8 +445,8 @@ const PDFGenerationModal: React.FC = () => {
               </div>
               
               {/* AI 插畫整合選項 */}
-              <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg">
-                <h4 className="text-md font-cosmic text-purple-400 mb-3 flex items-center">
+              <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-clay-orange/20 rounded-lg">
+                <h4 className="text-md font-cosmic text-clay-orange mb-3 flex items-center">
                   🎨 AI 插畫整合設定
                 </h4>
                 
@@ -458,7 +458,7 @@ const PDFGenerationModal: React.FC = () => {
                         checked={options.include_illustrations}
                         onChange={(e) => setOptions(prev => ({ ...prev, include_illustrations: e.target.checked }))}
                         disabled={generating}
-                        className="mr-2 w-4 h-4 text-purple-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-purple-500"
+                        className="mr-2 w-4 h-4 text-clay-orange bg-cosmic-700 border-cosmic-600 rounded focus:ring-clay-orange"
                       />
                       <span className="text-sm text-gray-300">包含AI生成的插畫</span>
                     </label>
@@ -543,7 +543,7 @@ const PDFGenerationModal: React.FC = () => {
               )}
 
               {progress.currentChapter && (
-                <p className="text-sm text-blue-400 mt-2 bg-blue-500/10 px-2 py-1 rounded">
+                <p className="text-sm text-warm-gold mt-2 bg-warm-gold/10 px-2 py-1 rounded">
                   📖 處理章節：{progress.currentChapter}
                 </p>
               )}
@@ -615,7 +615,7 @@ const PDFGenerationModal: React.FC = () => {
                 }
               }}
               disabled={!selectedProjectId || generating}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-warm-gold text-white rounded-lg hover:bg-warm-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               🧪 測試
             </button>

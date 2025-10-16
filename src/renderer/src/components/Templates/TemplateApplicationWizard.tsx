@@ -113,19 +113,19 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
           <React.Fragment key={step.key}>
             <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
               index <= currentIndex
-                ? 'bg-blue-600 text-white'
+                ? 'bg-warm-gold text-white'
                 : 'bg-gray-200 text-gray-600'
             }`}>
               {index + 1}
             </div>
             <div className={`text-sm ${
-              index <= currentIndex ? 'text-blue-600' : 'text-gray-500'
+              index <= currentIndex ? 'text-warm-gold' : 'text-gray-500'
             } ml-2`}>
               {step.label}
             </div>
             {index < steps.length - 1 && (
               <div className={`w-8 h-0.5 mx-4 ${
-                index < currentIndex ? 'bg-blue-600' : 'bg-gray-200'
+                index < currentIndex ? 'bg-warm-gold' : 'bg-gray-200'
               }`} />
             )}
           </React.Fragment>
@@ -141,27 +141,27 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
         <p className="text-gray-600">{template.description}</p>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-blue-900 mb-4">模板將為您的專案提供：</h3>
+      <div className="bg-warm-gold/5 border border-warm-gold/20 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-warm-gold mb-4">模板將為您的專案提供：</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <h4 className="font-medium text-blue-800 mb-2">世界觀設定</h4>
-            <ul className="text-sm text-blue-700 space-y-1">
+            <h4 className="font-medium text-warm-gold mb-2">世界觀設定</h4>
+            <ul className="text-sm text-warm-gold space-y-1">
               <li>• 時代背景：{template.worldSetting.era}</li>
               <li>• 科技水平：{template.worldSetting.technology}</li>
               <li>• 社會結構：{template.worldSetting.society}</li>
             </ul>
           </div>
           <div>
-            <h4 className="font-medium text-blue-800 mb-2">特殊元素</h4>
+            <h4 className="font-medium text-warm-gold mb-2">特殊元素</h4>
             <div className="flex flex-wrap gap-1">
               {template.worldSetting.specialElements.slice(0, 6).map((element, index) => (
-                <span key={index} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                <span key={index} className="px-2 py-1 text-xs bg-warm-gold/10 text-warm-gold rounded">
                   {element}
                 </span>
               ))}
               {template.worldSetting.specialElements.length > 6 && (
-                <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                <span className="px-2 py-1 text-xs bg-warm-gold/10 text-warm-gold rounded">
                   +{template.worldSetting.specialElements.length - 6}
                 </span>
               )}
@@ -191,7 +191,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
         </button>
         <button
           onClick={() => setCurrentStep('characters')}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          className="px-4 py-2 text-sm font-medium text-white bg-warm-gold rounded-md hover:bg-warm-gold"
         >
           下一步
         </button>
@@ -215,7 +215,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
               type="checkbox"
               checked={createCharacters}
               onChange={(e) => setCreateCharacters(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-warm-gold focus:ring-warm-gold border-gray-300 rounded"
             />
             <span className="ml-2 text-sm text-gray-700">自動創建角色</span>
           </label>
@@ -233,7 +233,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
                       key={archetype.name}
                       className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                         selectedArchetypes.includes(archetype.name)
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-warm-gold bg-warm-gold/5'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                       onClick={() => handleArchetypeToggle(archetype.name)}
@@ -244,7 +244,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
                           type="checkbox"
                           checked={selectedArchetypes.includes(archetype.name)}
                           onChange={() => {}}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-warm-gold focus:ring-warm-gold border-gray-300 rounded"
                         />
                       </div>
                       <p className="text-sm text-gray-600 mb-2">{archetype.description}</p>
@@ -271,7 +271,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
                       key={archetype.name}
                       className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                         selectedArchetypes.includes(archetype.name)
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-warm-gold bg-warm-gold/5'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                       onClick={() => handleArchetypeToggle(archetype.name)}
@@ -282,7 +282,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
                           type="checkbox"
                           checked={selectedArchetypes.includes(archetype.name)}
                           onChange={() => {}}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-warm-gold focus:ring-warm-gold border-gray-300 rounded"
                         />
                       </div>
                       <p className="text-sm text-gray-600 mb-2">{archetype.description}</p>
@@ -333,7 +333,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
           </button>
           <button
             onClick={() => setCurrentStep('settings')}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            className="px-4 py-2 text-sm font-medium text-white bg-warm-gold rounded-md hover:bg-warm-gold"
           >
             下一步
           </button>
@@ -360,7 +360,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
               type="checkbox"
               checked={updateProjectSettings}
               onChange={(e) => setUpdateProjectSettings(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-warm-gold focus:ring-warm-gold border-gray-300 rounded"
             />
           </label>
         </div>
@@ -377,15 +377,15 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
               type="checkbox"
               checked={createCharacters}
               onChange={(e) => setCreateCharacters(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-warm-gold focus:ring-warm-gold border-gray-300 rounded"
             />
           </label>
         </div>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-medium text-blue-900 mb-2">應用摘要</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="bg-warm-gold/5 border border-warm-gold/20 rounded-lg p-4">
+        <h3 className="font-medium text-warm-gold mb-2">應用摘要</h3>
+        <ul className="text-sm text-warm-gold space-y-1">
           <li>• 模板：{template.name}</li>
           {updateProjectSettings && <li>• 將更新專案的世界觀設定和寫作指導</li>}
           {createCharacters && <li>• 將創建 {selectedArchetypes.length} 個角色</li>}
@@ -412,7 +412,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
 
   const renderApplyingStep = () => (
     <div className="text-center py-12">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-warm-gold mx-auto mb-4"></div>
       <h2 className="text-xl font-semibold text-gray-900 mb-2">正在應用模板...</h2>
       <p className="text-gray-600">請稍候，正在設定您的專案</p>
     </div>
@@ -472,7 +472,7 @@ export const TemplateApplicationWizard: React.FC<TemplateApplicationWizardProps>
         <div className="flex justify-end">
           <button
             onClick={handleComplete}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            className="px-4 py-2 text-sm font-medium text-white bg-warm-gold rounded-md hover:bg-warm-gold"
           >
             完成
           </button>

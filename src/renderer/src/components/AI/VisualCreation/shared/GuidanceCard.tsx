@@ -27,7 +27,7 @@ const GuidanceCard: React.FC<GuidanceCardProps> = ({
 
   const getVariantClasses = () => {
     const variants = {
-      info: 'bg-blue-900/20 border-blue-500/30 text-blue-100',
+      info: 'bg-warm-gold/10 border-warm-gold/20 text-warm-gold/60',
       warning: 'bg-yellow-900/20 border-yellow-500/30 text-yellow-100',
       success: 'bg-green-900/20 border-green-500/30 text-green-100',
       primary: 'bg-gold-900/20 border-gold-500/30 text-gold-100'

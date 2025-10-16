@@ -127,7 +127,7 @@ const DraggableImageItem: React.FC<DraggableImageProps> = ({ image, index, onIma
       />
 
       {/* Debug badge - 調試標籤 */}
-      <div className="absolute -top-6 -left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded z-50 font-mono">
+      <div className="absolute -top-6 -left-2 bg-warm-gold text-white text-xs px-2 py-1 rounded z-50 font-mono">
         ID: {image.id.slice(-6)}
       </div>
 
@@ -430,9 +430,9 @@ const DragDropClassificationPanelFixed: React.FC<DragDropClassificationPanelProp
         </div>
 
         <div className="grid grid-cols-4 gap-4 text-center">
-          <div className="bg-blue-50 p-3 rounded">
-            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-            <div className="text-sm text-blue-500">總圖片</div>
+          <div className="bg-warm-gold/5 p-3 rounded">
+            <div className="text-2xl font-bold text-warm-gold">{stats.total}</div>
+            <div className="text-sm text-warm-gold">總圖片</div>
           </div>
           <div className="bg-green-50 p-3 rounded">
             <div className="text-2xl font-bold text-green-600">{stats.classified}</div>
@@ -442,9 +442,9 @@ const DragDropClassificationPanelFixed: React.FC<DragDropClassificationPanelProp
             <div className="text-2xl font-bold text-orange-600">{stats.unclassified}</div>
             <div className="text-sm text-orange-500">未分類</div>
           </div>
-          <div className="bg-purple-50 p-3 rounded">
-            <div className="text-2xl font-bold text-purple-600">{stats.progress}%</div>
-            <div className="text-sm text-purple-500">完成度</div>
+          <div className="bg-clay-orange/5 p-3 rounded">
+            <div className="text-2xl font-bold text-clay-orange">{stats.progress}%</div>
+            <div className="text-sm text-clay-orange">完成度</div>
           </div>
         </div>
 
@@ -452,7 +452,7 @@ const DragDropClassificationPanelFixed: React.FC<DragDropClassificationPanelProp
         <div className="mt-4">
           <div className="bg-gray-200 rounded-full h-2">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-warm-gold h-2 rounded-full transition-all duration-300"
               style={{ width: `${stats.progress}%` }}
             />
           </div>

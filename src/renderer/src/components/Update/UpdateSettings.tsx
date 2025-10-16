@@ -220,7 +220,7 @@ const UpdateSettings: React.FC = () => {
         {/* 預發布版本 */}
         <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg opacity-60">
           <div className="flex items-center">
-            <Shield className="w-5 h-5 text-purple-400 mr-3" />
+            <Shield className="w-5 h-5 text-clay-orange mr-3" />
             <div>
               <div className="flex items-center gap-2">
                 <h4 className="font-medium text-white">預發布版本</h4>

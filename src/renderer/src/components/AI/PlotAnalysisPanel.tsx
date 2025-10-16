@@ -82,7 +82,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
   const getPaceColor = (pace: string) => {
     switch (pace) {
       case 'fast': return 'text-red-400';
-      case 'slow': return 'text-blue-400';
+      case 'slow': return 'text-warm-gold';
       default: return 'text-green-400';
     }
   };
@@ -271,7 +271,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
                     <div className="text-gold-300 text-sm">節奏評分</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-blue-400">
+                    <div className="text-2xl font-bold text-warm-gold">
                       {analysis.pace.segments.length}
                     </div>
                     <div className="text-gold-300 text-sm">分析片段</div>
@@ -289,7 +289,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
                         <div className="text-sm text-gray-400">片段 {index + 1}</div>
                         <div className={`px-2 py-1 rounded text-xs font-medium ${
                           segment.pace === 'fast' ? 'bg-red-600/20 text-red-300' :
-                          segment.pace === 'slow' ? 'bg-blue-600/20 text-blue-300' :
+                          segment.pace === 'slow' ? 'bg-warm-gold/20 text-warm-gold' :
                           'bg-green-600/20 text-green-300'
                         }`}>
                           {segment.pace === 'fast' ? '快' : segment.pace === 'slow' ? '慢' : '中'}
@@ -310,7 +310,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <Card className="bg-cosmic-900 border-gold-600/20 p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-400">{analysis.foreshadowing.setups.length}</div>
+                  <div className="text-2xl font-bold text-clay-orange">{analysis.foreshadowing.setups.length}</div>
                   <div className="text-gold-300 text-sm">伏筆設置</div>
                 </Card>
                 <Card className="bg-cosmic-900 border-gold-600/20 p-4 text-center">
@@ -374,7 +374,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
                             <span className="font-medium text-gold-300">{suggestion.title}</span>
                           </div>
                           <div className="text-gray-300 text-sm mb-2">{suggestion.description}</div>
-                          <div className="text-blue-300 text-sm mb-2">💡 建議: {suggestion.suggestion}</div>
+                          <div className="text-warm-gold text-sm mb-2">💡 建議: {suggestion.suggestion}</div>
                           <div className="text-green-300 text-xs">📈 預期效果: {suggestion.impact}</div>
                         </div>
                         {_onSuggestionApply && (

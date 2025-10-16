@@ -259,7 +259,8 @@
       "Bash(/usr/libexec/PlistBuddy:*)",
       "Read(//Applications/**)",
       "Bash(killall:*)",
-      "Bash(RELEASE_VERSION=1.3.10 node scripts/sync-version.js:*)"
+      "Bash(RELEASE_VERSION=1.3.10 node scripts/sync-version.js:*)",
+      "Bash(timeout 15s npm run dev:renderer:*)"
     ],
     "deny": [],
     "ask": [],

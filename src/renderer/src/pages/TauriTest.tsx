@@ -52,7 +52,7 @@ const TauriTest: React.FC = () => {
             <div className="space-x-4">
               <button
                 onClick={handleReload}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+                className="px-4 py-2 bg-warm-gold hover:bg-warm-gold rounded transition-colors"
               >
                 重載應用
               </button>

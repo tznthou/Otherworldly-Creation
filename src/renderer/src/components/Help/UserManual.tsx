@@ -81,7 +81,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
         <div className="space-y-6">
           <div>
             <h3 className="text-xl font-semibold text-white mb-4">理解 AI 服務架構</h3>
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+            <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
               <div className="space-y-3 text-gray-300">
                 <p><strong className="text-white">創世紀元</strong> = 寫作平台（不含 AI 模型）</p>
                 <p><strong className="text-white">AI 提供商</strong> = 提供 AI 模型的第三方服務</p>
@@ -117,8 +117,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                     <td className="border border-cosmic-600 p-3 text-gray-300">雲端存儲</td>
                     <td className="border border-cosmic-600 p-3 text-gray-300">新手、學生、原型開發</td>
                   </tr>
-                  <tr className="bg-blue-900/10">
-                    <td className="border border-cosmic-600 p-3 text-blue-400 font-semibold">🔵 Ollama</td>
+                  <tr className="bg-warm-gold/5">
+                    <td className="border border-cosmic-600 p-3 text-warm-gold font-semibold">🔵 Ollama</td>
                     <td className="border border-cosmic-600 p-3 text-gray-300">完全免費</td>
                     <td className="border border-cosmic-600 p-3 text-gray-300">無限制</td>
                     <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐</td>
@@ -134,7 +134,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                     <td className="border border-cosmic-600 p-3 text-gray-300">專業作家、商業用途</td>
                   </tr>
                   <tr>
-                    <td className="border border-cosmic-600 p-3 text-purple-400 font-semibold">🟣 Claude</td>
+                    <td className="border border-cosmic-600 p-3 text-clay-orange font-semibold">🟣 Claude</td>
                     <td className="border border-cosmic-600 p-3 text-gray-300">付費</td>
                     <td className="border border-cosmic-600 p-3 text-gray-300">無</td>
                     <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐⭐⭐</td>
@@ -176,7 +176,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-                <h5 className="text-blue-400 font-semibold mb-2">🔐 隱私優先用戶</h5>
+                <h5 className="text-warm-gold font-semibold mb-2">🔐 隱私優先用戶</h5>
                 <p className="text-gray-300 text-sm mb-2">推薦：<strong>Ollama</strong>（完全本地）</p>
                 <ul className="text-gray-300 text-xs space-y-1">
                   <li>• 數據完全不離開電腦</li>
@@ -202,7 +202,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-5">
                 <h5 className="text-green-400 font-semibold text-lg mb-3">1. Google Gemini 配置</h5>
                 <ol className="text-gray-300 space-y-2 text-sm">
-                  <li><strong>步驟 1：</strong>訪問 <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Google AI Studio</a></li>
+                  <li><strong>步驟 1：</strong>訪問 <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-warm-gold underline">Google AI Studio</a></li>
                   <li><strong>步驟 2：</strong>使用 Google 帳號登入（若無帳號需先註冊）</li>
                   <li><strong>步驟 3：</strong>點擊「Get API Key」按鈕</li>
                   <li><strong>步驟 4：</strong>選擇「Create API Key」創建新的 API 金鑰</li>
@@ -222,10 +222,10 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-5">
-                <h5 className="text-blue-400 font-semibold text-lg mb-3">2. Ollama 配置</h5>
+              <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-5">
+                <h5 className="text-warm-gold font-semibold text-lg mb-3">2. Ollama 配置</h5>
                 <ol className="text-gray-300 space-y-2 text-sm">
-                  <li><strong>步驟 1：</strong>訪問 <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">ollama.com/download</a></li>
+                  <li><strong>步驟 1：</strong>訪問 <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" className="text-warm-gold underline">ollama.com/download</a></li>
                   <li><strong>步驟 2：</strong>選擇您的作業系統（Windows/macOS/Linux）並下載安裝檔</li>
                   <li><strong>步驟 3：</strong>執行安裝程式（通常會自動啟動 Ollama 服務）</li>
                   <li><strong>步驟 4：</strong>開啟終端機（Terminal/Command Prompt）</li>
@@ -254,7 +254,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-5">
                 <h5 className="text-yellow-400 font-semibold text-lg mb-3">3. OpenAI 配置</h5>
                 <ol className="text-gray-300 space-y-2 text-sm">
-                  <li><strong>步驟 1：</strong>訪問 <a href="https://platform.openai.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">OpenAI Platform</a></li>
+                  <li><strong>步驟 1：</strong>訪問 <a href="https://platform.openai.com/" target="_blank" rel="noopener noreferrer" className="text-warm-gold underline">OpenAI Platform</a></li>
                   <li><strong>步驟 2：</strong>註冊帳號並登入</li>
                   <li><strong>步驟 3：</strong>綁定信用卡（OpenAI 要求付款方式才能使用 API）</li>
                   <li><strong>步驟 4：</strong>點擊「API Keys」創建新的 API Key</li>
@@ -274,10 +274,10 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-5">
-                <h5 className="text-purple-400 font-semibold text-lg mb-3">4. Claude 配置</h5>
+              <div className="bg-clay-orange/10 border border-clay-orange/20 rounded-lg p-5">
+                <h5 className="text-clay-orange font-semibold text-lg mb-3">4. Claude 配置</h5>
                 <ol className="text-gray-300 space-y-2 text-sm">
-                  <li><strong>步驟 1：</strong>訪問 <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Anthropic Console</a></li>
+                  <li><strong>步驟 1：</strong>訪問 <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-warm-gold underline">Anthropic Console</a></li>
                   <li><strong>步驟 2：</strong>註冊並登入帳號</li>
                   <li><strong>步驟 3：</strong>進行帳號充值（Claude 採用預付費制）</li>
                   <li><strong>步驟 4：</strong>在 API Keys 頁面創建新的 API Key</li>
@@ -300,7 +300,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-5">
                 <h5 className="text-orange-400 font-semibold text-lg mb-3">5. OpenRouter 配置</h5>
                 <ol className="text-gray-300 space-y-2 text-sm">
-                  <li><strong>步驟 1：</strong>訪問 <a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">OpenRouter.ai</a></li>
+                  <li><strong>步驟 1：</strong>訪問 <a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="text-warm-gold underline">OpenRouter.ai</a></li>
                   <li><strong>步驟 2：</strong>註冊並登入帳號</li>
                   <li><strong>步驟 3：</strong>在 Keys 頁面創建新的 API Key</li>
                   <li><strong>步驟 4：</strong>充值（或選擇使用免費模型）</li>
@@ -355,8 +355,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </ul>
               </div>
 
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                <h5 className="text-blue-400 font-semibold mb-2">Q: 超過免費層限制怎麼辦？</h5>
+              <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
+                <h5 className="text-warm-gold font-semibold mb-2">Q: 超過免費層限制怎麼辦？</h5>
                 <ul className="text-gray-300 text-sm space-y-1">
                   <li>• Gemini：每天重置，等待隔天或升級付費方案</li>
                   <li>• OpenRouter：使用不同的免費模型輪換</li>
@@ -377,8 +377,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </ul>
               </div>
 
-              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
-                <h5 className="text-purple-400 font-semibold mb-2">Q: 如何切換 AI 提供商？</h5>
+              <div className="bg-clay-orange/10 border border-clay-orange/20 rounded-lg p-4">
+                <h5 className="text-clay-orange font-semibold mb-2">Q: 如何切換 AI 提供商？</h5>
                 <p className="text-gray-300 text-sm">
                   在編輯器的 AI 面板中，您可以隨時切換提供商和模型。配置完成後，
                   系統會記住您的選擇，下次使用時自動套用。
@@ -480,8 +480,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           <div>
             <h4 className="text-lg font-semibold text-gold-400 mb-3">四大模板類型</h4>
             <div className="space-y-4">
-              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
-                <h5 className="text-purple-400 font-semibold mb-2 flex items-center">
+              <div className="bg-clay-orange/10 border border-clay-orange/20 rounded-lg p-4">
+                <h5 className="text-clay-orange font-semibold mb-2 flex items-center">
                   🏰 奇幻冒險模板
                 </h5>
                 <p className="text-gray-300 text-sm mb-3">
@@ -516,8 +516,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                <h5 className="text-blue-400 font-semibold mb-2 flex items-center">
+              <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
+                <h5 className="text-warm-gold font-semibold mb-2 flex items-center">
                   ⚡ 異世界轉生模板
                 </h5>
                 <p className="text-gray-300 text-sm mb-3">
@@ -681,8 +681,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               <li>• <strong>關係圖視覺化</strong>：圖形化顯示角色關係網絡</li>
             </ul>
             
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mt-4">
-              <h5 className="text-blue-400 font-semibold mb-2">💡 關係設計理念</h5>
+            <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4 mt-4">
+              <h5 className="text-warm-gold font-semibold mb-2">💡 關係設計理念</h5>
               <p className="text-gray-300 text-sm mb-2">
                 系統採用<strong>單向關係</strong>設計，這表示當您為角色 A 設定對角色 B 的關係時，系統不會自動為角色 B 創建對角色 A 的反向關係。
               </p>
@@ -734,8 +734,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
 
           <div>
             <h4 className="text-lg font-semibold text-gold-400 mb-3">如何開始使用</h4>
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-              <h5 className="text-blue-400 font-semibold mb-2">兩種啟動方式</h5>
+            <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
+              <h5 className="text-warm-gold font-semibold mb-2">兩種啟動方式</h5>
               <div className="space-y-3 text-gray-300 text-sm">
                 <div>
                   <p><strong>方式一：儀表板啟動</strong></p>
@@ -840,8 +840,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </ul>
               </div>
 
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                <h5 className="text-blue-400 font-semibold mb-2">💳 Google Imagen（專業級）</h5>
+              <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
+                <h5 className="text-warm-gold font-semibold mb-2">💳 Google Imagen（專業級）</h5>
                 <ul className="text-gray-300 text-sm space-y-1">
                   <li>• <strong>優點</strong>：頂級品質、精確控制、商用許可</li>
                   <li>• <strong>適合</strong>：專業創作者、商業作品、高品質需求</li>
@@ -853,7 +853,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
 
           <div>
             <h4 className="text-lg font-semibold text-gold-400 mb-3">最佳實踐建議</h4>
-            <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+            <div className="bg-clay-orange/10 border border-clay-orange/20 rounded-lg p-4">
               <ul className="text-gray-300 space-y-2 text-sm">
                 <li>• <strong>角色設定</strong>：在角色管理中詳細填寫外貌描述，提升生成準確度</li>
                 <li>• <strong>場景選擇</strong>：肖像選1個角色，互動選2-3個，場景可選多個</li>
@@ -958,7 +958,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
 
           <div>
             <h4 className="text-lg font-semibold text-gold-400 mb-3">AI 使用建議</h4>
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+            <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
               <ul className="text-gray-300 space-y-2 text-sm">
                 <li>• AI 生成的內容僅供參考，請根據創作需要進行修改</li>
                 <li>• 建議將 AI 內容作為靈感來源，而非直接使用</li>
@@ -1120,7 +1120,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
 
           <div>
             <h4 className="text-lg font-semibold text-gold-400 mb-3">聯繫支援</h4>
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+            <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
               <p className="text-gray-300 text-sm mb-3">
                 如果上述方法無法解決問題，請準備以下資訊並聯繫技術支援：
               </p>

@@ -75,7 +75,7 @@ const TempImageVersionCard: React.FC<TempImageVersionCardProps> = ({
           )}
           
           {tempImage.is_free && (
-            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">
+            <span className="bg-warm-gold text-white text-xs px-2 py-1 rounded">
               🆓 免費
             </span>
           )}
@@ -163,7 +163,7 @@ const TempImageVersionCard: React.FC<TempImageVersionCardProps> = ({
             <button
               onClick={handleCreateVariant}
               disabled={isCreatingVariant}
-              className="px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-cosmic-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
+              className="px-3 py-2 bg-clay-orange hover:bg-clay-orange disabled:bg-cosmic-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
             >
               {isCreatingVariant ? (
                 <div className="flex items-center justify-center gap-1">
@@ -178,7 +178,7 @@ const TempImageVersionCard: React.FC<TempImageVersionCardProps> = ({
             {/* 版本管理按鈕 */}
             <button
               onClick={() => onViewVersionPanel(tempImage.id)}
-              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+              className="px-3 py-2 bg-warm-gold hover:bg-warm-gold text-white text-sm rounded transition-colors"
             >
               📝 版本管理
             </button>

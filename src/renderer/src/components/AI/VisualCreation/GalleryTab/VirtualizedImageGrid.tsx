@@ -166,7 +166,7 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
         <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity ${
           item.is_free 
             ? 'bg-green-600 text-white' 
-            : 'bg-blue-600 text-white'
+            : 'bg-warm-gold text-white'
         }`}>
           {item.is_free ? '免費' : '付費'}
         </div>

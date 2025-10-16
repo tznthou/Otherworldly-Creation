@@ -184,8 +184,8 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
                 </h3>
                 <div className="space-y-2 text-cosmic-300">
                   <p>• <strong className="text-green-400">Kontext 模型</strong>：需要 Seed 層級或更高認證才能存取</p>
-                  <p>• <strong className="text-purple-400">高級模型</strong>：Flux、Stable Diffusion 3.5 等需要付費層級</p>
-                  <p>• <strong className="text-blue-400">更快生成</strong>：付費用戶享受更短的等待時間</p>
+                  <p>• <strong className="text-clay-orange">高級模型</strong>：Flux、Stable Diffusion 3.5 等需要付費層級</p>
+                  <p>• <strong className="text-warm-gold">更快生成</strong>：付費用戶享受更短的等待時間</p>
                   <p>• <strong className="text-yellow-400">無限使用</strong>：高級層級無月度使用量限制</p>
                 </div>
               </div>
@@ -209,7 +209,7 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
                           <span className="font-bold text-white">{details.label}</span>
                         </div>
                         <span className={`px-2 py-1 text-xs rounded font-medium ${
-                          details.price === '免費' ? 'bg-green-600' : 'bg-blue-600'
+                          details.price === '免費' ? 'bg-green-600' : 'bg-warm-gold'
                         }`}>
                           {details.price}
                         </span>
@@ -263,7 +263,7 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
                       <span className="flex-shrink-0 w-6 h-6 bg-gold-600 text-black text-sm font-bold rounded-full flex items-center justify-center">1</span>
                       <div>
                         <p className="font-medium text-white">訪問 Pollinations.ai</p>
-                        <p className="text-sm text-cosmic-400">前往 <a href="https://pollinations.ai" className="text-blue-400 hover:text-blue-300">https://pollinations.ai</a> 註冊帳號</p>
+                        <p className="text-sm text-cosmic-400">前往 <a href="https://pollinations.ai" className="text-warm-gold hover:text-warm-gold">https://pollinations.ai</a> 註冊帳號</p>
                       </div>
                     </li>
                     <li className="flex items-start space-x-3">
@@ -404,8 +404,8 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
               )}
 
               {/* 使用提示 */}
-              <div className="bg-blue-900/20 border border-blue-500 rounded-lg p-4">
-                <h4 className="flex items-center text-blue-400 font-bold mb-2">
+              <div className="bg-warm-gold/10 border border-warm-gold rounded-lg p-4">
+                <h4 className="flex items-center text-warm-gold font-bold mb-2">
                   <span className="mr-2">💡</span>
                   使用提示
                 </h4>

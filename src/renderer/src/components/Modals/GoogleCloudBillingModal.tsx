@@ -87,7 +87,7 @@ export const GoogleCloudBillingModal: React.FC<GoogleCloudBillingModalProps> = (
               
               {/* 步驟 1 */}
               <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                <div className="flex-shrink-0 w-6 h-6 bg-warm-gold/30 rounded-full flex items-center justify-center text-white text-sm font-bold">
                   1
                 </div>
                 <div className="flex-1">
@@ -97,7 +97,7 @@ export const GoogleCloudBillingModal: React.FC<GoogleCloudBillingModalProps> = (
                   </p>
                   <button
                     onClick={handleOpenGoogleCloud}
-                    className="mt-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                    className="mt-2 px-3 py-1 bg-warm-gold hover:bg-warm-gold text-white text-xs rounded transition-colors"
                   >
                     🔗 開啟 Google Cloud Console
                   </button>
@@ -106,7 +106,7 @@ export const GoogleCloudBillingModal: React.FC<GoogleCloudBillingModalProps> = (
 
               {/* 步驟 2 */}
               <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                <div className="flex-shrink-0 w-6 h-6 bg-warm-gold/30 rounded-full flex items-center justify-center text-white text-sm font-bold">
                   2
                 </div>
                 <div className="flex-1">
@@ -116,7 +116,7 @@ export const GoogleCloudBillingModal: React.FC<GoogleCloudBillingModalProps> = (
                   </p>
                   <button
                     onClick={handleOpenImagenAPI}
-                    className="mt-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                    className="mt-2 px-3 py-1 bg-warm-gold hover:bg-warm-gold text-white text-xs rounded transition-colors"
                   >
                     🔗 開啟 Imagen API 頁面
                   </button>
@@ -125,7 +125,7 @@ export const GoogleCloudBillingModal: React.FC<GoogleCloudBillingModalProps> = (
 
               {/* 步驟 3 */}
               <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                <div className="flex-shrink-0 w-6 h-6 bg-warm-gold/30 rounded-full flex items-center justify-center text-white text-sm font-bold">
                   3
                 </div>
                 <div className="flex-1">
@@ -180,7 +180,7 @@ export const GoogleCloudBillingModal: React.FC<GoogleCloudBillingModalProps> = (
                 handleOpenGoogleCloud();
                 // 不立即關閉模態，讓用戶可以參考說明
               }}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+              className="px-4 py-2 bg-warm-gold hover:bg-warm-gold text-white rounded transition-colors"
             >
               立即前往設定
             </button>

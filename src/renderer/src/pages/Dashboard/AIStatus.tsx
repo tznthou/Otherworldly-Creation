@@ -92,7 +92,7 @@ const AIStatus: React.FC = () => {
 
         {/* 可用模型 */}
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-blue-500/20 text-blue-400 mx-auto mb-3 flex items-center justify-center text-2xl">
+          <div className="w-16 h-16 rounded-full bg-warm-gold/20 text-warm-gold mx-auto mb-3 flex items-center justify-center text-2xl">
             🤖
           </div>
           <h3 className="font-medium mb-1">可用模型</h3>
@@ -103,7 +103,7 @@ const AIStatus: React.FC = () => {
 
         {/* 當前模型 */}
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-purple-500/20 text-purple-400 mx-auto mb-3 flex items-center justify-center text-2xl">
+          <div className="w-16 h-16 rounded-full bg-clay-orange/20 text-clay-orange mx-auto mb-3 flex items-center justify-center text-2xl">
             ⚡
           </div>
           <h3 className="font-medium mb-1">當前模型</h3>

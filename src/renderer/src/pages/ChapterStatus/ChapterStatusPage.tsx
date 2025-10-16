@@ -129,7 +129,7 @@ const ChapterStatusPage: React.FC = () => {
       case ChapterStatus.DRAFT:
         return 'bg-gray-600 text-gray-200';
       case ChapterStatus.WRITING:
-        return 'bg-blue-600 text-blue-200';
+        return 'bg-warm-gold text-warm-gold/80';
       case ChapterStatus.REVIEWING:
         return 'bg-yellow-600 text-yellow-200';
       case ChapterStatus.COMPLETED:
@@ -252,7 +252,7 @@ const ChapterStatusPage: React.FC = () => {
   // 所有可選狀態
   const statusOptions = [
     { value: ChapterStatus.DRAFT, label: '📝 草稿', color: 'text-gray-300' },
-    { value: ChapterStatus.WRITING, label: '✍️ 寫作中', color: 'text-blue-300' },
+    { value: ChapterStatus.WRITING, label: '✍️ 寫作中', color: 'text-warm-gold' },
     { value: ChapterStatus.REVIEWING, label: '🔍 審核中', color: 'text-yellow-300' },
     { value: ChapterStatus.COMPLETED, label: '✅ 已完成', color: 'text-green-300' }
   ];
@@ -305,7 +305,7 @@ const ChapterStatusPage: React.FC = () => {
           <Card className="bg-cosmic-800 border-cosmic-700">
             <CardContent className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">{stats.totalChapters}</div>
+                <div className="text-2xl font-bold text-warm-gold">{stats.totalChapters}</div>
                 <div className="text-sm text-gray-300">總章節數</div>
               </div>
             </CardContent>
@@ -332,7 +332,7 @@ const ChapterStatusPage: React.FC = () => {
           <Card className="bg-cosmic-800 border-cosmic-700">
             <CardContent className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-400">{stats.statusDistribution.writing}</div>
+                <div className="text-2xl font-bold text-clay-orange">{stats.statusDistribution.writing}</div>
                 <div className="text-sm text-gray-300">寫作中</div>
               </div>
             </CardContent>
@@ -356,7 +356,7 @@ const ChapterStatusPage: React.FC = () => {
               <p>這個專案還沒有章節</p>
               <button
                 onClick={() => navigate(`/project/${projectId}`)}
-                className="mt-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition-colors"
+                className="mt-4 bg-warm-gold hover:bg-warm-gold px-4 py-2 rounded transition-colors"
               >
                 去新增章節
               </button>
@@ -390,7 +390,7 @@ const ChapterStatusPage: React.FC = () => {
                         </select>
                         <button
                           onClick={() => navigate(`/project/${projectId}`)}
-                          className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs transition-colors"
+                          className="bg-warm-gold hover:bg-warm-gold px-3 py-1 rounded text-xs transition-colors"
                         >
                           編輯
                         </button>

@@ -32,8 +32,8 @@ export const StyleTemplateCard = memo<StyleTemplateCardProps>(({
   const getCategoryColor = (category: string): string => {
     const colorMap: Record<string, string> = {
       'anime': 'bg-pink-100 text-pink-800',
-      'realistic': 'bg-blue-100 text-blue-800',
-      'fantasy': 'bg-purple-100 text-purple-800',
+      'realistic': 'bg-warm-gold/10 text-warm-gold',
+      'fantasy': 'bg-clay-orange/10 text-clay-orange',
       'watercolor': 'bg-green-100 text-green-800',
       'digital_art': 'bg-yellow-100 text-yellow-800',
     };
@@ -86,7 +86,7 @@ export const StyleTemplateCard = memo<StyleTemplateCardProps>(({
 
         {/* 內建模板標記 */}
         {template.isBuiltIn && (
-          <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+          <div className="absolute top-2 left-2 bg-warm-gold text-white text-xs px-2 py-1 rounded-full">
             內建
           </div>
         )}

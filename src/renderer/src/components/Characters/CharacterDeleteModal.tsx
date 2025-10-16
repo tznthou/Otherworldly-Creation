@@ -117,7 +117,7 @@ export const CharacterDeleteModal: React.FC<CharacterDeleteModalProps> = ({
           {checkingReferences ? (
             <div className="flex items-center justify-center py-8">
               <div className="flex items-center space-x-3">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-warm-gold"></div>
                 <span className="text-gray-600">正在檢查角色引用...</span>
               </div>
             </div>
@@ -219,7 +219,7 @@ export const CharacterDeleteModal: React.FC<CharacterDeleteModalProps> = ({
                                   <span className="font-medium text-gray-900">
                                     {ref.relatedCharacter}
                                   </span>
-                                  <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                  <span className="px-2 py-1 text-xs font-medium bg-warm-gold/10 text-warm-gold rounded-full">
                                     {ref.relationshipType}
                                   </span>
                                   <span className="text-xs text-gray-500">
@@ -268,7 +268,7 @@ export const CharacterDeleteModal: React.FC<CharacterDeleteModalProps> = ({
           <button
             type="button"
             onClick={handleCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warm-gold"
           >
             取消
           </button>

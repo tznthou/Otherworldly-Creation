@@ -41,10 +41,10 @@ const ErrorToast: React.FC<ErrorToastProps> = ({ error, onClose, onResolve }) =>
         };
       case 'low':
         return {
-          bg: 'bg-blue-900/90',
-          border: 'border-blue-500',
+          bg: 'bg-warm-gold/20',
+          border: 'border-warm-gold',
           icon: 'ℹ️',
-          iconColor: 'text-blue-400'
+          iconColor: 'text-warm-gold'
         };
       default:
         return {

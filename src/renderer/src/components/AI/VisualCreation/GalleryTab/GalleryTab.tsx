@@ -1086,7 +1086,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
                     
                     <div className="flex flex-wrap gap-2 mb-3">
                       <span className={`px-2 py-1 rounded-full text-xs ${
-                        previewImage.is_free ? 'bg-green-600 text-white' : 'bg-blue-600 text-white'
+                        previewImage.is_free ? 'bg-green-600 text-white' : 'bg-warm-gold text-white'
                       }`}>
                         {previewImage.provider === 'pollinations' ? 'Pollinations' : 'Imagen'}
                       </span>
@@ -1137,7 +1137,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
                     {previewImage.versionId && (
                       <button
                         onClick={() => handleViewVersionHistory(previewImage.id)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-warm-gold hover:bg-warm-gold text-white rounded transition-colors flex items-center gap-2"
                       >
                         🕰️ 版本歷史
                       </button>

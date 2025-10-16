@@ -54,11 +54,11 @@ const AutoBackupIndicator: React.FC<AutoBackupIndicatorProps> = ({
     if (status.enabled && countdown > 0) {
       return (
         <div className="relative">
-          <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4 text-warm-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           {countdown < 3600 && ( // 小於1小時時顯示倒數
-            <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center">
+            <div className="absolute -top-1 -right-1 bg-warm-gold/30 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center">
               <div className="w-1 h-1 bg-white rounded-full animate-pulse"></div>
             </div>
           )}
@@ -98,7 +98,7 @@ const AutoBackupIndicator: React.FC<AutoBackupIndicatorProps> = ({
   const getStatusColor = () => {
     if (status.error) return 'text-red-500';
     if (!status.enabled) return 'text-gray-500';
-    if (countdown > 0) return 'text-blue-500';
+    if (countdown > 0) return 'text-warm-gold';
     return 'text-green-500';
   };
 
