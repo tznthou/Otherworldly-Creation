@@ -5,7 +5,7 @@ import { SettingsComponentProps } from '../types';
 const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) => (
   <div className="max-w-4xl space-y-6">
     <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-cosmic text-gold-500">界面設定</h2>
+      <h2 className="text-2xl font-serif-tc font-bold text-warm-gold">界面設定</h2>
       <button
         onClick={() => dispatch(resetUISettings())}
         className="btn-secondary text-sm"
@@ -24,7 +24,7 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
       <div className="grid grid-cols-1 gap-3 text-xs">
         <div className="flex items-center space-x-2">
           <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-          <span className="text-gray-300">✅ 已實現：狀態欄、音效系統、動畫效果、通知系統</span>
+          <span className="text-text-primary font-sans-tc">✅ 已實現：狀態欄、音效系統、動畫效果、通知系統</span>
         </div>
       </div>
       <p className="text-xs text-gray-400 mt-2">
@@ -32,8 +32,8 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
       </p>
     </div>
 
-    <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gold-400 mb-4">顯示選項</h3>
+    <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl p-6">
+      <h3 className="text-lg font-medium text-warm-gold mb-4">顯示選項</h3>
       <p className="text-gray-400 text-sm mb-4">
         自訂界面元件的顯示和行為，提升您的寫作體驗
       </p>
@@ -44,10 +44,10 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             id="showStatusBar"
             checked={settings.ui.showStatusBar}
             onChange={(e) => dispatch(updateUISettings({ showStatusBar: e.target.checked }))}
-            className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+            className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark border-warm-gold/20 rounded focus:ring-warm-gold/50"
           />
           <div className="flex-1">
-            <label htmlFor="showStatusBar" className="text-gray-300 cursor-pointer flex items-center">
+            <label htmlFor="showStatusBar" className="text-text-primary font-sans-tc cursor-pointer flex items-center">
               顯示狀態欄
               <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
                 ✅ 已實現
@@ -65,10 +65,10 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             id="animationsEnabled"
             checked={settings.ui.animationsEnabled}
             onChange={(e) => dispatch(updateUISettings({ animationsEnabled: e.target.checked }))}
-            className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+            className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark border-warm-gold/20 rounded focus:ring-warm-gold/50"
           />
           <div className="flex-1">
-            <label htmlFor="animationsEnabled" className="text-gray-300 cursor-pointer flex items-center">
+            <label htmlFor="animationsEnabled" className="text-text-primary font-sans-tc cursor-pointer flex items-center">
               啟用動畫效果
               <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
                 ✅ 已實現
@@ -86,10 +86,10 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             id="soundEnabled"
             checked={settings.ui.soundEnabled}
             onChange={(e) => dispatch(updateUISettings({ soundEnabled: e.target.checked }))}
-            className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+            className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark border-warm-gold/20 rounded focus:ring-warm-gold/50"
           />
           <div className="flex-1">
-            <label htmlFor="soundEnabled" className="text-gray-300 cursor-pointer flex items-center">
+            <label htmlFor="soundEnabled" className="text-text-primary font-sans-tc cursor-pointer flex items-center">
               啟用音效
               <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
                 ✅ 已實現
@@ -107,10 +107,10 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             id="notificationsEnabled"
             checked={settings.ui.notificationsEnabled}
             onChange={(e) => dispatch(updateUISettings({ notificationsEnabled: e.target.checked }))}
-            className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+            className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark border-warm-gold/20 rounded focus:ring-warm-gold/50"
           />
           <div className="flex-1">
-            <label htmlFor="notificationsEnabled" className="text-gray-300 cursor-pointer flex items-center">
+            <label htmlFor="notificationsEnabled" className="text-text-primary font-sans-tc cursor-pointer flex items-center">
               啟用通知
               <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
                 ✅ 已實現
@@ -123,8 +123,8 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
         </div>
       </div>
       
-      <div className="mt-6 p-4 bg-cosmic-900 border border-cosmic-600 rounded-lg">
-        <h4 className="text-sm font-medium text-gold-400 mb-2">
+      <div className="mt-6 p-4 bg-bg-dark/50 border border-warm-gold/20 rounded-lg">
+        <h4 className="text-sm font-medium text-warm-gold mb-2">
           <span className="mr-2">💡</span>
           使用建議
         </h4>

@@ -48,7 +48,7 @@
   --color-cosmic-800: #3730a3;
   --color-cosmic-900: #312e81;
   --color-cosmic-950: #0A1128;
-  
+
   --color-gold-50: #fffbeb;
   --color-gold-100: #fef3c7;
   --color-gold-200: #fde68a;
@@ -60,7 +60,7 @@
   --color-gold-800: #92400e;
   --color-gold-900: #78350f;
   --color-gold: #FFD700;
-  
+
   --color-mystic-50: #faf5ff;
   --color-mystic-100: #f3e8ff;
   --color-mystic-200: #e9d5ff;
@@ -72,11 +72,32 @@
   --color-mystic-800: #6b21a8;
   --color-mystic-900: #581c87;
   --color-mystic: #6A0DAD;
-  
+
+  /* 人文設計系統 - 溫暖大地色系 */
+  --color-warm-gold: #d4a574;
+  --color-warm-gold-light: #e8c09d;
+  --color-warm-gold-dark: #b88f5f;
+  --color-clay-orange: #c17d5a;
+  --color-clay-orange-light: #d99978;
+  --color-clay-orange-dark: #a6643b;
+  --color-wood-brown: #8b7355;
+  --color-wood-brown-light: #a68d73;
+  --color-wood-brown-dark: #6f5a3f;
+  --color-bg-dark: #1a1612;
+  --color-bg-light: #2a2420;
+  --color-text-primary: #e8e3da;
+  --color-text-secondary: #b8afa4;
+
   /* 字體家族 */
   --font-cosmic: "Orbitron", sans-serif;
   --font-chinese: "Noto Sans TC", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* 人文字體系統 */
+  --font-serif-tc: "Noto Serif TC", "Noto Serif SC", serif;
+  --font-sans-tc: "Noto Sans TC", "Noto Sans SC", sans-serif;
+  --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-crimson: "Crimson Text", Georgia, serif;
   
   /* 動畫時長和緩動 */
   --animate-float: float 6s ease-in-out infinite;
@@ -91,6 +112,12 @@
   --animate-scale-in: scale-in 0.2s ease-out;
   --animate-rotate-glow: rotate-glow 4s linear infinite;
   --animate-breathe: breathe 4s ease-in-out infinite;
+
+  /* 人文動畫系統 - 溫和優雅 */
+  --animate-float-slow: float-slow 12s ease-in-out infinite;
+  --animate-fade-in-up: fadeInUp 0.6s ease-out;
+  --animate-fade-in-left: fadeInLeft 0.6s ease-out;
+  --animate-fade-in-right: fadeInRight 0.6s ease-out;
 }
 
 /* 標準 CSS @keyframes - 從 Tailwind config 轉移 */
@@ -172,6 +199,52 @@
 @keyframes shrink {
   from { width: 100%; }
   to { width: 0%; }
+}
+
+/* 人文動畫 Keyframes - 溫和優雅 */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  33% {
+    transform: translateY(-10px) translateX(5px);
+  }
+  66% {
+    transform: translateY(-5px) translateX(-5px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* 全域強制滾動條樣式 - 覆蓋 Tailwind reset */

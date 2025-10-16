@@ -23,7 +23,7 @@ const SettingsMain: React.FC = () => {
   const { settings, hasUnsavedChanges, isLoading } = useAppSelector(state => state.settings);
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const {
     loadUserSettings,
     saveSettings,
@@ -49,7 +49,7 @@ const SettingsMain: React.FC = () => {
   useEffect(() => {
     log.debug('SettingsMain: 開始載入設定...');
     let mounted = true;
-    
+
     const loadSettings = async () => {
       try {
         if (mounted) {
@@ -60,9 +60,9 @@ const SettingsMain: React.FC = () => {
         log.error('SettingsMain: 設定載入失敗:', error);
       }
     };
-    
+
     loadSettings();
-    
+
     return () => {
       mounted = false;
     };
@@ -86,7 +86,7 @@ const SettingsMain: React.FC = () => {
 
   const renderTabContent = () => {
     const commonProps = { settings, dispatch };
-    
+
     switch (activeTab) {
       case 'general':
         return <GeneralSettings {...commonProps} />;
@@ -115,7 +115,7 @@ const SettingsMain: React.FC = () => {
   try {
 
   return (
-    <div className="h-full flex bg-cosmic-900">
+    <div className="h-full flex bg-bg-dark">
       <SettingsSidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -137,13 +137,13 @@ const SettingsMain: React.FC = () => {
   } catch (error) {
     log.error('SettingsMain: 渲染錯誤:', error);
     return (
-      <div className="h-full flex items-center justify-center bg-cosmic-900">
+      <div className="h-full flex items-center justify-center bg-bg-dark">
         <div className="text-center">
-          <h2 className="text-2xl font-cosmic text-gold-500 mb-4">設定頁面載入失敗</h2>
-          <p className="text-gray-300 mb-4">發生了未預期的錯誤</p>
+          <h2 className="font-serif-tc text-2xl font-bold text-warm-gold mb-4">設定頁面載入失敗</h2>
+          <p className="font-sans-tc text-text-secondary mb-4">發生了未預期的錯誤</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-gold-500 hover:bg-gold-600 text-cosmic-950 px-4 py-2 rounded"
+            className="bg-warm-gold hover:bg-clay-orange text-bg-dark font-sans-tc px-6 py-2 rounded-2xl transition-colors duration-300"
           >
             重新載入
           </button>

@@ -58,18 +58,18 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-cosmic text-gold-500 mb-6">{t('settings.general.title')}</h2>
-      
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gold-400 mb-4">語言與地區設定</h3>
+      <h2 className="font-serif-tc text-2xl font-bold text-warm-gold mb-6">{t('settings.general.title')}</h2>
+
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl p-6">
+        <h3 className="font-serif-tc text-lg font-medium text-warm-gold mb-4">語言與地區設定</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-gray-300 mb-2">界面語言</label>
+            <label className="font-sans-tc block text-text-primary mb-2">界面語言</label>
             <div className="relative">
               <select
                 value={settings.language}
                 onChange={(e) => dispatch(updateSettings({ language: e.target.value as 'zh-TW' | 'zh-CN' | 'en' | 'ja' }))}
-                className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 appearance-none cursor-pointer"
+                className="font-sans-tc w-full bg-bg-dark border border-warm-gold/20 rounded-2xl px-4 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-warm-gold/50 appearance-none cursor-pointer"
                 disabled
               >
                 <option value="zh-TW">繁體中文</option>
@@ -78,24 +78,24 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                 <option value="ja">日本語</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
             </div>
-            <p className="text-sm text-gray-400 mt-2">
+            <p className="font-sans-tc text-sm text-text-secondary mt-2">
               ⚠️ 語言切換功能開發中，目前僅支援繁體中文界面
             </p>
           </div>
         </div>
       </div>
       
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gold-400 mb-4">編輯器設定</h3>
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl p-6">
+        <h3 className="text-lg font-medium text-warm-gold mb-4">編輯器設定</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-gray-300">自動儲存</span>
+              <span className="text-text-primary">自動儲存</span>
               <p className="text-sm text-gray-400">編輯器內容每 2 秒自動儲存</p>
             </div>
             <div className="flex items-center text-green-400">
@@ -109,8 +109,8 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
         </div>
       </div>
 
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gold-400 mb-4">🎨 AI 插畫功能設定</h3>
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl p-6">
+        <h3 className="text-lg font-medium text-warm-gold mb-4">🎨 AI 插畫功能設定</h3>
         <div className="space-y-6">
           <div className="flex items-start justify-between opacity-50">
             <div className="flex-1 mr-4">
@@ -132,7 +132,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             </label>
           </div>
 
-          <div className="border-t border-cosmic-600 pt-4">
+          <div className="border-t border-warm-gold/20 pt-4">
             <div className="flex items-start justify-between opacity-50">
               <div className="flex-1 mr-4">
                 <div className="flex items-center space-x-2 mb-2">
@@ -157,13 +157,13 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
         </div>
       </div>
 
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gold-400 mb-4">📚 電子書功能設定</h3>
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl p-6">
+        <h3 className="text-lg font-medium text-warm-gold mb-4">📚 電子書功能設定</h3>
         <div className="space-y-6">
           <div className="flex items-start justify-between">
             <div className="flex-1 mr-4">
               <div className="flex items-center space-x-2 mb-2">
-                <span className="text-gray-300 font-medium">電子書虛擬檔名對應系統</span>
+                <span className="text-text-primary font-medium">電子書虛擬檔名對應系統</span>
                 <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-900/30 text-blue-400 border border-blue-700/50">
                   🧪 實驗功能
                 </div>
@@ -185,12 +185,12 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                 onChange={(e) => dispatch(updateSettings({ ebookVirtualNaming: e.target.checked }))}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-500/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-500"></div>
+              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-warm-gold/50/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-500"></div>
             </label>
           </div>
 
           {settings.ebookVirtualNaming && (
-            <div className="border-t border-cosmic-600 pt-4 bg-blue-900/10 rounded-lg p-4">
+            <div className="border-t border-warm-gold/20 pt-4 bg-blue-900/10 rounded-lg p-4">
               <h4 className="text-sm font-medium text-blue-300 mb-3">⚙️ 功能配置</h4>
               <div className="space-y-3 text-xs text-gray-400">
                 <div className="flex items-center justify-between">
@@ -235,13 +235,13 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
         </div>
       </div>
 
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gold-400 mb-4">🧠 智能上下文優化</h3>
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl p-6">
+        <h3 className="text-lg font-medium text-warm-gold mb-4">🧠 智能上下文優化</h3>
         <div className="space-y-6">
           <div className="flex items-start justify-between">
             <div className="flex-1 mr-4">
               <div className="flex items-center space-x-2 mb-2">
-                <span className="text-gray-300 font-medium">啟用智能多維度上下文優化</span>
+                <span className="text-text-primary font-medium">啟用智能多維度上下文優化</span>
                 <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-400 border border-purple-700/50">
                   🚀 最新功能
                 </div>
@@ -273,14 +273,14 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
           </div>
 
           {settings.features?.intelligentContextOptimization && (
-            <div className="border-t border-cosmic-600 pt-4 bg-purple-900/10 rounded-lg p-4">
+            <div className="border-t border-warm-gold/20 pt-4 bg-purple-900/10 rounded-lg p-4">
               <h4 className="text-sm font-medium text-purple-300 mb-3">⚙️ 智能上下文配置</h4>
 
               <div className="space-y-4">
                 {/* 主要開關 */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-gray-300 text-sm">啟用智能上下文分析</span>
+                    <span className="text-text-primary text-sm">啟用智能上下文分析</span>
                     <p className="text-xs text-gray-500">為AI續寫建構跨章節上下文</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -303,7 +303,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                   <>
                     {/* 優化等級 */}
                     <div>
-                      <label className="block text-gray-300 text-sm mb-2">優化等級</label>
+                      <label className="block text-text-primary text-sm mb-2">優化等級</label>
                       <select
                         value={settings.ai?.intelligentContext?.optimizationLevel || 'advanced'}
                         onChange={(e) => dispatch(updateAISettings({
@@ -312,7 +312,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                             optimizationLevel: e.target.value as 'basic' | 'advanced' | 'experimental'
                           }
                         }))}
-                        className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+                        className="w-full bg-bg-dark border border-warm-gold/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
                       >
                         <option value="basic">基礎 - 簡單摘要</option>
                         <option value="advanced">高級 - 多維度分析（推薦）</option>
@@ -322,7 +322,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
 
                     {/* Token預算 */}
                     <div>
-                      <label className="block text-gray-300 text-sm mb-2">
+                      <label className="block text-text-primary text-sm mb-2">
                         Token預算: {settings.ai?.intelligentContext?.maxTokenBudget || 8000}
                       </label>
                       <input
@@ -337,7 +337,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                             maxTokenBudget: parseInt(e.target.value)
                           }
                         }))}
-                        className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer slider-purple"
+                        className="w-full h-2 bg-bg-dark rounded-lg appearance-none cursor-pointer slider-purple"
                       />
                       <div className="flex justify-between text-xs text-gray-500 mt-1">
                         <span>4K</span>
@@ -349,7 +349,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                     {/* 高級設定 */}
                     <div className="border-t border-purple-700/30 pt-4">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-gray-300 text-sm">保留對話內容</span>
+                        <span className="text-text-primary text-sm">保留對話內容</span>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
@@ -367,7 +367,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-300 text-sm">性能模式</span>
+                        <span className="text-text-primary text-sm">性能模式</span>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
@@ -411,37 +411,37 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
       </div>
 
       {/* 日誌管理區塊 (v1.3.3) */}
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gold-400 mb-4">🗂️ 日誌管理</h3>
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl p-6">
+        <h3 className="text-lg font-medium text-warm-gold mb-4">🗂️ 日誌管理</h3>
         <div className="space-y-4">
           <div>
-            <p className="text-gray-300 mb-2">
+            <p className="text-text-primary mb-2">
               當應用出現問題時，日誌檔案可以幫助開發者診斷問題。
             </p>
-            <div className="bg-cosmic-700 rounded px-3 py-2 mb-3">
+            <div className="bg-bg-dark rounded px-3 py-2 mb-3">
               <p className="text-xs text-gray-400">日誌位置：</p>
-              <code className="text-sm text-gold-300 break-all">{logDirectory || '載入中...'}</code>
+              <code className="text-sm text-warm-gold break-all">{logDirectory || '載入中...'}</code>
             </div>
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={handleOpenLogDirectory}
-              className="flex-1 bg-cosmic-700 hover:bg-cosmic-600 border border-cosmic-600 hover:border-gold-500 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex-1 bg-bg-dark hover:bg-cosmic-600 border border-warm-gold/20 hover:border-gold-500 text-white px-4 py-2 rounded-lg transition-colors"
             >
               📂 打開日誌目錄
             </button>
             <button
               onClick={handleCopyLogs}
               disabled={isExportingLogs}
-              className="flex-1 bg-gold-600 hover:bg-gold-500 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-warm-gold hover:bg-clay-orange text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isExportingLogs ? '⏳ 複製中...' : '📋 複製最新日誌'}
             </button>
           </div>
 
-          <div className="bg-cosmic-700/50 border border-cosmic-600 rounded-lg p-3">
-            <p className="text-sm text-gray-300 mb-2">💡 如何使用日誌：</p>
+          <div className="bg-bg-dark/50 border border-warm-gold/20 rounded-lg p-3">
+            <p className="text-sm text-text-primary mb-2">💡 如何使用日誌：</p>
             <ul className="text-xs text-gray-400 space-y-1 list-disc list-inside ml-2">
               <li>點擊「複製最新日誌」複製最近 2000 行日誌</li>
               <li>將日誌貼到 GitHub Issue 或郵件中發給開發者</li>

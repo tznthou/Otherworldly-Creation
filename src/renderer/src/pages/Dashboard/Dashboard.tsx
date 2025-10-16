@@ -4,8 +4,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { fetchProjects, setCurrentProject } from '../../store/slices/projectsSlice';
 import { setDefaultProvider, setDefaultModel } from '../../store/slices/aiSlice';
 import { openModal } from '../../store/slices/uiSlice';
-import { Card, CardContent } from '../../components/UI/Card';
-import CosmicBackground from '../../components/UI/CosmicBackground';
+import HumanBackground from '../../components/UI/HumanBackground';
 import type { Chapter } from '../../api/models';
 // import { initStatusManager } from '../../modules/chapterStatus';
 // import { useStatusStatistics } from '../../modules/chapterStatus/hooks';
@@ -240,103 +239,75 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="h-screen overflow-y-auto force-scrollbar p-6 pb-16 relative">
-      {/* 動畫星雲背景 */}
-      <CosmicBackground 
+      {/* 人文背景 - 深夜書房氛圍 */}
+      <HumanBackground
         intensity="medium"
-        showMagicCircles={true}
-        showStars={true}
         className="z-0"
       />
       
       {/* 主要內容區域 */}
-      <div className="relative z-10">
+      <div className="relative z-10 max-w-7xl mx-auto">
         {/* 標題區域 */}
-        <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-gold-300 to-gold-500 bg-clip-text text-transparent mb-2">
-          📚 創作工作台
-        </h1>
-        <p className="text-gray-400 text-lg">
-          開始您的文學創作之旅
-        </p>
-      </div>
+        <div className="mb-16">
+          <h1 className="font-serif-tc font-black text-6xl lg:text-7xl text-text-primary mb-4 leading-tight">
+            創作是孤獨的旅程
+          </h1>
+          <p className="font-sans-tc text-xl text-text-secondary">
+            但你並不孤單
+          </p>
+        </div>
 
       {/* 統計卡片區域 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {/* 專案統計卡片 */}
-        <Card className="bg-midnight-800 border-gray-700 hover:border-gold-500 transition-colors">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="text-3xl">📊</div>
-              <div>
-                <p className="text-sm text-gray-400">總專案數</p>
-                <p className="text-2xl font-bold text-gold-400">{projects.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-bg-light/50 backdrop-blur-sm rounded-3xl p-8 border border-warm-gold/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+          <div className="text-3xl mb-3">📊</div>
+          <p className="font-sans-tc text-sm text-text-secondary mb-2">總專案數</p>
+          <p className="font-serif-tc text-4xl font-bold text-warm-gold">{projects.length}</p>
+        </div>
 
         {/* 章節統計卡片 */}
-        <Card className="bg-midnight-800 border-gray-700 hover:border-green-500 transition-colors">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="text-3xl">📝</div>
-              <div>
-                <p className="text-sm text-gray-400">總章節數</p>
-                <p className="text-2xl font-bold text-green-400">{chapterStats.totalChapters}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-bg-light/50 backdrop-blur-sm rounded-3xl p-8 border border-warm-gold/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+          <div className="text-3xl mb-3">📝</div>
+          <p className="font-sans-tc text-sm text-text-secondary mb-2">總章節數</p>
+          <p className="font-serif-tc text-4xl font-bold text-warm-gold">{chapterStats.totalChapters}</p>
+        </div>
 
         {/* 完成章節卡片 */}
-        <Card className="bg-midnight-800 border-gray-700 hover:border-blue-500 transition-colors">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="text-3xl">✅</div>
-              <div>
-                <p className="text-sm text-gray-400">完成章節</p>
-                <p className="text-2xl font-bold text-blue-400">{chapterStats.completedCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-bg-light/50 backdrop-blur-sm rounded-3xl p-8 border border-warm-gold/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+          <div className="text-3xl mb-3">✅</div>
+          <p className="font-sans-tc text-sm text-text-secondary mb-2">完成章節</p>
+          <p className="font-serif-tc text-4xl font-bold text-warm-gold">{chapterStats.completedCount}</p>
+        </div>
 
         {/* 完成率卡片 */}
-        <Card className="bg-midnight-800 border-gray-700 hover:border-purple-500 transition-colors">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="text-3xl">🎯</div>
-              <div>
-                <p className="text-sm text-gray-400">完成率</p>
-                <p className="text-2xl font-bold text-purple-400">
-                  {(chapterStats.completionRate * 100).toFixed(1)}%
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-bg-light/50 backdrop-blur-sm rounded-3xl p-8 border border-warm-gold/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+          <div className="text-3xl mb-3">🎯</div>
+          <p className="font-sans-tc text-sm text-text-secondary mb-2">完成率</p>
+          <p className="font-serif-tc text-4xl font-bold text-warm-gold">
+            {(chapterStats.completionRate * 100).toFixed(1)}%
+          </p>
+        </div>
       </div>
 
       {/* AI 狀態指示器 */}
       <div className="mb-8">
-        <Card className="bg-midnight-800 border-gray-700">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className={`w-3 h-3 rounded-full ${isCurrentProviderConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-gray-300">
-                  AI 服務狀態: {isCurrentProviderConnected ? '已連接' : '未連接'}
-                </span>
-                <span className="text-xs text-gray-500">
-                  ({currentProviderName})
-                </span>
-              </div>
-              <div className="text-sm text-gray-400">
-                可用模型: {availableModels.length}
-              </div>
+        <div className="bg-bg-light/50 backdrop-blur-sm rounded-3xl p-6 border border-warm-gold/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`w-3 h-3 rounded-full ${isCurrentProviderConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="font-sans-tc text-text-primary">
+                AI 服務狀態: {isCurrentProviderConnected ? '已連接' : '未連接'}
+              </span>
+              <span className="font-sans-tc text-xs text-text-secondary">
+                ({currentProviderName})
+              </span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="font-sans-tc text-sm text-text-secondary">
+              可用模型: {availableModels.length}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 完整功能卡片區域 */}
@@ -345,21 +316,14 @@ const Dashboard: React.FC = () => {
       {/* 專案列表 */}
       {projects.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-2xl font-bold text-gray-200 mb-4">最近專案</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h2 className="font-serif-tc text-3xl font-bold text-text-primary mb-6">最近專案</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.slice(0, 6).map((project) => (
               <div
                 key={project.id}
-                className="group"
+                className="bg-bg-light/50 backdrop-blur-sm rounded-3xl p-6 border border-warm-gold/10 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer group relative"
               >
-                <Card className="bg-midnight-800 border-gray-700 hover:border-gold-500 hover:shadow-xl hover:shadow-gold-500/20 transition-all duration-300 transform group-hover:scale-105 group-active:scale-95 relative">
-                  {/* 魔法光暈效果 */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-gold-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg pointer-events-none"></div>
-
-                  {/* 邊框發光效果 */}
-                  <div className="absolute inset-0 rounded-lg ring-1 ring-gold-500/0 group-hover:ring-gold-500/30 transition-all duration-300 pointer-events-none"></div>
-
-                  <CardContent className="p-4 relative z-10">
+                  <div className="relative z-10">
                     {/* 操作按鈕群組 - 放在內容區域內，使用絕對定位 */}
                     <div className="absolute -top-1 -right-1 z-50 flex gap-1">
                       <button
@@ -396,22 +360,21 @@ const Dashboard: React.FC = () => {
                       className="cursor-pointer"
                     >
                       {/* 添加右邊距避免標題被按鈕遮擋 */}
-                      <h3 className="font-semibold text-gray-200 mb-2 line-clamp-1 group-hover:text-gold-300 transition-colors duration-300 pr-20">{project.name}</h3>
-                      <p className="text-sm text-gray-400 mb-3 line-clamp-2 group-hover:text-gray-300 transition-colors duration-300">
+                      <h3 className="font-serif-tc text-xl font-bold text-text-primary mb-3 line-clamp-1 group-hover:text-warm-gold transition-colors duration-300 pr-20">{project.name}</h3>
+                      <p className="font-sans-tc text-sm text-text-secondary mb-4 line-clamp-2 leading-relaxed">
                         {project.description || '暫無描述'}
                       </p>
-                      <div className="flex justify-between items-center text-xs text-gray-500 group-hover:text-gray-400 transition-colors duration-300">
+                      <div className="flex justify-between items-center font-sans-tc text-xs text-text-secondary border-t border-warm-gold/10 pt-4">
                         <span>
                           更新: {new Date(project.updatedAt).toLocaleDateString('zh-TW')}
                         </span>
                         {/* 小箭頭指示器 */}
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-gold-400">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-warm-gold">
                           →
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
               </div>
             ))}
           </div>
@@ -419,13 +382,13 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Footer 區域 */}
-      <div className="mt-24 pt-16 border-t border-gray-700/50 mb-12">
-        <div className="text-center text-gray-500 text-sm">
-          <p className="mb-3">
-            🌟 創世紀元 - 異世界創作神器 🌟
+      <div className="mt-24 pt-16 border-t border-warm-gold/10 mb-12">
+        <div className="text-center">
+          <p className="font-serif-tc text-text-secondary text-sm mb-3">
+            創世紀元 - 異世界創作神器
           </p>
-          <p className="text-xs mb-4">
-            用 AI 之力編織你的異世界傳說
+          <p className="font-sans-tc text-text-secondary/60 text-xs mb-4">
+            動筆，才是思考的開始
           </p>
         </div>
       </div>

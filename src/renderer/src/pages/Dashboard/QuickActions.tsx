@@ -145,18 +145,16 @@ const QuickActions: React.FC = () => {
 
   return (
     <div>
-      <h2 className="text-xl font-cosmic text-gold-500 mb-6">✨ 創世紀元功能大全 ✨</h2>
-      
+      <h2 className="font-serif-tc text-2xl font-bold text-text-primary mb-6">功能導航</h2>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {actions.map((action) => (
           <button
             key={action.id}
             onClick={action.action}
-            className={`card card-hover group text-left p-4 transition-all duration-200 hover:scale-105 active:scale-95 relative overflow-hidden ${action.isPlanned ? 'opacity-75 hover:opacity-90' : ''}`}
+            className={`bg-bg-light/50 backdrop-blur-sm rounded-3xl p-6 border border-warm-gold/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 text-left group relative ${action.isPlanned ? 'opacity-75 hover:opacity-90' : ''}`}
             data-tutorial={action.id === 'create-project' ? 'create-project-btn' : undefined}
           >
-            {/* 背景魔法效果 */}
-            <div className="absolute inset-0 bg-gradient-to-br from-cosmic-800/50 via-cosmic-700/30 to-cosmic-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
             {/* 規劃中功能標記 */}
             {action.isPlanned && (
@@ -168,20 +166,17 @@ const QuickActions: React.FC = () => {
             )}
             
             <div className="relative z-10">
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform shadow-lg ${action.isPlanned ? 'grayscale hover:grayscale-0' : ''}`}>
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center text-3xl mb-4 group-hover:scale-105 transition-transform shadow-md ${action.isPlanned ? 'grayscale hover:grayscale-0' : ''}`}>
                 {action.icon}
               </div>
-              
-              <h3 className="font-cosmic font-medium text-white mb-2 group-hover:text-gold-400 transition-colors text-lg">
+
+              <h3 className="font-serif-tc font-bold text-text-primary mb-2 group-hover:text-warm-gold transition-colors">
                 {action.title}
               </h3>
-              
-              <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors leading-relaxed">
+
+              <p className="font-sans-tc text-sm text-text-secondary leading-relaxed">
                 {action.description}
               </p>
-              
-              {/* 魔法光效 */}
-              <div className="absolute top-2 right-2 w-2 h-2 bg-gold-400 rounded-full opacity-0 group-hover:opacity-100 animate-pulse transition-opacity"></div>
             </div>
           </button>
         ))}
@@ -190,8 +185,8 @@ const QuickActions: React.FC = () => {
 
       {/* 底部說明文字 */}
       <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500 italic">
-          🌟 選擇功能卡片開始您的異世界創作之旅 🌟
+        <p className="font-sans-tc text-sm text-text-secondary/60">
+          選擇功能開始您的創作之旅
         </p>
       </div>
     </div>
