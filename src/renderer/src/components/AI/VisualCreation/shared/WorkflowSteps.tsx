@@ -44,8 +44,8 @@ const WorkflowSteps: React.FC<WorkflowStepsProps> = ({
   className = '' 
 }) => {
   return (
-    <div className={`bg-cosmic-800/50 rounded-lg p-4 border border-cosmic-600 ${className}`}>
-      <h3 className="text-sm font-cosmic text-gold-400 mb-3 flex items-center">
+    <div className={`bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4 border border-warm-gold/10 ${className}`}>
+      <h3 className="text-sm font-serif-tc text-warm-gold mb-3 flex items-center">
         <span className="mr-2">✨</span>
         創作流程
       </h3>
@@ -58,10 +58,10 @@ const WorkflowSteps: React.FC<WorkflowStepsProps> = ({
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
                   step.id === currentStep
-                    ? 'bg-gold-500 text-white'
+                    ? 'bg-warm-gold/50 text-white'
                     : step.id < currentStep
                     ? 'bg-green-500 text-white'
-                    : 'bg-cosmic-600 text-gray-400'
+                    : 'bg-bg-light text-gray-400'
                 }`}
               >
                 {step.id < currentStep ? '✓' : step.icon}
@@ -72,7 +72,7 @@ const WorkflowSteps: React.FC<WorkflowStepsProps> = ({
                 <p
                   className={`text-xs font-medium transition-colors ${
                     step.id === currentStep
-                      ? 'text-gold-400'
+                      ? 'text-warm-gold'
                       : step.id < currentStep
                       ? 'text-green-400'
                       : 'text-gray-400'
@@ -93,7 +93,7 @@ const WorkflowSteps: React.FC<WorkflowStepsProps> = ({
                   className={`h-full transition-colors ${
                     step.id < currentStep
                       ? 'bg-green-500'
-                      : 'bg-cosmic-600'
+                      : 'bg-bg-light'
                   }`}
                 />
               </div>

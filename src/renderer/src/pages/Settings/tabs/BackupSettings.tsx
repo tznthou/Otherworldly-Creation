@@ -10,7 +10,7 @@ const BackupSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-cosmic text-gold-500">備份設定</h2>
+        <h2 className="text-2xl font-serif-tc text-warm-gold">備份設定</h2>
         <button
           onClick={() => setShowBackupManager(true)}
           className="btn-primary text-sm"
@@ -19,8 +19,8 @@ const BackupSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }
         </button>
       </div>
       
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gold-400 mb-4">自動備份</h3>
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-warm-gold mb-4">自動備份</h3>
         <div className="space-y-4">
           <div className="flex items-center">
             <input
@@ -28,7 +28,7 @@ const BackupSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }
               id="autoBackup"
               checked={settings.backup.autoBackup}
               onChange={(e) => dispatch(updateBackupSettings({ autoBackup: e.target.checked }))}
-              className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+              className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
             />
             <label htmlFor="autoBackup" className="text-gray-300">啟用自動備份</label>
           </div>
@@ -43,7 +43,7 @@ const BackupSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }
                   onChange={(e) => dispatch(updateBackupSettings({ backupInterval: parseInt(e.target.value) }))}
                   min="1"
                   max="168"
-                  className="w-32 bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  className="w-32 bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                 />
               </div>
               
@@ -55,7 +55,7 @@ const BackupSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }
                   onChange={(e) => dispatch(updateBackupSettings({ maxBackupFiles: parseInt(e.target.value) }))}
                   min="1"
                   max="100"
-                  className="w-32 bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  className="w-32 bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                 />
               </div>
               
@@ -67,7 +67,7 @@ const BackupSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }
                     value={settings.backup.backupLocation}
                     onChange={(e) => dispatch(updateBackupSettings({ backupLocation: e.target.value }))}
                     placeholder="選擇備份資料夾..."
-                    className="flex-1 bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                    className="flex-1 bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                     readOnly
                   />
                   <button className="btn-secondary">瀏覽</button>
@@ -78,8 +78,8 @@ const BackupSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }
         </div>
       </div>
       
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gold-400 mb-4">備份狀態</h3>
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-warm-gold mb-4">備份狀態</h3>
         <AutoBackupIndicator size="medium" />
       </div>
       

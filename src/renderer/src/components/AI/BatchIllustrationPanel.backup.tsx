@@ -1119,7 +1119,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   <button
                     onClick={loadCharactersDirectly}
                     disabled={charactersLoading}
-                    className="px-3 py-1 bg-cosmic-700 hover:bg-cosmic-600 disabled:opacity-50 text-cosmic-200 rounded text-sm transition-colors"
+                    className="px-3 py-1 bg-bg-dark/80 hover:bg-bg-light disabled:opacity-50 text-text-secondary/40 rounded text-sm transition-colors"
                   >
                     🔄 重新載入
                   </button>
@@ -1238,7 +1238,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                     <div className="text-6xl mb-4">🎭</div>
                     <p className="mb-2">此專案還沒有角色</p>
                     <p className="text-sm mt-2 mb-4">請先到角色管理頁面創建角色</p>
-                    <div className="text-xs text-cosmic-500 bg-cosmic-900/50 p-3 rounded border border-cosmic-700">
+                    <div className="text-xs text-text-secondary bg-bg-dark/50 p-3 rounded border border-warm-gold/10">
                       <p className="mb-2"><strong>調試信息：</strong></p>
                       <p>專案ID: {currentProject?.id || '無'}</p>
                       <p>角色總數: {characters.length}</p>
@@ -1266,7 +1266,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                       onClick={() => setSceneType(type.value as 'portrait' | 'scene' | 'interaction')}
                       className={`flex-1 p-3 rounded-lg border-2 transition-all ${
                         sceneType === type.value
-                          ? 'border-gold-500 bg-gold-500/10 text-gold-400'
+                          ? 'border-warm-gold bg-warm-gold/50/10 text-warm-gold'
                           : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
                       }`}
                     >
@@ -1353,7 +1353,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                           {request.selectedCharacterIds.map(charId => {
                             const character = effectiveProjectCharacters.find(c => c.id === charId);
                             return character ? (
-                              <span key={charId} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gold-600/20 text-gold-300 border border-gold-600/30">
+                              <span key={charId} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-warm-gold/20 text-warm-gold border border-warm-gold/30">
                                 <span className="mr-1">{character.archetype?.includes('魔法') ? '🧙' : '👤'}</span>
                                 {character.name}
                               </span>

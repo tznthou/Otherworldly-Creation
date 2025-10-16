@@ -17,10 +17,10 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="h-16 bg-cosmic-900/90 backdrop-blur-sm border-b border-cosmic-700 flex items-center justify-between px-6 relative z-10">
+    <header className="h-16 bg-bg-dark/90 backdrop-blur-sm border-b border-warm-gold/10 flex items-center justify-between px-6 relative z-10">
       {/* 左側：頁面標題 */}
       <div className="flex items-center space-x-4">
-        <h2 className="text-xl font-cosmic text-gold-500">{getPageTitle()}</h2>
+        <h2 className="text-xl font-serif-tc text-warm-gold">{getPageTitle()}</h2>
         
         {currentProject && (
           <div className="flex items-center space-x-2 text-sm text-gray-400">
@@ -34,7 +34,7 @@ const Header: React.FC = () => {
       <div className="flex items-center space-x-4">
         {/* 自動儲存指示器 */}
         {saving && (
-          <div className="flex items-center space-x-2 text-sm text-gold-400">
+          <div className="flex items-center space-x-2 text-sm text-warm-gold">
             <div className="w-2 h-2 bg-gold-400 rounded-full animate-pulse" />
             <span>自動儲存中...</span>
           </div>

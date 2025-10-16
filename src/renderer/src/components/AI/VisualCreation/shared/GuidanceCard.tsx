@@ -30,7 +30,7 @@ const GuidanceCard: React.FC<GuidanceCardProps> = ({
       info: 'bg-warm-gold/10 border-warm-gold/20 text-warm-gold/60',
       warning: 'bg-yellow-900/20 border-yellow-500/30 text-yellow-100',
       success: 'bg-green-900/20 border-green-500/30 text-green-100',
-      primary: 'bg-gold-900/20 border-gold-500/30 text-gold-100'
+      primary: 'bg-warm-gold/20 border-warm-gold/30 text-warm-gold/60'
     };
     return variants[variant];
   };
@@ -84,7 +84,7 @@ const GuidanceCard: React.FC<GuidanceCardProps> = ({
               <ul className="text-xs text-gray-300 space-y-1">
                 {tips.map((tip, index) => (
                   <li key={index} className="flex items-start">
-                    <span className="text-gold-400 mr-2">•</span>
+                    <span className="text-warm-gold mr-2">•</span>
                     {tip}
                   </li>
                 ))}
@@ -99,7 +99,7 @@ const GuidanceCard: React.FC<GuidanceCardProps> = ({
                 {examples.map((example, index) => (
                   <div
                     key={index}
-                    className="text-xs text-gray-300 p-2 bg-cosmic-800/50 rounded border-l-2 border-gold-500/30"
+                    className="text-xs text-gray-300 p-2 bg-bg-light/50 backdrop-blur-sm/50 rounded border-l-2 border-warm-gold/30"
                   >
                     "{example}"
                   </div>

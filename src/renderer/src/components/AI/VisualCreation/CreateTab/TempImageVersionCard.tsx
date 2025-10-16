@@ -49,9 +49,9 @@ const TempImageVersionCard: React.FC<TempImageVersionCardProps> = ({
   };
 
   return (
-    <div className={`bg-cosmic-800/30 rounded-lg border border-cosmic-700 overflow-hidden ${className}`}>
+    <div className={`bg-bg-light/50 backdrop-blur-sm/30 rounded-lg border border-warm-gold/10 overflow-hidden ${className}`}>
       {/* 圖片區域 */}
-      <div className="relative aspect-square bg-cosmic-900">
+      <div className="relative aspect-square bg-bg-dark">
         <SafeImage
           imageUrl={tempImage.image_url}
           localFilePath={tempImage.temp_path}
@@ -91,8 +91,8 @@ const TempImageVersionCard: React.FC<TempImageVersionCardProps> = ({
       <div className="p-3">
         {/* 提示詞預覽 */}
         <div className="mb-3">
-          <h4 className="text-sm font-medium text-cosmic-200 mb-1">提示詞</h4>
-          <p className="text-xs text-cosmic-400 line-clamp-2" title={tempImage.prompt}>
+          <h4 className="text-sm font-medium text-text-secondary/40 mb-1">提示詞</h4>
+          <p className="text-xs text-text-secondary/80 line-clamp-2" title={tempImage.prompt}>
             {tempImage.prompt}
           </p>
         </div>
@@ -100,35 +100,35 @@ const TempImageVersionCard: React.FC<TempImageVersionCardProps> = ({
         {/* 技術參數 */}
         <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
           <div>
-            <span className="text-cosmic-400">提供商:</span>
-            <span className="text-cosmic-200 ml-1">{tempImage.provider}</span>
+            <span className="text-text-secondary/80">提供商:</span>
+            <span className="text-text-secondary/40 ml-1">{tempImage.provider}</span>
           </div>
           <div>
-            <span className="text-cosmic-400">模型:</span>
-            <span className="text-cosmic-200 ml-1">{tempImage.parameters.model}</span>
+            <span className="text-text-secondary/80">模型:</span>
+            <span className="text-text-secondary/40 ml-1">{tempImage.parameters.model}</span>
           </div>
           <div>
-            <span className="text-cosmic-400">尺寸:</span>
-            <span className="text-cosmic-200 ml-1">
+            <span className="text-text-secondary/80">尺寸:</span>
+            <span className="text-text-secondary/40 ml-1">
               {tempImage.parameters.width}×{tempImage.parameters.height}
             </span>
           </div>
           <div>
-            <span className="text-cosmic-400">生成時間:</span>
-            <span className="text-cosmic-200 ml-1">
+            <span className="text-text-secondary/80">生成時間:</span>
+            <span className="text-text-secondary/40 ml-1">
               {(tempImage.generation_time_ms / 1000).toFixed(1)}s
             </span>
           </div>
           {tempImage.parameters.seed && (
             <div className="col-span-2">
-              <span className="text-cosmic-400">種子:</span>
-              <span className="text-cosmic-200 ml-1">{tempImage.parameters.seed}</span>
+              <span className="text-text-secondary/80">種子:</span>
+              <span className="text-text-secondary/40 ml-1">{tempImage.parameters.seed}</span>
             </div>
           )}
           {tempImage.parameters.style && (
             <div className="col-span-2">
-              <span className="text-cosmic-400">風格:</span>
-              <span className="text-cosmic-200 ml-1">{tempImage.parameters.style}</span>
+              <span className="text-text-secondary/80">風格:</span>
+              <span className="text-text-secondary/40 ml-1">{tempImage.parameters.style}</span>
             </div>
           )}
         </div>
@@ -143,7 +143,7 @@ const TempImageVersionCard: React.FC<TempImageVersionCardProps> = ({
               isPendingVersion
                 ? 'bg-orange-600 hover:bg-orange-700 text-white'
                 : 'bg-green-600 hover:bg-green-700 text-white'
-            } disabled:bg-cosmic-600 disabled:cursor-not-allowed`}
+            } disabled:bg-bg-light disabled:cursor-not-allowed`}
           >
             {isCreatingVersion ? (
               <div className="flex items-center justify-center gap-2">
@@ -163,7 +163,7 @@ const TempImageVersionCard: React.FC<TempImageVersionCardProps> = ({
             <button
               onClick={handleCreateVariant}
               disabled={isCreatingVariant}
-              className="px-3 py-2 bg-clay-orange hover:bg-clay-orange disabled:bg-cosmic-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
+              className="px-3 py-2 bg-clay-orange hover:bg-clay-orange disabled:bg-bg-light disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
             >
               {isCreatingVariant ? (
                 <div className="flex items-center justify-center gap-1">

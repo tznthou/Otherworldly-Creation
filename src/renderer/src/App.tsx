@@ -125,7 +125,7 @@ const App: React.FC = () => {
   // 如果有嚴重的初始化錯誤，顯示錯誤畫面
   if (initError) {
     return (
-      <div className="min-h-screen bg-cosmic-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-bg-dark text-white flex items-center justify-center">
         <div className="text-center p-8">
           <div className="mb-6">
             <svg className="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +137,7 @@ const App: React.FC = () => {
           <div className="space-y-3">
             <button
               onClick={() => window.location.reload()}
-              className="w-full px-6 py-3 bg-gold-500 text-black rounded-lg hover:bg-gold-600 transition-colors font-medium"
+              className="w-full px-6 py-3 bg-warm-gold/50 text-black rounded-lg hover:bg-gold-600 transition-colors font-medium"
             >
               重新載入應用程式
             </button>
@@ -156,7 +156,7 @@ const App: React.FC = () => {
             v7_relativeSplatPath: true,
           }}
         >
-          <div className="min-h-screen bg-cosmic-950 text-white">
+          <div className="min-h-screen bg-bg-dark text-white">
             <SimpleErrorBoundary context="路由系統">
               <Routes>
                 <Route path="/" element={
@@ -211,11 +211,11 @@ const App: React.FC = () => {
                 <Route path="*" element={
                   <div className="flex items-center justify-center h-screen">
                     <div className="text-center">
-                      <h2 className="text-xl text-gold-400 mb-4">頁面不存在</h2>
+                      <h2 className="text-xl text-warm-gold mb-4">頁面不存在</h2>
                       <p className="text-gray-300">路徑：{window.location.pathname}</p>
                       <button 
                         onClick={() => window.history.back()} 
-                        className="mt-4 px-4 py-2 bg-gold-500 text-black rounded hover:bg-gold-600"
+                        className="mt-4 px-4 py-2 bg-warm-gold/50 text-black rounded hover:bg-gold-600"
                       >
                         返回
                       </button>

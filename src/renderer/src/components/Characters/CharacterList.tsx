@@ -158,7 +158,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-gold"></div>
         <span className="ml-2 text-gray-300">載入中...</span>
       </div>
     );
@@ -195,7 +195,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
       {/* 頁面標題和操作 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-cosmic text-gold-400">角色管理</h1>
+          <h1 className="text-2xl font-serif-tc text-warm-gold">角色管理</h1>
           <p className="mt-1 text-sm text-gray-300">
             管理專案中的角色，包括主角、配角和反派等
           </p>
@@ -225,8 +225,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({
           onClick={() => handleSortChange('name')}
           className={`px-3 py-1 rounded-lg transition-colors ${
             sortOptions.field === 'name'
-              ? 'bg-gold-500 text-cosmic-950'
-              : 'text-gray-300 hover:bg-cosmic-800'
+              ? 'bg-warm-gold/50 text-text-primary'
+              : 'text-gray-300 hover:bg-bg-light/50 backdrop-blur-sm'
           }`}
         >
           名稱
@@ -240,8 +240,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({
           onClick={() => handleSortChange('archetype')}
           className={`px-3 py-1 rounded-lg transition-colors ${
             sortOptions.field === 'archetype'
-              ? 'bg-gold-500 text-cosmic-950'
-              : 'text-gray-300 hover:bg-cosmic-800'
+              ? 'bg-warm-gold/50 text-text-primary'
+              : 'text-gray-300 hover:bg-bg-light/50 backdrop-blur-sm'
           }`}
         >
           原型
@@ -255,8 +255,8 @@ export const CharacterList: React.FC<CharacterListProps> = ({
           onClick={() => handleSortChange('createdAt')}
           className={`px-3 py-1 rounded-lg transition-colors ${
             sortOptions.field === 'createdAt'
-              ? 'bg-gold-500 text-cosmic-950'
-              : 'text-gray-300 hover:bg-cosmic-800'
+              ? 'bg-warm-gold/50 text-text-primary'
+              : 'text-gray-300 hover:bg-bg-light/50 backdrop-blur-sm'
           }`}
         >
           創建時間

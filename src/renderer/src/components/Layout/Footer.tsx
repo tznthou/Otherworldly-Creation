@@ -24,7 +24,7 @@ const Footer: React.FC<FooterProps> = ({ editorStats, currentChapterTitle }) => 
     : false;
   
   return (
-    <footer className="h-8 bg-cosmic-900/30 backdrop-blur-sm border-t border-cosmic-700 flex items-center justify-between px-6 text-xs text-gray-400">
+    <footer className="h-8 bg-bg-dark/30 backdrop-blur-sm border-t border-warm-gold/10 flex items-center justify-between px-6 text-xs text-gray-400">
       {/* 左側：專案資訊或編輯器統計 */}
       <div className="flex items-center space-x-4">
         {isEditorPage && showStatusBar && editorStats ? (
@@ -52,7 +52,7 @@ const Footer: React.FC<FooterProps> = ({ editorStats, currentChapterTitle }) => 
         <span>v{__APP_VERSION__}</span>
         <span>© 2025 創世紀元</span>
         <span>•</span>
-        <span>Made by <a href="mailto:tznthou@gmail.com" className="text-gold-400 hover:text-gold-300 transition-colors underline">tznthou</a></span>
+        <span>Made by <a href="mailto:tznthou@gmail.com" className="text-warm-gold hover:text-warm-gold transition-colors underline">tznthou</a></span>
       </div>
     </footer>
   );

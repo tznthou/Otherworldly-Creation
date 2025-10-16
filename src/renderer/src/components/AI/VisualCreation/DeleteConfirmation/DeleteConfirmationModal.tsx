@@ -67,11 +67,11 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div 
-        className={`bg-cosmic-800/95 border border-cosmic-700 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden ${className}`}
+        className={`bg-bg-light/50 backdrop-blur-sm/95 border border-warm-gold/10 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* 標題列 */}
-        <div className="flex items-center justify-between p-4 border-b border-cosmic-700 bg-red-900/20">
+        <div className="flex items-center justify-between p-4 border-b border-warm-gold/10 bg-red-900/20">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-red-600/20 rounded-lg flex items-center justify-center">
               <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +88,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
           <button
             onClick={onClose}
             disabled={isDeleting}
-            className="p-2 text-cosmic-400 hover:text-cosmic-200 hover:bg-cosmic-700 rounded-lg transition-colors disabled:opacity-50"
+            className="p-2 text-text-secondary/80 hover:text-text-secondary/40 hover:bg-bg-dark/80 rounded-lg transition-colors disabled:opacity-50"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -100,31 +100,31 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
           {/* 統計資訊 */}
           <div className="mb-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-              <div className="bg-cosmic-800/50 rounded-lg p-3 text-center">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-red-400">{stats.count}</div>
-                <div className="text-sm text-cosmic-400">張圖片</div>
+                <div className="text-sm text-text-secondary/80">張圖片</div>
               </div>
-              <div className="bg-cosmic-800/50 rounded-lg p-3 text-center">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-orange-400">{stats.totalSizeMB} MB</div>
-                <div className="text-sm text-cosmic-400">檔案大小</div>
+                <div className="text-sm text-text-secondary/80">檔案大小</div>
               </div>
-              <div className="bg-cosmic-800/50 rounded-lg p-3 text-center">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-clay-orange">{Object.keys(stats.byProvider).length}</div>
-                <div className="text-sm text-cosmic-400">個提供商</div>
+                <div className="text-sm text-text-secondary/80">個提供商</div>
               </div>
-              <div className="bg-cosmic-800/50 rounded-lg p-3 text-center">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-warm-gold">
                   {stats.hasVersions ? '有' : '無'}
                 </div>
-                <div className="text-sm text-cosmic-400">多版本</div>
+                <div className="text-sm text-text-secondary/80">多版本</div>
               </div>
             </div>
 
             {/* 提供商分佈 */}
-            <div className="flex items-center space-x-4 text-sm text-cosmic-400 mb-4">
+            <div className="flex items-center space-x-4 text-sm text-text-secondary/80 mb-4">
               <span>提供商分佈:</span>
               {Object.entries(stats.byProvider).map(([provider, count]) => (
-                <span key={provider} className="px-2 py-1 bg-cosmic-700/50 rounded">
+                <span key={provider} className="px-2 py-1 bg-bg-dark/80/50 rounded">
                   {provider}: {count}張
                 </span>
               ))}
@@ -133,11 +133,11 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
 
           {/* 圖片預覽網格 */}
           <div className="mb-6">
-            <h4 className="text-sm font-medium text-cosmic-300 mb-3">將要刪除的圖片:</h4>
+            <h4 className="text-sm font-medium text-text-secondary mb-3">將要刪除的圖片:</h4>
             <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 max-h-48 overflow-y-auto">
               {selectedImages.map((image, index) => (
                 <div key={image.id} className="relative group">
-                  <div className="w-16 h-16 bg-cosmic-700 rounded overflow-hidden relative">
+                  <div className="w-16 h-16 bg-bg-dark/80 rounded overflow-hidden relative">
                     {image.image_url || image.image_path ? (
                       <SafeImage
                         imageUrl={image.image_url}
@@ -147,7 +147,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
                         fallbackIcon="🗑️"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-cosmic-400 text-xs">
+                      <div className="w-full h-full flex items-center justify-center text-text-secondary/80 text-xs">
                         No Image
                       </div>
                     )}
@@ -179,7 +179,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
 
           {/* 刪除類型選擇 */}
           <div className="space-y-4 mb-6">
-            <h4 className="text-sm font-medium text-cosmic-300">刪除類型:</h4>
+            <h4 className="text-sm font-medium text-text-secondary">刪除類型:</h4>
             <div className="space-y-3">
               <label className="flex items-start space-x-3 cursor-pointer">
                 <input
@@ -188,11 +188,11 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
                   value="soft"
                   checked={deleteType === 'soft'}
                   onChange={(e) => setDeleteType(e.target.value as DeleteType)}
-                  className="mt-1 w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 focus:ring-gold-500"
+                  className="mt-1 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 focus:ring-gold-500"
                 />
                 <div>
                   <div className="font-medium text-green-400">軟刪除 (建議)</div>
-                  <div className="text-sm text-cosmic-400">
+                  <div className="text-sm text-text-secondary/80">
                     將圖片移動到垃圾桶資料夾，可以隨時恢復
                   </div>
                   <div className="text-xs text-green-500 mt-1">
@@ -207,11 +207,11 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
                   value="permanent"
                   checked={deleteType === 'permanent'}
                   onChange={(e) => setDeleteType(e.target.value as DeleteType)}
-                  className="mt-1 w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 focus:ring-gold-500"
+                  className="mt-1 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 focus:ring-gold-500"
                 />
                 <div>
                   <div className="font-medium text-red-400">永久刪除</div>
-                  <div className="text-sm text-cosmic-400">
+                  <div className="text-sm text-text-secondary/80">
                     直接刪除圖片檔案，無法恢復
                   </div>
                   <div className="text-xs text-red-500 mt-1">
@@ -224,24 +224,24 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
 
           {/* 進階選項 */}
           <div className="space-y-4 mb-6">
-            <h4 className="text-sm font-medium text-cosmic-300">進階選項:</h4>
+            <h4 className="text-sm font-medium text-text-secondary">進階選項:</h4>
             <div className="space-y-3">
               <label className="flex items-center space-x-3">
                 <input
                   type="checkbox"
                   checked={preserveMetadata}
                   onChange={(e) => setPreserveMetadata(e.target.checked)}
-                  className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                  className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                 />
                 <div>
-                  <span className="text-sm text-cosmic-300">保留圖片元數據</span>
-                  <div className="text-xs text-cosmic-500">保留提示詞、生成參數等資訊用於未來參考</div>
+                  <span className="text-sm text-text-secondary">保留圖片元數據</span>
+                  <div className="text-xs text-text-secondary">保留提示詞、生成參數等資訊用於未來參考</div>
                 </div>
               </label>
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-cosmic-300 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 刪除原因 (可選):
               </label>
               <input
@@ -249,7 +249,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
                 value={deleteReason}
                 onChange={(e) => setDeleteReason(e.target.value)}
                 placeholder="例如: 品質不佳、不符合需求、重複圖片..."
-                className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 placeholder-cosmic-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 text-text-secondary/20 placeholder-cosmic-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                 disabled={isDeleting}
               />
             </div>
@@ -292,9 +292,9 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
         </div>
 
         {/* 底部操作區 */}
-        <div className="border-t border-cosmic-700 p-4 bg-cosmic-900/50">
+        <div className="border-t border-warm-gold/10 p-4 bg-bg-dark/50">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-cosmic-400">
+            <div className="text-sm text-text-secondary/80">
               {deleteType === 'soft' 
                 ? `圖片將移動到垃圾桶，可隨時恢復` 
                 : `圖片將被永久刪除，無法恢復`
@@ -304,7 +304,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
               <button
                 onClick={onClose}
                 disabled={isDeleting}
-                className="px-4 py-2 text-cosmic-300 hover:text-cosmic-100 hover:bg-cosmic-700 rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-text-secondary hover:text-text-secondary/20 hover:bg-bg-dark/80 rounded-lg transition-colors disabled:opacity-50"
               >
                 取消
               </button>

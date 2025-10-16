@@ -30,7 +30,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
 
   return (
     <div
-      className="bg-cosmic-800 border border-cosmic-700 rounded-lg hover:border-gold-400 transition-all duration-200 cursor-pointer"
+      className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg hover:border-warm-gold transition-all duration-200 cursor-pointer"
       onClick={handleView}
     >
       <div className="p-4">
@@ -41,7 +41,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
               {character.name}
             </h3>
             {character.archetype && (
-              <span className="inline-block px-2 py-1 text-xs font-medium bg-gold-500 text-cosmic-950 rounded-full">
+              <span className="inline-block px-2 py-1 text-xs font-medium bg-warm-gold/50 text-text-primary rounded-full">
                 {character.archetype}
               </span>
             )}
@@ -51,7 +51,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
           <div className="flex space-x-1 ml-2">
             <button
               onClick={handleEdit}
-              className="p-1 text-gray-400 hover:text-gold-400 transition-colors"
+              className="p-1 text-gray-400 hover:text-warm-gold transition-colors"
               title="編輯角色"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,21 +74,21 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
         <div className="space-y-2 text-sm text-gray-300">
           {character.age && (
             <div className="flex items-center">
-              <span className="font-medium w-12 text-gold-400">年齡:</span>
+              <span className="font-medium w-12 text-warm-gold">年齡:</span>
               <span>{character.age}歲</span>
             </div>
           )}
           
           {character.gender && (
             <div className="flex items-center">
-              <span className="font-medium w-12 text-gold-400">性別:</span>
+              <span className="font-medium w-12 text-warm-gold">性別:</span>
               <span>{character.gender}</span>
             </div>
           )}
           
           {character.personality && (
             <div>
-              <span className="font-medium text-gold-400">性格:</span>
+              <span className="font-medium text-warm-gold">性格:</span>
               <p className="text-gray-300 mt-1 line-clamp-2">
                 {character.personality}
               </p>
@@ -98,8 +98,8 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
 
         {/* 角色外觀描述 */}
         {character.appearance && (
-          <div className="mt-3 pt-3 border-t border-cosmic-700">
-            <span className="font-medium text-sm text-gold-400">外觀:</span>
+          <div className="mt-3 pt-3 border-t border-warm-gold/10">
+            <span className="font-medium text-sm text-warm-gold">外觀:</span>
             <p className="text-sm text-gray-300 mt-1 line-clamp-2">
               {character.appearance}
             </p>
@@ -107,7 +107,7 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
         )}
 
         {/* 創建時間 */}
-        <div className="mt-3 pt-3 border-t border-cosmic-700 text-xs text-gray-500">
+        <div className="mt-3 pt-3 border-t border-warm-gold/10 text-xs text-gray-500">
           創建於 {new Date(character.createdAt).toLocaleDateString('zh-TW')}
         </div>
       </div>

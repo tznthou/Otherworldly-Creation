@@ -120,7 +120,7 @@ export const StyleTemplateSelector = memo<StyleTemplateSelectorProps>(({
     <div className={`space-y-6 ${className}`}>
       {/* 篩選器區域 */}
       {showFilters && (
-        <div className="bg-cosmic-800/30 rounded-lg border border-cosmic-700 p-4">
+        <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg border border-warm-gold/10 p-4">
           <TemplateFilters
             filter={filter}
             sortBy={sortBy}
@@ -134,17 +134,17 @@ export const StyleTemplateSelector = memo<StyleTemplateSelectorProps>(({
       {/* 工具欄 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h3 className="text-lg font-medium text-cosmic-100">
+          <h3 className="text-lg font-medium text-text-secondary/20">
             風格模板
             {hasTemplates && (
-              <span className="ml-2 text-sm text-cosmic-400">
+              <span className="ml-2 text-sm text-text-secondary/80">
                 ({filteredTemplates.length} 個模板)
               </span>
             )}
           </h3>
           
           {hasSelectedTemplate && (
-            <div className="flex items-center space-x-2 text-sm text-gold-600">
+            <div className="flex items-center space-x-2 text-sm text-warm-gold">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
@@ -159,8 +159,8 @@ export const StyleTemplateSelector = memo<StyleTemplateSelectorProps>(({
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-lg transition-colors ${
               viewMode === 'grid'
-                ? 'bg-gold-600/20 text-gold-400'
-                : 'bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600'
+                ? 'bg-warm-gold/20 text-warm-gold'
+                : 'bg-bg-dark/80 text-text-secondary hover:bg-bg-light'
             }`}
             title="網格視圖"
           >
@@ -172,8 +172,8 @@ export const StyleTemplateSelector = memo<StyleTemplateSelectorProps>(({
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-lg transition-colors ${
               viewMode === 'list'
-                ? 'bg-gold-600/20 text-gold-400'
-                : 'bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600'
+                ? 'bg-warm-gold/20 text-warm-gold'
+                : 'bg-bg-dark/80 text-text-secondary hover:bg-bg-light'
             }`}
             title="列表視圖"
           >
@@ -186,19 +186,19 @@ export const StyleTemplateSelector = memo<StyleTemplateSelectorProps>(({
 
       {/* 模板列表區域 */}
       <div 
-        className="bg-cosmic-800/30 rounded-lg border border-cosmic-700 overflow-hidden"
+        className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg border border-warm-gold/10 overflow-hidden"
         style={{ maxHeight }}
       >
         {!hasTemplates ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <div className="text-cosmic-400 mb-4">
+              <div className="text-text-secondary/80 mb-4">
                 <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
                 </svg>
               </div>
-              <p className="text-cosmic-300 mb-2">找不到符合條件的模板</p>
-              <p className="text-cosmic-400 text-sm">請調整篩選條件或重置篩選器</p>
+              <p className="text-text-secondary mb-2">找不到符合條件的模板</p>
+              <p className="text-text-secondary/80 text-sm">請調整篩選條件或重置篩選器</p>
             </div>
           </div>
         ) : (
@@ -225,7 +225,7 @@ export const StyleTemplateSelector = memo<StyleTemplateSelectorProps>(({
                     key={template.id}
                     className={`flex items-center space-x-4 p-4 rounded-lg border-2 transition-all cursor-pointer hover:shadow-md ${
                       template.id === selectedTemplateId || template.id === selectedTemplate?.id
-                        ? 'border-gold-500 bg-gold-50'
+                        ? 'border-warm-gold bg-warm-gold/5'
                         : 'border-gray-200 hover:border-gold-300'
                     }`}
                     onClick={() => handleTemplateSelect(template)}
@@ -269,7 +269,7 @@ export const StyleTemplateSelector = memo<StyleTemplateSelectorProps>(({
                           e.stopPropagation();
                           handlePreviewOpen(template);
                         }}
-                        className="px-3 py-1 text-sm text-gold-600 hover:text-gold-700 hover:bg-gold-50 rounded transition-colors"
+                        className="px-3 py-1 text-sm text-warm-gold hover:text-clay-orange hover:bg-warm-gold/5 rounded transition-colors"
                       >
                         預覽
                       </button>

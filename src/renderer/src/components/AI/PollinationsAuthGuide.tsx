@@ -130,32 +130,32 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden mx-4">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden mx-4">
         {/* 標題欄 */}
-        <div className="flex items-center justify-between p-6 border-b border-cosmic-700 bg-cosmic-900/95">
+        <div className="flex items-center justify-between p-6 border-b border-warm-gold/10 bg-bg-dark/95">
           <div className="flex items-center space-x-3">
             <div className="text-2xl">🔐</div>
             <div>
-              <h2 className="text-xl font-cosmic text-gold-500">Pollinations 認證指南</h2>
-              <p className="text-sm text-cosmic-400">升級到 Seed 或更高層級來使用 Kontext 等高級模型</p>
+              <h2 className="text-xl font-serif-tc text-warm-gold">Pollinations 認證指南</h2>
+              <p className="text-sm text-text-secondary/80">升級到 Seed 或更高層級來使用 Kontext 等高級模型</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-xl transition-colors hover:bg-cosmic-800 rounded-lg w-8 h-8 flex items-center justify-center"
+            className="text-gray-400 hover:text-white text-xl transition-colors hover:bg-bg-light/50 backdrop-blur-sm rounded-lg w-8 h-8 flex items-center justify-center"
           >
             ✕
           </button>
         </div>
 
         {/* 標籤頁導航 */}
-        <div className="flex border-b border-cosmic-700">
+        <div className="flex border-b border-warm-gold/10">
           <button
             onClick={() => setActiveTab('guide')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-all ${
               activeTab === 'guide'
-                ? 'border-gold-500 text-gold-500 bg-cosmic-800/50'
-                : 'border-transparent text-cosmic-400 hover:text-cosmic-200'
+                ? 'border-warm-gold text-warm-gold bg-bg-light/50 backdrop-blur-sm/50'
+                : 'border-transparent text-text-secondary/80 hover:text-text-secondary/40'
             }`}
           >
             📚 認證指南
@@ -164,8 +164,8 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
             onClick={() => setActiveTab('manage')}
             className={`px-6 py-3 text-sm font-medium border-b-2 transition-all ${
               activeTab === 'manage'
-                ? 'border-gold-500 text-gold-500 bg-cosmic-800/50'
-                : 'border-transparent text-cosmic-400 hover:text-cosmic-200'
+                ? 'border-warm-gold text-warm-gold bg-bg-light/50 backdrop-blur-sm/50'
+                : 'border-transparent text-text-secondary/80 hover:text-text-secondary/40'
             }`}
           >
             🔧 Token 管理
@@ -177,12 +177,12 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
           {activeTab === 'guide' ? (
             <div className="space-y-6">
               {/* 為什麼需要認證 */}
-              <div className="bg-cosmic-800/50 border border-cosmic-700 rounded-lg p-4">
-                <h3 className="text-lg font-cosmic text-gold-500 mb-3 flex items-center">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+                <h3 className="text-lg font-serif-tc text-warm-gold mb-3 flex items-center">
                   <span className="mr-2">💡</span>
                   為什麼需要認證？
                 </h3>
-                <div className="space-y-2 text-cosmic-300">
+                <div className="space-y-2 text-text-secondary">
                   <p>• <strong className="text-green-400">Kontext 模型</strong>：需要 Seed 層級或更高認證才能存取</p>
                   <p>• <strong className="text-clay-orange">高級模型</strong>：Flux、Stable Diffusion 3.5 等需要付費層級</p>
                   <p>• <strong className="text-warm-gold">更快生成</strong>：付費用戶享受更短的等待時間</p>
@@ -192,7 +192,7 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
 
               {/* 層級對比表 */}
               <div>
-                <h3 className="text-lg font-cosmic text-gold-500 mb-4">🏆 層級對比</h3>
+                <h3 className="text-lg font-serif-tc text-warm-gold mb-4">🏆 層級對比</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Object.entries(TIER_DETAILS).map(([tier, details]) => (
                     <div
@@ -200,7 +200,7 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
                       className={`border rounded-lg p-4 ${
                         tier === 'seed' 
                           ? 'border-green-500 bg-green-900/20' 
-                          : 'border-cosmic-600 bg-cosmic-800/30'
+                          : 'border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm/30'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-3">
@@ -217,21 +217,21 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
 
                       <div className="space-y-2 text-sm">
                         <div>
-                          <span className="text-cosmic-400">速率限制：</span>
+                          <span className="text-text-secondary/80">速率限制：</span>
                           <span className="text-white">{details.rateLimit}</span>
                         </div>
                         <div>
-                          <span className="text-cosmic-400">可用模型：</span>
+                          <span className="text-text-secondary/80">可用模型：</span>
                           <div className="mt-1 flex flex-wrap gap-1">
                             {details.models.map(model => (
-                              <span key={model} className="px-2 py-0.5 bg-cosmic-700 text-xs rounded">
+                              <span key={model} className="px-2 py-0.5 bg-bg-dark/80 text-xs rounded">
                                 {model}
                               </span>
                             ))}
                           </div>
                         </div>
                         <div>
-                          <span className="text-cosmic-400">特色功能：</span>
+                          <span className="text-text-secondary/80">特色功能：</span>
                           <ul className="mt-1 space-y-0.5">
                             {details.features.map((feature, idx) => (
                               <li key={idx} className="text-green-400 text-xs">• {feature}</li>
@@ -240,7 +240,7 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
                         </div>
                         {details.limitations[0] !== '無' && (
                           <div>
-                            <span className="text-cosmic-400">限制：</span>
+                            <span className="text-text-secondary/80">限制：</span>
                             <ul className="mt-1 space-y-0.5">
                               {details.limitations.map((limit, idx) => (
                                 <li key={idx} className="text-yellow-400 text-xs">• {limit}</li>
@@ -256,35 +256,35 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
 
               {/* 獲取步驟 */}
               <div>
-                <h3 className="text-lg font-cosmic text-gold-500 mb-4">📋 獲取 API Token 步驟</h3>
-                <div className="bg-cosmic-800/50 border border-cosmic-700 rounded-lg p-4">
-                  <ol className="space-y-3 text-cosmic-300">
+                <h3 className="text-lg font-serif-tc text-warm-gold mb-4">📋 獲取 API Token 步驟</h3>
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+                  <ol className="space-y-3 text-text-secondary">
                     <li className="flex items-start space-x-3">
                       <span className="flex-shrink-0 w-6 h-6 bg-gold-600 text-black text-sm font-bold rounded-full flex items-center justify-center">1</span>
                       <div>
                         <p className="font-medium text-white">訪問 Pollinations.ai</p>
-                        <p className="text-sm text-cosmic-400">前往 <a href="https://pollinations.ai" className="text-warm-gold hover:text-warm-gold">https://pollinations.ai</a> 註冊帳號</p>
+                        <p className="text-sm text-text-secondary/80">前往 <a href="https://pollinations.ai" className="text-warm-gold hover:text-warm-gold">https://pollinations.ai</a> 註冊帳號</p>
                       </div>
                     </li>
                     <li className="flex items-start space-x-3">
                       <span className="flex-shrink-0 w-6 h-6 bg-gold-600 text-black text-sm font-bold rounded-full flex items-center justify-center">2</span>
                       <div>
                         <p className="font-medium text-white">選擇訂閱方案</p>
-                        <p className="text-sm text-cosmic-400">推薦選擇 <strong className="text-green-400">Seed ($5/月)</strong> 來使用 Kontext 模型</p>
+                        <p className="text-sm text-text-secondary/80">推薦選擇 <strong className="text-green-400">Seed ($5/月)</strong> 來使用 Kontext 模型</p>
                       </div>
                     </li>
                     <li className="flex items-start space-x-3">
                       <span className="flex-shrink-0 w-6 h-6 bg-gold-600 text-black text-sm font-bold rounded-full flex items-center justify-center">3</span>
                       <div>
                         <p className="font-medium text-white">獲取 API Token</p>
-                        <p className="text-sm text-cosmic-400">在個人資料頁面或 API 設定中生成新的 API Token</p>
+                        <p className="text-sm text-text-secondary/80">在個人資料頁面或 API 設定中生成新的 API Token</p>
                       </div>
                     </li>
                     <li className="flex items-start space-x-3">
                       <span className="flex-shrink-0 w-6 h-6 bg-gold-600 text-black text-sm font-bold rounded-full flex items-center justify-center">4</span>
                       <div>
                         <p className="font-medium text-white">在應用中設定</p>
-                        <p className="text-sm text-cosmic-400">切換到「Token 管理」標籤，輸入您的 API Token</p>
+                        <p className="text-sm text-text-secondary/80">切換到「Token 管理」標籤，輸入您的 API Token</p>
                       </div>
                     </li>
                   </ol>
@@ -297,7 +297,7 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
                   <span className="mr-2">✨</span>
                   推薦：Seed 層級
                 </h4>
-                <p className="text-cosmic-300 text-sm">
+                <p className="text-text-secondary text-sm">
                   對於中文小說創作者，Seed 層級 ($5/月) 是最佳選擇。它提供了 Kontext 模型存取權限，
                   可以將文字描述轉換為高品質插畫，同時擁有更快的生成速度（5秒間隔）。
                 </p>
@@ -306,12 +306,12 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
           ) : (
             <div className="space-y-6">
               {/* Token 管理表單 */}
-              <div className="bg-cosmic-800/50 border border-cosmic-700 rounded-lg p-4">
-                <h3 className="text-lg font-cosmic text-gold-500 mb-4">🔧 API Token 設定</h3>
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+                <h3 className="text-lg font-serif-tc text-warm-gold mb-4">🔧 API Token 設定</h3>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       API Token *
                     </label>
                     <input
@@ -319,12 +319,12 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
                       value={apiToken}
                       onChange={(e) => setApiToken(e.target.value)}
                       placeholder="輸入您的 Pollinations API Token"
-                      className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white placeholder-cosmic-400 focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                      className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded-lg text-white placeholder-cosmic-400 focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       用戶名稱 (可選)
                     </label>
                     <input
@@ -332,18 +332,18 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
                       value={userName}
                       onChange={(e) => setUserName(e.target.value)}
                       placeholder="用於識別的名稱"
-                      className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white placeholder-cosmic-400 focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                      className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded-lg text-white placeholder-cosmic-400 focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       Token 層級
                     </label>
                     <select
                       value={tokenTier}
                       onChange={(e) => setTokenTier(e.target.value as 'seed' | 'flower' | 'nectar')}
-                      className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                      className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                     >
                       <option value="seed">🌱 Seed</option>
                       <option value="flower">🌸 Flower</option>
@@ -388,14 +388,14 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
                     <span className="mr-2">{testResult.valid ? '✅' : '❌'}</span>
                     Token 測試結果
                   </h4>
-                  <p className="text-cosmic-300 text-sm mb-2">{testResult.message}</p>
-                  <p className="text-cosmic-400 text-xs">
+                  <p className="text-text-secondary text-sm mb-2">{testResult.message}</p>
+                  <p className="text-text-secondary/80 text-xs">
                     存取層級: {testResult.tier_access}
                   </p>
                   {testResult.error_details && (
                     <details className="mt-2">
-                      <summary className="text-xs text-cosmic-400 cursor-pointer">詳細錯誤信息</summary>
-                      <pre className="text-xs text-red-400 mt-1 bg-cosmic-800/50 p-2 rounded overflow-x-auto">
+                      <summary className="text-xs text-text-secondary/80 cursor-pointer">詳細錯誤信息</summary>
+                      <pre className="text-xs text-red-400 mt-1 bg-bg-light/50 backdrop-blur-sm/50 p-2 rounded overflow-x-auto">
                         {testResult.error_details}
                       </pre>
                     </details>
@@ -409,7 +409,7 @@ const PollinationsAuthGuide: React.FC<PollinationsAuthGuideProps> = ({
                   <span className="mr-2">💡</span>
                   使用提示
                 </h4>
-                <ul className="text-cosmic-300 text-sm space-y-1">
+                <ul className="text-text-secondary text-sm space-y-1">
                   <li>• API Token 會被加密儲存在本機資料庫中</li>
                   <li>• 儲存前會自動測試 Token 的有效性</li>
                   <li>• 設定 Token 後，系統會自動啟用 Kontext 等高級模型</li>

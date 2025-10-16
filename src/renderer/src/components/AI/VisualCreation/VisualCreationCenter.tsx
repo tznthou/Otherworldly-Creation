@@ -126,8 +126,8 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="text-4xl mb-4">📚</div>
-            <h3 className="text-xl text-gold-500 font-cosmic mb-2">請選擇專案</h3>
-            <p className="text-cosmic-300">需要選擇一個專案才能使用視覺創作功能</p>
+            <h3 className="text-xl text-warm-gold font-serif-tc mb-2">請選擇專案</h3>
+            <p className="text-text-secondary">需要選擇一個專案才能使用視覺創作功能</p>
           </div>
         </div>
       </div>
@@ -143,7 +143,7 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
       >
         <div className="flex items-center justify-center h-96">
           <LoadingSpinner size="large" />
-          <span className="ml-3 text-cosmic-300">初始化視覺創作中心...</span>
+          <span className="ml-3 text-text-secondary">初始化視覺創作中心...</span>
         </div>
       </div>
     );
@@ -159,7 +159,7 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
         <div className="flex items-center justify-center h-96">
           <div className="text-center bg-red-900/20 border border-red-700/50 rounded-lg p-6 max-w-md">
             <div className="text-4xl mb-4">❌</div>
-            <h3 className="text-xl text-red-400 font-cosmic mb-2">初始化失敗</h3>
+            <h3 className="text-xl text-red-400 font-serif-tc mb-2">初始化失敗</h3>
             <p className="text-red-300 mb-4">{error}</p>
             <button
               onClick={() => {
@@ -184,13 +184,13 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
       style={{ isolation: 'isolate' }}
     >
       {/* 頂部標題 */}
-      <div className="flex-shrink-0 bg-cosmic-900/95 border-b border-cosmic-700">
+      <div className="flex-shrink-0 bg-bg-dark/95 border-b border-warm-gold/10">
         <div className="px-6 py-4">
           <div className="flex items-center space-x-3">
             <div className="text-2xl">🎨</div>
             <div>
-              <h1 className="text-xl font-cosmic text-gold-500">視覺創作中心</h1>
-              <p className="text-sm text-cosmic-400">AI 插畫創作和管理平台</p>
+              <h1 className="text-xl font-serif-tc text-warm-gold">視覺創作中心</h1>
+              <p className="text-sm text-text-secondary/80">AI 插畫創作和管理平台</p>
             </div>
           </div>
         </div>
@@ -199,14 +199,14 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
       {/* 主要內容區域 - 恢復左右布局 */}
       <div className="flex-1 flex flex-row min-h-0" style={{ isolation: 'auto' }}>
         {/* 左側：AI 服務配置面板 - 響應式寬度，正常布局流 */}
-        <div className="w-72 lg:w-80 xl:w-96 flex-shrink-0 bg-cosmic-900/80 border-r border-cosmic-700 overflow-y-auto">
+        <div className="w-72 lg:w-80 xl:w-96 flex-shrink-0 bg-bg-dark/80 border-r border-warm-gold/10 overflow-y-auto">
           <div className="p-4">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gold-400 mb-2 flex items-center">
+              <h2 className="text-lg font-semibold text-warm-gold mb-2 flex items-center">
                 <span className="mr-2">⚙️</span>
                 AI 服務配置
               </h2>
-              <p className="text-sm text-cosmic-400">選擇和配置圖像生成服務</p>
+              <p className="text-sm text-text-secondary/80">選擇和配置圖像生成服務</p>
             </div>
             
             {/* AI 服務配置面板 */}
@@ -230,7 +230,7 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
                   key={authStatusKey}
                   onClick={handleAuthStatusClick}
                   showDetails={true}
-                  className="cursor-pointer hover:bg-cosmic-800/30 rounded-lg p-3 transition-colors"
+                  className="cursor-pointer hover:bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-3 transition-colors"
                 />
               </div>
             )}
@@ -238,9 +238,9 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
         </div>
 
         {/* 右側：插圖功能區域 - 填充剩餘空間 */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-cosmic-900/30">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-bg-dark/30">
           {/* 標籤頁導航 */}
-          <div className="flex-shrink-0 bg-cosmic-900/80 border-b border-cosmic-700">
+          <div className="flex-shrink-0 bg-bg-dark/80 border-b border-warm-gold/10">
             <nav className="flex px-6">
               {[
                 { id: 'create' as ActiveTab, label: '創建', icon: '✨', description: '生成新的插畫（已整合模板功能）' },
@@ -251,8 +251,8 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
                   onClick={() => handleTabChange(tab.id)}
                   className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ${
                     activeTab === tab.id
-                      ? 'border-gold-500 text-gold-500 bg-cosmic-800/50'
-                      : 'border-transparent text-cosmic-400 hover:text-cosmic-200 hover:bg-cosmic-800/30'
+                      ? 'border-warm-gold text-warm-gold bg-bg-light/50 backdrop-blur-sm/50'
+                      : 'border-transparent text-text-secondary/80 hover:text-text-secondary/40 hover:bg-bg-light/50 backdrop-blur-sm/30'
                   }`}
                   title={tab.description}
                 >
@@ -264,15 +264,15 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
           </div>
 
           {/* 插圖功能內容區域 - 優化滾動處理 */}
-          <div className="flex-1 bg-cosmic-900/50 min-h-0 overflow-auto">
+          <div className="flex-1 bg-bg-dark/50 min-h-0 overflow-auto">
             {renderTabContent()}
           </div>
         </div>
       </div>
 
       {/* 底部狀態欄 */}
-      <div className="flex-shrink-0 bg-cosmic-900/95 border-t border-cosmic-700 px-6 py-2">
-        <div className="flex items-center justify-between text-xs text-cosmic-400">
+      <div className="flex-shrink-0 bg-bg-dark/95 border-t border-warm-gold/10 px-6 py-2">
+        <div className="flex items-center justify-between text-xs text-text-secondary/80">
           <div className="flex items-center space-x-4">
             <span>專案: {currentProject.name}</span>
             <span>•</span>
@@ -323,7 +323,7 @@ const VisualCreationCenter: React.FC<VisualCreationCenterProps> = ({
       {process.env.NODE_ENV === 'development' && (
         <button
           onClick={resetTutorial}
-          className="fixed bottom-4 left-4 z-50 px-3 py-2 bg-cosmic-700 hover:bg-cosmic-600 text-cosmic-300 text-xs rounded border border-cosmic-600"
+          className="fixed bottom-4 left-4 z-50 px-3 py-2 bg-bg-dark/80 hover:bg-bg-light text-text-secondary text-xs rounded border border-warm-gold/10"
           title="重新顯示教學（僅開發模式）"
         >
           🎓 教學

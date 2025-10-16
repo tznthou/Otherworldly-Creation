@@ -132,7 +132,7 @@ export const ModularizedBatchPanel: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               {/* 角色選擇狀態 */}
               <div className="bg-gray-700 p-3 rounded">
-                <h4 className="font-medium text-gold-400 mb-2">角色選擇狀態</h4>
+                <h4 className="font-medium text-warm-gold mb-2">角色選擇狀態</h4>
                 <div className="text-sm text-gray-300 space-y-1">
                   <div>選中數量: {selectedCharacters.length}</div>
                   <div>場景類型: {sceneType}</div>
@@ -176,9 +176,9 @@ export const ModularizedBatchPanel: React.FC = () => {
         </div>
 
         {/* 技術說明 */}
-        <div className="mt-8 p-4 bg-cosmic-900/50 rounded-lg border border-cosmic-700">
-          <h4 className="font-medium text-cosmic-300 mb-2">🔧 技術實現</h4>
-          <div className="text-sm text-cosmic-400 space-y-1">
+        <div className="mt-8 p-4 bg-bg-dark/50 rounded-lg border border-warm-gold/10">
+          <h4 className="font-medium text-text-secondary mb-2">🔧 技術實現</h4>
+          <div className="text-sm text-text-secondary/80 space-y-1">
             <p>• <strong>useCharacterSelection</strong>: 管理角色載入、選擇、過濾邏輯</p>
             <p>• <strong>useIllustrationService</strong>: 管理服務配置、API Key、驗證邏輯</p>
             <p>• <strong>組件通信</strong>: 通過回調函數進行父子組件通信</p>

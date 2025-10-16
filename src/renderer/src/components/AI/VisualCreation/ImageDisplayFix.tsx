@@ -60,12 +60,12 @@ const ImageDisplayFix: React.FC<ImageDisplayFixProps> = ({
   if (isLoading) {
     return (
       <div 
-        className={`flex items-center justify-center bg-cosmic-700/30 ${className}`}
+        className={`flex items-center justify-center bg-bg-dark/80/30 ${className}`}
         style={style}
       >
         <div className="flex flex-col items-center space-y-2">
-          <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-cosmic-400 text-xs">載入中...</span>
+          <div className="w-8 h-8 border-2 border-warm-gold border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-text-secondary/80 text-xs">載入中...</span>
         </div>
       </div>
     );
@@ -74,10 +74,10 @@ const ImageDisplayFix: React.FC<ImageDisplayFixProps> = ({
   if (hasError || !imageSrc) {
     return (
       <div 
-        className={`flex items-center justify-center bg-cosmic-700/30 ${className}`}
+        className={`flex items-center justify-center bg-bg-dark/80/30 ${className}`}
         style={style}
       >
-        <div className="flex flex-col items-center space-y-2 text-cosmic-400">
+        <div className="flex flex-col items-center space-y-2 text-text-secondary/80">
           <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>

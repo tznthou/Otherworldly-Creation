@@ -53,10 +53,10 @@ const TemplateManagerModal: React.FC = () => {
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[10001] p-4" style={{ isolation: 'isolate' }}>
-        <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl p-8">
+        <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl p-8">
           <div className="flex items-center space-x-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gold-500"></div>
-            <span className="text-gold-400">載入模板中...</span>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-warm-gold"></div>
+            <span className="text-warm-gold">載入模板中...</span>
           </div>
         </div>
       </div>
@@ -65,19 +65,19 @@ const TemplateManagerModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[10001] p-4" style={{ isolation: 'isolate' }}>
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
         {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
+        <div className="p-6 border-b border-warm-gold/10 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {view === 'detail' && (
               <button
                 onClick={() => setView('list')}
-                className="text-gray-400 hover:text-gold-400 transition-colors"
+                className="text-gray-400 hover:text-warm-gold transition-colors"
               >
                 ← 返回
               </button>
             )}
-            <h2 className="text-xl font-cosmic text-gold-500">
+            <h2 className="text-xl font-serif-tc text-warm-gold">
               🎭 {view === 'detail' ? localSelectedTemplate?.name : '輕小說模板'}
             </h2>
           </div>
@@ -94,7 +94,7 @@ const TemplateManagerModal: React.FC = () => {
           <div className="p-6">
             <div className="text-center mb-8">
               <div className="text-4xl mb-3">📚</div>
-              <h3 className="text-xl font-cosmic text-gold-400 mb-2">選擇創作模板</h3>
+              <h3 className="text-xl font-serif-tc text-warm-gold mb-2">選擇創作模板</h3>
               <p className="text-gray-300">
                 選擇合適的模板，快速開始您的輕小說創作之旅
               </p>
@@ -115,7 +115,7 @@ const TemplateManagerModal: React.FC = () => {
                             {getTemplateIcon(template.type)}
                           </div>
                           <div>
-                            <h4 className="font-cosmic text-lg text-white group-hover:text-gold-400 transition-colors">
+                            <h4 className="font-serif-tc text-lg text-white group-hover:text-warm-gold transition-colors">
                               {template.name}
                             </h4>
                             <span className="text-sm text-gray-400">
@@ -132,12 +132,12 @@ const TemplateManagerModal: React.FC = () => {
                       {/* 特色標籤 */}
                       <div className="flex flex-wrap gap-2 mb-4">
                         {template.characterArchetypes.slice(0, 3).map((archetype, index) => (
-                          <span key={index} className="px-2 py-1 bg-cosmic-800 text-xs text-gray-300 rounded-full">
+                          <span key={index} className="px-2 py-1 bg-bg-light/50 backdrop-blur-sm text-xs text-gray-300 rounded-full">
                             {archetype.name}
                           </span>
                         ))}
                         {template.characterArchetypes.length > 3 && (
-                          <span className="px-2 py-1 bg-cosmic-800 text-xs text-gray-400 rounded-full">
+                          <span className="px-2 py-1 bg-bg-light/50 backdrop-blur-sm text-xs text-gray-400 rounded-full">
                             +{template.characterArchetypes.length - 3}
                           </span>
                         )}
@@ -148,7 +148,7 @@ const TemplateManagerModal: React.FC = () => {
                         <span className="text-gray-500">v{template.version}</span>
                         <div className="flex items-center space-x-2">
                           <span className="text-gray-400">點擊查看詳情</span>
-                          <span className="text-gold-400 group-hover:translate-x-1 transition-transform">→</span>
+                          <span className="text-warm-gold group-hover:translate-x-1 transition-transform">→</span>
                         </div>
                       </div>
                     </div>
@@ -169,7 +169,7 @@ const TemplateManagerModal: React.FC = () => {
                   {getTemplateIcon(localSelectedTemplate.type)}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-cosmic text-white mb-2">{localSelectedTemplate.name}</h3>
+                  <h3 className="text-xl font-serif-tc text-white mb-2">{localSelectedTemplate.name}</h3>
                   <p className="text-gray-300 mb-3">{localSelectedTemplate.description}</p>
                   <div className="flex items-center space-x-4 text-sm text-gray-400">
                     <span>類型：{TEMPLATE_TYPES[localSelectedTemplate.type]}</span>
@@ -182,7 +182,7 @@ const TemplateManagerModal: React.FC = () => {
 
             {/* 世界觀設定 */}
             <div className="card">
-              <h4 className="text-lg font-cosmic text-gold-400 mb-4">🌍 世界觀設定</h4>
+              <h4 className="text-lg font-serif-tc text-warm-gold mb-4">🌍 世界觀設定</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h5 className="text-white font-medium mb-2">時代背景</h5>
@@ -200,7 +200,7 @@ const TemplateManagerModal: React.FC = () => {
                   <h5 className="text-white font-medium mb-2">特殊元素</h5>
                   <div className="flex flex-wrap gap-1">
                     {localSelectedTemplate.worldSetting.specialElements.map((element, index) => (
-                      <span key={index} className="px-2 py-1 bg-cosmic-800 text-xs text-gray-300 rounded">
+                      <span key={index} className="px-2 py-1 bg-bg-light/50 backdrop-blur-sm text-xs text-gray-300 rounded">
                         {element}
                       </span>
                     ))}
@@ -211,15 +211,15 @@ const TemplateManagerModal: React.FC = () => {
 
             {/* 角色原型 */}
             <div className="card">
-              <h4 className="text-lg font-cosmic text-gold-400 mb-4">👥 角色原型</h4>
+              <h4 className="text-lg font-serif-tc text-warm-gold mb-4">👥 角色原型</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {localSelectedTemplate.characterArchetypes.slice(0, 4).map((archetype, index) => (
-                  <div key={index} className="bg-cosmic-800 rounded-lg p-4">
+                  <div key={index} className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
                     <h5 className="text-white font-medium mb-2">{archetype.name}</h5>
                     <p className="text-gray-300 text-sm mb-2">{archetype.description}</p>
                     <div className="flex flex-wrap gap-1">
                       {archetype.commonTraits.slice(0, 3).map((trait, traitIndex) => (
-                        <span key={traitIndex} className="px-2 py-1 bg-cosmic-700 text-xs text-gray-400 rounded">
+                        <span key={traitIndex} className="px-2 py-1 bg-bg-dark/80 text-xs text-gray-400 rounded">
                           {trait}
                         </span>
                       ))}
@@ -236,7 +236,7 @@ const TemplateManagerModal: React.FC = () => {
 
             {/* 寫作指導 */}
             <div className="card">
-              <h4 className="text-lg font-cosmic text-gold-400 mb-4">✍️ 寫作指導</h4>
+              <h4 className="text-lg font-serif-tc text-warm-gold mb-4">✍️ 寫作指導</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h5 className="text-white font-medium mb-2">寫作風格</h5>
@@ -245,7 +245,7 @@ const TemplateManagerModal: React.FC = () => {
                   <h5 className="text-white font-medium mb-2">主要主題</h5>
                   <div className="flex flex-wrap gap-1">
                     {localSelectedTemplate.writingGuidelines.themes.map((theme, index) => (
-                      <span key={index} className="px-2 py-1 bg-cosmic-800 text-xs text-gray-300 rounded">
+                      <span key={index} className="px-2 py-1 bg-bg-light/50 backdrop-blur-sm text-xs text-gray-300 rounded">
                         {theme}
                       </span>
                     ))}
@@ -264,7 +264,7 @@ const TemplateManagerModal: React.FC = () => {
         )}
 
         {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-between">
+        <div className="p-6 border-t border-warm-gold/10 flex justify-between">
           <button
             onClick={handleClose}
             className="btn-secondary"

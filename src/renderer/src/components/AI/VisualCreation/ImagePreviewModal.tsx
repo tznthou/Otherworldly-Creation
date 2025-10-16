@@ -184,11 +184,11 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
         height: '100vh'
       }}
     >
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-[calc(100vw-160px)] max-w-6xl max-h-[95vh] overflow-hidden ml-32 mr-8 my-4">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-[calc(100vw-160px)] max-w-6xl max-h-[95vh] overflow-hidden ml-32 mr-8 my-4">
         {/* 標題欄 */}
-        <div className="p-4 border-b border-cosmic-700 flex items-center justify-between">
+        <div className="p-4 border-b border-warm-gold/10 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h2 className="text-xl font-cosmic text-gold-500">
+            <h2 className="text-xl font-serif-tc text-warm-gold">
               🎨 圖像預覽 ({currentImageIndex + 1}/{tempImages.length})
             </h2>
             <span className="text-sm text-gray-400">
@@ -198,7 +198,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={toggleDetails}
-              className="px-3 py-1 bg-cosmic-800 hover:bg-cosmic-700 text-gray-300 rounded-md transition-colors text-sm"
+              className="px-3 py-1 bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80 text-gray-300 rounded-md transition-colors text-sm"
             >
               {showImageDetails ? '隱藏詳情' : '顯示詳情'}
             </button>
@@ -246,8 +246,8 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
               <div 
                 className={`absolute top-4 left-4 w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer transition-colors ${
                   selectedImageIds.includes(currentImage.id)
-                    ? 'bg-gold-500 border-gold-500 text-white' 
-                    : 'bg-transparent border-gray-400 hover:border-gold-400'
+                    ? 'bg-warm-gold/50 border-warm-gold text-white' 
+                    : 'bg-transparent border-gray-400 hover:border-warm-gold'
                 }`}
                 onClick={() => toggleImageSelectionLocal(currentImage.id)}
               >
@@ -257,7 +257,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
 
             {/* 圖像縮略圖導航 */}
             {tempImages.length > 1 && (
-              <div className="p-4 border-t border-cosmic-700">
+              <div className="p-4 border-t border-warm-gold/10">
                 <div className="flex space-x-2 overflow-x-auto">
                   {tempImages.map((image, index) => (
                     <div
@@ -270,11 +270,11 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
                       <SafeImage
                         localFilePath={image.temp_path}
                         alt={`Image ${index + 1}`}
-                        className="w-16 h-16 object-cover rounded border border-cosmic-600"
+                        className="w-16 h-16 object-cover rounded border border-warm-gold/10"
                         fallbackIcon="🎨"
                       />
                       {selectedImageIds.includes(image.id) && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-gold-500 rounded-full flex items-center justify-center text-xs text-white">
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-warm-gold/50 rounded-full flex items-center justify-center text-xs text-white">
                           ✓
                         </div>
                       )}
@@ -287,20 +287,20 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
 
           {/* 側邊詳情面板 */}
           {showImageDetails && (
-            <div className="w-80 border-l border-cosmic-700 bg-cosmic-800/50 p-4 overflow-y-auto">
-              <h3 className="font-medium text-gold-400 mb-4">圖像詳情</h3>
+            <div className="w-80 border-l border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm/50 p-4 overflow-y-auto">
+              <h3 className="font-medium text-warm-gold mb-4">圖像詳情</h3>
               
               <div className="space-y-3 text-sm">
                 <div>
                   <label className="text-gray-400 block">原始提示詞</label>
-                  <p className="text-white bg-cosmic-900 p-2 rounded text-xs max-h-20 overflow-y-auto">
+                  <p className="text-white bg-bg-dark p-2 rounded text-xs max-h-20 overflow-y-auto">
                     {currentImage.original_prompt}
                   </p>
                 </div>
 
                 <div>
                   <label className="text-gray-400 block">增強提示詞</label>
-                  <p className="text-white bg-cosmic-900 p-2 rounded text-xs max-h-20 overflow-y-auto">
+                  <p className="text-white bg-bg-dark p-2 rounded text-xs max-h-20 overflow-y-auto">
                     {currentImage.prompt}
                   </p>
                 </div>
@@ -351,18 +351,18 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
         </div>
 
         {/* 底部操作欄 */}
-        <div className="p-4 border-t border-cosmic-700 flex items-center justify-between">
+        <div className="p-4 border-t border-warm-gold/10 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
               onClick={selectAll}
-              className="px-3 py-1 bg-cosmic-800 hover:bg-cosmic-700 text-gray-300 rounded-md transition-colors text-sm"
+              className="px-3 py-1 bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80 text-gray-300 rounded-md transition-colors text-sm"
               disabled={selectedImageIds.length === tempImages.length}
             >
               全選
             </button>
             <button
               onClick={deselectAll}
-              className="px-3 py-1 bg-cosmic-800 hover:bg-cosmic-700 text-gray-300 rounded-md transition-colors text-sm"
+              className="px-3 py-1 bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80 text-gray-300 rounded-md transition-colors text-sm"
               disabled={selectedImageIds.length === 0}
             >
               取消全選
@@ -398,7 +398,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
         </div>
 
         {/* 快捷鍵說明 */}
-        <div className="px-4 py-2 bg-cosmic-800/30 border-t border-cosmic-700/50 text-xs text-gray-500">
+        <div className="px-4 py-2 bg-bg-light/50 backdrop-blur-sm/30 border-t border-warm-gold/10/50 text-xs text-gray-500">
           快捷鍵：ESC 關閉 | ← → 切換圖像 | Space 切換選擇 | Ctrl+A 全選 | Ctrl+D 取消全選
         </div>
       </div>

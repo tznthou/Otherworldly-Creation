@@ -486,7 +486,7 @@ const AISettingsModal: React.FC = () => {
             value={isEdit ? (editProvider?.name || provider?.name) : formData.name}
             onChange={(e) => setFormData({ name: e.target.value })}
             placeholder="例如: OpenAI GPT-4"
-            className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             required
           />
         </div>
@@ -496,7 +496,7 @@ const AISettingsModal: React.FC = () => {
           <select
             value={formData.provider_type}
             onChange={(e) => setFormData({ provider_type: e.target.value })}
-            className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             disabled={isEdit} // 編輯時不允許修改類型
           >
             {supportedTypes.map(type => (
@@ -522,7 +522,7 @@ const AISettingsModal: React.FC = () => {
               value={formData.api_key || ''}
               onChange={(e) => setFormData({ api_key: e.target.value })}
               placeholder={isEdit ? "留空保持原有金鑰，或輸入新金鑰" : "輸入您的 API 金鑰"}
-              className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             />
           </div>
         )}
@@ -539,7 +539,7 @@ const AISettingsModal: React.FC = () => {
                   ? 'http://127.0.0.1:11434' 
                   : 'https://openrouter.ai/api/v1'
               }
-              className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             />
           </div>
         )}
@@ -569,7 +569,7 @@ const AISettingsModal: React.FC = () => {
               <select
                 value={formData.model}
                 onChange={(e) => setFormData({ model: e.target.value })}
-                className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
               >
                 <option value="">請選擇模型...</option>
                 {currentAvailableModels.map(model => (
@@ -594,7 +594,7 @@ const AISettingsModal: React.FC = () => {
                 formData.provider_type === 'openrouter' ? '例如: openai/gpt-4' :
                 '例如: llama3.2'
               }
-              className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
               required
             />
           )}
@@ -641,10 +641,10 @@ const AISettingsModal: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-black/70 z-[100] overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
-        <div ref={modalRef} className="relative bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div ref={modalRef} className="relative bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
           {/* 標題 */}
-          <div className="sticky top-0 bg-cosmic-900 p-6 border-b border-cosmic-700 flex items-center justify-between rounded-t-xl z-50">
-            <h2 className="text-xl font-cosmic text-gold-500">AI 提供者管理</h2>
+          <div className="sticky top-0 bg-bg-dark p-6 border-b border-warm-gold/10 flex items-center justify-between rounded-t-xl z-50">
+            <h2 className="text-xl font-serif-tc text-warm-gold">AI 提供者管理</h2>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-white text-2xl relative z-[110] p-2"
@@ -657,7 +657,7 @@ const AISettingsModal: React.FC = () => {
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
             {isLoading ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-500 mx-auto"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-warm-gold mx-auto"></div>
                 <p className="text-gray-300 mt-4">載入中...</p>
               </div>
             ) : (
@@ -675,7 +675,7 @@ const AISettingsModal: React.FC = () => {
                   </div>
 
                   {providers.length === 0 ? (
-                    <div className="bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg p-6 text-center">
+                    <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6 text-center">
                       <p className="text-gray-300">尚未配置任何 AI 提供者</p>
                       <button
                         onClick={() => setShowAddForm(true)}
@@ -691,8 +691,8 @@ const AISettingsModal: React.FC = () => {
                           key={provider.id}
                           className={`bg-bg-light/50 backdrop-blur-sm border rounded-lg p-4 transition-colors ${
                             selectedProvider?.id === provider.id 
-                              ? 'border-gold-500' 
-                              : 'border-cosmic-700 hover:border-cosmic-600'
+                              ? 'border-warm-gold' 
+                              : 'border-warm-gold/10 hover:border-warm-gold/10'
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -769,13 +769,13 @@ const AISettingsModal: React.FC = () => {
                                 <>
                                   <button
                                     onClick={() => handleSetCurrentModel(provider)}
-                                    className="text-warm-gold hover:text-gold-300 text-xs px-3 py-1 border border-gold-600 rounded hover:bg-gold-600 hover:text-cosmic-900 transition-colors"
+                                    className="text-warm-gold hover:text-warm-gold text-xs px-3 py-1 border border-gold-600 rounded hover:bg-gold-600 hover:text-text-primary transition-colors"
                                   >
                                     設為當前
                                   </button>
                                   <button
                                     onClick={() => handleSetDefaultProvider(provider)}
-                                    className="text-clay-orange hover:text-clay-orange text-xs px-3 py-1 border border-clay-orange rounded hover:bg-clay-orange hover:text-cosmic-900 transition-colors"
+                                    className="text-clay-orange hover:text-clay-orange text-xs px-3 py-1 border border-clay-orange rounded hover:bg-clay-orange hover:text-text-primary transition-colors"
                                   >
                                     設為預設
                                   </button>
@@ -811,7 +811,7 @@ const AISettingsModal: React.FC = () => {
 
                 {/* 新增提供者表單 */}
                 {showAddForm && (
-                  <div className="bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg p-6">
+                  <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
                     <h4 className="text-lg font-medium text-warm-gold mb-4">新增 AI 提供者</h4>
                     {renderProviderForm()}
                   </div>
@@ -819,7 +819,7 @@ const AISettingsModal: React.FC = () => {
 
                 {/* 編輯提供者表單 */}
                 {editProvider && (
-                  <div className="bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg p-6">
+                  <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
                     <h4 className="text-lg font-medium text-warm-gold mb-4">編輯 AI 提供者</h4>
                     {renderProviderForm(providers.find(p => p.id === editProvider.id), true)}
                   </div>
@@ -828,7 +828,7 @@ const AISettingsModal: React.FC = () => {
                 {/* AI插畫功能與提供者指南 */}
                 <div>
                   <h3 className="text-lg font-medium text-warm-gold mb-4">🎨 AI插畫功能指南</h3>
-                  <div className="bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg p-4 text-sm text-gray-300">
+                  <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4 text-sm text-gray-300">
 
                     {/* 智能推薦系統說明 */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-cosmic-700 to-cosmic-600 rounded-lg">
@@ -843,7 +843,7 @@ const AISettingsModal: React.FC = () => {
 
                     {/* 提供者詳細說明 */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
+                      <div className="bg-bg-light/40 p-4 rounded-lg border border-warm-gold/10">
                         <h5 className="text-warm-gold mb-3 font-medium text-base flex items-center">
                           <span className="text-xl mr-2">🦙</span>
                           Ollama (本地隱私)
@@ -867,7 +867,7 @@ const AISettingsModal: React.FC = () => {
                           </li>
                         </ul>
                       </div>
-                      <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
+                      <div className="bg-bg-light/40 p-4 rounded-lg border border-warm-gold/10">
                         <h5 className="text-warm-gold mb-3 font-medium text-base flex items-center">
                           <span className="text-xl mr-2">✨</span>
                           Gemini (多模態之王)
@@ -907,7 +907,7 @@ const AISettingsModal: React.FC = () => {
                           </li>
                         </ul>
                       </div>
-                      <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
+                      <div className="bg-bg-light/40 p-4 rounded-lg border border-warm-gold/10">
                         <h5 className="text-warm-gold mb-3 font-medium text-base flex items-center">
                           <span className="text-xl mr-2">🤖</span>
                           OpenAI (商業級穩定)
@@ -931,7 +931,7 @@ const AISettingsModal: React.FC = () => {
                           </li>
                         </ul>
                       </div>
-                      <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
+                      <div className="bg-bg-light/40 p-4 rounded-lg border border-warm-gold/10">
                         <h5 className="text-warm-gold mb-3 font-medium text-base flex items-center">
                           <span className="text-xl mr-2">🧠</span>
                           Claude (深度理解)
@@ -955,7 +955,7 @@ const AISettingsModal: React.FC = () => {
                           </li>
                         </ul>
                       </div>
-                      <div className="bg-cosmic-750 p-4 rounded-lg border border-cosmic-600">
+                      <div className="bg-bg-light/40 p-4 rounded-lg border border-warm-gold/10">
                         <h5 className="text-warm-gold mb-3 font-medium text-base flex items-center">
                           <span className="text-xl mr-2">🔄</span>
                           OpenRouter (百模聚合)
@@ -999,7 +999,7 @@ const AISettingsModal: React.FC = () => {
 
                     {/* 使用建議 */}
                     <div className="mt-8 mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="p-5 bg-bg-dark/80 rounded-lg border border-cosmic-600">
+                      <div className="p-5 bg-bg-dark/80 rounded-lg border border-warm-gold/10">
                         <p className="text-warm-gold font-medium text-base mb-3 flex items-center">
                           <span className="text-xl mr-2">💡</span>
                           插圖服務建議組合
@@ -1031,7 +1031,7 @@ const AISettingsModal: React.FC = () => {
                           </li>
                         </ul>
                       </div>
-                      <div className="p-5 bg-bg-dark/80 rounded-lg border border-cosmic-600">
+                      <div className="p-5 bg-bg-dark/80 rounded-lg border border-warm-gold/10">
                         <p className="text-warm-gold font-medium text-base mb-3 flex items-center">
                           <span className="text-xl mr-2">🎯</span>
                           插圖功能亮點
@@ -1067,7 +1067,7 @@ const AISettingsModal: React.FC = () => {
           </div>
 
           {/* 底部按鈕 */}
-          <div className="sticky bottom-0 bg-cosmic-900 px-8 py-6 border-t border-cosmic-700 flex justify-end space-x-4 rounded-b-xl mt-4">
+          <div className="sticky bottom-0 bg-bg-dark px-8 py-6 border-t border-warm-gold/10 flex justify-end space-x-4 rounded-b-xl mt-4">
             <button
               onClick={handleClose}
               className="btn-secondary text-base px-6 py-3 font-medium"

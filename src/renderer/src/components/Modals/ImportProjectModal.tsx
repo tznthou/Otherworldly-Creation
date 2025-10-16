@@ -157,10 +157,10 @@ const ImportProjectModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-2xl">
         {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
-          <h2 className="text-xl font-cosmic text-gold-500">匯入專案</h2>
+        <div className="p-6 border-b border-warm-gold/10 flex items-center justify-between">
+          <h2 className="text-xl font-serif-tc text-warm-gold">匯入專案</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-white"
@@ -173,7 +173,7 @@ const ImportProjectModal: React.FC = () => {
         <div className="p-6">
           {/* 檔案上傳區域 */}
           <div
-            className="border-2 border-dashed border-cosmic-700 rounded-lg p-8 mb-6 text-center cursor-pointer hover:border-gold-500 transition-colors"
+            className="border-2 border-dashed border-warm-gold/10 rounded-lg p-8 mb-6 text-center cursor-pointer hover:border-warm-gold transition-colors"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
@@ -186,7 +186,7 @@ const ImportProjectModal: React.FC = () => {
               className="hidden"
             />
             <div className="text-4xl mb-4">📁</div>
-            <h3 className="text-lg font-medium text-gold-400 mb-2">
+            <h3 className="text-lg font-medium text-warm-gold mb-2">
               {selectedFile ? selectedFile.name : '選擇檔案或拖放至此'}
             </h3>
             <p className="text-sm text-gray-400">
@@ -204,8 +204,8 @@ const ImportProjectModal: React.FC = () => {
           {/* 匯入預覽 */}
           {importedData && (
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gold-400 mb-4">匯入預覽</h3>
-              <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+              <h3 className="text-lg font-medium text-warm-gold mb-4">匯入預覽</h3>
+              <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
                 <div className="mb-4">
                   <h4 className="font-medium text-white">{importedData.name}</h4>
                   <p className="text-sm text-gray-400">
@@ -215,7 +215,7 @@ const ImportProjectModal: React.FC = () => {
                     {importedData.type === 'fantasy' && '奇幻'}
                   </p>
                 </div>
-                <p className="text-sm text-gray-400 border-t border-cosmic-700 pt-4">
+                <p className="text-sm text-gray-400 border-t border-warm-gold/10 pt-4">
                   {importedData.description || '暫無描述'}
                 </p>
                 {importedData.exportedAt && (
@@ -229,7 +229,7 @@ const ImportProjectModal: React.FC = () => {
         </div>
 
         {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-end space-x-4">
+        <div className="p-6 border-t border-warm-gold/10 flex justify-end space-x-4">
           <button
             onClick={handleClose}
             className="btn-secondary"

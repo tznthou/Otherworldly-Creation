@@ -181,7 +181,7 @@ export const SystemStatusPanel: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-cosmic-900/50 backdrop-blur-sm rounded-lg p-4 border border-cosmic-700">
+    <div className="bg-bg-dark/50 backdrop-blur-sm rounded-lg p-4 border border-warm-gold/10">
       <h3 className="text-white font-semibold mb-3 text-sm">系統狀態</h3>
       
       <div className="space-y-3">
@@ -249,7 +249,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
       {!isConnected && !isConnecting && onRetry && (
         <button
           onClick={onRetry}
-          className="text-xs text-gold-400 hover:text-gold-300 transition-colors ml-2"
+          className="text-xs text-warm-gold hover:text-warm-gold transition-colors ml-2"
         >
           重試
         </button>

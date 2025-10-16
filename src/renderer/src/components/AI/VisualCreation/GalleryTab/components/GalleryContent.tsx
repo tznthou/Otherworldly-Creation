@@ -219,7 +219,7 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
 
   if (filteredAndSortedIllustrations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-cosmic-400">
+      <div className="flex flex-col items-center justify-center h-64 text-text-secondary/80">
         <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
                 d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -271,8 +271,8 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
                   <div
                     key={item.id}
                     className={`
-                      flex bg-cosmic-800 rounded-lg p-4 transition-all duration-200
-                      ${isSelected ? 'ring-2 ring-primary-500 bg-primary-500/10' : 'hover:bg-cosmic-700'}
+                      flex bg-bg-light/50 backdrop-blur-sm rounded-lg p-4 transition-all duration-200
+                      ${isSelected ? 'ring-2 ring-primary-500 bg-primary-500/10' : 'hover:bg-bg-dark/80'}
                       ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
                     `}
                     onClick={() => !isDeleting && onToggleSelection(item.id)}
@@ -303,18 +303,18 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
                           )}
                         </>
                       ) : (
-                        <div className="w-full h-full bg-cosmic-700 rounded flex items-center justify-center">
-                          <span className="text-2xl text-cosmic-500">🎨</span>
+                        <div className="w-full h-full bg-bg-dark/80 rounded flex items-center justify-center">
+                          <span className="text-2xl text-text-secondary">🎨</span>
                         </div>
                       )}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-cosmic-100 mb-2 truncate">
+                      <h3 className="text-sm font-medium text-text-secondary/20 mb-2 truncate">
                         {item.original_prompt || '未命名插畫'}
                       </h3>
                       
-                      <div className="space-y-1 text-xs text-cosmic-400">
+                      <div className="space-y-1 text-xs text-text-secondary/80">
                         <div className="flex items-center justify-between">
                           <span>模型: {item.model || 'unknown'}</span>
                           <span>{item.width || 0}×{item.height || 0}</span>
@@ -349,7 +349,7 @@ export const GalleryContent: React.FC<GalleryContentProps> = ({
         </>
       ) : (
         // ❌ 備用錯誤狀態
-        <div className="flex flex-col items-center justify-center h-full text-cosmic-400">
+        <div className="flex flex-col items-center justify-center h-full text-text-secondary/80">
           <div className="text-6xl mb-4">⚠️</div>
           <p className="text-lg mb-2">容器尺寸計算失敗</p>
           <p className="text-sm opacity-60">請重新整理頁面或檢查瀏覽器開發者工具</p>

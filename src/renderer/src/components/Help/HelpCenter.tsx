@@ -44,12 +44,12 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div className="bg-bg-dark/95 backdrop-blur-sm border border-warm-gold/30 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* 標題欄 */}
-        <div className="flex items-center justify-between p-6 border-b border-cosmic-700">
+        <div className="flex items-center justify-between p-6 border-b border-warm-gold/10">
           <div className="flex items-center space-x-3">
             <div className="text-2xl">📚</div>
-            <h2 className="text-2xl font-cosmic text-gold-400">幫助中心</h2>
+            <h2 className="text-2xl font-serif-tc text-warm-gold">幫助中心</h2>
           </div>
           <button
             onClick={onClose}
@@ -62,7 +62,7 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* 標籤頁 */}
-        <div className="flex border-b border-cosmic-700 overflow-x-auto">
+        <div className="flex border-b border-warm-gold/10 overflow-x-auto">
           {[
             { id: 'quickstart', label: '快速入門', icon: '🚀' },
             { id: 'manual', label: '使用手冊', icon: '📖' },
@@ -73,8 +73,8 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
               onClick={() => setActiveTab(tab.id as 'faq' | 'manual' | 'quickstart')}
               className={`flex items-center space-x-2 px-6 py-3 transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-gold-500/20 text-gold-400 border-b-2 border-gold-500'
-                  : 'text-gray-400 hover:text-white hover:bg-cosmic-800/50'
+                  ? 'bg-warm-gold/50/20 text-warm-gold border-b-2 border-warm-gold'
+                  : 'text-gray-400 hover:text-white hover:bg-bg-light/50 backdrop-blur-sm/50'
               }`}
             >
               <span>{tab.icon}</span>
@@ -93,7 +93,7 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
                 <p className="text-gray-400">5 分鐘快速了解創世紀元的核心功能</p>
               </div>
 
-              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-6">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-lg font-semibold text-white mb-2">互動式快速入門</h4>
@@ -130,7 +130,7 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
                 <p className="text-gray-400">完整的功能說明和使用指南</p>
               </div>
 
-              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-6">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-lg font-semibold text-white mb-2">完整使用手冊</h4>
@@ -148,42 +148,42 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4 text-center">
                   <div className="text-3xl mb-3">📝</div>
                   <h4 className="text-white font-semibold mb-2">專案管理</h4>
                   <p className="text-gray-400 text-sm">創建、管理和組織您的創作專案</p>
                 </div>
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4 text-center">
                   <div className="text-3xl mb-3">✍️</div>
                   <h4 className="text-white font-semibold mb-2">寫作編輯</h4>
                   <p className="text-gray-400 text-sm">使用編輯器進行創作和文字處理</p>
                 </div>
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4 text-center">
                   <div className="text-3xl mb-3">🤖</div>
                   <h4 className="text-white font-semibold mb-2">AI 輔助</h4>
                   <p className="text-gray-400 text-sm">有效使用 AI 功能提升創作效率</p>
                 </div>
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4 text-center">
                   <div className="text-3xl mb-3">👥</div>
                   <h4 className="text-white font-semibold mb-2">角色管理</h4>
                   <p className="text-gray-400 text-sm">創建和管理故事中的角色</p>
                 </div>
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4 text-center">
                   <div className="text-3xl mb-3">⚙️</div>
                   <h4 className="text-white font-semibold mb-2">設定配置</h4>
                   <p className="text-gray-400 text-sm">個人化設定和系統配置</p>
                 </div>
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4 text-center">
                   <div className="text-3xl mb-3">📚</div>
                   <h4 className="text-white font-semibold mb-2">電子書格式</h4>
                   <p className="text-gray-400 text-sm">選擇適合的電子書格式和使用建議</p>
                 </div>
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4 text-center">
                   <div className="text-3xl mb-3">🎨</div>
                   <h4 className="text-white font-semibold mb-2">AI 插畫系統</h4>
                   <p className="text-gray-400 text-sm">使用AI生成角色插畫和場景圖片</p>
                 </div>
-                <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4 text-center">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4 text-center">
                   <div className="text-3xl mb-3">🔧</div>
                   <h4 className="text-white font-semibold mb-2">故障排除</h4>
                   <p className="text-gray-400 text-sm">解決常見問題和技術支援</p>
@@ -204,13 +204,13 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
                     placeholder="搜尋問題..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 bg-cosmic-800 border border-cosmic-600 rounded-lg text-white placeholder-gray-400 focus:border-gold-500 focus:outline-none"
+                    className="w-full px-4 py-2 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg text-white placeholder-gray-400 focus:border-warm-gold focus:outline-none"
                   />
                 </div>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-2 bg-cosmic-800 border border-cosmic-600 rounded-lg text-white focus:border-gold-500 focus:outline-none"
+                  className="px-4 py-2 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg text-white focus:border-warm-gold focus:outline-none"
                 >
                   <option value="all">所有分類</option>
                   {Object.entries(categoryNames).map(([key, name]) => (
@@ -224,15 +224,15 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
                 {filteredFAQ.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg overflow-hidden"
+                    className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg overflow-hidden"
                   >
                     <button
                       onClick={() => setExpandedFAQ(expandedFAQ === item.id ? null : item.id)}
-                      className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-cosmic-700/50 transition-colors"
+                      className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-bg-dark/80/50 transition-colors"
                     >
                       <span className="text-white font-medium">{item.question}</span>
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-400 bg-cosmic-700 px-2 py-1 rounded">
+                        <span className="text-xs text-gray-400 bg-bg-dark/80 px-2 py-1 rounded">
                           {categoryNames[item.category]}
                         </span>
                         <svg
@@ -249,7 +249,7 @@ export const HelpCenter: React.FC<HelpCenterProps> = ({ isOpen, onClose }) => {
                     </button>
                     
                     {expandedFAQ === item.id && (
-                      <div className="px-4 pb-4 text-gray-300 text-sm leading-relaxed border-t border-cosmic-600">
+                      <div className="px-4 pb-4 text-gray-300 text-sm leading-relaxed border-t border-warm-gold/10">
                         <div className="pt-3">{item.answer}</div>
                       </div>
                     )}

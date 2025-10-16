@@ -51,10 +51,10 @@ const DeleteProjectModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-md">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-md">
         {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700">
-          <h2 className="text-xl font-cosmic text-red-500">永久刪除專案</h2>
+        <div className="p-6 border-b border-warm-gold/10">
+          <h2 className="text-xl font-serif-tc text-red-500">永久刪除專案</h2>
         </div>
 
         {/* 內容 */}
@@ -74,7 +74,7 @@ const DeleteProjectModal: React.FC = () => {
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder={`輸入「${currentProject.name}」確認刪除`}
-              className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
             />
           </div>
 
@@ -89,7 +89,7 @@ const DeleteProjectModal: React.FC = () => {
         </div>
 
         {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-end space-x-4">
+        <div className="p-6 border-t border-warm-gold/10 flex justify-end space-x-4">
           <button
             onClick={handleClose}
             className="btn-secondary"

@@ -39,7 +39,7 @@ const AIStatusIndicator: React.FC<AIStatusIndicatorProps> = ({ className = '' })
 
   return (
     <div 
-      className={`flex items-center cursor-pointer hover:bg-cosmic-700 rounded px-2 py-1 transition-colors ${className}`}
+      className={`flex items-center cursor-pointer hover:bg-bg-dark/80 rounded px-2 py-1 transition-colors ${className}`}
       onClick={handleClick}
       title="點擊打開 AI 設定"
     >

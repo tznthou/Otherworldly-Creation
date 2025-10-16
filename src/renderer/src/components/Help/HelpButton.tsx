@@ -124,9 +124,9 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
 
             {/* 選單 */}
             {showMenu && (
-              <div className="absolute bottom-full right-0 mb-2 w-64 bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl overflow-hidden">
-                <div className="p-3 border-b border-cosmic-700">
-                  <h3 className="text-gold-400 font-semibold text-sm">需要幫助嗎？</h3>
+              <div className="absolute bottom-full right-0 mb-2 w-64 bg-bg-dark/95 backdrop-blur-sm border border-warm-gold/30 rounded-lg shadow-2xl overflow-hidden">
+                <div className="p-3 border-b border-warm-gold/10">
+                  <h3 className="text-warm-gold font-semibold text-sm">需要幫助嗎？</h3>
                 </div>
                 
                 <div className="py-2">
@@ -134,7 +134,7 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
                     <div key={item.id}>
                       {item.submenu ? (
                         <div className="group relative">
-                          <div className="px-4 py-2 text-white hover:bg-cosmic-800/50 cursor-pointer flex items-center justify-between">
+                          <div className="px-4 py-2 text-white hover:bg-bg-light/50 backdrop-blur-sm/50 cursor-pointer flex items-center justify-between">
                             <div className="flex items-center space-x-3">
                               <span>{item.icon}</span>
                               <div>
@@ -148,13 +148,13 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
                           </div>
                           
                           {/* 子選單 */}
-                          <div className="absolute left-full top-0 ml-1 w-48 bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                          <div className="absolute left-full top-0 ml-1 w-48 bg-bg-dark/95 backdrop-blur-sm border border-warm-gold/30 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                             <div className="py-2">
                               {item.submenu.map((subItem) => (
                                 <button
                                   key={subItem.id}
                                   onClick={subItem.action}
-                                  className="w-full px-4 py-2 text-left text-white hover:bg-cosmic-800/50 transition-colors"
+                                  className="w-full px-4 py-2 text-left text-white hover:bg-bg-light/50 backdrop-blur-sm/50 transition-colors"
                                 >
                                   <div className="text-sm">{subItem.label}</div>
                                 </button>
@@ -165,7 +165,7 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
                       ) : (
                         <button
                           onClick={item.action}
-                          className="w-full px-4 py-2 text-left text-white hover:bg-cosmic-800/50 transition-colors flex items-center space-x-3"
+                          className="w-full px-4 py-2 text-left text-white hover:bg-bg-light/50 backdrop-blur-sm/50 transition-colors flex items-center space-x-3"
                         >
                           <span>{item.icon}</span>
                           <div>
@@ -212,9 +212,9 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
         onClick={() => setShowMenu(!showMenu)}
         className={`
           ${sizeClasses[size]}
-          bg-cosmic-800 hover:bg-cosmic-700 
-          text-gold-400 hover:text-gold-300
-          border border-cosmic-600 hover:border-gold-500
+          bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80 
+          text-warm-gold hover:text-warm-gold
+          border border-warm-gold/10 hover:border-warm-gold
           rounded-lg transition-all duration-200
           flex items-center justify-center
         `}
@@ -225,9 +225,9 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
 
       {showMenu && (
         <>
-          <div className="absolute top-full left-0 mt-2 w-64 bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl z-50">
-            <div className="p-3 border-b border-cosmic-700">
-              <h3 className="text-gold-400 font-semibold text-sm">幫助選項</h3>
+          <div className="absolute top-full left-0 mt-2 w-64 bg-bg-dark/95 backdrop-blur-sm border border-warm-gold/30 rounded-lg shadow-2xl z-50">
+            <div className="p-3 border-b border-warm-gold/10">
+              <h3 className="text-warm-gold font-semibold text-sm">幫助選項</h3>
             </div>
             
             <div className="py-2">
@@ -235,7 +235,7 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
                 <button
                   key={item.id}
                   onClick={item.action}
-                  className="w-full px-4 py-2 text-left text-white hover:bg-cosmic-800/50 transition-colors flex items-center space-x-3"
+                  className="w-full px-4 py-2 text-left text-white hover:bg-bg-light/50 backdrop-blur-sm/50 transition-colors flex items-center space-x-3"
                 >
                   <span>{item.icon}</span>
                   <div>

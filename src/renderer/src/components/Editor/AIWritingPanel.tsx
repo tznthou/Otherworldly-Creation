@@ -199,7 +199,7 @@ const QuickPresets: React.FC<{
           <button
             key={key}
             onClick={() => onApplyPreset(preset.values)}
-            className="p-2 bg-cosmic-700 hover:bg-cosmic-600 rounded-lg text-xs transition-colors border border-cosmic-600 hover:border-cosmic-500"
+            className="p-2 bg-bg-dark/80 hover:bg-bg-light rounded-lg text-xs transition-colors border border-warm-gold/10 hover:border-warm-gold/20"
             title={preset.description}
           >
             <div className="text-center">
@@ -234,8 +234,8 @@ const UseLastSettings: React.FC<{
           disabled={!hasLastSettings}
           className={`flex-1 p-2 rounded-lg text-xs transition-colors border ${
             hasLastSettings
-              ? 'bg-cosmic-700 hover:bg-cosmic-600 border-cosmic-600 hover:border-cosmic-500 text-white'
-              : 'bg-cosmic-800 border-cosmic-700 text-gray-500 cursor-not-allowed'
+              ? 'bg-bg-dark/80 hover:bg-bg-light border-warm-gold/10 hover:border-warm-gold/20 text-white'
+              : 'bg-bg-light/50 backdrop-blur-sm border-warm-gold/10 text-gray-500 cursor-not-allowed'
           }`}
           title={hasLastSettings ? "載入上次使用的參數設定" : "目前沒有保存的設定"}
         >
@@ -244,7 +244,7 @@ const UseLastSettings: React.FC<{
         </button>
         <button
           onClick={onSaveCurrentSettings}
-          className="flex-1 p-2 bg-cosmic-700 hover:bg-cosmic-600 rounded-lg text-xs transition-colors border border-cosmic-600 hover:border-cosmic-500"
+          className="flex-1 p-2 bg-bg-dark/80 hover:bg-bg-light rounded-lg text-xs transition-colors border border-warm-gold/10 hover:border-warm-gold/20"
           title="保存當前參數設定供下次使用"
         >
           <span className="mr-1">💾</span>
@@ -811,13 +811,13 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
   }, [clearOptions]);
   
   return (
-    <div className="bg-cosmic-900 border-t border-cosmic-700 p-4">
+    <div className="bg-bg-dark border-t border-warm-gold/10 p-4">
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-medium text-gold-400">AI 續寫</h3>
+          <h3 className="text-lg font-medium text-warm-gold">AI 續寫</h3>
           <button
             onClick={() => setShowAIHistory(!showAIHistory)}
-            className="text-sm text-gray-400 hover:text-gold-400 transition-colors"
+            className="text-sm text-gray-400 hover:text-warm-gold transition-colors"
           >
             {showAIHistory ? '隱藏歷史' : '查看歷史'}
           </button>
@@ -828,13 +828,13 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         </div>
 
         {/* 🔧 提供者和模型顯示 */}
-        <div className="mb-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700 space-y-3">
+        <div className="mb-3 p-3 bg-bg-light/50 backdrop-blur-sm rounded-lg border border-warm-gold/10 space-y-3">
           {/* 提供者狀態 */}
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-300">使用</span>
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <span className="text-sm font-medium text-gold-400">
+              <span className="text-sm font-medium text-warm-gold">
                 {currentProviderId ? 
                   providers.find(p => p.id === currentProviderId)?.name || 'OpenRouter' : 
                   'Ollama'
@@ -852,7 +852,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
             <select
               value={currentModel || ''}
               onChange={(e) => dispatch(setCurrentModel(e.target.value))}
-              className="flex-1 px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="flex-1 px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
             >
               <option value="">選擇模型</option>
               {currentProviderModels.map((model) => (
@@ -863,12 +863,12 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         </div>
 
         {/* 🚀 快速預設 */}
-        <div className="mb-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
+        <div className="mb-3 p-3 bg-bg-light/50 backdrop-blur-sm rounded-lg border border-warm-gold/10">
           <QuickPresets onApplyPreset={handleApplyPreset} />
         </div>
 
         {/* 💾 使用上次設定 */}
-        <div className="mb-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
+        <div className="mb-3 p-3 bg-bg-light/50 backdrop-blur-sm rounded-lg border border-warm-gold/10">
           <UseLastSettings 
             onLoadLastSettings={handleLoadLastSettings}
             onSaveCurrentSettings={handleSaveCurrentSettings}
@@ -886,7 +886,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
         />
 
         {/* 📈 智能參數控制 */}
-        <div className="mb-3 p-3 bg-cosmic-800 rounded-lg border border-cosmic-700">
+        <div className="mb-3 p-3 bg-bg-light/50 backdrop-blur-sm rounded-lg border border-warm-gold/10">
           <div className="grid grid-cols-1 gap-4">
             {/* 生成數量 */}
             <div>
@@ -899,7 +899,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                 max="3"
                 value={generationCount}
                 onChange={(e) => setGenerationCount(Number(e.target.value))}
-                className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer"
+                className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none cursor-pointer"
               />
               <ParameterHelp parameterKey="generationCount" currentValue={generationCount} />
             </div>
@@ -916,7 +916,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                 step="50"
                 value={maxTokens}
                 onChange={(e) => setMaxTokens(Number(e.target.value))}
-                className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer"
+                className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none cursor-pointer"
               />
               <ParameterHelp parameterKey="maxTokens" currentValue={maxTokens} />
             </div>
@@ -933,13 +933,13 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                 step="0.1"
                 value={temperature}
                 onChange={(e) => setTemperature(Number(e.target.value))}
-                className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer"
+                className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none cursor-pointer"
               />
               <ParameterHelp parameterKey="temperature" currentValue={temperature} />
             </div>
             
             {/* 控制按鈕區域 */}
-            <div className="flex items-center justify-between pt-2 border-t border-cosmic-700">
+            <div className="flex items-center justify-between pt-2 border-t border-warm-gold/10">
               <div>
                 <button
                   onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
@@ -961,7 +961,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
           
           {/* 🔧 高級設置 */}
           {showAdvancedSettings && (
-            <div className="mt-3 pt-3 border-t border-cosmic-700 space-y-4">
+            <div className="mt-3 pt-3 border-t border-warm-gold/10 space-y-4">
               {/* 多樣性控制 (TopP) */}
               <div>
                 <label className="block text-xs text-gray-400 mb-1">
@@ -974,7 +974,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                   step="0.05"
                   value={topP}
                   onChange={(e) => setTopP(Number(e.target.value))}
-                  className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none cursor-pointer"
                 />
                 <ParameterHelp parameterKey="topP" currentValue={topP} />
               </div>
@@ -991,13 +991,13 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                   step="0.1"
                   value={presencePenalty}
                   onChange={(e) => setPresencePenalty(Number(e.target.value))}
-                  className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none cursor-pointer"
                 />
                 <ParameterHelp parameterKey="presencePenalty" currentValue={presencePenalty} />
               </div>
               
               {/* 高級設置說明 */}
-              <div className="bg-cosmic-900 border border-cosmic-600 rounded-lg p-3 mt-3">
+              <div className="bg-bg-dark border border-warm-gold/10 rounded-lg p-3 mt-3">
                 <div className="text-xs text-gray-300 font-medium mb-2 flex items-center">
                   <span className="mr-2">💡</span>
                   高級參數說明
@@ -1036,13 +1036,13 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
             
             {/* 📊 進度顯示組件 */}
             {progress.isActive && (
-              <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+              <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-300">{progress.currentStep}</span>
-                  <span className="text-sm text-gold-400">{Math.round(progress.progress)}%</span>
+                  <span className="text-sm text-warm-gold">{Math.round(progress.progress)}%</span>
                 </div>
                 
-                <div className="w-full bg-cosmic-900 rounded-full h-2 mb-3">
+                <div className="w-full bg-bg-dark rounded-full h-2 mb-3">
                   <div 
                     className="bg-gradient-to-r from-gold-500 to-gold-400 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${progress.progress}%` }}
@@ -1081,7 +1081,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
       {generationOptions.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-gold-400">
+            <h4 className="text-sm font-medium text-warm-gold">
               生成結果 ({generationOptions.length} 個版本)
             </h4>
             <button
@@ -1096,14 +1096,14 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
             {generationOptions.map((option, index) => (
               <div 
                 key={option.id}
-                className={`bg-cosmic-800 border rounded-lg p-4 transition-all duration-200 ${
-                  'border-cosmic-700 hover:border-gold-500'
+                className={`bg-bg-light/50 backdrop-blur-sm border rounded-lg p-4 transition-all duration-200 ${
+                  'border-warm-gold/10 hover:border-warm-gold'
                 }`}
               >
                 {/* 選項標題 */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium text-gold-400">版本 {index + 1}</span>
+                    <span className="text-xs font-medium text-warm-gold">版本 {index + 1}</span>
                     <span className="text-xs text-gray-400">
                       溫度: {option.temperature.toFixed(1)}
                     </span>
@@ -1142,7 +1142,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
                   
                   <button
                     onClick={() => handleApplyOption(option)}
-                    className="text-xs px-3 py-1 rounded transition-colors bg-gold-600 hover:bg-gold-500 text-white"
+                    className="text-xs px-3 py-1 rounded transition-colors bg-gold-600 hover:bg-warm-gold/50 text-white"
                   >
                     使用此版本
                   </button>
@@ -1155,7 +1155,7 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
 
       {/* AI 歷史面板 */}
       {showAIHistory && (
-        <div className="mt-4 border-t border-cosmic-700 pt-4">
+        <div className="mt-4 border-t border-warm-gold/10 pt-4">
           <AIHistoryPanel 
             projectId={projectId} 
             chapterId={chapterId}

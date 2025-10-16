@@ -105,10 +105,10 @@ const SaveStatusPanel: React.FC<SaveStatusPanelProps> = ({ isOpen, onClose }) =>
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
         {/* 標題欄 */}
-        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
-          <h2 className="text-xl font-cosmic text-gold-500">儲存狀態管理</h2>
+        <div className="p-6 border-b border-warm-gold/10 flex items-center justify-between">
+          <h2 className="text-xl font-serif-tc text-warm-gold">儲存狀態管理</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-white"
@@ -118,31 +118,31 @@ const SaveStatusPanel: React.FC<SaveStatusPanelProps> = ({ isOpen, onClose }) =>
         </div>
 
         {/* 統計資訊 */}
-        <div className="p-6 border-b border-cosmic-700">
+        <div className="p-6 border-b border-warm-gold/10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-cosmic-800 rounded-lg p-4">
+            <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
               <div className="text-2xl font-bold text-green-500">{statistics.saved}</div>
               <div className="text-sm text-gray-400">已儲存</div>
             </div>
-            <div className="bg-cosmic-800 rounded-lg p-4">
+            <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
               <div className="text-2xl font-bold text-yellow-500">{statistics.pending}</div>
               <div className="text-sm text-gray-400">等待中</div>
             </div>
-            <div className="bg-cosmic-800 rounded-lg p-4">
+            <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
               <div className="text-2xl font-bold text-warm-gold">{statistics.saving}</div>
               <div className="text-sm text-gray-400">儲存中</div>
             </div>
-            <div className="bg-cosmic-800 rounded-lg p-4">
+            <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
               <div className="text-2xl font-bold text-red-500">{statistics.error}</div>
               <div className="text-sm text-gray-400">失敗</div>
             </div>
           </div>
 
           {/* 自動儲存狀態 */}
-          <div className="mt-4 p-4 bg-cosmic-800 rounded-lg">
+          <div className="mt-4 p-4 bg-bg-light/50 backdrop-blur-sm rounded-lg">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium text-gold-400">自動儲存狀態</div>
+                <div className="text-sm font-medium text-warm-gold">自動儲存狀態</div>
                 <div className="text-xs text-gray-400 mt-1">
                   {autoSaveEnabled ? '已啟用' : '已停用'}
                   {autoSaveStatus.nextSaveIn > 0 && ` • ${autoSaveStatus.nextSaveIn}秒後儲存`}
@@ -163,7 +163,7 @@ const SaveStatusPanel: React.FC<SaveStatusPanelProps> = ({ isOpen, onClose }) =>
         </div>
 
         {/* 操作按鈕 */}
-        <div className="p-4 border-b border-cosmic-700 flex space-x-2">
+        <div className="p-4 border-b border-warm-gold/10 flex space-x-2">
           <button
             onClick={handleForceSaveAll}
             disabled={statistics.pending === 0}
@@ -200,7 +200,7 @@ const SaveStatusPanel: React.FC<SaveStatusPanelProps> = ({ isOpen, onClose }) =>
                 {operations.slice().reverse().map((operation) => (
                   <div
                     key={operation.id}
-                    className="flex items-center justify-between p-3 bg-cosmic-800 rounded-lg hover:bg-cosmic-700 transition-colors"
+                    className="flex items-center justify-between p-3 bg-bg-light/50 backdrop-blur-sm rounded-lg hover:bg-bg-dark/80 transition-colors"
                   >
                     <div className="flex items-center space-x-3">
                       {getStatusIcon(operation.status)}
@@ -240,7 +240,7 @@ const SaveStatusPanel: React.FC<SaveStatusPanelProps> = ({ isOpen, onClose }) =>
         </div>
 
         {/* 底部資訊 */}
-        <div className="p-4 border-t border-cosmic-700 bg-cosmic-800">
+        <div className="p-4 border-t border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm">
           <div className="flex items-center justify-between text-xs text-gray-400">
             <div>
               佇列長度: {statistics.queueLength} | 

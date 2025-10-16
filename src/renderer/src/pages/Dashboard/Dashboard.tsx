@@ -231,7 +231,7 @@ const Dashboard: React.FC = () => {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="loading-spinner mb-4"></div>
-          <p className="text-gold-500">載入專案中...</p>
+          <p className="text-warm-gold">載入專案中...</p>
         </div>
       </div>
     );

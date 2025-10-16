@@ -18,10 +18,10 @@ const SettingsSimple: React.FC = () => {
       case 'general':
         return (
           <div className="space-y-6">
-            <h2 className="text-xl font-cosmic text-gold-500">一般設定</h2>
+            <h2 className="text-xl font-serif-tc text-warm-gold">一般設定</h2>
             <div className="card">
               <h3 className="font-medium mb-4">語言設定</h3>
-              <select className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white">
+              <select className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 text-white">
                 <option value="zh-TW">繁體中文</option>
                 <option value="zh-CN">簡體中文</option>
                 <option value="en">English</option>
@@ -39,7 +39,7 @@ const SettingsSimple: React.FC = () => {
       case 'ai':
         return (
           <div className="space-y-6">
-            <h2 className="text-xl font-cosmic text-gold-500">AI 設定</h2>
+            <h2 className="text-xl font-serif-tc text-warm-gold">AI 設定</h2>
             <div className="card">
               <h3 className="font-medium mb-4">AI 引擎設定</h3>
               <button 
@@ -54,7 +54,7 @@ const SettingsSimple: React.FC = () => {
       case 'editor':
         return (
           <div className="space-y-6">
-            <h2 className="text-xl font-cosmic text-gold-500">編輯器設定</h2>
+            <h2 className="text-xl font-serif-tc text-warm-gold">編輯器設定</h2>
             <div className="card">
               <h3 className="font-medium mb-4">字體設定</h3>
               <div className="space-y-4">
@@ -86,7 +86,7 @@ const SettingsSimple: React.FC = () => {
       case 'ui':
         return (
           <div className="space-y-6">
-            <h2 className="text-xl font-cosmic text-gold-500">界面設定</h2>
+            <h2 className="text-xl font-serif-tc text-warm-gold">界面設定</h2>
             <div className="card">
               <h3 className="font-medium mb-4">外觀</h3>
               <div className="space-y-4">
@@ -112,10 +112,10 @@ const SettingsSimple: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex bg-cosmic-900">
+    <div className="h-full flex bg-bg-dark">
       {/* 側邊欄 */}
-      <div className="w-64 bg-cosmic-950 border-r border-cosmic-700 p-4">
-        <h1 className="text-xl font-cosmic text-gold-500 mb-6">系統設定 [SIMPLE DEBUG]</h1>
+      <div className="w-64 bg-bg-dark border-r border-warm-gold/10 p-4">
+        <h1 className="text-xl font-serif-tc text-warm-gold mb-6">系統設定 [SIMPLE DEBUG]</h1>
         <nav className="space-y-2">
           {tabs.map(tab => (
             <button
@@ -123,8 +123,8 @@ const SettingsSimple: React.FC = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`w-full flex items-center px-4 py-3 rounded-lg text-left transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-gold-500 text-cosmic-900'
-                  : 'text-gray-300 hover:bg-cosmic-800'
+                  ? 'bg-warm-gold/50 text-text-primary'
+                  : 'text-gray-300 hover:bg-bg-light/50 backdrop-blur-sm'
               }`}
             >
               <span className="text-lg mr-3">{tab.icon}</span>

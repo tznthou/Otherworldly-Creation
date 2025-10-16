@@ -91,7 +91,7 @@ const IllustrationRequestsSection: React.FC<IllustrationRequestsSectionProps> = 
                   {request.selectedCharacterIds.map(charId => {
                     const character = effectiveProjectCharacters.find(c => c.id === charId);
                     return character ? (
-                      <span key={charId} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gold-600/20 text-gold-300 border border-gold-600/30">
+                      <span key={charId} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-warm-gold/20 text-warm-gold border border-warm-gold/30">
                         <span className="mr-1">{character.archetype?.includes('魔法') ? '🧙' : '👤'}</span>
                         {character.name}
                       </span>

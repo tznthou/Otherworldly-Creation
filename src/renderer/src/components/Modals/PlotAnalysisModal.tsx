@@ -175,7 +175,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
           <div className="flex items-center space-x-3">
             <button
               onClick={toggleFullscreen}
-              className="p-2 rounded-lg bg-bg-dark/80 hover:bg-cosmic-600 text-gray-300 hover:text-white transition-colors"
+              className="p-2 rounded-lg bg-bg-dark/80 hover:bg-bg-light text-gray-300 hover:text-white transition-colors"
               title={isFullscreen ? '退出全屏' : '全屏顯示'}
             >
               {isFullscreen ? '🗗' : '⛶'}
@@ -226,7 +226,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
               <Button
                 onClick={performAnalysis}
                 disabled={isAnalyzing || (analysisScope === 'current' && !currentChapter) || (analysisScope === 'project' && chapters.length === 0)}
-                className="w-full bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 disabled:from-gray-600 disabled:to-gray-700 text-cosmic-900 px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105 disabled:scale-100 flex items-center justify-center space-x-2 shadow-lg"
+                className="w-full bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 disabled:from-gray-600 disabled:to-gray-700 text-text-primary px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105 disabled:scale-100 flex items-center justify-center space-x-2 shadow-lg"
               >
                 {isAnalyzing ? (
                   <>
@@ -264,7 +264,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                   disabled={tab.key === 'trends' && analysisScope !== 'project'}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                     activeTab === tab.key
-                      ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-cosmic-900 shadow-lg'
+                      ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-text-primary shadow-lg'
                       : 'text-gray-400 hover:text-white hover:bg-bg-dark/80/50'
                   } ${tab.key === 'trends' && analysisScope !== 'project' ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
@@ -285,7 +285,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                     <div className="relative">
                       <div className="text-8xl animate-pulse">🎭</div>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-32 h-32 bg-gold-600/20 rounded-full blur-3xl animate-ping"></div>
+                        <div className="w-32 h-32 bg-warm-gold/20 rounded-full blur-3xl animate-ping"></div>
                       </div>
                     </div>
                     <div className="space-y-3">
@@ -325,29 +325,29 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                             <div className={`text-4xl font-bold mb-2 ${getScoreColor(analysis.overallScore)}`}>
                               {analysis.overallScore}/10
                             </div>
-                            <div className="text-gold-300">整體劇情評分</div>
+                            <div className="text-warm-gold">整體劇情評分</div>
                           </div>
                         </Card>
 
                         <Card className="bg-bg-dark/80/30 border-gold-600/20 rounded-xl">
                           <div className="p-6">
-                            <div className="text-gold-300 font-medium mb-4">核心指標</div>
+                            <div className="text-warm-gold font-medium mb-4">核心指標</div>
                             <div className="space-y-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-300">衝突點</span>
-                                <Badge variant="secondary" className="bg-cosmic-600">
+                                <Badge variant="secondary" className="bg-bg-light">
                                   {analysis.conflicts.length}
                                 </Badge>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-300">節奏評分</span>
-                                <Badge variant="secondary" className={`${getPaceColor(analysis.pace.overallPace)} bg-cosmic-600`}>
+                                <Badge variant="secondary" className={`${getPaceColor(analysis.pace.overallPace)} bg-bg-light`}>
                                   {analysis.pace.paceScore}/10
                                 </Badge>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-300">伏筆設置</span>
-                                <Badge variant="secondary" className="bg-cosmic-600">
+                                <Badge variant="secondary" className="bg-bg-light">
                                   {analysis.foreshadowing.setups.length}
                                 </Badge>
                               </div>
@@ -357,7 +357,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
 
                         <Card className="bg-bg-dark/80/30 border-gold-600/20 rounded-xl">
                           <div className="p-6">
-                            <div className="text-gold-300 font-medium mb-4">分析摘要</div>
+                            <div className="text-warm-gold font-medium mb-4">分析摘要</div>
                             <div className="space-y-3 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-gray-400">總體評價：</span>
@@ -388,7 +388,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                   {activeTab === 'conflicts' && (
                     <div className="space-y-8">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-gold-300">
+                        <h3 className="text-xl font-bold text-warm-gold">
                           檢測到 {analysis.conflicts.length} 個衝突點
                         </h3>
                         {analysis.conflicts.length > 0 && (
@@ -414,8 +414,8 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                                 <div className="flex-1">
                                   <div className="flex items-center space-x-3 mb-3">
                                     <div className={`w-4 h-4 rounded-full ${getConflictIntensityColor(conflict.intensity)}`} />
-                                    <span className="font-medium text-gold-300 text-lg">{conflict.description}</span>
-                                    <Badge variant="secondary" className="bg-cosmic-600">
+                                    <span className="font-medium text-warm-gold text-lg">{conflict.description}</span>
+                                    <Badge variant="secondary" className="bg-bg-light">
                                       強度 {conflict.intensity}/10
                                     </Badge>
                                   </div>
@@ -424,7 +424,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                                   </div>
                                   <div className="flex flex-wrap gap-2">
                                     {conflict.keywords.map((keyword, i) => (
-                                      <Badge key={i} variant="secondary" className="bg-cosmic-600 text-xs">
+                                      <Badge key={i} variant="secondary" className="bg-bg-light text-xs">
                                         {keyword}
                                       </Badge>
                                     ))}
@@ -448,19 +448,19 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                               {analysis.pace.overallPace === 'fast' ? '快速' :
                                analysis.pace.overallPace === 'slow' ? '緩慢' : '適中'}
                             </div>
-                            <div className="text-gold-300">整體節奏</div>
+                            <div className="text-warm-gold">整體節奏</div>
                           </div>
                           <div>
                             <div className={`text-3xl font-bold mb-2 ${getScoreColor(analysis.pace.paceScore)}`}>
                               {analysis.pace.paceScore}/10
                             </div>
-                            <div className="text-gold-300">節奏評分</div>
+                            <div className="text-warm-gold">節奏評分</div>
                           </div>
                           <div>
                             <div className="text-3xl font-bold mb-2 text-warm-gold">
                               {analysis.pace.segments.length}
                             </div>
-                            <div className="text-gold-300">分析片段</div>
+                            <div className="text-warm-gold">分析片段</div>
                           </div>
                         </div>
                       </Card>
@@ -468,7 +468,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                       {/* 節奏片段分析 */}
                       {analysis.pace.segments.length > 0 && (
                         <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-8">
-                          <div className="text-gold-300 font-medium text-lg mb-6">節奏片段分析</div>
+                          <div className="text-warm-gold font-medium text-lg mb-6">節奏片段分析</div>
                           <div className="grid gap-4">
                             {analysis.pace.segments.map((segment, index) => (
                               <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-bg-light/50 backdrop-blur-sm/50">
@@ -502,19 +502,19 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                           <div className="text-3xl font-bold text-clay-orange mb-2">
                             {analysis.foreshadowing.setups.length}
                           </div>
-                          <div className="text-gold-300">伏筆設置</div>
+                          <div className="text-warm-gold">伏筆設置</div>
                         </Card>
                         <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-6 text-center">
                           <div className="text-3xl font-bold text-green-400 mb-2">
                             {analysis.foreshadowing.connections.length}
                           </div>
-                          <div className="text-gold-300">成功回收</div>
+                          <div className="text-warm-gold">成功回收</div>
                         </Card>
                         <Card className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-6 text-center">
                           <div className="text-3xl font-bold text-orange-400 mb-2">
                             {analysis.foreshadowing.orphanedSetups.length}
                           </div>
-                          <div className="text-gold-300">未回收</div>
+                          <div className="text-warm-gold">未回收</div>
                         </Card>
                       </div>
 
@@ -547,7 +547,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                   {activeTab === 'suggestions' && (
                     <div className="space-y-8">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-gold-300">
+                        <h3 className="text-xl font-bold text-warm-gold">
                           📋 改善建議 ({suggestions.length})
                         </h3>
                       </div>
@@ -578,7 +578,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                                       {suggestion.priority === 'high' ? '高優先級' :
                                        suggestion.priority === 'medium' ? '中優先級' : '低優先級'}
                                     </Badge>
-                                    <span className="font-medium text-gold-300 text-lg">{suggestion.title}</span>
+                                    <span className="font-medium text-warm-gold text-lg">{suggestion.title}</span>
                                   </div>
                                   <div className="text-gray-300 mb-3 leading-relaxed">{suggestion.description}</div>
                                   <div className="text-warm-gold mb-3 p-3 bg-warm-gold/5 rounded-lg border border-warm-gold/20">
@@ -592,7 +592,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                                   size="sm"
                                   variant="secondary"
                                   onClick={() => handleApplySuggestion(suggestion)}
-                                  className="ml-6 bg-gold-600 hover:bg-gold-500 text-cosmic-900"
+                                  className="ml-6 bg-gold-600 hover:bg-warm-gold/50 text-text-primary"
                                 >
                                   應用建議
                                 </Button>
@@ -607,7 +607,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                   {/* 章節趨勢標籤 */}
                   {activeTab === 'trends' && analysisScope === 'project' && (
                     <div className="space-y-8">
-                      <h3 className="text-xl font-bold text-gold-300">
+                      <h3 className="text-xl font-bold text-warm-gold">
                         📈 章節劇情趨勢
                       </h3>
 
@@ -624,7 +624,7 @@ const PlotAnalysisModal: React.FC<PlotAnalysisModalProps> = ({
                             <Card key={trend.chapterId} className="bg-bg-dark/80/20 border-gold-600/20 rounded-xl p-6">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
-                                  <div className="text-gold-300 font-medium text-lg">
+                                  <div className="text-warm-gold font-medium text-lg">
                                     第{trend.chapterIndex}章
                                   </div>
                                   <div className="text-gray-300 truncate max-w-64">

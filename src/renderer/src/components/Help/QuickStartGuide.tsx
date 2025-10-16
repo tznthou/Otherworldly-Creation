@@ -48,8 +48,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
             </p>
           </div>
 
-          <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-gold-400 mb-4">您將學到什麼：</h4>
+          <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-6">
+            <h4 className="text-lg font-semibold text-warm-gold mb-4">您將學到什麼：</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-warm-gold/20 rounded-full flex items-center justify-center">
@@ -102,53 +102,53 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">五大 AI 提供商對比（2025 最新）</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">五大 AI 提供商對比（2025 最新）</h4>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="bg-cosmic-700">
-                    <th className="border border-cosmic-600 p-2 text-left text-white">提供商</th>
-                    <th className="border border-cosmic-600 p-2 text-left text-white">類型</th>
-                    <th className="border border-cosmic-600 p-2 text-left text-white">免費選項</th>
-                    <th className="border border-cosmic-600 p-2 text-left text-white">難度</th>
-                    <th className="border border-cosmic-600 p-2 text-left text-white">推薦對象</th>
+                  <tr className="bg-bg-dark/80">
+                    <th className="border border-warm-gold/10 p-2 text-left text-white">提供商</th>
+                    <th className="border border-warm-gold/10 p-2 text-left text-white">類型</th>
+                    <th className="border border-warm-gold/10 p-2 text-left text-white">免費選項</th>
+                    <th className="border border-warm-gold/10 p-2 text-left text-white">難度</th>
+                    <th className="border border-warm-gold/10 p-2 text-left text-white">推薦對象</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="bg-green-900/10">
-                    <td className="border border-cosmic-600 p-2 text-green-400 font-semibold">🟢 Gemini</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">雲端</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">1,500 請求/天</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">⭐ 簡單</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">新手首選</td>
+                    <td className="border border-warm-gold/10 p-2 text-green-400 font-semibold">🟢 Gemini</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">雲端</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">1,500 請求/天</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">⭐ 簡單</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">新手首選</td>
                   </tr>
                   <tr className="bg-warm-gold/5">
-                    <td className="border border-cosmic-600 p-2 text-warm-gold font-semibold">🔵 Ollama</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">本地</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">完全免費</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">⭐⭐ 中等</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">隱私優先</td>
+                    <td className="border border-warm-gold/10 p-2 text-warm-gold font-semibold">🔵 Ollama</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">本地</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">完全免費</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">⭐⭐ 中等</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">隱私優先</td>
                   </tr>
                   <tr>
-                    <td className="border border-cosmic-600 p-2 text-yellow-400 font-semibold">🟡 OpenAI</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">雲端</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">無（付費）</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">⭐ 簡單</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">專業作家</td>
+                    <td className="border border-warm-gold/10 p-2 text-yellow-400 font-semibold">🟡 OpenAI</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">雲端</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">無（付費）</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">⭐ 簡單</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">專業作家</td>
                   </tr>
                   <tr>
-                    <td className="border border-cosmic-600 p-2 text-clay-orange font-semibold">🟣 Claude</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">雲端</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">無（付費）</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">⭐ 簡單</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">長文本創作</td>
+                    <td className="border border-warm-gold/10 p-2 text-clay-orange font-semibold">🟣 Claude</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">雲端</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">無（付費）</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">⭐ 簡單</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">長文本創作</td>
                   </tr>
                   <tr>
-                    <td className="border border-cosmic-600 p-2 text-orange-400 font-semibold">🟠 OpenRouter</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">網關</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">50-1000/天</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">⭐ 簡單</td>
-                    <td className="border border-cosmic-600 p-2 text-gray-300">多模型切換</td>
+                    <td className="border border-warm-gold/10 p-2 text-orange-400 font-semibold">🟠 OpenRouter</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">網關</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">50-1000/天</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">⭐ 簡單</td>
+                    <td className="border border-warm-gold/10 p-2 text-gray-300">多模型切換</td>
                   </tr>
                 </tbody>
               </table>
@@ -156,7 +156,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">🎯 新手快速開始推薦</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">🎯 新手快速開始推薦</h4>
 
             <div className="space-y-4">
               <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
@@ -170,7 +170,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                   <li>✓ 5 分鐘完成配置</li>
                   <li>✓ 允許商業使用</li>
                 </ul>
-                <div className="bg-cosmic-800/50 rounded p-3 text-xs text-gray-300">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded p-3 text-xs text-gray-300">
                   <p className="font-semibold mb-1">快速步驟：</p>
                   <ol className="space-y-1 ml-4">
                     <li>1. 訪問 <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-warm-gold underline">Google AI Studio</a></li>
@@ -194,12 +194,12 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                   <li>✓ 支援 100+ 模型</li>
                   <li>⚠️ 需要較好硬體（8GB+ RAM）</li>
                 </ul>
-                <div className="bg-cosmic-800/50 rounded p-3 text-xs text-gray-300">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded p-3 text-xs text-gray-300">
                   <p className="font-semibold mb-1">快速步驟：</p>
                   <ol className="space-y-1 ml-4">
                     <li>1. 訪問 <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" className="text-warm-gold underline">ollama.com/download</a></li>
                     <li>2. 下載並安裝（Windows/macOS/Linux）</li>
-                    <li>3. 開啟終端機，執行：<code className="bg-cosmic-700 px-1 rounded">ollama pull llama3.2</code></li>
+                    <li>3. 開啟終端機，執行：<code className="bg-bg-dark/80 px-1 rounded">ollama pull llama3.2</code></li>
                     <li>4. 回到創世紀元，Ollama 會自動檢測並連接</li>
                   </ol>
                 </div>
@@ -208,17 +208,17 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">其他提供商簡介</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">其他提供商簡介</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded p-3 text-sm">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded p-3 text-sm">
                 <h5 className="text-yellow-400 font-semibold mb-1">OpenAI</h5>
                 <p className="text-gray-300 text-xs">業界標準，需信用卡，適合專業用途</p>
               </div>
-              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded p-3 text-sm">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded p-3 text-sm">
                 <h5 className="text-clay-orange font-semibold mb-1">Claude</h5>
                 <p className="text-gray-300 text-xs">超長上下文（200K tokens），適合長篇小說</p>
               </div>
-              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded p-3 text-sm">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded p-3 text-sm">
                 <h5 className="text-orange-400 font-semibold mb-1">OpenRouter</h5>
                 <p className="text-gray-300 text-xs">300+ 模型統一網關，適合多模型切換</p>
               </div>
@@ -262,8 +262,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
           </div>
 
           <div className="space-y-4">
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">選擇小說類型</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-warm-gold mb-3">選擇小說類型</h4>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-clay-orange/20 rounded-lg p-3">
                   <h5 className="text-white font-semibold">🌟 異世界轉生</h5>
@@ -284,18 +284,18 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               </div>
             </div>
 
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">填寫基本資訊</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-warm-gold mb-3">填寫基本資訊</h4>
               <div className="space-y-3">
                 <div>
                   <label className="text-gray-300 text-sm">專案標題</label>
-                  <div className="mt-1 p-2 bg-cosmic-700 border border-cosmic-600 rounded text-gray-400 text-sm">
+                  <div className="mt-1 p-2 bg-bg-dark/80 border border-warm-gold/10 rounded text-gray-400 text-sm">
                     例如：異世界的魔法學院
                   </div>
                 </div>
                 <div>
                   <label className="text-gray-300 text-sm">簡介</label>
-                  <div className="mt-1 p-2 bg-cosmic-700 border border-cosmic-600 rounded text-gray-400 text-sm">
+                  <div className="mt-1 p-2 bg-bg-dark/80 border border-warm-gold/10 rounded text-gray-400 text-sm">
                     簡短描述您的故事概念...
                   </div>
                 </div>
@@ -339,8 +339,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
           </div>
 
           <div className="space-y-4">
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">界面佈局</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-warm-gold mb-3">界面佈局</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-warm-gold/20 rounded-lg flex items-center justify-center mx-auto mb-2">
@@ -366,18 +366,18 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               </div>
             </div>
 
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">基本操作</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-warm-gold mb-3">基本操作</h4>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
+                <div className="flex items-center justify-between p-2 bg-bg-dark/80/50 rounded">
                   <span className="text-gray-300">自動儲存</span>
                   <span className="text-green-400 text-sm">每 3 秒自動儲存</span>
                 </div>
-                <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
+                <div className="flex items-center justify-between p-2 bg-bg-dark/80/50 rounded">
                   <span className="text-gray-300">字數統計</span>
                   <span className="text-warm-gold text-sm">即時顯示進度</span>
                 </div>
-                <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
+                <div className="flex items-center justify-between p-2 bg-bg-dark/80/50 rounded">
                   <span className="text-gray-300">格式工具</span>
                   <span className="text-clay-orange text-sm">豐富的文字格式</span>
                 </div>
@@ -408,8 +408,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
           </div>
 
           <div className="space-y-4">
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">角色資訊</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-warm-gold mb-3">角色資訊</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h5 className="text-white font-semibold mb-2">基本資料</h5>
@@ -450,8 +450,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               </div>
             </div>
 
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">角色原型模板</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-warm-gold mb-3">角色原型模板</h4>
               <p className="text-gray-300 text-sm mb-3">使用預設模板可以快速創建角色：</p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 rounded p-3">
@@ -473,8 +473,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               </div>
             </div>
 
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">角色關係</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-warm-gold mb-3">角色關係</h4>
               <p className="text-gray-300 text-sm mb-3">設定角色間的關係有助於故事發展：</p>
               <div className="flex flex-wrap gap-2 mb-4">
                 <span className="px-3 py-1 bg-warm-gold/20 text-warm-gold rounded-full text-sm">家人</span>
@@ -517,8 +517,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
           </div>
 
           <div className="space-y-4">
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">多供應商AI系統特色</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-warm-gold mb-3">多供應商AI系統特色</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-start space-x-3">
                   <div className="w-8 h-8 bg-warm-gold/20 rounded-full flex items-center justify-center mt-1">
@@ -559,8 +559,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               </div>
             </div>
 
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">使用步驟</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-warm-gold mb-3">使用步驟</h4>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 bg-warm-gold/30 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
@@ -593,18 +593,18 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
               </div>
             </div>
 
-            <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gold-400 mb-3">參數說明</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-warm-gold mb-3">參數說明</h4>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
+                <div className="flex items-center justify-between p-2 bg-bg-dark/80/50 rounded">
                   <span className="text-gray-300">生成長度</span>
                   <span className="text-warm-gold text-sm">短 / 中 / 長</span>
                 </div>
-                <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
+                <div className="flex items-center justify-between p-2 bg-bg-dark/80/50 rounded">
                   <span className="text-gray-300">創意程度</span>
                   <span className="text-green-400 text-sm">保守 / 平衡 / 創新</span>
                 </div>
-                <div className="flex items-center justify-between p-2 bg-cosmic-700/50 rounded">
+                <div className="flex items-center justify-between p-2 bg-bg-dark/80/50 rounded">
                   <span className="text-gray-300">寫作風格</span>
                   <span className="text-clay-orange text-sm">描述 / 對話 / 動作</span>
                 </div>
@@ -650,8 +650,8 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
             </p>
           </div>
 
-          <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-gold-400 mb-4">接下來您可以：</h4>
+          <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-6">
+            <h4 className="text-lg font-semibold text-warm-gold mb-4">接下來您可以：</h4>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <CheckCircle className="w-5 h-5 text-green-400" />
@@ -726,12 +726,12 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
         isolation: 'isolate'
       }}
     >
-      <div className="bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-bg-dark/95 backdrop-blur-sm border border-warm-gold/30 rounded-lg shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
         {/* 標題欄 */}
-        <div className="flex items-center justify-between p-6 border-b border-cosmic-700">
+        <div className="flex items-center justify-between p-6 border-b border-warm-gold/10">
           <div className="flex items-center space-x-3">
-            <Zap className="w-6 h-6 text-gold-400" />
-            <h2 className="text-2xl font-cosmic text-gold-400">快速入門指南</h2>
+            <Zap className="w-6 h-6 text-warm-gold" />
+            <h2 className="text-2xl font-serif-tc text-warm-gold">快速入門指南</h2>
           </div>
           <button
             onClick={onClose}
@@ -745,7 +745,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
 
         <div className="flex flex-1 min-h-0">
           {/* 步驟導航 */}
-          <div className="w-80 bg-cosmic-800/50 border-r border-cosmic-700 p-4 overflow-y-auto">
+          <div className="w-80 bg-bg-light/50 backdrop-blur-sm/50 border-r border-warm-gold/10 p-4 overflow-y-auto">
             <div className="space-y-2">
               {steps.map((step, index) => (
                 <button
@@ -753,15 +753,15 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
                   onClick={() => handleStepClick(index)}
                   className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${
                     currentStep === index
-                      ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30'
-                      : 'text-gray-300 hover:bg-cosmic-700/50 hover:text-white'
+                      ? 'bg-warm-gold/50/20 text-warm-gold border border-warm-gold/30'
+                      : 'text-gray-300 hover:bg-bg-dark/80/50 hover:text-white'
                   }`}
                 >
                   <div>
                     {isStepCompleted(step.id) ? (
                       <CheckCircle className="w-5 h-5 text-green-400" />
                     ) : currentStep === index ? (
-                      <div className="w-5 h-5 rounded-full bg-gold-500" />
+                      <div className="w-5 h-5 rounded-full bg-warm-gold/50" />
                     ) : (
                       <Circle className="w-5 h-5" />
                     )}
@@ -782,7 +782,7 @@ const QuickStartGuide: React.FC<QuickStartGuideProps> = ({
             </div>
 
             {/* 底部操作欄 */}
-            <div className="p-6 border-t border-cosmic-700 flex items-center justify-between flex-shrink-0">
+            <div className="p-6 border-t border-warm-gold/10 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center space-x-4">
                 <div className="text-sm text-gray-400">
                   步驟 {currentStep + 1} / {steps.length}

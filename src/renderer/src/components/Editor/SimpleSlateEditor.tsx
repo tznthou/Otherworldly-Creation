@@ -79,7 +79,7 @@ const SimpleSlateEditor: React.FC<SimpleSlateEditorProps> = ({
 
   try {
     return (
-      <div className="w-full p-6 bg-cosmic-900 rounded-lg">
+      <div className="w-full p-6 bg-bg-dark rounded-lg">
         <Slate editor={editor} initialValue={safeValue} onChange={handleChange}>
           <Editable
             renderElement={renderElement}

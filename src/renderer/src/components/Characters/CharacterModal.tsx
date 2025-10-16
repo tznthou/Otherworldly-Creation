@@ -212,17 +212,17 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           {/* 標題列 */}
-          <div className="flex items-center justify-between p-6 border-b border-cosmic-700">
+          <div className="flex items-center justify-between p-6 border-b border-warm-gold/10">
             <h2 className="text-xl font-semibold text-white">
               {isEditing ? '編輯角色' : '新增角色'}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-gold-400 transition-colors"
+              className="text-gray-400 hover:text-warm-gold transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -231,15 +231,15 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
           </div>
 
           {/* 標籤導航 */}
-          <div className="border-b border-cosmic-700">
+          <div className="border-b border-warm-gold/10">
             <nav className="flex space-x-8 px-6">
               <button
                 type="button"
                 onClick={() => setActiveTab('basic')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'basic'
-                    ? 'border-gold-500 text-gold-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-cosmic-600'
+                    ? 'border-warm-gold text-warm-gold'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-warm-gold/10'
                 }`}
               >
                 基本資料
@@ -249,13 +249,13 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 onClick={() => setActiveTab('relationships')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'relationships'
-                    ? 'border-gold-500 text-gold-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-cosmic-600'
+                    ? 'border-warm-gold text-warm-gold'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-warm-gold/10'
                 }`}
               >
                 角色關係
                 {formData.relationships && formData.relationships.length > 0 && (
-                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gold-500 text-cosmic-950">
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warm-gold/50 text-text-primary">
                     {formData.relationships.length}
                   </span>
                 )}
@@ -280,8 +280,8 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
-                    errors.name ? 'border-red-400' : 'border-cosmic-600'
+                  className={`w-full px-3 py-2 bg-bg-dark border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-warm-gold ${
+                    errors.name ? 'border-red-400' : 'border-warm-gold/10'
                   }`}
                   placeholder="輸入角色名稱"
                 />
@@ -312,8 +312,8 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                   id="age"
                   value={formData.age || ''}
                   onChange={(e) => handleInputChange('age', e.target.value ? parseInt(e.target.value) : null)}
-                  className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
-                    errors.age ? 'border-red-400' : 'border-cosmic-600'
+                  className={`w-full px-3 py-2 bg-bg-dark border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-warm-gold ${
+                    errors.age ? 'border-red-400' : 'border-warm-gold/10'
                   }`}
                   placeholder="輸入年齡"
                   min="0"
@@ -333,7 +333,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                   id="gender"
                   value={formData.gender}
                   onChange={(e) => handleInputChange('gender', e.target.value)}
-                  className="w-full px-3 py-2 bg-cosmic-900 border border-cosmic-600 rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
+                  className="w-full px-3 py-2 bg-bg-dark border border-warm-gold/10 rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-warm-gold"
                 >
                   <option value="">選擇性別</option>
                   {GENDER_OPTIONS.map((gender) => (
@@ -361,8 +361,8 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 onChange={(e) => handleInputChange('appearance', e.target.value)}
                 rows={3}
                 maxLength={500}
-                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
-                  errors.appearance ? 'border-red-400' : 'border-cosmic-600'
+                className={`w-full px-3 py-2 bg-bg-dark border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-warm-gold ${
+                  errors.appearance ? 'border-red-400' : 'border-warm-gold/10'
                 }`}
                 placeholder="描述角色的外觀特徵..."
               />
@@ -387,8 +387,8 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 onChange={(e) => handleInputChange('personality', e.target.value)}
                 rows={3}
                 maxLength={500}
-                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
-                  errors.personality ? 'border-red-400' : 'border-cosmic-600'
+                className={`w-full px-3 py-2 bg-bg-dark border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-warm-gold ${
+                  errors.personality ? 'border-red-400' : 'border-warm-gold/10'
                 }`}
                 placeholder="描述角色的性格特點..."
               />
@@ -413,8 +413,8 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                 onChange={(e) => handleInputChange('background', e.target.value)}
                 rows={4}
                 maxLength={1000}
-                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
-                  errors.background ? 'border-red-400' : 'border-cosmic-600'
+                className={`w-full px-3 py-2 bg-bg-dark border rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-warm-gold ${
+                  errors.background ? 'border-red-400' : 'border-warm-gold/10'
                 }`}
                 placeholder="描述角色的背景故事..."
               />
@@ -547,7 +547,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowRelationshipEditor(true)}
-                        className="px-4 py-2 text-sm font-medium text-cosmic-950 bg-gold-500 rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
+                        className="px-4 py-2 text-sm font-medium text-text-primary bg-warm-gold/50 rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
                       >
                         管理關係
                       </button>
@@ -558,12 +558,12 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                         {formData.relationships.map((relationship, index) => {
                           const targetCharacter = allCharacters.find(c => c.id === relationship.targetId);
                           return (
-                            <div key={index} className="bg-cosmic-900 rounded-lg p-4 border border-cosmic-700">
+                            <div key={index} className="bg-bg-dark rounded-lg p-4 border border-warm-gold/10">
                               <div className="flex items-center space-x-2 mb-2">
                                 <span className="font-medium text-white">
                                   {targetCharacter?.name || '未知角色'}
                                 </span>
-                                <span className="px-2 py-1 text-xs font-medium bg-gold-500 text-cosmic-950 rounded-full">
+                                <span className="px-2 py-1 text-xs font-medium bg-warm-gold/50 text-text-primary rounded-full">
                                   {relationship.type}
                                 </span>
                               </div>
@@ -588,18 +588,18 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
           </div>
 
           {/* 按鈕列 */}
-          <div className="flex items-center justify-end space-x-3 p-6 border-t border-cosmic-700">
+          <div className="flex items-center justify-end space-x-3 p-6 border-t border-warm-gold/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-300 bg-cosmic-800 border border-cosmic-600 rounded-md hover:bg-cosmic-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
+              className="px-4 py-2 text-sm font-medium text-gray-300 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-md hover:bg-bg-dark/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-cosmic-950 bg-gold-500 border border-transparent rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-text-primary bg-warm-gold/50 border border-transparent rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? '儲存中...' : (isEditing ? '更新' : '創建')}
             </button>

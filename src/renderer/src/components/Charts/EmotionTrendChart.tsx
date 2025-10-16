@@ -82,8 +82,8 @@ const EmotionTrendChart: React.FC<EmotionTrendChartProps> = ({
   }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-cosmic-900 border border-gold-600/30 rounded-lg p-3 shadow-lg">
-          <p className="text-gold-400 font-bold text-sm mb-2">{label}</p>
+        <div className="bg-bg-dark border border-warm-gold/30 rounded-lg p-3 shadow-lg">
+          <p className="text-warm-gold font-bold text-sm mb-2">{label}</p>
           {payload.map((entry, index: number) => (
             <p key={index} className="text-xs" style={{ color: entry.color }}>
               {entry.name}: <span className="font-medium">{entry.value}%</span>
@@ -132,7 +132,7 @@ const EmotionTrendChart: React.FC<EmotionTrendChartProps> = ({
       {/* 標題和總體情感指標 */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-gold-400 font-bold text-sm flex items-center">
+          <h4 className="text-warm-gold font-bold text-sm flex items-center">
             <span className="mr-2">😊</span>
             情感分析圖表
           </h4>
@@ -165,8 +165,8 @@ const EmotionTrendChart: React.FC<EmotionTrendChartProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* 情感分佈餅圖 */}
-        <div className="bg-cosmic-800/30 rounded-lg p-4">
-          <h5 className="text-gold-300 font-medium text-xs mb-3 flex items-center">
+        <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4">
+          <h5 className="text-warm-gold font-medium text-xs mb-3 flex items-center">
             <span className="mr-2">🎭</span>
             情感分佈
           </h5>
@@ -210,8 +210,8 @@ const EmotionTrendChart: React.FC<EmotionTrendChartProps> = ({
         </div>
 
         {/* 章節情感趨勢線圖 */}
-        <div className="bg-cosmic-800/30 rounded-lg p-4">
-          <h5 className="text-gold-300 font-medium text-xs mb-3 flex items-center">
+        <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4">
+          <h5 className="text-warm-gold font-medium text-xs mb-3 flex items-center">
             <span className="mr-2">📈</span>
             章節情感趨勢
           </h5>
@@ -259,9 +259,9 @@ const EmotionTrendChart: React.FC<EmotionTrendChartProps> = ({
       </div>
 
       {/* 情感強度指示器 */}
-      <div className="mt-4 p-3 bg-cosmic-700/20 rounded-lg border border-gold-600/20">
+      <div className="mt-4 p-3 bg-bg-dark/80/20 rounded-lg border border-gold-600/20">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-gold-400 text-sm font-medium flex items-center">
+          <span className="text-warm-gold text-sm font-medium flex items-center">
             <span className="mr-2">⚡</span>
             情感強度分析
           </span>
@@ -271,7 +271,7 @@ const EmotionTrendChart: React.FC<EmotionTrendChartProps> = ({
              emotionalIntensity >= 0.4 ? '中等' : '溫和'}
           </span>
         </div>
-        <div className="w-full h-2 bg-cosmic-600 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-bg-light rounded-full overflow-hidden">
           <div 
             className={`h-full transition-all duration-500 ${
               emotionalIntensity >= 0.8 ? 'bg-gradient-to-r from-red-600 to-red-400' :

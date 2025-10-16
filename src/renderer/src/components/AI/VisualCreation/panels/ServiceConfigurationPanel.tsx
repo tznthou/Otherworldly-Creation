@@ -364,7 +364,7 @@ export const ServiceConfigurationPanel: React.FC<ServiceConfigurationPanelProps>
                     <div className="mt-2 flex justify-center">
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         serviceCapabilities[service]?.quality === 'premium'
-                          ? 'bg-gold-500/20 text-gold-300'
+                          ? 'bg-warm-gold/50/20 text-warm-gold'
                           : serviceCapabilities[service]?.quality === 'high'
                           ? 'bg-warm-gold/20 text-warm-gold'
                           : 'bg-green-500/20 text-green-300'

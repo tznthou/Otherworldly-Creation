@@ -97,7 +97,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
 
   if (compact) {
     return (
-      <div className={`flex items-center space-x-3 p-2 bg-cosmic-800/50 rounded-lg ${className}`}>
+      <div className={`flex items-center space-x-3 p-2 bg-bg-light/50 backdrop-blur-sm/50 rounded-lg ${className}`}>
         <span className="text-lg">{config.icon}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
@@ -108,7 +108,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
               {progress.progress.toFixed(0)}%
             </span>
           </div>
-          <div className="w-full bg-cosmic-700 rounded-full h-1">
+          <div className="w-full bg-bg-dark/80 rounded-full h-1">
             <div
               className={`h-1 rounded-full transition-all duration-300 ${config.bgColor}`}
               style={{ width: `${progress.progress}%` }}
@@ -131,7 +131,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   }
 
   return (
-    <div className={`bg-cosmic-800/50 border border-cosmic-700 rounded-lg p-4 ${className}`}>
+    <div className={`bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4 ${className}`}>
       {/* 標題和狀態 */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-2">
@@ -181,7 +181,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
 
       {/* 進度條 */}
       <div className="mb-3">
-        <div className="w-full bg-cosmic-700 rounded-full h-2">
+        <div className="w-full bg-bg-dark/80 rounded-full h-2">
           <div
             className={`h-2 rounded-full transition-all duration-300 ${config.bgColor} ${
               progress.status === 'running' ? 'animate-pulse' : ''

@@ -64,7 +64,7 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
           <button
             onClick={loadCharactersDirectly}
             disabled={charactersLoading}
-            className="px-3 py-1 bg-cosmic-700 hover:bg-cosmic-600 disabled:opacity-50 text-cosmic-200 rounded text-sm transition-colors"
+            className="px-3 py-1 bg-bg-dark/80 hover:bg-bg-light disabled:opacity-50 text-text-secondary/40 rounded text-sm transition-colors"
           >
             🔄 重新載入
           </button>
@@ -176,7 +176,7 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
               onClick={() => onSceneTypeChange(type.value as 'portrait' | 'scene' | 'interaction')}
               className={`flex-1 p-3 rounded-lg border-2 transition-all ${
                 sceneType === type.value
-                  ? 'border-gold-500 bg-gold-500/10 text-gold-400'
+                  ? 'border-warm-gold bg-warm-gold/50/10 text-warm-gold'
                   : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
               }`}
             >

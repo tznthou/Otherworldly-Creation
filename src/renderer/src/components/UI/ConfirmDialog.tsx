@@ -25,10 +25,10 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-md">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-md">
         {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700">
-          <h2 className="text-xl font-cosmic text-gold-500">{title}</h2>
+        <div className="p-6 border-b border-warm-gold/10">
+          <h2 className="text-xl font-serif-tc text-warm-gold">{title}</h2>
         </div>
 
         {/* 內容 */}
@@ -37,7 +37,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </div>
 
         {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-end space-x-4">
+        <div className="p-6 border-t border-warm-gold/10 flex justify-end space-x-4">
           <button
             onClick={onCancel}
             className="btn-secondary"

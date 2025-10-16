@@ -111,10 +111,10 @@ const ProjectManageModal: React.FC<ProjectManageModalProps> = ({ project }) => {
   return (
     <>
       <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-        <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl">
+        <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-2xl">
           {/* 標題 */}
-          <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
-            <h2 className="text-xl font-cosmic text-gold-500">管理專案</h2>
+          <div className="p-6 border-b border-warm-gold/10 flex items-center justify-between">
+            <h2 className="text-xl font-serif-tc text-warm-gold">管理專案</h2>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-white"
@@ -132,8 +132,8 @@ const ProjectManageModal: React.FC<ProjectManageModalProps> = ({ project }) => {
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 placeholder="輸入專案名稱"
-                className={`w-full bg-cosmic-800 border ${
-                  errors.name ? 'border-red-500' : 'border-cosmic-700'
+                className={`w-full bg-bg-light/50 backdrop-blur-sm border ${
+                  errors.name ? 'border-red-500' : 'border-warm-gold/10'
                 } rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500`}
               />
               {errors.name && (
@@ -148,13 +148,13 @@ const ProjectManageModal: React.FC<ProjectManageModalProps> = ({ project }) => {
                 onChange={(e) => setProjectDescription(e.target.value)}
                 placeholder="輸入專案描述..."
                 rows={3}
-                className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
               ></textarea>
             </div>
 
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gold-400 mb-4">專案資訊</h3>
-              <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+              <h3 className="text-lg font-medium text-warm-gold mb-4">專案資訊</h3>
+              <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-400">專案類型：</span>
@@ -186,7 +186,7 @@ const ProjectManageModal: React.FC<ProjectManageModalProps> = ({ project }) => {
             </div>
 
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gold-400 mb-4">危險操作</h3>
+              <h3 className="text-lg font-medium text-warm-gold mb-4">危險操作</h3>
               <div className="bg-red-900/20 border border-red-900/30 rounded-lg p-4">
                 <p className="text-gray-300 mb-4">
                   刪除專案將永久移除所有相關資料，包括章節和角色。此操作無法復原。
@@ -203,7 +203,7 @@ const ProjectManageModal: React.FC<ProjectManageModalProps> = ({ project }) => {
           </div>
 
           {/* 底部按鈕 */}
-          <div className="p-6 border-t border-cosmic-700 flex justify-between">
+          <div className="p-6 border-t border-warm-gold/10 flex justify-between">
             <button
               onClick={handleExport}
               className="btn-secondary"

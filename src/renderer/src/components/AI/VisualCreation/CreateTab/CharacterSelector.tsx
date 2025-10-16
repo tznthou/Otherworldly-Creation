@@ -59,12 +59,12 @@ const CharacterSelector: React.FC = () => {
   
   if (!currentProject) {
     return (
-      <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
-        <h3 className="text-lg font-cosmic text-gold-500 mb-2">👥 角色選擇</h3>
+      <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4 border border-warm-gold/10">
+        <h3 className="text-lg font-serif-tc text-warm-gold mb-2">👥 角色選擇</h3>
         <div className="text-center py-8">
           <div className="text-4xl mb-3">📁</div>
-          <p className="text-cosmic-400 text-sm mb-2">請先選擇專案</p>
-          <p className="text-cosmic-500 text-xs">
+          <p className="text-text-secondary/80 text-sm mb-2">請先選擇專案</p>
+          <p className="text-text-secondary text-xs">
             選擇專案後即可看到可用角色
           </p>
         </div>
@@ -74,12 +74,12 @@ const CharacterSelector: React.FC = () => {
   
   if (projectCharacters.length === 0) {
     return (
-      <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
-        <h3 className="text-lg font-cosmic text-gold-500 mb-2">👥 角色選擇</h3>
+      <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4 border border-warm-gold/10">
+        <h3 className="text-lg font-serif-tc text-warm-gold mb-2">👥 角色選擇</h3>
         <div className="text-center py-8">
           <div className="text-4xl mb-3">👥</div>
-          <p className="text-cosmic-400 text-sm mb-2">{GUIDANCE_TEXTS.characterSelection.emptyState}</p>
-          <p className="text-cosmic-500 text-xs mb-3">
+          <p className="text-text-secondary/80 text-sm mb-2">{GUIDANCE_TEXTS.characterSelection.emptyState}</p>
+          <p className="text-text-secondary text-xs mb-3">
             角色是創作插畫的核心，快去創建您的第一個角色吧！
           </p>
           <Tooltip content="前往角色管理頁面創建新角色">
@@ -93,16 +93,16 @@ const CharacterSelector: React.FC = () => {
   }
   
   return (
-    <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
+    <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4 border border-warm-gold/10">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-cosmic text-gold-500">👥 角色選擇</h3>
+        <h3 className="text-lg font-serif-tc text-warm-gold">👥 角色選擇</h3>
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-cosmic-400">
+          <span className="text-xs text-text-secondary/80">
             已選 {selectedCharacters.length}/{projectCharacters.length}
           </span>
           <button
             onClick={handleSelectAll}
-            className="text-xs px-2 py-1 bg-cosmic-700 hover:bg-cosmic-600 text-cosmic-300 hover:text-white rounded transition-colors"
+            className="text-xs px-2 py-1 bg-bg-dark/80 hover:bg-bg-light text-text-secondary hover:text-white rounded transition-colors"
           >
             {selectedCharacters.length === projectCharacters.length ? '取消全選' : '全選'}
           </button>
@@ -124,8 +124,8 @@ const CharacterSelector: React.FC = () => {
                 className={`
                   cursor-pointer p-3 rounded-lg border transition-all duration-200
                   ${isSelected 
-                    ? 'bg-gold-900/30 border-gold-500 ring-2 ring-gold-500/50' 
-                    : 'bg-cosmic-700/50 border-cosmic-600 hover:border-cosmic-500 hover:bg-cosmic-700/70'
+                    ? 'bg-gold-900/30 border-warm-gold ring-2 ring-gold-500/50' 
+                    : 'bg-bg-dark/80/50 border-warm-gold/10 hover:border-warm-gold/20 hover:bg-bg-dark/80/70'
                   }
                 `}
               >
@@ -135,7 +135,7 @@ const CharacterSelector: React.FC = () => {
                   flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold
                   ${isSelected 
                     ? 'bg-gold-600 text-white' 
-                    : 'bg-cosmic-600 text-cosmic-300'
+                    : 'bg-bg-light text-text-secondary'
                   }
                 `}>
                   {character.name.charAt(0)}
@@ -146,25 +146,25 @@ const CharacterSelector: React.FC = () => {
                   <div className="flex items-center space-x-2 mb-1">
                     <h4 className={`
                       font-medium truncate
-                      ${isSelected ? 'text-gold-300' : 'text-white'}
+                      ${isSelected ? 'text-warm-gold' : 'text-white'}
                     `}>
                       {character.name}
                     </h4>
                     {isSelected && (
-                      <div className="flex-shrink-0 w-4 h-4 bg-gold-500 rounded-full flex items-center justify-center">
+                      <div className="flex-shrink-0 w-4 h-4 bg-warm-gold/50 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs">✓</span>
                       </div>
                     )}
                   </div>
                   
                   {character.personality && (
-                    <p className="text-xs text-cosmic-400 truncate mb-1">
+                    <p className="text-xs text-text-secondary/80 truncate mb-1">
                       {character.personality.length > 20 ? character.personality.slice(0, 20) + '...' : character.personality}
                     </p>
                   )}
                   
                   {character.appearance && (
-                    <p className="text-xs text-cosmic-500 line-clamp-2">
+                    <p className="text-xs text-text-secondary line-clamp-2">
                       {character.appearance}
                     </p>
                   )}
@@ -174,7 +174,7 @@ const CharacterSelector: React.FC = () => {
               {/* 選擇狀態指示器 */}
               <div className={`
                 mt-2 h-1 rounded-full transition-all duration-200
-                ${isSelected ? 'bg-gold-500' : 'bg-cosmic-600'}
+                ${isSelected ? 'bg-warm-gold/50' : 'bg-bg-light'}
               `} />
             </div>
           </Tooltip>
@@ -184,8 +184,8 @@ const CharacterSelector: React.FC = () => {
       
       {/* 選擇提示 */}
       {selectedCharacters.length > 0 && (
-        <div className="mt-3 p-2 bg-gold-900/20 border border-gold-700/50 rounded text-xs">
-          <p className="text-gold-300">
+        <div className="mt-3 p-2 bg-warm-gold/20 border border-gold-700/50 rounded text-xs">
+          <p className="text-warm-gold">
             <span className="font-medium">已選擇角色：</span>
             {selectedCharacters.map(id => {
               const char = projectCharacters.find(c => c.id === id);
@@ -196,7 +196,7 @@ const CharacterSelector: React.FC = () => {
       )}
       
       {/* 使用提示 */}
-      <div className="mt-3 text-xs text-cosmic-500">
+      <div className="mt-3 text-xs text-text-secondary">
         <p>💡 選擇的角色將出現在生成的插畫中</p>
         <p>📝 建議：肖像選 1 個角色，互動選 2-3 個，場景可選多個</p>
       </div>

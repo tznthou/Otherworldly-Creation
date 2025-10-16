@@ -58,8 +58,8 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
               onClick={() => dispatch(setFontFamily(font.value))}
               className={`p-3 rounded-lg border text-left transition-all ${
                 settings.fontFamily === font.value
-                  ? 'border-gold-500 bg-gold-500/10 text-gold-400'
-                  : 'border-cosmic-600 bg-cosmic-800 text-gray-300 hover:border-cosmic-500'
+                  ? 'border-warm-gold bg-warm-gold/50/10 text-warm-gold'
+                  : 'border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm text-gray-300 hover:border-warm-gold/20'
               }`}
             >
               <div className="font-medium mb-1" style={{ fontFamily: font.value }}>
@@ -100,8 +100,8 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
               onClick={() => dispatch(setFontWeight(weight))}
               className={`p-2 rounded-lg border text-sm transition-all ${
                 settings.fontWeight === weight
-                  ? 'border-gold-500 bg-gold-500/10 text-gold-400'
-                  : 'border-cosmic-600 bg-cosmic-800 text-gray-300 hover:border-cosmic-500'
+                  ? 'border-warm-gold bg-warm-gold/50/10 text-warm-gold'
+                  : 'border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm text-gray-300 hover:border-warm-gold/20'
               }`}
               style={{ fontWeight: weight }}
             >
@@ -185,8 +185,8 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
               onClick={() => dispatch(setTextAlign(align))}
               className={`p-2 rounded-lg border text-sm transition-all ${
                 settings.textAlign === align
-                  ? 'border-gold-500 bg-gold-500/10 text-gold-400'
-                  : 'border-cosmic-600 bg-cosmic-800 text-gray-300 hover:border-cosmic-500'
+                  ? 'border-warm-gold bg-warm-gold/50/10 text-warm-gold'
+                  : 'border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm text-gray-300 hover:border-warm-gold/20'
               }`}
             >
               {align === 'left' ? '左對齊' :
@@ -230,8 +230,8 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
               onClick={() => dispatch(setTheme(theme.value))}
               className={`p-3 rounded-lg border text-left transition-all ${
                 currentTheme.value === theme.value
-                  ? 'border-gold-500 bg-gold-500/10'
-                  : 'border-cosmic-600 bg-cosmic-800 hover:border-cosmic-500'
+                  ? 'border-warm-gold bg-warm-gold/50/10'
+                  : 'border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm hover:border-warm-gold/20'
               }`}
             >
               <div className="flex items-center space-x-3">
@@ -267,7 +267,7 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
             {customThemes.map((theme) => (
               <div
                 key={theme.name}
-                className="p-3 rounded-lg border border-cosmic-600 bg-cosmic-800"
+                className="p-3 rounded-lg border border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -310,7 +310,7 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
         <button
           onClick={() => dispatch(toggleAutoSave())}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            settings.autoSave ? 'bg-gold-500' : 'bg-cosmic-600'
+            settings.autoSave ? 'bg-warm-gold/50' : 'bg-bg-light'
           }`}
         >
           <span
@@ -352,7 +352,7 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
         <button
           onClick={() => dispatch(toggleSpellCheck())}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            settings.spellCheck ? 'bg-gold-500' : 'bg-cosmic-600'
+            settings.spellCheck ? 'bg-warm-gold/50' : 'bg-bg-light'
           }`}
         >
           <span
@@ -372,7 +372,7 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
         <button
           onClick={() => dispatch(toggleWordWrap())}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            settings.wordWrap ? 'bg-gold-500' : 'bg-cosmic-600'
+            settings.wordWrap ? 'bg-warm-gold/50' : 'bg-bg-light'
           }`}
         >
           <span
@@ -392,7 +392,7 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
         <button
           onClick={() => dispatch(toggleLineNumbers())}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            settings.showLineNumbers ? 'bg-gold-500' : 'bg-cosmic-600'
+            settings.showLineNumbers ? 'bg-warm-gold/50' : 'bg-bg-light'
           }`}
         >
           <span
@@ -413,10 +413,10 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
   ] as const;
 
   return (
-    <div className={`bg-cosmic-900 border border-cosmic-700 rounded-lg shadow-xl ${className}`}>
+    <div className={`bg-bg-dark border border-warm-gold/10 rounded-lg shadow-xl ${className}`}>
       {/* 標題欄 */}
-      <div className="flex items-center justify-between p-4 border-b border-cosmic-700">
-        <h3 className="text-lg font-cosmic text-gold-500">編輯器設定</h3>
+      <div className="flex items-center justify-between p-4 border-b border-warm-gold/10">
+        <h3 className="text-lg font-serif-tc text-warm-gold">編輯器設定</h3>
         <button
           onClick={handleClose}
           className="text-gray-400 hover:text-white transition-colors"
@@ -428,15 +428,15 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
       </div>
 
       {/* 標籤頁 */}
-      <div className="flex border-b border-cosmic-700">
+      <div className="flex border-b border-warm-gold/10">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'text-gold-400 border-b-2 border-gold-500 bg-cosmic-800'
-                : 'text-gray-400 hover:text-gray-300 hover:bg-cosmic-800'
+                ? 'text-warm-gold border-b-2 border-warm-gold bg-bg-light/50 backdrop-blur-sm'
+                : 'text-gray-400 hover:text-gray-300 hover:bg-bg-light/50 backdrop-blur-sm'
             }`}
           >
             <span>{tab.icon}</span>
@@ -454,7 +454,7 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
       </div>
 
       {/* 底部按鈕 */}
-      <div className="flex items-center justify-between p-4 border-t border-cosmic-700">
+      <div className="flex items-center justify-between p-4 border-t border-warm-gold/10">
         <CosmicButton
           variant="secondary"
           size="small"

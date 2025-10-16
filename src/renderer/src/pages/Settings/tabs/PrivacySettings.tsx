@@ -4,10 +4,10 @@ import { SettingsComponentProps } from '../types';
 
 const PrivacySettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) => (
   <div className="space-y-6">
-    <h2 className="text-2xl font-cosmic text-gold-500">隱私設定</h2>
+    <h2 className="text-2xl font-serif-tc text-warm-gold">隱私設定</h2>
     
-    <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gold-400 mb-4">資料收集</h3>
+    <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
+      <h3 className="text-lg font-medium text-warm-gold mb-4">資料收集</h3>
       <div className="space-y-4">
         <div className="flex items-center">
           <input
@@ -15,7 +15,7 @@ const PrivacySettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             id="enableTelemetry"
             checked={settings.privacy.enableTelemetry}
             onChange={(e) => dispatch(updatePrivacySettings({ enableTelemetry: e.target.checked }))}
-            className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+            className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
           />
           <label htmlFor="enableTelemetry" className="text-gray-300">
             啟用遙測資料收集
@@ -29,7 +29,7 @@ const PrivacySettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             id="enableCrashReporting"
             checked={settings.privacy.enableCrashReporting}
             onChange={(e) => dispatch(updatePrivacySettings({ enableCrashReporting: e.target.checked }))}
-            className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+            className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
           />
           <label htmlFor="enableCrashReporting" className="text-gray-300">
             啟用錯誤報告
@@ -43,7 +43,7 @@ const PrivacySettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             id="enableUsageAnalytics"
             checked={settings.privacy.enableUsageAnalytics}
             onChange={(e) => dispatch(updatePrivacySettings({ enableUsageAnalytics: e.target.checked }))}
-            className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+            className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
           />
           <label htmlFor="enableUsageAnalytics" className="text-gray-300">
             啟用使用情況分析
@@ -52,7 +52,7 @@ const PrivacySettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
         </div>
       </div>
       
-      <div className="mt-4 p-4 bg-cosmic-700 rounded-lg">
+      <div className="mt-4 p-4 bg-bg-dark/80 rounded-lg">
         <p className="text-sm text-gray-400">
           這些設定幫助我們改善產品品質。所有資料都會匿名處理，不會包含您的創作內容。
         </p>

@@ -98,7 +98,7 @@ const UpdateSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* 當前版本信息 */}
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-medium text-white">當前版本</h3>
@@ -112,7 +112,7 @@ const UpdateSettings: React.FC = () => {
           <button
             onClick={handleManualCheck}
             disabled={isChecking}
-            className="bg-gold-600 hover:bg-gold-700 disabled:bg-gold-400 text-cosmic-950 px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+            className="bg-gold-600 hover:bg-gold-700 disabled:bg-gold-400 text-text-primary px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
             <span>{isChecking ? '檢查中...' : '立即檢查'}</span>
@@ -122,15 +122,15 @@ const UpdateSettings: React.FC = () => {
 
       {/* 自動更新設置 */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium text-gold-400 flex items-center">
-          <Settings className="w-5 h-5 mr-2 text-gold-400" />
+        <h3 className="text-lg font-medium text-warm-gold flex items-center">
+          <Settings className="w-5 h-5 mr-2 text-warm-gold" />
           自動更新設置
         </h3>
 
         {/* 自動檢查更新 */}
-        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg opacity-60">
+        <div className="flex items-center justify-between p-4 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg opacity-60">
           <div className="flex items-center">
-            <RefreshCw className="w-5 h-5 text-gold-500 mr-3" />
+            <RefreshCw className="w-5 h-5 text-warm-gold mr-3" />
             <div>
               <div className="flex items-center gap-2">
                 <h4 className="font-medium text-white">自動檢查更新</h4>
@@ -146,13 +146,13 @@ const UpdateSettings: React.FC = () => {
               disabled={true}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-cosmic-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-cosmic-900 after:border-cosmic-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
+            <div className="w-11 h-6 bg-bg-dark/80 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-bg-dark after:border-warm-gold/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
           </label>
         </div>
 
         {/* 檢查間隔 - 暫時隱藏因為自動檢查功能正在開發中 */}
         {false && (
-          <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg">
             <div>
               <h4 className="font-medium text-white">檢查間隔</h4>
               <p className="text-sm text-gray-300">設置自動檢查更新的頻率</p>
@@ -160,7 +160,7 @@ const UpdateSettings: React.FC = () => {
             <select
               value={settings.checkInterval}
               onChange={(e) => handleSettingChange('checkInterval', parseInt(e.target.value))}
-              className="bg-cosmic-700 border border-cosmic-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             >
               {intervalOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -172,7 +172,7 @@ const UpdateSettings: React.FC = () => {
         )}
 
         {/* 自動下載更新 */}
-        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg opacity-60">
+        <div className="flex items-center justify-between p-4 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg opacity-60">
           <div className="flex items-center">
             <Download className="w-5 h-5 text-green-400 mr-3" />
             <div>
@@ -190,12 +190,12 @@ const UpdateSettings: React.FC = () => {
               disabled={true}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-cosmic-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-cosmic-900 after:border-cosmic-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
+            <div className="w-11 h-6 bg-bg-dark/80 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-bg-dark after:border-warm-gold/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
           </label>
         </div>
 
         {/* 更新通知 */}
-        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg opacity-60">
+        <div className="flex items-center justify-between p-4 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg opacity-60">
           <div className="flex items-center">
             <Bell className="w-5 h-5 text-yellow-400 mr-3" />
             <div>
@@ -213,12 +213,12 @@ const UpdateSettings: React.FC = () => {
               disabled={true}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-cosmic-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-cosmic-900 after:border-cosmic-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
+            <div className="w-11 h-6 bg-bg-dark/80 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-bg-dark after:border-warm-gold/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
           </label>
         </div>
 
         {/* 預發布版本 */}
-        <div className="flex items-center justify-between p-4 bg-cosmic-800 border border-cosmic-700 rounded-lg opacity-60">
+        <div className="flex items-center justify-between p-4 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg opacity-60">
           <div className="flex items-center">
             <Shield className="w-5 h-5 text-clay-orange mr-3" />
             <div>
@@ -236,14 +236,14 @@ const UpdateSettings: React.FC = () => {
               disabled={true}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-cosmic-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-cosmic-900 after:border-cosmic-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
+            <div className="w-11 h-6 bg-bg-dark/80 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gold-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-bg-dark after:border-warm-gold/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-600"></div>
           </label>
         </div>
       </div>
 
       {/* 更新說明 */}
-      <div className="bg-cosmic-800 border border-gold-600/30 rounded-lg p-4">
-        <h4 className="font-medium text-gold-400 mb-2">關於自動更新</h4>
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/30 rounded-lg p-4">
+        <h4 className="font-medium text-warm-gold mb-2">關於自動更新</h4>
         <ul className="text-sm text-gray-300 space-y-1">
           <li>• 自動檢查更新功能正在開發中</li>
           <li>• 自動下載更新功能正在開發中</li>

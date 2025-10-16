@@ -116,10 +116,10 @@ const BackupManager: React.FC<BackupManagerProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* 標題欄 */}
-        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
-          <h2 className="text-xl font-cosmic text-gold-500">備份與還原</h2>
+        <div className="p-6 border-b border-warm-gold/10 flex items-center justify-between">
+          <h2 className="text-xl font-serif-tc text-warm-gold">備份與還原</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-white"
@@ -129,13 +129,13 @@ const BackupManager: React.FC<BackupManagerProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* 分頁導航 */}
-        <div className="border-b border-cosmic-700">
+        <div className="border-b border-warm-gold/10">
           <nav className="flex">
             <button
               onClick={() => setActiveTab('create')}
               className={`px-6 py-3 font-medium transition-colors ${
                 activeTab === 'create'
-                  ? 'text-gold-400 border-b-2 border-gold-400'
+                  ? 'text-warm-gold border-b-2 border-warm-gold'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -145,7 +145,7 @@ const BackupManager: React.FC<BackupManagerProps> = ({ isOpen, onClose }) => {
               onClick={() => setActiveTab('restore')}
               className={`px-6 py-3 font-medium transition-colors ${
                 activeTab === 'restore'
-                  ? 'text-gold-400 border-b-2 border-gold-400'
+                  ? 'text-warm-gold border-b-2 border-warm-gold'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -195,14 +195,14 @@ const CreateBackupTab: React.FC<CreateBackupTabProps> = ({
     <div className="space-y-6">
       <div className="text-center">
         <div className="text-6xl mb-4">💾</div>
-        <h3 className="text-xl font-medium text-gold-400 mb-2">創建備份</h3>
+        <h3 className="text-xl font-medium text-warm-gold mb-2">創建備份</h3>
         <p className="text-gray-400 mb-8">
           將您的所有創作內容打包成備份檔案，以防資料遺失
         </p>
       </div>
 
       {/* 完整備份 */}
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h4 className="text-lg font-medium text-white mb-2">完整備份</h4>
@@ -227,8 +227,8 @@ const CreateBackupTab: React.FC<CreateBackupTabProps> = ({
       </div>
 
       {/* 備份說明 */}
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-gold-400 mb-2">備份說明</h4>
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-warm-gold mb-2">備份說明</h4>
         <div className="text-xs text-gray-400 space-y-1">
           <p>• 備份檔案將以 JSON 格式儲存，包含所有必要的資料</p>
           <p>• 建議定期創建備份，特別是在重要創作節點</p>
@@ -265,9 +265,9 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
   return (
     <div className="space-y-6">
       {/* 檔案選擇 */}
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
         <h4 className="text-lg font-medium text-white mb-4">選擇備份檔案</h4>
-        <div className="border-2 border-dashed border-cosmic-600 rounded-lg p-8 text-center">
+        <div className="border-2 border-dashed border-warm-gold/10 rounded-lg p-8 text-center">
           <input
             type="file"
             accept=".gcbackup,.json"
@@ -286,7 +286,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
         </div>
 
         {selectedFile && (
-          <div className="mt-4 p-4 bg-cosmic-700 rounded-lg">
+          <div className="mt-4 p-4 bg-bg-dark/80 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white font-medium">{selectedFile.name}</p>
@@ -309,7 +309,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
 
       {/* 驗證結果 */}
       {validationResult && (
-        <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
+        <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
           <h4 className="text-lg font-medium text-white mb-4">驗證結果</h4>
           
           {validationResult.errors.length > 0 && (
@@ -338,20 +338,20 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
             <div>
               <h5 className="text-green-400 font-medium mb-2">備份內容預覽</h5>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="bg-cosmic-700 rounded p-3">
+                <div className="bg-bg-dark/80 rounded p-3">
                   <div className="text-2xl font-bold text-warm-gold">{backupPreview.totalProjects}</div>
                   <div className="text-gray-400">專案</div>
                 </div>
-                <div className="bg-cosmic-700 rounded p-3">
+                <div className="bg-bg-dark/80 rounded p-3">
                   <div className="text-2xl font-bold text-green-400">{backupPreview.totalChapters}</div>
                   <div className="text-gray-400">章節</div>
                 </div>
-                <div className="bg-cosmic-700 rounded p-3">
+                <div className="bg-bg-dark/80 rounded p-3">
                   <div className="text-2xl font-bold text-clay-orange">{backupPreview.totalCharacters}</div>
                   <div className="text-gray-400">角色</div>
                 </div>
-                <div className="bg-cosmic-700 rounded p-3">
-                  <div className="text-2xl font-bold text-gold-400">{validationResult.version}</div>
+                <div className="bg-bg-dark/80 rounded p-3">
+                  <div className="text-2xl font-bold text-warm-gold">{validationResult.version}</div>
                   <div className="text-gray-400">版本</div>
                 </div>
               </div>
@@ -361,7 +361,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
                   <h6 className="text-white font-medium mb-2">專案列表</h6>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {backupPreview.projects.map((project: { id: string; name: string; type: string }) => (
-                      <div key={project.id} className="flex items-center justify-between bg-cosmic-700 rounded p-2">
+                      <div key={project.id} className="flex items-center justify-between bg-bg-dark/80 rounded p-2">
                         <span className="text-white">{project.name}</span>
                         <span className="text-xs text-gray-400">{project.type}</span>
                       </div>
@@ -376,7 +376,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
 
       {/* 還原選項 */}
       {validationResult?.isValid && (
-        <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
+        <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
           <h4 className="text-lg font-medium text-white mb-4">還原選項</h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -388,7 +388,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
                   ...restoreOptions,
                   includeProjects: e.target.checked
                 })}
-                className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
               />
               <span className="text-gray-300">還原專案</span>
             </label>
@@ -401,7 +401,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
                   ...restoreOptions,
                   includeChapters: e.target.checked
                 })}
-                className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
               />
               <span className="text-gray-300">還原章節</span>
             </label>
@@ -414,7 +414,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
                   ...restoreOptions,
                   includeCharacters: e.target.checked
                 })}
-                className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
               />
               <span className="text-gray-300">還原角色</span>
             </label>
@@ -427,13 +427,13 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
                   ...restoreOptions,
                   includeSettings: e.target.checked
                 })}
-                className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
               />
               <span className="text-gray-300">還原設定</span>
             </label>
           </div>
 
-          <div className="border-t border-cosmic-700 pt-4">
+          <div className="border-t border-warm-gold/10 pt-4">
             <label className="flex items-center">
               <input
                 type="checkbox"
@@ -442,7 +442,7 @@ const RestoreBackupTab: React.FC<RestoreBackupTabProps> = ({
                   ...restoreOptions,
                   overwriteExisting: e.target.checked
                 })}
-                className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
               />
               <span className="text-gray-300">覆蓋現有資料</span>
             </label>

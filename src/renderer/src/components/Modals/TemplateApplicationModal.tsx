@@ -90,15 +90,15 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700">
+        <div className="p-6 border-b border-warm-gold/10">
           <div className="flex items-center space-x-3 mb-4">
             <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getTemplateColor(template.type)} flex items-center justify-center text-2xl`}>
               {getTemplateIcon(template.type)}
             </div>
             <div>
-              <h2 className="text-xl font-cosmic text-gold-500">應用模板創建專案</h2>
+              <h2 className="text-xl font-serif-tc text-warm-gold">應用模板創建專案</h2>
               <p className="text-gray-400 text-sm">{template.name} - {TEMPLATE_TYPES[template.type]}</p>
             </div>
           </div>
@@ -108,7 +108,7 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
         <div className="p-6 space-y-6">
           {/* 專案基本信息 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-cosmic text-gold-400">📝 專案信息</h3>
+            <h3 className="text-lg font-serif-tc text-warm-gold">📝 專案信息</h3>
             
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -118,7 +118,7 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
                 type="text"
                 value={options.projectName}
                 onChange={(e) => setOptions(prev => ({ ...prev, projectName: e.target.value }))}
-                className="w-full px-3 py-2 bg-cosmic-800 border border-cosmic-700 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
+                className="w-full px-3 py-2 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-warm-gold"
                 placeholder="輸入專案名稱"
                 maxLength={100}
               />
@@ -131,7 +131,7 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
               <textarea
                 value={options.projectDescription}
                 onChange={(e) => setOptions(prev => ({ ...prev, projectDescription: e.target.value }))}
-                className="w-full px-3 py-2 bg-cosmic-800 border border-cosmic-700 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 resize-none h-20"
+                className="w-full px-3 py-2 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-warm-gold resize-none h-20"
                 placeholder={`描述您的${TEMPLATE_TYPES[template.type]}故事...`}
                 maxLength={500}
               />
@@ -140,7 +140,7 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
 
           {/* 模板應用選項 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-cosmic text-gold-400">⚙️ 應用選項</h3>
+            <h3 className="text-lg font-serif-tc text-warm-gold">⚙️ 應用選項</h3>
             
             {/* 世界觀設定 */}
             <div className="flex items-start space-x-3">
@@ -149,7 +149,7 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
                 id="applyWorldSetting"
                 checked={options.applyWorldSetting}
                 onChange={(e) => setOptions(prev => ({ ...prev, applyWorldSetting: e.target.checked }))}
-                className="mt-1 rounded border-cosmic-700 bg-cosmic-800 text-gold-500 focus:ring-gold-500"
+                className="mt-1 rounded border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm text-warm-gold focus:ring-gold-500"
               />
               <div>
                 <label htmlFor="applyWorldSetting" className="text-white font-medium">
@@ -169,7 +169,7 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
                   id="createCharacters"
                   checked={options.createCharacters}
                   onChange={(e) => setOptions(prev => ({ ...prev, createCharacters: e.target.checked }))}
-                  className="mt-1 rounded border-cosmic-700 bg-cosmic-800 text-gold-500 focus:ring-gold-500"
+                  className="mt-1 rounded border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm text-warm-gold focus:ring-gold-500"
                 />
                 <div>
                   <label htmlFor="createCharacters" className="text-white font-medium">
@@ -204,7 +204,7 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
                               }));
                             }
                           }}
-                          className="rounded border-cosmic-700 bg-cosmic-800 text-gold-500 focus:ring-gold-500"
+                          className="rounded border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm text-warm-gold focus:ring-gold-500"
                         />
                         <span className="text-sm text-gray-300">{archetype.name}</span>
                         <span className="text-xs text-gray-500">({archetype.description})</span>
@@ -217,7 +217,7 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
           </div>
 
           {/* 模板預覽 */}
-          <div className="bg-cosmic-800 rounded-lg p-4">
+          <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
             <h4 className="text-white font-medium mb-3">📋 模板預覽</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
@@ -241,7 +241,7 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
         </div>
 
         {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-between">
+        <div className="p-6 border-t border-warm-gold/10 flex justify-between">
           <button
             onClick={handleClose}
             disabled={isApplying}

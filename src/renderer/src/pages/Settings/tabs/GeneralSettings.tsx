@@ -185,7 +185,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                 onChange={(e) => dispatch(updateSettings({ ebookVirtualNaming: e.target.checked }))}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-warm-gold/50/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold-500"></div>
+              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-warm-gold/50/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-warm-gold/50"></div>
             </label>
           </div>
 
@@ -427,7 +427,7 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
           <div className="flex gap-3">
             <button
               onClick={handleOpenLogDirectory}
-              className="flex-1 bg-bg-dark hover:bg-cosmic-600 border border-warm-gold/20 hover:border-gold-500 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex-1 bg-bg-dark hover:bg-bg-light border border-warm-gold/20 hover:border-warm-gold text-white px-4 py-2 rounded-lg transition-colors"
             >
               📂 打開日誌目錄
             </button>

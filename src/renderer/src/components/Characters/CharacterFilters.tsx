@@ -50,7 +50,7 @@ export const CharacterFiltersComponent: React.FC<CharacterFiltersProps> = ({
               placeholder="輸入角色名稱或描述..."
               value={filters.search || ''}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-4 py-2 bg-cosmic-800 border border-cosmic-700 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
+              className="w-full pl-10 pr-4 py-2 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-warm-gold"
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,7 +69,7 @@ export const CharacterFiltersComponent: React.FC<CharacterFiltersProps> = ({
             id="archetype"
             value={filters.archetype || ''}
             onChange={handleArchetypeChange}
-            className="w-full px-3 py-2 bg-cosmic-800 border border-cosmic-700 rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
+            className="w-full px-3 py-2 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-warm-gold"
           >
             <option value="">全部原型</option>
             {CHARACTER_ARCHETYPES.map((archetype) => (
@@ -89,7 +89,7 @@ export const CharacterFiltersComponent: React.FC<CharacterFiltersProps> = ({
             id="gender"
             value={filters.gender || ''}
             onChange={handleGenderChange}
-            className="w-full px-3 py-2 bg-cosmic-800 border border-cosmic-700 rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
+            className="w-full px-3 py-2 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-warm-gold"
           >
             <option value="">全部性別</option>
             {GENDER_OPTIONS.map((gender) => (
@@ -105,7 +105,7 @@ export const CharacterFiltersComponent: React.FC<CharacterFiltersProps> = ({
           <div className="flex items-end">
             <button
               onClick={onClearFilters}
-              className="px-4 py-2 text-sm font-medium text-gray-300 bg-cosmic-800 hover:bg-cosmic-700 rounded-lg transition-colors border border-cosmic-700"
+              className="px-4 py-2 text-sm font-medium text-gray-300 bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80 rounded-lg transition-colors border border-warm-gold/10"
             >
               清除過濾
             </button>

@@ -269,7 +269,7 @@ const CharacterManager: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-cosmic-950 text-white flex flex-col">
+    <div className="h-full bg-bg-dark text-white flex flex-col">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col min-h-0">
         {/* 視圖切換按鈕 */}
         <div className="mb-6 flex items-center justify-between">
@@ -278,8 +278,8 @@ const CharacterManager: React.FC = () => {
               onClick={() => setShowRelationshipView(false)}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 !showRelationshipView
-                  ? 'bg-gold-500 text-cosmic-950'
-                  : 'bg-cosmic-800 text-gray-300 border border-cosmic-700 hover:bg-cosmic-700'
+                  ? 'bg-warm-gold/50 text-text-primary'
+                  : 'bg-bg-light/50 backdrop-blur-sm text-gray-300 border border-warm-gold/10 hover:bg-bg-dark/80'
               }`}
               data-tutorial="character-list"
             >
@@ -289,8 +289,8 @@ const CharacterManager: React.FC = () => {
               onClick={() => setShowRelationshipView(true)}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 showRelationshipView
-                  ? 'bg-gold-500 text-cosmic-950'
-                  : 'bg-cosmic-800 text-gray-300 border border-cosmic-700 hover:bg-cosmic-700'
+                  ? 'bg-warm-gold/50 text-text-primary'
+                  : 'bg-bg-light/50 backdrop-blur-sm text-gray-300 border border-warm-gold/10 hover:bg-bg-dark/80'
               }`}
               data-tutorial="character-relationships"
             >
@@ -300,7 +300,7 @@ const CharacterManager: React.FC = () => {
           
           {/* 一致性問題提示 */}
           {consistencyIssues.length > 0 && (
-            <div className="flex items-center space-x-2 text-gold-400">
+            <div className="flex items-center space-x-2 text-warm-gold">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
@@ -323,21 +323,21 @@ const CharacterManager: React.FC = () => {
             {/* 一致性問題列表 */}
             {consistencyIssues.length > 0 && (
               <div className="card">
-                <h3 className="text-lg font-medium text-gold-400 mb-4">關係一致性問題</h3>
+                <h3 className="text-lg font-medium text-warm-gold mb-4">關係一致性問題</h3>
                 <div className="space-y-3">
                   {consistencyIssues.map((issue, index) => (
                     <div
                       key={index}
                       className={`p-3 rounded-lg border-l-4 ${
                         issue.severity === 'warning'
-                          ? 'bg-cosmic-800/50 border-gold-500'
-                          : 'bg-cosmic-800/50 border-red-500'
+                          ? 'bg-bg-light/50 backdrop-blur-sm/50 border-warm-gold'
+                          : 'bg-bg-light/50 backdrop-blur-sm/50 border-red-500'
                       }`}
                     >
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
                           {issue.severity === 'warning' ? (
-                            <svg className="w-5 h-5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-warm-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                             </svg>
                           ) : (
@@ -348,7 +348,7 @@ const CharacterManager: React.FC = () => {
                         </div>
                         <div className="ml-3">
                           <p className={`text-sm ${
-                            issue.severity === 'warning' ? 'text-gold-300' : 'text-red-300'
+                            issue.severity === 'warning' ? 'text-warm-gold' : 'text-red-300'
                           }`}>
                             {issue.message}
                           </p>

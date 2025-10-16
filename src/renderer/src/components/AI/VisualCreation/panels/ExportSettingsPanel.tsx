@@ -70,15 +70,15 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-cosmic-800 rounded-lg border border-cosmic-700 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg border border-warm-gold/10 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
         {/* 標題欄 */}
-        <div className="flex items-center justify-between p-6 border-b border-cosmic-700">
-          <h2 className="text-xl font-cosmic text-white">
+        <div className="flex items-center justify-between p-6 border-b border-warm-gold/10">
+          <h2 className="text-xl font-serif-tc text-white">
             🎨 導出設定
           </h2>
           <button
             onClick={handleClose}
-            className="text-cosmic-400 hover:text-white transition-colors"
+            className="text-text-secondary/80 hover:text-white transition-colors"
           >
             ✕
           </button>
@@ -87,15 +87,15 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
         {/* 設定內容 */}
         <div className="p-6 space-y-6">
           {/* 基本信息 */}
-          <div className="bg-cosmic-700/30 rounded-lg p-4">
+          <div className="bg-bg-dark/80/30 rounded-lg p-4">
             <h3 className="text-lg font-medium text-white mb-2">導出概覽</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-cosmic-400">選中圖像:</span>
+                <span className="text-text-secondary/80">選中圖像:</span>
                 <span className="ml-2 text-white">{selectedImageIds.length} 張</span>
               </div>
               <div>
-                <span className="text-cosmic-400">當前格式:</span>
+                <span className="text-text-secondary/80">當前格式:</span>
                 <span className="ml-2 text-white uppercase">{exportSettings.format}</span>
               </div>
             </div>
@@ -111,8 +111,8 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
                   className={`
                     flex items-center p-4 rounded-lg border cursor-pointer transition-all
                     ${exportSettings.format === option.value
-                      ? 'border-gold-500 bg-gold-900/20'
-                      : 'border-cosmic-600 hover:border-cosmic-500'
+                      ? 'border-warm-gold bg-warm-gold/20'
+                      : 'border-warm-gold/10 hover:border-warm-gold/20'
                     }
                   `}
                 >
@@ -122,14 +122,14 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
                     value={option.value}
                     checked={exportSettings.format === option.value}
                     onChange={(e) => handleSettingChange('format', e.target.value as ExportFormat)}
-                    className="mr-3 text-gold-500"
+                    className="mr-3 text-warm-gold"
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-white">{option.label}</span>
-                      <span className="text-xs text-cosmic-400 uppercase">.{option.value}</span>
+                      <span className="text-xs text-text-secondary/80 uppercase">.{option.value}</span>
                     </div>
-                    <p className="text-sm text-cosmic-400 mt-1">{option.description}</p>
+                    <p className="text-sm text-text-secondary/80 mt-1">{option.description}</p>
                   </div>
                 </label>
               ))}
@@ -144,7 +144,7 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
               {/* 滑桿控制 */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-cosmic-300">壓縮品質</span>
+                  <span className="text-text-secondary">壓縮品質</span>
                   <span className="text-white font-mono">{exportSettings.quality}%</span>
                 </div>
                 <input
@@ -153,7 +153,7 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
                   max="100"
                   value={exportSettings.quality}
                   onChange={(e) => handleSettingChange('quality', parseInt(e.target.value))}
-                  className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+                  className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none cursor-pointer slider-thumb"
                 />
               </div>
 
@@ -167,7 +167,7 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
                       px-3 py-2 rounded text-sm transition-colors
                       ${exportSettings.quality === preset.value
                         ? 'bg-gold-600 text-white'
-                        : 'bg-cosmic-700 text-cosmic-300 hover:bg-cosmic-600'
+                        : 'bg-bg-dark/80 text-text-secondary hover:bg-bg-light'
                       }
                     `}
                   >
@@ -184,7 +184,7 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
             
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   檔名前綴
                 </label>
                 <input
@@ -192,7 +192,7 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
                   value={exportSettings.prefix}
                   onChange={(e) => handleSettingChange('prefix', e.target.value)}
                   placeholder="例如: illustration"
-                  className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white placeholder-cosmic-400"
+                  className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded text-white placeholder-cosmic-400"
                 />
               </div>
               
@@ -202,7 +202,7 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
                   <button
                     key={suggestion}
                     onClick={() => handleSettingChange('prefix', suggestion)}
-                    className="px-2 py-1 text-xs bg-cosmic-700 hover:bg-cosmic-600 text-cosmic-300 rounded transition-colors"
+                    className="px-2 py-1 text-xs bg-bg-dark/80 hover:bg-bg-light text-text-secondary rounded transition-colors"
                   >
                     {suggestion}
                   </button>
@@ -211,8 +211,8 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
             </div>
 
             {/* 檔名預覽 */}
-            <div className="bg-cosmic-700/30 rounded p-3">
-              <span className="text-sm text-cosmic-400">檔名預覽: </span>
+            <div className="bg-bg-dark/80/30 rounded p-3">
+              <span className="text-sm text-text-secondary/80">檔名預覽: </span>
               <span className="text-sm font-mono text-white">
                 {exportSettings.prefix}-2024-01-15-001.{exportSettings.format}
               </span>
@@ -228,11 +228,11 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
                 type="checkbox"
                 checked={exportSettings.includeMetadata}
                 onChange={(e) => handleSettingChange('includeMetadata', e.target.checked)}
-                className="mt-1 text-gold-500"
+                className="mt-1 text-warm-gold"
               />
               <div>
                 <span className="text-white">包含生成參數</span>
-                <p className="text-sm text-cosmic-400 mt-1">
+                <p className="text-sm text-text-secondary/80 mt-1">
                   在圖像中嵌入提示詞、模型參數等元數據信息
                 </p>
               </div>
@@ -246,13 +246,13 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
                 <span className="text-white font-medium">正在導出...</span>
                 <span className="text-warm-gold">{exportProgress}%</span>
               </div>
-              <div className="w-full bg-cosmic-700 rounded-full h-2">
+              <div className="w-full bg-bg-dark/80 rounded-full h-2">
                 <div 
                   className="bg-warm-gold/30 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${exportProgress}%` }}
                 />
               </div>
-              <p className="text-sm text-cosmic-400 mt-2">
+              <p className="text-sm text-text-secondary/80 mt-2">
                 已處理 {exportTask.exportedFiles.length} / {exportTask.imageIds.length} 張圖像
               </p>
             </div>
@@ -260,11 +260,11 @@ const ExportSettingsPanel: React.FC<ExportSettingsPanelProps> = ({
         </div>
 
         {/* 操作按鈕 */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-cosmic-700 bg-cosmic-800/50">
+        <div className="flex items-center justify-end space-x-3 p-6 border-t border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm/50">
           <button
             onClick={handleClose}
             disabled={isExporting}
-            className="px-4 py-2 text-cosmic-300 hover:text-white transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-text-secondary hover:text-white transition-colors disabled:opacity-50"
           >
             取消
           </button>

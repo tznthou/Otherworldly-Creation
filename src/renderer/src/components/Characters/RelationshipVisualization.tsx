@@ -89,7 +89,7 @@ export const RelationshipVisualization: React.FC<RelationshipVisualizationProps>
 
   if (characters.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 bg-cosmic-800 rounded-lg border-2 border-dashed border-cosmic-600">
+      <div className="flex items-center justify-center h-64 bg-bg-light/50 backdrop-blur-sm rounded-lg border-2 border-dashed border-warm-gold/10">
         <div className="text-center text-gray-400">
           <div className="text-4xl mb-2">👥</div>
           <p>沒有角色可以顯示關係圖</p>
@@ -100,7 +100,7 @@ export const RelationshipVisualization: React.FC<RelationshipVisualizationProps>
 
   if (edges.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 bg-cosmic-800 rounded-lg border-2 border-dashed border-cosmic-600">
+      <div className="flex items-center justify-center h-64 bg-bg-light/50 backdrop-blur-sm rounded-lg border-2 border-dashed border-warm-gold/10">
         <div className="text-center text-gray-400">
           <div className="text-4xl mb-2">🔗</div>
           <p>尚未建立任何角色關係</p>
@@ -111,7 +111,7 @@ export const RelationshipVisualization: React.FC<RelationshipVisualizationProps>
   }
 
   return (
-    <div className="bg-cosmic-900 rounded-lg border border-cosmic-700 p-4">
+    <div className="bg-bg-dark rounded-lg border border-warm-gold/10 p-4">
       <div className="mb-4">
         <h3 className="text-lg font-medium text-white mb-2">角色關係圖</h3>
         <div className="text-sm text-gray-300">
@@ -124,7 +124,7 @@ export const RelationshipVisualization: React.FC<RelationshipVisualizationProps>
           width="400"
           height="300"
           viewBox="0 0 400 300"
-          className="w-full h-auto border border-cosmic-600 rounded"
+          className="w-full h-auto border border-warm-gold/10 rounded"
         >
           {/* 繪製關係線 */}
           {edges.map((edge, index) => {
@@ -213,7 +213,7 @@ export const RelationshipVisualization: React.FC<RelationshipVisualizationProps>
       </div>
 
       {/* 圖例 */}
-      <div className="mt-4 pt-4 border-t border-cosmic-700">
+      <div className="mt-4 pt-4 border-t border-warm-gold/10">
         <div className="text-sm font-medium text-gray-300 mb-2">關係類型圖例：</div>
         <div className="flex flex-wrap gap-3">
           {Array.from(new Set(edges.map(e => e.type))).map((type) => (

@@ -68,19 +68,19 @@ const AiIllustrationModal: React.FC = () => {
       }}
     >
       {/* 大幅增加模態框尺寸 - 更寬敞的設計 */}
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-[calc(100vw-80px)] h-[calc(100vh-80px)] max-w-none overflow-hidden m-10">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-[calc(100vw-80px)] h-[calc(100vh-80px)] max-w-none overflow-hidden m-10">
         {/* 標題欄 */}
-        <div className="flex items-center justify-between p-6 border-b border-cosmic-700 bg-cosmic-900/95">
+        <div className="flex items-center justify-between p-6 border-b border-warm-gold/10 bg-bg-dark/95">
           <div className="flex items-center space-x-3">
             <div className="text-3xl">🎨</div>
             <div>
-              <h2 className="text-2xl font-cosmic text-gold-500">幻想具現</h2>
-              <p className="text-base text-cosmic-400">視覺創作中心 v2.0 - 寬敞版</p>
+              <h2 className="text-2xl font-serif-tc text-warm-gold">幻想具現</h2>
+              <p className="text-base text-text-secondary/80">視覺創作中心 v2.0 - 寬敞版</p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-white text-2xl transition-colors hover:bg-cosmic-800 rounded-lg w-10 h-10 flex items-center justify-center"
+            className="text-gray-400 hover:text-white text-2xl transition-colors hover:bg-bg-light/50 backdrop-blur-sm rounded-lg w-10 h-10 flex items-center justify-center"
             title="關閉 (Esc)"
           >
             ✕
@@ -92,7 +92,7 @@ const AiIllustrationModal: React.FC = () => {
           <React.Suspense 
             fallback={
               <div className="flex items-center justify-center h-full">
-                <div className="text-cosmic-400 text-lg">載入視覺創作中心...</div>
+                <div className="text-text-secondary/80 text-lg">載入視覺創作中心...</div>
               </div>
             }
           >

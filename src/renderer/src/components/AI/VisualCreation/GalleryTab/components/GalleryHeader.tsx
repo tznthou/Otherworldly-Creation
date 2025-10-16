@@ -60,7 +60,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
   onDeleteSelected,
 }) => {
   return (
-    <div className="flex-shrink-0 bg-cosmic-800/30 rounded-lg p-4 mb-4 border border-cosmic-700">
+    <div className="flex-shrink-0 bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4 mb-4 border border-warm-gold/10">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         {/* 搜索和過濾器 */}
         <div className="flex flex-col sm:flex-row gap-2 flex-1">
@@ -71,7 +71,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="搜索插畫（提示詞、版本號、標籤）..."
-              className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white placeholder-cosmic-400 text-sm"
+              className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded text-white placeholder-cosmic-400 text-sm"
             />
           </div>
           
@@ -80,7 +80,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
             <select
               value={filterProvider}
               onChange={(e) => setFilterProvider(e.target.value as 'all' | 'pollinations' | 'imagen')}
-              className="px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+              className="px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded text-white text-sm"
             >
               <option value="all">所有服務</option>
               <option value="pollinations">Pollinations (免費)</option>
@@ -90,7 +90,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as 'all' | 'completed' | 'failed')}
-              className="px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+              className="px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded text-white text-sm"
             >
               <option value="all">所有狀態</option>
               <option value="completed">已完成</option>
@@ -101,7 +101,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
             <select
               value={filterVersions}
               onChange={(e) => setFilterVersions(e.target.value as 'all' | 'latest' | 'original' | 'multiple')}
-              className="px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+              className="px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded text-white text-sm"
             >
               <option value="all">所有版本</option>
               <option value="latest">僅最新版本</option>
@@ -112,7 +112,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'date' | 'provider' | 'type' | 'version' | 'custom')}
-              className="px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+              className="px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded text-white text-sm"
             >
               <option value="date">按日期排序</option>
               <option value="provider">按服務排序</option>
@@ -126,13 +126,13 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
         {/* 視圖控制和操作 */}
         <div className="flex items-center gap-2">
           {/* 視圖模式切換 */}
-          <div className="flex bg-cosmic-700 rounded p-1">
+          <div className="flex bg-bg-dark/80 rounded p-1">
             <button
               onClick={() => setViewMode('grid')}
               className={`px-3 py-1 text-sm rounded transition-colors ${
                 viewMode === 'grid' 
                   ? 'bg-gold-600 text-white' 
-                  : 'text-cosmic-300 hover:text-white'
+                  : 'text-text-secondary hover:text-white'
               }`}
             >
               🔳 網格
@@ -142,7 +142,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
               className={`px-3 py-1 text-sm rounded transition-colors ${
                 viewMode === 'list' 
                   ? 'bg-gold-600 text-white' 
-                  : 'text-cosmic-300 hover:text-white'
+                  : 'text-text-secondary hover:text-white'
               }`}
             >
               📋 列表
@@ -152,7 +152,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
           {/* 選擇控制 */}
           <button
             onClick={toggleSelectAll}
-            className="px-3 py-1 bg-cosmic-700 hover:bg-cosmic-600 text-cosmic-200 rounded text-sm transition-colors"
+            className="px-3 py-1 bg-bg-dark/80 hover:bg-bg-light text-text-secondary/40 rounded text-sm transition-colors"
           >
             {selectedImages.size === filteredIllustrations.length ? '取消全選' : '全選'}
           </button>
@@ -160,8 +160,8 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
       </div>
       
       {/* 統計信息 */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-cosmic-700/50">
-        <div className="flex items-center space-x-4 text-sm text-cosmic-400">
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-warm-gold/10/50">
+        <div className="flex items-center space-x-4 text-sm text-text-secondary/80">
           <span>總共 {filteredIllustrations.length} 張插畫</span>
           <span>•</span>
           <span>已選擇 {selectedImages.size} 張</span>
@@ -180,7 +180,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
         {selectedImages.size > 0 && (
           <div className="flex items-center space-x-3">
             {/* 導出說明 */}
-            <div className="flex items-center text-xs text-cosmic-400">
+            <div className="flex items-center text-xs text-text-secondary/80">
               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -190,7 +190,7 @@ const GalleryHeader: React.FC<GalleryHeaderProps> = ({
             {/* 導出按鈕群組 */}
             <div className="flex items-center space-x-2">
               {/* 電子書排版功能 */}
-              <div className="flex items-center space-x-2 mr-2 pr-2 border-r border-cosmic-600">
+              <div className="flex items-center space-x-2 mr-2 pr-2 border-r border-warm-gold/10">
                 <button
                   onClick={onOpenEbookPreparation}
                   className="px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded text-sm transition-colors flex items-center gap-1"

@@ -108,7 +108,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
 
         {/* 專案標題 */}
-        <h3 className="text-lg font-medium text-gold-400 group-hover:text-gold-300 mb-2 line-clamp-2">
+        <h3 className="text-lg font-medium text-warm-gold group-hover:text-warm-gold mb-2 line-clamp-2">
           {project.name}
         </h3>
 
@@ -118,7 +118,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </p>
 
         {/* 專案統計 */}
-        <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-cosmic-700">
+        <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-warm-gold/10">
           <div className="flex items-center space-x-4">
             <span>📝 {chapterCount} 章節</span>
             <span>👥 {characterCount} 角色</span>

@@ -212,11 +212,11 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
 
   if (isLoading) {
     return (
-      <div className={`bg-cosmic-800/95 border border-cosmic-700 rounded-lg shadow-xl p-8 ${className}`}>
+      <div className={`bg-bg-light/50 backdrop-blur-sm/95 border border-warm-gold/10 rounded-lg shadow-xl p-8 ${className}`}>
         <div className="flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-600 mx-auto mb-4"></div>
-            <p className="text-cosmic-400">載入電子書整合資料中...</p>
+            <p className="text-text-secondary/80">載入電子書整合資料中...</p>
           </div>
         </div>
       </div>
@@ -225,27 +225,27 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
 
   return (
     <div 
-      className={`relative isolate bg-cosmic-800/95 border border-cosmic-700 rounded-lg shadow-xl ${className}`}
+      className={`relative isolate bg-bg-light/50 backdrop-blur-sm/95 border border-warm-gold/10 rounded-lg shadow-xl ${className}`}
       style={{ zIndex: 1100 }}
     >
       {/* 標題列 */}
-      <div className="flex items-center justify-between p-4 border-b border-cosmic-700">
+      <div className="flex items-center justify-between p-4 border-b border-warm-gold/10">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gold-600/20 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 bg-warm-gold/20 rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-warm-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-medium text-cosmic-100">電子書整合</h3>
-            <p className="text-sm text-cosmic-400">
+            <h3 className="text-lg font-medium text-text-secondary/20">電子書整合</h3>
+            <p className="text-sm text-text-secondary/80">
               {integrationData ? `${integrationData.totalImages} 張圖片，預估增加 ${totalEstimatedSize.toFixed(1)} MB` : '載入中...'}
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-2 text-cosmic-400 hover:text-cosmic-200 hover:bg-cosmic-700 rounded-lg transition-colors"
+          className="p-2 text-text-secondary/80 hover:text-text-secondary/40 hover:bg-bg-dark/80 rounded-lg transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -254,7 +254,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
       </div>
 
       {/* 頁籤導航 */}
-      <div className="flex border-b border-cosmic-700">
+      <div className="flex border-b border-warm-gold/10">
         {[
           { id: 'overview', name: '概覽', icon: '📊' },
           { id: 'placement', name: '位置配置', icon: '📍' },
@@ -266,8 +266,8 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
             onClick={() => setSelectedTab(tab.id as 'overview' | 'placement' | 'settings' | 'preview')}
             className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors ${
               selectedTab === tab.id
-                ? 'text-gold-400 border-b-2 border-gold-500 bg-gold-500/10'
-                : 'text-cosmic-400 hover:text-cosmic-300 hover:bg-cosmic-700/50'
+                ? 'text-warm-gold border-b-2 border-warm-gold bg-warm-gold/50/10'
+                : 'text-text-secondary/80 hover:text-text-secondary hover:bg-bg-dark/80/50'
             }`}
           >
             <span>{tab.icon}</span>
@@ -282,33 +282,33 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
           <div className="space-y-6">
             {/* 統計卡片 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-cosmic-800/50 rounded-lg p-4">
-                <div className="text-2xl font-bold text-gold-400">{integrationData.totalImages}</div>
-                <div className="text-sm text-cosmic-400">總圖片數</div>
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4">
+                <div className="text-2xl font-bold text-warm-gold">{integrationData.totalImages}</div>
+                <div className="text-sm text-text-secondary/80">總圖片數</div>
               </div>
-              <div className="bg-cosmic-800/50 rounded-lg p-4">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4">
                 <div className="text-2xl font-bold text-green-400">{integrationData.processedImages}</div>
-                <div className="text-sm text-cosmic-400">已處理</div>
+                <div className="text-sm text-text-secondary/80">已處理</div>
               </div>
-              <div className="bg-cosmic-800/50 rounded-lg p-4">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4">
                 <div className="text-2xl font-bold text-warm-gold">{enabledPlacements}</div>
-                <div className="text-sm text-cosmic-400">啟用位置</div>
+                <div className="text-sm text-text-secondary/80">啟用位置</div>
               </div>
-              <div className="bg-cosmic-800/50 rounded-lg p-4">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4">
                 <div className="text-2xl font-bold text-clay-orange">{totalEstimatedSize.toFixed(1)} MB</div>
-                <div className="text-sm text-cosmic-400">預估大小</div>
+                <div className="text-sm text-text-secondary/80">預估大小</div>
               </div>
             </div>
 
             {/* 章節圖片分佈 */}
             <div className="space-y-4">
-              <h4 className="text-lg font-medium text-cosmic-200">章節圖片分佈</h4>
+              <h4 className="text-lg font-medium text-text-secondary/40">章節圖片分佈</h4>
               <div className="space-y-3">
                 {integrationData.byChapter.map((chapter) => (
-                  <div key={chapter.chapterId} className="bg-cosmic-800/50 rounded-lg p-4">
+                  <div key={chapter.chapterId} className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h5 className="font-medium text-cosmic-200">{chapter.chapterTitle}</h5>
-                      <div className="text-sm text-cosmic-400">
+                      <h5 className="font-medium text-text-secondary/40">{chapter.chapterTitle}</h5>
+                      <div className="text-sm text-text-secondary/80">
                         {chapter.imageCount} 張圖片 • {chapter.totalSize} MB
                       </div>
                     </div>
@@ -317,11 +317,11 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                         <div key={index} className="flex items-center justify-between text-sm">
                           <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-gold-400 rounded-full"></div>
-                            <span className="text-cosmic-300">
+                            <span className="text-text-secondary">
                               {placementOptions.find(p => p.value === placement.placement)?.label}
                             </span>
                           </div>
-                          <span className="text-cosmic-400">{placement.images.length} 張</span>
+                          <span className="text-text-secondary/80">{placement.images.length} 張</span>
                         </div>
                       ))}
                     </div>
@@ -333,18 +333,18 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
             {/* 全域圖片 */}
             {integrationData.globalImages.length > 0 && (
               <div className="space-y-4">
-                <h4 className="text-lg font-medium text-cosmic-200">全域圖片</h4>
+                <h4 className="text-lg font-medium text-text-secondary/40">全域圖片</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {integrationData.globalImages.map((image) => (
-                    <div key={image.imageId} className="bg-cosmic-800/50 rounded-lg p-4">
+                    <div key={image.imageId} className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h5 className="font-medium text-cosmic-200 truncate">{image.filename}</h5>
-                        <span className="text-xs bg-gold-600/20 text-gold-400 px-2 py-1 rounded">
+                        <h5 className="font-medium text-text-secondary/40 truncate">{image.filename}</h5>
+                        <span className="text-xs bg-warm-gold/20 text-warm-gold px-2 py-1 rounded">
                           {placementOptions.find(p => p.value === image.placement)?.icon}
                         </span>
                       </div>
-                      <p className="text-sm text-cosmic-400">{image.description}</p>
-                      <div className="mt-2 text-xs text-cosmic-500">
+                      <p className="text-sm text-text-secondary/80">{image.description}</p>
+                      <div className="mt-2 text-xs text-text-secondary">
                         類別: {image.category} • 位置: {placementOptions.find(p => p.value === image.placement)?.label}
                       </div>
                     </div>
@@ -358,22 +358,22 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
         {/* 位置配置頁籤 */}
         {selectedTab === 'placement' && (
           <div className="space-y-6">
-            <div className="text-sm text-cosmic-400">
+            <div className="text-sm text-text-secondary/80">
               配置不同位置類型的圖片顯示規則和品質設定
             </div>
             <div className="space-y-4">
               {placementOptions.map((option) => {
                 const rule = exportConfig.imagePlacementRules[option.value];
                 return (
-                  <div key={option.value} className="bg-cosmic-800/50 rounded-lg p-4">
+                  <div key={option.value} className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-cosmic-700 rounded-lg flex items-center justify-center text-lg">
+                        <div className="w-8 h-8 bg-bg-dark/80 rounded-lg flex items-center justify-center text-lg">
                           {option.icon}
                         </div>
                         <div>
-                          <h5 className="font-medium text-cosmic-200">{option.label}</h5>
-                          <p className="text-sm text-cosmic-400">{option.description}</p>
+                          <h5 className="font-medium text-text-secondary/40">{option.label}</h5>
+                          <p className="text-sm text-text-secondary/80">{option.description}</p>
                         </div>
                       </div>
                       <label className="flex items-center space-x-2">
@@ -381,16 +381,16 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                           type="checkbox"
                           checked={rule.enabled}
                           onChange={(e) => updatePlacementRule(option.value, { enabled: e.target.checked })}
-                          className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                          className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                         />
-                        <span className="text-sm text-cosmic-300">啟用</span>
+                        <span className="text-sm text-text-secondary">啟用</span>
                       </label>
                     </div>
                     
                     {rule.enabled && (
-                      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-cosmic-700">
+                      <div className="grid grid-cols-2 gap-4 pt-3 border-t border-warm-gold/10">
                         <div>
-                          <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                          <label className="block text-sm font-medium text-text-secondary mb-2">
                             最大尺寸: {rule.maxSize}px
                           </label>
                           <input
@@ -400,11 +400,11 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                             step="100"
                             value={rule.maxSize || 1000}
                             onChange={(e) => updatePlacementRule(option.value, { maxSize: parseInt(e.target.value) })}
-                            className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none slider"
+                            className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none slider"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                          <label className="block text-sm font-medium text-text-secondary mb-2">
                             品質: {rule.quality}%
                           </label>
                           <input
@@ -414,7 +414,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                             step="5"
                             value={rule.quality || 85}
                             onChange={(e) => updatePlacementRule(option.value, { quality: parseInt(e.target.value) })}
-                            className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none slider"
+                            className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none slider"
                           />
                         </div>
                       </div>
@@ -431,7 +431,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
           <div className="space-y-6">
             {/* 品質預設 */}
             <div className="space-y-4">
-              <h4 className="text-lg font-medium text-cosmic-200">品質預設</h4>
+              <h4 className="text-lg font-medium text-text-secondary/40">品質預設</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {qualityPresets.map((preset) => (
                   <button
@@ -442,13 +442,13 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                     })}
                     className={`p-4 text-left rounded-lg border transition-all ${
                       exportConfig.imageQuality === preset.quality
-                        ? 'border-gold-500 bg-gold-600/10'
-                        : 'border-cosmic-600 bg-cosmic-800/50 hover:border-cosmic-500'
+                        ? 'border-warm-gold bg-warm-gold/10'
+                        : 'border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm/50 hover:border-warm-gold/20'
                     }`}
                   >
-                    <h5 className="font-medium text-cosmic-200">{preset.name}</h5>
-                    <p className="text-sm text-cosmic-400 mt-1">{preset.description}</p>
-                    <div className="text-xs text-gold-400 mt-2">品質: {preset.quality}%</div>
+                    <h5 className="font-medium text-text-secondary/40">{preset.name}</h5>
+                    <p className="text-sm text-text-secondary/80 mt-1">{preset.description}</p>
+                    <div className="text-xs text-warm-gold mt-2">品質: {preset.quality}%</div>
                   </button>
                 ))}
               </div>
@@ -456,11 +456,11 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
 
             {/* 詳細設定 */}
             <div className="space-y-4">
-              <h4 className="text-lg font-medium text-cosmic-200">詳細設定</h4>
-              <div className="bg-cosmic-800/50 rounded-lg p-4 space-y-4">
+              <h4 className="text-lg font-medium text-text-secondary/40">詳細設定</h4>
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4 space-y-4">
                 {/* 圖片品質 */}
                 <div>
-                  <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
                     整體圖片品質: {exportConfig.imageQuality}%
                   </label>
                   <input
@@ -470,14 +470,14 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                     step="5"
                     value={exportConfig.imageQuality}
                     onChange={(e) => updateConfig({ imageQuality: parseInt(e.target.value) })}
-                    className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none slider"
+                    className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none slider"
                   />
                 </div>
 
                 {/* 尺寸限制 */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       最大寬度: {exportConfig.maxImageWidth}px
                     </label>
                     <input
@@ -487,11 +487,11 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                       step="100"
                       value={exportConfig.maxImageWidth}
                       onChange={(e) => updateConfig({ maxImageWidth: parseInt(e.target.value) })}
-                      className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none slider"
+                      className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none slider"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       最大高度: {exportConfig.maxImageHeight}px
                     </label>
                     <input
@@ -501,7 +501,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                       step="100"
                       value={exportConfig.maxImageHeight}
                       onChange={(e) => updateConfig({ maxImageHeight: parseInt(e.target.value) })}
-                      className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none slider"
+                      className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none slider"
                     />
                   </div>
                 </div>
@@ -513,27 +513,27 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                       type="checkbox"
                       checked={exportConfig.includeImageMetadata}
                       onChange={(e) => updateConfig({ includeImageMetadata: e.target.checked })}
-                      className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                      className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                     />
-                    <span className="text-sm text-cosmic-300">包含圖片元數據</span>
+                    <span className="text-sm text-text-secondary">包含圖片元數據</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       checked={exportConfig.includeAltText}
                       onChange={(e) => updateConfig({ includeAltText: e.target.checked })}
-                      className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                      className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                     />
-                    <span className="text-sm text-cosmic-300">包含替代文字</span>
+                    <span className="text-sm text-text-secondary">包含替代文字</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       checked={exportConfig.includeDescriptions}
                       onChange={(e) => updateConfig({ includeDescriptions: e.target.checked })}
-                      className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                      className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                     />
-                    <span className="text-sm text-cosmic-300">包含圖片描述</span>
+                    <span className="text-sm text-text-secondary">包含圖片描述</span>
                   </label>
                 </div>
               </div>
@@ -544,7 +544,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
         {/* 預覽頁籤 */}
         {selectedTab === 'preview' && (
           <div className="space-y-6">
-            <div className="text-center py-8 text-cosmic-400">
+            <div className="text-center py-8 text-text-secondary/80">
               <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -558,15 +558,15 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
       </div>
 
       {/* 底部操作區 */}
-      <div className="border-t border-cosmic-700 p-4">
+      <div className="border-t border-warm-gold/10 p-4">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-cosmic-400">
+          <div className="text-sm text-text-secondary/80">
             預估電子書增加大小: {totalEstimatedSize.toFixed(1)} MB
           </div>
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-cosmic-300 hover:text-cosmic-100 hover:bg-cosmic-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-text-secondary hover:text-text-secondary/20 hover:bg-bg-dark/80 rounded-lg transition-colors"
             >
               取消
             </button>

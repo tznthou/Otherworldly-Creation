@@ -150,10 +150,10 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
   return (
     <>
       <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-        <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-md">
+        <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-md">
           {/* 標題 */}
-          <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
-            <h2 className="text-xl font-cosmic text-gold-500">管理章節</h2>
+          <div className="p-6 border-b border-warm-gold/10 flex items-center justify-between">
+            <h2 className="text-xl font-serif-tc text-warm-gold">管理章節</h2>
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-white"
@@ -171,8 +171,8 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
                 value={chapterTitle}
                 onChange={(e) => setChapterTitle(e.target.value)}
                 placeholder="輸入章節標題"
-                className={`w-full bg-cosmic-800 border ${
-                  errors.title ? 'border-red-500' : 'border-cosmic-700'
+                className={`w-full bg-bg-light/50 backdrop-blur-sm border ${
+                  errors.title ? 'border-red-500' : 'border-warm-gold/10'
                 } rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500`}
               />
               {errors.title && (
@@ -186,7 +186,7 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
                 <button
                   onClick={() => setChapterOrder(Math.max(1, chapterOrder - 1))}
                   disabled={chapterOrder <= 1}
-                  className="bg-cosmic-800 text-gray-300 px-3 py-2 rounded-l-lg hover:bg-cosmic-700 disabled:opacity-50"
+                  className="bg-bg-light/50 backdrop-blur-sm text-gray-300 px-3 py-2 rounded-l-lg hover:bg-bg-dark/80 disabled:opacity-50"
                 >
                   -
                 </button>
@@ -196,12 +196,12 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
                   onChange={(e) => setChapterOrder(Math.max(1, Math.min(allChapters.length, parseInt(e.target.value) || 1)))}
                   min={1}
                   max={allChapters.length}
-                  className="w-16 bg-cosmic-800 border-y border-cosmic-700 px-3 py-2 text-white text-center focus:outline-none"
+                  className="w-16 bg-bg-light/50 backdrop-blur-sm border-y border-warm-gold/10 px-3 py-2 text-white text-center focus:outline-none"
                 />
                 <button
                   onClick={() => setChapterOrder(Math.min(allChapters.length, chapterOrder + 1))}
                   disabled={chapterOrder >= allChapters.length}
-                  className="bg-cosmic-800 text-gray-300 px-3 py-2 rounded-r-lg hover:bg-cosmic-700 disabled:opacity-50"
+                  className="bg-bg-light/50 backdrop-blur-sm text-gray-300 px-3 py-2 rounded-r-lg hover:bg-bg-dark/80 disabled:opacity-50"
                 >
                   +
                 </button>
@@ -212,8 +212,8 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
             </div>
 
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gold-400 mb-4">章節資訊</h3>
-              <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+              <h3 className="text-lg font-medium text-warm-gold mb-4">章節資訊</h3>
+              <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-400">創建時間：</span>
@@ -239,19 +239,19 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
                   </div>
                 </div>
                 
-                <div className="mt-4 pt-4 border-t border-cosmic-700">
-                  <h4 className="text-sm font-medium text-gold-400 mb-2">章節操作</h4>
+                <div className="mt-4 pt-4 border-t border-warm-gold/10">
+                  <h4 className="text-sm font-medium text-warm-gold mb-2">章節操作</h4>
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => navigator.clipboard.writeText(chapter.title)}
-                      className="bg-cosmic-700 hover:bg-cosmic-600 text-white text-xs px-3 py-1 rounded-lg flex items-center"
+                      className="bg-bg-dark/80 hover:bg-bg-light text-white text-xs px-3 py-1 rounded-lg flex items-center"
                     >
                       <span className="mr-1">📋</span>
                       複製標題
                     </button>
                     <button
                       onClick={() => navigator.clipboard.writeText(JSON.stringify(chapter.content))}
-                      className="bg-cosmic-700 hover:bg-cosmic-600 text-white text-xs px-3 py-1 rounded-lg flex items-center"
+                      className="bg-bg-dark/80 hover:bg-bg-light text-white text-xs px-3 py-1 rounded-lg flex items-center"
                     >
                       <span className="mr-1">📋</span>
                       複製內容
@@ -261,7 +261,7 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
                         const date = new Date();
                         setChapterTitle(`${chapter.title} (複本 ${date.getMonth() + 1}/${date.getDate()})`);
                       }}
-                      className="bg-cosmic-700 hover:bg-cosmic-600 text-white text-xs px-3 py-1 rounded-lg flex items-center"
+                      className="bg-bg-dark/80 hover:bg-bg-light text-white text-xs px-3 py-1 rounded-lg flex items-center"
                     >
                       <span className="mr-1">🔄</span>
                       標記為複本
@@ -289,7 +289,7 @@ const ChapterManageModal: React.FC<ChapterManageModalProps> = ({
           </div>
 
           {/* 底部按鈕 */}
-          <div className="p-6 border-t border-cosmic-700 flex justify-end space-x-4">
+          <div className="p-6 border-t border-warm-gold/10 flex justify-end space-x-4">
             <button
               onClick={handleClose}
               className="btn-secondary"

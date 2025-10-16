@@ -53,7 +53,7 @@ const TIER_CONFIG = {
   },
   nectar: {
     label: 'Nectar',
-    color: 'text-gold-400',
+    color: 'text-warm-gold',
     bgColor: 'bg-gold-700',
     borderColor: 'border-gold-600',
     icon: '🍯',
@@ -151,14 +151,14 @@ const PollinationsAuthStatus: React.FC<PollinationsAuthStatusProps> = ({
 
       {/* 詳細資訊 */}
       {showDetails && (
-        <div className="flex flex-col text-xs text-cosmic-300">
+        <div className="flex flex-col text-xs text-text-secondary">
           <div className="flex items-center space-x-1">
             <span>速率:</span>
             <span className={config.color}>{config.rateLimit}</span>
           </div>
           <div className="flex items-center space-x-1">
             <span>模型:</span>
-            <span className="text-cosmic-400">{config.models.join(', ')}</span>
+            <span className="text-text-secondary/80">{config.models.join(', ')}</span>
           </div>
         </div>
       )}

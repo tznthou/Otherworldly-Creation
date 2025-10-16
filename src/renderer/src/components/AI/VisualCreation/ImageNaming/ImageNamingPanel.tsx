@@ -137,23 +137,23 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
   const hasWarnings = previewResults.some(result => result.warnings.length > 0);
 
   return (
-    <div className={`bg-cosmic-800/95 border border-cosmic-700 rounded-lg shadow-xl ${className}`}>
+    <div className={`bg-bg-light/50 backdrop-blur-sm/95 border border-warm-gold/10 rounded-lg shadow-xl ${className}`}>
       {/* 標題列 */}
-      <div className="flex items-center justify-between p-4 border-b border-cosmic-700">
+      <div className="flex items-center justify-between p-4 border-b border-warm-gold/10">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gold-600/20 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 bg-warm-gold/20 rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-warm-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z" />
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-medium text-cosmic-100">批次重命名</h3>
-            <p className="text-sm text-cosmic-400">已選擇 {selectedImageIds.length} 張圖片</p>
+            <h3 className="text-lg font-medium text-text-secondary/20">批次重命名</h3>
+            <p className="text-sm text-text-secondary/80">已選擇 {selectedImageIds.length} 張圖片</p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-2 text-cosmic-400 hover:text-cosmic-200 hover:bg-cosmic-700 rounded-lg transition-colors"
+          className="p-2 text-text-secondary/80 hover:text-text-secondary/40 hover:bg-bg-dark/80 rounded-lg transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -164,7 +164,7 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
       <div className="p-4 space-y-6">
         {/* 模板選擇 */}
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-cosmic-300">命名模板</label>
+          <label className="block text-sm font-medium text-text-secondary">命名模板</label>
           <div className="grid grid-cols-2 gap-2">
             {templateOptions.map((option) => (
               <button
@@ -172,12 +172,12 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
                 onClick={() => handleTemplateChange(option.id)}
                 className={`p-3 text-left rounded-lg border transition-all ${
                   selectedTemplate === option.id
-                    ? 'border-gold-500 bg-gold-600/10 text-gold-200'
-                    : 'border-cosmic-600 bg-cosmic-800/50 text-cosmic-300 hover:border-cosmic-500 hover:bg-cosmic-700/50'
+                    ? 'border-warm-gold bg-warm-gold/10 text-warm-gold/80'
+                    : 'border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm/50 text-text-secondary hover:border-warm-gold/20 hover:bg-bg-dark/80/50'
                 }`}
               >
                 <div className="font-medium">{option.name}</div>
-                <div className="text-xs text-cosmic-400 mt-1 font-mono">
+                <div className="text-xs text-text-secondary/80 mt-1 font-mono">
                   {option.template}
                 </div>
               </button>
@@ -187,18 +187,18 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
 
         {/* 自訂模板 */}
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-cosmic-300">自訂模板</label>
+          <label className="block text-sm font-medium text-text-secondary">自訂模板</label>
           <div className="relative">
             <input
               type="text"
               value={namingConfig.template}
               onChange={(e) => handleConfigChange({ template: e.target.value })}
-              className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent font-mono text-sm"
+              className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 text-text-secondary/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent font-mono text-sm"
               placeholder="輸入命名模板..."
             />
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-cosmic-400 hover:text-cosmic-200"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-text-secondary/80 hover:text-text-secondary/40"
               title="顯示變數說明"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,11 +211,11 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
         {/* 變數說明 */}
         {showAdvanced && (
           <div className="space-y-3">
-            <div className="text-sm font-medium text-cosmic-300">可用變數</div>
-            <div className="bg-cosmic-800/50 rounded-lg p-3 max-h-48 overflow-y-auto">
+            <div className="text-sm font-medium text-text-secondary">可用變數</div>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-3 max-h-48 overflow-y-auto">
               {Object.entries(variablesByCategory).map(([category, variables]) => (
                 <div key={category} className="mb-4 last:mb-0">
-                  <div className="text-xs font-medium text-cosmic-400 uppercase tracking-wide mb-2">
+                  <div className="text-xs font-medium text-text-secondary/80 uppercase tracking-wide mb-2">
                     {category}
                   </div>
                   <div className="grid grid-cols-2 gap-1">
@@ -223,13 +223,13 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
                       <button
                         key={variable.name}
                         onClick={() => insertVariable(variable.name)}
-                        className="text-left p-2 rounded hover:bg-cosmic-700 text-xs group"
+                        className="text-left p-2 rounded hover:bg-bg-dark/80 text-xs group"
                         title={variable.description}
                       >
-                        <div className="font-mono text-gold-400 group-hover:text-gold-300">
+                        <div className="font-mono text-warm-gold group-hover:text-warm-gold">
                           {`{${variable.name}}`}
                         </div>
-                        <div className="text-cosmic-500 group-hover:text-cosmic-400 truncate">
+                        <div className="text-text-secondary group-hover:text-text-secondary/80 truncate">
                           {variable.example}
                         </div>
                       </button>
@@ -248,42 +248,42 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
               type="checkbox"
               checked={namingConfig.includeTimestamp}
               onChange={(e) => handleConfigChange({ includeTimestamp: e.target.checked })}
-              className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+              className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
             />
-            <span className="text-sm text-cosmic-300">包含時間戳</span>
+            <span className="text-sm text-text-secondary">包含時間戳</span>
           </label>
           <label className="flex items-center space-x-2">
             <input
               type="checkbox"
               checked={namingConfig.sanitizeSpecialChars}
               onChange={(e) => handleConfigChange({ sanitizeSpecialChars: e.target.checked })}
-              className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+              className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
             />
-            <span className="text-sm text-cosmic-300">清理特殊字元</span>
+            <span className="text-sm text-text-secondary">清理特殊字元</span>
           </label>
           <label className="flex items-center space-x-2">
             <input
               type="checkbox"
               checked={namingConfig.includeChapterInfo}
               onChange={(e) => handleConfigChange({ includeChapterInfo: e.target.checked })}
-              className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+              className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
             />
-            <span className="text-sm text-cosmic-300">包含章節資訊</span>
+            <span className="text-sm text-text-secondary">包含章節資訊</span>
           </label>
           <label className="flex items-center space-x-2">
             <input
               type="checkbox"
               checked={namingConfig.includeCharacterInfo}
               onChange={(e) => handleConfigChange({ includeCharacterInfo: e.target.checked })}
-              className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+              className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
             />
-            <span className="text-sm text-cosmic-300">包含角色資訊</span>
+            <span className="text-sm text-text-secondary">包含角色資訊</span>
           </label>
         </div>
 
         {/* 檔名長度限制 */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-cosmic-300">
+          <label className="block text-sm font-medium text-text-secondary">
             檔名最大長度: {namingConfig.maxLength}
           </label>
           <input
@@ -293,26 +293,26 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
             step="10"
             value={namingConfig.maxLength}
             onChange={(e) => handleConfigChange({ maxLength: parseInt(e.target.value) })}
-            className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none slider"
+            className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none slider"
           />
         </div>
 
         {/* 預覽區域 */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-cosmic-300">重命名預覽</span>
+            <span className="text-sm font-medium text-text-secondary">重命名預覽</span>
             {isPreviewLoading && (
-              <div className="w-4 h-4 border-2 border-gold-400 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-4 h-4 border-2 border-warm-gold border-t-transparent rounded-full animate-spin"></div>
             )}
           </div>
           
           {previewResults.length > 0 && (
-            <div className="bg-cosmic-800/50 rounded-lg p-3 max-h-48 overflow-y-auto">
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-3 max-h-48 overflow-y-auto">
               <div className="space-y-2">
                 {previewResults.slice(0, 5).map((result, index) => (
                   <div key={index} className="flex items-center justify-between text-xs">
                     <div className="flex-1 min-w-0">
-                      <div className="text-cosmic-400 truncate">{result.originalName}</div>
+                      <div className="text-text-secondary/80 truncate">{result.originalName}</div>
                       <div className={`font-mono truncate ${
                         result.conflicts ? 'text-red-400' : 'text-green-400'
                       }`}>
@@ -329,7 +329,7 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
                   </div>
                 ))}
                 {previewResults.length > 5 && (
-                  <div className="text-xs text-cosmic-500 text-center pt-2 border-t border-cosmic-700">
+                  <div className="text-xs text-text-secondary text-center pt-2 border-t border-warm-gold/10">
                     還有 {previewResults.length - 5} 個檔案...
                   </div>
                 )}
@@ -361,17 +361,17 @@ export const ImageNamingPanel: React.FC<ImageNamingPanelProps> = ({
         )}
 
         {/* 操作按鈕 */}
-        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-cosmic-700">
+        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-warm-gold/10">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-cosmic-300 hover:text-cosmic-100 hover:bg-cosmic-700 rounded-lg transition-colors"
+            className="px-4 py-2 text-text-secondary hover:text-text-secondary/20 hover:bg-bg-dark/80 rounded-lg transition-colors"
           >
             取消
           </button>
           <button
             onClick={generatePreview}
             disabled={isPreviewLoading}
-            className="px-4 py-2 bg-cosmic-600 text-cosmic-200 hover:bg-cosmic-500 hover:text-cosmic-100 rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-bg-light text-text-secondary/40 hover:bg-bg-light hover:text-text-secondary/20 rounded-lg transition-colors disabled:opacity-50"
           >
             重新預覽
           </button>

@@ -81,7 +81,7 @@ const ProgressManager: React.FC<ProgressManagerProps> = ({
           <div className="flex items-center justify-center">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="bg-cosmic-800/80 backdrop-blur-sm border border-cosmic-600 rounded-lg px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+              className="bg-bg-light/50 backdrop-blur-sm/80 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors"
             >
               {isExpanded ? (
                 <>
@@ -104,14 +104,14 @@ const ProgressManager: React.FC<ProgressManagerProps> = ({
 
         {/* 整體進度摘要 */}
         {runningProgress.length > 1 && (
-          <div className="bg-cosmic-800/80 backdrop-blur-sm border border-cosmic-600 rounded-lg p-2">
+          <div className="bg-bg-light/50 backdrop-blur-sm/80 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-2">
             <div className="flex items-center justify-between text-xs text-gray-400">
               <span>總進度</span>
               <span>
                 {runningProgress.length} 個任務進行中
               </span>
             </div>
-            <div className="w-full bg-cosmic-700 rounded-full h-1 mt-1">
+            <div className="w-full bg-bg-dark/80 rounded-full h-1 mt-1">
               <div
                 className="h-1 rounded-full bg-warm-gold transition-all duration-300"
                 style={{

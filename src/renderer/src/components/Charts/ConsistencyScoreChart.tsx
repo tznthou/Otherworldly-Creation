@@ -104,10 +104,10 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-cosmic-900 border border-gold-600/30 rounded-lg p-3 shadow-lg max-w-64">
-          <p className="text-gold-400 font-bold text-sm">{data.fullName}</p>
+        <div className="bg-bg-dark border border-warm-gold/30 rounded-lg p-3 shadow-lg max-w-64">
+          <p className="text-warm-gold font-bold text-sm">{data.fullName}</p>
           <p className="text-white text-sm mb-2">
-            評分: <span className="text-gold-300 font-medium">{data.score}%</span>
+            評分: <span className="text-warm-gold font-medium">{data.score}%</span>
           </p>
           <p className="text-gray-300 text-xs mb-2 leading-tight">
             {data.description}
@@ -136,7 +136,7 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
       {/* 標題和總體指標 */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-gold-400 font-bold text-sm flex items-center">
+          <h4 className="text-warm-gold font-bold text-sm flex items-center">
             <span className="mr-2">📈</span>
             一致性分析圖表
           </h4>
@@ -166,8 +166,8 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
       </div>
 
       {/* 一致性評分條形圖 */}
-      <div className="bg-cosmic-800/30 rounded-lg p-5 mb-6">
-        <h5 className="text-gold-300 font-medium text-sm mb-4 flex items-center">
+      <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-5 mb-6">
+        <h5 className="text-warm-gold font-medium text-sm mb-4 flex items-center">
           <span className="mr-2">📊</span>
           各維度一致性評分
         </h5>
@@ -201,8 +201,8 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
 
       {/* 問題標記列表 */}
       {issues.length > 0 && (
-        <div className="bg-cosmic-800/30 rounded-lg p-5 mb-6">
-          <h5 className="text-gold-300 font-medium text-sm mb-4 flex items-center">
+        <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-5 mb-6">
+          <h5 className="text-warm-gold font-medium text-sm mb-4 flex items-center">
             <span className="mr-2">⚠️</span>
             發現的一致性問題
           </h5>
@@ -240,7 +240,7 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
                 <p className="text-gray-300 text-sm leading-relaxed mb-3">
                   {issue.description}
                 </p>
-                <div className="flex items-center text-xs text-gray-400 pt-2 border-t border-cosmic-600/30">
+                <div className="flex items-center text-xs text-gray-400 pt-2 border-t border-warm-gold/10/30">
                   <span className="mr-2">📍 涉及章節：</span>
                   <span>{issue.chapters.join(', ')}</span>
                 </div>
@@ -251,9 +251,9 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
       )}
 
       {/* 總體評估和建議 */}
-      <div className="p-5 bg-cosmic-700/20 rounded-lg border border-gold-600/20">
+      <div className="p-5 bg-bg-dark/80/20 rounded-lg border border-gold-600/20">
         <div className="flex items-center mb-3">
-          <span className="text-gold-400 text-base font-medium">📋 一致性總評</span>
+          <span className="text-warm-gold text-base font-medium">📋 一致性總評</span>
         </div>
         <div className="space-y-3 text-sm">
           <div className="flex items-center justify-between">
@@ -279,7 +279,7 @@ const ConsistencyScoreChart: React.FC<ConsistencyScoreChartProps> = ({
             }
           </p>
           {totalIssues > 0 && (
-            <div className="mt-2 pt-2 border-t border-cosmic-600">
+            <div className="mt-2 pt-2 border-t border-warm-gold/10">
               <p className="text-gray-400 mb-1">
                 改進建議：優先處理 <span className="text-red-400 font-medium">{criticalIssues}</span> 個嚴重問題
               </p>

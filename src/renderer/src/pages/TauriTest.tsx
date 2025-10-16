@@ -34,20 +34,20 @@ const TauriTest: React.FC = () => {
   };
 
   return (
-    <div className="p-8 bg-cosmic-900 min-h-screen text-white">
+    <div className="p-8 bg-bg-dark min-h-screen text-white">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-gold-400">
+        <h1 className="text-3xl font-bold mb-6 text-warm-gold">
           Tauri 遷移測試頁面
         </h1>
         
         <div className="space-y-4">
-          <div className="bg-cosmic-800 p-4 rounded-lg">
+          <div className="bg-bg-light/50 backdrop-blur-sm p-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-2">環境信息</h2>
-            <p>運行環境: <span className="text-gold-400">{environment}</span></p>
-            <p>應用版本: <span className="text-gold-400">{version || '獲取中...'}</span></p>
+            <p>運行環境: <span className="text-warm-gold">{environment}</span></p>
+            <p>應用版本: <span className="text-warm-gold">{version || '獲取中...'}</span></p>
           </div>
 
-          <div className="bg-cosmic-800 p-4 rounded-lg">
+          <div className="bg-bg-light/50 backdrop-blur-sm p-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-4">功能測試</h2>
             <div className="space-x-4">
               <button
@@ -65,7 +65,7 @@ const TauriTest: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-cosmic-800 p-4 rounded-lg">
+          <div className="bg-bg-light/50 backdrop-blur-sm p-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-2">遷移進度</h2>
             <ul className="space-y-2 text-sm">
               <li className="flex items-center">

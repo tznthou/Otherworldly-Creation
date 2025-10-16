@@ -80,7 +80,7 @@ export const Menu: React.FC<MenuProps> = ({
       {isOpen && (
         <div 
           ref={menuRef}
-          className={`absolute z-50 min-w-[180px] bg-cosmic-800 border border-cosmic-700 rounded-lg shadow-lg py-1 ${getPositionClasses()} ${className}`}
+          className={`absolute z-50 min-w-[180px] bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg shadow-lg py-1 ${getPositionClasses()} ${className}`}
         >
           {React.Children.map(children, child => {
             if (React.isValidElement(child)) {
@@ -118,7 +118,7 @@ export const MenuItem: React.FC<MenuItemProps & { closeMenu?: () => void }> = ({
 
   return (
     <div 
-      className={`px-4 py-2 flex items-center text-sm cursor-pointer hover:bg-cosmic-700 transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      className={`px-4 py-2 flex items-center text-sm cursor-pointer hover:bg-bg-dark/80 transition-colors ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       onClick={handleClick}
     >
       {icon && <span className="mr-2">{icon}</span>}

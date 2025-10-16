@@ -259,9 +259,9 @@ const ChapterStatusPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="h-full bg-cosmic-950 text-white p-6 flex items-center justify-center">
-        <div className="text-gold-400">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-400 mx-auto mb-4"></div>
+      <div className="h-full bg-bg-dark text-white p-6 flex items-center justify-center">
+        <div className="text-warm-gold">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-gold mx-auto mb-4"></div>
           載入章節資料中...
         </div>
       </div>
@@ -270,7 +270,7 @@ const ChapterStatusPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="h-full bg-cosmic-950 text-white p-6">
+      <div className="h-full bg-bg-dark text-white p-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-red-900/50 border border-red-500 rounded-lg p-6 text-center">
             <h2 className="text-xl text-red-400 mb-2">⚠️ 載入錯誤</h2>
@@ -288,11 +288,11 @@ const ChapterStatusPage: React.FC = () => {
   }
 
   return (
-    <div className="h-full bg-cosmic-950 text-white p-6">
+    <div className="h-full bg-bg-dark text-white p-6">
       <div className="max-w-6xl mx-auto">
         {/* 標題區域 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-cosmic text-gold-500 mb-2">
+          <h1 className="text-3xl font-serif-tc text-warm-gold mb-2">
             📊 章節管理
           </h1>
           <p className="text-gray-300">
@@ -302,7 +302,7 @@ const ChapterStatusPage: React.FC = () => {
 
         {/* 統計卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-cosmic-800 border-cosmic-700">
+          <Card className="bg-bg-light/50 backdrop-blur-sm border-warm-gold/10">
             <CardContent className="p-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-warm-gold">{stats.totalChapters}</div>
@@ -311,7 +311,7 @@ const ChapterStatusPage: React.FC = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-cosmic-800 border-cosmic-700">
+          <Card className="bg-bg-light/50 backdrop-blur-sm border-warm-gold/10">
             <CardContent className="p-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-400">{stats.completedCount}</div>
@@ -320,16 +320,16 @@ const ChapterStatusPage: React.FC = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-cosmic-800 border-cosmic-700">
+          <Card className="bg-bg-light/50 backdrop-blur-sm border-warm-gold/10">
             <CardContent className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gold-400">{Math.round(stats.completionRate * 100)}%</div>
+                <div className="text-2xl font-bold text-warm-gold">{Math.round(stats.completionRate * 100)}%</div>
                 <div className="text-sm text-gray-300">完成率</div>
               </div>
             </CardContent>
           </Card>
           
-          <Card className="bg-cosmic-800 border-cosmic-700">
+          <Card className="bg-bg-light/50 backdrop-blur-sm border-warm-gold/10">
             <CardContent className="p-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-clay-orange">{stats.statusDistribution.writing}</div>
@@ -340,9 +340,9 @@ const ChapterStatusPage: React.FC = () => {
         </div>
 
         {/* 章節列表 */}
-        <div className="bg-cosmic-800 rounded-lg p-6">
+        <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl text-gold-400">章節列表</h2>
+            <h2 className="text-xl text-warm-gold">章節列表</h2>
             <button
               onClick={() => navigate(`/project/${projectId}`)}
               className="bg-gold-600 hover:bg-gold-700 px-4 py-2 rounded transition-colors text-sm"
@@ -364,7 +364,7 @@ const ChapterStatusPage: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {chapters.map((chapter) => (
-                <Card key={chapter.id} className="bg-cosmic-700 border-cosmic-600 hover:border-gold-500/50 transition-colors">
+                <Card key={chapter.id} className="bg-bg-dark/80 border-warm-gold/10 hover:border-warm-gold/50 transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -380,10 +380,10 @@ const ChapterStatusPage: React.FC = () => {
                         <select
                           value={chapter.status || ChapterStatus.DRAFT}
                           onChange={(e) => updateChapterStatus(chapter.id, e.target.value as ChapterStatus)}
-                          className="bg-cosmic-600 text-white text-xs px-2 py-1 rounded border border-cosmic-500 hover:border-gold-500 focus:border-gold-500 focus:outline-none transition-colors"
+                          className="bg-bg-light text-white text-xs px-2 py-1 rounded border border-warm-gold/20 hover:border-warm-gold focus:border-warm-gold focus:outline-none transition-colors"
                         >
                           {statusOptions.map(option => (
-                            <option key={option.value} value={option.value} className="bg-cosmic-700">
+                            <option key={option.value} value={option.value} className="bg-bg-dark/80">
                               {option.label}
                             </option>
                           ))}

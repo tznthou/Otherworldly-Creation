@@ -35,8 +35,8 @@ const CosmicButton: React.FC<CosmicButtonProps> = ({
   };
 
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-cosmic-950 shadow-lg hover:shadow-gold-500/25',
-    secondary: 'bg-cosmic-800 hover:bg-cosmic-700 text-white border border-cosmic-600',
+    primary: 'bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-text-primary shadow-lg hover:shadow-gold-500/25',
+    secondary: 'bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80 text-white border border-warm-gold/10',
     danger: 'bg-red-600 hover:bg-red-700 text-white',
     magic: 'bg-gradient-to-r from-mystic-600 to-mystic-700 hover:from-mystic-700 hover:to-mystic-800 text-white shadow-lg hover:shadow-mystic-500/25',
   };

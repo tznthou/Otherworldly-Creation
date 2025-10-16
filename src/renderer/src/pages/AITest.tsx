@@ -127,10 +127,10 @@ const AITest: React.FC = () => {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold text-gold-400 mb-6">AI 功能測試</h1>
+      <h1 className="text-2xl font-bold text-warm-gold mb-6">AI 功能測試</h1>
       
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6 mb-6">
-        <h2 className="text-lg font-medium text-gold-400 mb-4">基本設定</h2>
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-medium text-warm-gold mb-4">基本設定</h2>
         
         <div className="mb-4">
           <label className="block text-sm text-gray-300 mb-2">Ollama 連接狀態</label>
@@ -144,7 +144,7 @@ const AITest: React.FC = () => {
           <select
             value={currentModel || ''}
             onChange={(e) => dispatch(setCurrentModel(e.target.value))}
-            className="w-full bg-cosmic-700 border border-cosmic-600 rounded px-3 py-2 text-white"
+            className="w-full bg-bg-dark/80 border border-warm-gold/10 rounded px-3 py-2 text-white"
             disabled={!isOllamaConnected || availableModels.length === 0}
           >
             <option value="">請選擇模型...</option>
@@ -159,7 +159,7 @@ const AITest: React.FC = () => {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            className="w-full bg-cosmic-700 border border-cosmic-600 rounded px-3 py-2 text-white h-20"
+            className="w-full bg-bg-dark/80 border border-warm-gold/10 rounded px-3 py-2 text-white h-20"
             placeholder="輸入測試提示詞..."
           />
         </div>
@@ -184,9 +184,9 @@ const AITest: React.FC = () => {
       </div>
 
       {result && (
-        <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-          <h2 className="text-lg font-medium text-gold-400 mb-4">生成結果</h2>
-          <div className="bg-cosmic-900 p-4 rounded text-white whitespace-pre-wrap">
+        <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
+          <h2 className="text-lg font-medium text-warm-gold mb-4">生成結果</h2>
+          <div className="bg-bg-dark p-4 rounded text-white whitespace-pre-wrap">
             {result}
           </div>
         </div>

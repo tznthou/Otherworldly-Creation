@@ -98,10 +98,10 @@ const UpdateManagerModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
-          <h2 className="text-xl font-cosmic text-gold-500">🔄 檢查更新</h2>
+        <div className="p-6 border-b border-warm-gold/10 flex items-center justify-between">
+          <h2 className="text-xl font-serif-tc text-warm-gold">🔄 檢查更新</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-white"
@@ -114,12 +114,12 @@ const UpdateManagerModal: React.FC = () => {
         <div className="p-6">
           <div className="text-center py-8">
             <div className="text-6xl mb-4">🚀</div>
-            <h3 className="text-xl font-cosmic text-gold-400 mb-4">版本更新</h3>
+            <h3 className="text-xl font-serif-tc text-warm-gold mb-4">版本更新</h3>
             <div className="card max-w-md mx-auto">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-300">當前版本</span>
-                  <span className="text-gold-400 font-medium">v{updateInfo.currentVersion}</span>
+                  <span className="text-warm-gold font-medium">v{updateInfo.currentVersion}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-300">最新版本</span>
@@ -129,7 +129,7 @@ const UpdateManagerModal: React.FC = () => {
                     v{updateInfo.latestVersion || updateInfo.currentVersion}
                   </span>
                 </div>
-                <div className="pt-4 border-t border-cosmic-700">
+                <div className="pt-4 border-t border-warm-gold/10">
                   {updateInfo.error ? (
                     <div className="flex items-center text-red-400 mb-2">
                       <span className="text-xl mr-2">❌</span>
@@ -179,7 +179,7 @@ const UpdateManagerModal: React.FC = () => {
         </div>
 
         {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-end">
+        <div className="p-6 border-t border-warm-gold/10 flex justify-end">
           <button
             onClick={handleClose}
             className="btn-secondary"

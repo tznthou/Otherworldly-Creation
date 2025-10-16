@@ -47,7 +47,7 @@ const Statistics: React.FC = () => {
     return (
       <div className="p-8">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-gold"></div>
           <span className="ml-2 text-gray-300">載入統計數據中...</span>
         </div>
       </div>
@@ -59,7 +59,7 @@ const Statistics: React.FC = () => {
       {/* 標題和導航 */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-cosmic text-gold-400 mb-2">📊 創作統計</h1>
+          <h1 className="text-3xl font-serif-tc text-warm-gold mb-2">📊 創作統計</h1>
           <p className="text-gray-300">追蹤您的創作進度和成就</p>
         </div>
         <button
@@ -83,7 +83,7 @@ const Statistics: React.FC = () => {
               onClick={() => setActiveTab(tab.id as 'overview' | 'projects' | 'trends')}
               className={`flex items-center space-x-2 pb-4 border-b-2 font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'border-gold-500 text-gold-400'
+                  ? 'border-warm-gold text-warm-gold'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
             >
@@ -100,7 +100,7 @@ const Statistics: React.FC = () => {
           {/* 核心統計卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="card text-center">
-              <div className="text-3xl font-bold text-gold-500 mb-2">
+              <div className="text-3xl font-bold text-warm-gold mb-2">
                 {overallStats.totalProjects}
               </div>
               <div className="text-gray-400">創作專案</div>
@@ -131,11 +131,11 @@ const Statistics: React.FC = () => {
           {/* 創作亮點 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
-              <h3 className="text-xl font-cosmic text-gold-400 mb-4">🏆 創作亮點</h3>
+              <h3 className="text-xl font-serif-tc text-warm-gold mb-4">🏆 創作亮點</h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-300">平均每日字數</span>
-                  <span className="text-gold-400 font-bold">
+                  <span className="text-warm-gold font-bold">
                     {StatisticsService.formatNumber(overallStats.averageWordsPerDay)}
                   </span>
                 </div>
@@ -155,7 +155,7 @@ const Statistics: React.FC = () => {
                 </div>
                 
                 {overallStats.longestChapter.wordCount > 0 && (
-                  <div className="pt-4 border-t border-cosmic-700">
+                  <div className="pt-4 border-t border-warm-gold/10">
                     <div className="text-gray-300 mb-2">📖 最長章節</div>
                     <div className="text-sm">
                       <div className="text-white font-medium">
@@ -172,18 +172,18 @@ const Statistics: React.FC = () => {
 
             {/* 最近活動 */}
             <div className="card">
-              <h3 className="text-xl font-cosmic text-gold-400 mb-4">⚡ 最近活動</h3>
+              <h3 className="text-xl font-serif-tc text-warm-gold mb-4">⚡ 最近活動</h3>
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {overallStats.recentActivity.length > 0 ? (
                   overallStats.recentActivity.map((session, index) => (
-                    <div key={index} className="flex justify-between items-center py-2 border-b border-cosmic-800 last:border-b-0">
+                    <div key={index} className="flex justify-between items-center py-2 border-b border-warm-gold/15 last:border-b-0">
                       <div>
                         <div className="text-white text-sm">{session.date}</div>
                         <div className="text-gray-400 text-xs">
                           {session.chaptersWorked} 章節 · {StatisticsService.formatTime(session.timeSpent)}
                         </div>
                       </div>
-                      <div className="text-gold-400 font-bold">
+                      <div className="text-warm-gold font-bold">
                         +{StatisticsService.formatNumber(session.wordsWritten)}
                       </div>
                     </div>
@@ -210,7 +210,7 @@ const Statistics: React.FC = () => {
                 <div key={project.id} className="card">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-lg font-cosmic text-white mb-1">
+                      <h3 className="text-lg font-serif-tc text-white mb-1">
                         {project.name}
                       </h3>
                       <div className="text-sm text-gray-400">
@@ -219,14 +219,14 @@ const Statistics: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-sm text-gray-400">完成度</div>
-                      <div className="text-lg font-bold text-gold-400">
+                      <div className="text-lg font-bold text-warm-gold">
                         {project.completionPercentage}%
                       </div>
                     </div>
                   </div>
                   
                   {/* 進度條 */}
-                  <div className="w-full bg-cosmic-900 rounded-full h-2 mb-4">
+                  <div className="w-full bg-bg-dark rounded-full h-2 mb-4">
                     <div 
                       className="bg-gradient-to-r from-gold-500 to-gold-400 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${project.completionPercentage}%` }}
@@ -264,7 +264,7 @@ const Statistics: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t border-cosmic-700 text-xs text-gray-500">
+                  <div className="mt-4 pt-4 border-t border-warm-gold/10 text-xs text-gray-500">
                     最後更新：{project.lastUpdated.toLocaleDateString('zh-TW')}
                   </div>
                 </div>
@@ -294,7 +294,7 @@ const Statistics: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* 每日字數趨勢 */}
               <div className="card">
-                <h3 className="text-xl font-cosmic text-gold-400 mb-6">📝 每日字數趨勢</h3>
+                <h3 className="text-xl font-serif-tc text-warm-gold mb-6">📝 每日字數趨勢</h3>
                 <div className="h-64">
                   <WritingTrendChart 
                     data={overallStats.recentActivity} 
@@ -306,7 +306,7 @@ const Statistics: React.FC = () => {
               
               {/* 每日寫作時間趨勢 */}
               <div className="card">
-                <h3 className="text-xl font-cosmic text-gold-400 mb-6">⏰ 每日時間趨勢</h3>
+                <h3 className="text-xl font-serif-tc text-warm-gold mb-6">⏰ 每日時間趨勢</h3>
                 <div className="h-64">
                   <WritingTrendChart 
                     data={overallStats.recentActivity} 
@@ -321,7 +321,7 @@ const Statistics: React.FC = () => {
           {/* 月度統計圖表 */}
           {monthlyStats.length > 0 && (
             <div className="card">
-              <h3 className="text-xl font-cosmic text-gold-400 mb-6">📈 月度創作統計</h3>
+              <h3 className="text-xl font-serif-tc text-warm-gold mb-6">📈 月度創作統計</h3>
               <div className="h-80">
                 <MonthlyStatsChart 
                   data={monthlyStats}
@@ -333,10 +333,10 @@ const Statistics: React.FC = () => {
           
           {/* 月度詳細數據 */}
           <div className="card">
-            <h3 className="text-xl font-cosmic text-gold-400 mb-6">📊 月度詳細數據</h3>
+            <h3 className="text-xl font-serif-tc text-warm-gold mb-6">📊 月度詳細數據</h3>
             <div className="space-y-4">
               {monthlyStats.map((month, index) => (
-                <div key={index} className="flex items-center justify-between py-3 border-b border-cosmic-800 last:border-b-0">
+                <div key={index} className="flex items-center justify-between py-3 border-b border-warm-gold/15 last:border-b-0">
                   <div className="flex-1">
                     <div className="text-white font-medium">{month.month}</div>
                     <div className="text-sm text-gray-400">
@@ -345,7 +345,7 @@ const Statistics: React.FC = () => {
                   </div>
                   
                   <div className="flex-1 mx-4">
-                    <div className="w-full bg-cosmic-900 rounded-full h-2">
+                    <div className="w-full bg-bg-dark rounded-full h-2">
                       <div 
                         className="bg-gradient-to-r from-cyan-500 to-purple-500 h-2 rounded-full"
                         style={{ 
@@ -368,7 +368,7 @@ const Statistics: React.FC = () => {
 
           {/* 創作建議 */}
           <div className="card">
-            <h3 className="text-xl font-cosmic text-gold-400 mb-4">💡 創作建議</h3>
+            <h3 className="text-xl font-serif-tc text-warm-gold mb-4">💡 創作建議</h3>
             <div className="space-y-4">
               <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
                 <div className="flex items-center mb-2">

@@ -171,7 +171,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
             {error.suggestions
               .sort((a, b) => a.priority - b.priority)
               .map((suggestion) => (
-                <div key={suggestion.id} className="bg-cosmic-800/50 rounded-lg p-3">
+                <div key={suggestion.id} className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h5 className="font-medium text-white mb-1">
@@ -220,13 +220,13 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
             <summary className="text-gray-400 cursor-pointer hover:text-gray-300 mb-2">
               技術詳情
             </summary>
-            <pre className="bg-cosmic-900 p-2 rounded text-gray-500 overflow-x-auto whitespace-pre-wrap">
+            <pre className="bg-bg-dark p-2 rounded text-gray-500 overflow-x-auto whitespace-pre-wrap">
               {error.stack}
             </pre>
             {error.context && (
               <div className="mt-2">
                 <p className="text-gray-400 mb-1">上下文資訊：</p>
-                <pre className="bg-cosmic-900 p-2 rounded text-gray-500 overflow-x-auto">
+                <pre className="bg-bg-dark p-2 rounded text-gray-500 overflow-x-auto">
                   {JSON.stringify(error.context, null, 2)}
                 </pre>
               </div>

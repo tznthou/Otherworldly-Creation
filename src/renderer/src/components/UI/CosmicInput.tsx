@@ -57,7 +57,7 @@ const CosmicInput: React.FC<CosmicInputProps> = ({
     <div className={`relative ${className}`}>
       {/* 標籤 */}
       {label && (
-        <label className="block text-sm font-medium text-gray-300 mb-2 font-cosmic">
+        <label className="block text-sm font-medium text-gray-300 mb-2 font-serif-tc">
           {label}
         </label>
       )}
@@ -66,14 +66,14 @@ const CosmicInput: React.FC<CosmicInputProps> = ({
       <div className="relative">
         {/* 背景光效 */}
         {glowEffect && isFocused && (
-          <div className="absolute inset-0 bg-gold-500/10 rounded-lg blur-sm animate-pulse" />
+          <div className="absolute inset-0 bg-warm-gold/50/10 rounded-lg blur-sm animate-pulse" />
         )}
         
         {/* 魔法邊框 */}
         {magicBorder && (
           <div className={`absolute inset-0 rounded-lg border-2 transition-all duration-300 ${
             isFocused 
-              ? 'border-gold-500 shadow-lg shadow-gold-500/25' 
+              ? 'border-warm-gold shadow-lg shadow-gold-500/25' 
               : 'border-mystic-500/30'
           } ${magicBorder ? 'animate-pulse' : ''}`} />
         )}
@@ -83,9 +83,9 @@ const CosmicInput: React.FC<CosmicInputProps> = ({
           error 
             ? 'border-red-500 shadow-red-500/25' 
             : isFocused 
-              ? 'border-gold-500 shadow-gold-500/25' 
-              : 'border-cosmic-600'
-        } bg-cosmic-800 border rounded-lg transition-all duration-200 ${
+              ? 'border-warm-gold shadow-gold-500/25' 
+              : 'border-warm-gold/10'
+        } bg-bg-light/50 backdrop-blur-sm border rounded-lg transition-all duration-200 ${
           glowEffect && isFocused ? 'shadow-lg' : ''
         }`}>
           
@@ -131,7 +131,7 @@ const CosmicInput: React.FC<CosmicInputProps> = ({
         {placeholder && (isFocused || hasValue) && (
           <div className={`absolute left-3 transition-all duration-200 pointer-events-none ${
             isFocused || hasValue 
-              ? '-top-2 text-xs bg-cosmic-800 px-1 text-gold-400' 
+              ? '-top-2 text-xs bg-bg-light/50 backdrop-blur-sm px-1 text-warm-gold' 
               : 'top-2 text-gray-400'
           }`}>
             {placeholder}

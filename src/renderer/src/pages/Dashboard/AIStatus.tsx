@@ -63,7 +63,7 @@ const AIStatus: React.FC = () => {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-cosmic text-gold-500">AI 引擎狀態</h2>
+        <h2 className="text-xl font-serif-tc text-warm-gold">AI 引擎狀態</h2>
         <button
           onClick={handleRefreshConnection}
           className="btn-secondary text-sm px-4 py-2"
@@ -115,7 +115,7 @@ const AIStatus: React.FC = () => {
 
       {/* 詳細資訊 */}
       {isOllamaConnected && availableModels.length > 0 && (
-        <div className="mt-6 pt-6 border-t border-cosmic-700">
+        <div className="mt-6 pt-6 border-t border-warm-gold/10">
           <h4 className="text-sm font-medium text-gray-300 mb-3">可用模型列表</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {availableModels.map((model) => (
@@ -123,8 +123,8 @@ const AIStatus: React.FC = () => {
                 key={model}
                 className={`px-3 py-2 rounded-lg text-sm ${
                   model === currentModel
-                    ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30'
-                    : 'bg-cosmic-800 text-gray-300'
+                    ? 'bg-warm-gold/50/20 text-warm-gold border border-warm-gold/30'
+                    : 'bg-bg-light/50 backdrop-blur-sm text-gray-300'
                 }`}
               >
                 {model}
@@ -139,16 +139,16 @@ const AIStatus: React.FC = () => {
 
       {/* 未連接時的幫助資訊 */}
       {!isOllamaConnected && (
-        <div className="mt-6 pt-6 border-t border-cosmic-700">
+        <div className="mt-6 pt-6 border-t border-warm-gold/10">
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
             <h4 className="text-yellow-400 font-medium mb-2">🔧 需要安裝 Ollama</h4>
             <p className="text-sm text-gray-300 mb-3">
               創世紀元需要 Ollama 來提供本地 AI 功能。請按照以下步驟安裝：
             </p>
             <ol className="text-sm text-gray-400 space-y-1 list-decimal list-inside">
-              <li>前往 <span className="text-gold-400">ollama.ai</span> 下載 Ollama</li>
-              <li>安裝完成後，在終端機執行 <code className="bg-cosmic-800 px-2 py-1 rounded">ollama serve</code></li>
-              <li>下載中文模型：<code className="bg-cosmic-800 px-2 py-1 rounded">ollama pull llama3.2</code></li>
+              <li>前往 <span className="text-warm-gold">ollama.ai</span> 下載 Ollama</li>
+              <li>安裝完成後，在終端機執行 <code className="bg-bg-light/50 backdrop-blur-sm px-2 py-1 rounded">ollama serve</code></li>
+              <li>下載中文模型：<code className="bg-bg-light/50 backdrop-blur-sm px-2 py-1 rounded">ollama pull llama3.2</code></li>
               <li>點擊上方的「重新檢測」按鈕</li>
             </ol>
           </div>

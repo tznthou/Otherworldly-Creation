@@ -25,7 +25,7 @@ export const GoogleCloudBillingModal: React.FC<GoogleCloudBillingModalProps> = (
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl max-w-2xl max-h-[90vh] overflow-y-auto m-4">
         <div className="p-6">
           {/* 標題 */}
           <div className="flex items-center mb-6">

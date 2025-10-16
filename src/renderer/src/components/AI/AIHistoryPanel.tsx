@@ -156,23 +156,23 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
   if (isLoading && filteredHistories.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-400"></div>
-        <span className="ml-3 text-gold-400">{t('載入歷史記錄中...')}</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-warm-gold"></div>
+        <span className="ml-3 text-warm-gold">{t('載入歷史記錄中...')}</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-cosmic-900 rounded-lg border border-cosmic-700 p-4">
+    <div className="bg-bg-dark rounded-lg border border-warm-gold/10 p-4">
       {/* 標題和操作按鈕 */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gold-400">
+        <h3 className="text-lg font-semibold text-warm-gold">
           {t('AI 生成歷史')} ({filteredHistories.length})
         </h3>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="p-2 rounded-md bg-cosmic-800 text-gold-400 hover:bg-cosmic-700 transition-colors"
+            className="p-2 rounded-md bg-bg-light/50 backdrop-blur-sm text-warm-gold hover:bg-bg-dark/80 transition-colors"
             title={t('篩選選項')}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,7 +181,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
           </button>
           <button
             onClick={handleCleanup}
-            className="p-2 rounded-md bg-cosmic-800 text-gold-400 hover:bg-cosmic-700 transition-colors"
+            className="p-2 rounded-md bg-bg-light/50 backdrop-blur-sm text-warm-gold hover:bg-bg-dark/80 transition-colors"
             title={t('清理舊記錄')}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,16 +193,16 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
 
       {/* 篩選選項 */}
       {showFilters && (
-        <div className="mb-4 p-3 bg-cosmic-800 rounded-md border border-cosmic-600">
+        <div className="mb-4 p-3 bg-bg-light/50 backdrop-blur-sm rounded-md border border-warm-gold/10">
           <div className="flex items-center space-x-4">
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
                 checked={filterSelectedOnly}
                 onChange={(e) => setFilterSelectedOnly(e.target.checked)}
-                className="rounded bg-cosmic-700 border-cosmic-600 text-gold-400 focus:ring-gold-400"
+                className="rounded bg-bg-dark/80 border-warm-gold/10 text-warm-gold focus:ring-gold-400"
               />
-              <span className="text-sm text-cosmic-300">{t('只顯示已選擇的記錄')}</span>
+              <span className="text-sm text-text-secondary">{t('只顯示已選擇的記錄')}</span>
             </label>
           </div>
         </div>
@@ -228,8 +228,8 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
       {/* 歷史記錄列表 */}
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {filteredHistories.length === 0 ? (
-          <div className="text-center py-8 text-cosmic-400">
-            <svg className="w-12 h-12 mx-auto mb-3 text-cosmic-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center py-8 text-text-secondary/80">
+            <svg className="w-12 h-12 mx-auto mb-3 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <p>{t('暫無 AI 生成歷史記錄')}</p>
@@ -240,19 +240,19 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
               key={history.id}
               className={`p-3 rounded-md border transition-all cursor-pointer ${
                 history.selected
-                  ? 'bg-gold-900/20 border-gold-600 shadow-lg'
-                  : 'bg-cosmic-800 border-cosmic-600 hover:bg-cosmic-750 hover:border-cosmic-500'
+                  ? 'bg-warm-gold/20 border-gold-600 shadow-lg'
+                  : 'bg-bg-light/50 backdrop-blur-sm border-warm-gold/10 hover:bg-bg-light/40 hover:border-warm-gold/20'
               }`}
               onClick={() => handleSelectHistory(history)}
             >
               {/* 記錄頭部信息 */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs bg-cosmic-700 px-2 py-1 rounded text-cosmic-300">
+                  <span className="text-xs bg-bg-dark/80 px-2 py-1 rounded text-text-secondary">
                     {history.model}
                   </span>
                   {history.selected && (
-                    <span className="text-xs bg-gold-800 px-2 py-1 rounded text-gold-300">
+                    <span className="text-xs bg-gold-800 px-2 py-1 rounded text-warm-gold">
                       {t('已選擇')}
                     </span>
                   )}
@@ -276,8 +276,8 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
                     }}
                     className={`p-1 rounded ${
                       history.selected
-                        ? 'text-gold-400 hover:text-gold-300'
-                        : 'text-cosmic-400 hover:text-gold-400'
+                        ? 'text-warm-gold hover:text-warm-gold'
+                        : 'text-text-secondary/80 hover:text-warm-gold'
                     } transition-colors`}
                     title={history.selected ? t('取消選擇') : t('標記為選擇')}
                   >
@@ -290,7 +290,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
                       e.stopPropagation();
                       handleDelete(history.id);
                     }}
-                    className="p-1 rounded text-cosmic-400 hover:text-red-400 transition-colors"
+                    className="p-1 rounded text-text-secondary/80 hover:text-red-400 transition-colors"
                     title={t('刪除記錄')}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -301,7 +301,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
               </div>
 
               {/* 生成統計信息 */}
-              <div className="grid grid-cols-3 gap-2 mb-2 text-xs text-cosmic-400">
+              <div className="grid grid-cols-3 gap-2 mb-2 text-xs text-text-secondary/80">
                 <div>{t('時間')}: {formatTime(history.createdAt)}</div>
                 <div>{t('生成時間')}: {formatGenerationTime(history.generationTimeMs)}</div>
                 <div>{t('字數')}: {history.tokenCount || '-'}</div>
@@ -309,10 +309,10 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
 
               {/* 生成內容預覽 */}
               <div className="text-sm">
-                <div className="text-cosmic-300 mb-1">
+                <div className="text-text-secondary mb-1">
                   <span className="font-medium">{t('生成內容')}:</span>
                 </div>
-                <div className="text-cosmic-200 bg-cosmic-950 p-2 rounded text-xs max-h-20 overflow-hidden">
+                <div className="text-text-secondary/40 bg-bg-dark p-2 rounded text-xs max-h-20 overflow-hidden">
                   {history.generatedText.length > 150
                     ? `${history.generatedText.substring(0, 150)}...`
                     : history.generatedText}
@@ -325,7 +325,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
 
       {/* 分頁控制 */}
       {filteredHistories.length > 0 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-cosmic-400">
+        <div className="mt-4 flex items-center justify-between text-sm text-text-secondary/80">
           <div>
             {t('共')} {totalCount} {t('條記錄')}
           </div>
@@ -333,7 +333,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
             <button
               onClick={() => handlePageChange(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="p-2 rounded bg-cosmic-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cosmic-700 transition-colors"
+              className="p-2 rounded bg-bg-light/50 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg-dark/80 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -343,7 +343,7 @@ const AIHistoryPanel: React.FC<AIHistoryPanelProps> = ({
             <button
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={filteredHistories.length < pagination.pageSize}
-              className="p-2 rounded bg-cosmic-800 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cosmic-700 transition-colors"
+              className="p-2 rounded bg-bg-light/50 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-bg-dark/80 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

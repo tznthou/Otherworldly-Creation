@@ -148,7 +148,7 @@ const ProjectGrid: React.FC = () => {
               placeholder="搜索專案..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             />
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
               🔍
@@ -170,7 +170,7 @@ const ProjectGrid: React.FC = () => {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
           >
             <option value="all">所有類型</option>
             <option value="isekai">異世界</option>
@@ -180,22 +180,22 @@ const ProjectGrid: React.FC = () => {
           </select>
 
           {/* 排序方式 */}
-          <div className="flex rounded-lg overflow-hidden border border-cosmic-700">
+          <div className="flex rounded-lg overflow-hidden border border-warm-gold/10">
             <button
               onClick={() => handleSortChange('name')}
-              className={`px-3 py-2 ${sortBy === 'name' ? 'bg-cosmic-700 text-gold-400' : 'bg-cosmic-800 text-gray-300'}`}
+              className={`px-3 py-2 ${sortBy === 'name' ? 'bg-bg-dark/80 text-warm-gold' : 'bg-bg-light/50 backdrop-blur-sm text-gray-300'}`}
             >
               名稱 {getSortIcon('name')}
             </button>
             <button
               onClick={() => handleSortChange('updatedAt')}
-              className={`px-3 py-2 ${sortBy === 'updatedAt' ? 'bg-cosmic-700 text-gold-400' : 'bg-cosmic-800 text-gray-300'}`}
+              className={`px-3 py-2 ${sortBy === 'updatedAt' ? 'bg-bg-dark/80 text-warm-gold' : 'bg-bg-light/50 backdrop-blur-sm text-gray-300'}`}
             >
               更新時間 {getSortIcon('updatedAt')}
             </button>
             <button
               onClick={() => handleSortChange('createdAt')}
-              className={`px-3 py-2 ${sortBy === 'createdAt' ? 'bg-cosmic-700 text-gold-400' : 'bg-cosmic-800 text-gray-300'}`}
+              className={`px-3 py-2 ${sortBy === 'createdAt' ? 'bg-bg-dark/80 text-warm-gold' : 'bg-bg-light/50 backdrop-blur-sm text-gray-300'}`}
             >
               創建時間 {getSortIcon('createdAt')}
             </button>
@@ -215,12 +215,12 @@ const ProjectGrid: React.FC = () => {
         {/* 創建新專案卡片 */}
         <div
           onClick={handleCreateProject}
-          className="card card-hover cursor-pointer group min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed border-cosmic-600 hover:border-gold-500"
+          className="card card-hover cursor-pointer group min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed border-warm-gold/10 hover:border-warm-gold"
         >
           <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">
             ➕
           </div>
-          <h3 className="text-lg font-medium text-gold-500 group-hover:text-gold-400">
+          <h3 className="text-lg font-medium text-warm-gold group-hover:text-warm-gold">
             創建新專案
           </h3>
           <p className="text-sm text-gray-400 mt-2 text-center">

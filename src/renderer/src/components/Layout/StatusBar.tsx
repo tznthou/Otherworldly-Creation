@@ -28,7 +28,7 @@ const StatusBar: React.FC<StatusBarProps> = ({ stats, currentChapterTitle }) => 
       {/* 章節資訊 */}
       {currentChapterTitle && (
         <div className="flex items-center space-x-1">
-          <span className="text-gold-400">📖</span>
+          <span className="text-warm-gold">📖</span>
           <span>{currentChapterTitle}</span>
         </div>
       )}

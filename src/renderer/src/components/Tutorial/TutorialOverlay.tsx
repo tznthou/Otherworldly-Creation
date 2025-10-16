@@ -151,7 +151,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         {/* 高亮區域 */}
         {targetElement && currentStepData.highlight && (
           <div
-            className="absolute border-4 border-gold-400 rounded-lg shadow-lg shadow-gold-400/50 animate-pulse-glow"
+            className="absolute border-4 border-warm-gold rounded-lg shadow-lg shadow-gold-400/50 animate-pulse-glow"
             style={{
               left: targetElement.getBoundingClientRect().left - 8,
               top: targetElement.getBoundingClientRect().top - 8,
@@ -166,7 +166,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {/* 教學提示框 */}
       <div
         ref={tooltipRef}
-        className="fixed z-[9998] bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300"
+        className="fixed z-[9998] bg-bg-dark/95 backdrop-blur-sm border border-warm-gold/30 rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300"
         style={{
           left: currentStepData.position === 'center' ? '50%' : tooltipPosition.x,
           top: currentStepData.position === 'center' ? '50%' : tooltipPosition.y,
@@ -190,7 +190,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         <div className="p-6">
           {/* 標題和進度 */}
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-cosmic text-gold-400">
+            <h3 className="text-lg font-serif-tc text-warm-gold">
               {currentStepData.title}
             </h3>
             <div className="flex items-center space-x-2 text-sm text-gray-400">

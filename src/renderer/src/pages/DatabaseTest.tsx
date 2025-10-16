@@ -82,9 +82,9 @@ const DatabaseTest: React.FC = () => {
 
   if (!isTauri()) {
     return (
-      <div className="p-8 bg-cosmic-900 min-h-screen text-white">
+      <div className="p-8 bg-bg-dark min-h-screen text-white">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6 text-gold-400">
+          <h1 className="text-3xl font-bold mb-6 text-warm-gold">
             資料庫測試頁面
           </h1>
           <div className="bg-red-800 p-4 rounded-lg">
@@ -96,29 +96,29 @@ const DatabaseTest: React.FC = () => {
   }
 
   return (
-    <div className="p-8 bg-cosmic-900 min-h-screen text-white">
+    <div className="p-8 bg-bg-dark min-h-screen text-white">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-gold-400">
+        <h1 className="text-3xl font-bold mb-6 text-warm-gold">
           Tauri 資料庫功能測試
         </h1>
 
         {/* 狀態訊息 */}
         {message && (
-          <div className="mb-6 p-4 bg-cosmic-800 border border-gold-400 rounded-lg">
-            <p className="text-gold-300">{message}</p>
+          <div className="mb-6 p-4 bg-bg-light/50 backdrop-blur-sm border border-warm-gold rounded-lg">
+            <p className="text-warm-gold">{message}</p>
           </div>
         )}
 
         {/* 新增專案區域 */}
-        <div className="mb-8 bg-cosmic-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4 text-gold-400">建立新專案</h2>
+        <div className="mb-8 bg-bg-light/50 backdrop-blur-sm p-6 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4 text-warm-gold">建立新專案</h2>
           <div className="flex gap-4">
             <input
               type="text"
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
               placeholder="輸入專案名稱"
-              className="flex-1 px-4 py-2 bg-cosmic-700 border border-cosmic-600 rounded text-white"
+              className="flex-1 px-4 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded text-white"
               disabled={loading}
             />
             <button
@@ -132,9 +132,9 @@ const DatabaseTest: React.FC = () => {
         </div>
 
         {/* 專案列表 */}
-        <div className="bg-cosmic-800 p-6 rounded-lg">
+        <div className="bg-bg-light/50 backdrop-blur-sm p-6 rounded-lg">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gold-400">專案列表</h2>
+            <h2 className="text-xl font-semibold text-warm-gold">專案列表</h2>
             <button
               onClick={loadProjects}
               disabled={loading}
@@ -153,7 +153,7 @@ const DatabaseTest: React.FC = () => {
               {projects.map((project) => (
                 <div
                   key={project.id}
-                  className="bg-cosmic-700 p-4 rounded border border-cosmic-600"
+                  className="bg-bg-dark/80 p-4 rounded border border-warm-gold/10"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -185,8 +185,8 @@ const DatabaseTest: React.FC = () => {
         </div>
 
         {/* 功能狀態 */}
-        <div className="mt-8 bg-cosmic-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4 text-gold-400">資料庫功能狀態</h2>
+        <div className="mt-8 bg-bg-light/50 backdrop-blur-sm p-6 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4 text-warm-gold">資料庫功能狀態</h2>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center">
               <span className="text-green-400 mr-2">✓</span>

@@ -54,7 +54,7 @@ export const StyleTemplateCard = memo<StyleTemplateCardProps>(({
         relative group cursor-pointer
         bg-white rounded-lg shadow-sm border-2 transition-all duration-200
         hover:shadow-md hover:border-gold-300
-        ${isSelected ? 'border-gold-500 ring-2 ring-gold-200 shadow-md' : 'border-gray-200'}
+        ${isSelected ? 'border-warm-gold ring-2 ring-gold-200 shadow-md' : 'border-gray-200'}
         ${className}
       `}
       onClick={handleCardClick}
@@ -163,7 +163,7 @@ export const StyleTemplateCard = memo<StyleTemplateCardProps>(({
 
       {/* 選中狀態指示器 */}
       {isSelected && (
-        <div className="absolute -top-1 -right-1 w-6 h-6 bg-gold-500 rounded-full flex items-center justify-center text-white text-xs">
+        <div className="absolute -top-1 -right-1 w-6 h-6 bg-warm-gold/50 rounded-full flex items-center justify-center text-white text-xs">
           ✓
         </div>
       )}

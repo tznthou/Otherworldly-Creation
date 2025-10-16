@@ -97,13 +97,13 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
           isDeleting 
             ? 'border-red-500 bg-red-900/20 cursor-not-allowed opacity-50' 
             : selectedImages.has(item.id) 
-              ? 'border-gold-500 ring-2 ring-gold-500/50 cursor-pointer' 
-              : 'border-cosmic-600 hover:border-cosmic-500 cursor-pointer'
+              ? 'border-warm-gold ring-2 ring-gold-500/50 cursor-pointer' 
+              : 'border-warm-gold/10 hover:border-warm-gold/20 cursor-pointer'
         }`}
         onClick={() => !isDeleting && onToggleSelection(item.id)}
       >
         {/* 圖像縮略圖 */}
-        <div className="w-full h-full bg-cosmic-700 flex items-center justify-center">
+        <div className="w-full h-full bg-bg-dark/80 flex items-center justify-center">
           {(() => {
             // 🚨 如果正在刪除，顯示刪除中狀態而不是實際圖片
             if (isDeleting) {
@@ -145,7 +145,7 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
             } else {
               log.debug('❌ VirtualizedImageGrid: 顯示狀態圖標', { itemId: item.id, status: item.status });
               return (
-                <div className="text-cosmic-400 text-xl">
+                <div className="text-text-secondary/80 text-xl">
                   {getStatusIcon(item.status)}
                 </div>
               );
@@ -156,7 +156,7 @@ const GridItem: React.FC<GridChildComponentProps<ItemData>> = React.memo(({ colu
         {/* 選擇指示器 */}
         <div className={`absolute top-2 left-2 w-5 h-5 rounded-full border flex items-center justify-center text-xs transition-all ${
           selectedImages.has(item.id)
-            ? 'bg-gold-500 border-gold-500 text-white'
+            ? 'bg-warm-gold/50 border-warm-gold text-white'
             : 'bg-black/50 border-white/50 text-white opacity-0 group-hover:opacity-100'
         }`}>
           {selectedImages.has(item.id) && '✓'}
@@ -229,10 +229,10 @@ const VirtualizedImageGrid: React.FC<VirtualizedImageGridProps> = ({
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <div className="text-6xl mb-6">🖼️</div>
-        <h3 className="text-xl font-cosmic text-cosmic-300 mb-2">
+        <h3 className="text-xl font-serif-tc text-text-secondary mb-2">
           尚無插畫
         </h3>
-        <p className="text-cosmic-400 mb-4">
+        <p className="text-text-secondary/80 mb-4">
           開始創建您的第一張插畫吧！
         </p>
         <button className="px-4 py-2 bg-gold-600 hover:bg-gold-700 text-white rounded-lg transition-colors">

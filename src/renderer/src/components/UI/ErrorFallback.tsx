@@ -98,14 +98,14 @@ ${error.stack}
   const suggestions = getErrorSuggestions(error);
 
   return (
-    <div className="min-h-screen bg-cosmic-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bg-dark flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
         {/* 主要錯誤卡片 */}
-        <div className="bg-cosmic-900/90 backdrop-blur-sm rounded-lg border border-red-500/30 p-8 shadow-2xl">
+        <div className="bg-bg-dark/90 backdrop-blur-sm rounded-lg border border-red-500/30 p-8 shadow-2xl">
           {/* 錯誤圖標和標題 */}
           <div className="text-center mb-8">
             <div className="text-8xl mb-4 animate-bounce">💥</div>
-            <h1 className="text-3xl font-cosmic text-red-400 mb-2">
+            <h1 className="text-3xl font-serif-tc text-red-400 mb-2">
               糟糕！出現了錯誤
             </h1>
             <p className="text-gray-400 text-lg">
@@ -123,11 +123,11 @@ ${error.stack}
 
           {/* 解決建議 */}
           <div className="mb-6">
-            <h3 className="text-gold-400 font-semibold mb-3">建議的解決方案</h3>
+            <h3 className="text-warm-gold font-semibold mb-3">建議的解決方案</h3>
             <ul className="space-y-2">
               {suggestions.map((suggestion, index) => (
                 <li key={index} className="flex items-start space-x-2 text-gray-300">
-                  <span className="text-gold-400 mt-1">•</span>
+                  <span className="text-warm-gold mt-1">•</span>
                   <span className="text-sm">{suggestion}</span>
                 </li>
               ))}
@@ -205,7 +205,7 @@ ${error.stack}
             如果問題持續發生，請聯繫技術支援或查看
             <a 
               href="#" 
-              className="text-gold-400 hover:text-gold-300 ml-1"
+              className="text-warm-gold hover:text-warm-gold ml-1"
               onClick={(e) => {
                 e.preventDefault();
                 // 這裡可以打開幫助文檔

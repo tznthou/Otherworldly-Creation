@@ -20,9 +20,9 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   };
 
   const colorClasses = {
-    gold: 'border-gold-500',
+    gold: 'border-warm-gold',
     mystic: 'border-mystic-500',
-    cosmic: 'border-cosmic-500',
+    cosmic: 'border-warm-gold/20',
   };
 
   const textSizeClasses = {
@@ -52,7 +52,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
       {/* 載入文字 */}
       {text && (
-        <div className={`text-${color}-500 font-cosmic ${textSizeClasses[size]} animate-pulse`}>
+        <div className={`text-${color}-500 font-serif-tc ${textSizeClasses[size]} animate-pulse`}>
           {text}
         </div>
       )}

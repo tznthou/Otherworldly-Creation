@@ -222,7 +222,7 @@ export const TemplateImportWizard: React.FC<TemplateImportWizardProps> = ({
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-cosmic-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gold-500/20"
+        className="bg-bg-light/50 backdrop-blur-sm rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-warm-gold/20"
       >
         {/* 標題列 */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
@@ -280,7 +280,7 @@ export const TemplateImportWizard: React.FC<TemplateImportWizardProps> = ({
         </div>
 
         {/* 內容區域 */}
-        <div className="p-6 max-h-[70vh] overflow-y-auto bg-cosmic-950">
+        <div className="p-6 max-h-[70vh] overflow-y-auto bg-bg-dark">
           <AnimatePresence mode="wait">
             {/* 步驟 1: 檔案上傳 */}
             {currentStep === 'upload' && (
@@ -365,9 +365,9 @@ const UploadStep: React.FC<{
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 檔案上傳 */}
-        <div className="relative border-2 border-dashed border-cosmic-600 rounded-lg p-6 hover:border-gold-400 transition-colors bg-cosmic-800">
+        <div className="relative border-2 border-dashed border-warm-gold/10 rounded-lg p-6 hover:border-warm-gold transition-colors bg-bg-light/50 backdrop-blur-sm">
           <div className="text-center pointer-events-none">
-            <svg className="mx-auto h-12 w-12 text-cosmic-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+            <svg className="mx-auto h-12 w-12 text-text-secondary/80" stroke="currentColor" fill="none" viewBox="0 0 48 48">
               <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <div className="mt-4">
@@ -402,7 +402,7 @@ const UploadStep: React.FC<{
             或直接貼上小說內容
           </label>
           <textarea
-            className="w-full h-32 px-3 py-2 bg-cosmic-800 border border-cosmic-600 rounded-md focus:ring-2 focus:ring-gold-400 focus:border-gold-400 resize-none text-white placeholder-gray-400"
+            className="w-full h-32 px-3 py-2 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-md focus:ring-2 focus:ring-gold-400 focus:border-warm-gold resize-none text-white placeholder-gray-400"
             placeholder="在此貼上您的小說內容..."
             value={pastedText}
             onChange={(e) => setPastedText(e.target.value)}
@@ -411,7 +411,7 @@ const UploadStep: React.FC<{
             type="button"
             onClick={() => onTextPaste(pastedText)}
             disabled={!pastedText.trim()}
-            className="w-full px-4 py-2 bg-gold-600 text-cosmic-900 font-medium rounded-md hover:bg-gold-500 focus:ring-2 focus:ring-gold-400 disabled:bg-cosmic-600 disabled:cursor-not-allowed disabled:text-gray-400"
+            className="w-full px-4 py-2 bg-gold-600 text-text-primary font-medium rounded-md hover:bg-warm-gold/50 focus:ring-2 focus:ring-gold-400 disabled:bg-bg-light disabled:cursor-not-allowed disabled:text-gray-400"
           >
             使用此內容
           </button>
@@ -435,10 +435,10 @@ const UploadStep: React.FC<{
         <button
           onClick={onNext}
           disabled={!fileContent || isProcessing}
-          className="px-6 py-2 bg-gold-600 text-cosmic-900 font-medium rounded-md hover:bg-gold-500 focus:ring-2 focus:ring-gold-400 disabled:bg-cosmic-600 disabled:cursor-not-allowed disabled:text-gray-400 flex items-center"
+          className="px-6 py-2 bg-gold-600 text-text-primary font-medium rounded-md hover:bg-warm-gold/50 focus:ring-2 focus:ring-gold-400 disabled:bg-bg-light disabled:cursor-not-allowed disabled:text-gray-400 flex items-center"
         >
           {isProcessing && (
-            <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-cosmic-800" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-text-primary" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -474,8 +474,8 @@ const OptionsStep: React.FC<{
       </div>
 
       {/* 檔案資訊 */}
-      <div className="bg-cosmic-800 rounded-lg p-4">
-        <h4 className="font-medium text-gold-400 mb-2">檔案資訊</h4>
+      <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
+        <h4 className="font-medium text-warm-gold mb-2">檔案資訊</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <span className="text-gray-400">標題:</span>
@@ -498,7 +498,7 @@ const OptionsStep: React.FC<{
 
       {/* 分析深度選擇 */}
       <div>
-        <label className="block text-sm font-medium text-gold-400 mb-3">分析深度</label>
+        <label className="block text-sm font-medium text-warm-gold mb-3">分析深度</label>
         <div className="grid grid-cols-3 gap-4">
           {[
             { value: 'basic', label: '基礎', desc: '快速分析，提取核心元素' },
@@ -519,8 +519,8 @@ const OptionsStep: React.FC<{
               />
               <div className={`border-2 rounded-lg p-4 ${
                 options.analysisDepth === depth.value
-                  ? 'border-gold-400 bg-gold-900/20'
-                  : 'border-cosmic-600 hover:border-cosmic-500 bg-cosmic-800'
+                  ? 'border-warm-gold bg-warm-gold/20'
+                  : 'border-warm-gold/10 hover:border-warm-gold/20 bg-bg-light/50 backdrop-blur-sm'
               }`}>
                 <div className="font-medium text-white">{depth.label}</div>
                 <div className="text-sm text-gray-300 mt-1">{depth.desc}</div>
@@ -532,7 +532,7 @@ const OptionsStep: React.FC<{
 
       {/* 分析重點 */}
       <div>
-        <label className="block text-sm font-medium text-gold-400 mb-3">分析重點</label>
+        <label className="block text-sm font-medium text-warm-gold mb-3">分析重點</label>
         <div className="grid grid-cols-2 gap-4">
           {[
             { value: 'world', label: '世界觀設定', icon: '🌍' },
@@ -550,7 +550,7 @@ const OptionsStep: React.FC<{
                     : options.focusAreas.filter(a => a !== area.value);
                   onOptionsChange({ ...options, focusAreas: newAreas });
                 }}
-                className="h-4 w-4 text-gold-600 focus:ring-gold-400 border-cosmic-600 rounded bg-cosmic-700"
+                className="h-4 w-4 text-warm-gold focus:ring-gold-400 border-warm-gold/10 rounded bg-bg-dark/80"
               />
               <span className="ml-3 text-sm text-white">
                 {area.icon} {area.label}
@@ -569,14 +569,14 @@ const OptionsStep: React.FC<{
       <div className="flex justify-between">
         <button
           onClick={onBack}
-          className="px-6 py-2 border border-cosmic-600 text-gray-300 rounded-md hover:bg-cosmic-700 focus:ring-2 focus:ring-warm-gold"
+          className="px-6 py-2 border border-warm-gold/10 text-gray-300 rounded-md hover:bg-bg-dark/80 focus:ring-2 focus:ring-warm-gold"
         >
           上一步
         </button>
         <button
           onClick={onNext}
           disabled={options.focusAreas.length === 0}
-          className="px-6 py-2 bg-gold-600 text-cosmic-900 font-medium rounded-md hover:bg-gold-500 focus:ring-2 focus:ring-gold-400 disabled:bg-cosmic-600 disabled:cursor-not-allowed disabled:text-gray-400"
+          className="px-6 py-2 bg-gold-600 text-text-primary font-medium rounded-md hover:bg-warm-gold/50 focus:ring-2 focus:ring-gold-400 disabled:bg-bg-light disabled:cursor-not-allowed disabled:text-gray-400"
         >
           開始分析
         </button>
@@ -607,7 +607,7 @@ const AnalyzingStep: React.FC<{
       {/* 動畫圖標 */}
       <div className="flex justify-center">
         <div className="relative">
-          <svg className="animate-spin h-12 w-12 text-gold-500" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-12 w-12 text-warm-gold" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
@@ -621,9 +621,9 @@ const AnalyzingStep: React.FC<{
             <span className="text-gray-300">{progress.message}</span>
             <span className="text-white font-medium">{progress.current}%</span>
           </div>
-          <div className="w-full bg-cosmic-600 rounded-full h-2">
+          <div className="w-full bg-bg-light rounded-full h-2">
             <div 
-              className="bg-gold-500 h-2 rounded-full transition-all duration-300 ease-out"
+              className="bg-warm-gold/50 h-2 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progress.current}%` }}
             />
           </div>
@@ -674,32 +674,32 @@ const PreviewStep: React.FC<{
         </p>
       </div>
 
-      <div className="bg-cosmic-800 rounded-lg p-6 max-h-96 overflow-y-auto border border-cosmic-600">
+      <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6 max-h-96 overflow-y-auto border border-warm-gold/10">
         <div className="space-y-4">
           {/* 基本資訊 */}
           <div>
-            <label className="block text-sm font-medium text-gold-400 mb-1">模板名稱</label>
+            <label className="block text-sm font-medium text-warm-gold mb-1">模板名稱</label>
             <input
               type="text"
               value={template.name}
               onChange={(e) => onTemplateChange({ ...template, name: e.target.value })}
-              className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-md focus:ring-2 focus:ring-gold-400 text-white placeholder-gray-400"
+              className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded-md focus:ring-2 focus:ring-gold-400 text-white placeholder-gray-400"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gold-400 mb-1">描述</label>
+            <label className="block text-sm font-medium text-warm-gold mb-1">描述</label>
             <textarea
               value={template.description}
               onChange={(e) => onTemplateChange({ ...template, description: e.target.value })}
-              className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-md focus:ring-2 focus:ring-gold-400 text-white placeholder-gray-400"
+              className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded-md focus:ring-2 focus:ring-gold-400 text-white placeholder-gray-400"
               rows={3}
             />
           </div>
 
           {/* 世界觀設定 */}
           <div>
-            <h4 className="font-medium text-gold-400 mb-2">世界觀設定</h4>
+            <h4 className="font-medium text-warm-gold mb-2">世界觀設定</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-400">時代:</span>
@@ -718,10 +718,10 @@ const PreviewStep: React.FC<{
 
           {/* 角色原型 */}
           <div>
-            <h4 className="font-medium text-gold-400 mb-2">角色原型 ({template.characterArchetypes.length})</h4>
+            <h4 className="font-medium text-warm-gold mb-2">角色原型 ({template.characterArchetypes.length})</h4>
             <div className="space-y-2">
               {template.characterArchetypes.slice(0, 3).map((char, index) => (
-                <div key={index} className="text-sm border-l-4 border-gold-400 pl-3">
+                <div key={index} className="text-sm border-l-4 border-warm-gold pl-3">
                   <div className="font-medium text-white">{char.name}</div>
                   <div className="text-gray-300">{char.description}</div>
                 </div>
@@ -740,7 +740,7 @@ const PreviewStep: React.FC<{
       <div className="flex justify-between">
         <button
           onClick={onBack}
-          className="px-6 py-2 border border-cosmic-600 text-gray-300 rounded-md hover:bg-cosmic-700 focus:ring-2 focus:ring-warm-gold"
+          className="px-6 py-2 border border-warm-gold/10 text-gray-300 rounded-md hover:bg-bg-dark/80 focus:ring-2 focus:ring-warm-gold"
         >
           重新分析
         </button>
@@ -772,7 +772,7 @@ const SavingStep: React.FC = () => {
       </div>
 
       <div className="flex justify-center">
-        <svg className="animate-spin h-8 w-8 text-gold-500" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin h-8 w-8 text-warm-gold" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>

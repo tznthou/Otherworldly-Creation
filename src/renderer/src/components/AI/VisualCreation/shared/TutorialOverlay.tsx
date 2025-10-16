@@ -108,24 +108,24 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {/* 教學內容 */}
       <div className={`
         relative bg-gradient-to-br from-cosmic-800 to-cosmic-900 
-        border border-gold-500/30 rounded-2xl shadow-2xl
+        border border-warm-gold/30 rounded-2xl shadow-2xl
         max-w-lg mx-4 transform transition-all duration-300
         ${isAnimating ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
       `}>
         {/* 頭部 */}
-        <div className="p-6 border-b border-cosmic-700">
+        <div className="p-6 border-b border-warm-gold/10">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-cosmic text-gold-400 mb-1">
+              <h2 className="text-xl font-serif-tc text-warm-gold mb-1">
                 {currentTutorial.title}
               </h2>
-              <p className="text-sm text-cosmic-400">
+              <p className="text-sm text-text-secondary/80">
                 步驟 {currentStep + 1} / {tutorialSteps.length}
               </p>
             </div>
             <button
               onClick={handleSkip}
-              className="text-cosmic-400 hover:text-white transition-colors text-sm"
+              className="text-text-secondary/80 hover:text-white transition-colors text-sm"
             >
               跳過
             </button>
@@ -139,8 +139,8 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           </p>
 
           {currentTutorial.action && (
-            <div className="p-3 bg-gold-900/20 border border-gold-700/50 rounded-lg mb-4">
-              <p className="text-gold-300 text-sm font-medium flex items-center">
+            <div className="p-3 bg-warm-gold/20 border border-gold-700/50 rounded-lg mb-4">
+              <p className="text-warm-gold text-sm font-medium flex items-center">
                 <span className="mr-2">💡</span>
                 {currentTutorial.action}
               </p>
@@ -149,11 +149,11 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
           {/* 進度條 */}
           <div className="mb-6">
-            <div className="flex justify-between text-xs text-cosmic-400 mb-2">
+            <div className="flex justify-between text-xs text-text-secondary/80 mb-2">
               <span>進度</span>
               <span>{Math.round(((currentStep + 1) / tutorialSteps.length) * 100)}%</span>
             </div>
-            <div className="w-full bg-cosmic-700 rounded-full h-2">
+            <div className="w-full bg-bg-dark/80 rounded-full h-2">
               <div 
                 className="bg-gradient-to-r from-gold-500 to-gold-400 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${((currentStep + 1) / tutorialSteps.length) * 100}%` }}
@@ -168,7 +168,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             <button
               onClick={handlePrevious}
               disabled={currentStep === 0}
-              className="px-4 py-2 bg-cosmic-700 hover:bg-cosmic-600 disabled:bg-cosmic-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              className="px-4 py-2 bg-bg-dark/80 hover:bg-bg-light disabled:bg-bg-light/50 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
             >
               上一步
             </button>
@@ -194,7 +194,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         </div>
 
         {/* 裝飾性元素 */}
-        <div className="absolute -top-2 -right-2 w-4 h-4 bg-gold-500 rounded-full animate-pulse" />
+        <div className="absolute -top-2 -right-2 w-4 h-4 bg-warm-gold/50 rounded-full animate-pulse" />
         <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-clay-orange/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
     </div>,

@@ -174,7 +174,7 @@ export const CharacterSelectionPanel: React.FC<CharacterSelectionPanelProps> = m
                 onClick={() => onSceneTypeChange?.(type.value as typeof sceneType)}
                 className={`flex-1 p-3 rounded-lg border-2 transition-all ${
                   sceneType === type.value
-                    ? 'border-gold-500 bg-gold-500/10 text-gold-400'
+                    ? 'border-warm-gold bg-warm-gold/50/10 text-warm-gold'
                     : 'border-gray-600 bg-gray-700 text-gray-300 hover:border-gray-500'
                 }`}
               >
@@ -281,12 +281,12 @@ export const CharacterSelectionPanel: React.FC<CharacterSelectionPanelProps> = m
 
       {/* 選擇摘要 */}
       {hasSelectedCharacters && (
-        <div className="mt-4 p-3 bg-cosmic-800/50 rounded-lg">
-          <div className="text-sm text-cosmic-300">
+        <div className="mt-4 p-3 bg-bg-light/50 backdrop-blur-sm/50 rounded-lg">
+          <div className="text-sm text-text-secondary">
             <span className="font-medium">已選擇角色：</span>
             {getSelectedCharactersData().map(char => char.name).join('、')}
             {maxSelection && (
-              <span className="ml-2 text-cosmic-400">
+              <span className="ml-2 text-text-secondary/80">
                 ({selectedCharacterCount}/{maxSelection})
               </span>
             )}

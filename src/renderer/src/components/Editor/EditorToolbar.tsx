@@ -23,8 +23,8 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
     title={title}
     className={`px-3 py-2 rounded-lg transition-colors ${
       active 
-        ? 'bg-gold-500 text-cosmic-900' 
-        : 'bg-cosmic-800 text-gray-300 hover:bg-cosmic-700 hover:text-white'
+        ? 'bg-warm-gold/50 text-text-primary' 
+        : 'bg-bg-light/50 backdrop-blur-sm text-gray-300 hover:bg-bg-dark/80 hover:text-white'
     }`}
     onMouseDown={onMouseDown}
   >
@@ -51,7 +51,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const isFocusWritingMode = useAppSelector(selectIsFocusWritingMode);
 
   return (
-    <div className="border-b border-cosmic-700 p-4 flex items-center justify-between bg-cosmic-900">
+    <div className="border-b border-warm-gold/10 p-4 flex items-center justify-between bg-bg-dark">
       {/* 格式化工具 */}
       <div className="flex items-center space-x-2">
         {/* 文本格式 */}
@@ -101,7 +101,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </ToolbarButton>
         </div>
 
-        <div className="w-px h-6 bg-cosmic-700 mx-2"></div>
+        <div className="w-px h-6 bg-bg-dark/80 mx-2"></div>
 
         {/* 塊級元素 */}
         <div className="flex items-center space-x-1">
@@ -136,8 +136,8 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
           onClick={() => dispatch(toggleReadingMode())}
           className={`p-2 rounded-lg transition-colors ${
             isReadingMode 
-              ? 'bg-gold-500 text-cosmic-900' 
-              : 'bg-cosmic-800 text-gray-300 hover:bg-cosmic-700 hover:text-white'
+              ? 'bg-warm-gold/50 text-text-primary' 
+              : 'bg-bg-light/50 backdrop-blur-sm text-gray-300 hover:bg-bg-dark/80 hover:text-white'
           }`}
           title="閱讀模式"
         >
@@ -153,7 +153,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
           className={`p-2 rounded-lg transition-colors ${
             isFocusWritingMode 
               ? 'bg-clay-orange/30 text-white' 
-              : 'bg-cosmic-800 text-gray-300 hover:bg-cosmic-700 hover:text-white'
+              : 'bg-bg-light/50 backdrop-blur-sm text-gray-300 hover:bg-bg-dark/80 hover:text-white'
           }`}
           title="專注寫作模式"
         >
@@ -165,7 +165,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         {/* 設定按鈕 */}
         <button
           onClick={() => dispatch(toggleSettings())}
-          className="p-2 bg-cosmic-800 text-gray-300 hover:bg-cosmic-700 hover:text-white rounded-lg transition-colors"
+          className="p-2 bg-bg-light/50 backdrop-blur-sm text-gray-300 hover:bg-bg-dark/80 hover:text-white rounded-lg transition-colors"
           title="編輯器設定"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,14 +174,14 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </svg>
         </button>
 
-        <div className="w-px h-6 bg-cosmic-700 mx-2"></div>
+        <div className="w-px h-6 bg-bg-dark/80 mx-2"></div>
 
         {/* 儲存狀態指示器 */}
         <div className="flex items-center">
           <SaveStatusIndicator size="small" />
         </div>
 
-        <div className="w-px h-6 bg-cosmic-700 mx-2"></div>
+        <div className="w-px h-6 bg-bg-dark/80 mx-2"></div>
 
         {onAIWrite && (
           <button

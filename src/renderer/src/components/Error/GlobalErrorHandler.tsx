@@ -145,7 +145,7 @@ const GlobalErrorHandler: React.FC<GlobalErrorHandlerProps> = ({ children }) => 
         
         {/* 如果有更多錯誤，顯示摺疊指示 */}
         {activeErrors.filter(error => error.severity !== 'critical').length > 3 && (
-          <div className="bg-cosmic-800/80 backdrop-blur-sm border border-cosmic-600 rounded-lg p-2 text-center">
+          <div className="bg-bg-light/50 backdrop-blur-sm/80 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-2 text-center">
             <span className="text-sm text-gray-400">
               還有 {activeErrors.filter(error => error.severity !== 'critical').length - 3} 個錯誤...
             </span>

@@ -46,7 +46,7 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
         );
       case 'active':
         return (
-          <div className="w-6 h-6 bg-gold-500 rounded-full flex items-center justify-center">
+          <div className="w-6 h-6 bg-warm-gold/50 rounded-full flex items-center justify-center">
             <LoadingSpinner size="small" color="cosmic" />
           </div>
         );
@@ -106,7 +106,7 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   const remainingTime = estimateRemainingTime();
 
   return (
-    <div className={`bg-cosmic-900/90 backdrop-blur-sm rounded-lg p-6 ${className}`}>
+    <div className={`bg-bg-dark/90 backdrop-blur-sm rounded-lg p-6 ${className}`}>
       {/* 總體進度條 */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
@@ -145,7 +145,7 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <h4 className={`text-sm font-medium ${
-                    step.status === 'active' ? 'text-gold-400' :
+                    step.status === 'active' ? 'text-warm-gold' :
                     step.status === 'completed' ? 'text-green-400' :
                     step.status === 'error' ? 'text-red-400' :
                     'text-gray-400'
@@ -170,7 +170,7 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
                 {step.status === 'active' && step.progress !== undefined && (
                   <div className="w-full bg-gray-700 rounded-full h-1 mt-2">
                     <div 
-                      className="bg-gold-500 h-1 rounded-full transition-all duration-300"
+                      className="bg-warm-gold/50 h-1 rounded-full transition-all duration-300"
                       style={{ width: `${step.progress}%` }}
                     ></div>
                   </div>

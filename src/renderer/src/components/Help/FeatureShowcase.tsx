@@ -131,10 +131,10 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isOpen, onClos
       case 'interactive':
         if (feature.demo.content === 'ai-demo') {
           return (
-            <div className="bg-cosmic-800/50 rounded-lg p-4 mt-4">
-              <h5 className="text-gold-400 font-semibold mb-3">AI 續寫示例</h5>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4 mt-4">
+              <h5 className="text-warm-gold font-semibold mb-3">AI 續寫示例</h5>
               <div className="space-y-3">
-                <div className="bg-cosmic-700/50 rounded p-3">
+                <div className="bg-bg-dark/80/50 rounded p-3">
                   <p className="text-gray-300 text-sm mb-2">您的文字：</p>
                   <p className="text-white text-sm italic">
                     "主角走進了神秘的森林，突然聽到了奇怪的聲音..."
@@ -142,7 +142,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isOpen, onClos
                 </div>
                 <div className="flex items-center justify-center py-2">
                   <CircularProgress progress={75} size={40} showPercentage={false} />
-                  <span className="ml-2 text-gold-400 text-sm">AI 分析中...</span>
+                  <span className="ml-2 text-warm-gold text-sm">AI 分析中...</span>
                 </div>
                 <div className="bg-green-900/30 border border-green-500/30 rounded p-3">
                   <p className="text-gray-300 text-sm mb-2">AI 建議：</p>
@@ -164,12 +164,12 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isOpen, onClos
 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+      <div className="bg-bg-dark/95 backdrop-blur-sm border border-warm-gold/30 rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
         {/* 標題欄 */}
-        <div className="flex items-center justify-between p-6 border-b border-cosmic-700">
+        <div className="flex items-center justify-between p-6 border-b border-warm-gold/10">
           <div className="flex items-center space-x-3">
             <div className="text-2xl">🌟</div>
-            <h2 className="text-2xl font-cosmic text-gold-400">功能介紹</h2>
+            <h2 className="text-2xl font-serif-tc text-warm-gold">功能介紹</h2>
           </div>
           <button
             onClick={onClose}
@@ -183,13 +183,13 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isOpen, onClos
 
         <div className="flex h-[calc(90vh-100px)]">
           {/* 功能列表 */}
-          <div className="w-1/3 border-r border-cosmic-700 overflow-y-auto">
+          <div className="w-1/3 border-r border-warm-gold/10 overflow-y-auto">
             {/* 分類篩選 */}
-            <div className="p-4 border-b border-cosmic-700">
+            <div className="p-4 border-b border-warm-gold/10">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 bg-cosmic-800 border border-cosmic-600 rounded-lg text-white focus:border-gold-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg text-white focus:border-warm-gold focus:outline-none"
               >
                 <option value="all">所有功能</option>
                 {Object.entries(categoryNames).map(([key, name]) => (
@@ -206,8 +206,8 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isOpen, onClos
                   onClick={() => handleFeatureSelect(feature)}
                   className={`p-4 rounded-lg border cursor-pointer transition-all ${
                     selectedFeature?.id === feature.id
-                      ? 'bg-gold-500/20 border-gold-500'
-                      : 'bg-cosmic-800/50 border-cosmic-600 hover:border-gold-500/50'
+                      ? 'bg-warm-gold/50/20 border-warm-gold'
+                      : 'bg-bg-light/50 backdrop-blur-sm/50 border-warm-gold/10 hover:border-warm-gold/50'
                   }`}
                 >
                   <div className="flex items-start space-x-3">
@@ -216,7 +216,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isOpen, onClos
                       <h4 className="font-semibold text-white mb-1">{feature.title}</h4>
                       <p className="text-gray-400 text-sm">{feature.description}</p>
                       <div className="mt-2">
-                        <span className="text-xs text-gold-400 bg-gold-500/20 px-2 py-1 rounded">
+                        <span className="text-xs text-warm-gold bg-warm-gold/50/20 px-2 py-1 rounded">
                           {categoryNames[feature.category]}
                         </span>
                       </div>
@@ -234,7 +234,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isOpen, onClos
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="text-4xl">{selectedFeature.icon}</div>
                   <div>
-                    <h3 className="text-2xl font-cosmic text-gold-400 mb-2">
+                    <h3 className="text-2xl font-serif-tc text-warm-gold mb-2">
                       {selectedFeature.title}
                     </h3>
                     <p className="text-gray-300">{selectedFeature.description}</p>
@@ -248,9 +248,9 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isOpen, onClos
                     {selectedFeature.benefits.map((benefit, index) => (
                       <div
                         key={index}
-                        className="flex items-start space-x-3 p-3 bg-cosmic-800/30 rounded-lg"
+                        className="flex items-start space-x-3 p-3 bg-bg-light/50 backdrop-blur-sm/30 rounded-lg"
                       >
-                        <div className="text-gold-400 mt-0.5">✓</div>
+                        <div className="text-warm-gold mt-0.5">✓</div>
                         <span className="text-gray-300 text-sm">{benefit}</span>
                       </div>
                     ))}
@@ -286,7 +286,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ isOpen, onClos
         </div>
 
         {/* 底部操作 */}
-        <div className="p-4 border-t border-cosmic-700 flex justify-end">
+        <div className="p-4 border-t border-warm-gold/10 flex justify-end">
           <CosmicButton variant="primary" onClick={onClose}>
             開始使用
           </CosmicButton>

@@ -58,10 +58,10 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
   };
   
   return (
-    <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700 h-full">
+    <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4 border border-warm-gold/10 h-full">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-cosmic text-gold-500">📝 生成列表</h3>
-        <div className="text-xs text-cosmic-400">
+        <h3 className="text-lg font-serif-tc text-warm-gold">📝 生成列表</h3>
+        <div className="text-xs text-text-secondary/80">
           {requests.length} 個請求
         </div>
       </div>
@@ -69,8 +69,8 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
       {requests.length === 0 ? (
         <div className="text-center py-8">
           <div className="text-4xl mb-2">📋</div>
-          <p className="text-cosmic-400 text-sm mb-1">尚未添加任何請求</p>
-          <p className="text-cosmic-500 text-xs">
+          <p className="text-text-secondary/80 text-sm mb-1">尚未添加任何請求</p>
+          <p className="text-text-secondary text-xs">
             選擇角色和場景類型後點擊「添加請求」
           </p>
         </div>
@@ -79,18 +79,18 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
           {requests.map((request, index) => (
             <div
               key={request.id}
-              className="bg-cosmic-700/50 border border-cosmic-600 rounded-lg p-3"
+              className="bg-bg-dark/80/50 border border-warm-gold/10 rounded-lg p-3"
             >
               {/* 請求標題 */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
-                  <span className="text-gold-400 font-medium text-sm">
+                  <span className="text-warm-gold font-medium text-sm">
                     #{index + 1}
                   </span>
                   <span className="text-lg">
                     {getSceneTypeIcon(request.scene_type)}
                   </span>
-                  <span className="text-cosmic-300 text-sm">
+                  <span className="text-text-secondary text-sm">
                     {getSceneTypeName(request.scene_type)}
                   </span>
                 </div>
@@ -106,8 +106,8 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
               {/* 角色資訊 */}
               {request.selectedCharacterIds.length > 0 && (
                 <div className="mb-2">
-                  <p className="text-xs text-cosmic-400 mb-1">角色：</p>
-                  <p className="text-sm text-cosmic-200">
+                  <p className="text-xs text-text-secondary/80 mb-1">角色：</p>
+                  <p className="text-sm text-text-secondary/40">
                     {getCharacterNames(request.selectedCharacterIds)}
                   </p>
                 </div>
@@ -115,11 +115,11 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
               
               {/* 場景描述 */}
               <div className="mb-3">
-                <p className="text-xs text-cosmic-400 mb-1">場景描述：</p>
+                <p className="text-xs text-text-secondary/80 mb-1">場景描述：</p>
                 <textarea
                   value={request.scene_description}
                   onChange={(e) => onUpdateRequest(request.id, 'scene_description', e.target.value)}
-                  className="w-full px-2 py-2 bg-cosmic-600 border border-cosmic-500 rounded text-white placeholder-cosmic-400 text-sm resize-none"
+                  className="w-full px-2 py-2 bg-bg-light border border-warm-gold/20 rounded text-white placeholder-cosmic-400 text-sm resize-none"
                   rows={3}
                   placeholder="詳細描述想要生成的場景..."
                 />
@@ -128,11 +128,11 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
               {/* 生成設定 */}
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <p className="text-cosmic-400 mb-1">風格模板：</p>
+                  <p className="text-text-secondary/80 mb-1">風格模板：</p>
                   <select
                     value={request.style_template}
                     onChange={(e) => onUpdateRequest(request.id, 'style_template', e.target.value)}
-                    className="w-full px-2 py-1 bg-cosmic-600 border border-cosmic-500 rounded text-white text-xs"
+                    className="w-full px-2 py-1 bg-bg-light border border-warm-gold/20 rounded text-white text-xs"
                   >
                     <option value="anime-portrait">動漫肖像</option>
                     <option value="fantasy-scene">奇幻場景</option>
@@ -142,11 +142,11 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
                   </select>
                 </div>
                 <div>
-                  <p className="text-cosmic-400 mb-1">長寬比：</p>
+                  <p className="text-text-secondary/80 mb-1">長寬比：</p>
                   <select
                     value={request.aspect_ratio}
                     onChange={(e) => onUpdateRequest(request.id, 'aspect_ratio', e.target.value)}
-                    className="w-full px-2 py-1 bg-cosmic-600 border border-cosmic-500 rounded text-white text-xs"
+                    className="w-full px-2 py-1 bg-bg-light border border-warm-gold/20 rounded text-white text-xs"
                   >
                     <option value="square">正方形 (1:1)</option>
                     <option value="portrait">肖像 (3:4)</option>
@@ -160,9 +160,9 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
               <div className="mt-2 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-cosmic-400">等待生成</span>
+                  <span className="text-xs text-text-secondary/80">等待生成</span>
                 </div>
-                <div className="text-xs text-cosmic-500">
+                <div className="text-xs text-text-secondary">
                   使用 {currentProvider === 'pollinations' ? 'Pollinations.AI' : 'Google Imagen'}
                 </div>
               </div>
@@ -191,7 +191,7 @@ const GenerationControls: React.FC<GenerationControlsProps> = ({
       )}
       
       {/* 使用技巧 */}
-      <div className="mt-4 text-xs text-cosmic-500">
+      <div className="mt-4 text-xs text-text-secondary">
         <p>💡 <strong>技巧：</strong></p>
         <p>• 場景描述越詳細，生成效果越好</p>
         <p>• 可以描述服裝、表情、背景、氛圍等</p>

@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children, editorStats, currentChapterTi
   const mainOverflowClass = isEditorPage ? 'overflow-auto' : 'overflow-hidden';
 
   return (
-    <div className="flex h-screen bg-cosmic-950 relative" style={{ minWidth: '1400px' }}>
+    <div className="flex h-screen bg-bg-dark relative" style={{ minWidth: '1400px' }}>
       {/* 宇宙背景 - 確保不會阻擋點擊 */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
         <CosmicBackground intensity="medium" />

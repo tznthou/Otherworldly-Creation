@@ -35,9 +35,9 @@ const MagicCircle: React.FC<MagicCircleProps> = ({
   };
 
   const colorClasses = {
-    gold: 'border-gold-500',
+    gold: 'border-warm-gold',
     mystic: 'border-mystic-500',
-    cosmic: 'border-cosmic-500',
+    cosmic: 'border-warm-gold/20',
   };
 
   const positionStyle = {

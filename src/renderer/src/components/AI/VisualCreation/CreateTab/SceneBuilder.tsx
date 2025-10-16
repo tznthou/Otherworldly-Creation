@@ -56,25 +56,25 @@ const SceneBuilder: React.FC = () => {
   };
   
   return (
-    <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
+    <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4 border border-warm-gold/10">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-cosmic text-gold-500">🎬 場景類型</h3>
+        <h3 className="text-lg font-serif-tc text-warm-gold">🎬 場景類型</h3>
         <Tooltip content="選擇合適的場景類型以獲得最佳生成效果">
-          <div className="text-cosmic-400 text-sm">❓</div>
+          <div className="text-text-secondary/80 text-sm">❓</div>
         </Tooltip>
       </div>
       
       {selectedCharacters.length === 0 ? (
         <div className="text-center py-6">
           <div className="text-3xl mb-2">👥</div>
-          <p className="text-cosmic-400 text-sm mb-2">請先選擇角色</p>
-          <p className="text-cosmic-500 text-xs">
+          <p className="text-text-secondary/80 text-sm mb-2">請先選擇角色</p>
+          <p className="text-text-secondary text-xs">
             選擇角色後將顯示適合的場景類型
           </p>
         </div>
       ) : (
         <>
-          <div className="text-xs text-cosmic-400 mb-3 p-2 bg-cosmic-900/30 rounded">
+          <div className="text-xs text-text-secondary/80 mb-3 p-2 bg-bg-dark/30 rounded">
             💡 {GUIDANCE_TEXTS.sceneBuilder.description}
           </div>
           
@@ -96,10 +96,10 @@ const SceneBuilder: React.FC = () => {
                 className={`
                   cursor-pointer p-3 rounded-lg border transition-all duration-200
                   ${isSelected 
-                    ? 'bg-gold-900/30 border-gold-500 ring-2 ring-gold-500/50' 
+                    ? 'bg-gold-900/30 border-warm-gold ring-2 ring-gold-500/50' 
                     : isDisabled
-                    ? 'bg-cosmic-800/20 border-cosmic-700 opacity-50 cursor-not-allowed'
-                    : 'bg-cosmic-700/50 border-cosmic-600 hover:border-cosmic-500 hover:bg-cosmic-700/70'
+                    ? 'bg-bg-light/50 backdrop-blur-sm/20 border-warm-gold/10 opacity-50 cursor-not-allowed'
+                    : 'bg-bg-dark/80/50 border-warm-gold/10 hover:border-warm-gold/20 hover:bg-bg-dark/80/70'
                   }
                 `}
               >
@@ -110,8 +110,8 @@ const SceneBuilder: React.FC = () => {
                   ${isSelected 
                     ? 'bg-gold-600 text-white' 
                     : isDisabled 
-                    ? 'bg-cosmic-700 text-cosmic-500'
-                    : 'bg-cosmic-600 text-cosmic-300'
+                    ? 'bg-bg-dark/80 text-text-secondary'
+                    : 'bg-bg-light text-text-secondary'
                   }
                 `}>
                   {type.icon}
@@ -122,12 +122,12 @@ const SceneBuilder: React.FC = () => {
                   <div className="flex items-center justify-between mb-1">
                     <h4 className={`
                       font-medium
-                      ${isSelected ? 'text-gold-300' : isDisabled ? 'text-cosmic-500' : 'text-white'}
+                      ${isSelected ? 'text-warm-gold' : isDisabled ? 'text-text-secondary' : 'text-white'}
                     `}>
                       {type.name}
                     </h4>
                     {isSelected && (
-                      <div className="flex-shrink-0 w-4 h-4 bg-gold-500 rounded-full flex items-center justify-center">
+                      <div className="flex-shrink-0 w-4 h-4 bg-warm-gold/50 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs">✓</span>
                       </div>
                     )}
@@ -135,14 +135,14 @@ const SceneBuilder: React.FC = () => {
                   
                   <p className={`
                     text-sm mb-2
-                    ${isSelected ? 'text-gold-200' : isDisabled ? 'text-cosmic-500' : 'text-cosmic-300'}
+                    ${isSelected ? 'text-warm-gold/80' : isDisabled ? 'text-text-secondary' : 'text-text-secondary'}
                   `}>
                     {type.description}
                   </p>
                   
                   <p className={`
                     text-xs mb-2
-                    ${isSelected ? 'text-gold-400' : isDisabled ? 'text-cosmic-600' : 'text-cosmic-400'}
+                    ${isSelected ? 'text-warm-gold' : isDisabled ? 'text-text-secondary' : 'text-text-secondary/80'}
                   `}>
                     {type.recommendation}
                   </p>
@@ -171,18 +171,18 @@ const SceneBuilder: React.FC = () => {
       
       {/* 當前選擇摘要 */}
       {sceneType && (
-        <div className="mt-4 p-3 bg-gold-900/20 border border-gold-700/50 rounded-lg">
-          <p className="text-gold-300 text-sm font-medium mb-1">
+        <div className="mt-4 p-3 bg-warm-gold/20 border border-gold-700/50 rounded-lg">
+          <p className="text-warm-gold text-sm font-medium mb-1">
             當前選擇：{sceneTypes.find(t => t.id === sceneType)?.name} {sceneTypes.find(t => t.id === sceneType)?.icon}
           </p>
-          <p className="text-gold-400 text-xs">
+          <p className="text-warm-gold text-xs">
             {sceneTypes.find(t => t.id === sceneType)?.description}
           </p>
         </div>
       )}
       
       {/* 使用提示 */}
-      <div className="mt-3 text-xs text-cosmic-500">
+      <div className="mt-3 text-xs text-text-secondary">
         <p>💡 不同場景類型會影響 AI 生成的構圖和細節重點</p>
         <p>🎨 肖像注重角色特寫，互動強調表情關係，場景突出環境氛圍</p>
       </div>

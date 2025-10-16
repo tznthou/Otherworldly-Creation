@@ -115,25 +115,25 @@ const ChapterBatchActions: React.FC<ChapterBatchActionsProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 bg-cosmic-800 border border-cosmic-700 rounded-lg shadow-lg z-10 w-48">
+        <div className="absolute right-0 top-full mt-2 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg shadow-lg z-10 w-48">
           <div className="p-2">
             <button
               onClick={handleSortByTitle}
-              className="w-full text-left px-3 py-2 hover:bg-cosmic-700 rounded text-sm flex items-center"
+              className="w-full text-left px-3 py-2 hover:bg-bg-dark/80 rounded text-sm flex items-center"
             >
               <span className="mr-2">🔤</span>
               按標題排序
             </button>
             <button
               onClick={handleSortByDate}
-              className="w-full text-left px-3 py-2 hover:bg-cosmic-700 rounded text-sm flex items-center"
+              className="w-full text-left px-3 py-2 hover:bg-bg-dark/80 rounded text-sm flex items-center"
             >
               <span className="mr-2">📅</span>
               按創建日期排序
             </button>
             <button
               onClick={handleReverseOrder}
-              className="w-full text-left px-3 py-2 hover:bg-cosmic-700 rounded text-sm flex items-center"
+              className="w-full text-left px-3 py-2 hover:bg-bg-dark/80 rounded text-sm flex items-center"
             >
               <span className="mr-2">🔄</span>
               反轉章節順序

@@ -81,14 +81,14 @@ const ChapterNotes: React.FC<ChapterNotesProps> = ({ chapter }) => {
   };
 
   return (
-    <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg overflow-hidden">
+    <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg overflow-hidden">
       <div 
-        className="p-3 flex items-center justify-between cursor-pointer hover:bg-cosmic-700"
+        className="p-3 flex items-center justify-between cursor-pointer hover:bg-bg-dark/80"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center">
-          <span className="text-gold-400 mr-2">📝</span>
-          <h3 className="font-medium text-gold-400">章節筆記</h3>
+          <span className="text-warm-gold mr-2">📝</span>
+          <h3 className="font-medium text-warm-gold">章節筆記</h3>
         </div>
         <span className="text-gray-400">
           {isExpanded ? '▼' : '►'}
@@ -96,12 +96,12 @@ const ChapterNotes: React.FC<ChapterNotesProps> = ({ chapter }) => {
       </div>
 
       {isExpanded && (
-        <div className="p-3 border-t border-cosmic-700">
+        <div className="p-3 border-t border-warm-gold/10">
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="在這裡添加章節筆記、大綱或靈感..."
-            className="w-full h-32 bg-cosmic-900 border border-cosmic-700 rounded-lg p-3 text-white resize-none focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full h-32 bg-bg-dark border border-warm-gold/10 rounded-lg p-3 text-white resize-none focus:outline-none focus:ring-2 focus:ring-gold-500"
           />
           
           <div className="flex justify-end mt-2">

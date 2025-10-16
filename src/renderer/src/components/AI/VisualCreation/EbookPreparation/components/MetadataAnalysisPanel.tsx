@@ -198,7 +198,7 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
     return (
       <div className="text-center py-8">
         <div className="text-4xl mb-3">📊</div>
-        <p className="text-cosmic-400">請選擇圖片以查看元數據分析</p>
+        <p className="text-text-secondary/80">請選擇圖片以查看元數據分析</p>
       </div>
     );
   }
@@ -206,71 +206,71 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
   return (
     <div className="space-y-6">
       {/* 整體統計 */}
-      <div className="bg-cosmic-800 rounded-lg p-4">
-        <h4 className="text-base font-medium text-cosmic-100 mb-4 flex items-center">
+      <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
+        <h4 className="text-base font-medium text-text-secondary/20 mb-4 flex items-center">
           <span className="text-xl mr-2">📊</span>
           整體統計分析
         </h4>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-          <div className="bg-cosmic-750 p-3 rounded">
-            <div className="text-cosmic-400">總圖片數</div>
-            <div className="text-lg font-semibold text-cosmic-100">{stats.totalImages}</div>
+          <div className="bg-bg-light/40 p-3 rounded">
+            <div className="text-text-secondary/80">總圖片數</div>
+            <div className="text-lg font-semibold text-text-secondary/20">{stats.totalImages}</div>
           </div>
-          <div className="bg-cosmic-750 p-3 rounded">
-            <div className="text-cosmic-400">平均解析度</div>
-            <div className="text-lg font-semibold text-cosmic-100">{formatPixels(stats.averageResolution)}</div>
+          <div className="bg-bg-light/40 p-3 rounded">
+            <div className="text-text-secondary/80">平均解析度</div>
+            <div className="text-lg font-semibold text-text-secondary/20">{formatPixels(stats.averageResolution)}</div>
           </div>
-          <div className="bg-cosmic-750 p-3 rounded">
-            <div className="text-cosmic-400">總檔案大小</div>
-            <div className="text-lg font-semibold text-cosmic-100">{formatFileSize(stats.fileStats.totalSize)}</div>
+          <div className="bg-bg-light/40 p-3 rounded">
+            <div className="text-text-secondary/80">總檔案大小</div>
+            <div className="text-lg font-semibold text-text-secondary/20">{formatFileSize(stats.fileStats.totalSize)}</div>
           </div>
-          <div className="bg-cosmic-750 p-3 rounded">
-            <div className="text-cosmic-400">平均檔案大小</div>
-            <div className="text-lg font-semibold text-cosmic-100">{formatFileSize(stats.fileStats.averageSize)}</div>
+          <div className="bg-bg-light/40 p-3 rounded">
+            <div className="text-text-secondary/80">平均檔案大小</div>
+            <div className="text-lg font-semibold text-text-secondary/20">{formatFileSize(stats.fileStats.averageSize)}</div>
           </div>
         </div>
 
         {/* 分佈圖表 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* 方向分佈 */}
-          <div className="bg-cosmic-750 p-3 rounded">
-            <h5 className="text-sm font-medium text-cosmic-200 mb-3">圖片方向分佈</h5>
+          <div className="bg-bg-light/40 p-3 rounded">
+            <h5 className="text-sm font-medium text-text-secondary/40 mb-3">圖片方向分佈</h5>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-cosmic-400">直向 📱</span>
-                <span className="text-cosmic-200">{stats.orientationDistribution.portrait}</span>
+                <span className="text-text-secondary/80">直向 📱</span>
+                <span className="text-text-secondary/40">{stats.orientationDistribution.portrait}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-cosmic-400">橫向 🖥️</span>
-                <span className="text-cosmic-200">{stats.orientationDistribution.landscape}</span>
+                <span className="text-text-secondary/80">橫向 🖥️</span>
+                <span className="text-text-secondary/40">{stats.orientationDistribution.landscape}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-cosmic-400">正方 ⏹️</span>
-                <span className="text-cosmic-200">{stats.orientationDistribution.square}</span>
+                <span className="text-text-secondary/80">正方 ⏹️</span>
+                <span className="text-text-secondary/40">{stats.orientationDistribution.square}</span>
               </div>
             </div>
           </div>
 
           {/* 品質分佈 */}
-          <div className="bg-cosmic-750 p-3 rounded">
-            <h5 className="text-sm font-medium text-cosmic-200 mb-3">解析度品質分佈</h5>
+          <div className="bg-bg-light/40 p-3 rounded">
+            <h5 className="text-sm font-medium text-text-secondary/40 mb-3">解析度品質分佈</h5>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-red-400">低品質 🔴</span>
-                <span className="text-cosmic-200">{stats.qualityDistribution.low}</span>
+                <span className="text-text-secondary/40">{stats.qualityDistribution.low}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-yellow-400">中等品質 🟡</span>
-                <span className="text-cosmic-200">{stats.qualityDistribution.medium}</span>
+                <span className="text-text-secondary/40">{stats.qualityDistribution.medium}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-green-400">高品質 🟢</span>
-                <span className="text-cosmic-200">{stats.qualityDistribution.high}</span>
+                <span className="text-text-secondary/40">{stats.qualityDistribution.high}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-warm-gold">超高品質 🔵</span>
-                <span className="text-cosmic-200">{stats.qualityDistribution.ultra}</span>
+                <span className="text-text-secondary/40">{stats.qualityDistribution.ultra}</span>
               </div>
             </div>
           </div>
@@ -278,8 +278,8 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
       </div>
 
       {/* 個別圖片分析 */}
-      <div className="bg-cosmic-800 rounded-lg p-4">
-        <h4 className="text-base font-medium text-cosmic-100 mb-4 flex items-center">
+      <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
+        <h4 className="text-base font-medium text-text-secondary/20 mb-4 flex items-center">
           <span className="text-xl mr-2">🔍</span>
           個別圖片分析
         </h4>
@@ -294,9 +294,9 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
                            `圖片-${index + 1}`;
 
             return (
-              <div key={analysis.id} className="bg-cosmic-750 rounded-lg p-3">
+              <div key={analysis.id} className="bg-bg-light/40 rounded-lg p-3">
                 <div className="flex justify-between items-start mb-2">
-                  <h5 className="font-medium text-cosmic-200 truncate flex-1 mr-2">{fileName}</h5>
+                  <h5 className="font-medium text-text-secondary/40 truncate flex-1 mr-2">{fileName}</h5>
                   <div className="flex space-x-1 text-xs">
                     <span className={`px-2 py-1 rounded ${
                       analysis.resolution === 'ultra' ? 'bg-warm-gold text-white' :
@@ -311,27 +311,27 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
                   <div>
-                    <div className="text-cosmic-400">尺寸</div>
-                    <div className="text-cosmic-200">{image.width}×{image.height}</div>
+                    <div className="text-text-secondary/80">尺寸</div>
+                    <div className="text-text-secondary/40">{image.width}×{image.height}</div>
                   </div>
                   <div>
-                    <div className="text-cosmic-400">比例</div>
-                    <div className="text-cosmic-200">{analysis.aspectRatio.toFixed(2)}</div>
+                    <div className="text-text-secondary/80">比例</div>
+                    <div className="text-text-secondary/40">{analysis.aspectRatio.toFixed(2)}</div>
                   </div>
                   <div>
-                    <div className="text-cosmic-400">檔案大小</div>
-                    <div className="text-cosmic-200">{formatFileSize(image.file_size_bytes || 0)}</div>
+                    <div className="text-text-secondary/80">檔案大小</div>
+                    <div className="text-text-secondary/40">{formatFileSize(image.file_size_bytes || 0)}</div>
                   </div>
                   <div>
-                    <div className="text-cosmic-400">效率</div>
-                    <div className="text-cosmic-200">{analysis.fileEfficiency.toFixed(0)} KB/MP</div>
+                    <div className="text-text-secondary/80">效率</div>
+                    <div className="text-text-secondary/40">{analysis.fileEfficiency.toFixed(0)} KB/MP</div>
                   </div>
                 </div>
 
                 {/* 電子書適用性 */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-3">
                   <div className="text-center">
-                    <div className="text-cosmic-400">封面</div>
+                    <div className="text-text-secondary/80">封面</div>
                     <div className={`font-semibold ${
                       analysis.ebookSuitability.cover >= 70 ? 'text-green-400' :
                       analysis.ebookSuitability.cover >= 40 ? 'text-yellow-400' :
@@ -341,7 +341,7 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-cosmic-400">內頁</div>
+                    <div className="text-text-secondary/80">內頁</div>
                     <div className={`font-semibold ${
                       analysis.ebookSuitability.inline >= 70 ? 'text-green-400' :
                       analysis.ebookSuitability.inline >= 40 ? 'text-yellow-400' :
@@ -351,7 +351,7 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-cosmic-400">肖像</div>
+                    <div className="text-text-secondary/80">肖像</div>
                     <div className={`font-semibold ${
                       analysis.ebookSuitability.portrait >= 70 ? 'text-green-400' :
                       analysis.ebookSuitability.portrait >= 40 ? 'text-yellow-400' :
@@ -361,7 +361,7 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-cosmic-400">場景</div>
+                    <div className="text-text-secondary/80">場景</div>
                     <div className={`font-semibold ${
                       analysis.ebookSuitability.scene >= 70 ? 'text-green-400' :
                       analysis.ebookSuitability.scene >= 40 ? 'text-yellow-400' :
@@ -374,11 +374,11 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
 
                 {/* 建議 */}
                 {analysis.recommendations.length > 0 && (
-                  <div className="border-t border-cosmic-600 pt-2">
-                    <div className="text-cosmic-400 text-xs mb-1">建議：</div>
+                  <div className="border-t border-warm-gold/10 pt-2">
+                    <div className="text-text-secondary/80 text-xs mb-1">建議：</div>
                     <div className="space-y-1">
                       {analysis.recommendations.map((rec, i) => (
-                        <div key={i} className="text-xs text-cosmic-300">{rec}</div>
+                        <div key={i} className="text-xs text-text-secondary">{rec}</div>
                       ))}
                     </div>
                   </div>

@@ -43,7 +43,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
     if (archetype.includes('魔法') || archetype.includes('法師')) return 'bg-clay-orange';
     if (archetype.includes('戰士') || archetype.includes('騎士')) return 'bg-warm-gold';
     if (archetype.includes('配角') || archetype.includes('朋友')) return 'bg-green-600';
-    return 'bg-cosmic-600';
+    return 'bg-bg-light';
   };
 
   return (
@@ -51,8 +51,8 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       className={`
         character-card relative cursor-pointer transition-all duration-200 
         ${selected 
-          ? 'ring-2 ring-gold-500 bg-cosmic-800/80' 
-          : 'bg-cosmic-800/40 hover:bg-cosmic-800/60'
+          ? 'ring-2 ring-gold-500 bg-bg-light/50 backdrop-blur-sm/80' 
+          : 'bg-bg-light/50 backdrop-blur-sm/40 hover:bg-bg-light/50 backdrop-blur-sm/60'
         }
         rounded-lg p-4 min-h-[120px] flex flex-col items-center text-center
         ${className}
@@ -69,7 +69,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
     >
       {/* 選中狀態指示器 */}
       {selected && (
-        <div className="absolute top-2 right-2 w-6 h-6 bg-gold-500 rounded-full flex items-center justify-center">
+        <div className="absolute top-2 right-2 w-6 h-6 bg-warm-gold/50 rounded-full flex items-center justify-center">
           <span className="text-white text-xs">✓</span>
         </div>
       )}

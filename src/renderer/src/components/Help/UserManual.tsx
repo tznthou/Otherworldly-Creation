@@ -45,13 +45,13 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               創世紀元的核心功能（AI 續寫、角色分析、劇情建議等）依賴外部 AI 服務。
               請先完成 AI 環境配置，再開始使用其他功能。
             </p>
-            <p className="text-gold-400 text-sm font-semibold">
+            <p className="text-warm-gold text-sm font-semibold">
               → 請參閱「🤖 AI 環境配置指南」章節完成設定
             </p>
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">系統需求</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">系統需求</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• 作業系統：Windows 10+、macOS 10.14+、Linux Ubuntu 18.04+</li>
               <li>• 記憶體：建議 4GB RAM 以上（Ollama 本地模型需 8GB+）</li>
@@ -61,7 +61,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">第一次使用</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">第一次使用</h4>
             <ol className="text-gray-300 space-y-2">
               <li><strong>1. 配置 AI 服務</strong>（必需步驟，請參閱「AI 環境配置指南」）</li>
               <li>2. 啟動應用程式後，系統會自動檢查 AI 服務狀態</li>
@@ -95,59 +95,59 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">五大提供商完整對比（2025 最新）</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">五大提供商完整對比（2025 最新）</h4>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="bg-cosmic-700">
-                    <th className="border border-cosmic-600 p-3 text-left text-white">提供商</th>
-                    <th className="border border-cosmic-600 p-3 text-left text-white">費用</th>
-                    <th className="border border-cosmic-600 p-3 text-left text-white">免費層</th>
-                    <th className="border border-cosmic-600 p-3 text-left text-white">性能</th>
-                    <th className="border border-cosmic-600 p-3 text-left text-white">隱私</th>
-                    <th className="border border-cosmic-600 p-3 text-left text-white">適用場景</th>
+                  <tr className="bg-bg-dark/80">
+                    <th className="border border-warm-gold/10 p-3 text-left text-white">提供商</th>
+                    <th className="border border-warm-gold/10 p-3 text-left text-white">費用</th>
+                    <th className="border border-warm-gold/10 p-3 text-left text-white">免費層</th>
+                    <th className="border border-warm-gold/10 p-3 text-left text-white">性能</th>
+                    <th className="border border-warm-gold/10 p-3 text-left text-white">隱私</th>
+                    <th className="border border-warm-gold/10 p-3 text-left text-white">適用場景</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="bg-green-900/10">
-                    <td className="border border-cosmic-600 p-3 text-green-400 font-semibold">🟢 Gemini</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">免費+付費</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">1,500/天<br/>15 RPM</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐⭐</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">雲端存儲</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">新手、學生、原型開發</td>
+                    <td className="border border-warm-gold/10 p-3 text-green-400 font-semibold">🟢 Gemini</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">免費+付費</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">1,500/天<br/>15 RPM</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">⭐⭐⭐⭐</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">雲端存儲</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">新手、學生、原型開發</td>
                   </tr>
                   <tr className="bg-warm-gold/5">
-                    <td className="border border-cosmic-600 p-3 text-warm-gold font-semibold">🔵 Ollama</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">完全免費</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">無限制</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">完全本地</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">隱私優先、離線使用</td>
+                    <td className="border border-warm-gold/10 p-3 text-warm-gold font-semibold">🔵 Ollama</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">完全免費</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">無限制</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">⭐⭐⭐</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">完全本地</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">隱私優先、離線使用</td>
                   </tr>
                   <tr>
-                    <td className="border border-cosmic-600 p-3 text-yellow-400 font-semibold">🟡 OpenAI</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">付費</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">無</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐⭐⭐</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">雲端存儲</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">專業作家、商業用途</td>
+                    <td className="border border-warm-gold/10 p-3 text-yellow-400 font-semibold">🟡 OpenAI</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">付費</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">無</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">⭐⭐⭐⭐⭐</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">雲端存儲</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">專業作家、商業用途</td>
                   </tr>
                   <tr>
-                    <td className="border border-cosmic-600 p-3 text-clay-orange font-semibold">🟣 Claude</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">付費</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">無</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐⭐⭐</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">雲端存儲</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">長篇創作、深度理解</td>
+                    <td className="border border-warm-gold/10 p-3 text-clay-orange font-semibold">🟣 Claude</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">付費</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">無</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">⭐⭐⭐⭐⭐</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">雲端存儲</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">長篇創作、深度理解</td>
                   </tr>
                   <tr>
-                    <td className="border border-cosmic-600 p-3 text-orange-400 font-semibold">🟠 OpenRouter</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">付費</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">50-1000/天</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">⭐⭐⭐⭐</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">雲端存儲</td>
-                    <td className="border border-cosmic-600 p-3 text-gray-300">多模型測試、成本優化</td>
+                    <td className="border border-warm-gold/10 p-3 text-orange-400 font-semibold">🟠 OpenRouter</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">付費</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">50-1000/天</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">⭐⭐⭐⭐</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">雲端存儲</td>
+                    <td className="border border-warm-gold/10 p-3 text-gray-300">多模型測試、成本優化</td>
                   </tr>
                 </tbody>
               </table>
@@ -155,9 +155,9 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">針對不同用戶類型的推薦</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">針對不同用戶類型的推薦</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
                 <h5 className="text-green-400 font-semibold mb-2">🎓 學生 / 業餘愛好者</h5>
                 <p className="text-gray-300 text-sm mb-2">推薦：<strong>Gemini Free</strong> 或 <strong>Ollama</strong></p>
                 <ul className="text-gray-300 text-xs space-y-1">
@@ -166,7 +166,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </ul>
               </div>
 
-              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
                 <h5 className="text-yellow-400 font-semibold mb-2">✍️ 專業作家</h5>
                 <p className="text-gray-300 text-sm mb-2">推薦：<strong>OpenAI GPT-4o</strong> 或 <strong>Claude Sonnet 4.5</strong></p>
                 <ul className="text-gray-300 text-xs space-y-1">
@@ -175,7 +175,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </ul>
               </div>
 
-              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
                 <h5 className="text-warm-gold font-semibold mb-2">🔐 隱私優先用戶</h5>
                 <p className="text-gray-300 text-sm mb-2">推薦：<strong>Ollama</strong>（完全本地）</p>
                 <ul className="text-gray-300 text-xs space-y-1">
@@ -184,7 +184,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </ul>
               </div>
 
-              <div className="bg-cosmic-800/50 border border-cosmic-600 rounded-lg p-4">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 border border-warm-gold/10 rounded-lg p-4">
                 <h5 className="text-orange-400 font-semibold mb-2">💰 預算有限</h5>
                 <p className="text-gray-300 text-sm mb-2">推薦：<strong>Gemini Free</strong> + <strong>OpenRouter 免費模型</strong></p>
                 <ul className="text-gray-300 text-xs space-y-1">
@@ -196,7 +196,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">詳細配置教學</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">詳細配置教學</h4>
 
             <div className="space-y-6">
               <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-5">
@@ -229,12 +229,12 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                   <li><strong>步驟 2：</strong>選擇您的作業系統（Windows/macOS/Linux）並下載安裝檔</li>
                   <li><strong>步驟 3：</strong>執行安裝程式（通常會自動啟動 Ollama 服務）</li>
                   <li><strong>步驟 4：</strong>開啟終端機（Terminal/Command Prompt）</li>
-                  <li><strong>步驟 5：</strong>下載模型：<code className="bg-cosmic-700 px-2 py-1 rounded">ollama pull llama3.2</code></li>
+                  <li><strong>步驟 5：</strong>下載模型：<code className="bg-bg-dark/80 px-2 py-1 rounded">ollama pull llama3.2</code></li>
                   <li><strong>步驟 6：</strong>等待模型下載完成（首次下載需要較長時間）</li>
                   <li><strong>步驟 7：</strong>開啟創世紀元，Ollama 會自動檢測並連接</li>
                   <li><strong>步驟 8：</strong>無需手動配置 API Key，系統會自動使用本地服務</li>
                 </ol>
-                <div className="bg-cosmic-800/50 rounded p-3 mt-3 text-xs text-gray-300">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded p-3 mt-3 text-xs text-gray-300">
                   <p className="font-semibold mb-1">📋 推薦模型列表：</p>
                   <ul className="space-y-1 ml-4">
                     <li>• <code>llama3.2</code> - 最新 Llama 模型（7B）</li>
@@ -286,7 +286,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                   <li><strong>步驟 7：</strong>貼上 API Key 並測試連接</li>
                   <li><strong>步驟 8：</strong>選擇模型（推薦：claude-sonnet-4-5）</li>
                 </ol>
-                <div className="bg-cosmic-800/50 rounded p-3 mt-3 text-xs text-gray-300">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded p-3 mt-3 text-xs text-gray-300">
                   <p className="font-semibold mb-1">🎯 Claude 特色：</p>
                   <ul className="space-y-1 ml-4">
                     <li>• 200K token 超長上下文視窗</li>
@@ -309,7 +309,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                   <li><strong>步驟 7：</strong>貼上 API Key 並測試連接</li>
                   <li><strong>步驟 8：</strong>從 300+ 模型中選擇合適的模型</li>
                 </ol>
-                <div className="bg-cosmic-800/50 rounded p-3 mt-3 text-xs text-gray-300">
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded p-3 mt-3 text-xs text-gray-300">
                   <p className="font-semibold mb-1">💡 OpenRouter 優勢：</p>
                   <ul className="space-y-1 ml-4">
                     <li>• 統一 API 訪問 300+ 模型</li>
@@ -323,7 +323,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">常見配置問題 FAQ</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">常見配置問題 FAQ</h4>
             <div className="space-y-3">
               <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
                 <h5 className="text-red-400 font-semibold mb-2">Q: API Key 顯示無效怎麼辦？</h5>
@@ -402,7 +402,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">創建新專案</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">創建新專案</h4>
             <ol className="text-gray-300 space-y-2">
               <li>1. 在儀表板點擊「創建新專案」按鈕</li>
               <li>2. 選擇小說類型（異世界、校園、科幻、奇幻）</li>
@@ -411,8 +411,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
               <li>5. 確認創建，系統會自動生成專案結構</li>
             </ol>
             
-            <div className="bg-gold-900/20 border border-gold-500/30 rounded-lg p-4 mt-4">
-              <h5 className="text-gold-400 font-semibold mb-2">💡 使用模板快速開始</h5>
+            <div className="bg-warm-gold/20 border border-warm-gold/30 rounded-lg p-4 mt-4">
+              <h5 className="text-warm-gold font-semibold mb-2">💡 使用模板快速開始</h5>
               <p className="text-gray-300 text-sm mb-2">
                 如果您是新用戶或想要快速開始創作，建議使用模板管理系統：
               </p>
@@ -422,28 +422,28 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 <li>3. 點擊右上角「匯入模板」按鈕</li>
                 <li>4. 選擇合適的模板類型一鍵匯入</li>
               </ol>
-              <p className="text-gold-300 text-sm mt-2 font-medium">
+              <p className="text-warm-gold text-sm mt-2 font-medium">
                 模板包含完整的世界觀設定、角色框架和劇情大綱，讓您立即開始創作！
               </p>
             </div>
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">專案類型說明</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">專案類型說明</h4>
             <div className="space-y-3">
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold">異世界轉生</h5>
                 <p className="text-gray-300 text-sm">包含轉生設定、魔法系統、異世界地理等元素</p>
               </div>
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold">校園戀愛</h5>
                 <p className="text-gray-300 text-sm">現代校園背景，著重角色關係發展</p>
               </div>
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold">科幻冒險</h5>
                 <p className="text-gray-300 text-sm">未來科技設定，包含科技體系和宇宙觀</p>
               </div>
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold">奇幻冒險</h5>
                 <p className="text-gray-300 text-sm">魔法世界設定，包含種族和魔法體系</p>
               </div>
@@ -466,7 +466,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">如何使用模板</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">如何使用模板</h4>
             <ol className="text-gray-300 space-y-2">
               <li>1. 點擊左側選單的「⚙️ 設定」</li>
               <li>2. 在設定頁面中選擇「📚 模板管理」</li>
@@ -478,7 +478,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">四大模板類型</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">四大模板類型</h4>
             <div className="space-y-4">
               <div className="bg-clay-orange/10 border border-clay-orange/20 rounded-lg p-4">
                 <h5 className="text-clay-orange font-semibold mb-2 flex items-center">
@@ -555,7 +555,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">模板使用建議</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">模板使用建議</h4>
             <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
               <ul className="text-gray-300 space-y-2 text-sm">
                 <li>• <strong>新手建議</strong>：如果您是第一次使用創世紀元，強烈建議從模板開始</li>
@@ -568,7 +568,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">模板管理功能</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">模板管理功能</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>匯入模板</strong>：一鍵匯入預設模板，創建完整專案</li>
               <li>• <strong>模板預覽</strong>：匯入前可以查看模板的詳細內容</li>
@@ -593,7 +593,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">編輯器界面</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">編輯器界面</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>章節列表</strong>：左側面板顯示所有章節，支援拖拽排序</li>
               <li>• <strong>工具列</strong>：提供儲存、格式設定、AI 輔助等功能</li>
@@ -603,7 +603,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">章節管理</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">章節管理</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>創建章節</strong>：點擊章節列表底部的「新增章節」按鈕</li>
               <li>• <strong>編輯章節</strong>：點擊章節標題可以重新命名</li>
@@ -614,7 +614,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">寫作功能</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">寫作功能</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>自動儲存</strong>：每 3 秒自動儲存，無需手動操作</li>
               <li>• <strong>字數統計</strong>：即時顯示章節和專案字數</li>
@@ -639,7 +639,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">角色資訊設定</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">角色資訊設定</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>基本資訊</strong>：姓名、年齡、性別、職業等</li>
               <li>• <strong>外貌描述</strong>：身高、體重、髮色、眼色、特徵等</li>
@@ -650,22 +650,22 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">角色原型模板</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">角色原型模板</h4>
             <p className="text-gray-300 mb-3">系統提供多種角色原型模板，幫助您快速創建角色：</p>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold text-sm">主角類型</h5>
                 <p className="text-gray-300 text-xs">熱血主角、冷靜主角、天才主角等</p>
               </div>
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold text-sm">女主角類型</h5>
                 <p className="text-gray-300 text-xs">溫柔型、傲嬌型、天然型等</p>
               </div>
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold text-sm">配角類型</h5>
                 <p className="text-gray-300 text-xs">導師、對手、朋友、敵人等</p>
               </div>
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold text-sm">特殊角色</h5>
                 <p className="text-gray-300 text-xs">神秘人物、反派、路人等</p>
               </div>
@@ -673,7 +673,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">角色關係管理</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">角色關係管理</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>關係類型</strong>：家人、朋友、戀人、敵人、師徒等</li>
               <li>• <strong>關係描述</strong>：詳細說明角色間的關係背景</li>
@@ -717,7 +717,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">功能特色</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">功能特色</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>🧠 智能推薦系統</strong>：系統根據小說內容自動推薦最適合的AI提供者</li>
               <li>• <strong>🌐 多AI提供者支持</strong>：整合5大AI服務（Ollama、OpenAI、Gemini、Claude、OpenRouter）</li>
@@ -733,7 +733,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">如何開始使用</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">如何開始使用</h4>
             <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
               <h5 className="text-warm-gold font-semibold mb-2">兩種啟動方式</h5>
               <div className="space-y-3 text-gray-300 text-sm">
@@ -756,9 +756,9 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">創建標籤 - 核心功能</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">創建標籤 - 核心功能</h4>
             <div className="space-y-4">
-              <div className="bg-cosmic-800/50 p-4 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-4 rounded-lg">
                 <h5 className="text-white font-semibold mb-2">角色選擇系統</h5>
                 <ul className="text-gray-300 text-sm space-y-1">
                   <li>• 自動載入當前專案的所有角色</li>
@@ -768,7 +768,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </ul>
               </div>
               
-              <div className="bg-cosmic-800/50 p-4 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-4 rounded-lg">
                 <h5 className="text-white font-semibold mb-2">場景建構器</h5>
                 <ul className="text-gray-300 text-sm space-y-1">
                   <li>• <strong>肖像模式</strong>：單一角色的精美頭像或全身像</li>
@@ -778,7 +778,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 </ul>
               </div>
 
-              <div className="bg-cosmic-800/50 p-4 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-4 rounded-lg">
                 <h5 className="text-white font-semibold mb-2">生成控制與快速迭代</h5>
                 <ul className="text-gray-300 text-sm space-y-1">
                   <li>• 批次設定：為生成任務命名和添加描述</li>
@@ -802,8 +802,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">監控標籤 - 任務管理</h4>
-            <div className="bg-cosmic-800/50 p-4 rounded-lg">
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">監控標籤 - 任務管理</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 p-4 rounded-lg">
               <ul className="text-gray-300 space-y-2">
                 <li>• <strong>實時進度</strong>：顯示所有生成任務的當前狀態</li>
                 <li>• <strong>詳細信息</strong>：包含提示詞、參數、時間戳等</li>
@@ -815,8 +815,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">圖庫標籤 - 成果管理</h4>
-            <div className="bg-cosmic-800/50 p-4 rounded-lg">
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">圖庫標籤 - 成果管理</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 p-4 rounded-lg">
               <ul className="text-gray-300 space-y-2">
                 <li>• <strong>虛擬化網格</strong>：高效能顯示大量圖片</li>
                 <li>• <strong>圖片預覽</strong>：全螢幕預覽模式，支援鍵盤導航</li>
@@ -829,7 +829,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">服務商選擇指南</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">服務商選擇指南</h4>
             <div className="space-y-3">
               <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
                 <h5 className="text-green-400 font-semibold mb-2">🆓 Pollinations.AI（推薦新手）</h5>
@@ -852,7 +852,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">最佳實踐建議</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">最佳實踐建議</h4>
             <div className="bg-clay-orange/10 border border-clay-orange/20 rounded-lg p-4">
               <ul className="text-gray-300 space-y-2 text-sm">
                 <li>• <strong>角色設定</strong>：在角色管理中詳細填寫外貌描述，提升生成準確度</li>
@@ -866,7 +866,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">常見問題與解決</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">常見問題與解決</h4>
             <div className="space-y-3">
               <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
                 <h5 className="text-red-400 font-semibold">問題：無法載入角色列表</h5>
@@ -915,7 +915,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">多供應商AI系統特點</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">多供應商AI系統特點</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>供應商多元化</strong>：本地Ollama + 4大雲端服務，滿足不同需求</li>
               <li>• <strong>智能供應商選擇</strong>：根據創作類型推薦最適合的AI供應商</li>
@@ -927,7 +927,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">使用 AI 續寫</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">使用 AI 續寫</h4>
             <ol className="text-gray-300 space-y-2">
               <li>1. 在編輯器中將游標定位到想要續寫的位置</li>
               <li>2. 點擊工具列的「AI 續寫」按鈕</li>
@@ -939,17 +939,17 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">AI 設定說明</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">AI 設定說明</h4>
             <div className="space-y-3">
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold">生成長度</h5>
                 <p className="text-gray-300 text-sm">控制 AI 生成內容的字數，可選擇短、中、長</p>
               </div>
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold">創意程度</h5>
                 <p className="text-gray-300 text-sm">調整 AI 的創意程度，高創意會產生更多變化</p>
               </div>
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold">寫作風格</h5>
                 <p className="text-gray-300 text-sm">選擇敘述風格：描述性、對話性、動作性等</p>
               </div>
@@ -957,7 +957,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">AI 使用建議</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">AI 使用建議</h4>
             <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
               <ul className="text-gray-300 space-y-2 text-sm">
                 <li>• AI 生成的內容僅供參考，請根據創作需要進行修改</li>
@@ -984,7 +984,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">一般設定</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">一般設定</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>主題設定</strong>：選擇亮色或暗色主題</li>
               <li>• <strong>語言設定</strong>：介面語言選擇</li>
@@ -995,7 +995,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">AI供應商配置</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">AI供應商配置</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>供應商管理</strong>：啟用或停用不同的AI供應商</li>
               <li>• <strong>API Key設定</strong>：為雲端服務配置API金鑰</li>
@@ -1007,26 +1007,26 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">資料管理</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">資料管理</h4>
             <p className="text-gray-300 mb-4">
               在主頁面的功能選單中，點擊「💾 資料管理」可以存取完整的資料備份、還原與維護功能。
             </p>
             <div className="space-y-3">
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold">資料庫備份</h5>
                 <p className="text-gray-300 text-sm">
                   點擊「立即備份」可以將整個資料庫（包含所有專案、章節、角色）備份到您指定的位置。
                   備份檔案為 SQLite 格式（.db），包含完整的創作內容。
                 </p>
               </div>
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold">資料庫還原</h5>
                 <p className="text-gray-300 text-sm">
                   點擊「選擇備份檔案」可以從之前建立的備份檔案中還原所有資料。
                   還原後系統會自動重新載入以反映還原的內容。
                 </p>
               </div>
-              <div className="bg-cosmic-800/50 p-3 rounded-lg">
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 p-3 rounded-lg">
                 <h5 className="text-white font-semibold">專案匯入匯出</h5>
                 <p className="text-gray-300 text-sm">
                   資料管理功能整合了專案匯入與匯出，提供完整的資料備份解決方案。
@@ -1037,7 +1037,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">系統維護</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">系統維護</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>清除快取</strong>：清理暫存檔案釋放空間</li>
               <li>• <strong>資料庫維護</strong>：檢查和修復資料庫</li>
@@ -1061,7 +1061,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">AI 功能異常</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">AI 功能異常</h4>
             <div className="space-y-3">
               <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
                 <h5 className="text-red-400 font-semibold">問題：AI 無法連線</h5>
@@ -1085,7 +1085,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">應用程式問題</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">應用程式問題</h4>
             <div className="space-y-3">
               <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
                 <h5 className="text-red-400 font-semibold">問題：應用程式無法啟動</h5>
@@ -1109,7 +1109,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">效能優化</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">效能優化</h4>
             <ul className="text-gray-300 space-y-2">
               <li>• <strong>定期清理</strong>：清除暫存檔案和快取資料</li>
               <li>• <strong>資料庫維護</strong>：定期執行資料庫最佳化</li>
@@ -1119,7 +1119,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-gold-400 mb-3">聯繫支援</h4>
+            <h4 className="text-lg font-semibold text-warm-gold mb-3">聯繫支援</h4>
             <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-4">
               <p className="text-gray-300 text-sm mb-3">
                 如果上述方法無法解決問題，請準備以下資訊並聯繫技術支援：
@@ -1150,12 +1150,12 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
       }}
     >
       {/* 側邊欄 */}
-      <div className="w-80 bg-cosmic-900/95 backdrop-blur-sm border-r border-gold-500/30 overflow-y-auto">
-        <div className="p-4 border-b border-cosmic-700">
+      <div className="w-80 bg-bg-dark/95 backdrop-blur-sm border-r border-warm-gold/30 overflow-y-auto">
+        <div className="p-4 border-b border-warm-gold/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Book className="w-6 h-6 text-gold-400" />
-              <h2 className="text-lg font-cosmic text-gold-400">使用手冊</h2>
+              <Book className="w-6 h-6 text-warm-gold" />
+              <h2 className="text-lg font-serif-tc text-warm-gold">使用手冊</h2>
             </div>
             <button
               onClick={onClose}
@@ -1178,8 +1178,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                 }}
                 className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
                   activeSection === section.id
-                    ? 'bg-gold-500/20 text-gold-400'
-                    : 'text-gray-300 hover:bg-cosmic-800/50 hover:text-white'
+                    ? 'bg-warm-gold/50/20 text-warm-gold'
+                    : 'text-gray-300 hover:bg-bg-light/50 backdrop-blur-sm/50 hover:text-white'
                 }`}
               >
                 <span className="font-medium">{section.title}</span>
@@ -1202,8 +1202,8 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
                       onClick={() => setActiveSection(subsection.id)}
                       className={`w-full text-left p-2 rounded text-sm transition-colors ${
                         activeSection === subsection.id
-                          ? 'bg-gold-500/10 text-gold-400'
-                          : 'text-gray-400 hover:bg-cosmic-800/30 hover:text-white'
+                          ? 'bg-warm-gold/50/10 text-warm-gold'
+                          : 'text-gray-400 hover:bg-bg-light/50 backdrop-blur-sm/30 hover:text-white'
                       }`}
                     >
                       {subsection.title}
@@ -1217,7 +1217,7 @@ const UserManual: React.FC<UserManualProps> = ({ isOpen, onClose }) => {
       </div>
 
       {/* 主要內容區域 */}
-      <div className="flex-1 bg-cosmic-900/95 backdrop-blur-sm overflow-y-auto">
+      <div className="flex-1 bg-bg-dark/95 backdrop-blur-sm overflow-y-auto">
         <div className="p-8 max-w-4xl">
           {currentSection && currentSection.content}
         </div>

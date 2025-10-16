@@ -1013,7 +1013,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
       </div>
 
       {/* 使用提示 */}
-      <div className="flex-shrink-0 mt-3 text-xs text-cosmic-500">
+      <div className="flex-shrink-0 mt-3 text-xs text-text-secondary">
         <p>💡 <strong>圖庫說明：</strong></p>
         <p>• 點擊圖像可以選擇，支持批量操作（導出、刪除等）</p>
         <p>• 使用搜索和過濾器可以快速找到特定的插畫和版本</p>
@@ -1030,13 +1030,13 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
           onClick={handleClosePreview}
         >
           <div 
-            className="relative max-w-[90vw] max-h-[90vh] bg-cosmic-800 rounded-lg shadow-2xl border border-cosmic-600"
+            className="relative max-w-[90vw] max-h-[90vh] bg-bg-light/50 backdrop-blur-sm rounded-lg shadow-2xl border border-warm-gold/10"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 關閉按鈕 */}
             <button
               onClick={handleClosePreview}
-              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-cosmic-700/80 hover:bg-cosmic-600 text-white rounded-full transition-colors"
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-bg-dark/80/80 hover:bg-bg-light text-white rounded-full transition-colors"
               title="關閉預覽 (ESC)"
             >
               ✕
@@ -1047,14 +1047,14 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
               <>
                 <button
                   onClick={() => handlePreviewNavigation('prev')}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-cosmic-700/80 hover:bg-cosmic-600 text-white rounded-full transition-colors"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-bg-dark/80/80 hover:bg-bg-light text-white rounded-full transition-colors"
                   title="上一張 (←)"
                 >
                   ←
                 </button>
                 <button
                   onClick={() => handlePreviewNavigation('next')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-cosmic-700/80 hover:bg-cosmic-600 text-white rounded-full transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-bg-dark/80/80 hover:bg-bg-light text-white rounded-full transition-colors"
                   title="下一張 (→)"
                 >
                   →
@@ -1077,7 +1077,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
               </div>
 
               {/* 圖像信息 */}
-              <div className="p-6 pt-4 border-t border-cosmic-700">
+              <div className="p-6 pt-4 border-t border-warm-gold/10">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0 mr-4">
                     <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
@@ -1090,10 +1090,10 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
                       }`}>
                         {previewImage.provider === 'pollinations' ? 'Pollinations' : 'Imagen'}
                       </span>
-                      <span className="px-2 py-1 rounded-full text-xs bg-cosmic-600 text-white">
+                      <span className="px-2 py-1 rounded-full text-xs bg-bg-light text-white">
                         {previewImage.model}
                       </span>
-                      <span className="px-2 py-1 rounded-full text-xs bg-cosmic-600 text-white">
+                      <span className="px-2 py-1 rounded-full text-xs bg-bg-light text-white">
                         {previewImage.width}×{previewImage.height}
                       </span>
                     </div>
@@ -1101,12 +1101,12 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
                     {/* 版本信息 */}
                     {previewImage.versionNumber && (
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm text-cosmic-300">版本：</span>
-                        <span className="px-2 py-1 bg-cosmic-700 text-white text-sm rounded flex items-center gap-1">
+                        <span className="text-sm text-text-secondary">版本：</span>
+                        <span className="px-2 py-1 bg-bg-dark/80 text-white text-sm rounded flex items-center gap-1">
                           {getVersionTypeIcon(previewImage.versionType)}
                           {formatVersionNumber(previewImage.versionNumber)}
                           {previewImage.totalVersions && previewImage.totalVersions > 1 && (
-                            <span className="text-gold-400">({previewImage.totalVersions})</span>
+                            <span className="text-warm-gold">({previewImage.totalVersions})</span>
                           )}
                         </span>
                         {previewImage.isLatestVersion && (
@@ -1115,7 +1115,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
                       </div>
                     )}
 
-                    <div className="text-sm text-cosmic-400 space-y-1">
+                    <div className="text-sm text-text-secondary/80 space-y-1">
                       <p>創建時間：{formatDate(previewImage.created_at)}</p>
                       {previewImage.character_id && (
                         <p>關聯角色：{projectCharacters.find(c => c.id === previewImage.character_id)?.name || '未知角色'}</p>
@@ -1147,11 +1147,11 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
 
                 {/* 版本標籤 */}
                 {previewImage.versionTags && previewImage.versionTags.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-cosmic-700">
-                    <span className="text-sm text-cosmic-300 mr-2">標籤：</span>
+                  <div className="mt-3 pt-3 border-t border-warm-gold/10">
+                    <span className="text-sm text-text-secondary mr-2">標籤：</span>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {previewImage.versionTags.map((tag, index) => (
-                        <span key={index} className="px-2 py-1 bg-gold-600/20 text-gold-400 text-xs rounded">
+                        <span key={index} className="px-2 py-1 bg-warm-gold/20 text-warm-gold text-xs rounded">
                           {tag}
                         </span>
                       ))}
@@ -1171,20 +1171,20 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
           onClick={handleCloseBatchExport}
         >
           <div 
-            className="relative w-full max-w-4xl max-h-[90vh] bg-cosmic-900 rounded-lg shadow-2xl border border-cosmic-600 overflow-hidden"
+            className="relative w-full max-w-4xl max-h-[90vh] bg-bg-dark rounded-lg shadow-2xl border border-warm-gold/10 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-cosmic-700 bg-cosmic-800">
+            <div className="flex items-center justify-between p-4 border-b border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm">
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">📦</div>
                 <div>
-                  <h2 className="text-xl font-cosmic text-gold-500">批次導出系統</h2>
-                  <p className="text-sm text-cosmic-400">導出 {selectedImages.size} 張圖片，享受企業級批次處理體驗</p>
+                  <h2 className="text-xl font-serif-tc text-warm-gold">批次導出系統</h2>
+                  <p className="text-sm text-text-secondary/80">導出 {selectedImages.size} 張圖片，享受企業級批次處理體驗</p>
                 </div>
               </div>
               <button
                 onClick={handleCloseBatchExport}
-                className="w-8 h-8 flex items-center justify-center bg-cosmic-700 hover:bg-cosmic-600 text-white rounded-full transition-colors"
+                className="w-8 h-8 flex items-center justify-center bg-bg-dark/80 hover:bg-bg-light text-white rounded-full transition-colors"
                 title="關閉"
               >
                 ✕
@@ -1231,7 +1231,7 @@ const GalleryTab: React.FC<GalleryTabProps> = ({ className = '' }) => {
           onClick={handleCloseEbookPreparation}
         >
           <div
-            className="relative w-full max-w-7xl max-h-[90vh] overflow-y-auto bg-cosmic-900 rounded-lg"
+            className="relative w-full max-w-7xl max-h-[90vh] overflow-y-auto bg-bg-dark rounded-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <EbookPreparationPanel

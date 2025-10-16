@@ -106,11 +106,11 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
   ];
 
   return (
-    <div className="bg-cosmic-800 rounded-lg border border-gold-600/30 p-4">
+    <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg border border-warm-gold/30 p-4">
       {/* 頭部控制區 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4">
-          <h3 className="text-lg font-bold text-gold-400 flex items-center">
+          <h3 className="text-lg font-bold text-warm-gold flex items-center">
             🎭 劇情分析引擎
           </h3>
           
@@ -138,7 +138,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
         <Button
           onClick={performAnalysis}
           disabled={isAnalyzing || (analysisScope === 'current' && !currentChapter) || (analysisScope === 'project' && chapters.length === 0)}
-          className="bg-gold-600 hover:bg-gold-700 text-cosmic-900"
+          className="bg-gold-600 hover:bg-gold-700 text-text-primary"
         >
           {isAnalyzing ? (
             <>
@@ -161,8 +161,8 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
               disabled={tab.key === 'trends' && analysisScope !== 'project'}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'bg-gold-600 text-cosmic-900'
-                  : 'bg-cosmic-700 text-gold-200 hover:bg-cosmic-600'
+                  ? 'bg-gold-600 text-text-primary'
+                  : 'bg-bg-dark/80 text-warm-gold/80 hover:bg-bg-light'
               } ${tab.key === 'trends' && analysisScope !== 'project' ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {tab.icon} {tab.label}
@@ -177,18 +177,18 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
           {/* 總覽標籤 */}
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="bg-cosmic-900 border-gold-600/20">
+              <Card className="bg-bg-dark border-gold-600/20">
                 <div className="text-center p-4">
                   <div className={`text-3xl font-bold ${getScoreColor(analysis.overallScore)}`}>
                     {analysis.overallScore}/10
                   </div>
-                  <div className="text-gold-300 text-sm">整體劇情評分</div>
+                  <div className="text-warm-gold text-sm">整體劇情評分</div>
                 </div>
               </Card>
               
-              <Card className="bg-cosmic-900 border-gold-600/20">
+              <Card className="bg-bg-dark border-gold-600/20">
                 <div className="p-4">
-                  <div className="text-gold-300 text-sm mb-2">核心指標</div>
+                  <div className="text-warm-gold text-sm mb-2">核心指標</div>
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-300">衝突點</span>
@@ -213,12 +213,12 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
           {/* 衝突分析標籤 */}
           {activeTab === 'conflicts' && (
             <div className="space-y-4">
-              <div className="text-lg font-semibold text-gold-300">
+              <div className="text-lg font-semibold text-warm-gold">
                 檢測到 {analysis.conflicts.length} 個衝突點
               </div>
               
               {analysis.conflicts.length === 0 ? (
-                <Card className="bg-cosmic-900 border-gold-600/20 p-4">
+                <Card className="bg-bg-dark border-gold-600/20 p-4">
                   <div className="text-center text-gray-400">
                     <div className="text-4xl mb-2">🕊️</div>
                     <div>未檢測到明顯的戲劇衝突</div>
@@ -228,12 +228,12 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
               ) : (
                 <div className="space-y-3">
                   {analysis.conflicts.map((conflict, index) => (
-                    <Card key={index} className="bg-cosmic-900 border-gold-600/20 p-4">
+                    <Card key={index} className="bg-bg-dark border-gold-600/20 p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
                             <div className={`w-3 h-3 rounded-full ${getConflictIntensityColor(conflict.intensity)}`} />
-                            <span className="font-medium text-gold-300">{conflict.description}</span>
+                            <span className="font-medium text-warm-gold">{conflict.description}</span>
                             <Badge variant="secondary" className="text-xs">強度 {conflict.intensity}/10</Badge>
                           </div>
                           <div className="text-gray-300 text-sm mb-2">"{conflict.context}"</div>
@@ -256,36 +256,36 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
           {/* 節奏分析標籤 */}
           {activeTab === 'pace' && (
             <div className="space-y-4">
-              <Card className="bg-cosmic-900 border-gold-600/20 p-4">
+              <Card className="bg-bg-dark border-gold-600/20 p-4">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <div className={`text-2xl font-bold ${getPaceColor(analysis.pace.overallPace)}`}>
                       {analysis.pace.overallPace === 'fast' ? '快速' : analysis.pace.overallPace === 'slow' ? '緩慢' : '適中'}
                     </div>
-                    <div className="text-gold-300 text-sm">整體節奏</div>
+                    <div className="text-warm-gold text-sm">整體節奏</div>
                   </div>
                   <div>
                     <div className={`text-2xl font-bold ${getScoreColor(analysis.pace.paceScore)}`}>
                       {analysis.pace.paceScore}/10
                     </div>
-                    <div className="text-gold-300 text-sm">節奏評分</div>
+                    <div className="text-warm-gold text-sm">節奏評分</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-warm-gold">
                       {analysis.pace.segments.length}
                     </div>
-                    <div className="text-gold-300 text-sm">分析片段</div>
+                    <div className="text-warm-gold text-sm">分析片段</div>
                   </div>
                 </div>
               </Card>
 
               {/* 節奏片段分析 */}
               {analysis.pace.segments.length > 0 && (
-                <Card className="bg-cosmic-900 border-gold-600/20 p-4">
-                  <div className="text-gold-300 font-medium mb-3">節奏片段分析</div>
+                <Card className="bg-bg-dark border-gold-600/20 p-4">
+                  <div className="text-warm-gold font-medium mb-3">節奏片段分析</div>
                   <div className="space-y-2">
                     {analysis.pace.segments.map((segment, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-2 rounded bg-cosmic-800">
+                      <div key={index} className="flex items-center space-x-3 p-2 rounded bg-bg-light/50 backdrop-blur-sm">
                         <div className="text-sm text-gray-400">片段 {index + 1}</div>
                         <div className={`px-2 py-1 rounded text-xs font-medium ${
                           segment.pace === 'fast' ? 'bg-red-600/20 text-red-300' :
@@ -309,17 +309,17 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
           {activeTab === 'foreshadowing' && (
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
-                <Card className="bg-cosmic-900 border-gold-600/20 p-4 text-center">
+                <Card className="bg-bg-dark border-gold-600/20 p-4 text-center">
                   <div className="text-2xl font-bold text-clay-orange">{analysis.foreshadowing.setups.length}</div>
-                  <div className="text-gold-300 text-sm">伏筆設置</div>
+                  <div className="text-warm-gold text-sm">伏筆設置</div>
                 </Card>
-                <Card className="bg-cosmic-900 border-gold-600/20 p-4 text-center">
+                <Card className="bg-bg-dark border-gold-600/20 p-4 text-center">
                   <div className="text-2xl font-bold text-green-400">{analysis.foreshadowing.connections.length}</div>
-                  <div className="text-gold-300 text-sm">成功回收</div>
+                  <div className="text-warm-gold text-sm">成功回收</div>
                 </Card>
-                <Card className="bg-cosmic-900 border-gold-600/20 p-4 text-center">
+                <Card className="bg-bg-dark border-gold-600/20 p-4 text-center">
                   <div className="text-2xl font-bold text-orange-400">{analysis.foreshadowing.orphanedSetups.length}</div>
-                  <div className="text-gold-300 text-sm">未回收</div>
+                  <div className="text-warm-gold text-sm">未回收</div>
                 </Card>
               </div>
 
@@ -347,12 +347,12 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
           {/* 改善建議標籤 */}
           {activeTab === 'suggestions' && (
             <div className="space-y-3">
-              <div className="text-lg font-semibold text-gold-300">
+              <div className="text-lg font-semibold text-warm-gold">
                 📋 改善建議 ({suggestions.length})
               </div>
               
               {suggestions.length === 0 ? (
-                <Card className="bg-cosmic-900 border-gold-600/20 p-4">
+                <Card className="bg-bg-dark border-gold-600/20 p-4">
                   <div className="text-center text-green-400">
                     <div className="text-4xl mb-2">🎉</div>
                     <div>劇情品質良好，暫無改善建議</div>
@@ -361,7 +361,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
               ) : (
                 <div className="space-y-3">
                   {suggestions.map((suggestion, index) => (
-                    <Card key={index} className="bg-cosmic-900 border-gold-600/20 p-4">
+                    <Card key={index} className="bg-bg-dark border-gold-600/20 p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
@@ -371,7 +371,7 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
                             >
                               {suggestion.priority === 'high' ? '高優先級' : suggestion.priority === 'medium' ? '中優先級' : '低優先級'}
                             </Badge>
-                            <span className="font-medium text-gold-300">{suggestion.title}</span>
+                            <span className="font-medium text-warm-gold">{suggestion.title}</span>
                           </div>
                           <div className="text-gray-300 text-sm mb-2">{suggestion.description}</div>
                           <div className="text-warm-gold text-sm mb-2">💡 建議: {suggestion.suggestion}</div>
@@ -398,21 +398,21 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
           {/* 章節趨勢標籤 */}
           {activeTab === 'trends' && analysisScope === 'project' && (
             <div className="space-y-4">
-              <div className="text-lg font-semibold text-gold-300">
+              <div className="text-lg font-semibold text-warm-gold">
                 📈 章節劇情趨勢
               </div>
               
               {chapterTrends.length === 0 ? (
-                <Card className="bg-cosmic-900 border-gold-600/20 p-4">
+                <Card className="bg-bg-dark border-gold-600/20 p-4">
                   <div className="text-center text-gray-400">暫無章節趨勢數據</div>
                 </Card>
               ) : (
                 <div className="grid gap-3">
                   {chapterTrends.map((trend) => (
-                    <Card key={trend.chapterId} className="bg-cosmic-900 border-gold-600/20 p-3">
+                    <Card key={trend.chapterId} className="bg-bg-dark border-gold-600/20 p-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="text-gold-300 font-medium">
+                          <div className="text-warm-gold font-medium">
                             第{trend.chapterIndex}章
                           </div>
                           <div className="text-gray-300 text-sm truncate max-w-48">
@@ -443,14 +443,14 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
 
       {/* 無分析結果時的提示 */}
       {!analysis && !isAnalyzing && (
-        <Card className="bg-cosmic-900 border-gold-600/20 p-8">
+        <Card className="bg-bg-dark border-gold-600/20 p-8">
           <div className="text-center text-gray-400">
             <div className="text-6xl mb-4">🎭</div>
             <div className="text-lg font-medium mb-2">劇情分析引擎</div>
             <div className="text-sm mb-4">
               點擊「開始分析」來深度分析您的故事劇情
             </div>
-            <div className="text-xs text-gold-400">
+            <div className="text-xs text-warm-gold">
               • 衝突點檢測 • 節奏分析 • 伏筆追蹤 • 改善建議
             </div>
           </div>

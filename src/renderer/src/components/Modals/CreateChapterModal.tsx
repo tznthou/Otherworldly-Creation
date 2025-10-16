@@ -71,10 +71,10 @@ const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-md">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-md">
         {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between">
-          <h2 className="text-xl font-cosmic text-gold-500">創建新章節</h2>
+        <div className="p-6 border-b border-warm-gold/10 flex items-center justify-between">
+          <h2 className="text-xl font-serif-tc text-warm-gold">創建新章節</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-white"
@@ -92,8 +92,8 @@ const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
               value={chapterTitle}
               onChange={(e) => setChapterTitle(e.target.value)}
               placeholder="輸入章節標題"
-              className={`w-full bg-cosmic-800 border ${
-                errors.title ? 'border-red-500' : 'border-cosmic-700'
+              className={`w-full bg-bg-light/50 backdrop-blur-sm border ${
+                errors.title ? 'border-red-500' : 'border-warm-gold/10'
               } rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500`}
               autoFocus
             />
@@ -104,7 +104,7 @@ const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
 
           <div className="mb-6">
             <label className="block text-gray-300 mb-2">章節順序</label>
-            <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+            <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
               <p className="text-gray-300">
                 此章節將被添加為第 {chaptersCount + 1} 章。
                 <br />
@@ -119,36 +119,36 @@ const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
               <button
                 type="button"
                 onClick={() => setChapterTitle(`第${chaptersCount + 1}章`)}
-                className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-3 text-left hover:bg-cosmic-700"
+                className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-3 text-left hover:bg-bg-dark/80"
               >
-                <div className="font-medium text-gold-400">第N章</div>
+                <div className="font-medium text-warm-gold">第N章</div>
                 <div className="text-xs text-gray-400 mt-1">簡單章節編號</div>
               </button>
               
               <button
                 type="button"
                 onClick={() => setChapterTitle(`第${chaptersCount + 1}章：`)}
-                className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-3 text-left hover:bg-cosmic-700"
+                className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-3 text-left hover:bg-bg-dark/80"
               >
-                <div className="font-medium text-gold-400">第N章：標題</div>
+                <div className="font-medium text-warm-gold">第N章：標題</div>
                 <div className="text-xs text-gray-400 mt-1">帶冒號的章節格式</div>
               </button>
               
               <button
                 type="button"
                 onClick={() => setChapterTitle('序章')}
-                className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-3 text-left hover:bg-cosmic-700"
+                className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-3 text-left hover:bg-bg-dark/80"
               >
-                <div className="font-medium text-gold-400">序章</div>
+                <div className="font-medium text-warm-gold">序章</div>
                 <div className="text-xs text-gray-400 mt-1">故事的開始</div>
               </button>
               
               <button
                 type="button"
                 onClick={() => setChapterTitle('尾聲')}
-                className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-3 text-left hover:bg-cosmic-700"
+                className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-3 text-left hover:bg-bg-dark/80"
               >
-                <div className="font-medium text-gold-400">尾聲</div>
+                <div className="font-medium text-warm-gold">尾聲</div>
                 <div className="text-xs text-gray-400 mt-1">故事的結束</div>
               </button>
             </div>
@@ -156,7 +156,7 @@ const CreateChapterModal: React.FC<CreateChapterModalProps> = ({
         </div>
 
         {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-end space-x-4">
+        <div className="p-6 border-t border-warm-gold/10 flex justify-end space-x-4">
           <button
             onClick={handleClose}
             className="btn-secondary"

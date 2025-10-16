@@ -181,7 +181,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
         {relationships.map((relationship, index) => (
           <div
             key={index}
-            className="bg-cosmic-800 rounded-lg p-4 border border-cosmic-700"
+            className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4 border border-warm-gold/10"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -189,7 +189,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
                   <span className="font-medium text-white">
                     {getCharacterName(relationship.targetId)}
                   </span>
-                  <span className="px-2 py-1 text-xs font-medium bg-gold-500 text-cosmic-950 rounded-full">
+                  <span className="px-2 py-1 text-xs font-medium bg-warm-gold/50 text-text-primary rounded-full">
                     {relationship.type}
                   </span>
                 </div>
@@ -201,7 +201,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
                 <button
                   type="button"
                   onClick={() => handleEditRelationship(index)}
-                  className="text-gold-400 hover:text-gold-300 text-sm"
+                  className="text-warm-gold hover:text-warm-gold text-sm"
                 >
                   編輯
                 </button>
@@ -228,8 +228,8 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
 
       {/* 關係編輯表單 */}
       {showAddForm && (
-        <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
-          <h4 className="text-md font-medium text-gold-400 mb-4">
+        <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
+          <h4 className="text-md font-medium text-warm-gold mb-4">
             {isEditing ? '編輯關係' : '添加新關係'}
           </h4>
           
@@ -242,8 +242,8 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
               <select
                 value={formData.targetId}
                 onChange={(e) => setFormData(prev => ({ ...prev, targetId: e.target.value }))}
-                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
-                  getFieldError('targetId') ? 'border-red-400' : 'border-cosmic-600'
+                className={`w-full px-3 py-2 bg-bg-dark border rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-warm-gold ${
+                  getFieldError('targetId') ? 'border-red-400' : 'border-warm-gold/10'
                 }`}
               >
                 <option value="">選擇角色</option>
@@ -266,8 +266,8 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
               <select
                 value={formData.type}
                 onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
-                  getFieldError('type') ? 'border-red-400' : 'border-cosmic-600'
+                className={`w-full px-3 py-2 bg-bg-dark border rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-warm-gold ${
+                  getFieldError('type') ? 'border-red-400' : 'border-warm-gold/10'
                 }`}
               >
                 <option value="">選擇關係類型</option>
@@ -297,8 +297,8 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 rows={3}
                 maxLength={200}
-                className={`w-full px-3 py-2 bg-cosmic-900 border rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-gold-500 ${
-                  getFieldError('description') ? 'border-red-400' : 'border-cosmic-600'
+                className={`w-full px-3 py-2 bg-bg-dark border rounded-md text-white focus:ring-2 focus:ring-gold-500 focus:border-warm-gold ${
+                  getFieldError('description') ? 'border-red-400' : 'border-warm-gold/10'
                 }`}
                 placeholder="描述兩個角色之間的關係..."
               />
@@ -319,7 +319,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
               <button
                 type="button"
                 onClick={handleSaveRelationship}
-                className="px-4 py-2 text-sm font-medium text-cosmic-950 bg-gold-500 rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
+                className="px-4 py-2 text-sm font-medium text-text-primary bg-warm-gold/50 rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
               >
                 {isEditing ? '更新關係' : '添加關係'}
               </button>
@@ -333,7 +333,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
         <button
           type="button"
           onClick={handleAddRelationship}
-          className="w-full py-3 border-2 border-dashed border-cosmic-600 rounded-lg text-gray-400 hover:border-gold-400 hover:text-gold-400 transition-colors"
+          className="w-full py-3 border-2 border-dashed border-warm-gold/10 rounded-lg text-gray-400 hover:border-warm-gold hover:text-warm-gold transition-colors"
         >
           <div className="flex items-center justify-center space-x-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,11 +345,11 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
       )}
 
       {/* 底部按鈕 */}
-      <div className="flex items-center justify-end space-x-3 pt-4 border-t border-cosmic-700">
+      <div className="flex items-center justify-end space-x-3 pt-4 border-t border-warm-gold/10">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-300 bg-cosmic-800 border border-cosmic-600 rounded-md hover:bg-cosmic-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
+          className="px-4 py-2 text-sm font-medium text-gray-300 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-md hover:bg-bg-dark/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500"
         >
           取消
         </button>
@@ -357,7 +357,7 @@ export const RelationshipEditor: React.FC<RelationshipEditorProps> = ({
           type="button"
           onClick={handleSaveAll}
           disabled={loading}
-          className="px-4 py-2 text-sm font-medium text-cosmic-950 bg-gold-500 border border-transparent rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm font-medium text-text-primary bg-warm-gold/50 border border-transparent rounded-md hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? '儲存中...' : '儲存所有關係'}
         </button>

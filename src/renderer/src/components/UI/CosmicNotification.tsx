@@ -102,7 +102,7 @@ const CosmicNotification: React.FC<CosmicNotificationProps> = ({
           
           {/* 內容 */}
           <div className="flex-1 min-w-0">
-            <h4 className={`font-medium ${config.textColor} font-cosmic`}>
+            <h4 className={`font-medium ${config.textColor} font-serif-tc`}>
               {title}
             </h4>
             {message && (
@@ -125,7 +125,7 @@ const CosmicNotification: React.FC<CosmicNotificationProps> = ({
         </div>
         
         {/* 進度條 */}
-        <div className="mt-3 w-full bg-cosmic-700 rounded-full h-1">
+        <div className="mt-3 w-full bg-bg-dark/80 rounded-full h-1">
           <div 
             className={`h-1 rounded-full bg-gradient-to-r ${
               type === 'success' ? 'from-green-500 to-green-600' :

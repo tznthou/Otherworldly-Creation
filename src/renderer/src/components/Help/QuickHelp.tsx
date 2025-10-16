@@ -118,7 +118,7 @@ export const QuickHelp: React.FC<QuickHelpProps> = ({ className = '' }) => {
   return (
     <div className={`fixed bottom-4 right-4 z-40 max-w-sm ${className}`}>
       <div className={`
-        bg-cosmic-900/95 backdrop-blur-sm border border-gold-500/30 rounded-lg shadow-2xl p-4
+        bg-bg-dark/95 backdrop-blur-sm border border-warm-gold/30 rounded-lg shadow-2xl p-4
         transform transition-all duration-300 ease-out
         ${isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95'}
       `}>
@@ -126,7 +126,7 @@ export const QuickHelp: React.FC<QuickHelpProps> = ({ className = '' }) => {
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-2">
             <div className="text-lg">💡</div>
-            <h4 className="font-semibold text-gold-400 text-sm">
+            <h4 className="font-semibold text-warm-gold text-sm">
               {currentTip.title}
             </h4>
           </div>

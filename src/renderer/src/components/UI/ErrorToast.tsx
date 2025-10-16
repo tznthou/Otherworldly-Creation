@@ -183,7 +183,7 @@ const ErrorToast: React.FC<ErrorToastProps> = ({ error, onClose, onResolve }) =>
               <ul className="text-xs text-gray-400 space-y-1">
                 {suggestions.map((suggestion, index) => (
                   <li key={index} className="flex items-start space-x-2">
-                    <span className="text-gold-400 mt-0.5">•</span>
+                    <span className="text-warm-gold mt-0.5">•</span>
                     <span>{suggestion}</span>
                   </li>
                 ))}

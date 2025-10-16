@@ -66,7 +66,7 @@ const VirtualizedContainer: React.FC<VirtualizedContainerProps> = ({
       ) : (
         <>
           {log.debug('❌ VirtualizedContainer: 尺寸無效，不渲染子組件', dimensions)}
-          <div className="flex items-center justify-center h-full text-cosmic-400">
+          <div className="flex items-center justify-center h-full text-text-secondary/80">
             📏 等待容器尺寸計算...
           </div>
         </>

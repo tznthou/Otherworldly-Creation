@@ -562,17 +562,17 @@ ${smartParams.locationNames.length > 0 ? `
 
   
   return (
-    <div className="bg-cosmic-900 border-t border-cosmic-700 p-4 rounded-lg">
+    <div className="bg-bg-dark border-t border-warm-gold/10 p-4 rounded-lg">
       
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-medium text-gold-400">AI 續寫</h3>
+          <h3 className="text-lg font-medium text-warm-gold">AI 續寫</h3>
           <button
             onClick={() => setShowHistory(!showHistory)}
             className={`px-3 py-1 rounded-md text-sm transition-colors ${
               showHistory 
                 ? 'bg-gold-600 text-white' 
-                : 'bg-cosmic-800 text-gold-400 hover:bg-cosmic-700'
+                : 'bg-bg-light/50 backdrop-blur-sm text-warm-gold hover:bg-bg-dark/80'
             }`}
             title="AI 生成歷史記錄"
           >
@@ -589,12 +589,12 @@ ${smartParams.locationNames.length > 0 ? `
       
       {/* 🧠 NLP 智能分析面板 */}
       {(contextAnalysis || isAnalyzing) && (
-        <div className="mb-4 bg-cosmic-800 border border-cosmic-700 rounded-lg p-4">
+        <div className="mb-4 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-gold-400 flex items-center">
+            <h4 className="text-sm font-medium text-warm-gold flex items-center">
               🧠 智能寫作分析
               {isAnalyzing && (
-                <svg className="animate-spin ml-2 h-4 w-4 text-gold-400" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin ml-2 h-4 w-4 text-warm-gold" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -615,16 +615,16 @@ ${smartParams.locationNames.length > 0 ? `
           ) : contextAnalysis && (
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2 text-xs">
-                <span className="px-2 py-1 bg-cosmic-700 rounded text-gold-300">
+                <span className="px-2 py-1 bg-bg-dark/80 rounded text-warm-gold">
                   {contextAnalysis.emotionalTone}風格
                 </span>
-                <span className="px-2 py-1 bg-cosmic-700 rounded text-warm-gold">
+                <span className="px-2 py-1 bg-bg-dark/80 rounded text-warm-gold">
                   {contextAnalysis.dominantTense}式
                 </span>
-                <span className="px-2 py-1 bg-cosmic-700 rounded text-green-300">
+                <span className="px-2 py-1 bg-bg-dark/80 rounded text-green-300">
                   {contextAnalysis.narrativeStyle === 'first' ? '第一人稱' : contextAnalysis.narrativeStyle === 'third' ? '第三人稱' : '混合視角'}
                 </span>
-                <span className="px-2 py-1 bg-cosmic-700 rounded text-clay-orange">
+                <span className="px-2 py-1 bg-bg-dark/80 rounded text-clay-orange">
                   {contextAnalysis.textAnalysis.complexity}程度
                 </span>
               </div>
@@ -654,7 +654,7 @@ ${smartParams.locationNames.length > 0 ? `
 
       {/* 📊 品質檢測結果 */}
       {lastQualityCheck && (lastQualityCheck.warnings.length > 0 || lastQualityCheck.suggestions.length > 0) && (
-        <div className="mb-4 bg-cosmic-800 border border-yellow-600 rounded-lg p-4">
+        <div className="mb-4 bg-bg-light/50 backdrop-blur-sm border border-yellow-600 rounded-lg p-4">
           <h4 className="text-sm font-medium text-yellow-400 flex items-center mb-2">
             🔍 品質檢測報告
           </h4>
@@ -693,7 +693,7 @@ ${smartParams.locationNames.length > 0 ? `
           <select
             value={currentModel || ''}
             onChange={(e) => dispatch(setCurrentModel(e.target.value))}
-            className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
             disabled={isGenerating || availableModels.length === 0}
           >
             <option value="">請選擇模型...</option>
@@ -775,7 +775,7 @@ ${smartParams.locationNames.length > 0 ? `
           className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center min-w-[140px] ${
             isGenerating 
               ? 'bg-gold-600 text-white cursor-not-allowed animate-pulse' 
-              : 'btn-primary hover:bg-gold-500 active:scale-95'
+              : 'btn-primary hover:bg-warm-gold/50 active:scale-95'
           }`}
         >
           {isGenerating ? (
@@ -805,11 +805,11 @@ ${smartParams.locationNames.length > 0 ? `
       {/* 生成結果 */}
       {generationOptions.length > 0 && (
         <div 
-          className="mt-4 bg-cosmic-800 border border-cosmic-700 rounded-lg p-4" 
+          className="mt-4 bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4" 
           data-results-container
         >
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-gold-400">
+            <h4 className="text-sm font-medium text-warm-gold">
               🎯 生成結果 ({generationOptions.length} 個版本) 🎯
             </h4>
             <button
@@ -825,14 +825,14 @@ ${smartParams.locationNames.length > 0 ? `
             {generationOptions.map((option, index) => (
               <div 
                 key={option.id}
-                className={`bg-cosmic-800 border rounded-lg p-4 transition-all duration-200 ${
+                className={`bg-bg-light/50 backdrop-blur-sm border rounded-lg p-4 transition-all duration-200 ${
                   option.selected 
                     ? 'border-green-500 bg-green-900/20' 
-                    : 'border-cosmic-700 hover:border-gold-500'
+                    : 'border-warm-gold/10 hover:border-warm-gold'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-gold-400">
+                  <span className="text-xs font-medium text-warm-gold">
                     版本 {index + 1} (溫度: {option.temperature.toFixed(1)})
                   </span>
                   {option.selected && (
@@ -857,7 +857,7 @@ ${smartParams.locationNames.length > 0 ? `
                     className={`text-xs px-3 py-1 rounded transition-colors ${
                       option.selected
                         ? 'bg-green-600 text-white cursor-not-allowed'
-                        : 'bg-gold-600 hover:bg-gold-500 text-white'
+                        : 'bg-gold-600 hover:bg-warm-gold/50 text-white'
                     }`}
                     disabled={option.selected}
                   >

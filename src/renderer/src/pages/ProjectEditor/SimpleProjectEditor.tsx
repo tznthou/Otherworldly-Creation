@@ -267,7 +267,7 @@ const SimpleProjectEditor: React.FC = () => {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gold-400">寫作編輯器</h1>
+          <h1 className="text-2xl font-bold text-warm-gold">寫作編輯器</h1>
           {currentProject && (
             <p className="text-gray-400 mt-1">{currentProject.name}</p>
           )}
@@ -286,7 +286,7 @@ const SimpleProjectEditor: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
         <div className="mb-4 flex gap-2">
           <button 
             onClick={handleSave}
@@ -310,9 +310,9 @@ const SimpleProjectEditor: React.FC = () => {
           </button>
         </div>
 
-        <div className="bg-cosmic-900 border border-cosmic-600 rounded-lg p-4">
+        <div className="bg-bg-dark border border-warm-gold/10 rounded-lg p-4">
           {isLoading ? (
-            <div className="w-full h-96 bg-cosmic-950 border border-cosmic-600 rounded p-3 flex items-center justify-center">
+            <div className="w-full h-96 bg-bg-dark border border-warm-gold/10 rounded p-3 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-4xl mb-4">📖</div>
                 <p className="text-gray-300">載入章節內容中...</p>
@@ -331,7 +331,7 @@ const SimpleProjectEditor: React.FC = () => {
               onClick={handleTextAreaClick}
               onKeyUp={handleTextAreaKeyUp}
               disabled={!currentChapter}
-              className="w-full h-96 bg-cosmic-950 border border-cosmic-600 rounded p-3 text-white resize-none focus:outline-none focus:ring-2 focus:ring-gold-500 font-mono disabled:opacity-50"
+              className="w-full h-96 bg-bg-dark border border-warm-gold/10 rounded p-3 text-white resize-none focus:outline-none focus:ring-2 focus:ring-gold-500 font-mono disabled:opacity-50"
               placeholder={currentChapter ? "開始你的創作..." : "載入中..."}
             />
           )}

@@ -76,9 +76,9 @@ const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = React.memo((
     
     const data = payload[0].payload;
     return (
-      <div className="bg-cosmic-900 border border-gold-600/30 rounded-lg p-3 shadow-lg">
+      <div className="bg-bg-dark border border-warm-gold/30 rounded-lg p-3 shadow-lg">
         <p className="text-white text-sm mb-1">
-          評分: <span className="text-gold-300 font-medium">{data.score}%</span>
+          評分: <span className="text-warm-gold font-medium">{data.score}%</span>
         </p>
         <p className="text-gray-300 text-xs max-w-48 leading-tight">
           {data.description}
@@ -91,7 +91,7 @@ const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = React.memo((
     <div className={`${className}`}>
       {/* 置信度指示器 */}
       <div className="mb-4 flex items-center justify-between">
-        <h4 className="text-gold-400 font-bold text-sm flex items-center">
+        <h4 className="text-warm-gold font-bold text-sm flex items-center">
           <span className="mr-2">🎯</span>
           人格特徵雷達圖
         </h4>
@@ -108,7 +108,7 @@ const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = React.memo((
       </div>
 
       {/* 雷達圖 */}
-      <div className="bg-cosmic-800/30 rounded-lg p-5">
+      <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-5">
         <ResponsiveContainer width="100%" height={350}>
           <RadarChart data={data} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
             <PolarGrid 
@@ -160,11 +160,11 @@ const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = React.memo((
         {data.map((item, index) => (
           <div 
             key={index}
-            className="flex items-center justify-between bg-cosmic-700/30 rounded-lg px-4 py-3"
+            className="flex items-center justify-between bg-bg-dark/80/30 rounded-lg px-4 py-3"
           >
             <span className="text-gray-300 font-medium min-w-0 flex-shrink-0 mr-4">{item.trait}</span>
             <div className="flex items-center space-x-3 flex-1">
-              <div className={`w-20 md:w-24 h-2 bg-cosmic-600 rounded-full overflow-hidden`}>
+              <div className={`w-20 md:w-24 h-2 bg-bg-light rounded-full overflow-hidden`}>
                 <div 
                   className="h-full bg-gradient-to-r from-gold-600 to-gold-400 transition-all duration-300"
                   style={{ width: `${item.score}%` }}
@@ -183,9 +183,9 @@ const PersonalityRadarChart: React.FC<PersonalityRadarChartProps> = React.memo((
       </div>
 
       {/* 總體評估 */}
-      <div className="mt-6 p-4 bg-cosmic-700/20 rounded-lg border border-gold-600/20">
+      <div className="mt-6 p-4 bg-bg-dark/80/20 rounded-lg border border-gold-600/20">
         <div className="flex items-center mb-3">
-          <span className="text-gold-400 text-base font-medium">📋 人格總結</span>
+          <span className="text-warm-gold text-base font-medium">📋 人格總結</span>
         </div>
         <p className="text-gray-300 text-sm leading-relaxed">
           {getPersonalitySummary(data)}

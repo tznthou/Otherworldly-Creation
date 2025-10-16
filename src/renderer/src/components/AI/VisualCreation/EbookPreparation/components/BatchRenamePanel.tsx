@@ -264,8 +264,8 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
       </div>
 
       {/* 範本選擇 */}
-      <div className="bg-cosmic-800 rounded-lg p-4">
-        <h4 className="text-base font-medium text-cosmic-100 mb-4 flex items-center">
+      <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
+        <h4 className="text-base font-medium text-text-secondary/20 mb-4 flex items-center">
           <span className="text-xl mr-2">🏷️</span>
           重命名範本
         </h4>
@@ -275,22 +275,22 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
               key={template.id}
               className={`p-3 rounded-lg border cursor-pointer transition-all ${
                 activeTemplate === template.id
-                  ? 'border-gold-500 bg-gold-500/10'
-                  : 'border-cosmic-600 bg-cosmic-750 hover:border-cosmic-500'
+                  ? 'border-warm-gold bg-warm-gold/50/10'
+                  : 'border-warm-gold/10 bg-bg-light/40 hover:border-warm-gold/20'
               }`}
               onClick={() => setActiveTemplate(template.id)}
             >
               <div className="flex items-center justify-between mb-2">
                 <h5 className={`font-medium ${
-                  activeTemplate === template.id ? 'text-gold-400' : 'text-cosmic-200'
+                  activeTemplate === template.id ? 'text-warm-gold' : 'text-text-secondary/40'
                 }`}>
                   {template.name}
                 </h5>
                 {activeTemplate === template.id && (
-                  <span className="text-gold-400">✓</span>
+                  <span className="text-warm-gold">✓</span>
                 )}
               </div>
-              <p className="text-sm text-cosmic-400">{template.description}</p>
+              <p className="text-sm text-text-secondary/80">{template.description}</p>
             </div>
           ))}
         </div>
@@ -298,9 +298,9 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
 
       {/* 自定義規則編輯 */}
       {activeTemplate === 'custom' && (
-        <div className="bg-cosmic-800 rounded-lg p-4">
+        <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-base font-medium text-cosmic-100 flex items-center">
+            <h4 className="text-base font-medium text-text-secondary/20 flex items-center">
               <span className="text-xl mr-2">⚙️</span>
               自定義規則
             </h4>
@@ -314,7 +314,7 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
 
           <div className="space-y-3">
             {customRules.map((rule, _index) => (
-              <div key={rule.id} className="flex items-center gap-3 p-3 bg-cosmic-750 rounded">
+              <div key={rule.id} className="flex items-center gap-3 p-3 bg-bg-light/40 rounded">
                 <input
                   type="checkbox"
                   checked={rule.enabled}
@@ -325,7 +325,7 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
                 <select
                   value={rule.type}
                   onChange={(e) => updateCustomRule(rule.id, { type: e.target.value as RenamingRule['type'] })}
-                  className="px-2 py-1 bg-cosmic-700 text-cosmic-100 rounded text-sm"
+                  className="px-2 py-1 bg-bg-dark/80 text-text-secondary/20 rounded text-sm"
                 >
                   {ruleTypeOptions.map(option => (
                     <option key={option.value} value={option.value}>
@@ -338,7 +338,7 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
                   <select
                     value={rule.value}
                     onChange={(e) => updateCustomRule(rule.id, { value: e.target.value })}
-                    className="flex-1 px-2 py-1 bg-cosmic-700 text-cosmic-100 rounded text-sm"
+                    className="flex-1 px-2 py-1 bg-bg-dark/80 text-text-secondary/20 rounded text-sm"
                   >
                     <option value="sequential">順序編號</option>
                     <option value="roman">羅馬數字</option>
@@ -347,7 +347,7 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
                   <select
                     value={rule.value}
                     onChange={(e) => updateCustomRule(rule.id, { value: e.target.value })}
-                    className="flex-1 px-2 py-1 bg-cosmic-700 text-cosmic-100 rounded text-sm"
+                    className="flex-1 px-2 py-1 bg-bg-dark/80 text-text-secondary/20 rounded text-sm"
                   >
                     <option value="auto">自動偵測</option>
                     <option value="ch01">固定章節</option>
@@ -358,7 +358,7 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
                     value={rule.value}
                     onChange={(e) => updateCustomRule(rule.id, { value: e.target.value })}
                     placeholder="輸入規則值"
-                    className="flex-1 px-2 py-1 bg-cosmic-700 text-cosmic-100 rounded text-sm"
+                    className="flex-1 px-2 py-1 bg-bg-dark/80 text-text-secondary/20 rounded text-sm"
                   />
                 )}
 
@@ -376,37 +376,37 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
       )}
 
       {/* 預覽結果 */}
-      <div className="bg-cosmic-800 rounded-lg p-4">
-        <h4 className="text-base font-medium text-cosmic-100 mb-4 flex items-center">
+      <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
+        <h4 className="text-base font-medium text-text-secondary/20 mb-4 flex items-center">
           <span className="text-xl mr-2">👁️</span>
           重命名預覽 ({previews.length} 張圖片)
         </h4>
 
         <div className="max-h-64 overflow-y-auto space-y-2">
           {previews.map(({ image, oldName, newName }, index) => (
-            <div key={image.id} className="flex items-center justify-between p-2 bg-cosmic-750 rounded text-sm">
+            <div key={image.id} className="flex items-center justify-between p-2 bg-bg-light/40 rounded text-sm">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <span className="text-cosmic-400 w-6 text-center">{index + 1}</span>
+                <span className="text-text-secondary/80 w-6 text-center">{index + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-cosmic-300 truncate">{oldName}</div>
-                  <div className="text-gold-400 truncate font-medium">→ {newName}</div>
+                  <div className="text-text-secondary truncate">{oldName}</div>
+                  <div className="text-warm-gold truncate font-medium">→ {newName}</div>
                 </div>
               </div>
               {oldName === newName && (
-                <span className="text-cosmic-500 text-xs">無變化</span>
+                <span className="text-text-secondary text-xs">無變化</span>
               )}
             </div>
           ))}
         </div>
 
         {/* 統計信息 */}
-        <div className="mt-4 p-3 bg-cosmic-700 rounded flex justify-between text-sm">
+        <div className="mt-4 p-3 bg-bg-dark/80 rounded flex justify-between text-sm">
           <div>
-            <span className="text-cosmic-400">總計：</span>
-            <span className="text-cosmic-200">{previews.length} 張圖片</span>
+            <span className="text-text-secondary/80">總計：</span>
+            <span className="text-text-secondary/40">{previews.length} 張圖片</span>
           </div>
           <div>
-            <span className="text-cosmic-400">將變更：</span>
+            <span className="text-text-secondary/80">將變更：</span>
             <span className="text-green-400">
               {previews.filter(p => p.oldName !== p.newName).length} 張
             </span>

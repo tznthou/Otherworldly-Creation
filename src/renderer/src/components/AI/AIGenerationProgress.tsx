@@ -112,21 +112,21 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
   };
 
   return (
-    <div className={`bg-cosmic-900 border border-gold-600/30 rounded-xl p-4 shadow-lg ${className}`}>
+    <div className={`bg-bg-dark border border-warm-gold/30 rounded-xl p-4 shadow-lg ${className}`}>
       {/* 標題區域 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="text-2xl">{stageInfo.icon}</div>
           <div>
-            <h3 className="font-semibold text-gold-400">
+            <h3 className="font-semibold text-warm-gold">
               AI 內容生成
               {generationCount > 1 && (
-                <span className="ml-2 text-sm text-cosmic-300">
+                <span className="ml-2 text-sm text-text-secondary">
                   ({currentGenerationIndex + 1}/{generationCount})
                 </span>
               )}
             </h3>
-            <p className="text-sm text-cosmic-200">
+            <p className="text-sm text-text-secondary/40">
               {progress.status === 'running' ? stageInfo.description : progress.description}
             </p>
           </div>
@@ -140,13 +140,13 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
       {/* 主進度條 */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-cosmic-200">整體進度</span>
-          <span className="text-sm font-medium text-gold-300">
+          <span className="text-sm text-text-secondary/40">整體進度</span>
+          <span className="text-sm font-medium text-warm-gold">
             {progress.progress.toFixed(0)}%
           </span>
         </div>
         
-        <div className="w-full bg-cosmic-700 rounded-full h-3 overflow-hidden">
+        <div className="w-full bg-bg-dark/80 rounded-full h-3 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
               progress.status === 'running' 
@@ -164,7 +164,7 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
 
       {/* 生成狀態動畫 */}
       {progress.status === 'running' && (
-        <div className="mb-4 p-3 bg-cosmic-900/50 rounded-lg border border-cosmic-600">
+        <div className="mb-4 p-3 bg-bg-dark/50 rounded-lg border border-warm-gold/10">
           <div className="flex items-center space-x-3">
             <div className="flex space-x-1">
               {[0, 1, 2].map((i) => (
@@ -173,12 +173,12 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${
                     animationStep === i 
                       ? 'bg-gold-400 scale-125' 
-                      : 'bg-cosmic-600'
+                      : 'bg-bg-light'
                   }`}
                 />
               ))}
             </div>
-            <span className="text-sm text-cosmic-200">
+            <span className="text-sm text-text-secondary/40">
               {getThinkingAnimation()}
             </span>
           </div>
@@ -188,29 +188,29 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
       {/* 詳細統計 */}
       {showDetailedStats && (
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-cosmic-800 rounded-lg p-3 border border-cosmic-600">
-            <div className="text-xs text-cosmic-300 mb-1">生成速度</div>
-            <div className="text-sm font-medium text-gold-300">
+          <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-3 border border-warm-gold/10">
+            <div className="text-xs text-text-secondary mb-1">生成速度</div>
+            <div className="text-sm font-medium text-warm-gold">
               {formatSpeed(stats.averageSpeed)}
             </div>
           </div>
           
-          <div className="bg-cosmic-800 rounded-lg p-3 border border-cosmic-600">
-            <div className="text-xs text-cosmic-300 mb-1">Token 數量</div>
-            <div className="text-sm font-medium text-gold-300">
+          <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-3 border border-warm-gold/10">
+            <div className="text-xs text-text-secondary mb-1">Token 數量</div>
+            <div className="text-sm font-medium text-warm-gold">
               {stats.tokensGenerated}
             </div>
           </div>
           
-          <div className="bg-cosmic-800 rounded-lg p-3 border border-cosmic-600">
-            <div className="text-xs text-cosmic-300 mb-1">預估品質</div>
+          <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-3 border border-warm-gold/10">
+            <div className="text-xs text-text-secondary mb-1">預估品質</div>
             <div className={`text-sm font-medium ${getQualityColor(stats.estimatedQuality)}`}>
               {stats.estimatedQuality.toFixed(0)}%
             </div>
           </div>
           
-          <div className="bg-cosmic-800 rounded-lg p-3 border border-cosmic-600">
-            <div className="text-xs text-cosmic-300 mb-1">語言純度</div>
+          <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-3 border border-warm-gold/10">
+            <div className="text-xs text-text-secondary mb-1">語言純度</div>
             <div className={`text-sm font-medium ${getQualityColor(stats.languagePurity)}`}>
               {stats.languagePurity.toFixed(0)}%
             </div>
@@ -222,8 +222,8 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
       {progress.totalSteps && progress.completedSteps !== undefined && (
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-cosmic-300">步驟進度</span>
-            <span className="text-xs text-cosmic-200">
+            <span className="text-xs text-text-secondary">步驟進度</span>
+            <span className="text-xs text-text-secondary/40">
               {progress.completedSteps}/{progress.totalSteps}
             </span>
           </div>
@@ -236,7 +236,7 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
                     ? 'bg-green-500' 
                     : i === progress.completedSteps && progress.status === 'running'
                     ? 'bg-warm-gold/30 animate-pulse'
-                    : 'bg-cosmic-600'
+                    : 'bg-bg-light'
                 }`}
               />
             ))}
@@ -245,7 +245,7 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
       )}
 
       {/* 時間信息 */}
-      <div className="flex items-center justify-between text-xs text-cosmic-300">
+      <div className="flex items-center justify-between text-xs text-text-secondary">
         <span>
           開始時間: {progress.startTime.toLocaleTimeString('zh-TW')}
         </span>

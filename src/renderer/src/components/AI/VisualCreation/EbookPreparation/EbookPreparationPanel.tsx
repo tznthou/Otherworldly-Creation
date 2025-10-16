@@ -118,27 +118,27 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
     return (
       <div className="space-y-6">
         {/* 統計面板 */}
-        <div className="bg-cosmic-800 rounded-lg p-4">
-          <h4 className="text-base font-medium text-cosmic-100 mb-3 flex items-center">
+        <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
+          <h4 className="text-base font-medium text-text-secondary/20 mb-3 flex items-center">
             <span className="text-xl mr-2">📊</span>
             圖片統計
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="bg-cosmic-750 p-3 rounded">
-              <div className="text-cosmic-400">總數量</div>
-              <div className="text-lg font-semibold text-cosmic-100">{stats.totalImages}</div>
+            <div className="bg-bg-light/40 p-3 rounded">
+              <div className="text-text-secondary/80">總數量</div>
+              <div className="text-lg font-semibold text-text-secondary/20">{stats.totalImages}</div>
             </div>
-            <div className="bg-cosmic-750 p-3 rounded">
-              <div className="text-cosmic-400">已完成</div>
+            <div className="bg-bg-light/40 p-3 rounded">
+              <div className="text-text-secondary/80">已完成</div>
               <div className="text-lg font-semibold text-green-400">{stats.completedImages}</div>
             </div>
-            <div className="bg-cosmic-750 p-3 rounded">
-              <div className="text-cosmic-400">總大小</div>
-              <div className="text-lg font-semibold text-cosmic-100">{formatFileSize(stats.totalSize)}</div>
+            <div className="bg-bg-light/40 p-3 rounded">
+              <div className="text-text-secondary/80">總大小</div>
+              <div className="text-lg font-semibold text-text-secondary/20">{formatFileSize(stats.totalSize)}</div>
             </div>
-            <div className="bg-cosmic-750 p-3 rounded">
-              <div className="text-cosmic-400">平均尺寸</div>
-              <div className="text-lg font-semibold text-cosmic-100">
+            <div className="bg-bg-light/40 p-3 rounded">
+              <div className="text-text-secondary/80">平均尺寸</div>
+              <div className="text-lg font-semibold text-text-secondary/20">
                 {stats.avgDimensions.width}×{stats.avgDimensions.height}
               </div>
             </div>
@@ -162,7 +162,7 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
         </div>
 
         {/* 子標籤導航 */}
-        <div className="bg-cosmic-800 rounded-lg p-4">
+        <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
           <div className="flex space-x-1 mb-4">
             {organizeSubTabs.map(subTab => (
               <button
@@ -170,8 +170,8 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
                 onClick={() => setOrganizeSubTab(subTab.id)}
                 className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   organizeSubTab === subTab.id
-                    ? 'bg-gold-500 text-black'
-                    : 'bg-cosmic-750 text-cosmic-300 hover:bg-cosmic-700'
+                    ? 'bg-warm-gold/50 text-black'
+                    : 'bg-bg-light/40 text-text-secondary hover:bg-bg-dark/80'
                 }`}
               >
                 <span className="mr-2">{subTab.icon}</span>
@@ -213,10 +213,10 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
       case 'configure':
         return (
           <div className="space-y-6">
-            <div className="bg-cosmic-800 rounded-lg p-6 text-center">
+            <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6 text-center">
               <div className="text-6xl mb-4">🚧</div>
-              <h3 className="text-xl font-semibold text-cosmic-200 mb-2">章節配置功能</h3>
-              <p className="text-cosmic-400">正在開發中，敬請期待...</p>
+              <h3 className="text-xl font-semibold text-text-secondary/40 mb-2">章節配置功能</h3>
+              <p className="text-text-secondary/80">正在開發中，敬請期待...</p>
             </div>
           </div>
         );
@@ -224,10 +224,10 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
       case 'preview':
         return (
           <div className="space-y-6">
-            <div className="bg-cosmic-800 rounded-lg p-6 text-center">
+            <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6 text-center">
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-cosmic-200 mb-2">排版預覽功能</h3>
-              <p className="text-cosmic-400">正在開發中，敬請期待...</p>
+              <h3 className="text-xl font-semibold text-text-secondary/40 mb-2">排版預覽功能</h3>
+              <p className="text-text-secondary/80">正在開發中，敬請期待...</p>
             </div>
           </div>
         );
@@ -238,21 +238,21 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
   };
 
   return (
-    <div className={`bg-cosmic-900 rounded-xl border border-cosmic-700 ${className}`}>
+    <div className={`bg-bg-dark rounded-xl border border-warm-gold/10 ${className}`}>
       {/* 標題欄 */}
-      <div className="flex items-center justify-between p-6 border-b border-cosmic-700">
+      <div className="flex items-center justify-between p-6 border-b border-warm-gold/10">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center text-xl">
             📚
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-cosmic-100">電子書排版預備</h2>
-            <p className="text-sm text-cosmic-400">智能圖片整理與排版配置工具</p>
+            <h2 className="text-xl font-semibold text-text-secondary/20">電子書排版預備</h2>
+            <p className="text-sm text-text-secondary/80">智能圖片整理與排版配置工具</p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-cosmic-400 hover:text-cosmic-200 p-2 rounded-lg hover:bg-cosmic-800 transition-colors"
+          className="text-text-secondary/80 hover:text-text-secondary/40 p-2 rounded-lg hover:bg-bg-light/50 backdrop-blur-sm transition-colors"
           title="關閉"
         >
           ✕
@@ -260,7 +260,7 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
       </div>
 
       {/* Tab 導航 */}
-      <div className="border-b border-cosmic-700">
+      <div className="border-b border-warm-gold/10">
         <div className="flex px-6">
           {tabs.map((tab) => (
             <button
@@ -269,8 +269,8 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
               className={`
                 flex items-center space-x-2 px-4 py-3 border-b-2 text-sm font-medium transition-colors
                 ${activeTab === tab.id
-                  ? 'border-gold-500 text-gold-400 bg-gold-500/10'
-                  : 'border-transparent text-cosmic-400 hover:text-cosmic-200 hover:bg-cosmic-800'
+                  ? 'border-warm-gold text-warm-gold bg-warm-gold/50/10'
+                  : 'border-transparent text-text-secondary/80 hover:text-text-secondary/40 hover:bg-bg-light/50 backdrop-blur-sm'
                 }
               `}
             >
@@ -287,15 +287,15 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
       </div>
 
       {/* 底部操作欄 */}
-      <div className="border-t border-cosmic-700 px-6 py-4">
+      <div className="border-t border-warm-gold/10 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-cosmic-400">
+          <div className="text-sm text-text-secondary/80">
             已選擇 {selectedImages.length} 張圖片用於電子書排版
           </div>
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-cosmic-300 bg-cosmic-800 hover:bg-cosmic-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-text-secondary bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80 rounded-lg transition-colors"
             >
               關閉
             </button>

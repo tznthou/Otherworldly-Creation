@@ -300,9 +300,9 @@ const PDFGenerationModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-cosmic text-gold-500">"
+          <h2 className="text-2xl font-serif-tc text-warm-gold">"
             ⚔️ 絕對文書・完全具現化
           </h2>
           {!generating && (
@@ -318,14 +318,14 @@ const PDFGenerationModal: React.FC = () => {
         <div className="space-y-6">
           {/* 專案選擇 */}
           <div>
-            <label className="block text-sm font-medium text-gold-400 mb-2">
+            <label className="block text-sm font-medium text-warm-gold mb-2">
               選擇專案
             </label>
             <select
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
               disabled={generating}
-              className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white focus:outline-none focus:border-gold-500"
+              className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded-lg text-white focus:outline-none focus:border-warm-gold"
             >
               <option value="">選擇要解放最終形態的專案...</option>
               {projects.map(project => (
@@ -374,7 +374,7 @@ const PDFGenerationModal: React.FC = () => {
           {/* 生成選項 */}
           {selectedProjectId && validation?.valid && (
             <div className="space-y-4">
-              <h3 className="text-lg font-cosmic text-gold-400">生成選項</h3>
+              <h3 className="text-lg font-serif-tc text-warm-gold">生成選項</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -383,7 +383,7 @@ const PDFGenerationModal: React.FC = () => {
                     value={options.page_size as string}
                     onChange={(e) => setOptions(prev => ({ ...prev, page_size: e.target.value as PageSizeType }))}
                     disabled={generating}
-                    className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+                    className="w-full px-2 py-1 bg-bg-dark/80 border border-warm-gold/10 rounded text-white text-sm"
                   >
                     <option value="A4">A4 (210×297mm)</option>
                     <option value="Letter">Letter (8.5×11in)</option>
@@ -400,7 +400,7 @@ const PDFGenerationModal: React.FC = () => {
                     disabled={generating}
                     min="8"
                     max="24"
-                    className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+                    className="w-full px-2 py-1 bg-bg-dark/80 border border-warm-gold/10 rounded text-white text-sm"
                   />
                 </div>
 
@@ -411,7 +411,7 @@ const PDFGenerationModal: React.FC = () => {
                       checked={options.include_cover}
                       onChange={(e) => setOptions(prev => ({ ...prev, include_cover: e.target.checked }))}
                       disabled={generating}
-                      className="mr-2 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                      className="mr-2 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                     />
                     <span className="text-sm text-gray-300">生成封面頁</span>
                   </label>
@@ -423,7 +423,7 @@ const PDFGenerationModal: React.FC = () => {
                     value={options.chapter_break_style}
                     onChange={(e) => setOptions(prev => ({ ...prev, chapter_break_style: e.target.value as 'NewPage' | 'SectionBreak' | 'Continuous' }))}
                     disabled={generating}
-                    className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+                    className="w-full px-2 py-1 bg-bg-dark/80 border border-warm-gold/10 rounded text-white text-sm"
                   >
                     <option value="NewPage">每章新頁面</option>
                     <option value="SectionBreak">章節間距</option>
@@ -439,14 +439,14 @@ const PDFGenerationModal: React.FC = () => {
                     onChange={(e) => setOptions(prev => ({ ...prev, author: e.target.value }))}
                     disabled={generating}
                     placeholder="留空將使用「創世紀元用戶」"
-                    className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white focus:outline-none focus:border-gold-500"
+                    className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded-lg text-white focus:outline-none focus:border-warm-gold"
                   />
                 </div>
               </div>
               
               {/* AI 插畫整合選項 */}
               <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-clay-orange/20 rounded-lg">
-                <h4 className="text-md font-cosmic text-clay-orange mb-3 flex items-center">
+                <h4 className="text-md font-serif-tc text-clay-orange mb-3 flex items-center">
                   🎨 AI 插畫整合設定
                 </h4>
                 
@@ -458,7 +458,7 @@ const PDFGenerationModal: React.FC = () => {
                         checked={options.include_illustrations}
                         onChange={(e) => setOptions(prev => ({ ...prev, include_illustrations: e.target.checked }))}
                         disabled={generating}
-                        className="mr-2 w-4 h-4 text-clay-orange bg-cosmic-700 border-cosmic-600 rounded focus:ring-clay-orange"
+                        className="mr-2 w-4 h-4 text-clay-orange bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-clay-orange"
                       />
                       <span className="text-sm text-gray-300">包含AI生成的插畫</span>
                     </label>
@@ -472,7 +472,7 @@ const PDFGenerationModal: React.FC = () => {
                           value={options.illustration_layout}
                           onChange={(e) => setOptions(prev => ({ ...prev, illustration_layout: e.target.value as 'Gallery' | 'Inline' | 'ChapterStart' | 'ChapterEnd' }))}
                           disabled={generating}
-                          className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+                          className="w-full px-2 py-1 bg-bg-dark/80 border border-warm-gold/10 rounded text-white text-sm"
                         >
                           <option value="Gallery">插畫集錦頁 (在開頭集中展示)</option>
                           <option value="ChapterStart">章節開始 (在每章標題下顯示相關插畫)</option>
@@ -487,7 +487,7 @@ const PDFGenerationModal: React.FC = () => {
                           value={options.illustration_quality}
                           onChange={(e) => setOptions(prev => ({ ...prev, illustration_quality: e.target.value as 'Original' | 'High' | 'Medium' | 'Compressed' }))}
                           disabled={generating}
-                          className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+                          className="w-full px-2 py-1 bg-bg-dark/80 border border-warm-gold/10 rounded text-white text-sm"
                         >
                           <option value="Original">原始品質 (檔案最大)</option>
                           <option value="High">高品質 (輕微壓縮)</option>
@@ -496,7 +496,7 @@ const PDFGenerationModal: React.FC = () => {
                         </select>
                       </div>
                       
-                      <div className="text-xs text-gray-400 bg-cosmic-700/50 p-2 rounded">
+                      <div className="text-xs text-gray-400 bg-bg-dark/80/50 p-2 rounded">
                         💡 插畫功能說明：PDF 目前僅支援插畫資訊的文字顯示，包含文件名稱和角色資訊。實際圖片嵌入功能正在開發中。
                       </div>
                     </>
@@ -508,18 +508,18 @@ const PDFGenerationModal: React.FC = () => {
 
           {/* 生成進度 */}
           {progress && (
-            <div className="bg-gradient-to-br from-cosmic-700 to-cosmic-800 border border-gold-500/30 rounded-lg p-5 shadow-lg">
+            <div className="bg-gradient-to-br from-cosmic-700 to-cosmic-800 border border-warm-gold/30 rounded-lg p-5 shadow-lg">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-gold-400 font-semibold text-lg flex items-center">
+                <span className="text-warm-gold font-semibold text-lg flex items-center">
                   <span className="animate-spin mr-2">⚙️</span>
                   {getStageText()} - {progress.progress}%
                 </span>
-                <span className="text-sm text-gold-300 bg-gold-500/20 px-2 py-1 rounded">
+                <span className="text-sm text-warm-gold bg-warm-gold/50/20 px-2 py-1 rounded">
                   {progress.totalChapters > 0 && `${progress.totalChapters} 章節`}
                 </span>
               </div>
               
-              <div className="w-full bg-cosmic-600 rounded-full h-3 mb-3 overflow-hidden">
+              <div className="w-full bg-bg-light rounded-full h-3 mb-3 overflow-hidden">
                 <div 
                   className={`bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 h-3 rounded-full transition-all duration-500 ease-out relative ${
                     isIndeterminateProgress() ? 'animate-pulse' : ''
@@ -537,7 +537,7 @@ const PDFGenerationModal: React.FC = () => {
               
               {progress.message && (
                 <div className="flex items-center">
-                  <div className="w-2 h-2 bg-gold-500 rounded-full mr-2 animate-pulse"></div>
+                  <div className="w-2 h-2 bg-warm-gold/50 rounded-full mr-2 animate-pulse"></div>
                   <p className="text-sm text-gray-200 font-medium">{progress.message}</p>
                 </div>
               )}

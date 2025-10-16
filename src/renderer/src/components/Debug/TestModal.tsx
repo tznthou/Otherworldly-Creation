@@ -30,13 +30,13 @@ const TestModal: React.FC = () => {
       className="fixed inset-0 bg-black/70 flex items-center justify-center p-4"
       style={{ zIndex: 9999 }}
     >
-      <div className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-md">
+      <div className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-md">
         <div className="p-6 text-center">
-          <h2 className="text-xl font-cosmic text-gold-500 mb-4">🎉 測試模態框成功！</h2>
+          <h2 className="text-xl font-serif-tc text-warm-gold mb-4">🎉 測試模態框成功！</h2>
           <p className="text-gray-300 mb-4">
             恭喜！模態框系統正常工作。這證明 Redux 狀態管理和組件渲染都沒有問題。
           </p>
-          <p className="text-sm text-gold-400 mb-4">
+          <p className="text-sm text-warm-gold mb-4">
             檢查控制台可以看到組件的生命週期日誌。
           </p>
           <button

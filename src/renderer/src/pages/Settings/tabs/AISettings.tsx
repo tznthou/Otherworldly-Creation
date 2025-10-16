@@ -10,7 +10,7 @@ const log = createLogger('AISettings');
 const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) => (
   <div className="space-y-6">
     <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-cosmic text-gold-500">AI 設定</h2>
+      <h2 className="text-2xl font-serif-tc text-warm-gold">AI 設定</h2>
       <button
         onClick={() => dispatch(resetAISettings())}
         className="btn-secondary text-sm"
@@ -19,8 +19,8 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
       </button>
     </div>
     
-    <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gold-400 mb-4">模型設定</h3>
+    <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
+      <h3 className="text-lg font-medium text-warm-gold mb-4">模型設定</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-gray-300 mb-2">預設模型</label>
@@ -29,7 +29,7 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             value={settings.ai.defaultModel}
             onChange={(e) => dispatch(updateAISettings({ defaultModel: e.target.value }))}
             placeholder="llama3"
-            className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
           />
         </div>
         
@@ -41,14 +41,14 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             onChange={(e) => dispatch(updateAISettings({ contextLength: parseInt(e.target.value) }))}
             min="1000"
             max="32000"
-            className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
           />
         </div>
       </div>
     </div>
     
-    <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gold-400 mb-4">生成參數</h3>
+    <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
+      <h3 className="text-lg font-medium text-warm-gold mb-4">生成參數</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-gray-300 mb-2">溫度 ({settings.ai.temperature})</label>
@@ -84,14 +84,14 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             onChange={(e) => dispatch(updateAISettings({ maxTokens: parseInt(e.target.value) }))}
             min="50"
             max="2000"
-            className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
           />
         </div>
       </div>
     </div>
     
-    <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gold-400 mb-4">自動完成</h3>
+    <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
+      <h3 className="text-lg font-medium text-warm-gold mb-4">自動完成</h3>
       <div className="space-y-4">
         <div className="flex items-center">
           <input
@@ -99,7 +99,7 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             id="enableAutoComplete"
             checked={settings.ai.enableAutoComplete}
             onChange={(e) => dispatch(updateAISettings({ enableAutoComplete: e.target.checked }))}
-            className="mr-3 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+            className="mr-3 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
           />
           <label htmlFor="enableAutoComplete" className="text-gray-300">啟用自動完成</label>
         </div>
@@ -113,15 +113,15 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
               onChange={(e) => dispatch(updateAISettings({ autoCompleteDelay: parseInt(e.target.value) }))}
               min="500"
               max="5000"
-              className="w-32 bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+              className="w-32 bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
             />
           </div>
         )}
       </div>
     </div>
     
-    <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gold-400 mb-4">Ollama 服務設定</h3>
+    <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
+      <h3 className="text-lg font-medium text-warm-gold mb-4">Ollama 服務設定</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <label className="block text-gray-300 mb-2">服務端點 URL</label>
@@ -130,7 +130,7 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             value={settings.ai.ollamaBaseUrl}
             onChange={(e) => dispatch(updateAISettings({ ollamaBaseUrl: e.target.value }))}
             placeholder="http://127.0.0.1:11434"
-            className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
           />
           <p className="text-sm text-gray-400 mt-1">Ollama 服務的 API 端點位址</p>
         </div>
@@ -143,7 +143,7 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             onChange={(e) => dispatch(updateAISettings({ ollamaTimeout: parseInt(e.target.value) }))}
             min="30"
             max="600"
-            className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
           />
           <p className="text-sm text-gray-400 mt-1">AI 生成請求的最大等待時間</p>
         </div>
@@ -156,7 +156,7 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             onChange={(e) => dispatch(updateAISettings({ ollamaRetryAttempts: parseInt(e.target.value) }))}
             min="0"
             max="10"
-            className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
           />
           <p className="text-sm text-gray-400 mt-1">請求失敗時的重試次數</p>
         </div>
@@ -170,7 +170,7 @@ const AISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             min="500"
             max="10000"
             step="500"
-            className="w-full bg-cosmic-700 border border-cosmic-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+            className="w-full bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
           />
           <p className="text-sm text-gray-400 mt-1">重試之間的等待時間</p>
         </div>

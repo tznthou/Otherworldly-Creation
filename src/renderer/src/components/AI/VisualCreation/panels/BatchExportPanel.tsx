@@ -654,7 +654,7 @@ export const BatchExportPanel = memo<BatchExportPanelProps>(({
                           log.debug('✅ [BatchExportPanel] 確認對話框中更換目錄成功:', newPath);
                         }
                       }}
-                      className="text-xs text-gold-600 hover:text-gold-700 font-medium"
+                      className="text-xs text-warm-gold hover:text-clay-orange font-medium"
                     >
                       更改
                     </button>

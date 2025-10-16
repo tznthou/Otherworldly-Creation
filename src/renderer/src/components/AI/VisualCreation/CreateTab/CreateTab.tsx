@@ -606,23 +606,23 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
       </div>
 
       {/* 創作狀態總覽 */}
-      <div className="flex-shrink-0 bg-cosmic-800/30 rounded-lg p-3 mb-4 border border-cosmic-700">
+      <div className="flex-shrink-0 bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-3 mb-4 border border-warm-gold/10">
         <div className="flex items-center justify-between">
           {/* 左側：當前狀態 */}
           <div className="flex items-center space-x-4 text-sm">
-            <div className="flex items-center space-x-2 text-cosmic-300">
+            <div className="flex items-center space-x-2 text-text-secondary">
               <span>👥 角色:</span>
               <span className={`px-2 py-1 rounded text-xs ${
-                selectedCharacters.length > 0 ? 'bg-green-600 text-white' : 'bg-cosmic-600 text-cosmic-300'
+                selectedCharacters.length > 0 ? 'bg-green-600 text-white' : 'bg-bg-light text-text-secondary'
               }`}>
                 {selectedCharacters.length > 0 ? `${selectedCharacters.length} 已選` : '未選擇'}
               </span>
             </div>
-            <div className="flex items-center space-x-2 text-cosmic-300">
+            <div className="flex items-center space-x-2 text-text-secondary">
               <span>📋 請求:</span>
-              <span className="px-2 py-1 bg-cosmic-600 rounded text-xs">{batchRequests.length}</span>
+              <span className="px-2 py-1 bg-bg-light rounded text-xs">{batchRequests.length}</span>
             </div>
-            <div className="text-xs text-cosmic-400">
+            <div className="text-xs text-text-secondary/80">
               服務: {
                 illustrationProvider === 'pollinations' ? 'Pollinations.AI (免費)' :
                 illustrationProvider === 'gemini' ? 'Gemini Flash (免費/付費額度)' :
@@ -636,7 +636,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
             <button
               onClick={handleAddToBatch}
               disabled={selectedCharacters.length === 0 || !sceneType || !sceneDescription.trim()}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-cosmic-600 disabled:opacity-50 text-white text-sm rounded-lg transition-colors flex items-center space-x-2"
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-bg-light disabled:opacity-50 text-white text-sm rounded-lg transition-colors flex items-center space-x-2"
               title="先選擇角色，設定場景，再添加到批次請求"
             >
               <span>➕</span>
@@ -645,7 +645,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
             <button
               onClick={handleBatchGenerate}
               disabled={batchRequests.length === 0 || loading.generating || isGenerating}
-              className="px-4 py-2 bg-gold-600 hover:bg-gold-700 disabled:bg-cosmic-600 disabled:opacity-50 text-white text-sm rounded-lg transition-colors flex items-center space-x-2"
+              className="px-4 py-2 bg-gold-600 hover:bg-gold-700 disabled:bg-bg-light disabled:opacity-50 text-white text-sm rounded-lg transition-colors flex items-center space-x-2"
             >
               <span>🚀</span>
               <span>{loading.generating || isGenerating ? '生成中...' : `生成 ${batchRequests.length} 張圖片`}</span>
@@ -675,11 +675,11 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
               <SceneBuilder />
 
               {/* 場景描述 */}
-              <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
+              <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4 border border-warm-gold/10">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-cosmic text-gold-500">📝 場景描述</h3>
+                  <h3 className="text-lg font-serif-tc text-warm-gold">📝 場景描述</h3>
                   <Tooltip content="描述角色在場景中的具體情況、動作和表情">
-                    <div className="text-cosmic-400 text-sm">❓</div>
+                    <div className="text-text-secondary/80 text-sm">❓</div>
                   </Tooltip>
                 </div>
 
@@ -687,12 +687,12 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                   value={sceneDescription}
                   onChange={(e) => setSceneDescription(e.target.value)}
                   placeholder="描述角色的具體情況、動作、表情和環境... 例如：角色站在櫻花樹下，微笑著向前伸手，夕陽西下的溫暖光線"
-                  className="w-full h-32 p-3 bg-cosmic-900/50 border border-cosmic-600 rounded-lg text-white placeholder-cosmic-400 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 transition-colors resize-none"
+                  className="w-full h-32 p-3 bg-bg-dark/50 border border-warm-gold/10 rounded-lg text-white placeholder-cosmic-400 focus:border-warm-gold focus:ring-2 focus:ring-gold-500/20 transition-colors resize-none"
                   maxLength={500}
                 />
                 
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs text-cosmic-500">
+                  <span className="text-xs text-text-secondary">
                     {sceneDescription.length}/500 字
                   </span>
                   <button
@@ -781,20 +781,20 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
               />
 
               {/* 生成控制 */}
-              <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
-                <h3 className="text-lg font-cosmic text-gold-500 mb-3">⚡ 生成控制</h3>
-                <p className="text-cosmic-300 text-sm">
+              <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4 border border-warm-gold/10">
+                <h3 className="text-lg font-serif-tc text-warm-gold mb-3">⚡ 生成控制</h3>
+                <p className="text-text-secondary text-sm">
                   設定完成後，點擊上方的「添加請求」和「生成」按鈕開始創作。
                 </p>
               </div>
 
               {/* 批次請求列表 */}
               {batchRequests.length > 0 && (
-                <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
+                <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4 border border-warm-gold/10">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-cosmic text-gold-500">📋 批次請求</h3>
+                    <h3 className="text-lg font-serif-tc text-warm-gold">📋 批次請求</h3>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs text-cosmic-400">
+                      <span className="text-xs text-text-secondary/80">
                         {batchRequests.length} 個請求
                       </span>
                       <button
@@ -810,7 +810,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                     {batchRequests.map((request: BatchRequest, index: number) => (
                       <div
                         key={request.id}
-                        className="p-3 bg-cosmic-700/50 rounded border border-cosmic-600"
+                        className="p-3 bg-bg-dark/80/50 rounded border border-warm-gold/10"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -821,11 +821,11 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                               <span className="text-xs px-2 py-1 bg-gold-600 text-white rounded">
                                 {request.scene_type === 'portrait' ? '肖像' : request.scene_type === 'interaction' ? '互動' : '場景'}
                               </span>
-                              <span className="text-xs text-cosmic-400">
+                              <span className="text-xs text-text-secondary/80">
                                 {request.selectedCharacterIds.length} 個角色
                               </span>
                             </div>
-                            <p className="text-sm text-cosmic-300 line-clamp-2 mb-2">
+                            <p className="text-sm text-text-secondary line-clamp-2 mb-2">
                               {request.scene_description}
                             </p>
                             
@@ -836,7 +836,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                               </div>
                             )}
                             
-                            <div className="text-xs text-cosmic-500">
+                            <div className="text-xs text-text-secondary">
                               {request.style_template} • {request.aspect_ratio}
                             </div>
                           </div>
@@ -856,12 +856,12 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
 
               {/* 臨時圖片版本 */}
               {tempImages.length > 0 && (
-                <div className="bg-cosmic-800/30 rounded-lg p-4 border border-cosmic-700">
+                <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-4 border border-warm-gold/10">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-cosmic text-gold-500">🖼️ 最新生成</h3>
+                    <h3 className="text-lg font-serif-tc text-warm-gold">🖼️ 最新生成</h3>
                     <div className="flex items-center gap-2">
                       {/* 主要操作區：收藏 & 刪除 */}
-                      <div className="flex items-center gap-2 border-r border-cosmic-600 pr-2">
+                      <div className="flex items-center gap-2 border-r border-warm-gold/10 pr-2">
                       <button
                         onClick={async () => {
                           try {
@@ -1049,7 +1049,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {tempImages.slice(-4).map((image: TempImageData, _index: number) => (
-                      <div key={image.id} className="aspect-square bg-cosmic-700/50 rounded border border-cosmic-600 p-2 overflow-hidden">
+                      <div key={image.id} className="aspect-square bg-bg-dark/80/50 rounded border border-warm-gold/10 p-2 overflow-hidden">
                         <div className="w-full h-full relative rounded">
                           <SafeImage
                             imageUrl={image.image_url}
@@ -1074,8 +1074,8 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                   </div>
 
                   {/* 快速動作面板 */}
-                  <div className="mt-4 p-3 bg-gold-900/20 border border-gold-700/50 rounded-lg">
-                    <p className="text-gold-300 text-sm font-medium mb-2">
+                  <div className="mt-4 p-3 bg-warm-gold/20 border border-gold-700/50 rounded-lg">
+                    <p className="text-warm-gold text-sm font-medium mb-2">
                       🚀 下一步操作建議
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -1084,7 +1084,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                           // 繼續為其他角色生成
                           log.debug('為其他角色生成');
                         }}
-                        className="px-3 py-2 bg-cosmic-700 hover:bg-cosmic-600 text-white text-xs rounded transition-colors"
+                        className="px-3 py-2 bg-bg-dark/80 hover:bg-bg-light text-white text-xs rounded transition-colors"
                       >
                         🎭 切換角色
                       </button>
@@ -1093,7 +1093,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                           // 嘗試不同場景
                           setSceneDescription('');
                         }}
-                        className="px-3 py-2 bg-cosmic-700 hover:bg-cosmic-600 text-white text-xs rounded transition-colors"
+                        className="px-3 py-2 bg-bg-dark/80 hover:bg-bg-light text-white text-xs rounded transition-colors"
                       >
                         🎬 新場景
                       </button>
@@ -1103,7 +1103,7 @@ const CreateTab: React.FC<CreateTabProps> = ({ className = '' }) => {
                             dispatch(openVersionPanel(tempImages[0]));
                           }
                         }}
-                        className="px-3 py-2 bg-cosmic-700 hover:bg-cosmic-600 text-white text-xs rounded transition-colors"
+                        className="px-3 py-2 bg-bg-dark/80 hover:bg-bg-light text-white text-xs rounded transition-colors"
                       >
                         📚 管理版本
                       </button>

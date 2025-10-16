@@ -158,9 +158,9 @@ const EPubGenerationModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-cosmic-800 border border-cosmic-700 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-cosmic text-gold-500">
+          <h2 className="text-2xl font-serif-tc text-warm-gold">
             🌟 次元物語・零式記錄
           </h2>
           {!generating && (
@@ -176,14 +176,14 @@ const EPubGenerationModal: React.FC = () => {
         <div className="space-y-6">
           {/* 專案選擇 */}
           <div>
-            <label className="block text-sm font-medium text-gold-400 mb-2">
+            <label className="block text-sm font-medium text-warm-gold mb-2">
               選擇專案
             </label>
             <select
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
               disabled={generating}
-              className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white focus:outline-none focus:border-gold-500"
+              className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded-lg text-white focus:outline-none focus:border-warm-gold"
             >
               <option value="">選擇要展開虛數空間的專案...</option>
               {projects.map(project => (
@@ -232,7 +232,7 @@ const EPubGenerationModal: React.FC = () => {
           {/* 生成選項 */}
           {selectedProjectId && validation?.valid && (
             <div className="space-y-4">
-              <h3 className="text-lg font-cosmic text-gold-400">生成選項</h3>
+              <h3 className="text-lg font-serif-tc text-warm-gold">生成選項</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -242,7 +242,7 @@ const EPubGenerationModal: React.FC = () => {
                       checked={options.include_cover}
                       onChange={(e) => setOptions(prev => ({ ...prev, include_cover: e.target.checked }))}
                       disabled={generating}
-                      className="mr-2 w-4 h-4 text-gold-500 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                      className="mr-2 w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                     />
                     <span className="text-sm text-gray-300">生成封面頁</span>
                   </label>
@@ -254,7 +254,7 @@ const EPubGenerationModal: React.FC = () => {
                     value={options.font_family}
                     onChange={(e) => setOptions(prev => ({ ...prev, font_family: e.target.value }))}
                     disabled={generating}
-                    className="w-full px-2 py-1 bg-cosmic-700 border border-cosmic-600 rounded text-white text-sm"
+                    className="w-full px-2 py-1 bg-bg-dark/80 border border-warm-gold/10 rounded text-white text-sm"
                   >
                     <option value="Noto Sans TC">思源黑體</option>
                     <option value="Microsoft JhengHei">微軟正黑體</option>
@@ -270,7 +270,7 @@ const EPubGenerationModal: React.FC = () => {
                     onChange={(e) => setOptions(prev => ({ ...prev, author: e.target.value }))}
                     disabled={generating}
                     placeholder="留空將使用「創世紀元用戶」"
-                    className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 rounded-lg text-white focus:outline-none focus:border-gold-500"
+                    className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 rounded-lg text-white focus:outline-none focus:border-warm-gold"
                   />
                 </div>
               </div>
@@ -279,18 +279,18 @@ const EPubGenerationModal: React.FC = () => {
 
           {/* 生成進度 */}
           {progress && (
-            <div className="bg-gradient-to-br from-cosmic-700 to-cosmic-800 border border-gold-500/30 rounded-lg p-5 shadow-lg">
+            <div className="bg-gradient-to-br from-cosmic-700 to-cosmic-800 border border-warm-gold/30 rounded-lg p-5 shadow-lg">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-gold-400 font-semibold text-lg flex items-center">
+                <span className="text-warm-gold font-semibold text-lg flex items-center">
                   <span className="animate-spin mr-2">⚙️</span>
                   {getStageText()} - {progress.progress}%
                 </span>
-                <span className="text-sm text-gold-300 bg-gold-500/20 px-2 py-1 rounded">
+                <span className="text-sm text-warm-gold bg-warm-gold/50/20 px-2 py-1 rounded">
                   {progress.totalChapters > 0 && `${progress.totalChapters} 章節`}
                 </span>
               </div>
               
-              <div className="w-full bg-cosmic-600 rounded-full h-3 mb-3 overflow-hidden">
+              <div className="w-full bg-bg-light rounded-full h-3 mb-3 overflow-hidden">
                 <div 
                   className="bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 h-3 rounded-full transition-all duration-500 ease-out relative"
                   style={{ width: getProgressBarWidth() }}
@@ -301,7 +301,7 @@ const EPubGenerationModal: React.FC = () => {
               
               {progress.message && (
                 <div className="flex items-center">
-                  <div className="w-2 h-2 bg-gold-500 rounded-full mr-2 animate-pulse"></div>
+                  <div className="w-2 h-2 bg-warm-gold/50 rounded-full mr-2 animate-pulse"></div>
                   <p className="text-sm text-gray-200 font-medium">{progress.message}</p>
                 </div>
               )}

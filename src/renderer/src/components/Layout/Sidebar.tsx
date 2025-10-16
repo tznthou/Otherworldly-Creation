@@ -128,7 +128,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <div 
-      className={`fixed left-0 top-0 h-full bg-bg-dark/80 backdrop-blur-sm border-r border-cosmic-700 transition-all duration-300 ${
+      className={`fixed left-0 top-0 h-full bg-bg-dark/80 backdrop-blur-sm border-r border-warm-gold/10 transition-all duration-300 ${
         sidebarCollapsed ? 'w-16' : 'w-64'
       }`}
       style={{ 
@@ -140,14 +140,14 @@ const Sidebar: React.FC = () => {
       }}
     >
       {/* Logo 區域 */}
-      <div className="flex items-center justify-between p-4 border-b border-cosmic-700">
+      <div className="flex items-center justify-between p-4 border-b border-warm-gold/10">
         {!sidebarCollapsed && (
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-br from-gold-500 to-gold-600 rounded-lg flex items-center justify-center glow-effect animate-pulse-glow">
-              <span className="text-cosmic-950 font-bold text-sm">創</span>
+              <span className="text-text-primary font-bold text-sm">創</span>
             </div>
             <div>
-              <h1 className="font-cosmic text-warm-gold text-lg font-bold title-cosmic">創世紀元</h1>
+              <h1 className="font-serif-tc text-warm-gold text-lg font-bold title-cosmic">創世紀元</h1>
               <p className="text-xs text-gray-400">異世界創作神器</p>
             </div>
           </div>
@@ -165,12 +165,12 @@ const Sidebar: React.FC = () => {
 
       {/* 當前專案資訊 */}
       {!sidebarCollapsed && currentProject && (
-        <div className="p-4 border-b border-cosmic-700">
+        <div className="p-4 border-b border-warm-gold/10">
           <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-3 card-hover animate-fade-in">
             <p className="text-xs text-gray-400 mb-1">當前專案</p>
             <p className="text-warm-gold font-medium truncate">{currentProject.name}</p>
             <p className="text-xs text-gray-500 capitalize">{currentProject.type}</p>
-            <div className="w-full bg-cosmic-700 rounded-full h-1 mt-2">
+            <div className="w-full bg-bg-dark/80 rounded-full h-1 mt-2">
               <div className="bg-gradient-to-r from-gold-500 to-gold-600 h-1 rounded-full animate-pulse" style={{ width: '60%' }} />
             </div>
           </div>
@@ -237,7 +237,7 @@ const Sidebar: React.FC = () => {
       </nav>
 
       {/* AI 狀態指示 */}
-      <div className="p-4 border-t border-cosmic-700">
+      <div className="p-4 border-t border-warm-gold/10">
         <AIStatusIndicator collapsed={sidebarCollapsed} />
       </div>
     </div>

@@ -159,8 +159,8 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
   // 載入中
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center bg-cosmic-700 ${className}`}>
-        <div className="text-cosmic-400 animate-pulse">
+      <div className={`flex items-center justify-center bg-bg-dark/80 ${className}`}>
+        <div className="text-text-secondary/80 animate-pulse">
           <svg className="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
@@ -172,7 +172,7 @@ export const SafeImage: React.FC<SafeImageProps> = React.memo(({
   // 錯誤狀態
   if (hasError || !src) {
     return (
-      <div className={`flex flex-col items-center justify-center bg-cosmic-700 text-cosmic-400 ${className}`} style={style}>
+      <div className={`flex flex-col items-center justify-center bg-bg-dark/80 text-text-secondary/80 ${className}`} style={style}>
         <div className="text-2xl mb-1">{fallbackIcon}</div>
         <div className="text-xs opacity-60">{fallback}</div>
       </div>

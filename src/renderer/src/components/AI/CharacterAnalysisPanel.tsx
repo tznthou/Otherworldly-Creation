@@ -216,7 +216,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
       <div className="space-y-6 mb-8">
         {/* 標題 */}
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-gold-400 flex items-center">
+          <h3 className="text-xl font-bold text-warm-gold flex items-center">
             <span className="mr-3 text-2xl">🎭</span>
             角色分析
           </h3>
@@ -236,7 +236,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
             <select
               value={selectedCharacterId}
               onChange={(e) => setSelectedCharacterId(e.target.value)}
-              className="bg-cosmic-700/80 backdrop-blur border border-gold-600/30 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+              className="bg-bg-dark/80/80 backdrop-blur border border-warm-gold/30 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
             >
               <option value="">請選擇角色</option>
               {characters.map(character => (
@@ -258,8 +258,8 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
                 onClick={() => setAnalysisScope('current')}
                 className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
                   analysisScope === 'current'
-                    ? 'bg-gold-600 text-cosmic-900'
-                    : 'bg-cosmic-700/80 text-gray-300 hover:bg-cosmic-600 border border-gold-600/30'
+                    ? 'bg-gold-600 text-text-primary'
+                    : 'bg-bg-dark/80/80 text-gray-300 hover:bg-bg-light border border-warm-gold/30'
                 }`}>
                 當前章節
               </button>
@@ -267,8 +267,8 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
                 onClick={() => setAnalysisScope('project')}
                 className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all ${
                   analysisScope === 'project'
-                    ? 'bg-gold-600 text-cosmic-900'
-                    : 'bg-cosmic-700/80 text-gray-300 hover:bg-cosmic-600 border border-gold-600/30'
+                    ? 'bg-gold-600 text-text-primary'
+                    : 'bg-bg-dark/80/80 text-gray-300 hover:bg-bg-light border border-warm-gold/30'
                 }`}>
                 全專案
               </button>
@@ -281,7 +281,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
             <button
               onClick={performAnalysis}
               disabled={isAnalyzing || !selectedCharacterId}
-              className="bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 disabled:from-gray-600 disabled:to-gray-700 text-cosmic-900 px-6 py-2.5 rounded-lg font-medium transition-all transform hover:scale-105 disabled:scale-100 flex items-center justify-center space-x-2 shadow-lg"
+              className="bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 disabled:from-gray-600 disabled:to-gray-700 text-text-primary px-6 py-2.5 rounded-lg font-medium transition-all transform hover:scale-105 disabled:scale-100 flex items-center justify-center space-x-2 shadow-lg"
             >
               <span className="text-xl">{isAnalyzing ? '⏳' : '🔍'}</span>
               <span>{isAnalyzing ? '分析中...' : '開始分析'}</span>
@@ -292,7 +292,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
 
       {/* 分析進度指示器 */}
       {isAnalyzing && (
-        <div className="mb-4 p-4 bg-cosmic-700/50 rounded-lg border border-gold-600/20">
+        <div className="mb-4 p-4 bg-bg-dark/80/50 rounded-lg border border-gold-600/20">
           <div className="flex items-center space-x-3">
             <LoadingSpinner size="small" />
             <div className="text-white">
@@ -306,15 +306,15 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
       )}
 
       {/* 標籤導航 - 改為2x3網格佈局，增加更好的間距 */}
-      <div className="grid grid-cols-3 gap-3 mb-8 bg-cosmic-700/30 rounded-xl p-4">
+      <div className="grid grid-cols-3 gap-3 mb-8 bg-bg-dark/80/30 rounded-xl p-4">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`flex flex-col items-center justify-center space-y-2 px-4 py-4 rounded-lg text-sm font-medium transition-all transform hover:scale-105 ${
               activeTab === tab.key
-                ? 'bg-gradient-to-br from-gold-600 to-gold-500 text-cosmic-900 shadow-lg'
-                : 'bg-cosmic-700/50 text-gray-400 hover:text-white hover:bg-cosmic-600'
+                ? 'bg-gradient-to-br from-gold-600 to-gold-500 text-text-primary shadow-lg'
+                : 'bg-bg-dark/80/50 text-gray-400 hover:text-white hover:bg-bg-light'
             }`}
           >
             <span className="text-2xl">{tab.icon}</span>
@@ -324,14 +324,14 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
       </div>
 
       {/* 分析結果內容 */}
-      <div className="min-h-[500px] bg-cosmic-800/30 rounded-xl p-6">
+      <div className="min-h-[500px] bg-bg-light/50 backdrop-blur-sm/30 rounded-xl p-6">
         {!analysisResult ? (
           <div className="flex items-center justify-center h-[400px]">
             <div className="text-center space-y-4">
               <div className="relative">
                 <div className="text-8xl animate-pulse">🎭</div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-32 h-32 bg-gold-600/20 rounded-full blur-3xl animate-ping"></div>
+                  <div className="w-32 h-32 bg-warm-gold/20 rounded-full blur-3xl animate-ping"></div>
                 </div>
               </div>
               <div className="space-y-2">
@@ -363,8 +363,8 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
               <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* 基本信息 */}
-                  <div className="bg-cosmic-700/50 rounded-lg p-5">
-                    <h4 className="text-gold-400 font-bold mb-2 flex items-center">
+                  <div className="bg-bg-dark/80/50 rounded-lg p-5">
+                    <h4 className="text-warm-gold font-bold mb-2 flex items-center">
                       <span className="mr-2">ℹ️</span>基本信息
                     </h4>
                     <div className="space-y-2 text-sm">
@@ -380,8 +380,8 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
                   </div>
 
                   {/* 人格特徵雷達 */}
-                  <div className="bg-cosmic-700/50 rounded-lg p-5">
-                    <h4 className="text-gold-400 font-bold mb-2 flex items-center">
+                  <div className="bg-bg-dark/80/50 rounded-lg p-5">
+                    <h4 className="text-warm-gold font-bold mb-2 flex items-center">
                       <span className="mr-2">🎯</span>人格特徵
                     </h4>
                     <div className="space-y-2 text-sm">
@@ -419,8 +419,8 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
                   </div>
 
                   {/* 情感和行為 */}
-                  <div className="bg-cosmic-700/50 rounded-lg p-5">
-                    <h4 className="text-gold-400 font-bold mb-2 flex items-center">
+                  <div className="bg-bg-dark/80/50 rounded-lg p-5">
+                    <h4 className="text-warm-gold font-bold mb-2 flex items-center">
                       <span className="mr-2">💭</span>情感行為
                     </h4>
                     <div className="space-y-2 text-sm">
@@ -501,15 +501,15 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
             {/* 語言風格標籤 */}
             {activeTab === 'language' && (
               <div className="space-y-6">
-                <div className="bg-cosmic-800/30 rounded-lg p-6">
-                  <h4 className="text-gold-400 font-bold mb-4 flex items-center">
+                <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-6">
+                  <h4 className="text-warm-gold font-bold mb-4 flex items-center">
                     <span className="mr-2">💬</span>語言風格分析
                   </h4>
                   
                   {/* 說話風格 */}
                   <div className="mb-8">
-                    <h5 className="text-gold-300 font-medium text-sm mb-4">說話風格特徵</h5>
-                    <div className="bg-cosmic-700/50 rounded-lg p-5">
+                    <h5 className="text-warm-gold font-medium text-sm mb-4">說話風格特徵</h5>
+                    <div className="bg-bg-dark/80/50 rounded-lg p-5">
                       <div className="text-white text-lg font-medium mb-4">
                         {analysisResult.linguisticPattern.speakingStyle}
                       </div>
@@ -534,12 +534,12 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
 
                   {/* 詞彙豐富度視覺化 */}
                   <div className="mb-8">
-                    <h5 className="text-gold-300 font-medium text-sm mb-4">詞彙豐富度指標</h5>
+                    <h5 className="text-warm-gold font-medium text-sm mb-4">詞彙豐富度指標</h5>
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-cosmic-700/30 rounded-lg">
+                      <div className="flex items-center justify-between p-4 bg-bg-dark/80/30 rounded-lg">
                         <span className="text-gray-300 text-sm font-medium">整體豐富度</span>
                         <div className="flex items-center space-x-3">
-                          <div className="w-40 h-3 bg-cosmic-600 rounded-full overflow-hidden">
+                          <div className="w-40 h-3 bg-bg-light rounded-full overflow-hidden">
                             <div 
                               className="h-full bg-gradient-to-r from-gold-600 to-gold-400 transition-all duration-300"
                               style={{ width: `${analysisResult.linguisticPattern.vocabularyRichness * 100}%` }}
@@ -555,17 +555,17 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
 
                   {/* 語言特色 */}
                   <div>
-                    <h5 className="text-gold-300 font-medium text-sm mb-4">語言特色分析</h5>
-                    <div className="bg-cosmic-700/20 rounded-lg p-5 border border-gold-600/20">
+                    <h5 className="text-warm-gold font-medium text-sm mb-4">語言特色分析</h5>
+                    <div className="bg-bg-dark/80/20 rounded-lg p-5 border border-gold-600/20">
                       <p className="text-gray-300 text-sm leading-relaxed space-y-2">
                         <span className="block">
                           角色的語言表達呈現 <strong className="text-white">{analysisResult.linguisticPattern.speakingStyle}</strong> 的特點。
                         </span>
                         <span className="block">
-                          平均每段對話 <strong className="text-gold-300">{analysisResult.linguisticPattern.averageDialogueLength}字</strong> 的表達長度反映了角色的{analysisResult.linguisticPattern.averageDialogueLength > 30 ? '詳細縝密' : '簡潔直接'}表達習慣。
+                          平均每段對話 <strong className="text-warm-gold">{analysisResult.linguisticPattern.averageDialogueLength}字</strong> 的表達長度反映了角色的{analysisResult.linguisticPattern.averageDialogueLength > 30 ? '詳細縝密' : '簡潔直接'}表達習慣。
                         </span>
                         <span className="block">
-                          詞彙豐富度達到 <strong className="text-gold-300">{(analysisResult.linguisticPattern.vocabularyRichness * 100).toFixed(0)}%</strong>，顯示角色具有{analysisResult.linguisticPattern.vocabularyRichness >= 0.8 ? '豐富多樣' : analysisResult.linguisticPattern.vocabularyRichness >= 0.6 ? '中等程度' : '相對簡單'}的語言表達能力。
+                          詞彙豐富度達到 <strong className="text-warm-gold">{(analysisResult.linguisticPattern.vocabularyRichness * 100).toFixed(0)}%</strong>，顯示角色具有{analysisResult.linguisticPattern.vocabularyRichness >= 0.8 ? '豐富多樣' : analysisResult.linguisticPattern.vocabularyRichness >= 0.6 ? '中等程度' : '相對簡單'}的語言表達能力。
                         </span>
                       </p>
                     </div>
@@ -577,19 +577,19 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
             {/* 改進建議標籤 */}
             {activeTab === 'suggestions' && (
               <div className="space-y-6">
-                <div className="bg-cosmic-800/30 rounded-lg p-6">
-                  <h4 className="text-gold-400 font-bold mb-4 flex items-center">
+                <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-6">
+                  <h4 className="text-warm-gold font-bold mb-4 flex items-center">
                     <span className="mr-2">💡</span>改進建議
                   </h4>
                   
                   {/* AI建議列表 */}
                   <div className="space-y-5">
                     {generateSuggestions(analysisResult).map((suggestion, index) => (
-                      <div key={index} className="bg-cosmic-700/40 rounded-lg p-5 border border-gold-600/20">
+                      <div key={index} className="bg-bg-dark/80/40 rounded-lg p-5 border border-gold-600/20">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center">
                             <span className="text-xl mr-3">{suggestion.icon}</span>
-                            <h5 className="text-gold-300 font-medium text-base">{suggestion.title}</h5>
+                            <h5 className="text-warm-gold font-medium text-base">{suggestion.title}</h5>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                             suggestion.priority === 'high' ? 'bg-red-600 text-white' :
@@ -603,12 +603,12 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
                         <p className="text-gray-300 text-sm leading-relaxed mb-4">
                           {suggestion.description}
                         </p>
-                        <div className="flex items-center justify-between pt-2 border-t border-cosmic-600/30">
+                        <div className="flex items-center justify-between pt-2 border-t border-warm-gold/10/30">
                           <div className="text-xs text-gray-400">
                             影響章節: {suggestion.chapters.join(', ')}
                           </div>
                           <button 
-                            className="px-4 py-2 bg-gold-600 hover:bg-gold-500 text-cosmic-900 text-xs font-medium rounded-lg transition-colors hover:scale-105 transform"
+                            className="px-4 py-2 bg-gold-600 hover:bg-warm-gold/50 text-text-primary text-xs font-medium rounded-lg transition-colors hover:scale-105 transform"
                             onClick={() => handleApplySuggestion(suggestion)}
                           >
                             應用建議
@@ -619,20 +619,20 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
                   </div>
 
                   {/* 整體改善建議 */}
-                  <div className="mt-8 p-5 bg-cosmic-700/20 rounded-lg border border-gold-600/20">
-                    <h5 className="text-gold-400 font-medium text-base mb-3 flex items-center">
+                  <div className="mt-8 p-5 bg-bg-dark/80/20 rounded-lg border border-gold-600/20">
+                    <h5 className="text-warm-gold font-medium text-base mb-3 flex items-center">
                       <span className="mr-2">📈</span>整體改善方向
                     </h5>
                     <p className="text-gray-300 text-sm leading-relaxed space-y-2">
                       <span className="block">
-                        基於分析結果，建議重點關注 <strong className="text-gold-300">
+                        基於分析結果，建議重點關注 <strong className="text-warm-gold">
                         {analysisResult.confidence < 0.7 ? '提升角色一致性' :
                          analysisResult.behaviorConsistency < 0.8 ? '強化行為邏輯' :
                          '深化人物層次'}
                         </strong>，同時保持角色的核心特徵不變。
                       </span>
                       <span className="block">
-                        可以考慮在對話中更多展現角色的 <strong className="text-gold-300">{analysisResult.linguisticPattern.speakingStyle}</strong> 特點，讓讀者更容易識別和記住這個角色。
+                        可以考慮在對話中更多展現角色的 <strong className="text-warm-gold">{analysisResult.linguisticPattern.speakingStyle}</strong> 特點，讓讀者更容易識別和記住這個角色。
                       </span>
                     </p>
                   </div>

@@ -227,25 +227,25 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
   };
 
   return (
-    <div className={`bg-cosmic-800/95 border border-cosmic-700 rounded-lg shadow-xl ${className}`}>
+    <div className={`bg-bg-light/50 backdrop-blur-sm/95 border border-warm-gold/10 rounded-lg shadow-xl ${className}`}>
       {/* 標題列 */}
-      <div className="flex items-center justify-between p-4 border-b border-cosmic-700">
+      <div className="flex items-center justify-between p-4 border-b border-warm-gold/10">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gold-600/20 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 bg-warm-gold/20 rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-warm-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0-6V4m0 6l4.5 4.5M12 10L7.5 5.5" />
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-medium text-cosmic-100">增強導出系統</h3>
-            <p className="text-sm text-cosmic-400">
+            <h3 className="text-lg font-medium text-text-secondary/20">增強導出系統</h3>
+            <p className="text-sm text-text-secondary/80">
               專業的EPUB/PDF導出，整合圖片優化和版面控制
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-2 text-cosmic-400 hover:text-cosmic-200 hover:bg-cosmic-700 rounded-lg transition-colors"
+          className="p-2 text-text-secondary/80 hover:text-text-secondary/40 hover:bg-bg-dark/80 rounded-lg transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -254,7 +254,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
       </div>
 
       {/* 頁籤導航 */}
-      <div className="flex border-b border-cosmic-700">
+      <div className="flex border-b border-warm-gold/10">
         {[
           { id: 'format', name: '格式設定', icon: '📄' },
           { id: 'images', name: '圖片優化', icon: '🖼️' },
@@ -266,8 +266,8 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
             onClick={() => setSelectedTab(tab.id as 'format' | 'images' | 'advanced' | 'preview')}
             className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors ${
               selectedTab === tab.id
-                ? 'text-gold-400 border-b-2 border-gold-500 bg-gold-500/10'
-                : 'text-cosmic-400 hover:text-cosmic-300 hover:bg-cosmic-700/50'
+                ? 'text-warm-gold border-b-2 border-warm-gold bg-warm-gold/50/10'
+                : 'text-text-secondary/80 hover:text-text-secondary hover:bg-bg-dark/80/50'
             }`}
           >
             <span>{tab.icon}</span>
@@ -282,7 +282,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
           <div className="space-y-6">
             {/* 導出格式選擇 */}
             <div className="space-y-4">
-              <h4 className="text-lg font-medium text-cosmic-200">導出格式</h4>
+              <h4 className="text-lg font-medium text-text-secondary/40">導出格式</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   { id: 'epub', name: 'EPUB 電子書', description: '通用電子書格式，適合各種閱讀器', icon: '📱' },
@@ -294,15 +294,15 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                     onClick={() => setExportFormat(format.id as ExportFormat)}
                     className={`p-4 text-left rounded-lg border transition-all ${
                       exportFormat === format.id
-                        ? 'border-gold-500 bg-gold-600/10 ring-1 ring-gold-500/50'
-                        : 'border-cosmic-600 bg-cosmic-800/50 hover:border-cosmic-500 hover:bg-cosmic-700/50'
+                        ? 'border-warm-gold bg-warm-gold/10 ring-1 ring-gold-500/50'
+                        : 'border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm/50 hover:border-warm-gold/20 hover:bg-bg-dark/80/50'
                     }`}
                   >
                     <div className="flex items-center space-x-3 mb-2">
                       <span className="text-2xl">{format.icon}</span>
-                      <h5 className="font-medium text-cosmic-200">{format.name}</h5>
+                      <h5 className="font-medium text-text-secondary/40">{format.name}</h5>
                     </div>
-                    <p className="text-sm text-cosmic-400">{format.description}</p>
+                    <p className="text-sm text-text-secondary/80">{format.description}</p>
                   </button>
                 ))}
               </div>
@@ -310,7 +310,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
 
             {/* 品質預設 */}
             <div className="space-y-4">
-              <h4 className="text-lg font-medium text-cosmic-200">品質預設</h4>
+              <h4 className="text-lg font-medium text-text-secondary/40">品質預設</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 {Object.entries(qualityPresets).map(([key, preset]) => (
                   <button
@@ -319,11 +319,11 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                     className={`p-3 text-left rounded-lg border transition-all ${
                       qualityPreset === key
                         ? 'border-clay-orange bg-clay-orange/10 ring-1 ring-purple-500/50'
-                        : 'border-cosmic-600 bg-cosmic-800/50 hover:border-cosmic-500'
+                        : 'border-warm-gold/10 bg-bg-light/50 backdrop-blur-sm/50 hover:border-warm-gold/20'
                     }`}
                   >
-                    <h6 className="font-medium text-cosmic-200 mb-1">{preset.name}</h6>
-                    <p className="text-xs text-cosmic-400 mb-2">{preset.description}</p>
+                    <h6 className="font-medium text-text-secondary/40 mb-1">{preset.name}</h6>
+                    <p className="text-xs text-text-secondary/80 mb-2">{preset.description}</p>
                     <div className="text-xs text-clay-orange">
                       {preset.imageQuality}% • {preset.maxWidth}x{preset.maxHeight}
                     </div>
@@ -339,10 +339,10 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
           <div className="space-y-6">
             {/* 圖片品質控制 */}
             <div className="space-y-4">
-              <h4 className="text-lg font-medium text-cosmic-200">圖片品質控制</h4>
-              <div className="bg-cosmic-800/50 rounded-lg p-4 space-y-4">
+              <h4 className="text-lg font-medium text-text-secondary/40">圖片品質控制</h4>
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
                     整體圖片品質: {imageConfig.imageQuality}%
                   </label>
                   <input
@@ -356,9 +356,9 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                       setImageConfig(prev => ({ ...prev, imageQuality: quality }));
                       if (qualityPreset !== 'custom') setQualityPreset('custom');
                     }}
-                    className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none slider"
+                    className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none slider"
                   />
-                  <div className="flex justify-between text-xs text-cosmic-400 mt-1">
+                  <div className="flex justify-between text-xs text-text-secondary/80 mt-1">
                     <span>檔案較小</span>
                     <span>平衡</span>
                     <span>最高品質</span>
@@ -367,7 +367,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       最大寬度: {imageConfig.maxImageWidth}px
                     </label>
                     <input
@@ -380,11 +380,11 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                         setImageConfig(prev => ({ ...prev, maxImageWidth: parseInt(e.target.value) }));
                         if (qualityPreset !== 'custom') setQualityPreset('custom');
                       }}
-                      className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none slider"
+                      className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none slider"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-cosmic-300 mb-2">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
                       最大高度: {imageConfig.maxImageHeight}px
                     </label>
                     <input
@@ -397,20 +397,20 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                         setImageConfig(prev => ({ ...prev, maxImageHeight: parseInt(e.target.value) }));
                         if (qualityPreset !== 'custom') setQualityPreset('custom');
                       }}
-                      className="w-full h-2 bg-cosmic-700 rounded-lg appearance-none slider"
+                      className="w-full h-2 bg-bg-dark/80 rounded-lg appearance-none slider"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-cosmic-300 mb-2">壓縮等級</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">壓縮等級</label>
                   <select
                     value={imageConfig.compressionLevel}
                     onChange={(e) => {
                       setImageConfig(prev => ({ ...prev, compressionLevel: e.target.value as 'none' | 'low' | 'medium' | 'high' }));
                       if (qualityPreset !== 'custom') setQualityPreset('custom');
                     }}
-                    className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500"
+                    className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 text-text-secondary/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500"
                   >
                     <option value="none">無壓縮</option>
                     <option value="low">低壓縮</option>
@@ -423,35 +423,35 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
 
             {/* 圖片包含選項 */}
             <div className="space-y-4">
-              <h4 className="text-lg font-medium text-cosmic-200">包含選項</h4>
-              <div className="bg-cosmic-800/50 rounded-lg p-4">
+              <h4 className="text-lg font-medium text-text-secondary/40">包含選項</h4>
+              <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4">
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       checked={imageConfig.includeImageMetadata}
                       onChange={(e) => setImageConfig(prev => ({ ...prev, includeImageMetadata: e.target.checked }))}
-                      className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                      className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                     />
-                    <span className="text-sm text-cosmic-300">包含圖片元數據</span>
+                    <span className="text-sm text-text-secondary">包含圖片元數據</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       checked={imageConfig.includeAltText}
                       onChange={(e) => setImageConfig(prev => ({ ...prev, includeAltText: e.target.checked }))}
-                      className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                      className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                     />
-                    <span className="text-sm text-cosmic-300">包含替代文字</span>
+                    <span className="text-sm text-text-secondary">包含替代文字</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       checked={imageConfig.includeDescriptions}
                       onChange={(e) => setImageConfig(prev => ({ ...prev, includeDescriptions: e.target.checked }))}
-                      className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                      className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                     />
-                    <span className="text-sm text-cosmic-300">包含圖片描述</span>
+                    <span className="text-sm text-text-secondary">包含圖片描述</span>
                   </label>
                 </div>
               </div>
@@ -464,34 +464,34 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
           <div className="space-y-6">
             {(exportFormat === 'epub' || exportFormat === 'both') && (
               <div className="space-y-4">
-                <h4 className="text-lg font-medium text-cosmic-200">EPUB 進階設定</h4>
-                <div className="bg-cosmic-800/50 rounded-lg p-4 space-y-3">
+                <h4 className="text-lg font-medium text-text-secondary/40">EPUB 進階設定</h4>
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4 space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         checked={epubOptions.includeChapterNumbers}
                         onChange={(e) => setEpubOptions(prev => ({ ...prev, includeChapterNumbers: e.target.checked }))}
-                        className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                        className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                       />
-                      <span className="text-sm text-cosmic-300">包含章節編號</span>
+                      <span className="text-sm text-text-secondary">包含章節編號</span>
                     </label>
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         checked={epubOptions.includeTOC}
                         onChange={(e) => setEpubOptions(prev => ({ ...prev, includeTOC: e.target.checked }))}
-                        className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                        className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                       />
-                      <span className="text-sm text-cosmic-300">包含目錄</span>
+                      <span className="text-sm text-text-secondary">包含目錄</span>
                     </label>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-cosmic-300 mb-2">字體大小</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">字體大小</label>
                     <select
                       value={epubOptions.fontSize}
                       onChange={(e) => setEpubOptions(prev => ({ ...prev, fontSize: e.target.value as 'small' | 'medium' | 'large' }))}
-                      className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 rounded-lg"
+                      className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 text-text-secondary/20 rounded-lg"
                     >
                       <option value="small">小</option>
                       <option value="medium">中</option>
@@ -504,14 +504,14 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
 
             {(exportFormat === 'pdf' || exportFormat === 'both') && (
               <div className="space-y-4">
-                <h4 className="text-lg font-medium text-cosmic-200">PDF 進階設定</h4>
-                <div className="bg-cosmic-800/50 rounded-lg p-4 space-y-3">
+                <h4 className="text-lg font-medium text-text-secondary/40">PDF 進階設定</h4>
+                <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4 space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-cosmic-300 mb-2">頁面大小</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">頁面大小</label>
                     <select
                       value={pdfOptions.pageSize}
                       onChange={(e) => setPdfOptions(prev => ({ ...prev, pageSize: e.target.value }))}
-                      className="w-full px-3 py-2 bg-cosmic-700 border border-cosmic-600 text-cosmic-100 rounded-lg"
+                      className="w-full px-3 py-2 bg-bg-dark/80 border border-warm-gold/10 text-text-secondary/20 rounded-lg"
                     >
                       <option value="A4">A4</option>
                       <option value="A5">A5</option>
@@ -525,18 +525,18 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
                         type="checkbox"
                         checked={pdfOptions.includeHeader}
                         onChange={(e) => setPdfOptions(prev => ({ ...prev, includeHeader: e.target.checked }))}
-                        className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                        className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                       />
-                      <span className="text-sm text-cosmic-300">包含頁首</span>
+                      <span className="text-sm text-text-secondary">包含頁首</span>
                     </label>
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         checked={pdfOptions.includeFooter}
                         onChange={(e) => setPdfOptions(prev => ({ ...prev, includeFooter: e.target.checked }))}
-                        className="w-4 h-4 text-gold-600 bg-cosmic-700 border-cosmic-600 rounded focus:ring-gold-500"
+                        className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                       />
-                      <span className="text-sm text-cosmic-300">包含頁尾</span>
+                      <span className="text-sm text-text-secondary">包含頁尾</span>
                     </label>
                   </div>
                 </div>
@@ -548,45 +548,45 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
         {/* 預覽摘要頁籤 */}
         {selectedTab === 'preview' && (
           <div className="space-y-6">
-            <div className="bg-cosmic-800/50 rounded-lg p-4">
-              <h4 className="text-lg font-medium text-cosmic-200 mb-4">導出摘要</h4>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4">
+              <h4 className="text-lg font-medium text-text-secondary/40 mb-4">導出摘要</h4>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="text-center p-3 bg-cosmic-700/50 rounded-lg">
-                  <div className="text-2xl font-bold text-gold-400">{exportFormat.toUpperCase()}</div>
-                  <div className="text-sm text-cosmic-400">導出格式</div>
+                <div className="text-center p-3 bg-bg-dark/80/50 rounded-lg">
+                  <div className="text-2xl font-bold text-warm-gold">{exportFormat.toUpperCase()}</div>
+                  <div className="text-sm text-text-secondary/80">導出格式</div>
                 </div>
-                <div className="text-center p-3 bg-cosmic-700/50 rounded-lg">
+                <div className="text-center p-3 bg-bg-dark/80/50 rounded-lg">
                   <div className="text-2xl font-bold text-warm-gold">{imageConfig.imageQuality}%</div>
-                  <div className="text-sm text-cosmic-400">圖片品質</div>
+                  <div className="text-sm text-text-secondary/80">圖片品質</div>
                 </div>
-                <div className="text-center p-3 bg-cosmic-700/50 rounded-lg">
+                <div className="text-center p-3 bg-bg-dark/80/50 rounded-lg">
                   <div className="text-2xl font-bold text-green-400">
                     {exportFormat === 'both' 
                       ? `${(estimatedSize.epub + estimatedSize.pdf).toFixed(1)}` 
                       : `${estimatedSize[exportFormat === 'epub' ? 'epub' : 'pdf'].toFixed(1)}`} MB
                   </div>
-                  <div className="text-sm text-cosmic-400">預估大小</div>
+                  <div className="text-sm text-text-secondary/80">預估大小</div>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-cosmic-300">圖片最大尺寸:</span>
-                  <span className="text-cosmic-100">{imageConfig.maxImageWidth} × {imageConfig.maxImageHeight}</span>
+                  <span className="text-text-secondary">圖片最大尺寸:</span>
+                  <span className="text-text-secondary/20">{imageConfig.maxImageWidth} × {imageConfig.maxImageHeight}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-cosmic-300">壓縮等級:</span>
-                  <span className="text-cosmic-100">{imageConfig.compressionLevel}</span>
+                  <span className="text-text-secondary">壓縮等級:</span>
+                  <span className="text-text-secondary/20">{imageConfig.compressionLevel}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-cosmic-300">包含元數據:</span>
+                  <span className="text-text-secondary">包含元數據:</span>
                   <span className={imageConfig.includeImageMetadata ? 'text-green-400' : 'text-red-400'}>
                     {imageConfig.includeImageMetadata ? '是' : '否'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-cosmic-300">包含替代文字:</span>
+                  <span className="text-text-secondary">包含替代文字:</span>
                   <span className={imageConfig.includeAltText ? 'text-green-400' : 'text-red-400'}>
                     {imageConfig.includeAltText ? '是' : '否'}
                   </span>
@@ -595,29 +595,29 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
             </div>
 
             {/* 檔案大小詳細分析 */}
-            <div className="bg-cosmic-800/50 rounded-lg p-4">
-              <h5 className="font-medium text-cosmic-200 mb-3">檔案大小分析</h5>
+            <div className="bg-bg-light/50 backdrop-blur-sm/50 rounded-lg p-4">
+              <h5 className="font-medium text-text-secondary/40 mb-3">檔案大小分析</h5>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-cosmic-300">圖片總大小:</span>
-                  <span className="text-cosmic-100">{estimatedSize.images.toFixed(1)} MB</span>
+                  <span className="text-text-secondary">圖片總大小:</span>
+                  <span className="text-text-secondary/20">{estimatedSize.images.toFixed(1)} MB</span>
                 </div>
                 {(exportFormat === 'epub' || exportFormat === 'both') && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-cosmic-300">EPUB 檔案:</span>
-                    <span className="text-cosmic-100">{estimatedSize.epub.toFixed(1)} MB</span>
+                    <span className="text-text-secondary">EPUB 檔案:</span>
+                    <span className="text-text-secondary/20">{estimatedSize.epub.toFixed(1)} MB</span>
                   </div>
                 )}
                 {(exportFormat === 'pdf' || exportFormat === 'both') && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-cosmic-300">PDF 檔案:</span>
-                    <span className="text-cosmic-100">{estimatedSize.pdf.toFixed(1)} MB</span>
+                    <span className="text-text-secondary">PDF 檔案:</span>
+                    <span className="text-text-secondary/20">{estimatedSize.pdf.toFixed(1)} MB</span>
                   </div>
                 )}
                 {exportFormat === 'both' && (
-                  <div className="flex items-center justify-between text-sm font-medium border-t border-cosmic-700 pt-2">
-                    <span className="text-gold-300">總計:</span>
-                    <span className="text-gold-300">{(estimatedSize.epub + estimatedSize.pdf).toFixed(1)} MB</span>
+                  <div className="flex items-center justify-between text-sm font-medium border-t border-warm-gold/10 pt-2">
+                    <span className="text-warm-gold">總計:</span>
+                    <span className="text-warm-gold">{(estimatedSize.epub + estimatedSize.pdf).toFixed(1)} MB</span>
                   </div>
                 )}
               </div>
@@ -627,9 +627,9 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
       </div>
 
       {/* 底部操作區 */}
-      <div className="border-t border-cosmic-700 p-4">
+      <div className="border-t border-warm-gold/10 p-4">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-cosmic-400">
+          <div className="text-sm text-text-secondary/80">
             {exportFormat === 'both' ? '將生成兩個檔案' : `將生成 ${exportFormat.toUpperCase()} 檔案`} • 
             預估大小: {exportFormat === 'both' 
               ? `${(estimatedSize.epub + estimatedSize.pdf).toFixed(1)} MB` 
@@ -639,7 +639,7 @@ export const EnhancedExportPanel: React.FC<EnhancedExportPanelProps> = ({
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-cosmic-300 hover:text-cosmic-100 hover:bg-cosmic-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-text-secondary hover:text-text-secondary/20 hover:bg-bg-dark/80 rounded-lg transition-colors"
             >
               取消
             </button>

@@ -321,7 +321,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                 <select
                   value={selectedCharacterId}
                   onChange={(e) => setSelectedCharacterId(e.target.value)}
-                  className="w-full bg-bg-dark/80/80 backdrop-blur border border-gold-600/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+                  className="w-full bg-bg-dark/80/80 backdrop-blur border border-warm-gold/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                 >
                   <option value="">請選擇角色</option>
                   {characters.map(character => (
@@ -342,8 +342,8 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                     onClick={() => setAnalysisScope('current')}
                     className={`px-4 py-3 rounded-lg font-medium transition-all text-sm ${
                       analysisScope === 'current'
-                        ? 'bg-gold-600 text-cosmic-900'
-                        : 'bg-bg-dark/80/80 text-gray-300 hover:bg-bg-light border border-gold-600/30'
+                        ? 'bg-gold-600 text-text-primary'
+                        : 'bg-bg-dark/80/80 text-gray-300 hover:bg-bg-light border border-warm-gold/30'
                     }`}>
                     當前章節
                   </button>
@@ -351,8 +351,8 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                     onClick={() => setAnalysisScope('project')}
                     className={`px-4 py-3 rounded-lg font-medium transition-all text-sm ${
                       analysisScope === 'project'
-                        ? 'bg-gold-600 text-cosmic-900'
-                        : 'bg-bg-dark/80/80 text-gray-300 hover:bg-bg-light border border-gold-600/30'
+                        ? 'bg-gold-600 text-text-primary'
+                        : 'bg-bg-dark/80/80 text-gray-300 hover:bg-bg-light border border-warm-gold/30'
                     }`}>
                     全專案
                   </button>
@@ -363,7 +363,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
               <button
                 onClick={performAnalysis}
                 disabled={isAnalyzing || !selectedCharacterId}
-                className="w-full bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 disabled:from-gray-600 disabled:to-gray-700 text-cosmic-900 px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105 disabled:scale-100 flex items-center justify-center space-x-2 shadow-lg"
+                className="w-full bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 disabled:from-gray-600 disabled:to-gray-700 text-text-primary px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105 disabled:scale-100 flex items-center justify-center space-x-2 shadow-lg"
               >
                 <span className="text-xl">{isAnalyzing ? '⏳' : '🔍'}</span>
                 <span>{isAnalyzing ? '分析中...' : '開始分析'}</span>
@@ -379,7 +379,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   onClick={() => setActiveTab(tab.key)}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                     activeTab === tab.key
-                      ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-cosmic-900 shadow-lg'
+                      ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-text-primary shadow-lg'
                       : 'text-gray-400 hover:text-white hover:bg-bg-dark/80/50'
                   }`}
                 >
@@ -415,7 +415,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                     <div className="relative">
                       <div className="text-8xl animate-pulse">🎭</div>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-32 h-32 bg-gold-600/20 rounded-full blur-3xl animate-ping"></div>
+                        <div className="w-32 h-32 bg-warm-gold/20 rounded-full blur-3xl animate-ping"></div>
                       </div>
                     </div>
                     <div className="space-y-3">
@@ -698,12 +698,12 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                               <p className="text-gray-300 leading-relaxed mb-4">
                                 {suggestion.description}
                               </p>
-                              <div className="flex items-center justify-between pt-3 border-t border-cosmic-600/30">
+                              <div className="flex items-center justify-between pt-3 border-t border-warm-gold/10/30">
                                 <div className="text-sm text-gray-400">
                                   影響章節: {suggestion.chapters.join(', ')}
                                 </div>
                                 <button
-                                  className="px-4 py-2 bg-gold-600 hover:bg-gold-500 text-cosmic-900 text-sm font-medium rounded-lg transition-all hover:scale-105 transform"
+                                  className="px-4 py-2 bg-gold-600 hover:bg-warm-gold/50 text-text-primary text-sm font-medium rounded-lg transition-all hover:scale-105 transform"
                                   onClick={() => handleApplySuggestion(suggestion)}
                                 >
                                   應用建議

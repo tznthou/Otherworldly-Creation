@@ -281,12 +281,12 @@ const CreateProjectModal: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div 
-        className="bg-cosmic-900 border border-cosmic-700 rounded-xl shadow-xl w-full max-w-2xl relative my-8 flex flex-col max-h-[90vh]"
+        className="bg-bg-dark border border-warm-gold/10 rounded-xl shadow-xl w-full max-w-2xl relative my-8 flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 標題 */}
-        <div className="p-6 border-b border-cosmic-700 flex items-center justify-between relative z-10 flex-shrink-0">
-          <h2 className="text-xl font-cosmic text-gold-500">創建新專案</h2>
+        <div className="p-6 border-b border-warm-gold/10 flex items-center justify-between relative z-10 flex-shrink-0">
+          <h2 className="text-xl font-serif-tc text-warm-gold">創建新專案</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-white hover:bg-bg-dark/80 text-2xl p-2 rounded-lg transition-colors"
@@ -301,15 +301,15 @@ const CreateProjectModal: React.FC = () => {
           {/* 步驟指示器 */}
           <div className="flex items-center mb-8">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              step === 1 ? 'bg-gold-500 text-cosmic-900' : 'bg-bg-dark/80 text-gold-500'
+              step === 1 ? 'bg-warm-gold/50 text-text-primary' : 'bg-bg-dark/80 text-warm-gold'
             }`}>
               1
             </div>
             <div className={`h-1 flex-1 mx-2 ${
-              step >= 2 ? 'bg-gold-500' : 'bg-bg-dark/80'
+              step >= 2 ? 'bg-warm-gold/50' : 'bg-bg-dark/80'
             }`}></div>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              step === 2 ? 'bg-gold-500 text-cosmic-900' : 'bg-bg-dark/80 text-gray-300'
+              step === 2 ? 'bg-warm-gold/50 text-text-primary' : 'bg-bg-dark/80 text-gray-300'
             }`}>
               2
             </div>
@@ -326,7 +326,7 @@ const CreateProjectModal: React.FC = () => {
                   onChange={(e) => setProjectName(e.target.value)}
                   placeholder="輸入專案名稱"
                   className={`w-full bg-bg-light/50 backdrop-blur-sm border ${
-                    errors.name ? 'border-red-500' : 'border-cosmic-700'
+                    errors.name ? 'border-red-500' : 'border-warm-gold/10'
                   } rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500`}
                 />
                 {errors.name && (
@@ -343,8 +343,8 @@ const CreateProjectModal: React.FC = () => {
                       onClick={() => setSelectedType(type.id)}
                       className={`p-4 rounded-lg cursor-pointer border ${
                         selectedType === type.id
-                          ? 'border-gold-500 bg-bg-light/50 backdrop-blur-sm'
-                          : 'border-cosmic-700 bg-cosmic-900 hover:bg-bg-light/50 backdrop-blur-sm'
+                          ? 'border-warm-gold bg-bg-light/50 backdrop-blur-sm'
+                          : 'border-warm-gold/10 bg-bg-dark hover:bg-bg-light/50 backdrop-blur-sm'
                       }`}
                     >
                       <div className="flex items-center mb-2">
@@ -375,8 +375,8 @@ const CreateProjectModal: React.FC = () => {
                       onClick={() => setSelectedNovelLength(length.id)}
                       className={`p-4 rounded-lg cursor-pointer border ${
                         selectedNovelLength === length.id
-                          ? 'border-gold-500 bg-bg-light/50 backdrop-blur-sm'
-                          : 'border-cosmic-700 bg-cosmic-900 hover:bg-bg-light/50 backdrop-blur-sm'
+                          ? 'border-warm-gold bg-bg-light/50 backdrop-blur-sm'
+                          : 'border-warm-gold/10 bg-bg-dark hover:bg-bg-light/50 backdrop-blur-sm'
                       }`}
                     >
                       <div className="flex items-center mb-2">
@@ -414,13 +414,13 @@ const CreateProjectModal: React.FC = () => {
                   onChange={(e) => setProjectDescription(e.target.value)}
                   placeholder="輸入專案描述..."
                   rows={3}
-                  className="w-full bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                 ></textarea>
               </div>
 
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-warm-gold mb-4">模板設定</h3>
-                <div className="bg-bg-light/50 backdrop-blur-sm border border-cosmic-700 rounded-lg p-4">
+                <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
                   {selectedType === 'isekai' && (
                     <div className="space-y-4">
                       <div>
@@ -430,7 +430,7 @@ const CreateProjectModal: React.FC = () => {
                           value={templateSettings.levelSystem || ''}
                           onChange={(e) => handleTemplateSettingChange('levelSystem', e.target.value)}
                           placeholder="例如：等級與技能系統"
-                          className="w-full bg-cosmic-900 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                          className="w-full bg-bg-dark border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                       <div>
@@ -440,7 +440,7 @@ const CreateProjectModal: React.FC = () => {
                           value={templateSettings.magicSystem || ''}
                           onChange={(e) => handleTemplateSettingChange('magicSystem', e.target.value)}
                           placeholder="例如：元素魔法"
-                          className="w-full bg-cosmic-900 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                          className="w-full bg-bg-dark border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                       <div>
@@ -450,7 +450,7 @@ const CreateProjectModal: React.FC = () => {
                           value={templateSettings.reincarnation || ''}
                           onChange={(e) => handleTemplateSettingChange('reincarnation', e.target.value)}
                           placeholder="例如：車禍後轉生"
-                          className="w-full bg-cosmic-900 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                          className="w-full bg-bg-dark border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                     </div>
@@ -465,7 +465,7 @@ const CreateProjectModal: React.FC = () => {
                           value={templateSettings.schoolName || ''}
                           onChange={(e) => handleTemplateSettingChange('schoolName', e.target.value)}
                           placeholder="例如：櫻花高中"
-                          className="w-full bg-cosmic-900 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                          className="w-full bg-bg-dark border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                       <div>
@@ -473,7 +473,7 @@ const CreateProjectModal: React.FC = () => {
                         <select
                           value={templateSettings.schoolType || ''}
                           onChange={(e) => handleTemplateSettingChange('schoolType', e.target.value)}
-                          className="w-full bg-cosmic-900 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                          className="w-full bg-bg-dark border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                         >
                           <option value="">選擇學校類型</option>
                           <option value="普通高中">普通高中</option>
@@ -493,7 +493,7 @@ const CreateProjectModal: React.FC = () => {
                         <select
                           value={templateSettings.techLevel || ''}
                           onChange={(e) => handleTemplateSettingChange('techLevel', e.target.value)}
-                          className="w-full bg-cosmic-900 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                          className="w-full bg-bg-dark border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                         >
                           <option value="">選擇科技水平</option>
                           <option value="近未來科技">近未來科技</option>
@@ -509,7 +509,7 @@ const CreateProjectModal: React.FC = () => {
                           value={templateSettings.worldSetting || ''}
                           onChange={(e) => handleTemplateSettingChange('worldSetting', e.target.value)}
                           placeholder="例如：太空殖民時代"
-                          className="w-full bg-cosmic-900 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                          className="w-full bg-bg-dark border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                     </div>
@@ -524,7 +524,7 @@ const CreateProjectModal: React.FC = () => {
                           value={templateSettings.magicSystem || ''}
                           onChange={(e) => handleTemplateSettingChange('magicSystem', e.target.value)}
                           placeholder="例如：魔法與咒語"
-                          className="w-full bg-cosmic-900 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                          className="w-full bg-bg-dark border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                       <div>
@@ -534,7 +534,7 @@ const CreateProjectModal: React.FC = () => {
                           value={templateSettings.races || ''}
                           onChange={(e) => handleTemplateSettingChange('races', e.target.value)}
                           placeholder="例如：人類、精靈、矮人、獸人"
-                          className="w-full bg-cosmic-900 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                          className="w-full bg-bg-dark border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                         />
                       </div>
                     </div>
@@ -546,7 +546,7 @@ const CreateProjectModal: React.FC = () => {
         </div>
 
         {/* 底部按鈕 */}
-        <div className="p-6 border-t border-cosmic-700 flex justify-between relative z-10 bg-cosmic-900 rounded-b-xl flex-shrink-0">
+        <div className="p-6 border-t border-warm-gold/10 flex justify-between relative z-10 bg-bg-dark rounded-b-xl flex-shrink-0">
           {step === 1 ? (
             <button
               onClick={handleClose}
