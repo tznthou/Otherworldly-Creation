@@ -137,7 +137,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
     <div className="h-full flex flex-col">
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-medium text-gold-400">章節列表</h2>
+          <h2 className="text-lg font-medium text-warm-gold">章節列表</h2>
           <div className="flex space-x-2">
             {chapters.length > 0 && (
               <ChapterBatchActions 
@@ -161,7 +161,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
               <input
                 type="text"
                 placeholder="搜尋章節..."
-                className="w-full bg-cosmic-800 border border-cosmic-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 text-sm"
+                className="w-full bg-bg-light/50 backdrop-blur-sm border border-warm-gold/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-warm-gold/50 text-sm"
                 onChange={(e) => setSearchQuery(e.target.value)}
                 value={searchQuery}
               />
@@ -214,13 +214,13 @@ const ChapterList: React.FC<ChapterListProps> = ({
                   onClick={() => onSelectChapter(chapter.id)}
                   className={`p-3 rounded-lg cursor-pointer transition-colors relative group ${
                     selectedChapterId === chapter.id
-                      ? 'bg-gold-500/20 border border-gold-500/30'
-                      : 'bg-cosmic-800 hover:bg-cosmic-700'
+                      ? 'bg-warm-gold/20 border border-warm-gold/30'
+                      : 'bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80'
                   } ${draggedChapterId === chapter.id ? 'opacity-50' : ''}`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
-                      <span className="w-6 h-6 flex items-center justify-center rounded-full bg-cosmic-700 text-xs text-gold-400 mr-2">
+                      <span className="w-6 h-6 flex items-center justify-center rounded-full bg-bg-dark/80 text-xs text-warm-gold mr-2">
                         {chapter.chapterNumber || chapter.order}
                       </span>
                       <h3 className="font-medium text-white truncate pr-6">
@@ -228,7 +228,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
                       </h3>
                     </div>
                     {(chapter.wordCount && chapter.wordCount > 0) && (
-                      <span className="text-xs text-gray-400 bg-cosmic-700 px-2 py-1 rounded-full">
+                      <span className="text-xs text-gray-400 bg-bg-dark/80 px-2 py-1 rounded-full">
                         {chapter.wordCount} 字
                       </span>
                     )}
@@ -260,7 +260,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
                   <Menu
                     trigger={
                       <button
-                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-cosmic-700 hover:bg-cosmic-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-bg-dark/80 hover:bg-bg-light flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
                       >
                         <span className="text-gray-400">⋮</span>
                       </button>

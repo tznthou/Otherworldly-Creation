@@ -315,7 +315,7 @@ const ProjectEditorContent: React.FC = () => {
         <div className="text-center max-w-md">
           <div className="mb-6">
             <div className="text-6xl mb-4 animate-bounce">📚</div>
-            <h2 className="text-2xl font-cosmic text-gold-500 mb-2">載入專案中</h2>
+            <h2 className="text-2xl font-serif-tc font-bold text-warm-gold mb-2">載入專案中</h2>
             <p className="text-gray-400">正在載入專案資料...</p>
           </div>
           
@@ -347,10 +347,10 @@ const ProjectEditorContent: React.FC = () => {
   const editorContent = (
     <div className="min-h-full flex" style={{ overflowX: 'auto' }}>
       {/* 章節列表側邊欄 */}
-      <div className="w-80 bg-cosmic-900 border-r border-cosmic-700 flex flex-col">
+      <div className="w-80 bg-bg-dark border-r border-warm-gold/10 flex flex-col">
         {/* 專案標題 */}
-        <div className="p-4 border-b border-cosmic-700">
-          <h1 className="text-xl font-cosmic text-gold-500 mb-2">
+        <div className="p-4 border-b border-warm-gold/10">
+          <h1 className="text-xl font-serif-tc font-bold text-warm-gold mb-2">
             {currentProject.name}
           </h1>
           <div className="flex items-center justify-between">
@@ -361,7 +361,7 @@ const ProjectEditorContent: React.FC = () => {
               {currentProject.type === 'fantasy' && '奇幻'}
             </p>
             <div className="flex items-center space-x-2">
-              <span className="text-xs px-2 py-1 rounded-full bg-cosmic-800 text-gold-400" style={{ backgroundColor: '#2a2139' }}>
+              <span className="text-xs px-2 py-1 rounded-full bg-bg-light/50 backdrop-blur-sm text-warm-gold" style={{ backgroundColor: '#2a2139' }}>
                 {currentProject?.novelLength === 'short' && '短篇'}
                 {currentProject?.novelLength === 'medium' && '中篇'}
                 {currentProject?.novelLength === 'long' && '長篇'}
@@ -383,12 +383,12 @@ const ProjectEditorContent: React.FC = () => {
         </div>
 
         {/* 狀態欄 */}
-        <div className="p-4 border-t border-cosmic-700">
+        <div className="p-4 border-t border-warm-gold/10">
           <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
             <span>共 {chapters.length} 章節</span>
             <button
               onClick={() => setShowSavePanel(true)}
-              className="text-xs text-gray-400 hover:text-gold-400 transition-colors"
+              className="text-xs text-gray-400 hover:text-warm-gold transition-colors"
               title="查看儲存狀態"
             >
               儲存管理
@@ -427,13 +427,13 @@ const ProjectEditorContent: React.FC = () => {
           {currentChapter ? (
             <>
               {/* 章節標題欄 */}
-              <div className="bg-cosmic-800 border-b border-cosmic-700 px-6 py-4 flex items-center justify-between" style={{ backgroundColor: '#2a2139', borderColor: '#3d3557', zIndex: 10 }}>
+              <div className="bg-bg-light/50 backdrop-blur-sm border-b border-warm-gold/10 px-6 py-4 flex items-center justify-between" style={{ backgroundColor: '#2a2139', borderColor: '#3d3557', zIndex: 10 }}>
                 <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-gold-500 text-cosmic-900 flex items-center justify-center font-bold text-sm mr-3">
+                  <div className="w-8 h-8 rounded-full bg-warm-gold text-bg-dark flex items-center justify-center font-bold text-sm mr-3">
                     {currentChapter?.chapterNumber || currentChapter?.order || '1'}
                   </div>
                   <div>
-                    <h2 className="text-lg font-cosmic text-gold-400">
+                    <h2 className="text-lg font-serif-tc text-warm-gold">
                       第 {currentChapter?.chapterNumber || currentChapter?.order || '1'} 章
                     </h2>
                     <h3 className="text-white font-medium">
@@ -449,7 +449,7 @@ const ProjectEditorContent: React.FC = () => {
                     {/* 劇情分析按鈕 */}
                     <button
                       onClick={handlePlotAnalysis}
-                      className="px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 bg-cosmic-700 hover:bg-purple-600/20 text-purple-300 hover:text-purple-200 hover:scale-105 transform"
+                      className="px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 bg-bg-dark/80 hover:bg-purple-600/20 text-purple-300 hover:text-purple-200 hover:scale-105 transform"
                       title="劇情分析"
                     >
                       <span>🎭</span>
@@ -459,7 +459,7 @@ const ProjectEditorContent: React.FC = () => {
                     {/* 角色分析按鈕 */}
                     <button
                       onClick={handleCharacterAnalysis}
-                      className="px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 bg-cosmic-700 hover:bg-blue-600/20 text-blue-300 hover:text-blue-200 hover:scale-105 transform"
+                      className="px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center space-x-1 bg-bg-dark/80 hover:bg-blue-600/20 text-blue-300 hover:text-blue-200 hover:scale-105 transform"
                       title="角色分析"
                     >
                       <span>👥</span>
@@ -475,7 +475,7 @@ const ProjectEditorContent: React.FC = () => {
                         }
                       }}
                       disabled={chapters.findIndex(c => c.id === currentChapter?.id) === 0}
-                      className="w-8 h-8 rounded-full bg-cosmic-700 hover:bg-cosmic-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gold-400 text-sm"
+                      className="w-8 h-8 rounded-full bg-bg-dark/80 hover:bg-bg-light disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-warm-gold text-sm"
                       title="上一章"
                     >
                       ←
@@ -489,7 +489,7 @@ const ProjectEditorContent: React.FC = () => {
                         }
                       }}
                       disabled={chapters.findIndex(c => c.id === currentChapter?.id) === chapters.length - 1}
-                      className="w-8 h-8 rounded-full bg-cosmic-700 hover:bg-cosmic-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-gold-400 text-sm"
+                      className="w-8 h-8 rounded-full bg-bg-dark/80 hover:bg-bg-light disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-warm-gold text-sm"
                       title="下一章"
                     >
                       →
@@ -533,7 +533,7 @@ const ProjectEditorContent: React.FC = () => {
                   })()}
                   
                   {/* 章節筆記 (可折疊) */}
-                  <div className="p-4 border-t border-cosmic-700" data-tutorial="chapter-notes">
+                  <div className="p-4 border-t border-warm-gold/10" data-tutorial="chapter-notes">
                     <ChapterNotes chapter={currentChapter} />
                   </div>
                 </div>
@@ -543,7 +543,7 @@ const ProjectEditorContent: React.FC = () => {
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl mb-6">📝</div>
-                <h2 className="text-2xl font-cosmic text-gold-500 mb-4">
+                <h2 className="text-2xl font-serif-tc font-bold text-warm-gold mb-4">
                   選擇一個章節開始寫作
                 </h2>
                 <p className="text-gray-400 mb-8">
@@ -562,7 +562,7 @@ const ProjectEditorContent: React.FC = () => {
 
         {/* AI 續寫面板 */}
         {showAIPanel && currentChapter && id && (
-          <div className="w-96 border-l border-cosmic-700 flex-shrink-0" style={{ minWidth: '384px' }} data-tutorial="ai-panel-btn">
+          <div className="w-96 border-l border-warm-gold/10 flex-shrink-0" style={{ minWidth: '384px' }} data-tutorial="ai-panel-btn">
             <AIWritingPanel 
               projectId={id} 
               chapterId={currentChapter.id}
