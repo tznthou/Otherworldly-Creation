@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCharacterSelection } from '../../../hooks/illustration';
 import CosmicButton from '../../UI/CosmicButton';
+import { Icon } from '../../UI/Icon';
 
 export interface BatchRequestItem {
   id: string;
@@ -41,7 +42,8 @@ const IllustrationRequestsSection: React.FC<IllustrationRequestsSectionProps> = 
           插畫請求 ({requests.length})
         </h3>
         <CosmicButton onClick={onAddRequest} variant="secondary" size="small">
-          ➕ 添加請求
+          <Icon name="Plus" variant="solid" className="w-4 h-4 inline mr-1" />
+          添加請求
         </CosmicButton>
       </div>
 
@@ -54,15 +56,17 @@ const IllustrationRequestsSection: React.FC<IllustrationRequestsSectionProps> = 
             size="small"
             disabled={selectedCharacters.length === 0}
           >
-            ✨ 基於選中角色生成請求
+            <Icon name="Sparkles" variant="solid" className="w-4 h-4 inline mr-1" />
+            基於選中角色生成請求
           </CosmicButton>
-          
+
           <CosmicButton
             onClick={onBatchAddPortraits}
             variant="secondary"
             size="small"
           >
-            🎨 為每個角色生成肖像
+            <Icon name="PaintBrush" variant="solid" className="w-4 h-4 inline mr-1" />
+            為每個角色生成肖像
           </CosmicButton>
         </div>
       )}
@@ -153,7 +157,8 @@ const IllustrationRequestsSection: React.FC<IllustrationRequestsSectionProps> = 
           <div className="text-center py-8 text-gray-400">
             <p className="mb-4">尚未添加任何插畫請求</p>
             <CosmicButton onClick={onAddRequest} variant="secondary">
-              ➕ 添加第一個請求
+              <Icon name="Plus" variant="solid" className="w-4 h-4 inline mr-1" />
+              添加第一個請求
             </CosmicButton>
           </div>
         )}

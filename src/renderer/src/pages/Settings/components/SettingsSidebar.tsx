@@ -1,6 +1,7 @@
 import React from 'react';
 import { SettingsTab, SETTINGS_TABS } from '../types';
 import { useI18n } from '../../../hooks/useI18n';
+import { Icon } from '../../../components/UI/Icon';
 
 interface SettingsSidebarProps {
   activeTab: SettingsTab;
@@ -42,7 +43,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                 : 'text-text-secondary hover:bg-bg-light hover:text-text-primary hover:-translate-y-0.5'
             }`}
           >
-            <span className="mr-3 text-lg">{tab.icon}</span>
+            <Icon name={tab.iconName} variant={tab.iconVariant} className="w-5 h-5 mr-3" />
             <span className="font-sans-tc">{t(`settings.tabs.${tab.id}`)}</span>
           </button>
         ))}

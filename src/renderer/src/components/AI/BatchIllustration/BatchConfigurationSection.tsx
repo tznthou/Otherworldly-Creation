@@ -2,6 +2,7 @@ import React from 'react';
 import { TaskPriority } from '../../../types/illustration';
 import { useBatchConfiguration } from '../../../hooks/illustration';
 import CosmicInput from '../../UI/CosmicInput';
+import { Icon } from '../../UI/Icon';
 
 interface BatchConfigurationSectionProps {
   batchConfig: ReturnType<typeof useBatchConfiguration>;
@@ -20,18 +21,18 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
         <div className="flex items-center space-x-2">
           {batchConfig.isValidConfiguration ? (
             <div className="flex items-center space-x-1 text-green-400">
-              <span>✅</span>
+              <Icon name="CheckCircle" variant="solid" className="w-4 h-4" />
               <span className="text-sm">配置有效</span>
             </div>
           ) : (
             <div className="flex items-center space-x-1 text-red-400">
-              <span>❌</span>
+              <Icon name="XCircle" variant="solid" className="w-4 h-4" />
               <span className="text-sm">{batchConfig.validation.errors.length} 個錯誤</span>
             </div>
           )}
           {batchConfig.validation.warnings.length > 0 && (
             <div className="flex items-center space-x-1 text-yellow-400">
-              <span>⚠️</span>
+              <Icon name="ExclamationTriangle" variant="solid" className="w-4 h-4" />
               <span className="text-sm">{batchConfig.validation.warnings.length} 個警告</span>
             </div>
           )}
@@ -40,8 +41,9 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
       
       {/* 色彩模式選擇 - 全局設定 */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-300 mb-3">
-          🎨 色彩模式 <span className="text-gray-400">(套用至整個批次)</span>
+        <label className="block text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+          <Icon name="PaintBrush" variant="solid" className="w-4 h-4" />
+          色彩模式 <span className="text-gray-400">(套用至整個批次)</span>
         </label>
         <div className="grid grid-cols-2 gap-3">
           <button
@@ -53,12 +55,12 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             }`}
           >
             <div className="text-center">
-              <div className="text-3xl mb-2">🌈</div>
+              <Icon name="Sparkles" variant="solid" className="w-8 h-8 mx-auto mb-2 text-purple-400" />
               <div className="font-medium text-white">彩色插畫</div>
               <div className="text-xs text-gray-400 mt-1">豐富色彩表現</div>
             </div>
           </button>
-          
+
           <button
             onClick={() => batchConfig.setGlobalColorMode('monochrome')}
             className={`p-4 rounded-lg border-2 transition-all ${
@@ -68,7 +70,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             }`}
           >
             <div className="text-center">
-              <div className="text-3xl mb-2">⚫⚪</div>
+              <Icon name="Moon" variant="solid" className="w-8 h-8 mx-auto mb-2 text-gray-400" />
               <div className="font-medium text-white">黑白插畫</div>
               <div className="text-xs text-gray-400 mt-1">經典素描風格</div>
             </div>
@@ -78,8 +80,9 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
 
       {/* 插畫服務選擇器 */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-300 mb-3">
-          🤖 插畫服務 <span className="text-gray-400">(選擇生成服務)</span>
+        <label className="block text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+          <Icon name="CpuChip" variant="solid" className="w-4 h-4" />
+          插畫服務 <span className="text-gray-400">(選擇生成服務)</span>
         </label>
         <div className="grid grid-cols-2 gap-3">
           <button
@@ -91,13 +94,13 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             }`}
           >
             <div className="text-center">
-              <div className="text-3xl mb-2">🆓</div>
+              <Icon name="Gift" variant="solid" className="w-8 h-8 mx-auto mb-2 text-green-400" />
               <div className="font-medium text-white">Pollinations.AI</div>
               <div className="text-xs text-green-400 mt-1">完全免費・無需API Key</div>
               <div className="text-xs text-gray-400 mt-1">支援多種風格模型</div>
             </div>
           </button>
-          
+
           <button
             onClick={() => batchConfig.setIllustrationProvider('imagen')}
             className={`p-4 rounded-lg border-2 transition-all ${
@@ -107,7 +110,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             }`}
           >
             <div className="text-center">
-              <div className="text-3xl mb-2">💎</div>
+              <Icon name="Sparkles" variant="solid" className="w-8 h-8 mx-auto mb-2 text-warm-gold" />
               <div className="font-medium text-white">Google Imagen</div>
               <div className="text-xs text-warm-gold mt-1">高品質專業級</div>
               <div className="text-xs text-gray-400 mt-1">需要 API Key</div>
@@ -119,8 +122,11 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
       {/* Pollinations 模型和風格選擇 */}
       {batchConfig.illustrationProvider === 'pollinations' && (
         <div className="mb-6 p-4 bg-green-900/20 border border-green-700 rounded-lg">
-          <h4 className="text-sm font-medium text-green-300 mb-4">🎨 Pollinations.AI 設定</h4>
-          
+          <h4 className="text-sm font-medium text-green-300 mb-4 flex items-center gap-2">
+            <Icon name="PaintBrush" variant="solid" className="w-4 h-4" />
+            Pollinations.AI 設定
+          </h4>
+
           {/* 模型選擇 */}
           <div className="mb-4">
             <label className="block text-sm text-gray-300 mb-2">模型選擇</label>
@@ -141,11 +147,11 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             <label className="block text-sm text-gray-300 mb-2">風格選擇</label>
             <div className="grid grid-cols-5 gap-2">
               {[
-                { id: 'anime', label: '動漫', emoji: '🌸' },
-                { id: 'realistic', label: '寫實', emoji: '📷' },
-                { id: 'fantasy', label: '奇幻', emoji: '🧙‍♂️' },
-                { id: 'watercolor', label: '水彩', emoji: '🎨' },
-                { id: 'digital_art', label: '數位', emoji: '💻' }
+                { id: 'anime', label: '動漫', iconName: 'Sparkles', iconVariant: 'solid' as const },
+                { id: 'realistic', label: '寫實', iconName: 'Camera', iconVariant: 'solid' as const },
+                { id: 'fantasy', label: '奇幻', iconName: 'Fire', iconVariant: 'solid' as const },
+                { id: 'watercolor', label: '水彩', iconName: 'PaintBrush', iconVariant: 'solid' as const },
+                { id: 'digital_art', label: '數位', iconName: 'ComputerDesktop', iconVariant: 'solid' as const }
               ].map(style => (
                 <button
                   key={style.id}
@@ -156,7 +162,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
-                  <div>{style.emoji}</div>
+                  <Icon name={style.iconName} variant={style.iconVariant} className="w-5 h-5 mx-auto mb-1" />
                   <div>{style.label}</div>
                 </button>
               ))}
@@ -180,7 +186,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             .filter(error => error.field === 'batchName')
             .map((error, index) => (
               <div key={index} className="mt-1 text-sm text-red-400 flex items-center space-x-1">
-                <span>⚠️</span>
+                <Icon name="ExclamationTriangle" variant="solid" className="w-3 h-3" />
                 <span>{error.message}</span>
               </div>
             ))}
@@ -227,7 +233,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             .filter(error => error.field === 'maxParallel')
             .map((error, index) => (
               <div key={`error-${index}`} className="mt-1 text-sm text-red-400 flex items-center space-x-1">
-                <span>⚠️</span>
+                <Icon name="ExclamationTriangle" variant="solid" className="w-3 h-3" />
                 <span>{error.message}</span>
               </div>
             ))}
@@ -235,7 +241,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             .filter(warning => warning.field === 'maxParallel')
             .map((warning, index) => (
               <div key={`warning-${index}`} className="mt-1 text-sm text-yellow-400 flex items-center space-x-1">
-                <span>⚡</span>
+                <Icon name="Bolt" variant="solid" className="w-3 h-3" />
                 <span>{warning.message}</span>
               </div>
             ))}
@@ -243,10 +249,11 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
 
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            API 金鑰 
+            API 金鑰
             {batchConfig.apiKeySource !== 'manual' ? (
-              <span className="text-green-400 ml-2">
-                ✅ 已從 {batchConfig.apiKeySource === 'gemini' ? 'Gemini' : 'OpenRouter'} 載入
+              <span className="text-green-400 ml-2 inline-flex items-center gap-1">
+                <Icon name="CheckCircle" variant="solid" className="w-3 h-3" />
+                已從 {batchConfig.apiKeySource === 'gemini' ? 'Gemini' : 'OpenRouter'} 載入
               </span>
             ) : (
               <span className="text-red-400"> *</span>
@@ -266,8 +273,9 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             }
           />
           {batchConfig.apiKeySource !== 'manual' && (
-            <p className="text-xs text-gray-400 mt-1">
-              💡 已自動使用 AI 提供者管理中的金鑰，您也可以手動輸入覆寫
+            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+              <Icon name="LightBulb" variant="solid" className="w-3 h-3" />
+              已自動使用 AI 提供者管理中的金鑰，您也可以手動輸入覆寫
             </p>
           )}
           {/* API 金鑰驗證提示 */}
@@ -275,7 +283,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             .filter(error => error.field === 'apiKey')
             .map((error, index) => (
               <div key={`error-${index}`} className="mt-1 text-sm text-red-400 flex items-center space-x-1">
-                <span>⚠️</span>
+                <Icon name="ExclamationTriangle" variant="solid" className="w-3 h-3" />
                 <span>{error.message}</span>
               </div>
             ))}
@@ -283,7 +291,7 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
             .filter(warning => warning.field === 'apiKey')
             .map((warning, index) => (
               <div key={`warning-${index}`} className="mt-1 text-sm text-yellow-400 flex items-center space-x-1">
-                <span>⚡</span>
+                <Icon name="Bolt" variant="solid" className="w-3 h-3" />
                 <span>{warning.message}</span>
               </div>
             ))}
@@ -298,19 +306,24 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-bold text-orange-300 mb-2">
-                    ⚠️ 重要：Google Cloud 計費要求
+                  <h4 className="text-sm font-bold text-orange-300 mb-2 flex items-center gap-2">
+                    <Icon name="ExclamationTriangle" variant="solid" className="w-4 h-4" />
+                    重要：Google Cloud 計費要求
                   </h4>
                   <div className="text-sm text-orange-200 space-y-1">
                     <p className="font-medium">Imagen API 需要付費的 Google Cloud 帳戶才能使用</p>
                     <ul className="list-disc list-inside space-y-1 mt-2 text-xs text-orange-100">
                       <li>需要有效的 Google Cloud API 金鑰</li>
                       <li>必須啟用 Imagen API 服務</li>
-                      <li className="font-medium text-orange-200">⭐ 必須設定付費方式（計費帳戶）</li>
+                      <li className="font-medium text-orange-200 flex items-center gap-1">
+                        <Icon name="Star" variant="solid" className="w-3 h-3 inline" />
+                        必須設定付費方式（計費帳戶）
+                      </li>
                       <li>在 Google Cloud Console 中完成所有設定</li>
                     </ul>
-                    <p className="text-xs text-orange-300 mt-2 font-medium">
-                      💡 如果遇到計費錯誤，系統會提供詳細的設定說明
+                    <p className="text-xs text-orange-300 mt-2 font-medium flex items-center gap-1">
+                      <Icon name="LightBulb" variant="solid" className="w-3 h-3" />
+                      如果遇到計費錯誤，系統會提供詳細的設定說明
                     </p>
                   </div>
                 </div>
@@ -337,7 +350,8 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
       <div className="mt-6 p-4 bg-gray-750 rounded-lg border border-gray-600">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <span className="text-gray-300 font-medium">⚙️ 配置管理</span>
+            <Icon name="Cog6Tooth" variant="solid" className="w-4 h-4 text-gray-300" />
+            <span className="text-gray-300 font-medium">配置管理</span>
             <span className="text-xs text-gray-400">({batchConfig.getConfigurationSummary()})</span>
           </div>
           <div className="flex items-center space-x-2">
@@ -348,12 +362,13 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
                   batchConfig.resetToDefaults();
                 }
               }}
-              className="px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-yellow-100 text-xs rounded transition-colors"
+              className="px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-yellow-100 text-xs rounded transition-colors flex items-center gap-1"
               title="重置為預設配置"
             >
-              🔄 重置
+              <Icon name="ArrowPath" variant="outline" className="w-3 h-3" />
+              重置
             </button>
-            
+
             {/* 匯出按鈕 */}
             <button
               onClick={() => {
@@ -368,12 +383,13 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
               }}
-              className="px-3 py-1 bg-green-600 hover:bg-green-500 text-green-100 text-xs rounded transition-colors"
+              className="px-3 py-1 bg-green-600 hover:bg-green-500 text-green-100 text-xs rounded transition-colors flex items-center gap-1"
               title="匯出配置到檔案"
             >
-              📤 匯出
+              <Icon name="ArrowUpTray" variant="outline" className="w-3 h-3" />
+              匯出
             </button>
-            
+
             {/* 匯入按鈕 */}
             <button
               onClick={() => {
@@ -398,10 +414,11 @@ const BatchConfigurationSection: React.FC<BatchConfigurationSectionProps> = ({
                 };
                 input.click();
               }}
-              className="px-3 py-1 bg-warm-gold hover:bg-warm-gold text-warm-gold/60 text-xs rounded transition-colors"
+              className="px-3 py-1 bg-warm-gold hover:bg-warm-gold text-warm-gold/60 text-xs rounded transition-colors flex items-center gap-1"
               title="從檔案匯入配置"
             >
-              📥 匯入
+              <Icon name="ArrowDownTray" variant="outline" className="w-3 h-3" />
+              匯入
             </button>
           </div>
         </div>

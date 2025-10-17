@@ -5,6 +5,7 @@ import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { Badge } from '../UI/Badge';
+import { Icon } from '../UI/Icon';
 import { plotAnalysisService, PlotSuggestion, ChapterTrendAnalysis } from '../../services/plotAnalysisService';
 import { PlotAnalysis } from '../../utils/nlpUtils';
 import { createLogger } from '../../utils/logger';
@@ -96,13 +97,13 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
   };
 
   // 標籤按鈕配置
-  const tabs: { key: AnalysisTab; label: string; icon: string }[] = [
-    { key: 'overview', label: '總覽', icon: '📊' },
-    { key: 'conflicts', label: '衝突分析', icon: '⚔️' },
-    { key: 'pace', label: '節奏分析', icon: '🎵' },
-    { key: 'foreshadowing', label: '伏筆追蹤', icon: '🔮' },
-    { key: 'suggestions', label: '改善建議', icon: '💡' },
-    { key: 'trends', label: '章節趨勢', icon: '📈' }
+  const tabs: { key: AnalysisTab; label: string; iconName: string; iconVariant: 'outline' | 'solid' }[] = [
+    { key: 'overview', label: '總覽', iconName: 'ChartBar', iconVariant: 'solid' },
+    { key: 'conflicts', label: '衝突分析', iconName: 'Fire', iconVariant: 'solid' },
+    { key: 'pace', label: '節奏分析', iconName: 'MusicalNote', iconVariant: 'solid' },
+    { key: 'foreshadowing', label: '伏筆追蹤', iconName: 'Sparkles', iconVariant: 'solid' },
+    { key: 'suggestions', label: '改善建議', iconName: 'LightBulb', iconVariant: 'solid' },
+    { key: 'trends', label: '章節趨勢', iconName: 'ArrowTrendingUp', iconVariant: 'solid' }
   ];
 
   return (
@@ -110,8 +111,9 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
       {/* 頭部控制區 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4">
-          <h3 className="text-lg font-bold text-warm-gold flex items-center">
-            🎭 劇情分析引擎
+          <h3 className="text-lg font-bold text-warm-gold flex items-center gap-2">
+            <Icon name="BookOpen" variant="solid" className="w-6 h-6" />
+            劇情分析引擎
           </h3>
           
           {/* 分析範圍選擇 */}
@@ -159,13 +161,14 @@ export const PlotAnalysisPanel: React.FC<PlotAnalysisPanelProps> = ({
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               disabled={tab.key === 'trends' && analysisScope !== 'project'}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                 activeTab === tab.key
                   ? 'bg-gold-600 text-text-primary'
                   : 'bg-bg-dark/80 text-warm-gold/80 hover:bg-bg-light'
               } ${tab.key === 'trends' && analysisScope !== 'project' ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {tab.icon} {tab.label}
+              <Icon name={tab.iconName} variant={tab.iconVariant} className="w-4 h-4" />
+              {tab.label}
             </button>
           ))}
         </div>

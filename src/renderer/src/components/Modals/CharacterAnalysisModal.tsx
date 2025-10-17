@@ -11,6 +11,7 @@ import { fetchCharactersByProjectId } from '../../store/slices/charactersSlice';
 import PersonalityRadarChart from '../Charts/PersonalityRadarChart';
 import EmotionTrendChart from '../Charts/EmotionTrendChart';
 import ConsistencyScoreChart from '../Charts/ConsistencyScoreChart';
+import { Icon } from '../UI/Icon';
 import { createLogger } from '../../utils/logger';
 
 // 創建模組專用 logger
@@ -35,7 +36,8 @@ interface CharacterAnalysisModalProps {
 }
 
 interface Suggestion {
-  icon: string;
+  iconName: string;
+  iconVariant?: 'outline' | 'solid';
   title: string;
   description: string;
   priority: 'high' | 'medium' | 'low';
@@ -196,13 +198,13 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
   };
 
   // 標籤按鈕配置
-  const tabs: { key: AnalysisTab; label: string; icon: string }[] = [
-    { key: 'overview', label: '概覽', icon: '📊' },
-    { key: 'personality', label: '人格分析', icon: '👤' },
-    { key: 'language', label: '語言風格', icon: '💬' },
-    { key: 'emotion', label: '情感分析', icon: '😊' },
-    { key: 'consistency', label: '一致性檢查', icon: '📈' },
-    { key: 'suggestions', label: '改進建議', icon: '💡' }
+  const tabs: { key: AnalysisTab; label: string; iconName: string; iconVariant: 'outline' | 'solid' }[] = [
+    { key: 'overview', label: '概覽', iconName: 'ChartBar', iconVariant: 'outline' },
+    { key: 'personality', label: '人格分析', iconName: 'User', iconVariant: 'outline' },
+    { key: 'language', label: '語言風格', iconName: 'ChatBubbleLeftRight', iconVariant: 'outline' },
+    { key: 'emotion', label: '情感分析', iconName: 'FaceSmile', iconVariant: 'outline' },
+    { key: 'consistency', label: '一致性檢查', iconName: 'ChartBar', iconVariant: 'solid' },
+    { key: 'suggestions', label: '改進建議', iconName: 'LightBulb', iconVariant: 'outline' }
   ];
 
   // 當前選中角色的名稱
@@ -214,7 +216,8 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
 
     if (result.confidence < 0.7) {
       suggestions.push({
-        icon: '🎯',
+        iconName: 'Target',
+        iconVariant: 'outline',
         title: '提升角色一致性',
         description: '角色在某些章節中的表現存在不一致，建議檢查核心人格設定，確保在所有場景下保持相同的反應模式。',
         priority: 'high',
@@ -224,7 +227,8 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
 
     if (result.behaviorConsistency < 0.8) {
       suggestions.push({
-        icon: '⚖️',
+        iconName: 'Scale',
+        iconVariant: 'outline',
         title: '強化行為邏輯',
         description: '角色的行為選擇在某些情境下缺乏邏輯一致性，建議為角色建立更清晰的價值觀和決策原則。',
         priority: result.behaviorConsistency < 0.6 ? 'high' : 'medium',
@@ -234,7 +238,8 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
 
     if (result.emotionalIntensity < 0.4) {
       suggestions.push({
-        icon: '💝',
+        iconName: 'Heart',
+        iconVariant: 'solid',
         title: '增強情感表達',
         description: '角色的情感表達較為平淡，可以適度增加內心獨白或情感反應的描寫，讓角色更有感染力。',
         priority: 'medium',
@@ -244,7 +249,8 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
 
     if (result.linguisticPattern.vocabularyRichness < 0.5) {
       suggestions.push({
-        icon: '📚',
+        iconName: 'BookOpen',
+        iconVariant: 'outline',
         title: '豐富詞彙表達',
         description: '角色的語言表達相對簡單，建議根據角色背景和教育程度，適當豐富其詞彙使用和表達方式。',
         priority: 'medium',
@@ -254,7 +260,8 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
 
     if (suggestions.length === 0) {
       suggestions.push({
-        icon: '⭐',
+        iconName: 'Star',
+        iconVariant: 'solid',
         title: '深化人物層次',
         description: '角色整體表現良好，可以考慮增加更多內心衝突或成長弧線，讓角色更加立體動人。',
         priority: 'low',
@@ -278,13 +285,13 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10002] flex items-center justify-center p-4">
-      <div className={`bg-gradient-to-br from-cosmic-800 to-cosmic-900 rounded-2xl shadow-2xl border border-gold-600/20 overflow-hidden transition-all duration-300 ${
+      <div className={`bg-gradient-to-br from-bg-dark to-bg-light rounded-2xl shadow-2xl border border-warm-gold/20 overflow-hidden transition-all duration-300 ${
         isFullscreen ? 'w-full h-full' : 'w-[95vw] h-[90vh] max-w-7xl'
       }`}>
         {/* 模態框頭部 */}
-        <div className="flex items-center justify-between p-6 border-b border-gold-600/20 bg-bg-light/50 backdrop-blur-sm/50">
+        <div className="flex items-center justify-between p-6 border-b border-warm-gold/20 bg-bg-light/50 backdrop-blur-sm/50">
           <div className="flex items-center space-x-3">
-            <span className="text-3xl">🎭</span>
+            <Icon name="UserGroup" variant="outline" className="w-8 h-8 text-warm-gold" />
             <div>
               <h2 className="text-2xl font-bold text-warm-gold">角色分析詳情</h2>
               <p className="text-sm text-gray-400">深度分析角色特徵與發展軌跡</p>
@@ -310,13 +317,14 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
         {/* 主內容區域 */}
         <div className="flex h-full">
           {/* 左側導航欄 */}
-          <div className="w-80 bg-bg-light/50 backdrop-blur-sm/30 border-r border-gold-600/20 flex flex-col">
+          <div className="w-80 bg-bg-light/50 backdrop-blur-sm/30 border-r border-warm-gold/20 flex flex-col">
             {/* 控制面板 */}
-            <div className="p-6 space-y-4 border-b border-gold-600/20">
+            <div className="p-6 space-y-4 border-b border-warm-gold/20">
               {/* 角色選擇器 */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 flex items-center">
-                  <span className="mr-2">👤</span>選擇角色
+                <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                  <Icon name="User" variant="outline" className="w-4 h-4" />
+                  選擇角色
                 </label>
                 <select
                   value={selectedCharacterId}
@@ -334,15 +342,16 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
 
               {/* 分析範圍選擇 */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 flex items-center">
-                  <span className="mr-2">📊</span>分析範圍
+                <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                  <Icon name="ChartBar" variant="outline" className="w-4 h-4" />
+                  分析範圍
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setAnalysisScope('current')}
                     className={`px-4 py-3 rounded-lg font-medium transition-all text-sm ${
                       analysisScope === 'current'
-                        ? 'bg-gold-600 text-text-primary'
+                        ? 'bg-warm-gold text-text-primary'
                         : 'bg-bg-dark/80/80 text-gray-300 hover:bg-bg-light border border-warm-gold/30'
                     }`}>
                     當前章節
@@ -351,7 +360,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                     onClick={() => setAnalysisScope('project')}
                     className={`px-4 py-3 rounded-lg font-medium transition-all text-sm ${
                       analysisScope === 'project'
-                        ? 'bg-gold-600 text-text-primary'
+                        ? 'bg-warm-gold text-text-primary'
                         : 'bg-bg-dark/80/80 text-gray-300 hover:bg-bg-light border border-warm-gold/30'
                     }`}>
                     全專案
@@ -363,10 +372,19 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
               <button
                 onClick={performAnalysis}
                 disabled={isAnalyzing || !selectedCharacterId}
-                className="w-full bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 disabled:from-gray-600 disabled:to-gray-700 text-text-primary px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105 disabled:scale-100 flex items-center justify-center space-x-2 shadow-lg"
+                className="w-full bg-gradient-to-r from-warm-gold to-warm-gold-light hover:from-warm-gold hover:to-warm-gold-light disabled:from-gray-600 disabled:to-gray-700 text-text-primary px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105 disabled:scale-100 flex items-center justify-center space-x-2 shadow-lg"
               >
-                <span className="text-xl">{isAnalyzing ? '⏳' : '🔍'}</span>
-                <span>{isAnalyzing ? '分析中...' : '開始分析'}</span>
+                {isAnalyzing ? (
+                  <>
+                    <Icon name="Clock" variant="outline" className="w-5 h-5 animate-spin" />
+                    <span>分析中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="MagnifyingGlass" variant="outline" className="w-5 h-5" />
+                    <span>開始分析</span>
+                  </>
+                )}
               </button>
             </div>
 
@@ -379,11 +397,11 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   onClick={() => setActiveTab(tab.key)}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                     activeTab === tab.key
-                      ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-text-primary shadow-lg'
+                      ? 'bg-gradient-to-r from-warm-gold to-warm-gold-light text-text-primary shadow-lg'
                       : 'text-gray-400 hover:text-white hover:bg-bg-dark/80/50'
                   }`}
                 >
-                  <span className="text-lg">{tab.icon}</span>
+                  <Icon name={tab.iconName} variant={tab.iconVariant} className="w-5 h-5" />
                   <span>{tab.label}</span>
                 </button>
               ))}
@@ -394,7 +412,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* 分析進度指示器 */}
             {isAnalyzing && (
-              <div className="p-6 bg-bg-dark/80/30 border-b border-gold-600/20">
+              <div className="p-6 bg-bg-dark/80/30 border-b border-warm-gold/20">
                 <div className="flex items-center space-x-3">
                   <LoadingSpinner size="small" />
                   <div className="text-white">
@@ -413,7 +431,9 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center space-y-6">
                     <div className="relative">
-                      <div className="text-8xl animate-pulse">🎭</div>
+                      <div className="flex justify-center animate-pulse">
+                        <Icon name="UserGroup" variant="outline" className="w-32 h-32 text-warm-gold" />
+                      </div>
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-32 h-32 bg-warm-gold/20 rounded-full blur-3xl animate-ping"></div>
                       </div>
@@ -426,15 +446,21 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                     </div>
                     <div className="flex justify-center space-x-8 pt-4">
                       <div className="text-center">
-                        <div className="text-4xl mb-2">💬</div>
+                        <div className="flex justify-center mb-2">
+                          <Icon name="ChatBubbleLeftRight" variant="outline" className="w-10 h-10 text-warm-gold" />
+                        </div>
                         <p className="text-sm text-gray-500">對話分析</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-4xl mb-2">🧠</div>
+                        <div className="flex justify-center mb-2">
+                          <Icon name="Brain" variant="outline" className="w-10 h-10 text-warm-gold" />
+                        </div>
                         <p className="text-sm text-gray-500">人格特徵</p>
                       </div>
                       <div className="text-center">
-                        <div className="text-4xl mb-2">📈</div>
+                        <div className="flex justify-center mb-2">
+                          <Icon name="ChartBar" variant="solid" className="w-10 h-10 text-warm-gold" />
+                        </div>
                         <p className="text-sm text-gray-500">一致性檢測</p>
                       </div>
                     </div>
@@ -447,8 +473,9 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                         <div className="bg-bg-dark/80/30 rounded-xl p-6">
-                          <h4 className="text-warm-gold font-bold mb-4 flex items-center">
-                            <span className="mr-2">ℹ️</span>基本信息
+                          <h4 className="text-warm-gold font-bold mb-4 flex items-center gap-2">
+                            <Icon name="InformationCircle" variant="outline" className="w-5 h-5" />
+                            基本信息
                           </h4>
                           <div className="space-y-3">
                             <div className="flex justify-between">
@@ -473,8 +500,9 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                         </div>
 
                         <div className="bg-bg-dark/80/30 rounded-xl p-6">
-                          <h4 className="text-warm-gold font-bold mb-4 flex items-center">
-                            <span className="mr-2">🎯</span>人格特徵
+                          <h4 className="text-warm-gold font-bold mb-4 flex items-center gap-2">
+                            <Icon name="Target" variant="outline" className="w-5 h-5" />
+                            人格特徵
                           </h4>
                           <div className="space-y-3 text-sm">
                             <div className="flex justify-between">
@@ -511,8 +539,9 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                         </div>
 
                         <div className="bg-bg-dark/80/30 rounded-xl p-6">
-                          <h4 className="text-warm-gold font-bold mb-4 flex items-center">
-                            <span className="mr-2">💭</span>情感行為
+                          <h4 className="text-warm-gold font-bold mb-4 flex items-center gap-2">
+                            <Icon name="ChatBubbleOvalLeft" variant="outline" className="w-5 h-5" />
+                            情感行為
                           </h4>
                           <div className="space-y-3 text-sm">
                             <div className="flex justify-between">
@@ -603,8 +632,9 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   {activeTab === 'language' && (
                     <div className="space-y-8">
                       <div className="bg-bg-dark/80/20 rounded-xl p-8">
-                        <h4 className="text-warm-gold font-bold mb-6 flex items-center text-xl">
-                          <span className="mr-3">💬</span>語言風格分析
+                        <h4 className="text-warm-gold font-bold mb-6 flex items-center text-xl gap-3">
+                          <Icon name="ChatBubbleLeftRight" variant="outline" className="w-6 h-6" />
+                          語言風格分析
                         </h4>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -639,7 +669,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                                 <div className="flex items-center space-x-3">
                                   <div className="w-32 h-4 bg-bg-light rounded-full overflow-hidden">
                                     <div
-                                      className="h-full bg-gradient-to-r from-gold-600 to-gold-400 transition-all duration-300"
+                                      className="h-full bg-gradient-to-r from-warm-gold to-warm-gold-light transition-all duration-300"
                                       style={{ width: `${analysisResult.linguisticPattern.vocabularyRichness * 100}%` }}
                                     ></div>
                                   </div>
@@ -652,7 +682,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="bg-bg-dark/80/20 rounded-lg p-6 border border-gold-600/20">
+                        <div className="bg-bg-dark/80/20 rounded-lg p-6 border border-warm-gold/20">
                           <h5 className="text-warm-gold font-medium mb-4">語言特色分析</h5>
                           <div className="text-gray-300 leading-relaxed space-y-3">
                             <p>
@@ -674,16 +704,21 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                   {activeTab === 'suggestions' && (
                     <div className="space-y-8">
                       <div className="bg-bg-dark/80/20 rounded-xl p-8">
-                        <h4 className="text-warm-gold font-bold mb-6 flex items-center text-xl">
-                          <span className="mr-3">💡</span>改進建議
+                        <h4 className="text-warm-gold font-bold mb-6 flex items-center text-xl gap-3">
+                          <Icon name="LightBulb" variant="outline" className="w-6 h-6" />
+                          改進建議
                         </h4>
 
                         <div className="space-y-6">
                           {generateSuggestions(analysisResult).map((suggestion, index) => (
-                            <div key={index} className="bg-bg-dark/80/30 rounded-lg p-6 border border-gold-600/20">
+                            <div key={index} className="bg-bg-dark/80/30 rounded-lg p-6 border border-warm-gold/20">
                               <div className="flex items-start justify-between mb-4">
-                                <div className="flex items-center">
-                                  <span className="text-2xl mr-3">{suggestion.icon}</span>
+                                <div className="flex items-center gap-3">
+                                  <Icon
+                                    name={suggestion.iconName}
+                                    variant={suggestion.iconVariant || 'outline'}
+                                    className="w-6 h-6 text-warm-gold"
+                                  />
                                   <h5 className="text-warm-gold font-medium text-lg">{suggestion.title}</h5>
                                 </div>
                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -703,7 +738,7 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                                   影響章節: {suggestion.chapters.join(', ')}
                                 </div>
                                 <button
-                                  className="px-4 py-2 bg-gold-600 hover:bg-warm-gold/50 text-text-primary text-sm font-medium rounded-lg transition-all hover:scale-105 transform"
+                                  className="px-4 py-2 bg-warm-gold hover:bg-warm-gold/50 text-text-primary text-sm font-medium rounded-lg transition-all hover:scale-105 transform"
                                   onClick={() => handleApplySuggestion(suggestion)}
                                 >
                                   應用建議
@@ -713,9 +748,10 @@ const CharacterAnalysisModal: React.FC<CharacterAnalysisModalProps> = ({
                           ))}
                         </div>
 
-                        <div className="mt-8 p-6 bg-bg-dark/80/20 rounded-lg border border-gold-600/20">
-                          <h5 className="text-warm-gold font-medium text-lg mb-4 flex items-center">
-                            <span className="mr-2">📈</span>整體改善方向
+                        <div className="mt-8 p-6 bg-bg-dark/80/20 rounded-lg border border-warm-gold/20">
+                          <h5 className="text-warm-gold font-medium text-lg mb-4 flex items-center gap-2">
+                            <Icon name="ChartBar" variant="solid" className="w-5 h-5" />
+                            整體改善方向
                           </h5>
                           <div className="text-gray-300 leading-relaxed space-y-3">
                             <p>

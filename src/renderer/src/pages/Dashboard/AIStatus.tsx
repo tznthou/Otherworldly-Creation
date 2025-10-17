@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { checkOllamaService, fetchServiceStatus, fetchModelsInfo, fetchAvailableModels } from '../../store/slices/aiSlice';
+import { Icon } from '../../components/UI/Icon';
 import { createLogger } from '../../utils/logger';
 
 // 創建模組專用 logger
@@ -66,21 +67,26 @@ const AIStatus: React.FC = () => {
         <h2 className="text-xl font-serif-tc text-warm-gold">AI 引擎狀態</h2>
         <button
           onClick={handleRefreshConnection}
-          className="btn-secondary text-sm px-4 py-2"
+          className="btn-secondary text-sm px-4 py-2 flex items-center gap-2"
         >
-          🔄 重新檢測
+          <Icon name="ArrowPath" variant="outline" className="w-4 h-4" />
+          重新檢測
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* 連接狀態 */}
         <div className="text-center">
-          <div className={`w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-2xl ${
-            isOllamaConnected 
-              ? 'bg-green-500/20 text-green-400' 
-              : 'bg-red-500/20 text-red-400'
+          <div className={`w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center ${
+            isOllamaConnected
+              ? 'bg-green-500/20'
+              : 'bg-red-500/20'
           }`}>
-            {isOllamaConnected ? '✅' : '❌'}
+            <Icon
+              name={isOllamaConnected ? "CheckCircle" : "XCircle"}
+              variant="solid"
+              className={`w-8 h-8 ${isOllamaConnected ? 'text-green-400' : 'text-red-400'}`}
+            />
           </div>
           <h3 className="font-medium mb-1">Ollama 服務</h3>
           <p className={`text-sm ${
@@ -92,8 +98,8 @@ const AIStatus: React.FC = () => {
 
         {/* 可用模型 */}
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-warm-gold/20 text-warm-gold mx-auto mb-3 flex items-center justify-center text-2xl">
-            🤖
+          <div className="w-16 h-16 rounded-full bg-warm-gold/20 mx-auto mb-3 flex items-center justify-center">
+            <Icon name="Sparkles" variant="solid" className="w-8 h-8 text-warm-gold" />
           </div>
           <h3 className="font-medium mb-1">可用模型</h3>
           <p className="text-sm text-gray-400">
@@ -103,8 +109,8 @@ const AIStatus: React.FC = () => {
 
         {/* 當前模型 */}
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-clay-orange/20 text-clay-orange mx-auto mb-3 flex items-center justify-center text-2xl">
-            ⚡
+          <div className="w-16 h-16 rounded-full bg-clay-orange/20 mx-auto mb-3 flex items-center justify-center">
+            <Icon name="Bolt" variant="solid" className="w-8 h-8 text-clay-orange" />
           </div>
           <h3 className="font-medium mb-1">當前模型</h3>
           <p className="text-sm text-gray-400 truncate">
@@ -141,7 +147,10 @@ const AIStatus: React.FC = () => {
       {!isOllamaConnected && (
         <div className="mt-6 pt-6 border-t border-warm-gold/10">
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-            <h4 className="text-yellow-400 font-medium mb-2">🔧 需要安裝 Ollama</h4>
+            <h4 className="text-yellow-400 font-medium mb-2 flex items-center gap-2">
+              <Icon name="Wrench" variant="outline" className="w-5 h-5" />
+              需要安裝 Ollama
+            </h4>
             <p className="text-sm text-gray-300 mb-3">
               創世紀元需要 Ollama 來提供本地 AI 功能。請按照以下步驟安裝：
             </p>

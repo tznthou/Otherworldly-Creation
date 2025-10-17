@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { api } from '../../api';
+import { Icon } from '../UI/Icon';
 import { 
   ConsistencyReport, 
   CharacterConsistencyReport,
@@ -363,7 +364,7 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
       <Card className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white flex items-center">
-            <span className="mr-2">🎭</span>
+            <Icon name="UserGroup" variant="solid" className="w-7 h-7 mr-2" />
             角色視覺一致性管理
           </h2>
         </div>
@@ -391,10 +392,10 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
         {/* 頁籤導航 */}
         <div className="flex space-x-1 mb-6 bg-gray-800 rounded-lg p-1">
           {[
-            { id: 'setup', label: '基本設定', icon: '⚙️' },
-            { id: 'report', label: '一致性報告', icon: '📊' },
-            { id: 'similarity', label: '相似度分析', icon: '🔄' },
-            { id: 'batch', label: '批次檢查', icon: '📋' }
+            { id: 'setup', label: '基本設定', iconName: 'Cog6Tooth', iconVariant: 'solid' },
+            { id: 'report', label: '一致性報告', iconName: 'ChartBar', iconVariant: 'solid' },
+            { id: 'similarity', label: '相似度分析', iconName: 'ArrowPath', iconVariant: 'solid' },
+            { id: 'batch', label: '批次檢查', iconName: 'ClipboardDocumentList', iconVariant: 'outline' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -403,9 +404,9 @@ const ConsistencyPanel: React.FC<CharacterConsistencyPanelProps> = ({
                 activeTab === tab.id
                   ? 'bg-clay-orange text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
-              }`}
+              } flex items-center gap-2`}
             >
-              <span className="mr-2">{tab.icon}</span>
+              <Icon name={tab.iconName} variant={tab.iconVariant} className="w-4 h-4" />
               {tab.label}
             </button>
           ))}

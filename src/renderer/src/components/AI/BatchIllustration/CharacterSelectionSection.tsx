@@ -1,6 +1,7 @@
 import React from 'react';
 import { Character } from '../../../api/models';
 import { useCharacterSelection } from '../../../hooks/illustration';
+import { Icon } from '../../UI/Icon';
 
 interface CharacterSelectionSectionProps {
   characterSelection: ReturnType<typeof useCharacterSelection>;
@@ -25,18 +26,22 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
   } = characterSelection;
 
   // 獲取角色頭像
-  const getCharacterAvatar = (char: Character) => {
-    if (char.gender === 'female') {
-      return char.archetype?.includes('魔法') || char.archetype?.includes('法師') ? '🧙‍♀️' : '👩';
-    } else if (char.gender === 'male') {
-      return char.archetype?.includes('魔法') || char.archetype?.includes('法師') ? '🧙‍♂️' : '👨';
-    }
+  const getCharacterAvatar = (char: Character): { name: string; variant: 'outline' | 'solid' } => {
     // 根據角色類型
-    if (char.archetype?.includes('魔法') || char.archetype?.includes('法師')) return '🧙';
-    if (char.archetype?.includes('戰士') || char.archetype?.includes('騎士')) return '⚔️';
-    if (char.archetype?.includes('盜賊') || char.archetype?.includes('刺客')) return '🗡️';
-    if (char.archetype?.includes('治療') || char.archetype?.includes('牧師')) return '🛡️';
-    return '👤';
+    if (char.archetype?.includes('魔法') || char.archetype?.includes('法師')) {
+      return { name: 'Sparkles', variant: 'solid' };
+    }
+    if (char.archetype?.includes('戰士') || char.archetype?.includes('騎士')) {
+      return { name: 'ShieldCheck', variant: 'solid' };
+    }
+    if (char.archetype?.includes('盜賊') || char.archetype?.includes('刺客')) {
+      return { name: 'Bolt', variant: 'solid' };
+    }
+    if (char.archetype?.includes('治療') || char.archetype?.includes('牧師')) {
+      return { name: 'Heart', variant: 'solid' };
+    }
+    // 默認根據性別
+    return { name: 'User', variant: 'solid' };
   };
 
   // 獲取角色類型顏色
@@ -54,8 +59,9 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
   return (
     <div className={`bg-gray-800 p-4 rounded-lg ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">
-          🎭 選擇角色 ({selectedCharacters.length} 已選擇)
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <Icon name="UserGroup" variant="solid" className="w-6 h-6" />
+          選擇角色 ({selectedCharacters.length} 已選擇)
         </h3>
         <div className="flex items-center space-x-2">
           {charactersLoading && (
@@ -64,9 +70,10 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
           <button
             onClick={loadCharactersDirectly}
             disabled={charactersLoading}
-            className="px-3 py-1 bg-bg-dark/80 hover:bg-bg-light disabled:opacity-50 text-text-secondary/40 rounded text-sm transition-colors"
+            className="px-3 py-1 bg-bg-dark/80 hover:bg-bg-light disabled:opacity-50 text-text-secondary/40 rounded text-sm transition-colors flex items-center gap-1"
           >
-            🔄 重新載入
+            <Icon name="ArrowPath" variant="outline" className="w-4 h-4" />
+            重新載入
           </button>
         </div>
       </div>
@@ -80,7 +87,7 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
       <div className="character-grid flex flex-wrap gap-6 mb-6">
         {charactersLoading && (
           <div className="col-span-full text-center py-8 text-warm-gold">
-            <div className="text-6xl mb-4 animate-spin">🔄</div>
+            <Icon name="ArrowPath" variant="outline" className="w-16 h-16 mx-auto mb-4 animate-spin" />
             <p>載入角色中...</p>
           </div>
         )}
@@ -115,8 +122,12 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
               )}
               
               {/* 角色頭像 */}
-              <div className="absolute top-4 left-4 text-4xl filter drop-shadow-lg">
-                {getCharacterAvatar(character)}
+              <div className="absolute top-4 left-4 filter drop-shadow-lg">
+                <Icon
+                  name={getCharacterAvatar(character).name}
+                  variant={getCharacterAvatar(character).variant}
+                  className="w-10 h-10 text-white"
+                />
               </div>
               
               {/* 角色信息 */}
@@ -135,8 +146,9 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
                 
                 {/* 年齡 */}
                 {character.age && (
-                  <div className="text-xs text-white/80 mt-1">
-                    📅 {character.age}歲
+                  <div className="text-xs text-white/80 mt-1 flex items-center gap-1">
+                    <Icon name="Calendar" variant="outline" className="w-3 h-3" />
+                    {character.age}歲
                   </div>
                 )}
               </div>
@@ -153,7 +165,7 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
         
         {!charactersLoading && effectiveProjectCharacters.length === 0 && (
           <div className="col-span-full text-center py-8 text-gray-400">
-            <div className="text-6xl mb-4">🎭</div>
+            <Icon name="UserGroup" variant="outline" className="w-16 h-16 mx-auto mb-4" />
             <p className="mb-2">此專案還沒有角色</p>
             <p className="text-sm mt-2 mb-4">請先到角色管理頁面創建角色</p>
           </div>
@@ -167,9 +179,9 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
         </label>
         <div className="flex space-x-2">
           {[
-            { value: 'portrait', label: '🎭 角色肖像', desc: '單一角色精美肖像' },
-            { value: 'interaction', label: '💬 角色互動', desc: '多角色對話場景' },
-            { value: 'scene', label: '🏰 環境場景', desc: '角色在特定環境中' }
+            { value: 'portrait', label: '角色肖像', desc: '單一角色精美肖像', iconName: 'User', iconVariant: 'solid' as const },
+            { value: 'interaction', label: '角色互動', desc: '多角色對話場景', iconName: 'ChatBubbleLeftRight', iconVariant: 'outline' as const },
+            { value: 'scene', label: '環境場景', desc: '角色在特定環境中', iconName: 'Photo', iconVariant: 'solid' as const }
           ].map(type => (
             <button
               key={type.value}
@@ -181,6 +193,7 @@ const CharacterSelectionSection: React.FC<CharacterSelectionSectionProps> = ({
               }`}
             >
               <div className="text-center">
+                <Icon name={type.iconName} variant={type.iconVariant} className="w-6 h-6 mx-auto mb-1" />
                 <div className="text-sm font-medium">{type.label}</div>
                 <div className="text-xs opacity-75">{type.desc}</div>
               </div>

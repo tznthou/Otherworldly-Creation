@@ -4,6 +4,7 @@ import { closeModal } from '../../store/slices/uiSlice';
 import { addNotification } from '../../store/slices/uiSlice';
 import { api } from '../../api';
 import type { PDFGenerationOptions, PageSizeType, PDFResult } from '../../api/models';
+import { Icon } from '../UI/Icon';
 import { createLogger } from '../../utils/logger';
 
 // 創建模組專用 logger
@@ -366,7 +367,10 @@ const PDFGenerationModal: React.FC = () => {
               )}
 
               {validation.valid && validation.errors.length === 0 && (
-                <p className="text-green-400 font-medium">✅ 專案驗證通過，可以真理銘刻</p>
+                <p className="text-green-400 font-medium flex items-center gap-2">
+                  <Icon name="CheckCircle" variant="solid" className="w-5 h-5" />
+                  專案驗證通過，可以真理銘刻
+                </p>
               )}
             </div>
           )}
@@ -446,8 +450,9 @@ const PDFGenerationModal: React.FC = () => {
               
               {/* AI 插畫整合選項 */}
               <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-clay-orange/20 rounded-lg">
-                <h4 className="text-md font-serif-tc text-clay-orange mb-3 flex items-center">
-                  🎨 AI 插畫整合設定
+                <h4 className="text-md font-serif-tc text-clay-orange mb-3 flex items-center gap-2">
+                  <Icon name="PaintBrush" variant="solid" className="w-5 h-5" />
+                  AI 插畫整合設定
                 </h4>
                 
                 <div className="space-y-3">
@@ -508,7 +513,7 @@ const PDFGenerationModal: React.FC = () => {
 
           {/* 生成進度 */}
           {progress && (
-            <div className="bg-gradient-to-br from-cosmic-700 to-cosmic-800 border border-warm-gold/30 rounded-lg p-5 shadow-lg">
+            <div className="bg-gradient-to-br from-bg-dark to-bg-light border border-warm-gold/30 rounded-lg p-5 shadow-lg">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-warm-gold font-semibold text-lg flex items-center">
                   <span className="animate-spin mr-2">⚙️</span>
@@ -521,7 +526,7 @@ const PDFGenerationModal: React.FC = () => {
               
               <div className="w-full bg-bg-light rounded-full h-3 mb-3 overflow-hidden">
                 <div 
-                  className={`bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 h-3 rounded-full transition-all duration-500 ease-out relative ${
+                  className={`bg-gradient-to-r from-warm-gold via-gold-500 to-warm-gold-light h-3 rounded-full transition-all duration-500 ease-out relative ${
                     isIndeterminateProgress() ? 'animate-pulse' : ''
                   }`}
                   style={{ width: getProgressBarWidth() }}
@@ -634,7 +639,10 @@ const PDFGenerationModal: React.FC = () => {
                   生成中...
                 </span>
               ) : (
-                '⚔️ 真理銘刻'
+                <span className="flex items-center gap-2">
+                  <Icon name="DocumentArrowDown" variant="solid" className="w-4 h-4" />
+                  真理銘刻
+                </span>
               )}
             </button>
           </div>

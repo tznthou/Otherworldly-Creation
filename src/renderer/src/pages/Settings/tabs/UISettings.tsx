@@ -1,5 +1,6 @@
 import React from 'react';
 import { updateUISettings, resetUISettings } from '../../../store/slices/settingsSlice';
+import { Icon } from '../../../components/UI/Icon';
 import { SettingsComponentProps } from '../types';
 
 const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) => (
@@ -17,14 +18,17 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
 
     {/* 開發狀態概覽 */}
     <div className="bg-warm-gold/10 border border-warm-gold/30 rounded-2xl p-4">
-      <h3 className="text-sm font-sans-tc font-medium text-warm-gold mb-2 flex items-center">
-        <span className="mr-2">🚀</span>
+      <h3 className="text-sm font-sans-tc font-medium text-warm-gold mb-2 flex items-center gap-2">
+        <Icon name="RocketLaunch" variant="outline" className="w-4 h-4" />
         開發狀態概覽
       </h3>
       <div className="grid grid-cols-1 gap-3 text-xs">
         <div className="flex items-center space-x-2">
           <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-          <span className="text-text-primary font-sans-tc">✅ 已實現：狀態欄、音效系統、動畫效果、通知系統</span>
+          <span className="text-text-primary font-sans-tc flex items-center gap-1">
+            <Icon name="CheckCircle" variant="solid" className="w-3.5 h-3.5 text-green-400" />
+            已實現：狀態欄、音效系統、動畫效果、通知系統
+          </span>
         </div>
       </div>
       <p className="text-xs text-gray-400 mt-2">
@@ -49,8 +53,9 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
           <div className="flex-1">
             <label htmlFor="showStatusBar" className="text-text-primary font-sans-tc cursor-pointer flex items-center">
               顯示狀態欄
-              <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
-                ✅ 已實現
+              <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full flex items-center gap-1">
+                <Icon name="CheckCircle" variant="solid" className="w-3 h-3" />
+                已實現
               </span>
             </label>
             <p className="text-xs text-gray-500 mt-1">
@@ -70,8 +75,9 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
           <div className="flex-1">
             <label htmlFor="animationsEnabled" className="text-text-primary font-sans-tc cursor-pointer flex items-center">
               啟用動畫效果
-              <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
-                ✅ 已實現
+              <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full flex items-center gap-1">
+                <Icon name="CheckCircle" variant="solid" className="w-3 h-3" />
+                已實現
               </span>
             </label>
             <p className="text-xs text-gray-500 mt-1">
@@ -79,7 +85,7 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -91,8 +97,9 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
           <div className="flex-1">
             <label htmlFor="soundEnabled" className="text-text-primary font-sans-tc cursor-pointer flex items-center">
               啟用音效
-              <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
-                ✅ 已實現
+              <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full flex items-center gap-1">
+                <Icon name="CheckCircle" variant="solid" className="w-3 h-3" />
+                已實現
               </span>
             </label>
             <p className="text-xs text-gray-500 mt-1">
@@ -100,7 +107,7 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -112,8 +119,9 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
           <div className="flex-1">
             <label htmlFor="notificationsEnabled" className="text-text-primary font-sans-tc cursor-pointer flex items-center">
               啟用通知
-              <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
-                ✅ 已實現
+              <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full flex items-center gap-1">
+                <Icon name="CheckCircle" variant="solid" className="w-3 h-3" />
+                已實現
               </span>
             </label>
             <p className="text-xs text-gray-500 mt-1">
@@ -124,8 +132,8 @@ const UISettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) =>
       </div>
       
       <div className="mt-6 p-4 bg-bg-dark/50 border border-warm-gold/20 rounded-lg">
-        <h4 className="text-sm font-medium text-warm-gold mb-2">
-          <span className="mr-2">💡</span>
+        <h4 className="text-sm font-medium text-warm-gold mb-2 flex items-center gap-2">
+          <Icon name="LightBulb" variant="outline" className="w-4 h-4" />
           使用建議
         </h4>
         <ul className="text-xs text-gray-400 space-y-1">

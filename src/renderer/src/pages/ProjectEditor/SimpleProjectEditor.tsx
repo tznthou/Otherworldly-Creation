@@ -298,7 +298,7 @@ const SimpleProjectEditor: React.FC = () => {
           <button 
             onClick={handleAIWrite}
             disabled={isLoading || !currentChapter}
-            className={`btn-secondary ${(isLoading || !currentChapter) ? 'opacity-50 cursor-not-allowed' : ''} ${showAIPanel ? 'bg-gold-600' : ''}`}
+            className={`btn-secondary ${(isLoading || !currentChapter) ? 'opacity-50 cursor-not-allowed' : ''} ${showAIPanel ? 'bg-warm-gold' : ''}`}
           >
             🤖 {showAIPanel ? '關閉 AI 面板' : 'AI 續寫'}
           </button>

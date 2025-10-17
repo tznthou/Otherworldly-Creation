@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { closeModal } from '../../store/slices/uiSlice';
 import { addNotification } from '../../store/slices/uiSlice';
 import { EPubService, EPubGenerationProgress } from '../../services/epubService';
+import { Icon } from '../UI/Icon';
 import { api } from '../../api';
 import type { EPubGenerationOptions } from '../../api/models';
 import { createLogger } from '../../utils/logger';
@@ -160,8 +161,9 @@ const EPubGenerationModal: React.FC = () => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-serif-tc text-warm-gold">
-            🌟 次元物語・零式記錄
+          <h2 className="text-2xl font-serif-tc text-warm-gold flex items-center gap-2">
+            <Icon name="Sparkles" variant="solid" className="w-6 h-6" />
+            次元物語・零式記錄
           </h2>
           {!generating && (
             <button
@@ -224,7 +226,10 @@ const EPubGenerationModal: React.FC = () => {
               )}
 
               {validation.valid && validation.errors.length === 0 && (
-                <p className="text-green-400 font-medium">✅ 專案驗證通過，可以展開虛數空間</p>
+                <p className="text-green-400 font-medium flex items-center gap-2">
+                  <Icon name="CheckCircle" variant="solid" className="w-5 h-5" />
+                  專案驗證通過，可以展開虛數空間
+                </p>
               )}
             </div>
           )}
@@ -279,7 +284,7 @@ const EPubGenerationModal: React.FC = () => {
 
           {/* 生成進度 */}
           {progress && (
-            <div className="bg-gradient-to-br from-cosmic-700 to-cosmic-800 border border-warm-gold/30 rounded-lg p-5 shadow-lg">
+            <div className="bg-gradient-to-br from-bg-dark to-bg-light border border-warm-gold/30 rounded-lg p-5 shadow-lg">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-warm-gold font-semibold text-lg flex items-center">
                   <span className="animate-spin mr-2">⚙️</span>
@@ -292,7 +297,7 @@ const EPubGenerationModal: React.FC = () => {
               
               <div className="w-full bg-bg-light rounded-full h-3 mb-3 overflow-hidden">
                 <div 
-                  className="bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 h-3 rounded-full transition-all duration-500 ease-out relative"
+                  className="bg-gradient-to-r from-warm-gold via-gold-500 to-warm-gold-light h-3 rounded-full transition-all duration-500 ease-out relative"
                   style={{ width: getProgressBarWidth() }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
@@ -338,7 +343,10 @@ const EPubGenerationModal: React.FC = () => {
                   生成中...
                 </span>
               ) : (
-                '🌟 展開虛數空間'
+                <span className="flex items-center gap-2">
+                  <Icon name="BookOpen" variant="solid" className="w-4 h-4" />
+                  展開虛數空間
+                </span>
               )}
             </button>
           </div>

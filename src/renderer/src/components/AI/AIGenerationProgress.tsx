@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ProgressIndicator as ProgressIndicatorType } from '../../types/error';
+import { Icon } from '../UI/Icon';
 
 interface AIGenerationProgressProps {
   progress: ProgressIndicatorType;
@@ -63,33 +64,37 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
       preparing: {
         name: '準備階段',
         description: '正在建構上下文和系統提示...',
-        icon: '📝',
+        iconName: 'DocumentText',
+        iconVariant: 'outline' as const,
         color: 'text-warm-gold',
         bgColor: 'bg-warm-gold/20'
       },
       generating: {
         name: '生成階段',
         description: 'AI 正在創作內容...',
-        icon: '🤖',
+        iconName: 'CpuChip',
+        iconVariant: 'solid' as const,
         color: 'text-green-400',
         bgColor: 'bg-green-600/20'
       },
       processing: {
         name: '處理階段',
         description: '正在分析和優化生成結果...',
-        icon: '⚙️',
+        iconName: 'Cog6Tooth',
+        iconVariant: 'solid' as const,
         color: 'text-yellow-400',
         bgColor: 'bg-yellow-600/20'
       },
       complete: {
         name: '完成',
         description: '內容生成完成！',
-        icon: '✅',
+        iconName: 'CheckCircle',
+        iconVariant: 'solid' as const,
         color: 'text-green-400',
         bgColor: 'bg-green-600/20'
       }
     };
-    
+
     return stages[stage as keyof typeof stages] || stages.preparing;
   };
 
@@ -116,7 +121,7 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
       {/* 標題區域 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="text-2xl">{stageInfo.icon}</div>
+          <Icon name={stageInfo.iconName} variant={stageInfo.iconVariant} className={`w-8 h-8 ${stageInfo.color}`} />
           <div>
             <h3 className="font-semibold text-warm-gold">
               AI 內容生成
@@ -131,7 +136,7 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
             </p>
           </div>
         </div>
-        
+
         <div className={`px-3 py-1 rounded-full text-xs font-medium ${stageInfo.bgColor} ${stageInfo.color}`}>
           {stageInfo.name}
         </div>
@@ -260,7 +265,7 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
       {progress.status === 'failed' && progress.error && (
         <div className="mt-3 p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
           <div className="flex items-start space-x-2">
-            <span className="text-red-400 text-lg">⚠️</span>
+            <Icon name="ExclamationTriangle" variant="solid" className="w-5 h-5 text-red-400 flex-shrink-0" />
             <div>
               <div className="text-red-400 font-medium text-sm">生成失敗</div>
               <div className="text-red-200 text-xs mt-1">{progress.error.message}</div>
@@ -273,7 +278,7 @@ const AIGenerationProgress: React.FC<AIGenerationProgressProps> = ({
       {progress.status === 'completed' && (
         <div className="mt-3 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
           <div className="flex items-center space-x-2">
-            <span className="text-green-400 text-lg">🎉</span>
+            <Icon name="CheckBadge" variant="solid" className="w-5 h-5 text-green-400 flex-shrink-0" />
             <div className="text-green-400 font-medium text-sm">
               內容生成完成！共生成 {stats.tokensGenerated} 個 tokens
             </div>

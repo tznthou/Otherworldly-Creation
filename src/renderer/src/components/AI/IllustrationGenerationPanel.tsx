@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { api } from '../../api';
+import { Icon } from '../UI/Icon';
 import { 
   DetailedGenerationResult,
   StyleTemplate,
@@ -332,7 +333,7 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
       <Card className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white flex items-center">
-            <span className="mr-2">🎨</span>
+            <Icon name="PaintBrush" variant="solid" className="w-7 h-7 mr-2" />
             AI 插畫生成
           </h2>
           
@@ -544,7 +545,10 @@ export const IllustrationGenerationPanel: React.FC<IllustrationGenerationPanelPr
                 <span>生成中...</span>
               </div>
             ) : (
-              '🚀 生成插畫'
+              <div className="flex items-center gap-2">
+                <Icon name="Rocket" variant="solid" className="w-5 h-5" />
+                生成插畫
+              </div>
             )}
           </CosmicButton>
         </div>

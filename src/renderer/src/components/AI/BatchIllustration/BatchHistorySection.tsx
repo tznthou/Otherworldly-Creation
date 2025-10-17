@@ -4,6 +4,7 @@ import { convertFileSrc } from '@tauri-apps/api/core';
 import { RootState } from '../../../store/store';
 import { api } from '../../../api';
 import { createLogger } from '../../../utils/logger';
+import { Icon } from '../../UI/Icon';
 
 // 創建模組專用 logger
 const log = createLogger('BatchHistorySection');
@@ -92,7 +93,10 @@ const BatchHistorySection: React.FC<BatchHistorySectionProps> = ({
       <div className={`bg-gray-800 p-4 rounded-lg ${className}`}>
         <h3 className="text-lg font-semibold text-white mb-4">插畫歷史</h3>
         <div className="text-center py-8 text-red-400">
-          <p>❌ {error}</p>
+          <div className="flex items-center justify-center gap-2">
+            <Icon name="XCircle" variant="solid" className="w-5 h-5" />
+            <p>{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -103,7 +107,8 @@ const BatchHistorySection: React.FC<BatchHistorySectionProps> = ({
       <div className={`bg-gray-800 p-4 rounded-lg ${className}`}>
         <h3 className="text-lg font-semibold text-white mb-4">插畫歷史</h3>
         <div className="text-center py-8 text-gray-400">
-          <p>🎨 還沒有生成過插畫</p>
+          <Icon name="PaintBrush" variant="solid" className="w-12 h-12 mx-auto mb-2 text-gray-500" />
+          <p>還沒有生成過插畫</p>
           <p className="text-sm mt-2">切換到「創建批次」開始生成你的第一張插畫吧！</p>
         </div>
       </div>
@@ -139,7 +144,7 @@ const BatchHistorySection: React.FC<BatchHistorySectionProps> = ({
               {/* 圖片載入失敗或不存在時的佔位符 */}
               <div className={`w-full h-full flex items-center justify-center text-gray-500 ${item.local_file_path ? 'hidden' : ''}`}>
                 <div className="text-center">
-                  <div className="text-4xl mb-2">🖼️</div>
+                  <Icon name="Photo" variant="outline" className="w-12 h-12 mx-auto mb-2 text-gray-600" />
                   <p className="text-xs">預覽不可用</p>
                   {item.local_file_path && (
                     <p className="text-xs mt-1 text-gray-600 truncate max-w-32" title={item.local_file_path}>
@@ -157,10 +162,20 @@ const BatchHistorySection: React.FC<BatchHistorySectionProps> = ({
               </div>
               
               <div className="flex items-center justify-between text-xs text-gray-400">
-                <span className={`px-2 py-1 rounded ${
+                <span className={`px-2 py-1 rounded flex items-center gap-1 ${
                   item.status === 'completed' ? 'bg-green-600' : 'bg-red-600'
                 }`}>
-                  {item.status === 'completed' ? '✅ 已完成' : '❌ 失敗'}
+                  {item.status === 'completed' ? (
+                    <>
+                      <Icon name="CheckCircle" variant="solid" className="w-3 h-3" />
+                      <span>已完成</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="XCircle" variant="solid" className="w-3 h-3" />
+                      <span>失敗</span>
+                    </>
+                  )}
                 </span>
                 <span>{item.model}</span>
               </div>

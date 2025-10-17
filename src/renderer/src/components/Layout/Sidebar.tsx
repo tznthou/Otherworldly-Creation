@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { toggleSidebar, openModal } from '../../store/slices/uiSlice';
+import { Icon } from '../UI/Icon';
 import { createLogger } from '../../utils/logger';
 
 // 創建模組專用 logger
@@ -18,7 +19,8 @@ const Sidebar: React.FC = () => {
   interface MenuItem {
     id: string;
     label: string;
-    icon: string;
+    iconName: string;
+    iconVariant: 'outline' | 'solid';
     path?: string | null;
     disabled?: boolean;
     isModal?: boolean;
@@ -65,47 +67,54 @@ const Sidebar: React.FC = () => {
     {
       id: 'dashboard',
       label: '專案總覽',
-      icon: '🏠',
+      iconName: 'Home',
+      iconVariant: 'outline',
       path: '/',
     },
     {
       id: 'editor',
       label: '寫作編輯器',
-      icon: '✍️',
+      iconName: 'PencilSquare',
+      iconVariant: 'outline',
       path: safeProjectId ? `/project/${safeProjectId}` : null,
       disabled: !currentProject,
     },
     {
       id: 'characters',
       label: '角色管理',
-      icon: '👥',
+      iconName: 'UserGroup',
+      iconVariant: 'outline',
       path: safeProjectId ? `/characters/${safeProjectId}` : null,
       disabled: !currentProject,
     },
     {
       id: 'illustrations',
       label: 'AI 插畫',
-      icon: '🎨',
+      iconName: 'Photo',
+      iconVariant: 'solid',
       isModal: true,
       disabled: !currentProject,
     },
     {
       id: 'chapterStatus',
       label: '章節管理',
-      icon: '📋',
+      iconName: 'ClipboardDocumentList',
+      iconVariant: 'outline',
       path: safeProjectId ? `/chapter-status/${safeProjectId}` : null,
       disabled: !currentProject,
     },
     {
       id: 'statistics',
       label: '創作統計',
-      icon: '📊',
+      iconName: 'ChartBar',
+      iconVariant: 'solid',
       path: '/statistics',
     },
     {
       id: 'settings',
       label: '設定',
-      icon: '⚙️',
+      iconName: 'Cog6Tooth',
+      iconVariant: 'outline',
       path: '/settings',
     },
   ];
@@ -225,7 +234,9 @@ const Sidebar: React.FC = () => {
                     zIndex: 100
                   }}
                 >
-                  <span className={`text-xl flex-shrink-0 ${!sidebarCollapsed ? 'mr-3' : ''}`}>{item.icon}</span>
+                  <span className={`flex-shrink-0 ${!sidebarCollapsed ? 'mr-3' : ''}`}>
+                    <Icon name={item.iconName} variant={item.iconVariant} className="w-5 h-5" />
+                  </span>
                   {!sidebarCollapsed && (
                     <span className="font-medium truncate">{item.label}</span>
                   )}

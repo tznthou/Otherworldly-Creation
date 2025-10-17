@@ -4,7 +4,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { fetchProjects, setCurrentProject } from '../../store/slices/projectsSlice';
 import { setDefaultProvider, setDefaultModel } from '../../store/slices/aiSlice';
 import { openModal } from '../../store/slices/uiSlice';
-import HumanBackground from '../../components/UI/HumanBackground';
+import { Icon } from '../../components/UI/Icon';
 import type { Chapter } from '../../api/models';
 // import { initStatusManager } from '../../modules/chapterStatus';
 // import { useStatusStatistics } from '../../modules/chapterStatus/hooks';
@@ -239,12 +239,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="h-screen overflow-y-auto force-scrollbar p-6 pb-16 relative">
-      {/* 人文背景 - 深夜書房氛圍 */}
-      <HumanBackground
-        intensity="medium"
-        className="z-0"
-      />
-      
       {/* 主要內容區域 */}
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* 標題區域 */}
@@ -261,28 +255,36 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {/* 專案統計卡片 */}
         <div className="bg-bg-light/50 backdrop-blur-sm rounded-3xl p-8 border border-warm-gold/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-          <div className="text-3xl mb-3">📊</div>
+          <div className="mb-3">
+            <Icon name="ChartBar" variant="outline" className="w-8 h-8 text-warm-gold" />
+          </div>
           <p className="font-sans-tc text-sm text-text-secondary mb-2">總專案數</p>
           <p className="font-serif-tc text-4xl font-bold text-warm-gold">{projects.length}</p>
         </div>
 
         {/* 章節統計卡片 */}
         <div className="bg-bg-light/50 backdrop-blur-sm rounded-3xl p-8 border border-warm-gold/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-          <div className="text-3xl mb-3">📝</div>
+          <div className="mb-3">
+            <Icon name="DocumentText" variant="outline" className="w-8 h-8 text-warm-gold" />
+          </div>
           <p className="font-sans-tc text-sm text-text-secondary mb-2">總章節數</p>
           <p className="font-serif-tc text-4xl font-bold text-warm-gold">{chapterStats.totalChapters}</p>
         </div>
 
         {/* 完成章節卡片 */}
         <div className="bg-bg-light/50 backdrop-blur-sm rounded-3xl p-8 border border-warm-gold/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-          <div className="text-3xl mb-3">✅</div>
+          <div className="mb-3">
+            <Icon name="CheckCircle" variant="solid" className="w-8 h-8 text-green-500" />
+          </div>
           <p className="font-sans-tc text-sm text-text-secondary mb-2">完成章節</p>
           <p className="font-serif-tc text-4xl font-bold text-warm-gold">{chapterStats.completedCount}</p>
         </div>
 
         {/* 完成率卡片 */}
         <div className="bg-bg-light/50 backdrop-blur-sm rounded-3xl p-8 border border-warm-gold/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
-          <div className="text-3xl mb-3">🎯</div>
+          <div className="mb-3">
+            <Icon name="Target" variant="outline" className="w-8 h-8 text-warm-gold" />
+          </div>
           <p className="font-sans-tc text-sm text-text-secondary mb-2">完成率</p>
           <p className="font-serif-tc text-4xl font-bold text-warm-gold">
             {(chapterStats.completionRate * 100).toFixed(1)}%

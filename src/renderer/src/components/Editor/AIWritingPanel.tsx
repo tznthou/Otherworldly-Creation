@@ -6,6 +6,7 @@ import { setCurrentModel, fetchAvailableModels, checkOllamaService, generateText
 import { api } from '../../api';
 import AIHistoryPanel from '../AI/AIHistoryPanel';
 import { useAppSelector as useAppSelectorTyped } from '../../hooks/redux';
+import { Icon } from '../UI/Icon';
 
 // 導入新的modular架構
 import { useAIGeneration } from '../../hooks/useAIGeneration';
@@ -97,7 +98,8 @@ const parameterExplanations: Record<string, ParameterConfig> = {
 interface PresetConfig {
   name: string;
   description: string;
-  emoji: string;
+  iconName: string;
+  iconVariant: 'outline' | 'solid';
   values: {
     temperature: number;
     topP: number;
@@ -111,19 +113,22 @@ const quickPresets: Record<string, PresetConfig> = {
   conservative: {
     name: "保守穩重",
     description: "適合正式文體、商業小說、歷史題材",
-    emoji: "🎯",
+    iconName: "Target",
+    iconVariant: "solid",
     values: { temperature: 0.4, topP: 0.7, presencePenalty: 0.2, maxTokens: 600, generationCount: 1 }
   },
   balanced: {
     name: "平衡創作",
     description: "適合一般小說創作、日常題材",
-    emoji: "⚖️",
+    iconName: "Scale",
+    iconVariant: "outline",
     values: { temperature: 0.7, topP: 0.9, presencePenalty: 0.3, maxTokens: 650, generationCount: 2 }
   },
   creative: {
     name: "創意奔放",
     description: "適合奇幻、科幻、實驗性題材",
-    emoji: "🌟",
+    iconName: "Sparkles",
+    iconVariant: "solid",
     values: { temperature: 0.95, topP: 0.92, presencePenalty: 0.4, maxTokens: 700, generationCount: 2 }
   }
 };
@@ -169,8 +174,8 @@ const ParameterHelp: React.FC<{
       
       {/* 警告訊息 */}
       {warningLevel !== 'safe' && (
-        <div className={`flex items-start ${warningLevel === 'danger' ? 'text-red-400' : 'text-orange-400'} mt-1`}>
-          <span className="mr-1 mt-0.5">⚠️</span>
+        <div className={`flex items-start gap-1 ${warningLevel === 'danger' ? 'text-red-400' : 'text-orange-400'} mt-1`}>
+          <Icon name="ExclamationTriangle" variant="solid" className="w-3 h-3 mt-0.5 flex-shrink-0" />
           <span className="flex-1">{config.warning}</span>
         </div>
       )}
@@ -190,8 +195,8 @@ const QuickPresets: React.FC<{
 }> = ({ onApplyPreset, className = "" }) => {
   return (
     <div className={`mb-4 ${className}`}>
-      <div className="text-sm text-gray-300 mb-2 flex items-center">
-        <span className="mr-2">🚀</span>
+      <div className="text-sm text-gray-300 mb-2 flex items-center gap-2">
+        <Icon name="Rocket" variant="solid" className="w-4 h-4" />
         快速預設
       </div>
       <div className="grid grid-cols-3 gap-2">
@@ -203,14 +208,15 @@ const QuickPresets: React.FC<{
             title={preset.description}
           >
             <div className="text-center">
-              <div className="text-base mb-1">{preset.emoji}</div>
+              <Icon name={preset.iconName} variant={preset.iconVariant} className="w-5 h-5 mx-auto mb-1 text-warm-gold" />
               <div className="text-white font-medium">{preset.name}</div>
             </div>
           </button>
         ))}
       </div>
-      <div className="text-xs text-gray-500 mt-2">
-        💡 點擊預設會自動調整所有參數到推薦值
+      <div className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+        <Icon name="LightBulb" variant="outline" className="w-3 h-3" />
+        點擊預設會自動調整所有參數到推薦值
       </div>
     </div>
   );
@@ -224,30 +230,30 @@ const UseLastSettings: React.FC<{
 }> = ({ onLoadLastSettings, onSaveCurrentSettings, hasLastSettings, className = "" }) => {
   return (
     <div className={`mb-4 ${className}`}>
-      <div className="text-sm text-gray-300 mb-2 flex items-center">
-        <span className="mr-2">💾</span>
+      <div className="text-sm text-gray-300 mb-2 flex items-center gap-2">
+        <Icon name="ArchiveBox" variant="solid" className="w-4 h-4" />
         設定記憶
       </div>
       <div className="flex gap-2">
         <button
           onClick={onLoadLastSettings}
           disabled={!hasLastSettings}
-          className={`flex-1 p-2 rounded-lg text-xs transition-colors border ${
+          className={`flex-1 p-2 rounded-lg text-xs transition-colors border flex items-center justify-center gap-1 ${
             hasLastSettings
               ? 'bg-bg-dark/80 hover:bg-bg-light border-warm-gold/10 hover:border-warm-gold/20 text-white'
               : 'bg-bg-light/50 backdrop-blur-sm border-warm-gold/10 text-gray-500 cursor-not-allowed'
           }`}
           title={hasLastSettings ? "載入上次使用的參數設定" : "目前沒有保存的設定"}
         >
-          <span className="mr-1">⚡</span>
+          <Icon name="Bolt" variant="solid" className="w-3 h-3" />
           使用上次設定
         </button>
         <button
           onClick={onSaveCurrentSettings}
-          className="flex-1 p-2 bg-bg-dark/80 hover:bg-bg-light rounded-lg text-xs transition-colors border border-warm-gold/10 hover:border-warm-gold/20"
+          className="flex-1 p-2 bg-bg-dark/80 hover:bg-bg-light rounded-lg text-xs transition-colors border border-warm-gold/10 hover:border-warm-gold/20 flex items-center justify-center gap-1"
           title="保存當前參數設定供下次使用"
         >
-          <span className="mr-1">💾</span>
+          <Icon name="FolderArrowDown" variant="outline" className="w-3 h-3" />
           保存當前設定
         </button>
       </div>
@@ -295,8 +301,8 @@ const ParameterRiskIndicator: React.FC<{
       {/* 高風險警告 */}
       {risks.length > 0 && (
         <div className="bg-red-900/40 border border-red-700 rounded-lg p-3 mb-2">
-          <div className="text-red-400 text-sm font-medium mb-2 flex items-center">
-            <span className="mr-2">🚨</span>
+          <div className="text-red-400 text-sm font-medium mb-2 flex items-center gap-2">
+            <Icon name="ExclamationTriangle" variant="solid" className="w-4 h-4" />
             參數風險警告
           </div>
           <ul className="text-red-300 text-xs space-y-1">
@@ -310,8 +316,8 @@ const ParameterRiskIndicator: React.FC<{
       {/* 一般提醒 */}
       {warnings.length > 0 && (
         <div className="bg-orange-900/40 border border-orange-700 rounded-lg p-3">
-          <div className="text-orange-400 text-sm font-medium mb-2 flex items-center">
-            <span className="mr-2">⚠️</span>
+          <div className="text-orange-400 text-sm font-medium mb-2 flex items-center gap-2">
+            <Icon name="ExclamationCircle" variant="outline" className="w-4 h-4" />
             參數調整建議
           </div>
           <ul className="text-orange-300 text-xs space-y-1">
@@ -943,9 +949,9 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               <div>
                 <button
                   onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                  className="text-xs text-warm-gold hover:text-warm-gold transition-colors flex items-center"
+                  className="text-xs text-warm-gold hover:text-warm-gold transition-colors flex items-center gap-1"
                 >
-                  <span className="mr-1">{showAdvancedSettings ? '🔽' : '▶️'}</span>
+                  <Icon name={showAdvancedSettings ? 'ChevronDown' : 'ChevronRight'} variant="solid" className="w-3 h-3" />
                   {showAdvancedSettings ? '隱藏' : '顯示'}高級設置
                 </button>
               </div>
@@ -998,8 +1004,8 @@ const AIWritingPanel: React.FC<AIWritingPanelProps> = ({ projectId, chapterId, e
               
               {/* 高級設置說明 */}
               <div className="bg-bg-dark border border-warm-gold/10 rounded-lg p-3 mt-3">
-                <div className="text-xs text-gray-300 font-medium mb-2 flex items-center">
-                  <span className="mr-2">💡</span>
+                <div className="text-xs text-gray-300 font-medium mb-2 flex items-center gap-2">
+                  <Icon name="LightBulb" variant="solid" className="w-3 h-3" />
                   高級參數說明
                 </div>
                 <div className="text-xs text-gray-400 space-y-1">

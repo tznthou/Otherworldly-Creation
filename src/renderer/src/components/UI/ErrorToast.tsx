@@ -4,6 +4,7 @@ import { RootState } from '../../store/store';
 import { removeError, resolveError } from '../../store/slices/errorSlice';
 import { AppError, ErrorSeverity } from '../../types/error';
 import CosmicButton from './CosmicButton';
+import { Icon } from './Icon';
 
 interface ErrorToastProps {
   error: AppError;
@@ -22,35 +23,40 @@ const ErrorToast: React.FC<ErrorToastProps> = ({ error, onClose, onResolve }) =>
         return {
           bg: 'bg-red-900/90',
           border: 'border-red-500',
-          icon: '🚨',
+          iconName: 'ExclamationCircle',
+          iconVariant: 'solid' as const,
           iconColor: 'text-red-400'
         };
       case 'high':
         return {
           bg: 'bg-orange-900/90',
           border: 'border-orange-500',
-          icon: '⚠️',
+          iconName: 'ExclamationTriangle',
+          iconVariant: 'solid' as const,
           iconColor: 'text-orange-400'
         };
       case 'medium':
         return {
           bg: 'bg-yellow-900/90',
           border: 'border-yellow-500',
-          icon: '⚡',
+          iconName: 'Bolt',
+          iconVariant: 'solid' as const,
           iconColor: 'text-yellow-400'
         };
       case 'low':
         return {
           bg: 'bg-warm-gold/20',
           border: 'border-warm-gold',
-          icon: 'ℹ️',
+          iconName: 'InformationCircle',
+          iconVariant: 'outline' as const,
           iconColor: 'text-warm-gold'
         };
       default:
         return {
           bg: 'bg-gray-900/90',
           border: 'border-gray-500',
-          icon: '❓',
+          iconName: 'QuestionMarkCircle',
+          iconVariant: 'outline' as const,
           iconColor: 'text-gray-400'
         };
     }
@@ -119,9 +125,9 @@ const ErrorToast: React.FC<ErrorToastProps> = ({ error, onClose, onResolve }) =>
       {/* 錯誤標題 */}
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3">
-          <span className={`text-2xl ${styles.iconColor}`}>
-            {styles.icon}
-          </span>
+          <div className="flex-shrink-0">
+            <Icon name={styles.iconName} variant={styles.iconVariant} className={`w-6 h-6 ${styles.iconColor}`} />
+          </div>
           <div>
             <h4 className="font-semibold text-white">
               {error.message}

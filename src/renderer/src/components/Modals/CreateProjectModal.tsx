@@ -3,6 +3,7 @@ import { useAppDispatch } from '../../hooks/redux';
 import { createProject } from '../../store/slices/projectsSlice';
 import { closeModal } from '../../store/slices/uiSlice';
 import { fetchAllTemplates } from '../../store/slices/templatesSlice';
+import { Icon } from '../UI/Icon';
 import { createLogger } from '../../utils/logger';
 
 // 創建模組專用 logger
@@ -11,7 +12,8 @@ const log = createLogger('CreateProjectModal');
 interface ProjectType {
   id: 'isekai' | 'school' | 'scifi' | 'fantasy';
   name: string;
-  icon: string;
+  iconName: string;
+  iconVariant: 'outline' | 'solid';
   description: string;
   color: string;
 }
@@ -20,28 +22,32 @@ const projectTypes: ProjectType[] = [
   {
     id: 'isekai',
     name: '異世界',
-    icon: '🌟',
+    iconName: 'Sparkles',
+    iconVariant: 'solid',
     description: '主角穿越或轉生到異世界的冒險故事',
     color: 'from-purple-500 to-pink-500',
   },
   {
     id: 'school',
     name: '校園',
-    icon: '🏫',
+    iconName: 'AcademicCap',
+    iconVariant: 'outline',
     description: '以學校為背景的青春戀愛或成長故事',
     color: 'from-blue-500 to-cyan-500',
   },
   {
     id: 'scifi',
     name: '科幻',
-    icon: '🚀',
+    iconName: 'RocketLaunch',
+    iconVariant: 'outline',
     description: '探索未來科技和太空冒險的故事',
     color: 'from-green-500 to-teal-500',
   },
   {
     id: 'fantasy',
     name: '奇幻',
-    icon: '⚔️',
+    iconName: 'Shield',
+    iconVariant: 'outline',
     description: '充滿魔法和神秘生物的奇幻世界冒險',
     color: 'from-orange-500 to-red-500',
   },
@@ -50,7 +56,8 @@ const projectTypes: ProjectType[] = [
 interface NovelLength {
   id: 'short' | 'medium' | 'long';
   name: string;
-  icon: string;
+  iconName: string;
+  iconVariant: 'outline' | 'solid';
   description: string;
   estimatedChapters: string;
   wordCount: string;
@@ -60,7 +67,8 @@ const novelLengths: NovelLength[] = [
   {
     id: 'short',
     name: '短篇',
-    icon: '📄',
+    iconName: 'Document',
+    iconVariant: 'outline',
     description: '簡潔有力的故事，適合初學者練習',
     estimatedChapters: '1-5 章',
     wordCount: '1-5 萬字',
@@ -68,15 +76,17 @@ const novelLengths: NovelLength[] = [
   {
     id: 'medium',
     name: '中篇',
-    icon: '📖',
+    iconName: 'BookOpen',
+    iconVariant: 'outline',
     description: '適中篇幅，有足夠空間發展情節',
     estimatedChapters: '10-30 章',
-    wordCount: '5-20 萬字',  
+    wordCount: '5-20 萬字',
   },
   {
     id: 'long',
     name: '長篇',
-    icon: '📚',
+    iconName: 'Squares2X2',
+    iconVariant: 'solid',
     description: '宏大史詩，構建完整的世界觀',
     estimatedChapters: '50+ 章',
     wordCount: '20+ 萬字',
@@ -348,8 +358,8 @@ const CreateProjectModal: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-center mb-2">
-                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${type.color} flex items-center justify-center text-2xl mr-3`}>
-                          {type.icon}
+                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${type.color} flex items-center justify-center mr-3`}>
+                          <Icon name={type.iconName} variant={type.iconVariant} className="w-6 h-6 text-white" />
                         </div>
                         <h3 className="text-lg font-medium text-white">
                           {type.name}
@@ -380,8 +390,8 @@ const CreateProjectModal: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-center mb-2">
-                        <div className="text-2xl mr-3">
-                          {length.icon}
+                        <div className="bg-warm-gold/20 p-2 rounded-lg mr-3">
+                          <Icon name={length.iconName} variant={length.iconVariant} className="w-6 h-6 text-warm-gold" />
                         </div>
                         <h3 className="text-lg font-medium text-white">
                           {length.name}

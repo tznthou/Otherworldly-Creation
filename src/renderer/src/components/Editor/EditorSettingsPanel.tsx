@@ -23,6 +23,7 @@ import {
 } from '../../store/slices/editorSlice';
 import { FONT_OPTIONS, THEME_OPTIONS } from '../../types/editor';
 import CosmicButton from '../UI/CosmicButton';
+import { Icon } from '../UI/Icon';
 
 interface EditorSettingsPanelProps {
   className?: string;
@@ -406,10 +407,10 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
   );
 
   const tabs = [
-    { id: 'font', label: '字體', icon: '🔤' },
-    { id: 'layout', label: '排版', icon: '📐' },
-    { id: 'theme', label: '主題', icon: '🎨' },
-    { id: 'behavior', label: '行為', icon: '⚙️' }
+    { id: 'font', label: '字體', iconName: 'LanguageIcon', iconVariant: 'outline' as const },
+    { id: 'layout', label: '排版', iconName: 'Squares2X2', iconVariant: 'outline' as const },
+    { id: 'theme', label: '主題', iconName: 'PaintBrush', iconVariant: 'solid' as const },
+    { id: 'behavior', label: '行為', iconName: 'Cog6Tooth', iconVariant: 'outline' as const }
   ] as const;
 
   return (
@@ -439,7 +440,7 @@ const EditorSettingsPanel: React.FC<EditorSettingsPanelProps> = ({ className = '
                 : 'text-gray-400 hover:text-gray-300 hover:bg-bg-light/50 backdrop-blur-sm'
             }`}
           >
-            <span>{tab.icon}</span>
+            <Icon name={tab.iconName} variant={tab.iconVariant} className="w-4 h-4" />
             <span>{tab.label}</span>
           </button>
         ))}

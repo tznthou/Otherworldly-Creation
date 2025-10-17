@@ -4,6 +4,7 @@ import { RootState, AppDispatch } from '../../store/store';
 import { selectCharactersByProjectId } from '../../store/optimizedSelectors';
 import { withSmartMemo, useOptimizedSelector, useStableCallback } from '../../utils/componentOptimization';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import { Icon } from '../UI/Icon';
 // import { api } from '../../api'; // 暫時不使用
 import { characterAnalysisService, CharacterAnalysisResult, ProjectCharacterAnalysis } from '../../services/characterAnalysisService';
 import { addNotification } from '../../store/slices/notificationSlice';
@@ -198,13 +199,13 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
   };
 
   // 標籤按鈕配置
-  const tabs: { key: AnalysisTab; label: string; icon: string }[] = [
-    { key: 'overview', label: '概覽', icon: '📊' },
-    { key: 'personality', label: '人格分析', icon: '👤' },
-    { key: 'language', label: '語言風格', icon: '💬' },
-    { key: 'emotion', label: '情感分析', icon: '😊' },
-    { key: 'consistency', label: '一致性檢查', icon: '📈' },
-    { key: 'suggestions', label: '改進建議', icon: '💡' }
+  const tabs: { key: AnalysisTab; label: string; iconName: string; iconVariant: 'outline' | 'solid' }[] = [
+    { key: 'overview', label: '概覽', iconName: 'ChartBar', iconVariant: 'outline' },
+    { key: 'personality', label: '人格分析', iconName: 'User', iconVariant: 'outline' },
+    { key: 'language', label: '語言風格', iconName: 'ChatBubbleLeftRight', iconVariant: 'outline' },
+    { key: 'emotion', label: '情感分析', iconName: 'FaceSmile', iconVariant: 'outline' },
+    { key: 'consistency', label: '一致性檢查', iconName: 'ChartBar', iconVariant: 'solid' },
+    { key: 'suggestions', label: '改進建議', iconName: 'LightBulb', iconVariant: 'outline' }
   ];
 
   // 當前選中角色的名稱
@@ -217,7 +218,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
         {/* 標題 */}
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-warm-gold flex items-center">
-            <span className="mr-3 text-2xl">🎭</span>
+            <Icon name="UserGroup" variant="solid" className="w-7 h-7 mr-3" />
             角色分析
           </h3>
           <div className="text-xs text-gray-500">
@@ -230,7 +231,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
           {/* 角色選擇器 */}
           <div className="flex flex-col space-y-2">
             <label className="text-sm font-medium text-gray-300 flex items-center">
-              <span className="mr-2">👤</span>
+              <Icon name="User" variant="solid" className="w-4 h-4 mr-2" />
               選擇角色
             </label>
             <select
@@ -249,8 +250,8 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
 
           {/* 分析範圍選擇 */}
           <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-gray-300 flex items-center">
-              <span className="mr-2">📊</span>
+            <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <Icon name="ChartBar" variant="solid" className="w-4 h-4" />
               分析範圍
             </label>
             <div className="flex gap-2">
@@ -283,7 +284,11 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
               disabled={isAnalyzing || !selectedCharacterId}
               className="bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 disabled:from-gray-600 disabled:to-gray-700 text-text-primary px-6 py-2.5 rounded-lg font-medium transition-all transform hover:scale-105 disabled:scale-100 flex items-center justify-center space-x-2 shadow-lg"
             >
-              <span className="text-xl">{isAnalyzing ? '⏳' : '🔍'}</span>
+              {isAnalyzing ? (
+                <Icon name="Clock" variant="outline" className="w-5 h-5 animate-spin" />
+              ) : (
+                <Icon name="MagnifyingGlass" variant="outline" className="w-5 h-5" />
+              )}
               <span>{isAnalyzing ? '分析中...' : '開始分析'}</span>
             </button>
           </div>
@@ -317,7 +322,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
                 : 'bg-bg-dark/80/50 text-gray-400 hover:text-white hover:bg-bg-light'
             }`}
           >
-            <span className="text-2xl">{tab.icon}</span>
+            <Icon name={tab.iconName} variant={tab.iconVariant} className="w-6 h-6" />
             <span className="text-xs text-center leading-tight">{tab.label}</span>
           </button>
         ))}
@@ -329,7 +334,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
           <div className="flex items-center justify-center h-[400px]">
             <div className="text-center space-y-4">
               <div className="relative">
-                <div className="text-8xl animate-pulse">🎭</div>
+                <Icon name="UserGroup" variant="solid" className="w-32 h-32 mx-auto text-warm-gold/60 animate-pulse" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-32 h-32 bg-warm-gold/20 rounded-full blur-3xl animate-ping"></div>
                 </div>
@@ -342,15 +347,15 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
               </div>
               <div className="flex justify-center space-x-4 pt-4">
                 <div className="text-center">
-                  <div className="text-3xl mb-1">💬</div>
+                  <Icon name="ChatBubbleLeftRight" variant="outline" className="w-8 h-8 mb-1 mx-auto text-warm-gold" />
                   <p className="text-xs text-gray-500">對話分析</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl mb-1">🧠</div>
+                  <Icon name="AcademicCap" variant="solid" className="w-8 h-8 mb-1 mx-auto text-warm-gold" />
                   <p className="text-xs text-gray-500">人格特徵</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl mb-1">📈</div>
+                  <Icon name="ArrowTrendingUp" variant="solid" className="w-8 h-8 mb-1 mx-auto text-warm-gold" />
                   <p className="text-xs text-gray-500">一致性檢測</p>
                 </div>
               </div>
@@ -364,8 +369,9 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* 基本信息 */}
                   <div className="bg-bg-dark/80/50 rounded-lg p-5">
-                    <h4 className="text-warm-gold font-bold mb-2 flex items-center">
-                      <span className="mr-2">ℹ️</span>基本信息
+                    <h4 className="text-warm-gold font-bold mb-2 flex items-center gap-2">
+                      <Icon name="InformationCircle" variant="outline" className="w-5 h-5" />
+                      基本信息
                     </h4>
                     <div className="space-y-2 text-sm">
                       <div><span className="text-gray-400">角色：</span>{analysisResult.characterName}</div>
@@ -381,8 +387,9 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
 
                   {/* 人格特徵雷達 */}
                   <div className="bg-bg-dark/80/50 rounded-lg p-5">
-                    <h4 className="text-warm-gold font-bold mb-2 flex items-center">
-                      <span className="mr-2">🎯</span>人格特徵
+                    <h4 className="text-warm-gold font-bold mb-2 flex items-center gap-2">
+                      <Icon name="Target" variant="outline" className="w-5 h-5" />
+                      人格特徵
                     </h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
@@ -420,8 +427,9 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
 
                   {/* 情感和行為 */}
                   <div className="bg-bg-dark/80/50 rounded-lg p-5">
-                    <h4 className="text-warm-gold font-bold mb-2 flex items-center">
-                      <span className="mr-2">💭</span>情感行為
+                    <h4 className="text-warm-gold font-bold mb-2 flex items-center gap-2">
+                      <Icon name="ChatBubbleBottomCenterText" variant="outline" className="w-5 h-5" />
+                      情感行為
                     </h4>
                     <div className="space-y-2 text-sm">
                       <div><span className="text-gray-400">情感色調：</span>
@@ -502,8 +510,9 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
             {activeTab === 'language' && (
               <div className="space-y-6">
                 <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-6">
-                  <h4 className="text-warm-gold font-bold mb-4 flex items-center">
-                    <span className="mr-2">💬</span>語言風格分析
+                  <h4 className="text-warm-gold font-bold mb-4 flex items-center gap-2">
+                    <Icon name="ChatBubbleLeftRight" variant="solid" className="w-5 h-5" />
+                    語言風格分析
                   </h4>
                   
                   {/* 說話風格 */}
@@ -578,8 +587,9 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
             {activeTab === 'suggestions' && (
               <div className="space-y-6">
                 <div className="bg-bg-light/50 backdrop-blur-sm/30 rounded-lg p-6">
-                  <h4 className="text-warm-gold font-bold mb-4 flex items-center">
-                    <span className="mr-2">💡</span>改進建議
+                  <h4 className="text-warm-gold font-bold mb-4 flex items-center gap-2">
+                    <Icon name="LightBulb" variant="solid" className="w-5 h-5" />
+                    改進建議
                   </h4>
                   
                   {/* AI建議列表 */}
@@ -588,7 +598,7 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
                       <div key={index} className="bg-bg-dark/80/40 rounded-lg p-5 border border-gold-600/20">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center">
-                            <span className="text-xl mr-3">{suggestion.icon}</span>
+                            <Icon name={suggestion.iconName} variant={suggestion.iconVariant} className="w-5 h-5 mr-3 text-warm-gold" />
                             <h5 className="text-warm-gold font-medium text-base">{suggestion.title}</h5>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -620,8 +630,9 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
 
                   {/* 整體改善建議 */}
                   <div className="mt-8 p-5 bg-bg-dark/80/20 rounded-lg border border-gold-600/20">
-                    <h5 className="text-warm-gold font-medium text-base mb-3 flex items-center">
-                      <span className="mr-2">📈</span>整體改善方向
+                    <h5 className="text-warm-gold font-medium text-base mb-3 flex items-center gap-2">
+                      <Icon name="ArrowTrendingUp" variant="solid" className="w-5 h-5" />
+                      整體改善方向
                     </h5>
                     <p className="text-gray-300 text-sm leading-relaxed space-y-2">
                       <span className="block">
@@ -652,7 +663,8 @@ const CharacterAnalysisPanel: React.FC<CharacterAnalysisPanelProps> = ({
  * 生成改進建議
  */
 interface Suggestion {
-  icon: string;
+  iconName: string;
+  iconVariant: 'outline' | 'solid';
   title: string;
   description: string;
   priority: 'high' | 'medium' | 'low';
@@ -666,7 +678,8 @@ function generateSuggestions(result: CharacterAnalysisResult): Suggestion[] {
   // 基於置信度生成建議
   if (result.confidence < 0.7) {
     suggestions.push({
-      icon: '🎯',
+      iconName: 'Target',
+      iconVariant: 'outline',
       title: '提升角色一致性',
       description: '角色在某些章節中的表現存在不一致，建議檢查核心人格設定，確保在所有場景下保持相同的反應模式。',
       priority: 'high',
@@ -677,7 +690,8 @@ function generateSuggestions(result: CharacterAnalysisResult): Suggestion[] {
   // 基於行為一致性生成建議
   if (result.behaviorConsistency < 0.8) {
     suggestions.push({
-      icon: '⚖️',
+      iconName: 'Scale',
+      iconVariant: 'outline',
       title: '強化行為邏輯',
       description: '角色的行為選擇在某些情境下缺乏邏輯一致性，建議為角色建立更清晰的價值觀和決策原則。',
       priority: result.behaviorConsistency < 0.6 ? 'high' : 'medium',
@@ -688,7 +702,8 @@ function generateSuggestions(result: CharacterAnalysisResult): Suggestion[] {
   // 基於情感強度生成建議
   if (result.emotionalIntensity < 0.4) {
     suggestions.push({
-      icon: '💝',
+      iconName: 'Heart',
+      iconVariant: 'solid',
       title: '增強情感表達',
       description: '角色的情感表達較為平淡，可以適度增加內心獨白或情感反應的描寫，讓角色更有感染力。',
       priority: 'medium',
@@ -696,7 +711,8 @@ function generateSuggestions(result: CharacterAnalysisResult): Suggestion[] {
     });
   } else if (result.emotionalIntensity > 0.9) {
     suggestions.push({
-      icon: '🧘',
+      iconName: 'User',
+      iconVariant: 'outline',
       title: '平衡情感表達',
       description: '角色的情感表達過於強烈，可能會讓讀者感到疲勞。建議在某些場景中加入更多理性思考的描寫。',
       priority: 'low',
@@ -707,7 +723,8 @@ function generateSuggestions(result: CharacterAnalysisResult): Suggestion[] {
   // 基於語言風格生成建議
   if (result.linguisticPattern.vocabularyRichness < 0.5) {
     suggestions.push({
-      icon: '📚',
+      iconName: 'BookOpen',
+      iconVariant: 'solid',
       title: '豐富詞彙表達',
       description: '角色的語言表達相對簡單，建議根據角色背景和教育程度，適當豐富其詞彙使用和表達方式。',
       priority: 'medium',
@@ -718,7 +735,8 @@ function generateSuggestions(result: CharacterAnalysisResult): Suggestion[] {
   // 基於對話數量生成建議
   if (result.dialogueCount < 10) {
     suggestions.push({
-      icon: '💬',
+      iconName: 'ChatBubbleLeftRight',
+      iconVariant: 'outline',
       title: '增加對話展示',
       description: '角色的直接對話較少，建議增加角色與其他人物的互動對話，更好地展現其性格特點。',
       priority: 'low',
@@ -729,7 +747,8 @@ function generateSuggestions(result: CharacterAnalysisResult): Suggestion[] {
   // 默認建議（如果沒有其他問題）
   if (suggestions.length === 0) {
     suggestions.push({
-      icon: '⭐',
+      iconName: 'Star',
+      iconVariant: 'solid',
       title: '深化人物層次',
       description: '角色整體表現良好，可以考慮增加更多內心衝突或成長弧線，讓角色更加立體動人。',
       priority: 'low',

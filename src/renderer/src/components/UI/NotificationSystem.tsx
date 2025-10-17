@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, store } from '../../store/store';
 import { removeNotification, addNotification, clearNotifications } from '../../store/slices/notificationSlice';
 import { soundManager } from '../../services/SoundManager';
+import { Icon } from './Icon';
 
 export interface Notification {
   id: string;
@@ -58,35 +59,40 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClo
         return {
           bg: 'bg-green-900/90',
           border: 'border-green-500',
-          icon: '✅',
+          iconName: 'CheckCircle',
+          iconVariant: 'solid' as const,
           iconBg: 'bg-green-500'
         };
       case 'error':
         return {
           bg: 'bg-red-900/90',
           border: 'border-red-500',
-          icon: '❌',
+          iconName: 'XCircle',
+          iconVariant: 'solid' as const,
           iconBg: 'bg-red-500'
         };
       case 'warning':
         return {
           bg: 'bg-yellow-900/90',
           border: 'border-yellow-500',
-          icon: '⚠️',
+          iconName: 'ExclamationTriangle',
+          iconVariant: 'solid' as const,
           iconBg: 'bg-yellow-500'
         };
       case 'info':
         return {
           bg: 'bg-warm-gold/20',
           border: 'border-warm-gold',
-          icon: 'ℹ️',
+          iconName: 'InformationCircle',
+          iconVariant: 'outline' as const,
           iconBg: 'bg-warm-gold/30'
         };
       default:
         return {
           bg: 'bg-gray-900/90',
           border: 'border-gray-500',
-          icon: '📝',
+          iconName: 'DocumentText',
+          iconVariant: 'outline' as const,
           iconBg: 'bg-gray-500'
         };
     }
@@ -106,8 +112,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClo
     `}>
       <div className="flex items-start space-x-3">
         {/* 圖標 */}
-        <div className={`${styles.iconBg} rounded-full p-1 flex-shrink-0`}>
-          <span className="text-white text-sm">{styles.icon}</span>
+        <div className={`${styles.iconBg} rounded-full p-1.5 flex-shrink-0 flex items-center justify-center`}>
+          <Icon name={styles.iconName} variant={styles.iconVariant} className="w-4 h-4 text-white" />
         </div>
         
         {/* 內容 */}

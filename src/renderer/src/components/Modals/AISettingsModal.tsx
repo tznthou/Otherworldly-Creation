@@ -3,6 +3,7 @@ import { useAppDispatch } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
 import { setCurrentModel, setCurrentProvider, setDefaultProvider, setDefaultModel } from '../../store/slices/aiSlice';
 import ConfirmDialog from '../UI/ConfirmDialog';
+import { Icon } from '../UI/Icon';
 import { api } from '../../api';
 import { createLogger } from '../../utils/logger';
 import type {
@@ -410,14 +411,14 @@ const AISettingsModal: React.FC = () => {
     }
   };
 
-  const getProviderIcon = (type: string) => {
+  const getProviderIcon = (type: string): { name: string; variant: 'outline' | 'solid' } => {
     switch (type) {
-      case 'openai': return '🤖';
-      case 'gemini': return '✨';
-      case 'claude': return '🧠';
-      case 'openrouter': return '🔄';
-      case 'ollama': return '🦙';
-      default: return '🤖';
+      case 'openai': return { name: 'Cpu', variant: 'outline' };
+      case 'gemini': return { name: 'Sparkles', variant: 'solid' };
+      case 'claude': return { name: 'AcademicCap', variant: 'outline' };
+      case 'openrouter': return { name: 'ArrowPath', variant: 'outline' };
+      case 'ollama': return { name: 'CommandLine', variant: 'outline' };
+      default: return { name: 'Cpu', variant: 'outline' };
     }
   };
 
@@ -501,7 +502,7 @@ const AISettingsModal: React.FC = () => {
           >
             {supportedTypes.map(type => (
               <option key={type} value={type}>
-                {getProviderIcon(type)} {type.charAt(0).toUpperCase() + type.slice(1)}
+                {type.charAt(0).toUpperCase() + type.slice(1)}
               </option>
             ))}
           </select>
@@ -559,7 +560,10 @@ const AISettingsModal: React.FC = () => {
                   搜尋中...
                 </>
               ) : (
-                '🔍 搜尋模型'
+                <span className="flex items-center gap-2">
+                  <Icon name="MagnifyingGlass" variant="outline" className="w-4 h-4" />
+                  搜尋模型
+                </span>
               )}
             </button>
           </div>
@@ -697,9 +701,13 @@ const AISettingsModal: React.FC = () => {
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
-                              <span className="text-2xl">
-                                {getProviderIcon(provider.provider_type)}
-                              </span>
+                              <div className="bg-warm-gold/20 p-2 rounded-lg">
+                                <Icon
+                                  name={getProviderIcon(provider.provider_type).name}
+                                  variant={getProviderIcon(provider.provider_type).variant}
+                                  className="w-6 h-6 text-warm-gold"
+                                />
+                              </div>
                               <div>
                                 <h4 className="text-white font-medium" title={provider.name}>
                                   {provider.name.length > 20 ? `${provider.name.substring(0, 18)}...` : provider.name}
@@ -769,7 +777,7 @@ const AISettingsModal: React.FC = () => {
                                 <>
                                   <button
                                     onClick={() => handleSetCurrentModel(provider)}
-                                    className="text-warm-gold hover:text-warm-gold text-xs px-3 py-1 border border-gold-600 rounded hover:bg-gold-600 hover:text-text-primary transition-colors"
+                                    className="text-warm-gold hover:text-warm-gold text-xs px-3 py-1 border border-warm-gold rounded hover:bg-warm-gold hover:text-text-primary transition-colors"
                                   >
                                     設為當前
                                   </button>
@@ -827,11 +835,14 @@ const AISettingsModal: React.FC = () => {
 
                 {/* AI插畫功能與提供者指南 */}
                 <div>
-                  <h3 className="text-lg font-medium text-warm-gold mb-4">🎨 AI插畫功能指南</h3>
+                  <h3 className="text-lg font-medium text-warm-gold mb-4 flex items-center gap-2">
+                    <Icon name="PaintBrush" variant="solid" className="w-5 h-5" />
+                    AI插畫功能指南
+                  </h3>
                   <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4 text-sm text-gray-300">
 
                     {/* 智能推薦系統說明 */}
-                    <div className="mb-6 p-4 bg-gradient-to-r from-cosmic-700 to-cosmic-600 rounded-lg">
+                    <div className="mb-6 p-4 bg-gradient-to-r from-bg-dark to-bg-light rounded-lg">
                       <h4 className="text-warm-gold font-medium text-base mb-3 flex items-center">
                         <span className="text-xl mr-2">🧠</span>
                         智能推薦系統

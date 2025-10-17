@@ -5,6 +5,7 @@ import { useI18n } from '../../../hooks/useI18n';
 import { logsApi } from '../../../api/logs';
 import { logger } from '../../../services/logService';
 import { createLogger } from '../../../utils/logger';
+import { Icon } from '../../../components/UI/Icon';
 
 // 創建模組專用 logger
 const log = createLogger('GeneralSettings');
@@ -83,8 +84,9 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                 </svg>
               </div>
             </div>
-            <p className="font-sans-tc text-sm text-text-secondary mt-2">
-              ⚠️ 語言切換功能開發中，目前僅支援繁體中文界面
+            <p className="font-sans-tc text-sm text-text-secondary mt-2 flex items-center gap-1">
+              <Icon name="ExclamationTriangle" variant="solid" className="w-4 h-4 text-yellow-500" />
+              語言切換功能開發中，目前僅支援繁體中文界面
             </p>
           </div>
         </div>
@@ -103,21 +105,26 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
               <span className="text-sm">已啟用</span>
             </div>
           </div>
-          <p className="text-xs text-gray-500 italic">
-            💡 自動儲存功能已內建於編輯器中，無需手動設定
+          <p className="text-xs text-gray-500 italic flex items-center gap-1">
+            <Icon name="LightBulb" variant="outline" className="w-3 h-3" />
+            自動儲存功能已內建於編輯器中，無需手動設定
           </p>
         </div>
       </div>
 
       <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl p-6">
-        <h3 className="text-lg font-medium text-warm-gold mb-4">🎨 AI 插畫功能設定</h3>
+        <h3 className="text-lg font-medium text-warm-gold mb-4 flex items-center gap-2">
+          <Icon name="PaintBrush" variant="solid" className="w-5 h-5" />
+          AI 插畫功能設定
+        </h3>
         <div className="space-y-6">
           <div className="flex items-start justify-between opacity-50">
             <div className="flex-1 mr-4">
               <div className="flex items-center space-x-2 mb-2">
                 <span className="text-gray-500 font-medium">擴展AI插圖服務 (已遷移)</span>
-                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-900/30 text-yellow-400 border border-yellow-700/50">
-                  🔄 已遷移
+                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-900/30 text-yellow-400 border border-yellow-700/50">
+                  <Icon name="ArrowPath" variant="outline" className="w-3 h-3" />
+                  已遷移
                 </div>
               </div>
             </div>
@@ -137,8 +144,9 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
               <div className="flex-1 mr-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <span className="text-gray-500 font-medium">智能API檢測 (已遷移)</span>
-                  <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-900/30 text-yellow-400 border border-yellow-700/50">
-                    🔄 已遷移
+                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-900/30 text-yellow-400 border border-yellow-700/50">
+                    <Icon name="ArrowPath" variant="outline" className="w-3 h-3" />
+                    已遷移
                   </div>
                 </div>
               </div>
@@ -158,7 +166,10 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
       </div>
 
       <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl p-6">
-        <h3 className="text-lg font-medium text-warm-gold mb-4">📚 電子書功能設定</h3>
+        <h3 className="text-lg font-medium text-warm-gold mb-4 flex items-center gap-2">
+          <Icon name="BookOpen" variant="solid" className="w-5 h-5" />
+          電子書功能設定
+        </h3>
         <div className="space-y-6">
           <div className="flex items-start justify-between">
             <div className="flex-1 mr-4">
@@ -242,8 +253,9 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
             <div className="flex-1 mr-4">
               <div className="flex items-center space-x-2 mb-2">
                 <span className="text-text-primary font-medium">啟用智能多維度上下文優化</span>
-                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-clay-orange/20 text-clay-orange border border-clay-orange/40">
-                  🚀 最新功能
+                <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-clay-orange/20 text-clay-orange border border-clay-orange/40">
+                  <Icon name="Rocket" variant="solid" className="w-3 h-3" />
+                  最新功能
                 </div>
               </div>
               <p className="text-sm text-gray-400">
@@ -412,7 +424,10 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
 
       {/* 日誌管理區塊 (v1.3.3) */}
       <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-3xl p-6">
-        <h3 className="text-lg font-medium text-warm-gold mb-4">🗂️ 日誌管理</h3>
+        <h3 className="text-lg font-medium text-warm-gold mb-4 flex items-center gap-2">
+          <Icon name="FolderOpen" variant="solid" className="w-5 h-5" />
+          日誌管理
+        </h3>
         <div className="space-y-4">
           <div>
             <p className="text-text-primary mb-2">
@@ -427,21 +442,35 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
           <div className="flex gap-3">
             <button
               onClick={handleOpenLogDirectory}
-              className="flex-1 bg-bg-dark hover:bg-bg-light border border-warm-gold/20 hover:border-warm-gold text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex-1 bg-bg-dark hover:bg-bg-light border border-warm-gold/20 hover:border-warm-gold text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              📂 打開日誌目錄
+              <Icon name="Folder" variant="outline" className="w-4 h-4" />
+              打開日誌目錄
             </button>
             <button
               onClick={handleCopyLogs}
               disabled={isExportingLogs}
-              className="flex-1 bg-warm-gold hover:bg-clay-orange text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-warm-gold hover:bg-clay-orange text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isExportingLogs ? '⏳ 複製中...' : '📋 複製最新日誌'}
+              {isExportingLogs ? (
+                <>
+                  <Icon name="Clock" variant="outline" className="w-4 h-4 animate-spin" />
+                  複製中...
+                </>
+              ) : (
+                <>
+                  <Icon name="ClipboardDocument" variant="outline" className="w-4 h-4" />
+                  複製最新日誌
+                </>
+              )}
             </button>
           </div>
 
           <div className="bg-bg-dark/50 border border-warm-gold/20 rounded-lg p-3">
-            <p className="text-sm text-text-primary mb-2">💡 如何使用日誌：</p>
+            <p className="text-sm text-text-primary mb-2 flex items-center gap-2">
+              <Icon name="LightBulb" variant="solid" className="w-4 h-4 text-warm-gold" />
+              如何使用日誌：
+            </p>
             <ul className="text-xs text-gray-400 space-y-1 list-disc list-inside ml-2">
               <li>點擊「複製最新日誌」複製最近 2000 行日誌</li>
               <li>將日誌貼到 GitHub Issue 或郵件中發給開發者</li>

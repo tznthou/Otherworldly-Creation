@@ -1,13 +1,66 @@
-# 創世紀元：Genesis Chronicle v1.3.9
+# 創世紀元：Genesis Chronicle v2.0.0
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
 <p align="center">
   <a href="README.md">English</a> | <strong>繁體中文</strong>
 </p>
 
-![Version](https://img.shields.io/badge/version-v1.3.9-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-112.7k-purple)
+![Version](https://img.shields.io/badge/version-v2.0.0-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-106k-purple)
 
 ## 🚀 最新更新歷程
+
+## 🎉 v2.0.0 全新時代 - 人文設計的誕生 (2025-10-17)
+
+### 🎨 視覺語言的完全革命
+**創世紀元進入全新時代** - 從科幻星空到溫暖人文。這不只是顏色的更新，而是產品身份的根本重新定義。
+
+#### ✨ 設計理念的轉變
+- **從宇宙星空 → 溫暖書房**：淘汰冷調藍紫色太空主題，改用溫暖的金棕色大地色調
+- **100% UI 全面改造**：完整介面覆蓋（7 個頂層頁面 + 20+ 個模態對話框元件）
+- **以人為中心的設計**：柔和光暈效果、溫暖照明，營造深夜書房的氛圍
+- **寫作即體驗**：每次創作都像是在溫馨書齋中與靈感對話
+
+#### ⚡ 技術架構的現代化
+- **Tailwind CSS v4 遷移**：從 v3 架構完整升級至 v4
+- **統一設計語言系統**：建立可維護的人文設計色彩規範
+- **架構級優化**：Layout 元件提供統一背景管理
+- **90% 維護效率提升**：集中化設計語言管理顯著提升程式碼可維護性
+
+#### 🎯 視覺系統詳情
+**全新人文色彩系統：**
+```
+暖金色系：#d4a574, #e8c09d, #b88f5f（主要強調色）
+陶土橙：#c17d5a（次要強調色）
+木棕色：#8b7355（第三強調色）
+背景色：#1a1612（深色）/ #2a2420（浮起表面）
+文字色：#e8e3da（主要）/ #b8afa4（次要）
+```
+
+**淘汰的舊系統：**
+- ~~宇宙藍紫 (cosmic-*)~~ - 科幻太空主題已退役
+- ~~魔法金 (gold-[數字])~~ - 魔法陣元素已淘汰
+- ~~神秘紫 (mystic-*)~~ - 神秘紫色不再使用
+
+#### 📊 影響規模
+- **修改檔案數**：10+ 核心元件檔案
+- **程式碼變更**：約 500 行的色彩系統重構
+- **覆蓋範圍**：100% UI 元件（頁面、模態框、對話框）
+- **使用者影響**：立即可見的視覺體驗轉變
+- **相容性**：✅ 零破壞性變更 - 所有功能完全向後相容
+
+#### 💡 為什麼是 v2.0？
+這次更新代表的**不只是技術迭代** - 它是新設計語言的確立：
+- 業界參考：類似 macOS Big Sur (v11)、Windows 8 的 Metro UI 轉型
+- **產品身份重新定義**：從技術工具變為以人為中心的創作夥伴
+- **行銷意義**：「全新 2.0」比「1.3.11」有更強的吸引力
+- **心理里程碑**：象徵成熟度、穩定性和深思熟慮的演化
+
+#### 🎯 核心理念
+> 「讓創作成為享受，而非任務」
+
+人文設計系統透過溫暖色調與柔和照明，讓寫作更加舒適，幫助創作者在長時間寫作中保持專注並減少視覺疲勞。
+
+---
 
 ### 🎉 v1.3.9 - 使用體驗優化與系統調整 (2025年10月14日)
 

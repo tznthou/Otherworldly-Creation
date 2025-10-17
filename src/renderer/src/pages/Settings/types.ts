@@ -6,7 +6,8 @@ export type SettingsTab = 'general' | 'ui' | 'backup' | 'database' | 'update' | 
 export interface SettingsTabConfig {
   id: string;
   name: string;
-  icon: string;
+  iconName: string;
+  iconVariant: 'outline' | 'solid';
 }
 
 export interface SettingsComponentProps {
@@ -20,13 +21,13 @@ export interface SettingsState {
 }
 
 export const SETTINGS_TABS: SettingsTabConfig[] = [
-  { id: 'general', name: '一般設定', icon: '⚙️' },
-  { id: 'ui', name: '界面', icon: '🎨' },
-  { id: 'templates', name: '模板管理', icon: '📋' },
-  { id: 'backup', name: '備份', icon: '💾' },
-  { id: 'database', name: '資料庫維護', icon: '🗄️' },
-  { id: 'update', name: '自動更新', icon: '🔄' },
-  { id: 'privacy', name: '隱私', icon: '🔒' },
+  { id: 'general', name: '一般設定', iconName: 'Cog6Tooth', iconVariant: 'outline' },
+  { id: 'ui', name: '界面', iconName: 'PaintBrush', iconVariant: 'solid' },
+  { id: 'templates', name: '模板管理', iconName: 'DocumentText', iconVariant: 'outline' },
+  { id: 'backup', name: '備份', iconName: 'CloudArrowUp', iconVariant: 'solid' },
+  { id: 'database', name: '資料庫維護', iconName: 'CircleStack', iconVariant: 'solid' },
+  { id: 'update', name: '自動更新', iconName: 'ArrowPath', iconVariant: 'outline' },
+  { id: 'privacy', name: '隱私', iconName: 'LockClosed', iconVariant: 'solid' },
 ];
 
 export const SHORTCUT_LABELS: Record<string, string> = {

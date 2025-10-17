@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { closeModal, openModal, setSelectedTemplate } from '../../store/slices/uiSlice';
 import { fetchAllTemplates } from '../../store/slices/templatesSlice';
+import { Icon } from '../UI/Icon';
 import { NovelTemplate, TEMPLATE_TYPES } from '../../types/template';
 
 const TemplateManagerModal: React.FC = () => {
@@ -30,14 +31,14 @@ const TemplateManagerModal: React.FC = () => {
     dispatch(openModal('templateApplication'));
   };
 
-  const getTemplateIcon = (type: string) => {
+  const getTemplateIcon = (type: string): { name: string; variant: 'outline' | 'solid' } => {
     const icons = {
-      isekai: '🌟',
-      school: '🏫', 
-      scifi: '🚀',
-      fantasy: '⚔️'
+      isekai: { name: 'Sparkles', variant: 'solid' as const },
+      school: { name: 'AcademicCap', variant: 'outline' as const },
+      scifi: { name: 'RocketLaunch', variant: 'outline' as const },
+      fantasy: { name: 'Shield', variant: 'outline' as const }
     };
-    return icons[type as keyof typeof icons] || '📖';
+    return icons[type as keyof typeof icons] || { name: 'BookOpen', variant: 'outline' as const };
   };
 
   const getTemplateColor = (type: string) => {
@@ -111,8 +112,12 @@ const TemplateManagerModal: React.FC = () => {
                     <div className="relative p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center space-x-3">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getTemplateColor(template.type)} flex items-center justify-center text-2xl group-hover:scale-110 transition-transform`}>
-                            {getTemplateIcon(template.type)}
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getTemplateColor(template.type)} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                            <Icon
+                              name={getTemplateIcon(template.type).name}
+                              variant={getTemplateIcon(template.type).variant}
+                              className="w-6 h-6 text-white"
+                            />
                           </div>
                           <div>
                             <h4 className="font-serif-tc text-lg text-white group-hover:text-warm-gold transition-colors">
@@ -165,8 +170,12 @@ const TemplateManagerModal: React.FC = () => {
             {/* 模板概述 */}
             <div className="card">
               <div className="flex items-start space-x-4">
-                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${getTemplateColor(localSelectedTemplate.type)} flex items-center justify-center text-3xl`}>
-                  {getTemplateIcon(localSelectedTemplate.type)}
+                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${getTemplateColor(localSelectedTemplate.type)} flex items-center justify-center`}>
+                  <Icon
+                    name={getTemplateIcon(localSelectedTemplate.type).name}
+                    variant={getTemplateIcon(localSelectedTemplate.type).variant}
+                    className="w-8 h-8 text-white"
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-serif-tc text-white mb-2">{localSelectedTemplate.name}</h3>

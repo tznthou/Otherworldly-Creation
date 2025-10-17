@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
-import CosmicBackground from '../UI/CosmicBackground';
+import HumanBackground from '../UI/HumanBackground';
 import { useAppSelector } from '../../hooks/redux';
 import { EditorStats } from './StatusBar';
 
@@ -23,9 +23,9 @@ const Layout: React.FC<LayoutProps> = ({ children, editorStats, currentChapterTi
 
   return (
     <div className="flex h-screen bg-bg-dark relative" style={{ minWidth: '1400px' }}>
-      {/* 宇宙背景 - 確保不會阻擋點擊 */}
+      {/* 人文背景 - 確保不會阻擋點擊 */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-        <CosmicBackground intensity="medium" />
+        <HumanBackground intensity="low" />
       </div>
       
       {/* 側邊欄 - 確保在最上層 */}

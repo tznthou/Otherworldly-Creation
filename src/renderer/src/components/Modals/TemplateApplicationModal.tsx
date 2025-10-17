@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppDispatch } from '../../hooks/redux';
 import { closeModal, addNotification } from '../../store/slices/uiSlice';
+import { Icon } from '../UI/Icon';
 import { NovelTemplate, TEMPLATE_TYPES } from '../../types/template';
 import useTemplateApplication, { TemplateApplicationOptions } from '../../hooks/useTemplateApplication';
 import { useNavigate } from 'react-router-dom';
@@ -68,14 +69,14 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
     }
   };
 
-  const getTemplateIcon = (type: string) => {
+  const getTemplateIcon = (type: string): { name: string; variant: 'outline' | 'solid' } => {
     const icons = {
-      isekai: '🌟',
-      school: '🏫', 
-      scifi: '🚀',
-      fantasy: '⚔️'
+      isekai: { name: 'Sparkles', variant: 'solid' as const },
+      school: { name: 'AcademicCap', variant: 'outline' as const },
+      scifi: { name: 'RocketLaunch', variant: 'outline' as const },
+      fantasy: { name: 'Shield', variant: 'outline' as const }
     };
-    return icons[type as keyof typeof icons] || '📖';
+    return icons[type as keyof typeof icons] || { name: 'BookOpen', variant: 'outline' as const };
   };
 
   const getTemplateColor = (type: string) => {
@@ -94,8 +95,12 @@ const TemplateApplicationModal: React.FC<TemplateApplicationModalProps> = ({ tem
         {/* 標題 */}
         <div className="p-6 border-b border-warm-gold/10">
           <div className="flex items-center space-x-3 mb-4">
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getTemplateColor(template.type)} flex items-center justify-center text-2xl`}>
-              {getTemplateIcon(template.type)}
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getTemplateColor(template.type)} flex items-center justify-center`}>
+              <Icon
+                name={getTemplateIcon(template.type).name}
+                variant={getTemplateIcon(template.type).variant}
+                className="w-6 h-6 text-white"
+              />
             </div>
             <div>
               <h2 className="text-xl font-serif-tc text-warm-gold">應用模板創建專案</h2>

@@ -12,6 +12,7 @@ import { Alert } from '../UI/Alert';
 import { Card } from '../UI/Card';
 import { useBatchConfiguration, useCharacterSelection } from '../../hooks/illustration';
 import { useBatchSubmission } from '../../hooks/useBatchSubmission';
+import { Icon } from '../UI/Icon';
 
 // 導入子組件
 import BatchConfigurationSection from './BatchIllustration/BatchConfigurationSection';
@@ -259,7 +260,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
       <Card className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white flex items-center">
-            <span className="mr-2">⚡</span>
+            <Icon name="Bolt" variant="solid" className="w-6 h-6 mr-2 text-warm-gold" />
             批次插畫生成
           </h2>
         </div>
@@ -267,8 +268,8 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
         {/* 標籤導航 */}
         <div className="flex space-x-1 mb-6 bg-gray-800 rounded-lg p-1">
           {[
-            { id: 'create', label: '創建批次', icon: '➕' },
-            { id: 'history', label: '歷史記錄', icon: '📋' }
+            { id: 'create', label: '創建批次', iconName: 'Plus', iconVariant: 'solid' as const },
+            { id: 'history', label: '歷史記錄', iconName: 'ClipboardDocumentList', iconVariant: 'outline' as const }
           ].map(tab => (
             <button
               key={tab.id}
@@ -279,7 +280,7 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <span className="mr-2">{tab.icon}</span>
+              <Icon name={tab.iconName} variant={tab.iconVariant} className="w-4 h-4 mr-2 inline-block" />
               {tab.label}
             </button>
           ))}
@@ -328,7 +329,10 @@ const BatchIllustrationPanel: React.FC<BatchIllustrationPanelProps> = ({
                     <span>提交中...</span>
                   </div>
                 ) : (
-                  '🚀 提交批次'
+                  <div className="flex items-center space-x-2">
+                    <Icon name="Rocket" variant="solid" className="w-5 h-5" />
+                    <span>提交批次</span>
+                  </div>
                 )}
               </CosmicButton>
             </div>

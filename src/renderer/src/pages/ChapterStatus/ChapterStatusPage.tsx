@@ -345,7 +345,7 @@ const ChapterStatusPage: React.FC = () => {
             <h2 className="text-xl text-warm-gold">章節列表</h2>
             <button
               onClick={() => navigate(`/project/${projectId}`)}
-              className="bg-gold-600 hover:bg-gold-700 px-4 py-2 rounded transition-colors text-sm"
+              className="bg-warm-gold hover:bg-warm-gold-dark px-4 py-2 rounded transition-colors text-sm text-bg-dark"
             >
               返回專案
             </button>

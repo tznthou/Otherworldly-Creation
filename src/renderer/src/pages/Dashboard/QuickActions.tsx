@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { openModal } from '../../store/slices/uiSlice';
 import { useNavigate } from 'react-router-dom';
+import { Icon } from '../../components/UI/Icon';
 import { createLogger } from '../../utils/logger';
 
 // 創建模組專用 logger
@@ -15,9 +16,10 @@ const QuickActions: React.FC = () => {
   const actions = [
     {
       id: 'create-project',
-      title: '🌟 創世神模式',
+      title: '創世神模式',
       description: '創建新的異世界創作專案',
-      icon: '📝',
+      iconName: 'Sparkles',
+      iconVariant: 'solid' as const,
       color: 'from-gold-500 to-gold-600',
       action: () => {
         dispatch(openModal('createProject'));
@@ -25,9 +27,10 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'character-manager',
-      title: '⚔️ 英靈召喚',
+      title: '英靈召喚',
       description: 'AI 輔助角色創造與管理',
-      icon: '👥',
+      iconName: 'UserGroup',
+      iconVariant: 'outline' as const,
       color: 'from-purple-500 to-purple-600',
       action: () => {
         dispatch(openModal('selectProjectForCharacters'));
@@ -35,9 +38,10 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'template-manager',
-      title: '🎭 輕小說模板',
+      title: '輕小說模板',
       description: '異世界、校園、科幻、奇幻模板',
-      icon: '📚',
+      iconName: 'BookOpen',
+      iconVariant: 'solid' as const,
       color: 'from-mystic-500 to-mystic-600',
       action: () => {
         dispatch(openModal('templateManager'));
@@ -45,9 +49,10 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'ai-writing',
-      title: '🔮 預言書寫',
+      title: '預言書寫',
       description: '智能續寫與劇情建議',
-      icon: '🤖',
+      iconName: 'CpuChip',
+      iconVariant: 'solid' as const,
       color: 'from-cyan-500 to-cyan-600',
       action: () => {
         dispatch(openModal('aiSettings'));
@@ -55,9 +60,10 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'data-management',
-      title: '💾 資料管理',
+      title: '資料管理',
       description: '備份、還原、匯入專案與資料庫維護',
-      icon: '🛠️',
+      iconName: 'CircleStack',
+      iconVariant: 'outline' as const,
       color: 'from-green-500 to-green-600',
       action: () => {
         dispatch(openModal('backupManager'));
@@ -65,9 +71,10 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'settings',
-      title: '⚙️ 系統設定',
+      title: '系統設定',
       description: '配置 AI 引擎和應用程式設定',
-      icon: '⚙️',
+      iconName: 'Cog6Tooth',
+      iconVariant: 'outline' as const,
       color: 'from-gray-500 to-gray-600',
       action: () => {
         navigate('/settings');
@@ -75,9 +82,10 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'help',
-      title: '❓ 使用說明',
+      title: '使用說明',
       description: '查看使用教學和常見問題',
-      icon: '❓',
+      iconName: 'QuestionMarkCircle',
+      iconVariant: 'outline' as const,
       color: 'from-indigo-500 to-indigo-600',
       action: () => {
         dispatch(openModal('helpCenter'));
@@ -86,9 +94,10 @@ const QuickActions: React.FC = () => {
 
     {
       id: 'writing-stats',
-      title: '📊 創作統計',
+      title: '創作統計',
       description: '查看寫作進度和統計數據',
-      icon: '📊',
+      iconName: 'ChartBar',
+      iconVariant: 'solid' as const,
       color: 'from-violet-500 to-violet-600',
       action: () => {
         navigate('/statistics');
@@ -97,9 +106,10 @@ const QuickActions: React.FC = () => {
 
     {
       id: 'ai-illustration',
-      title: '🎨 幻想具現',
+      title: '幻想具現',
       description: 'AI 插畫生成 - 角色插畫、場景插畫、封面設計',
-      icon: '🖼️',
+      iconName: 'Photo',
+      iconVariant: 'solid' as const,
       color: 'from-pink-500 to-rose-600',
       action: () => {
         log.debug('🎨 [QuickActions] 幻想具現卡片被點擊');
@@ -109,9 +119,10 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'ebook-generation',
-      title: '🌟 次元物語・零式記錄',
+      title: '次元物語・零式記錄',
       description: '虛數空間展開・輕量化傳送陣（建議優先）',
-      icon: '📖',
+      iconName: 'BookOpen',
+      iconVariant: 'outline' as const,
       color: 'from-emerald-500 to-teal-600',
       isPlanned: false, // 功能已實現，移除規劃中標記
       action: () => {
@@ -120,9 +131,10 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'pdf-generation',
-      title: '⚔️ 絕對文書・完全具現化', 
+      title: '絕對文書・完全具現化',
       description: '真理銘刻・最終形態解放（模組化架構重構完成！）',
-      icon: '📄',
+      iconName: 'DocumentArrowDown',
+      iconVariant: 'solid' as const,
       color: 'from-orange-500 to-red-600',
       isPlanned: false, // 功能已重構完成！
       action: () => {
@@ -131,9 +143,10 @@ const QuickActions: React.FC = () => {
     },
     {
       id: 'advanced-ai',
-      title: '🧠 進階 AI 功能',
+      title: '進階 AI 功能',
       description: '高級創作輔助 - 劇情分析、角色一致性檢查、創意建議',
-      icon: '🔬',
+      iconName: 'Beaker',
+      iconVariant: 'outline' as const,
       color: 'from-blue-500 to-indigo-600',
       isPlanned: false, // 功能已實現！
       action: () => {
@@ -166,8 +179,8 @@ const QuickActions: React.FC = () => {
             )}
             
             <div className="relative z-10">
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center text-3xl mb-4 group-hover:scale-105 transition-transform shadow-md ${action.isPlanned ? 'grayscale hover:grayscale-0' : ''}`}>
-                {action.icon}
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-md ${action.isPlanned ? 'grayscale hover:grayscale-0' : ''}`}>
+                <Icon name={action.iconName} variant={action.iconVariant} className="w-8 h-8 text-white" />
               </div>
 
               <h3 className="font-serif-tc font-bold text-text-primary mb-2 group-hover:text-warm-gold transition-colors">
