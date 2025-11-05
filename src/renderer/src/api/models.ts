@@ -5,9 +5,9 @@ import { Descendant } from 'slate';
 export interface Project {
   id: string;
   name: string;
-  type: 'isekai' | 'school' | 'scifi' | 'fantasy';
+  type: 'blank' | 'isekai' | 'school' | 'scifi' | 'fantasy';
   description: string;
-  novelLength: 'short' | 'medium' | 'long';
+  novelLength?: 'short' | 'medium' | 'long'; // 空白專案可能不選擇篇幅
   createdAt: string;
   updatedAt: string;
   cover_image?: string; // 電子書封面圖片路徑

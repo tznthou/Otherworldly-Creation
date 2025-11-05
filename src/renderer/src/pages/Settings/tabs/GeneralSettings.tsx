@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAppDispatch } from '../../../hooks/redux';
+import { openModal, addNotification } from '../../../store/slices/uiSlice';
 import { updateSettings, updateAISettings } from '../../../store/slices/settingsSlice';
 import { SettingsComponentProps } from '../types';
 import { useI18n } from '../../../hooks/useI18n';
@@ -12,10 +14,12 @@ const log = createLogger('GeneralSettings');
 
 const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) => {
   const { t } = useI18n();
+  const appDispatch = useAppDispatch();
 
   // 日誌管理狀態 (v1.3.3)
   const [logDirectory, setLogDirectory] = useState<string>('');
   const [isExportingLogs, setIsExportingLogs] = useState(false);
+  const [isDeletingLogs, setIsDeletingLogs] = useState(false);
 
   // 載入日誌目錄
   useEffect(() => {
@@ -54,6 +58,41 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
       alert('❌ 複製日誌失敗，請手動打開日誌目錄');
     } finally {
       setIsExportingLogs(false);
+    }
+  };
+
+  // 處理刪除舊日誌
+  const handleDeleteOldLogs = async () => {
+    const confirmed = confirm(
+      '⚠️ 確定要刪除舊日誌嗎？\n\n' +
+      '此操作將刪除 2 天前的所有日誌檔案，\n' +
+      '保留最近兩天的日誌。\n\n' +
+      '刪除後無法恢復！'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsDeletingLogs(true);
+    try {
+      const result = await logsApi.deleteOldLogs();
+      appDispatch(addNotification({
+        type: 'success',
+        title: '日誌清理完成',
+        message: result
+      }));
+      logger.info('Settings', result);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      appDispatch(addNotification({
+        type: 'error',
+        title: '刪除失敗',
+        message: errorMsg
+      }));
+      logger.error('Settings', '刪除舊日誌失敗', error);
+    } finally {
+      setIsDeletingLogs(false);
     }
   };
 
@@ -159,6 +198,37 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
                 />
                 <div className="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
               </label>
+            </div>
+          </div>
+
+          {/* API設定引導卡片 */}
+          <div className="border-t border-warm-gold/20 pt-6 mt-6">
+            <div
+              onClick={() => appDispatch(openModal('aiSettings'))}
+              className="bg-gradient-to-br from-warm-gold/10 to-clay-orange/10 border-2 border-warm-gold/30 rounded-2xl p-6 cursor-pointer hover:border-warm-gold/50 hover:shadow-lg hover:shadow-warm-gold/20 transition-all duration-300 group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-warm-gold/20 rounded-xl flex items-center justify-center group-hover:bg-warm-gold/30 transition-colors">
+                  <Icon name="CpuChip" variant="solid" className="w-6 h-6 text-warm-gold" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="font-serif-tc text-lg font-bold text-warm-gold">需要設定 API 金鑰？</h4>
+                    <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-clay-orange/20 text-clay-orange border border-clay-orange/40 animate-pulse">
+                      <Icon name="Sparkles" variant="solid" className="w-3 h-3" />
+                      重要
+                    </div>
+                  </div>
+                  <p className="font-sans-tc text-sm text-text-secondary mb-3 leading-relaxed">
+                    前往<span className="font-bold text-warm-gold">「預言書寫」</span>頁面，即可快速設定 AI 服務的 API 金鑰。
+                    支援 OpenAI、Gemini、Claude、OpenRouter 等多個提供者。
+                  </p>
+                  <div className="flex items-center gap-2 text-warm-gold font-medium text-sm group-hover:gap-3 transition-all">
+                    <span>立即前往設定</span>
+                    <Icon name="ArrowRight" variant="outline" className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -465,6 +535,24 @@ const GeneralSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch 
               )}
             </button>
           </div>
+
+          <button
+            onClick={handleDeleteOldLogs}
+            disabled={isDeletingLogs}
+            className="w-full bg-red-500/10 hover:bg-red-500/20 border-2 border-red-500/30 hover:border-red-500/50 text-red-400 hover:text-red-300 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isDeletingLogs ? (
+              <>
+                <Icon name="Clock" variant="outline" className="w-4 h-4 animate-spin" />
+                刪除中...
+              </>
+            ) : (
+              <>
+                <Icon name="Trash" variant="outline" className="w-4 h-4" />
+                刪除舊日誌（保留最近 2 天）
+              </>
+            )}
+          </button>
 
           <div className="bg-bg-dark/50 border border-warm-gold/20 rounded-lg p-3">
             <p className="text-sm text-text-primary mb-2 flex items-center gap-2">

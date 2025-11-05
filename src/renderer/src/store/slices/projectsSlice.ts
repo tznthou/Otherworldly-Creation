@@ -4,9 +4,9 @@ import { api } from '../../api';
 export interface Project {
   id: string;
   name: string;
-  type: 'isekai' | 'school' | 'scifi' | 'fantasy';
+  type: 'blank' | 'isekai' | 'school' | 'scifi' | 'fantasy';
   description: string;
-  novelLength: 'short' | 'medium' | 'long';
+  novelLength?: 'short' | 'medium' | 'long'; // 空白專案可能不選擇篇幅
   createdAt: string; // 改為字符串以符合 Redux 序列化要求
   updatedAt: string; // 改為字符串以符合 Redux 序列化要求
   cover_image?: string; // 電子書封面圖片路徑
@@ -42,7 +42,7 @@ export const fetchProjects = createAsyncThunk(
     // 確保型別匹配
     return projects.map((project) => ({
       ...project,
-      type: project.type as 'isekai' | 'school' | 'scifi' | 'fantasy',
+      type: project.type as 'blank' | 'isekai' | 'school' | 'scifi' | 'fantasy',
       createdAt: typeof project.createdAt === 'string' ? project.createdAt : project.createdAt,
       updatedAt: typeof project.updatedAt === 'string' ? project.updatedAt : project.updatedAt,
     }));

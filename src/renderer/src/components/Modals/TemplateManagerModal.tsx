@@ -34,19 +34,19 @@ const TemplateManagerModal: React.FC = () => {
   const getTemplateIcon = (type: string): { name: string; variant: 'outline' | 'solid' } => {
     const icons = {
       isekai: { name: 'Sparkles', variant: 'solid' as const },
-      school: { name: 'AcademicCap', variant: 'outline' as const },
-      scifi: { name: 'RocketLaunch', variant: 'outline' as const },
-      fantasy: { name: 'Shield', variant: 'outline' as const }
+      school: { name: 'Heart', variant: 'solid' as const },
+      scifi: { name: 'RocketLaunch', variant: 'solid' as const },
+      fantasy: { name: 'Bolt', variant: 'solid' as const }
     };
     return icons[type as keyof typeof icons] || { name: 'BookOpen', variant: 'outline' as const };
   };
 
   const getTemplateColor = (type: string) => {
     const colors = {
-      isekai: 'from-gold-500 to-yellow-600',
-      school: 'from-pink-500 to-rose-600',
-      scifi: 'from-cyan-500 to-blue-600',
-      fantasy: 'from-purple-500 to-indigo-600'
+      isekai: 'from-purple-500 to-pink-500',
+      school: 'from-pink-500 to-rose-500',
+      scifi: 'from-blue-500 to-cyan-500',
+      fantasy: 'from-purple-500 to-violet-500'
     };
     return colors[type as keyof typeof colors] || 'from-gray-500 to-gray-600';
   };

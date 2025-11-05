@@ -9,7 +9,7 @@ use commands::system::{
     save_export_file, get_image_path, get_environment_info, test_store_plugin,
     get_secure_key, set_secure_key, delete_secure_key,
     // 日誌管理 commands (v1.3.3)
-    get_log_directory, open_log_directory, get_recent_logs
+    get_log_directory, open_log_directory, get_recent_logs, delete_old_logs
 };
 use commands::project::{get_all_projects, get_project_by_id, create_project, update_project, delete_project};
 use commands::chapter::{get_chapters_by_project_id, get_chapter_by_id, create_chapter, update_chapter, delete_chapter};
@@ -147,6 +147,7 @@ pub fn run() {
       get_log_directory,
       open_log_directory,
       get_recent_logs,
+      delete_old_logs,
       // Project commands
       get_all_projects,
       get_project_by_id,

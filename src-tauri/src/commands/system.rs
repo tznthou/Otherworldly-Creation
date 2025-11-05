@@ -781,3 +781,84 @@ pub async fn get_recent_logs(app: AppHandle, lines: Option<usize>) -> Result<Str
 
     Ok(result)
 }
+
+/// 刪除舊日誌（保留最近兩天）
+#[tauri::command]
+pub async fn delete_old_logs(app: AppHandle) -> Result<String, String> {
+    let log_dir = get_log_directory(app)?;
+    let log_path = std::path::Path::new(&log_dir);
+
+    log::info!("[delete_old_logs] 開始清理舊日誌，日誌目錄: {}", log_dir);
+
+    // 確保日誌目錄存在
+    if !log_path.exists() {
+        let error_msg = format!("日誌目錄不存在: {}", log_dir);
+        log::warn!("[delete_old_logs] {}", error_msg);
+        return Err(error_msg);
+    }
+
+    // 計算兩天前的時間戳
+    let two_days_ago = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| format!("時間計算錯誤: {}", e))?
+        .as_secs() - (2 * 24 * 60 * 60); // 減去兩天的秒數
+
+    // 收集要刪除的檔案
+    let mut deleted_count = 0;
+    let mut total_size = 0u64;
+    let mut kept_count = 0;
+
+    let entries = std::fs::read_dir(&log_path)
+        .map_err(|e| format!("無法讀取日誌目錄: {}", e))?;
+
+    for entry in entries.filter_map(|e| e.ok()) {
+        let path = entry.path();
+
+        // 只處理 .log 檔案
+        if let Some(ext) = path.extension() {
+            if ext != "log" {
+                continue;
+            }
+        } else {
+            continue;
+        }
+
+        // 獲取檔案的修改時間
+        if let Ok(metadata) = entry.metadata() {
+            if let Ok(modified) = metadata.modified() {
+                let modified_secs = modified
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+
+                // 如果檔案超過兩天，刪除它
+                if modified_secs < two_days_ago {
+                    let file_size = metadata.len();
+                    match std::fs::remove_file(&path) {
+                        Ok(_) => {
+                            deleted_count += 1;
+                            total_size += file_size;
+                            log::info!("[delete_old_logs] 已刪除: {:?} (大小: {} bytes)", path, file_size);
+                        }
+                        Err(e) => {
+                            log::warn!("[delete_old_logs] 刪除失敗: {:?}, 錯誤: {}", path, e);
+                        }
+                    }
+                } else {
+                    kept_count += 1;
+                }
+            }
+        }
+    }
+
+    // 轉換檔案大小為可讀格式
+    let size_mb = total_size as f64 / (1024.0 * 1024.0);
+    let result_msg = format!(
+        "清理完成！刪除了 {} 個舊日誌檔案，釋放 {:.2} MB 空間。保留了 {} 個最近的日誌檔案。",
+        deleted_count, size_mb, kept_count
+    );
+
+    log::info!("[delete_old_logs] ✅ {}", result_msg);
+
+    Ok(result_msg)
+}

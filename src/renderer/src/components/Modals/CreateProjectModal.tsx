@@ -10,7 +10,7 @@ import { createLogger } from '../../utils/logger';
 const log = createLogger('CreateProjectModal');
 
 interface ProjectType {
-  id: 'isekai' | 'school' | 'scifi' | 'fantasy';
+  id: 'blank' | 'isekai' | 'school' | 'scifi' | 'fantasy';
   name: string;
   iconName: string;
   iconVariant: 'outline' | 'solid';
@@ -19,6 +19,14 @@ interface ProjectType {
 }
 
 const projectTypes: ProjectType[] = [
+  {
+    id: 'blank',
+    name: '空白專案',
+    iconName: 'DocumentText',
+    iconVariant: 'outline',
+    description: '完全自由創作，從零開始構建你的架空世界',
+    color: 'from-gray-500 to-gray-600',
+  },
   {
     id: 'isekai',
     name: '異世界',
@@ -30,26 +38,26 @@ const projectTypes: ProjectType[] = [
   {
     id: 'school',
     name: '校園',
-    iconName: 'AcademicCap',
-    iconVariant: 'outline',
+    iconName: 'Heart',
+    iconVariant: 'solid',
     description: '以學校為背景的青春戀愛或成長故事',
-    color: 'from-blue-500 to-cyan-500',
+    color: 'from-pink-500 to-rose-500',
   },
   {
     id: 'scifi',
     name: '科幻',
     iconName: 'RocketLaunch',
-    iconVariant: 'outline',
+    iconVariant: 'solid',
     description: '探索未來科技和太空冒險的故事',
-    color: 'from-green-500 to-teal-500',
+    color: 'from-blue-500 to-cyan-500',
   },
   {
     id: 'fantasy',
     name: '奇幻',
-    iconName: 'Shield',
-    iconVariant: 'outline',
+    iconName: 'Bolt',
+    iconVariant: 'solid',
     description: '充滿魔法和神秘生物的奇幻世界冒險',
-    color: 'from-orange-500 to-red-500',
+    color: 'from-purple-500 to-violet-500',
   },
 ];
 
@@ -166,7 +174,8 @@ const CreateProjectModal: React.FC = () => {
       newErrors.type = '請選擇專案類型';
     }
 
-    if (!selectedNovelLength) {
+    // 空白專案不強制選擇篇幅
+    if (selectedType !== 'blank' && !selectedNovelLength) {
       newErrors.novelLength = '請選擇小說篇幅';
     }
 
@@ -241,32 +250,36 @@ const CreateProjectModal: React.FC = () => {
         },
       })).unwrap();
 
-      // 2. 應用對應的模板
-      try {
-        // 載入模板
-        await dispatch(fetchAllTemplates());
-        
-        // 找到對應類型的預設模板
-        const templateId = `${selectedType}-default`;
-        const { templateService } = await import('../../services/templateService');
-        
-        // 應用模板到新創建的專案
-        const applicationResult = await templateService.applyTemplateToProject(
-          templateId,
-          projectResult.id,
-          {
-            createCharacters: true,
-            updateProjectSettings: true
-          }
-        );
+      // 2. 應用對應的模板（空白專案跳過）
+      if (selectedType !== 'blank') {
+        try {
+          // 載入模板
+          await dispatch(fetchAllTemplates());
 
-        if (!applicationResult.success) {
-          log.warn('模板應用失敗:', applicationResult.message);
-          // 不阻止專案創建，只是記錄警告
+          // 找到對應類型的預設模板
+          const templateId = `${selectedType}-default`;
+          const { templateService } = await import('../../services/templateService');
+
+          // 應用模板到新創建的專案
+          const applicationResult = await templateService.applyTemplateToProject(
+            templateId,
+            projectResult.id,
+            {
+              createCharacters: true,
+              updateProjectSettings: true
+            }
+          );
+
+          if (!applicationResult.success) {
+            log.warn('模板應用失敗:', applicationResult.message);
+            // 不阻止專案創建，只是記錄警告
+          }
+        } catch (templateError) {
+          log.error('應用模板失敗:', templateError);
+          // 不阻止專案創建，模板應用失敗不影響專案創建
         }
-      } catch (templateError) {
-        log.error('應用模板失敗:', templateError);
-        // 不阻止專案創建，模板應用失敗不影響專案創建
+      } else {
+        log.debug('空白專案，跳過模板應用');
       }
 
       handleClose();
@@ -377,7 +390,9 @@ const CreateProjectModal: React.FC = () => {
               </div>
 
               <div className="mb-6">
-                <label className="block text-gray-300 mb-2">選擇小說篇幅</label>
+                <label className="block text-gray-300 mb-2">
+                  選擇小說篇幅{selectedType === 'blank' && <span className="text-sm text-gray-500 ml-2">(選填)</span>}
+                </label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {novelLengths.map((length) => (
                     <div
@@ -428,9 +443,41 @@ const CreateProjectModal: React.FC = () => {
                 ></textarea>
               </div>
 
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-warm-gold mb-4">模板設定</h3>
-                <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
+              {/* 空白專案的簡化提示 */}
+              {selectedType === 'blank' && (
+                <div className="bg-warm-gold/10 border border-warm-gold/20 rounded-lg p-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <Icon name="LightBulb" variant="solid" className="w-6 h-6 text-warm-gold flex-shrink-0 mt-1" />
+                    <div>
+                      <h3 className="text-lg font-medium text-warm-gold mb-2">完全自由的創作空間</h3>
+                      <p className="text-sm text-text-secondary leading-relaxed">
+                        你選擇了空白專案,這意味著你可以完全自由地構建你的故事世界。
+                        沒有預設的模板限制,一切都由你來定義！
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm text-text-secondary">
+                    <div className="flex items-center gap-2">
+                      <Icon name="Check" variant="outline" className="w-4 h-4 text-green-500" />
+                      <span>自由設定世界觀和設定</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Icon name="Check" variant="outline" className="w-4 h-4 text-green-500" />
+                      <span>不受類型限制的創作空間</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Icon name="Check" variant="outline" className="w-4 h-4 text-green-500" />
+                      <span>隨時可以從模板管理器導入模板</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 模板專案的設定 */}
+              {selectedType !== 'blank' && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-warm-gold mb-4">模板設定</h3>
+                  <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-4">
                   {selectedType === 'isekai' && (
                     <div className="space-y-4">
                       <div>
@@ -549,8 +596,9 @@ const CreateProjectModal: React.FC = () => {
                       </div>
                     </div>
                   )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>

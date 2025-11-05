@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v2.0.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-v2.0.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green" alt="Platform">
   <img src="https://img.shields.io/badge/AI_Providers-5-orange" alt="AI Providers">
   <img src="https://img.shields.io/badge/RAM_Usage-80~150MB-success" alt="RAM Usage">
@@ -22,6 +22,72 @@
 <p align="center">
   <strong>English</strong> | <a href="README_zh_TW.md">繁體中文</a>
 </p>
+
+---
+
+## 🎉 What's New in v2.0.1 - UX Refinements & Creative Freedom (2025-01-05)
+
+### 🎯 API Configuration Quick Access
+**Problem Solved**: The most frequent user question since launch - "Where do I configure API keys?"
+
+**Solution**: Added prominent guidance card in Settings → General tab
+- **One-Click Access**: Directly opens AI Settings modal from Settings page
+- **Visual Design**: Eye-catching warm gold gradient with pulsing "重要" badge
+- **Clear Instructions**: Lists all supported providers (OpenAI, Gemini, Claude, OpenRouter)
+- **Consistent Iconography**: Matches "預言書寫" (AI Writing) card design with CpuChip icon
+
+**Impact**: Eliminates user confusion, provides immediate path to essential configuration
+
+### 🎨 Blank Project Template - Complete Creative Freedom
+**User Feedback**: Not everyone wants to start with predefined templates
+
+**New Feature**: "空白專案" (Blank Project) option added as first choice in project creation
+- **No Template Constraints**: Skip automatic template application entirely
+- **Optional Settings**: Novel length selection is optional, not required
+- **Clear Guidance**: Friendly UI explains the freedom this option provides
+- **Flexibility**: Users can still import templates later via Template Manager
+
+**Benefits**:
+- ✅ Build completely custom worlds without genre restrictions
+- ✅ Define your own world-building and settings
+- ✅ Perfect for experimental or unique story concepts
+- ✅ Maintains all AI features without template dependency
+
+**Technical Implementation**:
+- Updated Project type system: Added `'blank'` to type unions
+- Made `novelLength` optional in Project interface
+- Conditional validation logic skips requirements for blank projects
+- Template service bypassed for blank project creation
+
+### 🎨 Project Type Icon Standardization
+**Visual Consistency**: Unified project template icons to match product website design
+
+**Icon Updates**:
+- **School Romance** (校園): Changed from AcademicCap 🎓 to Heart ❤️ (solid)
+- **Sci-Fi Adventure** (科幻): Kept RocketLaunch 🚀 but switched to solid variant
+- **Fantasy Adventure** (奇幻): Changed from Shield 🛡️ to Bolt ⚡ (solid)
+
+**Impact**: Consistent visual language across Create Project Modal, Template Manager, and Template Application Modal
+
+### 🧹 Log Management - Delete Old Logs
+**File Size Control**: New log cleanup feature prevents unlimited log file accumulation
+
+**New Features**:
+- **Delete Old Logs Button**: One-click removal of logs older than 2 days in Settings → General tab
+- **Smart Retention**: Automatically preserves the most recent 2 days of logs for debugging
+- **Statistics Reporting**: Shows number of files deleted and disk space freed (MB)
+- **Non-Blocking UI**: Uses application notification system instead of native alerts
+
+**Benefits**:
+- ✅ Prevents log files from consuming excessive disk space
+- ✅ Maintains recent logs for troubleshooting
+- ✅ Safe deletion with user confirmation
+- ✅ Detailed success/failure feedback
+
+**Technical Implementation**:
+- Rust command: `delete_old_logs` with timestamp-based filtering
+- TypeScript API: `logsApi.deleteOldLogs()` with notification integration
+- UI: Red delete button with loading states and error handling
 
 ---
 

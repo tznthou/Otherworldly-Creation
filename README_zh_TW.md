@@ -1,11 +1,77 @@
-# 創世紀元：Genesis Chronicle v2.0.0
+# 創世紀元：Genesis Chronicle v2.0.1
 **AI驅動的中文輕小說創作神器** - 整合5大主流AI供應商的創作平台
 
 <p align="center">
   <a href="README.md">English</a> | <strong>繁體中文</strong>
 </p>
 
-![Version](https://img.shields.io/badge/version-v2.0.0-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-106k-purple)
+![Version](https://img.shields.io/badge/version-v2.0.1-blue) ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green) ![AI Providers](https://img.shields.io/badge/AI_Providers-5-orange) ![RAM Usage](https://img.shields.io/badge/記憶體使用-80~150MB-success) ![App Size](https://img.shields.io/badge/程式大小-55MB-success) ![Code Lines](https://img.shields.io/badge/程式碼行數-106k-purple)
+
+---
+
+## 🎉 v2.0.1 - 使用體驗精進與創作自由度提升 (2025-01-05)
+
+### 🎯 API 設定快速導航
+**解決的痛點**: 自發布以來最常被問的問題 - 「在哪裡設定 API 金鑰？」
+
+**解決方案**: 在設定頁面的一般設定分頁新增醒目的引導卡片
+- **一鍵直達**: 從設定頁面直接開啟 AI 設定模態框
+- **視覺設計**: 搶眼的暖金色漸變背景搭配脈衝式「重要」標籤
+- **清晰說明**: 列出所有支援的供應商（OpenAI、Gemini、Claude、OpenRouter）
+- **一致性圖示**: 與「預言書寫」卡片設計一致，使用 CpuChip 圖示
+
+**影響**: 消除用戶困惑，提供立即可達的核心設定路徑
+
+### 🎨 空白專案模板 - 完全的創作自由
+**用戶回饋**: 並非每個人都想從預設模板開始創作
+
+**新功能**: 在專案建立選項中新增「空白專案」選項（置於首位）
+- **無模板限制**: 完全跳過自動套用模板的流程
+- **選填設定**: 小說篇幅選擇變為選填，非必填項目
+- **清楚引導**: 友善的 UI 說明此選項提供的自由度
+- **保留彈性**: 使用者仍可稍後透過模板管理器匯入模板
+
+**優勢**:
+- ✅ 打造完全客製化的世界，不受類型限制
+- ✅ 自行定義世界觀和設定
+- ✅ 適合實驗性或獨特的故事概念
+- ✅ 保留所有 AI 功能，無需依賴模板
+
+**技術實作**:
+- 更新專案類型系統：在類型聯集中加入 `'blank'`
+- 將專案介面中的 `novelLength` 設為選填
+- 條件式驗證邏輯，空白專案跳過必填檢查
+- 空白專案建立時略過模板服務
+
+### 🎨 專案類型圖示統一化
+**視覺一致性**: 統一專案模板圖示，與產品官網設計保持一致
+
+**圖示更新**:
+- **校園戀愛** (校園): 從學士帽 🎓 (AcademicCap) 改為愛心 ❤️ (Heart，實心版)
+- **科幻冒險** (科幻): 保留火箭 🚀 (RocketLaunch) 但改用實心版
+- **奇幻冒險** (奇幻): 從盾牌 🛡️ (Shield) 改為閃電 ⚡ (Bolt，實心版)
+
+**影響範圍**: 新建專案模態框、模板管理器、模板套用模態框的視覺語言統一
+
+### 🧹 日誌管理 - 刪除舊日誌功能
+**檔案大小控制**: 新增日誌清理功能，防止日誌檔案無限制累積
+
+**新功能**:
+- **刪除舊日誌按鈕**: 在設定 → 一般設定分頁中一鍵清除 2 天前的日誌
+- **智能保留**: 自動保留最近 2 天的日誌以供除錯使用
+- **統計報告**: 顯示刪除的檔案數量與釋放的磁碟空間（MB）
+- **非阻塞式 UI**: 使用應用程式通知系統，避免原生 alert 對話框卡住問題
+
+**優勢**:
+- ✅ 防止日誌檔案佔用過多磁碟空間
+- ✅ 保留近期日誌供問題排查
+- ✅ 安全刪除機制，需用戶確認
+- ✅ 詳細的成功/失敗回饋
+
+**技術實作**:
+- Rust 命令: `delete_old_logs` 使用時間戳篩選
+- TypeScript API: `logsApi.deleteOldLogs()` 整合通知系統
+- UI: 紅色刪除按鈕，含載入狀態與錯誤處理
 
 ---
 

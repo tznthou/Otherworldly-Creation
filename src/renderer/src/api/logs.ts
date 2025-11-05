@@ -43,5 +43,13 @@ export const logsApi = {
       log.error('複製日誌失敗:', error);
       return false;
     }
+  },
+
+  /**
+   * 刪除舊日誌（保留最近兩天）
+   * @returns 刪除結果訊息
+   */
+  async deleteOldLogs(): Promise<string> {
+    return invoke<string>('delete_old_logs');
   }
 };
