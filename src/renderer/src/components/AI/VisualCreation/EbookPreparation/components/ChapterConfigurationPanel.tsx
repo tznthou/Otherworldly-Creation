@@ -1,10 +1,17 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
+import { useAppDispatch } from '../../../../../hooks/redux';
 import { IllustrationHistoryItem } from '../../../../../types/illustration';
 import { EbookImagePosition } from '../../../../../types/ebookPreparation';
 import { SafeImage } from '../../../../UI/SafeImage';
 import { createLogger } from '../../../../../utils/logger';
+import { useEbookPreparationPersistence } from '../../../../../hooks/useEbookPreparationPersistence';
+import {
+  addImageToCategory,
+  removeImageFromCategory,
+  addChapterConfiguration
+} from '../../../../../store/slices/ebookPreparationSlice';
 
 const log = createLogger('ChapterConfigurationPanel');
 
@@ -13,26 +20,45 @@ interface ChapterConfigurationPanelProps {
   projectId: string;
 }
 
-interface ChapterImageConfig {
-  chapterId: string;
-  images: {
-    imageId: string;
-    position: EbookImagePosition;
-    order: number;
-    customSize?: { width: number; height: number };
-    caption?: string;
-    altText?: string;
-  }[];
-}
-
 const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
   selectedImages,
   projectId
 }) => {
+  const dispatch = useAppDispatch();
   const chapters = useSelector((state: RootState) => state.chapters.chapters);
-  const [chapterConfigs, setChapterConfigs] = useState<Record<string, ChapterImageConfig>>({});
+  const currentProject = useSelector((state: RootState) => state.projects.currentProject);
+  const ebookConfig = useSelector((state: RootState) => state.ebookPreparation.currentConfig);
+
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
+
+  // 使用持久化 hook
+  const { initializeForProject, saveToStorage, isInitialized } = useEbookPreparationPersistence(projectId, true);
+
+  // 初始化配置（如果需要）
+  useEffect(() => {
+    if (!isInitialized && currentProject) {
+      initializeForProject(currentProject.title, currentProject.author || 'Unknown');
+    }
+  }, [isInitialized, currentProject, initializeForProject]);
+
+  // 確保所有章節都有配置條目
+  useEffect(() => {
+    if (!ebookConfig) return;
+
+    chapters
+      .filter(ch => ch.projectId === projectId)
+      .forEach(chapter => {
+        const exists = ebookConfig.chapterConfigurations.some(c => c.chapterId === chapter.id);
+        if (!exists) {
+          dispatch(addChapterConfiguration({
+            chapterId: chapter.id,
+            chapterTitle: chapter.title,
+            chapterNumber: chapter.order
+          }));
+        }
+      });
+  }, [chapters, projectId, ebookConfig, dispatch]);
 
   const projectChapters = useMemo(() => {
     return chapters.filter(ch => ch.projectId === projectId).sort((a, b) => a.order - b.order);
@@ -46,22 +72,25 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
     { value: EbookImagePosition.SceneIllustration, label: '场景插图', icon: '🏞️', color: 'bg-teal-500' }
   ];
 
+  // 從 Redux config 計算已分配的圖片 IDs
   const assignedImageIds = useMemo(() => {
+    if (!ebookConfig) return new Set<string>();
     const ids = new Set<string>();
-    Object.values(chapterConfigs).forEach(config => {
+    ebookConfig.chapterConfigurations.forEach(config => {
       config.images.forEach(img => ids.add(img.imageId));
     });
     return ids;
-  }, [chapterConfigs]);
+  }, [ebookConfig]);
 
   const unassignedImages = useMemo(() => {
     return selectedImages.filter(img => !assignedImageIds.has(img.id));
   }, [selectedImages, assignedImageIds]);
 
+  // 獲取選中章節的配置
   const selectedChapterConfig = useMemo(() => {
-    if (!selectedChapterId) return null;
-    return chapterConfigs[selectedChapterId] || null;
-  }, [selectedChapterId, chapterConfigs]);
+    if (!selectedChapterId || !ebookConfig) return null;
+    return ebookConfig.chapterConfigurations.find(c => c.chapterId === selectedChapterId) || null;
+  }, [selectedChapterId, ebookConfig]);
 
   const handleDragStart = useCallback((imageId: string) => {
     setDraggedImageId(imageId);
@@ -73,61 +102,52 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
   }, []);
 
   const handleDropToChapter = useCallback((chapterId: string, position: EbookImagePosition) => {
-    if (!draggedImageId) return;
+    if (!draggedImageId || !ebookConfig) return;
 
     log.debug('放置图片到章节:', { chapterId, position, imageId: draggedImageId });
 
-    setChapterConfigs(prev => {
-      const config = prev[chapterId] || { chapterId, images: [] };
-      const existingIndex = config.images.findIndex(img => img.imageId === draggedImageId);
+    // 獲取該章節該位置已有的圖片數量，用於設定 order
+    const chapterConfig = ebookConfig.chapterConfigurations.find(c => c.chapterId === chapterId);
+    const existingImages = chapterConfig?.images.filter(img => img.position === position) || [];
 
-      if (existingIndex >= 0) {
-        config.images[existingIndex].position = position;
-      } else {
-        config.images.push({
-          imageId: draggedImageId,
-          position,
-          order: config.images.length
-        });
-      }
-
-      return { ...prev, [chapterId]: config };
-    });
+    // 使用 Redux action
+    dispatch(addImageToCategory({
+      imageId: draggedImageId,
+      position,
+      chapterId,
+      order: existingImages.length
+    }));
 
     setDraggedImageId(null);
-  }, [draggedImageId]);
+  }, [draggedImageId, ebookConfig, dispatch]);
 
   const handleRemoveImageFromChapter = useCallback((chapterId: string, imageId: string) => {
-    setChapterConfigs(prev => {
-      const config = prev[chapterId];
-      if (!config) return prev;
-
-      config.images = config.images.filter(img => img.imageId !== imageId);
-
-      if (config.images.length === 0) {
-        const newConfigs = { ...prev };
-        delete newConfigs[chapterId];
-        return newConfigs;
-      }
-
-      return { ...prev, [chapterId]: config };
-    });
-  }, []);
+    dispatch(removeImageFromCategory({
+      imageId,
+      chapterId
+    }));
+  }, [dispatch]);
 
   const handleUpdateImageOrder = useCallback((chapterId: string, imageId: string, newOrder: number) => {
-    setChapterConfigs(prev => {
-      const config = prev[chapterId];
-      if (!config) return prev;
+    if (!ebookConfig) return;
 
-      const imageIndex = config.images.findIndex(img => img.imageId === imageId);
-      if (imageIndex === -1) return prev;
+    const chapterConfig = ebookConfig.chapterConfigurations.find(c => c.chapterId === chapterId);
+    if (!chapterConfig) return;
 
-      config.images[imageIndex].order = newOrder;
-      config.images.sort((a, b) => a.order - b.order);
+    const imageConfig = chapterConfig.images.find(img => img.imageId === imageId);
+    if (!imageConfig) return;
 
-      return { ...prev, [chapterId]: config };
-    });
-  }, []);
+    // 移除舊的圖片配置
+    dispatch(removeImageFromCategory({ imageId, chapterId }));
+
+    // 重新添加with新的order
+    dispatch(addImageToCategory({
+      imageId,
+      position: imageConfig.position,
+      chapterId,
+      order: newOrder
+    }));
+  }, [ebookConfig, dispatch]);
 
   const getImageById = useCallback((imageId: string) => {
     return selectedImages.find(img => img.id === imageId);
@@ -137,10 +157,16 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
     const totalImages = selectedImages.length;
     const assignedCount = assignedImageIds.size;
     const unassignedCount = totalImages - assignedCount;
-    const configuredChapters = Object.keys(chapterConfigs).length;
+    const configuredChapters = ebookConfig?.chapterConfigurations.filter(c => c.images.length > 0).length || 0;
 
     return { totalImages, assignedCount, unassignedCount, configuredChapters };
-  }, [selectedImages.length, assignedImageIds, chapterConfigs]);
+  }, [selectedImages.length, assignedImageIds, ebookConfig]);
+
+  // 手動保存配置
+  const handleSaveConfig = useCallback(() => {
+    saveToStorage();
+    log.info('✅ 配置已手動保存');
+  }, [saveToStorage]);
 
   if (projectChapters.length === 0) {
     return (
@@ -242,7 +268,7 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
         <div className="lg:col-span-2">
           <div className="space-y-4">
             {projectChapters.map((chapter, index) => {
-              const config = chapterConfigs[chapter.id];
+              const config = ebookConfig?.chapterConfigurations.find(c => c.chapterId === chapter.id);
               const imageCount = config?.images.length || 0;
               const isSelected = selectedChapterId === chapter.id;
 
@@ -372,13 +398,14 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
           <div className="flex items-center space-x-3">
             <button
               onClick={() => {
-                log.debug('📋 [章节配置] 当前配置:', chapterConfigs);
+                log.debug('📋 [章节配置] 当前配置:', ebookConfig);
               }}
               className="px-4 py-2 text-sm font-medium text-text-secondary bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80 rounded-lg transition-colors"
             >
               查看配置
             </button>
             <button
+              onClick={handleSaveConfig}
               disabled={stats.assignedCount === 0}
               className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
