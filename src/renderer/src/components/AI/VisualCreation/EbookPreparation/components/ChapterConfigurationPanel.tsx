@@ -372,8 +372,7 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
           <div className="flex items-center space-x-3">
             <button
               onClick={() => {
-                log.debug('导出章节配置:', chapterConfigs);
-                console.log('Chapter Configurations:', chapterConfigs);
+                log.debug('📋 [章节配置] 当前配置:', chapterConfigs);
               }}
               className="px-4 py-2 text-sm font-medium text-text-secondary bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80 rounded-lg transition-colors"
             >

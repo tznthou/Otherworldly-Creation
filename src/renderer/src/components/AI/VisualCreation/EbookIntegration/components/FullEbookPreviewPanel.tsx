@@ -15,11 +15,59 @@ interface FullEbookPreviewPanelProps {
 
 type PageType = 'cover' | 'toc' | 'chapter' | 'info';
 
+interface CoverPageContent {
+  bookTitle: string;
+  author: string;
+  coverImage?: {
+    imageId: string;
+    filename: string;
+    description: string;
+  };
+}
+
+interface InfoPageContent {
+  stats?: {
+    totalSizeMB: number;
+    compressionRatio: number;
+  };
+  totalImages: number;
+  totalChapters: number;
+}
+
+interface TocPageContent {
+  chapters: Array<{
+    number: number;
+    title: string;
+    id: string;
+  }>;
+}
+
+interface ChapterPageContent {
+  chapter: {
+    id: string;
+    title: string;
+    wordCount?: number;
+  };
+  chapterNumber: number;
+  images: Array<{
+    placement: string;
+    images: Array<{
+      imageId: string;
+      filename: string;
+      description: string;
+      order: number;
+    }>;
+  }>;
+  totalImages: number;
+}
+
+type PageContent = CoverPageContent | InfoPageContent | TocPageContent | ChapterPageContent;
+
 interface PreviewPage {
   id: string;
   type: PageType;
   title: string;
-  content: any;
+  content: PageContent;
   pageNumber: number;
 }
 
@@ -161,7 +209,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
   const goToNextPage = () => goToPage(currentPageIndex + 1);
 
   // 渲染封面页
-  const renderCoverPage = (content: any) => (
+  const renderCoverPage = (content: CoverPageContent) => (
     <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-warm-gold/20 to-clay-orange/20 p-12">
       {content.coverImage ? (
         <div className="w-3/4 max-w-md mb-8 shadow-2xl rounded-lg overflow-hidden">
@@ -187,7 +235,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
   );
 
   // 渲染信息页
-  const renderInfoPage = (content: any) => (
+  const renderInfoPage = (content: InfoPageContent) => (
     <div className="h-full p-12 overflow-y-auto">
       <h2 className="text-3xl font-bold text-text-secondary/20 mb-8">图书信息</h2>
 
@@ -270,12 +318,12 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
   );
 
   // 渲染目录页
-  const renderTocPage = (content: any) => (
+  const renderTocPage = (content: TocPageContent) => (
     <div className="h-full p-12 overflow-y-auto">
       <h2 className="text-3xl font-bold text-text-secondary/20 mb-8 text-center">目录</h2>
 
       <div className="max-w-2xl mx-auto space-y-3">
-        {content.chapters.map((ch: any) => (
+        {content.chapters.map((ch) => (
           <div
             key={ch.id}
             className="flex items-center justify-between p-4 bg-bg-light/50 backdrop-blur-sm rounded-lg hover:bg-bg-dark/80 transition-colors cursor-pointer"
@@ -296,7 +344,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
   );
 
   // 渲染章节页
-  const renderChapterPage = (content: any) => (
+  const renderChapterPage = (content: ChapterPageContent) => (
     <div className="h-full p-12 overflow-y-auto">
       <h2 className="text-2xl font-bold text-text-secondary/20 mb-2">
         第 {content.chapterNumber} 章
@@ -312,7 +360,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
         </div>
       ) : (
         <div className="space-y-8">
-          {content.images.map((placement: any, idx: number) => (
+          {content.images.map((placement, idx) => (
             <div key={idx} className="space-y-4">
               <h4 className="text-lg font-semibold text-warm-gold flex items-center space-x-2">
                 <span>🖼️</span>
@@ -321,7 +369,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
               </h4>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {placement.images.map((img: any, imgIdx: number) => (
+                {placement.images.map((img, imgIdx) => (
                   <div key={imgIdx} className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
                     <div className="aspect-video bg-bg-dark/80 rounded mb-2 flex items-center justify-center">
                       <span className="text-4xl">🎨</span>
