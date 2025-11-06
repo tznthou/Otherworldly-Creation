@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { 
-  EbookExportConfig, 
+import {
+  EbookExportConfig,
   EbookImageIntegration,
   EbookImagePlacement,
   ImageCategory
 } from '../../../../types/imageMetadata';
 import { IllustrationHistoryItem } from '../../../../types/illustration';
+import FullEbookPreviewPanel from './components/FullEbookPreviewPanel';
 import { createLogger } from '../../../../utils/logger';
 
 // 創建模組專用 logger
@@ -543,17 +544,11 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
 
         {/* 預覽頁籤 */}
         {selectedTab === 'preview' && (
-          <div className="space-y-6">
-            <div className="text-center py-8 text-text-secondary/80">
-              <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              <h4 className="text-lg font-medium mb-2">電子書預覽</h4>
-              <p>此功能將在後續版本中實現</p>
-              <p className="text-sm mt-1">將提供電子書布局的即時預覽</p>
-            </div>
-          </div>
+          <FullEbookPreviewPanel
+            projectId={projectId}
+            exportConfig={exportConfig}
+            integrationData={integrationData}
+          />
         )}
       </div>
 
