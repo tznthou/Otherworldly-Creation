@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../store/store';
 import { IllustrationHistoryItem } from '../../../../types/illustration';
 import BatchRenamePanel from './components/BatchRenamePanel';
 import MetadataAnalysisPanel from './components/MetadataAnalysisPanel';
 import DragDropClassificationPanel, { ImageCategory } from './components/DragDropClassificationPanel';
+import ChapterConfigurationPanel from './components/ChapterConfigurationPanel';
+import SimplePreviewPanel from './components/SimplePreviewPanel';
 import { createLogger } from '../../../../utils/logger';
 
 // 創建模組專用 logger
@@ -29,6 +33,9 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
   const [organizeSubTab, setOrganizeSubTab] = useState<'rename' | 'metadata' | 'classify'>('rename');
   const [isProcessing, _setIsProcessing] = useState(false);
   const [_imageClassifications, setImageClassifications] = useState<Record<string, ImageCategory>>({});
+
+  // 從 Redux 取得目前專案
+  const currentProject = useSelector((state: RootState) => state.projects.currentProject);
 
   // 過濾選中的圖片
   const selectedImages = useMemo(() => {
@@ -211,25 +218,41 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
         return renderOrganizeContent();
 
       case 'configure':
-        return (
-          <div className="space-y-6">
-            <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6 text-center">
-              <div className="text-6xl mb-4">🚧</div>
-              <h3 className="text-xl font-semibold text-text-secondary/40 mb-2">章節配置功能</h3>
-              <p className="text-text-secondary/80">正在開發中，敬請期待...</p>
+        if (!currentProject) {
+          return (
+            <div className="space-y-6">
+              <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6 text-center">
+                <div className="text-6xl mb-4">📚</div>
+                <h3 className="text-xl font-semibold text-text-secondary/40 mb-2">請先選擇專案</h3>
+                <p className="text-text-secondary/80">章節配置需要先選擇一個專案</p>
+              </div>
             </div>
-          </div>
+          );
+        }
+        return (
+          <ChapterConfigurationPanel
+            selectedImages={selectedImages}
+            projectId={currentProject.id}
+          />
         );
 
       case 'preview':
-        return (
-          <div className="space-y-6">
-            <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6 text-center">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-text-secondary/40 mb-2">排版預覽功能</h3>
-              <p className="text-text-secondary/80">正在開發中，敬請期待...</p>
+        if (!currentProject) {
+          return (
+            <div className="space-y-6">
+              <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6 text-center">
+                <div className="text-6xl mb-4">📚</div>
+                <h3 className="text-xl font-semibold text-text-secondary/40 mb-2">請先選擇專案</h3>
+                <p className="text-text-secondary/80">排版預覽需要先選擇一個專案</p>
+              </div>
             </div>
-          </div>
+          );
+        }
+        return (
+          <SimplePreviewPanel
+            selectedImages={selectedImages}
+            projectId={currentProject.id}
+          />
         );
 
       default:
