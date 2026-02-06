@@ -88,12 +88,12 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
       .sort((a, b) => a.order - b.order);
   }, [chapters, projectId]);
 
-  // 生成预览页面序列
+  // 產生預覽頁面序列
   const previewPages = useMemo((): PreviewPage[] => {
     const pages: PreviewPage[] = [];
     let pageNum = 1;
 
-    // 1. 封面页
+    // 1. 封面頁
     const coverImage = integrationData?.globalImages.find(img => img.placement === 'cover');
     if (coverImage || currentProject) {
       pages.push({
@@ -109,11 +109,11 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
       });
     }
 
-    // 2. 信息页（元数据检查）
+    // 2. 資訊頁（中繼資料檢查）
     pages.push({
       id: 'info',
       type: 'info',
-      title: '图书信息',
+      title: '圖書資訊',
       content: {
         stats: integrationData?.statistics,
         totalImages: integrationData?.totalImages || 0,
@@ -122,12 +122,12 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
       pageNumber: pageNum++
     });
 
-    // 3. 目录页
+    // 3. 目錄頁
     if (projectChapters.length > 0) {
       pages.push({
         id: 'toc',
         type: 'toc',
-        title: '目录',
+        title: '目錄',
         content: {
           chapters: projectChapters.map((ch, idx) => ({
             number: idx + 1,
@@ -139,7 +139,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
       });
     }
 
-    // 4. 章节页
+    // 4. 章節頁
     projectChapters.forEach((chapter, idx) => {
       const chapterData = integrationData?.byChapter.find(bc => bc.chapterId === chapter.id);
 
@@ -163,36 +163,36 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
   const currentPage = previewPages[currentPageIndex];
   const totalPages = previewPages.length;
 
-  // 元数据检查
+  // 中繼資料檢查
   const metadataIssues = useMemo(() => {
     const issues: string[] = [];
 
     if (!integrationData) {
-      issues.push('无图片整合数据');
+      issues.push('無圖片整合資料');
       return issues;
     }
 
-    // 检查图片缺失
+    // 檢查圖片缺失
     if (integrationData.totalImages === 0) {
-      issues.push('未配置任何图片');
+      issues.push('未配置任何圖片');
     }
 
-    // 检查章节配置
+    // 檢查章節配置
     const unconfiguredChapters = projectChapters.filter(
       ch => !integrationData.byChapter.find(bc => bc.chapterId === ch.id)
     );
     if (unconfiguredChapters.length > 0) {
-      issues.push(`${unconfiguredChapters.length} 个章节未配置图片`);
+      issues.push(`${unconfiguredChapters.length} 個章節未配置圖片`);
     }
 
-    // 检查图片质量设置
+    // 檢查圖片品質設定
     if (exportConfig.imageQuality < 70) {
-      issues.push(`图片质量较低 (${exportConfig.imageQuality}%)`);
+      issues.push(`圖片品質較低 (${exportConfig.imageQuality}%)`);
     }
 
-    // 检查文件大小
+    // 檢查檔案大小
     if (integrationData.statistics.totalSizeMB > 100) {
-      issues.push(`总文件大小较大 (${integrationData.statistics.totalSizeMB.toFixed(1)} MB)`);
+      issues.push(`總檔案大小較大 (${integrationData.statistics.totalSizeMB.toFixed(1)} MB)`);
     }
 
     return issues;
@@ -201,14 +201,14 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
   const goToPage = (index: number) => {
     if (index >= 0 && index < totalPages) {
       setCurrentPageIndex(index);
-      log.debug('切换到页面:', index + 1);
+      log.debug('切換到頁面:', index + 1);
     }
   };
 
   const goToPrevPage = () => goToPage(currentPageIndex - 1);
   const goToNextPage = () => goToPage(currentPageIndex + 1);
 
-  // 渲染封面页
+  // 渲染封面頁
   const renderCoverPage = (content: CoverPageContent) => (
     <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-warm-gold/20 to-clay-orange/20 p-12">
       {content.coverImage ? (
@@ -234,34 +234,34 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
     </div>
   );
 
-  // 渲染信息页
+  // 渲染資訊頁
   const renderInfoPage = (content: InfoPageContent) => (
     <div className="h-full p-12 overflow-y-auto">
-      <h2 className="text-3xl font-bold text-text-secondary/20 mb-8">图书信息</h2>
+      <h2 className="text-3xl font-bold text-text-secondary/20 mb-8">圖書資訊</h2>
 
       <div className="space-y-6">
-        {/* 统计信息 */}
+        {/* 統計資訊 */}
         <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-text-secondary/40 mb-4">统计</h3>
+          <h3 className="text-xl font-semibold text-text-secondary/40 mb-4">統計</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-text-secondary/80 text-sm">总章节数</div>
+              <div className="text-text-secondary/80 text-sm">總章節數</div>
               <div className="text-2xl font-bold text-warm-gold">{content.totalChapters}</div>
             </div>
             <div>
-              <div className="text-text-secondary/80 text-sm">总图片数</div>
+              <div className="text-text-secondary/80 text-sm">總圖片數</div>
               <div className="text-2xl font-bold text-warm-gold">{content.totalImages}</div>
             </div>
             {content.stats && (
               <>
                 <div>
-                  <div className="text-text-secondary/80 text-sm">文件大小</div>
+                  <div className="text-text-secondary/80 text-sm">檔案大小</div>
                   <div className="text-2xl font-bold text-warm-gold">
                     {content.stats.totalSizeMB.toFixed(1)} MB
                   </div>
                 </div>
                 <div>
-                  <div className="text-text-secondary/80 text-sm">压缩比例</div>
+                  <div className="text-text-secondary/80 text-sm">壓縮比例</div>
                   <div className="text-2xl font-bold text-warm-gold">
                     {(content.stats.compressionRatio * 100).toFixed(0)}%
                   </div>
@@ -271,13 +271,13 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
           </div>
         </div>
 
-        {/* 元数据检查 */}
+        {/* 中繼資料檢查 */}
         <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-text-secondary/40 mb-4">元数据检查</h3>
+          <h3 className="text-xl font-semibold text-text-secondary/40 mb-4">中繼資料檢查</h3>
           {metadataIssues.length === 0 ? (
             <div className="flex items-center space-x-2 text-green-400">
               <span className="text-2xl">✅</span>
-              <span>所有检查项通过</span>
+              <span>所有檢查項通過</span>
             </div>
           ) : (
             <div className="space-y-2">
@@ -291,16 +291,16 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
           )}
         </div>
 
-        {/* 导出配置 */}
+        {/* 匯出配置 */}
         <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-text-secondary/40 mb-4">导出配置</h3>
+          <h3 className="text-xl font-semibold text-text-secondary/40 mb-4">匯出配置</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-text-secondary/80">图片质量</span>
+              <span className="text-text-secondary/80">圖片品質</span>
               <span className="text-text-secondary/40">{exportConfig.imageQuality}%</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-text-secondary/80">最大宽度</span>
+              <span className="text-text-secondary/80">最大寬度</span>
               <span className="text-text-secondary/40">{exportConfig.maxImageWidth}px</span>
             </div>
             <div className="flex justify-between">
@@ -308,7 +308,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
               <span className="text-text-secondary/40">{exportConfig.maxImageHeight}px</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-text-secondary/80">压缩级别</span>
+              <span className="text-text-secondary/80">壓縮等級</span>
               <span className="text-text-secondary/40">{exportConfig.compressionLevel}</span>
             </div>
           </div>
@@ -317,10 +317,10 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
     </div>
   );
 
-  // 渲染目录页
+  // 渲染目錄頁
   const renderTocPage = (content: TocPageContent) => (
     <div className="h-full p-12 overflow-y-auto">
-      <h2 className="text-3xl font-bold text-text-secondary/20 mb-8 text-center">目录</h2>
+      <h2 className="text-3xl font-bold text-text-secondary/20 mb-8 text-center">目錄</h2>
 
       <div className="max-w-2xl mx-auto space-y-3">
         {content.chapters.map((ch) => (
@@ -343,7 +343,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
     </div>
   );
 
-  // 渲染章节页
+  // 渲染章節頁
   const renderChapterPage = (content: ChapterPageContent) => (
     <div className="h-full p-12 overflow-y-auto">
       <h2 className="text-2xl font-bold text-text-secondary/20 mb-2">
@@ -356,7 +356,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
       {content.totalImages === 0 ? (
         <div className="text-center py-16 text-text-secondary/80">
           <div className="text-6xl mb-4">📄</div>
-          <p>此章节未配置图片</p>
+          <p>此章節未配置圖片</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -386,21 +386,21 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
     </div>
   );
 
-  // 渲染当前页面
+  // 渲染目前頁面
   const renderCurrentPage = () => {
     if (!currentPage) return null;
 
     switch (currentPage.type) {
       case 'cover':
-        return renderCoverPage(currentPage.content);
+        return renderCoverPage(currentPage.content as CoverPageContent);
       case 'info':
-        return renderInfoPage(currentPage.content);
+        return renderInfoPage(currentPage.content as InfoPageContent);
       case 'toc':
-        return renderTocPage(currentPage.content);
+        return renderTocPage(currentPage.content as TocPageContent);
       case 'chapter':
-        return renderChapterPage(currentPage.content);
+        return renderChapterPage(currentPage.content as ChapterPageContent);
       default:
-        return <div>未知页面类型</div>;
+        return <div>未知頁面類型</div>;
     }
   };
 
@@ -409,8 +409,8 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
       <div className="space-y-6">
         <div className="text-center py-16 text-text-secondary/80">
           <div className="text-6xl mb-4">📚</div>
-          <h3 className="text-xl font-semibold mb-2">无预览内容</h3>
-          <p className="text-sm">请先配置图片并生成整合数据</p>
+          <h3 className="text-xl font-semibold mb-2">無預覽內容</h3>
+          <p className="text-sm">請先配置圖片並產生整合資料</p>
         </div>
       </div>
     );
@@ -418,7 +418,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 控制栏 */}
+      {/* 控制列 */}
       <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
         <div className="flex items-center justify-between">
           <button
@@ -427,7 +427,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
             className="px-4 py-2 bg-bg-light/40 hover:bg-bg-dark/80 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center space-x-2"
           >
             <span>◀</span>
-            <span>上一页</span>
+            <span>上一頁</span>
           </button>
 
           <div className="text-center">
@@ -435,7 +435,7 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
               {currentPage?.title}
             </div>
             <div className="text-lg font-semibold text-text-secondary/40">
-              第 {currentPageIndex + 1} / {totalPages} 页
+              第 {currentPageIndex + 1} / {totalPages} 頁
             </div>
           </div>
 
@@ -444,15 +444,15 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
             disabled={currentPageIndex === totalPages - 1}
             className="px-4 py-2 bg-bg-light/40 hover:bg-bg-dark/80 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center space-x-2"
           >
-            <span>下一页</span>
+            <span>下一頁</span>
             <span>▶</span>
           </button>
         </div>
       </div>
 
-      {/* 元数据显示切换 */}
+      {/* 中繼資料顯示切換 */}
       <div className="flex items-center justify-between bg-bg-light/50 backdrop-blur-sm rounded-lg p-3">
-        <span className="text-sm text-text-secondary/80">显示元数据信息</span>
+        <span className="text-sm text-text-secondary/80">顯示中繼資料資訊</span>
         <label className="flex items-center space-x-2">
           <input
             type="checkbox"
@@ -463,12 +463,12 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
         </label>
       </div>
 
-      {/* 元数据警告 */}
+      {/* 中繼資料警告 */}
       {showMetadata && metadataIssues.length > 0 && (
         <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-4">
           <h4 className="text-orange-400 font-medium mb-2 flex items-center">
             <span className="text-xl mr-2">⚠️</span>
-            发现 {metadataIssues.length} 个问题
+            發現 {metadataIssues.length} 個問題
           </h4>
           <ul className="space-y-1 text-sm text-orange-300">
             {metadataIssues.map((issue, idx) => (
@@ -478,16 +478,16 @@ const FullEbookPreviewPanel: React.FC<FullEbookPreviewPanelProps> = ({
         </div>
       )}
 
-      {/* 预览区域 */}
+      {/* 預覽區域 */}
       <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
         <div className="relative" style={{ height: '600px' }}>
           {renderCurrentPage()}
         </div>
       </div>
 
-      {/* 页面导航 */}
+      {/* 頁面導覽 */}
       <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
-        <h4 className="text-sm font-medium text-text-secondary/40 mb-3">快速导航</h4>
+        <h4 className="text-sm font-medium text-text-secondary/40 mb-3">快速導覽</h4>
         <div className="flex flex-wrap gap-2">
           {previewPages.map((page, idx) => (
             <button

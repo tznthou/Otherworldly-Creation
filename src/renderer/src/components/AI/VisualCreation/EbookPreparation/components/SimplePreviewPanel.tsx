@@ -6,7 +6,7 @@ import { EbookImagePosition } from '../../../../../types/ebookPreparation';
 import { SafeImage } from '../../../../UI/SafeImage';
 import { createLogger } from '../../../../../utils/logger';
 
-const log = createLogger('SimplePreviewPanel');
+const _log = createLogger('SimplePreviewPanel');
 
 interface SimplePreviewPanelProps {
   selectedImages: IllustrationHistoryItem[];
@@ -15,7 +15,7 @@ interface SimplePreviewPanelProps {
 
 type DeviceType = 'phone' | 'tablet' | 'kindle' | 'desktop';
 
-// 设备尺寸配置
+// 裝置尺寸配置
 const DEVICE_DIMENSIONS = {
   phone: { width: 375, height: 667, name: 'Phone', icon: '📱' },
   tablet: { width: 768, height: 1024, name: 'Tablet', icon: '📱' },
@@ -23,7 +23,7 @@ const DEVICE_DIMENSIONS = {
   desktop: { width: 1024, height: 768, name: 'Desktop', icon: '🖥️' }
 };
 
-// 图片位置样式配置
+// 圖片位置樣式配置
 const POSITION_STYLES = {
   [EbookImagePosition.ChapterHeader]: 'w-full mb-6',
   [EbookImagePosition.ChapterEnd]: 'w-full mt-6',
@@ -111,7 +111,7 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
           <h3 className="text-lg font-semibold text-gray-700 mb-2">
             第 {chapterIndex + 1} 章：{chapter.title}
           </h3>
-          <p className="text-sm text-gray-500 italic">尚未配置图片</p>
+          <p className="text-sm text-gray-500 italic">尚未配置圖片</p>
         </div>
       );
     }
@@ -124,20 +124,20 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
 
     return (
       <div key={chapter.id} className="mb-8">
-        {/* 章节标题 */}
+        {/* 章節標題 */}
         <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-gray-300">
           第 {chapterIndex + 1} 章：{chapter.title}
         </h3>
 
-        {/* 章节开头图片 */}
+        {/* 章節開頭圖片 */}
         {headerImages.map((imgConfig, idx) =>
           imgConfig.image ? renderImageByPosition(imgConfig.image, imgConfig.position, idx) : null
         )}
 
-        {/* 正文区域（包含其他位置的图片） */}
+        {/* 正文區域（包含其他位置的圖片） */}
         <div className="my-6 space-y-4">
           <p className="text-sm text-gray-600 leading-relaxed">
-            {chapter.wordCount ? `字数: ${chapter.wordCount}` : '正文内容...'}
+            {chapter.wordCount ? `字數: ${chapter.wordCount}` : '正文內容...'}
           </p>
 
           {otherImages.map((imgConfig, idx) =>
@@ -145,11 +145,11 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
           )}
 
           {otherImages.length === 0 && (
-            <p className="text-sm text-gray-500 italic">（文中插图将显示在这里）</p>
+            <p className="text-sm text-gray-500 italic">（文中插圖將顯示在這裡）</p>
           )}
         </div>
 
-        {/* 章节结尾图片 */}
+        {/* 章節結尾圖片 */}
         {endImages.map((imgConfig, idx) =>
           imgConfig.image ? renderImageByPosition(imgConfig.image, imgConfig.position, idx) : null
         )}
@@ -164,10 +164,10 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
       {/* 控制面板 */}
       <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* 设备选择 */}
+          {/* 裝置選擇 */}
           <div>
             <label className="block text-sm font-medium text-text-secondary/40 mb-2">
-              设备类型
+              裝置類型
             </label>
             <div className="grid grid-cols-2 gap-2">
               {(Object.keys(DEVICE_DIMENSIONS) as DeviceType[]).map((type) => (
@@ -186,10 +186,10 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
             </div>
           </div>
 
-          {/* 辅助线选项 */}
+          {/* 輔助線選項 */}
           <div>
             <label className="block text-sm font-medium text-text-secondary/40 mb-2">
-              辅助选项
+              輔助選項
             </label>
             <div className="space-y-2">
               <label className="flex items-center space-x-2">
@@ -199,7 +199,7 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
                   onChange={(e) => setShowGrid(e.target.checked)}
                   className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                 />
-                <span className="text-sm text-text-secondary">显示网格</span>
+                <span className="text-sm text-text-secondary">顯示網格</span>
               </label>
               <label className="flex items-center space-x-2">
                 <input
@@ -208,15 +208,15 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
                   onChange={(e) => setShowMargins(e.target.checked)}
                   className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                 />
-                <span className="text-sm text-text-secondary">显示边距</span>
+                <span className="text-sm text-text-secondary">顯示邊距</span>
               </label>
             </div>
           </div>
 
-          {/* 缩放控制 */}
+          {/* 縮放控制 */}
           <div>
             <label className="block text-sm font-medium text-text-secondary/40 mb-2">
-              缩放比例: {Math.round(scale * 100)}%
+              縮放比例: {Math.round(scale * 100)}%
             </label>
             <input
               type="range"
@@ -235,14 +235,14 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
         </div>
       </div>
 
-      {/* 预览信息 */}
+      {/* 預覽資訊 */}
       <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-warm-gold/40 rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <span className="text-2xl">{deviceDimensions.icon}</span>
             <div>
               <h4 className="text-warm-gold font-medium">
-                {deviceDimensions.name} 预览
+                {deviceDimensions.name} 預覽
               </h4>
               <p className="text-warm-gold/80 text-sm">
                 {deviceDimensions.width} × {deviceDimensions.height} px
@@ -251,23 +251,23 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
           </div>
           <div className="text-right">
             <p className="text-warm-gold/80 text-sm">
-              已配置 {chapterConfigurations.length} 个章节
+              已配置 {chapterConfigurations.length} 個章節
             </p>
             <p className="text-warm-gold/80 text-xs">
-              共 {selectedImages.length} 张图片
+              共 {selectedImages.length} 張圖片
             </p>
           </div>
         </div>
       </div>
 
-      {/* 预览容器 */}
+      {/* 預覽容器 */}
       <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6">
         <div className="flex justify-center">
           {!hasAnyConfiguration ? (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📖</div>
-              <h3 className="text-xl font-semibold text-text-secondary/40 mb-2">尚无章节配置</h3>
-              <p className="text-text-secondary/80">请先在"章节配置"标签中配置图片</p>
+              <h3 className="text-xl font-semibold text-text-secondary/40 mb-2">尚無章節配置</h3>
+              <p className="text-text-secondary/80">請先在「章節配置」標籤中配置圖片</p>
             </div>
           ) : (
             <div
@@ -279,7 +279,7 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
                 transformOrigin: 'top center'
               }}
             >
-              {/* 网格背景 */}
+              {/* 網格背景 */}
               {showGrid && (
                 <div
                   className="absolute inset-0 pointer-events-none"
@@ -293,14 +293,14 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
                 />
               )}
 
-              {/* 边距指示器 */}
+              {/* 邊距指示器 */}
               {showMargins && (
                 <div className="absolute inset-0 pointer-events-none">
                   <div className="absolute inset-4 border-2 border-dashed border-blue-300/50" />
                 </div>
               )}
 
-              {/* 内容区域 */}
+              {/* 內容區域 */}
               <div
                 className="relative h-full overflow-y-auto p-8"
                 style={{
@@ -312,7 +312,7 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
                 {projectChapters.length === 0 && (
                   <div className="text-center py-16">
                     <div className="text-4xl mb-4">📚</div>
-                    <p className="text-gray-500">此项目尚无章节</p>
+                    <p className="text-gray-500">此專案尚無章節</p>
                   </div>
                 )}
               </div>
@@ -321,17 +321,17 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
         </div>
       </div>
 
-      {/* 提示信息 */}
+      {/* 提示資訊 */}
       <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
         <div className="flex items-start space-x-3">
           <span className="text-xl">💡</span>
           <div className="text-sm text-text-secondary/80">
-            <p className="font-medium mb-1">预览说明：</p>
+            <p className="font-medium mb-1">預覽說明：</p>
             <ul className="space-y-1">
-              <li>• 悬停在图片上可查看图片位置类型</li>
-              <li>• 使用缩放滑杆调整预览大小</li>
-              <li>• 切换不同设备查看不同尺寸的排版效果</li>
-              <li>• 此为简化预览，实际电子书效果可能略有差异</li>
+              <li>• 懸停在圖片上可查看圖片位置類型</li>
+              <li>• 使用縮放滑桿調整預覽大小</li>
+              <li>• 切換不同裝置查看不同尺寸的排版效果</li>
+              <li>• 此為簡化預覽，實際電子書效果可能略有差異</li>
             </ul>
           </div>
         </div>

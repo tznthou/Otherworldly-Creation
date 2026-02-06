@@ -34,7 +34,7 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
   const [isProcessing, _setIsProcessing] = useState(false);
   const [_imageClassifications, setImageClassifications] = useState<Record<string, ImageCategory>>({});
 
-  // 从 Redux 获取当前项目
+  // 從 Redux 取得目前專案
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
 
   // 過濾選中的圖片

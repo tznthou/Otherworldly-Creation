@@ -1,6 +1,6 @@
 /**
  * 電子書排版配置持久化 Hook
- * 自動保存和載入 ebookPreparation 狀態到 localStorage
+ * 自動儲存和載入 ebookPreparation 狀態到 localStorage
  */
 
 import { useEffect, useCallback } from 'react';
@@ -29,6 +29,17 @@ export const useEbookPreparationPersistence = (
   const ebookState = useSelector((state: RootState) => state.ebookPreparation);
 
   /**
+   * 驗證從 localStorage 載入的配置結構是否合法
+   */
+  const isValidConfig = useCallback((config: unknown): boolean => {
+    if (!config || typeof config !== 'object') return false;
+    const c = config as Record<string, unknown>;
+    if (typeof c.projectId !== 'string') return false;
+    if (!Array.isArray(c.chapterConfigurations)) return false;
+    return true;
+  }, []);
+
+  /**
    * 從 localStorage 載入配置
    */
   const loadFromStorage = useCallback(() => {
@@ -42,9 +53,18 @@ export const useEbookPreparationPersistence = (
       }
 
       const allConfigs = JSON.parse(stored);
+      if (!allConfigs || typeof allConfigs !== 'object') {
+        log.warn('⚠️ localStorage 資料格式異常，略過載入');
+        return;
+      }
+
       const projectConfig = allConfigs[projectId];
 
       if (projectConfig) {
+        if (!isValidConfig(projectConfig)) {
+          log.warn('⚠️ 專案配置結構異常，略過載入:', projectId);
+          return;
+        }
         log.debug('📂 載入專案配置:', { projectId, config: projectConfig });
         dispatch(updateConfig(projectConfig));
       } else {
@@ -53,7 +73,7 @@ export const useEbookPreparationPersistence = (
     } catch (error) {
       log.error('❌ 載入配置失敗:', error);
     }
-  }, [projectId, dispatch]);
+  }, [projectId, dispatch, isValidConfig]);
 
   /**
    * 保存配置到 localStorage
@@ -64,7 +84,11 @@ export const useEbookPreparationPersistence = (
     try {
       // 讀取現有的所有專案配置
       const stored = localStorage.getItem(STORAGE_KEY);
-      const allConfigs = stored ? JSON.parse(stored) : {};
+      let allConfigs: Record<string, unknown> = {};
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        allConfigs = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+      }
 
       // 更新當前專案的配置
       allConfigs[projectId] = currentConfig;

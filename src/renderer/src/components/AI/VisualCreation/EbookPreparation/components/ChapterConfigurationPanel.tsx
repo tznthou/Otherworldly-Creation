@@ -38,7 +38,7 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
   // 初始化配置（如果需要）
   useEffect(() => {
     if (!isInitialized && currentProject) {
-      initializeForProject(currentProject.title, currentProject.author || 'Unknown');
+      initializeForProject(currentProject.name, 'Unknown');
     }
   }, [isInitialized, currentProject, initializeForProject]);
 
@@ -65,11 +65,11 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
   }, [chapters, projectId]);
 
   const positionOptions = [
-    { value: EbookImagePosition.ChapterHeader, label: '章节开头', icon: '📖', color: 'bg-blue-500' },
-    { value: EbookImagePosition.ChapterEnd, label: '章节结尾', icon: '📄', color: 'bg-green-500' },
-    { value: EbookImagePosition.InlineText, label: '文中插图', icon: '🖼️', color: 'bg-purple-500' },
-    { value: EbookImagePosition.FullPage, label: '全页插图', icon: '🎨', color: 'bg-orange-500' },
-    { value: EbookImagePosition.SceneIllustration, label: '场景插图', icon: '🏞️', color: 'bg-teal-500' }
+    { value: EbookImagePosition.ChapterHeader, label: '章節開頭', icon: '📖', color: 'bg-blue-500' },
+    { value: EbookImagePosition.ChapterEnd, label: '章節結尾', icon: '📄', color: 'bg-green-500' },
+    { value: EbookImagePosition.InlineText, label: '文中插圖', icon: '🖼️', color: 'bg-purple-500' },
+    { value: EbookImagePosition.FullPage, label: '全頁插圖', icon: '🎨', color: 'bg-orange-500' },
+    { value: EbookImagePosition.SceneIllustration, label: '場景插圖', icon: '🏞️', color: 'bg-teal-500' }
   ];
 
   // 從 Redux config 計算已分配的圖片 IDs
@@ -87,14 +87,14 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
   }, [selectedImages, assignedImageIds]);
 
   // 獲取選中章節的配置
-  const selectedChapterConfig = useMemo(() => {
+  const _selectedChapterConfig = useMemo(() => {
     if (!selectedChapterId || !ebookConfig) return null;
     return ebookConfig.chapterConfigurations.find(c => c.chapterId === selectedChapterId) || null;
   }, [selectedChapterId, ebookConfig]);
 
   const handleDragStart = useCallback((imageId: string) => {
     setDraggedImageId(imageId);
-    log.debug('开始拖动图片:', imageId);
+    log.debug('開始拖動圖片:', imageId);
   }, []);
 
   const handleDragEnd = useCallback(() => {
@@ -104,28 +104,36 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
   const handleDropToChapter = useCallback((chapterId: string, position: EbookImagePosition) => {
     if (!draggedImageId || !ebookConfig) return;
 
-    log.debug('放置图片到章节:', { chapterId, position, imageId: draggedImageId });
+    log.debug('放置圖片到章節:', { chapterId, position, imageId: draggedImageId });
 
-    // 獲取該章節該位置已有的圖片數量，用於設定 order
-    const chapterConfig = ebookConfig.chapterConfigurations.find(c => c.chapterId === chapterId);
-    const existingImages = chapterConfig?.images.filter(img => img.position === position) || [];
+    try {
+      // 獲取該章節該位置已有的圖片數量，用於設定 order
+      const chapterConfig = ebookConfig.chapterConfigurations.find(c => c.chapterId === chapterId);
+      const existingImages = chapterConfig?.images.filter(img => img.position === position) || [];
 
-    // 使用 Redux action
-    dispatch(addImageToCategory({
-      imageId: draggedImageId,
-      position,
-      chapterId,
-      order: existingImages.length
-    }));
+      // 使用 Redux action
+      dispatch(addImageToCategory({
+        imageId: draggedImageId,
+        position,
+        chapterId,
+        order: existingImages.length
+      }));
+    } catch (error) {
+      log.error('新增圖片到章節失敗:', error);
+    }
 
     setDraggedImageId(null);
   }, [draggedImageId, ebookConfig, dispatch]);
 
   const handleRemoveImageFromChapter = useCallback((chapterId: string, imageId: string) => {
-    dispatch(removeImageFromCategory({
-      imageId,
-      chapterId
-    }));
+    try {
+      dispatch(removeImageFromCategory({
+        imageId,
+        chapterId
+      }));
+    } catch (error) {
+      log.error('移除圖片失敗:', error);
+    }
   }, [dispatch]);
 
   const handleUpdateImageOrder = useCallback((chapterId: string, imageId: string, newOrder: number) => {
@@ -137,16 +145,20 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
     const imageConfig = chapterConfig.images.find(img => img.imageId === imageId);
     if (!imageConfig) return;
 
-    // 移除舊的圖片配置
-    dispatch(removeImageFromCategory({ imageId, chapterId }));
+    try {
+      // 移除舊的圖片配置
+      dispatch(removeImageFromCategory({ imageId, chapterId }));
 
-    // 重新添加with新的order
-    dispatch(addImageToCategory({
-      imageId,
-      position: imageConfig.position,
-      chapterId,
-      order: newOrder
-    }));
+      // 重新添加新的 order
+      dispatch(addImageToCategory({
+        imageId,
+        position: imageConfig.position,
+        chapterId,
+        order: newOrder
+      }));
+    } catch (error) {
+      log.error('更新圖片順序失敗:', error);
+    }
   }, [ebookConfig, dispatch]);
 
   const getImageById = useCallback((imageId: string) => {
@@ -172,23 +184,23 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
     return (
       <div className="text-center py-8">
         <div className="text-4xl mb-3">📚</div>
-        <p className="text-text-secondary/80">此专案尚无章节</p>
-        <p className="text-sm text-text-secondary mt-2">请先在编辑器中创建章节</p>
+        <p className="text-text-secondary/80">此專案尚無章節</p>
+        <p className="text-sm text-text-secondary mt-2">請先在編輯器中建立章節</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* 统计信息 */}
+      {/* 統計資訊 */}
       <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
         <h4 className="text-base font-medium text-text-secondary/20 mb-3 flex items-center">
           <span className="text-xl mr-2">📊</span>
-          配置统计
+          配置統計
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div className="bg-bg-light/40 p-3 rounded">
-            <div className="text-text-secondary/80">总图片数</div>
+            <div className="text-text-secondary/80">總圖片數</div>
             <div className="text-lg font-semibold text-text-secondary/20">{stats.totalImages}</div>
           </div>
           <div className="bg-bg-light/40 p-3 rounded">
@@ -200,40 +212,40 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
             <div className="text-lg font-semibold text-orange-400">{stats.unassignedCount}</div>
           </div>
           <div className="bg-bg-light/40 p-3 rounded">
-            <div className="text-text-secondary/80">已配置章节</div>
+            <div className="text-text-secondary/80">已配置章節</div>
             <div className="text-lg font-semibold text-text-secondary/20">{stats.configuredChapters}/{projectChapters.length}</div>
           </div>
         </div>
       </div>
 
-      {/* 使用说明 */}
+      {/* 使用說明 */}
       <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-warm-gold/40 rounded-lg p-4">
         <h4 className="text-warm-gold font-medium mb-2 flex items-center">
           <span className="text-xl mr-2">💡</span>
-          使用说明
+          使用說明
         </h4>
         <ul className="text-warm-gold/80 text-sm space-y-1">
-          <li>• 从左侧未分配图片区拖动图片到章节的位置区域</li>
-          <li>• 每个章节可以设置多张图片，不同位置</li>
-          <li>• 点击章节查看该章节的图片配置详情</li>
-          <li>• 可以调整图片在章节中的显示顺序</li>
+          <li>• 從左側未分配圖片區拖動圖片到章節的位置區域</li>
+          <li>• 每個章節可以設定多張圖片，不同位置</li>
+          <li>• 點擊章節查看該章節的圖片配置詳情</li>
+          <li>• 可以調整圖片在章節中的顯示順序</li>
         </ul>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 左侧：未分配图片区 */}
+        {/* 左側：未分配圖片區 */}
         <div className="lg:col-span-1">
           <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4 sticky top-4">
             <h4 className="text-base font-medium text-text-secondary/20 mb-4 flex items-center">
               <span className="text-xl mr-2">🖼️</span>
-              未分配图片 ({unassignedImages.length})
+              未分配圖片 ({unassignedImages.length})
             </h4>
 
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {unassignedImages.length === 0 ? (
                 <div className="text-center py-8 text-text-secondary/80">
                   <div className="text-4xl mb-2">✅</div>
-                  <p className="text-sm">所有图片已分配</p>
+                  <p className="text-sm">所有圖片已分配</p>
                 </div>
               ) : (
                 unassignedImages.map((image, index) => (
@@ -255,7 +267,7 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
                       fallbackIcon="🎨"
                     />
                     <p className="text-xs text-text-secondary truncate">
-                      {image.original_prompt?.slice(0, 50) || `图片 ${index + 1}`}
+                      {image.original_prompt?.slice(0, 50) || `圖片 ${index + 1}`}
                     </p>
                   </div>
                 ))
@@ -264,7 +276,7 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
           </div>
         </div>
 
-        {/* 右侧：章节列表 */}
+        {/* 右側：章節列表 */}
         <div className="lg:col-span-2">
           <div className="space-y-4">
             {projectChapters.map((chapter, index) => {
@@ -274,7 +286,7 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
 
               return (
                 <div key={chapter.id} className="bg-bg-light/50 backdrop-blur-sm rounded-lg border border-warm-gold/10">
-                  {/* 章节标题栏 */}
+                  {/* 章節標題列 */}
                   <div
                     className="p-4 cursor-pointer hover:bg-bg-dark/80 transition-colors"
                     onClick={() => setSelectedChapterId(isSelected ? null : chapter.id)}
@@ -287,14 +299,14 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
                             第 {index + 1} 章：{chapter.title}
                           </h5>
                           <p className="text-xs text-text-secondary/80">
-                            {imageCount > 0 ? `已配置 ${imageCount} 张图片` : '尚未配置图片'}
+                            {imageCount > 0 ? `已配置 ${imageCount} 張圖片` : '尚未配置圖片'}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         {imageCount > 0 && (
                           <span className="bg-green-600 text-white text-xs px-2 py-1 rounded">
-                            {imageCount} 张
+                            {imageCount} 張
                           </span>
                         )}
                         <span className="text-text-secondary/80">
@@ -304,10 +316,10 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
                     </div>
                   </div>
 
-                  {/* 展开的章节配置区 */}
+                  {/* 展開的章節配置區 */}
                   {isSelected && (
                     <div className="border-t border-warm-gold/10 p-4 space-y-4">
-                      {/* 位置区域 */}
+                      {/* 位置區域 */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {positionOptions.map(pos => {
                           const posImages = config?.images.filter(img => img.position === pos.value) || [];
@@ -331,7 +343,7 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
 
                               {posImages.length === 0 ? (
                                 <div className="text-center py-4 text-xs text-text-secondary/80">
-                                  拖动图片到此处
+                                  拖動圖片到此處
                                 </div>
                               ) : (
                                 <div className="space-y-2">
@@ -354,7 +366,7 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
                                             {image.original_prompt?.slice(0, 30) || 'Image'}
                                           </p>
                                           <div className="flex items-center space-x-2 mt-1">
-                                            <label className="text-xs text-text-secondary/80">顺序:</label>
+                                            <label className="text-xs text-text-secondary/80">順序:</label>
                                             <input
                                               type="number"
                                               min="0"
@@ -389,16 +401,16 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
         </div>
       </div>
 
-      {/* 底部操作栏 */}
+      {/* 底部操作列 */}
       <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div className="text-sm text-text-secondary/80">
-            配置完成度: {stats.configuredChapters}/{projectChapters.length} 章节
+            配置完成度: {stats.configuredChapters}/{projectChapters.length} 章節
           </div>
           <div className="flex items-center space-x-3">
             <button
               onClick={() => {
-                log.debug('📋 [章节配置] 当前配置:', ebookConfig);
+                log.debug('📋 [章節配置] 目前配置:', ebookConfig);
               }}
               className="px-4 py-2 text-sm font-medium text-text-secondary bg-bg-light/50 backdrop-blur-sm hover:bg-bg-dark/80 rounded-lg transition-colors"
             >
