@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> 新 session 開始前，先讀取 `.claude/RESUME.md`
+
 ## 🚀 Serena MCP Integration (CRITICAL!)
 
 **ESSENTIAL**: This project REQUIRES Serena MCP for full functionality. Initialize at session start:
