@@ -40,7 +40,10 @@ fi
 
 echo ""
 echo "📝 檢查 3: 是否有個人小說內容..."
-NOVEL_CONTENT=$(find . -name "*.md" -o -name "*.txt" | grep -v README | grep -v CHANGELOG | grep -v RELEASE_CHECKLIST | grep -v CLAUDE.md | grep -v node_modules | grep -v .serena | grep -v .specstory | grep -v coverage | xargs grep -l "第.*章\|故事\|主角\|劇情" 2>/dev/null || true)
+# docs/ 與 .stats/ 排除在外：這是一款小說寫作軟體，技術文件本來就會寫到
+# 「章節」「劇情」「主角」，掃這些位置只會誤判自己的文件。真正的創作稿件
+# 不會被放進 docs/，該防的是根目錄、src/ 這些不該出現小說內容的地方。
+NOVEL_CONTENT=$(find . -name "*.md" -o -name "*.txt" | grep -v README | grep -v CHANGELOG | grep -v RELEASE_CHECKLIST | grep -v CLAUDE.md | grep -v node_modules | grep -v .serena | grep -v .specstory | grep -v coverage | grep -v "^\./docs/" | grep -v "^\./\.stats/" | xargs grep -l "第.*章\|故事\|主角\|劇情" 2>/dev/null || true)
 if [ -n "$NOVEL_CONTENT" ]; then
     echo "⚠️  發現疑似小說內容檔案："
     echo "$NOVEL_CONTENT"
