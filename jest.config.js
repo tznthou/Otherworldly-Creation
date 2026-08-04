@@ -18,6 +18,9 @@ module.exports = {
     '!src/__tests__/**/*',
   ],
   moduleNameMapper: {
+    // NOTE: this should be src/renderer/src to match tsconfig.json and vite.config.ts.
+    // Fixing it lets the integration suites resolve their imports, at which point they
+    // crash on missing Tauri API / AudioContext mocks. Left as-is until those are added.
     '^@/(.*)': '<rootDir>/src/renderer/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
