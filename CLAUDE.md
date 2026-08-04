@@ -21,11 +21,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📝 Project Overview
 
-**Genesis Chronicle v1.2.8** - AI-powered Chinese light novel writing application
+**Genesis Chronicle v2.0.1** - AI-powered Chinese light novel writing application
 - **Stack**: Tauri v2 + Rust + React/TypeScript + SQLite
-- **Scale**: 112,266 lines of code across 468 files (3 languages)
+- **Scale**: 112,687+ lines of code across 468 files (3 languages)
 - **AI**: 5 providers (Ollama, OpenAI, Gemini, Claude, OpenRouter)
 - **Security**: OS-native Keyring encryption for API keys (v1.2.8+)
+- **Design**: Human-centered warm design system (v2.0.0+)
 - **Editor**: Slate.js with auto-save
 - **Export**: EPUB 3.0 + PDF (Chrome Headless)
 
@@ -72,11 +73,9 @@ cargo check --manifest-path src-tauri/Cargo.toml  # Rust compile check
 
 # Testing
 npm test                     # Run all tests (Jest with jsdom)
-npm run test:unit            # Run unit tests only
-npm run test:integration     # Run integration tests only
-npm run test:performance     # Run performance tests
+npm run test:watch           # Watch mode
+npm run test:coverage        # With coverage report
 npm test -- --testNamePattern="test name"  # Run single test by name
-npm test -- --watch         # Run tests in watch mode
 cargo test --manifest-path src-tauri/Cargo.toml   # Rust tests
 
 # Build & Package
@@ -112,7 +111,7 @@ npm run setup              # Quick project setup
 - **API Layer**: `src/renderer/src/api/tauri.ts` (ALWAYS use `import { api }`, never direct invoke)
 - **AI Providers**: `src-tauri/src/services/ai_providers/trait.rs` + implementations
 - **Security Service**: `src-tauri/src/services/keyring_service.rs` + `src/renderer/src/services/settingsService.ts`
-- **Security Docs**: `KEYRING_IMPLEMENTATION_SUMMARY.md`, `KEYRING_TEST.md`
+- **Security Docs**: `docs/KEYRING_IMPLEMENTATION_SUMMARY.md`, `docs/KEYRING_TEST.md`
 - **Redux Store**: `src/renderer/src/store/store.ts` (16 slices with middleware configuration)
 - **Modal Components**: `src/renderer/src/components/Modals/` (CharacterAnalysisModal, PlotAnalysisModal, etc.)
 - **Settings**: `src/renderer/src/pages/Settings/` (GeneralSettings with AI feature controls)
@@ -158,7 +157,7 @@ npm run setup              # Quick project setup
 - **Graceful Fallback**: If Keyring fails, application automatically uses localStorage
 - **Cross-Platform**: macOS Keychain, Windows Credential Manager, Linux Secret Service
 - **Zero Breaking Changes**: Pure additive security layer, all existing functionality preserved
-- **Documentation**: See [KEYRING_IMPLEMENTATION_SUMMARY.md](KEYRING_IMPLEMENTATION_SUMMARY.md) and [KEYRING_TEST.md](KEYRING_TEST.md)
+- **Documentation**: See [docs/KEYRING_IMPLEMENTATION_SUMMARY.md](docs/KEYRING_IMPLEMENTATION_SUMMARY.md) and [docs/KEYRING_TEST.md](docs/KEYRING_TEST.md)
 
 ### Template System (Quick Start)
 - **🏰 Fantasy Adventure**: Classic magical worlds
@@ -188,6 +187,23 @@ npm run setup              # Quick project setup
 
 ## 🔄 Major Version Milestones
 
+### v2.0.1 - UX Refinements & Creative Freedom (2025-01-05)
+- **API Configuration Quick Access**: Prominent guidance card in Settings → General
+- **Blank Project Template**: No template constraints, optional novel length
+- **Project Type Icons**: Unified with product website (Heart, Bolt, solid variants)
+- **Log Management**: Delete old logs feature (keeps last 2 days, prevents size bloat)
+- **Impact**: Enhanced onboarding experience, creative flexibility, system maintenance
+- **Code Changes**: +421 lines insertion, -63 deletions (12 files modified)
+
+### v2.0.0 - The Human Design Era (2025-10-17)
+- **Visual Language Revolution**: Complete UI redesign from cosmic sci-fi to warm humanities
+- **Tailwind CSS v4**: Architecture upgrade with unified design token system
+- **New Color Palette**: Warm gold (#d4a574), earth orange (#c17d5a), wood brown (#8b7355)
+- **100% Coverage**: All 7 top-level pages + 20+ modal components
+- **Maintenance Efficiency**: +90% improvement via centralized design management
+- **Why v2.0**: Product identity redefinition - tech tool → human-centered creative companion
+- **Code Changes**: ~500 lines of color system refactoring, zero breaking changes
+
 ### v1.2.8 - Security Enhancement (2025-10-08)
 - **OS-Native Encryption**: System Keyring integration for API key security
 - **Implementation**: 260 lines (Rust 52 + TypeScript 144 + commands 58)
@@ -205,146 +221,44 @@ npm run setup              # Quick project setup
 
 ---
 
-## 🐛 Critical Lessons Learned (v1.2.8 發布經驗)
+## 🐛 Critical Development Lessons
 
-### ⚠️ Tauri 版本匹配陷阱
+### ⚠️ Tauri Version Matching (v1.2.8 經驗)
+**Key Issue**: Rust and NPM package version mismatch caused 9 consecutive CI failures
 
-**問題**：連續 9 次 GitHub Actions 構建失敗
-**根本原因**：Rust 和 NPM 包版本不匹配
-
-#### 錯誤訊息
-```
-Error [tauri_cli] Found version mismatched Tauri packages.
-Make sure the NPM and crate versions are on the same major/minor releases:
-tauri (v2.7.0) : @tauri-apps/api (v2.8.0)
-tauri-plugin-store (v2.3.0) : @tauri-apps/plugin-store (v2.4.0)
-```
-
-#### 發生原因
-
-**隱形的版本升級**：
-1. v1.2.7 使用 `@tauri-apps/api@2.7.0` ✅ 匹配
-2. v1.2.8 添加 `@tauri-apps/plugin-store@^2.4.0`
-3. npm 依賴解析時，發現 plugin-store 的 peerDependencies 允許 `@tauri-apps/api@^2.6.0`
-4. npm 自動將 api 升級到 `2.8.0` ❌ 不匹配 Rust 的 `tauri@2.7.0`
-
-**為什麼沒發現**：
-- ❌ 只比對了 `package.json`（看起來一樣）
-- ❌ 沒比對 `package-lock.json`（實際安裝版本）
-- ✅ 應該檢查：`npm list @tauri-apps/api`
-
-#### 解決方案
-
-**精確鎖定關鍵依賴**：
+**Quick Solution**: Use exact versions (no `^`) for all Tauri packages:
 ```json
-// ❌ 錯誤：使用 ^ 允許次版本升級
-"@tauri-apps/api": "^2.7.0",
-"@tauri-apps/plugin-store": "^2.4.0"
-
-// ✅ 正確：精確版本匹配 Rust
-"@tauri-apps/api": "2.7.0",      // 匹配 tauri = "=2.7.0"
-"@tauri-apps/plugin-store": "2.3.0"  // 匹配 tauri-plugin-store = "2.3.0"
+"@tauri-apps/api": "2.7.0",           // Match Rust tauri = "=2.7.0"
+"@tauri-apps/plugin-store": "2.3.0"   // Match Rust plugin version
 ```
 
-#### 診斷技巧
+**Pre-Release Checklist**:
+- [ ] Verify `package-lock.json` with `npm list @tauri-apps/api`
+- [ ] Ensure all Tauri packages use exact versions
+- [ ] Check Cargo.toml plugins match NPM counterparts
 
-**本地看不到，CI 失敗時**：
-1. 添加 `--verbose` flag 到構建命令
-2. 輸出最後 100 行日誌
-3. 用 grep/Select-String 搜索 ERROR
-
-**GitHub Actions 錯誤輸出模板**：
-```yaml
-- name: Build with error diagnostics
-  run: |
-    cargo tauri build --verbose 2>&1 | tee build.log
-    BUILD_EXIT_CODE=${PIPESTATUS[0]}
-    if [ $BUILD_EXIT_CODE -ne 0 ]; then
-      echo "❌ Build failed"
-      tail -100 build.log
-      grep -i "error" build.log | tail -20
-      exit $BUILD_EXIT_CODE
-    fi
-```
-
-#### 版本檢查清單
-
-發布前必須檢查：
-- [ ] `Cargo.toml` 版本：`tauri = "=X.Y.Z"`（精確鎖定）
-- [ ] `package.json` 版本：`@tauri-apps/api: "X.Y.Z"`（無 ^）
-- [ ] `package-lock.json`：`npm list @tauri-apps/api` 確認實際版本
-- [ ] 所有 plugin 版本對齊：`tauri-plugin-* = NPM @tauri-apps/plugin-*`
-
-#### 記憶查詢
-
-相關問題記得查詢 Serena 記憶：
-- 版本不匹配診斷流程
-- GitHub Actions 調試技巧
-- 依賴管理最佳實踐
+📚 **Complete Guide**: Query Serena memory `v1-3-3-npm-install-fix-lesson`
 
 ---
 
-## ⚠️ UI Feature Removal Protocol (CRITICAL!)
+## ⚠️ UI Feature Removal Protocol
 
-**Background**: Critical lesson from AI插畫設定移除事件where removing "duplicate" functionality resulted in loss of user control capabilities.
+**CRITICAL RULE**: NEVER remove UI functionality without verifying target location has COMPLETE feature parity
 
-### 🚨 Before Removing ANY UI Feature - Mandatory Checklist
+### 🚨 Mandatory Pre-Removal Checklist
+1. **Deep Function Analysis**: Distinguish controls vs documentation
+2. **Feature Parity Verification**: All user-controllable settings preserved
+3. **User Journey Testing**: Workflow continuity maintained
+4. **Gradual Removal**: Comment first, test, then delete
 
-1. **Deep Function Analysis** (not surface comparison):
-   ```
-   Original Location: Settings controls + documentation
-   Target Location: Only documentation ❌ INCOMPLETE
-   Result: Users lose control ability
-   ```
+### ⚡ Quick Reference
+- [ ] List ALL functionality in both locations (1:1 mapping)
+- [ ] Verify controls (toggles/selectors) not just documentation
+- [ ] Test user workflows remain unbroken
+- [ ] Record decisions in Serena memory
 
-2. **Function Type Verification**:
-   - [ ] Setting controls (toggles/selectors/inputs)
-   - [ ] Documentation/guides
-   - [ ] Action buttons (test/save/reset)
-   - [ ] Status indicators
-
-3. **Complete Feature Parity Check**:
-   - [ ] All user-controllable settings preserved
-   - [ ] Same accessibility/discoverability
-   - [ ] Workflow continuity maintained
-
-4. **Division of Labor Analysis**:
-   ```
-   Question: Are locations truly duplicate OR complementary?
-   Example: GeneralSettings (controls) + AISettingsModal (detailed config)
-   ```
-
-### 📋 Standard Operating Procedure
-
-**Step 1: Create Function Inventory**
-- List ALL functionality in source location
-- List ALL functionality in target location
-- Map each item 1:1 for verification
-
-**Step 2: User Journey Testing**
-- Can users still accomplish same tasks?
-- Is the path still intuitive?
-- Any workflow disruption?
-
-**Step 3: Gradual Removal**
-- Comment out UI (don't delete)
-- Test functionality completeness
-- Get user confirmation before permanent removal
-
-**Step 4: Documentation Update**
-- Update user guides if paths change
-- Record architectural decisions in Serena
-
-### 🎯 Case Study: AI插畫設定 Event
-
-**What Happened**: Removed GeneralSettings AI controls assuming AISettingsModal had same functionality
-**Reality**: AISettingsModal only had guides, not setting controls
-**Lost Functionality**:
-- 智能API檢測 toggle
-- 擴展AI插圖服務 toggle
-**Fix**: Restored controls to GeneralSettings with clear division of labor
-
-**Memory Reference**: `ui-cleanup-lessons-learned` in Serena
+📚 **Complete Protocol**: Query Serena memory `ui-cleanup-lessons-learned`
+🎯 **Case Study**: AI插畫設定 removal incident and recovery process
 
 ---
 

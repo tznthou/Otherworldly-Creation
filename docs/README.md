@@ -1,84 +1,80 @@
-# 創世紀元開發文檔
+# 開發文檔
 
-本目錄包含創世紀元專案的完整開發文檔和指南。
+創世紀元的開發文檔索引。使用者導向的說明在專案根目錄的 [README](../README_zh_TW.md)，版本變更在 [CHANGELOG](../CHANGELOG_zh_TW.md)。
 
-## 📚 文檔索引
+## 架構與工具
 
-### 🔧 配置與設定
-- **[ESLint 配置指南](./ESLINT_CONFIGURATION_GUIDE.md)** - 完整的 ESLint 配置文檔，包含常見問題解決方案
-- **[ESLint 快速參考](./ESLINT_QUICK_REFERENCE.md)** - ESLint 問題的快速診斷和修復指南
+| 文件 | 內容 |
+|------|------|
+| [系統架構](ARCHITECTURE.md) | 資料流、Rust 後端模組、React 前端分層、AI 供應商抽象、資料庫 schema |
+| [開發工具鏈](TOOLING.md) | 版本管理、程式碼統計、發布前檢查、Tauri 版本鎖定陷阱 |
+| [視覺創作中心架構](architecture/VISUAL_CREATION_CENTER_ARCHITECTURE.md) | 插畫系統的元件與狀態設計 |
+| [設計系統](design.md) | 色彩、字型、間距、元件、動畫、響應式規範 |
+| [Keyring 實作說明](KEYRING_IMPLEMENTATION_SUMMARY.md) | API 金鑰加密儲存的實作細節 |
+| [Keyring 測試](KEYRING_TEST.md) | 金鑰儲存的驗證流程 |
 
-### 🚀 開發指南
-- **[CLAUDE.md](../CLAUDE.md)** - Claude Code 的專案配置和架構說明
+## 開發規範
 
-## 🛠️ 工具腳本
+| 文件 | 內容 |
+|------|------|
+| [測試指南](TESTING_GUIDE.md) | 測試架構與撰寫慣例 |
+| [手動測試清單](MANUAL_TESTING_CHECKLIST.md) | 發布前的人工驗證項目 |
+| [ESLint 設定指南](ESLINT_CONFIGURATION_GUIDE.md) | 完整設定說明與常見問題 |
+| [ESLint 快速參考](ESLINT_QUICK_REFERENCE.md) | 問題快速診斷 |
+| [程式碼行數最佳實踐](tools/程式碼行數最佳實踐規則.md) | 統計口徑的約定 |
 
-### ESLint 修復工具
+## 部署與發布
+
+| 文件 | 內容 |
+|------|------|
+| [安裝指南](deployment/INSTALLATION_GUIDE.md) | 各平台安裝方式 |
+| [CI 說明](deployment/README_CI.md) | GitHub Actions 設定 |
+| [Apple 簽章設定](deployment/APPLE_SIGNING_SETUP.md) | macOS 簽章流程 |
+| [macOS PKG 繞過指南](deployment/MACOS_PKG_BYPASS_GUIDE.md) | quarantine 處理 |
+| [發布檢查清單](RELEASE_CHECKLIST.md) | 發布前的人工確認項目 |
+
+## 稽核與分析報告
+
+| 文件 | 內容 |
+|------|------|
+| [技術債稽核](TECH_DEBT_AUDIT_2025-10-11.md) | 2025-10-11 的全面稽核，驅動了 v1.3.7 的清理 |
+| [程式碼審查 2026-02-06](CODE_REVIEW_2026-02-06.md) | 電子書排版功能的審查發現 |
+| [Console 使用分析](CONSOLE_ANALYSIS_REPORT.md) | logger 遷移前的呼叫點盤點 |
+| [Context Engineering 指標](context-engineering-metrics.md) | 上下文處理的量測結果 |
+| [電子書 P1 實作計畫](EBOOK_P1_IMPLEMENTATION_PLAN.md) | 電子書排版功能的規劃 |
+| [電子書 P1 完成總結](EBOOK_P1_COMPLETION_SUMMARY.md) | 實作結果 |
+
+## 歷史紀錄
+
+`archive/` 存放已完成階段的紀錄，不再維護，但保留下來是有理由的：
+
+| 文件 | 內容 |
+|------|------|
+| [Tauri 遷移記錄](archive/TAURI-MIGRATION.md) | 2025-07-31，五天內從 Electron 換到 Tauri 的過程 |
+| [Tailwind v4 升級記錄](archive/TAILWIND_V4_UPGRADE_LOG.md) | v2.0.0 設計改版的技術基礎 |
+| [Ollama 修復總結](archive/OLLAMA_FIX_SUMMARY.md) | v0.3.3–v0.4.6 那六次連線修復的結論 |
+| [Context Engineering 測試報告](archive/context_engineering_test_report.md) | 系統提示與使用者上下文分離的驗證 |
+
+## 產品與官網
+
+| 文件 | 內容 |
+|------|------|
+| [官網 PRD](PRD.md) | 產品官網的需求規格、市場定位與功能規劃 |
+| [網頁版快速指南](QUICK_START_GUIDE_WEB.md) | 官網用的入門說明 |
+
+官網：<https://genesis-chronicle.zeabur.app/>
+
+## ESLint 疑難排解
+
 ```bash
-# 自動修復 ESLint 配置問題
-./scripts/fix-eslint.sh
+./scripts/fix-eslint.sh    # 自動修復設定問題
+npm run lint               # 檢查
 ```
 
-### 參考配置文件
-- **[.eslintrc.reference.js](../.eslintrc.reference.js)** - ESLint 標準配置範本
+| 問題 | 處理方式 |
+|------|---------|
+| TypeScript 語法錯誤 | 檢查 parser 設定，見[設定指南](ESLINT_CONFIGURATION_GUIDE.md) |
+| React JSX 錯誤 | 啟用 JSX 支援，見[快速參考](ESLINT_QUICK_REFERENCE.md) |
+| 依賴衝突 | 重裝依賴後跑修復腳本 |
 
-## 🔍 快速問題解決
-
-### ESLint 常見問題
-| 問題 | 解決方案 | 文檔連結 |
-|------|---------|----------|
-| TypeScript 語法錯誤 | 檢查解析器配置 | [ESLint 指南](./ESLINT_CONFIGURATION_GUIDE.md#常見問題與解決方案) |
-| React JSX 錯誤 | 啟用 JSX 支援 | [快速參考](./ESLINT_QUICK_REFERENCE.md#jsx-語法問題) |
-| 依賴衝突 | 重新安裝依賴 | [修復腳本](../scripts/fix-eslint.sh) |
-
-### 緊急修復步驟
-1. 運行修復腳本：`./scripts/fix-eslint.sh`
-2. 查看快速參考：[ESLint_QUICK_REFERENCE.md](./ESLINT_QUICK_REFERENCE.md)
-3. 使用參考配置：`cp .eslintrc.reference.js .eslintrc.js`
-
-## 📋 檢查清單
-
-### 新環境設定
-- [ ] 安裝 Node.js 18+
-- [ ] 運行 `npm install`
-- [ ] 檢查 ESLint 配置：`npm run lint`
-- [ ] 如有問題，運行 `./scripts/fix-eslint.sh`
-
-### 日常開發
-- [ ] 提交前運行 `npm run lint`
-- [ ] 使用 IDE 的 ESLint 整合
-- [ ] 遵循專案編碼規範
-
-### 問題排除
-- [ ] 檢查 [快速參考](./ESLINT_QUICK_REFERENCE.md)
-- [ ] 運行自動修復腳本
-- [ ] 查看詳細配置指南
-
-## 🔄 版本資訊
-
-| 工具 | 版本 | 說明 |
-|------|------|------|
-| ESLint | 8.54.0 | 代碼檢查工具 |
-| TypeScript ESLint | 6.11.0 | TypeScript 支援 |
-| React ESLint | 7.33.2 | React 規則 |
-
-## 🤝 貢獻指南
-
-1. **修改配置前**：先閱讀 [ESLint 配置指南](./ESLINT_CONFIGURATION_GUIDE.md)
-2. **測試配置**：運行 `npm run lint` 確保配置正確
-3. **更新文檔**：如有新的配置或解決方案，請更新相關文檔
-4. **提交變更**：確保所有配置文件都被提交
-
-## 📞 技術支援
-
-如果遇到文檔中未涵蓋的問題：
-
-1. 先查看 [ESLint 官方文檔](https://eslint.org/docs/)
-2. 檢查 [TypeScript ESLint 文檔](https://typescript-eslint.io/)
-3. 運行自動修復腳本嘗試解決
-4. 在專案中建立 Issue 記錄問題
-
----
-
-**最後更新**: 2024年1月  
-**維護者**: 創世紀元開發團隊
+目前版本：ESLint 8.54.0、TypeScript ESLint 8.38.0、React ESLint 7.33.2。
