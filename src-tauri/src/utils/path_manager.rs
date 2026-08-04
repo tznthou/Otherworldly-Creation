@@ -43,15 +43,15 @@ impl PathManager {
     }
     
     /// 取得 AI 圖片儲存目錄
-    /// 
-    /// 開發環境：專案根目錄/generated-images
+    ///
+    /// 開發環境：src-tauri/generated-images
     /// 生產環境：
     /// - macOS: ~/Library/Application Support/genesis-chronicle/images
     /// - Windows: %LOCALAPPDATA%\genesis-chronicle\images
     pub fn get_images_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
         let images_dir = if Self::is_development() {
             // 開發環境：src-tauri/generated-images (Tauri 應用結構)
-            env::current_dir()?.join("src-tauri").join("generated-images")
+            crate::utils::path_utils::get_src_tauri_dir()?.join("generated-images")
         } else {
             // 生產環境：平台特定目錄
             #[cfg(target_os = "macos")]
@@ -91,15 +91,15 @@ impl PathManager {
     }
     
     /// 取得垃圾桶目錄（軟刪除圖片存放處）
-    /// 
-    /// 開發環境：專案根目錄/deleted-images
+    ///
+    /// 開發環境：src-tauri/deleted-images
     /// 生產環境：
     /// - macOS: ~/Library/Application Support/genesis-chronicle/deleted-images
     /// - Windows: %LOCALAPPDATA%\genesis-chronicle\deleted-images
     pub fn get_trash_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
         let trash_dir = if Self::is_development() {
             // 開發環境：src-tauri/deleted-images (Tauri 應用結構)
-            env::current_dir()?.join("src-tauri").join("deleted-images")
+            crate::utils::path_utils::get_src_tauri_dir()?.join("deleted-images")
         } else {
             // 生產環境：平台特定目錄
             #[cfg(target_os = "macos")]
@@ -138,51 +138,18 @@ impl PathManager {
     }
     
     /// 取得資料庫路徑
-    /// 
-    /// 開發環境：專案根目錄/genesis-chronicle-dev.db
+    ///
+    /// 開發環境：src-tauri/genesis-chronicle-dev.db
     /// 生產環境：
     /// - macOS: ~/Library/Application Support/genesis-chronicle/genesis-chronicle.db
     /// - Windows: %LOCALAPPDATA%\genesis-chronicle\genesis-chronicle.db
+    ///
+    /// 委派給 `database::connection::get_db_path()`，確保診斷資訊回報的是實際連線的那顆。
     pub fn get_database_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
-        let db_path = if Self::is_development() {
-            // 開發環境：專案根目錄/genesis-chronicle-dev.db
-            env::current_dir()?.join("genesis-chronicle-dev.db")
-        } else {
-            // 生產環境：平台特定目錄
-            #[cfg(target_os = "macos")]
-            {
-                let data_dir = dirs::data_dir()
-                    .ok_or("無法獲取 macOS 資料目錄")?
-                    .join("genesis-chronicle");
-                    
-                // 確保目錄存在
-                std::fs::create_dir_all(&data_dir)?;
-                data_dir.join("genesis-chronicle.db")
-            }
-            #[cfg(target_os = "windows")]
-            {
-                // 🔧 修復：使用 data_dir() 與圖片目錄保持一致
-                let data_dir = dirs::data_dir()
-                    .ok_or("無法獲取 Windows 資料目錄")?
-                    .join("genesis-chronicle");
+        let db_path = crate::database::connection::get_db_path()
+            .map_err(|e| -> Box<dyn std::error::Error> { e.to_string().into() })?;
 
-                // 確保目錄存在
-                std::fs::create_dir_all(&data_dir)?;
-                data_dir.join("genesis-chronicle.db")
-            }
-            #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-            {
-                let data_dir = dirs::data_local_dir()
-                    .ok_or("無法獲取資料目錄")?
-                    .join("genesis-chronicle");
-                    
-                // 確保目錄存在
-                std::fs::create_dir_all(&data_dir)?;
-                data_dir.join("genesis-chronicle.db")
-            }
-        };
-        
-        log::info!("資料庫路徑: {:?} (開發環境: {})", db_path, Self::is_development());
+        log::info!("資料庫路徑: {:?}", db_path);
         Ok(db_path)
     }
     
@@ -198,7 +165,7 @@ impl PathManager {
     /// 取得臨時目錄
     pub fn get_temp_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
         let temp_dir = if Self::is_development() {
-            env::current_dir()?.join("src-tauri").join("temp")
+            crate::utils::path_utils::get_src_tauri_dir()?.join("temp")
         } else {
             dirs::cache_dir()
                 .ok_or("無法獲取快取目錄")?

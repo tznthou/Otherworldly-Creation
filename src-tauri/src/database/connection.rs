@@ -63,9 +63,11 @@ pub fn get_db_path() -> Result<PathBuf> {
         log::info!("📁 使用用戶資料庫: {:?}", prod_db_path);
         Ok(prod_db_path)
     } else {
-        // 開發環境：使用項目根目錄下的開發資料庫
-        let current_dir = std::env::current_dir()?;
-        let dev_db_path = current_dir.join("genesis-chronicle-dev.db");
+        // 開發環境：src-tauri 目錄下的開發資料庫
+        // 用執行檔位置推導，不使用工作目錄——後者會隨啟動方式改變，導致另外建出一顆空資料庫
+        let dev_db_path = crate::utils::path_utils::get_src_tauri_dir()
+            .map_err(|e| anyhow::anyhow!("無法定位 src-tauri 目錄: {}", e))?
+            .join("genesis-chronicle-dev.db");
         log::info!("🔧 開發環境檢測 - 執行路徑: {}", exe_path_info);
         log::info!("📁 使用開發資料庫: {:?}", dev_db_path);
         Ok(dev_db_path)
@@ -112,6 +114,38 @@ pub fn create_connection() -> Result<Connection> {
     conn.pragma_update(None, "auto_vacuum", &"INCREMENTAL")?;
     
     log::info!("資料庫連接成功，已啟用性能優化");
-    
+
     Ok(conn)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 迴歸測試：開發資料庫必須固定在 src-tauri，不隨工作目錄漂移
+    ///
+    /// 舊版用 `current_dir()`，從專案根啟動時會在根目錄另建一顆空資料庫，
+    /// 使用者會以為原有作品消失。
+    #[test]
+    fn test_dev_db_path_lives_in_src_tauri() {
+        if is_production_environment() {
+            return;
+        }
+
+        let db_path = get_db_path().expect("應能取得資料庫路徑");
+
+        assert_eq!(
+            db_path.file_name(),
+            Some(std::ffi::OsStr::new("genesis-chronicle-dev.db")),
+            "開發環境應使用 dev 資料庫，實際為 {:?}",
+            db_path
+        );
+
+        let db_dir = db_path.parent().expect("資料庫路徑應有上層目錄");
+        assert!(
+            db_dir.join("Cargo.toml").exists(),
+            "開發資料庫應位於 src-tauri 目錄下，實際落在 {:?}",
+            db_dir
+        );
+    }
 }

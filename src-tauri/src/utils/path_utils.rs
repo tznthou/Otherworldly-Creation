@@ -71,20 +71,62 @@ pub fn is_development_environment() -> bool {
     false
 }
 
+/// 獲取 src-tauri 目錄（開發環境專用）
+///
+/// 不依賴當前工作目錄。工作目錄會隨啟動方式改變（`cargo tauri dev` 為 src-tauri，
+/// 從專案根手動啟動則為專案根），用它算路徑會讓資料落在兩個不同位置。
+///
+/// 三層定位，每層都用 Cargo.toml 驗證，確認找到的是真正的 src-tauri：
+/// 1. 執行檔位置往上找（主要路徑，與工作目錄無關）
+/// 2. 工作目錄本身就是 src-tauri（`cargo tauri dev` / `cargo test`）
+/// 3. 工作目錄下有 src-tauri（從專案根啟動）
+///
+/// 保留 2、3 兩層後備是因為環境判定並非完全可靠——例如 Windows 上若殘留
+/// `NODE_ENV=development`，安裝版也會被判成開發環境。直接回傳 Err 會讓功能整個壞掉，
+/// 留後備至少能繼續運作。驗證 Cargo.toml 則確保後備不會退回舊的巢狀路徑問題。
+pub fn get_src_tauri_dir() -> Result<PathBuf, Box<dyn Error>> {
+    let is_src_tauri = |p: &std::path::Path| p.join("Cargo.toml").is_file();
+
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(dir) = exe_path
+            .ancestors()
+            .map(|p| p.join("src-tauri"))
+            .find(|p| is_src_tauri(p))
+        {
+            return Ok(dir);
+        }
+    }
+
+    let current_dir = std::env::current_dir()?;
+
+    if current_dir.file_name() == Some(std::ffi::OsStr::new("src-tauri")) && is_src_tauri(&current_dir) {
+        log::warn!("[PathUtils] 無法從執行檔定位 src-tauri，改用工作目錄: {:?}", current_dir);
+        return Ok(current_dir);
+    }
+
+    let nested = current_dir.join("src-tauri");
+    if is_src_tauri(&nested) {
+        log::warn!("[PathUtils] 無法從執行檔定位 src-tauri，改用工作目錄下的: {:?}", nested);
+        return Ok(nested);
+    }
+
+    Err(format!(
+        "無法定位 src-tauri 目錄（執行檔: {:?}，工作目錄: {:?}）",
+        std::env::current_exe().ok(),
+        current_dir
+    )
+    .into())
+}
+
 /// 獲取圖片儲存的基礎目錄
-/// 
+///
 /// 返回的路徑會根據開發/生產環境自動選擇：
 /// - 開發環境：{project_root}/src-tauri/generated-images
 /// - 生產環境：{data_dir}/genesis-chronicle/images
 pub fn get_images_base_dir() -> Result<PathBuf, Box<dyn Error>> {
     let base_path = if is_development_environment() {
         // 開發環境：使用絕對路徑找到專案根目錄，避免工作目錄問題
-        let exe_path = std::env::current_exe()?;
-        let project_root = exe_path
-            .ancestors()
-            .find(|p| p.join("src-tauri").exists())
-            .ok_or("無法找到專案根目錄")?;
-        project_root.join("src-tauri").join("generated-images")
+        get_src_tauri_dir()?.join("generated-images")
     } else {
         // 生產環境：使用系統標準位置
         #[cfg(target_os = "windows")]
@@ -288,6 +330,30 @@ mod tests {
             assert!(temp.parent() == Some(&final_dir), "臨時目錄應該是最終目錄的子目錄");
             assert!(temp.file_name() == Some(std::ffi::OsStr::new("temp")), "臨時目錄名稱應該是 'temp'");
         }
+    }
+
+    /// 迴歸測試：src-tauri 目錄必須從執行檔推導，不得依賴工作目錄
+    ///
+    /// cargo test 的工作目錄就是 src-tauri，舊版 `current_dir().join("src-tauri")`
+    /// 會推出不存在的 src-tauri/src-tauri，讓資料落在錯誤位置。
+    #[test]
+    fn test_src_tauri_dir_not_derived_from_cwd() {
+        let src_tauri = get_src_tauri_dir().expect("應能從執行檔位置定位 src-tauri 目錄");
+
+        assert!(
+            src_tauri.file_name() == Some(std::ffi::OsStr::new("src-tauri")),
+            "路徑結尾應為 src-tauri，實際為 {:?}",
+            src_tauri
+        );
+        assert!(
+            src_tauri.join("Cargo.toml").exists(),
+            "src-tauri 下應有 Cargo.toml，實際路徑 {:?} 不是真正的 src-tauri（巢狀重複的徵兆）",
+            src_tauri
+        );
+        assert!(
+            !src_tauri.join("src-tauri").exists(),
+            "不應存在巢狀的 src-tauri/src-tauri"
+        );
     }
 }
 #[cfg(test)]
