@@ -215,12 +215,7 @@ export const waitForLoadingToFinish = async (queryByTestId: any) => {
 // 重新導出 mockElectronAPI 供測試使用
 export { mockElectronAPI };
 
-// 簡單的測試來避免 Jest 錯誤
-describe('Test Utils', () => {
-  it('should provide testing utilities', () => {
-    expect(createMockProject).toBeDefined();
-    expect(createMockChapter).toBeDefined();
-    expect(createMockCharacter).toBeDefined();
-    expect(renderWithProviders).toBeDefined();
-  });
-});
+// 這裡原本有一個佔位測試，用來避免「suite 沒有測試」的錯誤。
+// jest.config.js 的 testMatch 已改為只認 .test / .spec，輔助檔不再被當成 suite，
+// 佔位測試也就不需要了 —— 它會被每個 import 本檔的 suite 重複註冊，
+// 讓通過數多出好幾筆什麼都沒驗證的綠燈。
