@@ -430,7 +430,13 @@ mod tests {
         };
         
         let url = service.build_request_url(&request).unwrap();
-        assert!(url.contains("美麗的公主"));
+
+        // 提示詞會經過 percent-encoding 才進 URL，原文不會出現在裡面。
+        // 這裡寫死期望值而不是再呼叫一次 urlencoding::encode，
+        // 否則測的就只是「編碼器等於自己」而不是實際的編碼結果。
+        assert!(url.contains("%E7%BE%8E%E9%BA%97%E7%9A%84%E5%85%AC%E4%B8%BB"));
+        assert!(!url.contains("美麗的公主"));
+
         assert!(url.contains("width=512"));
         assert!(url.contains("height=512"));
         assert!(url.contains("model=flux"));

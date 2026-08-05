@@ -14,6 +14,12 @@ impl LanguagePurityEnforcer {
         let english_pattern = Regex::new(r"[a-zA-Z]+").unwrap();
         
         // 常見簡體字集合
+        //
+        // 已知缺陷：這份清單混進了一批繁簡同形字（定、期、始、束、就、能、完、成、
+        // 法、面、看、打、查、加、用、史、除、型、品、明、站、版、到、理、系 等），
+        // 正常的繁體文字碰到它們會被誤報成簡體。「打開查看」就會中三個。
+        // 要修得換成可靠的簡繁對照表，屬功能開發，暫時只標記。
+        // 目前唯一的呼叫路徑 analyze_text_purity 前端尚未接上，實際影響為零。
         let simplified_chars: HashSet<char> = [
             '国', '际', '时', '会', '这', '说', '对', '进', '发', '现', '经', '过',
             '与', '从', '来', '到', '学', '问', '题', '样', '关', '系', '间',
@@ -76,11 +82,16 @@ impl LanguagePurityEnforcer {
         }
         
         let purity_score = self.calculate_purity_score(text, &issues);
-        
+
+        // is_pure 看的是「有沒有偵測到問題」，不是分數門檻。
+        // 舊寫法 purity_score >= 0.95 會讓「这是一个国际化的应用」通过：
+        // 十個字裡抓到五個簡體字，但每個 Medium issue 只扣 0.05／總字數，
+        // 算出來 0.975 仍在門檻之上，於是一段簡體文字被判定為純繁體。
+        // 分數保留下來表示嚴重程度，純度與否交給 issues。
         PurityAnalysis {
+            is_pure: issues.is_empty(),
             issues,
             purity_score,
-            is_pure: purity_score >= 0.95,
         }
     }
     

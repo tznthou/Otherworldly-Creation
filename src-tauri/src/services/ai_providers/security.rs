@@ -33,7 +33,12 @@ impl SecurityUtils {
     /// 遮蔽 API 金鑰，用於安全日誌記錄
     /// 
     /// # Examples
-    /// ```
+    ///
+    /// 這段標成 text 而不是可執行的 doctest —— doctest 以外部 crate 的身分編譯，
+    /// 而 `lib.rs` 的 `mod services` 是私有的，範例裡的型別根本進不了 scope。
+    /// 實際行為由 `tests::test_api_key_masking` 驗證，斷言與這裡一致。
+    ///
+    /// ```text
     /// let masked = SecurityUtils::mask_api_key("sk-1234567890abcdef");
     /// assert_eq!(masked, "sk-1...cdef");
     /// ```
