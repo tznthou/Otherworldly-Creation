@@ -46,6 +46,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 9. **State Management**: All component state should flow through Redux - avoid local state for shared data
 10. **Error Handling**: Wrap all Tauri API calls with APIResponse<T> and error boundaries
 11. **Rust Build**: Use `cargo check --manifest-path src-tauri/Cargo.toml` for compilation checks
+12. **Testing**: TDD applies forward only — new code gets tests first. See 🧪 Testing below
 
 ### Development Commands (v1.2.0)
 
@@ -167,6 +168,37 @@ npm run setup              # Quick project setup
 - **⚡ Isekai Reincarnation**: Popular transmigration themes
 - **🚀 Sci-Fi Adventure**: Future tech space exploration
 - **Access**: Settings → Template Manager → Import Template
+
+## 🧪 Testing (TDD, 2026-08-05+)
+
+**Scope**: TDD applies **forward only**. New code gets tests first; existing code gets tests only when you touch it. Never retrofit tests across the codebase.
+
+**Baseline (must stay green)**: frontend 12 passed / Rust 34 passed / **0 failed / 0 skipped**. CI runs on every push to `main` and every PR — `frontend` on ubuntu + windows, `rust` on windows + macos. A red CI is a real signal now.
+
+```bash
+npm test                                          # jest (unit + integration projects)
+cargo test --manifest-path src-tauri/Cargo.toml   # lib + doctest
+```
+
+### The one rule that matters
+
+**A green test must mean the product works.** If a test can't turn red when production code breaks, it is worse than no test — it manufactures the appearance of coverage. 2026-08-05 deleted 55 tests that had never once passed, plus 7 that were always green while touching zero production code.
+
+Three ways fake green happens here — all three have already bitten this repo:
+
+1. `jest.mock` an entire module, then assert on that mock. Always green, verifies nothing, and it **hid a real gap for a year** (`context-engineering.test.ts` "tested" three APIs the frontend never wired up)
+2. Render something the test itself wrote inline (`<div onKeyDown={...}>`) and assert your own handler fired — that tests React, not the product
+3. Placeholder tests in helper files, re-registered once per importing suite
+
+### How to write one that counts
+
+- **Feed data through the Tauri command channel** — `mockTauriCommand('get_all_projects', () => [...])` from `src/__tests__/integration/setup.ts`. Components read via api layer → `enhancedSafeInvoke` → `invoke`. Setting `window.electronAPI` does **nothing** (Electron leftover; only 3 optional-chaining sites remain)
+- **Build the store with `createAppStore()`** from `store/store.ts`, never hand-roll a reducer list — the old helper did and silently lost 4 slices
+- **Verify the UI actually looks like that before asserting on it.** The deleted suites passed `isOpen`/`onClose` to a modal that takes no props (it dispatches `closeModal()`), queried a `modal-backdrop` testId that never existed, and drove `ProjectGrid` — a component nothing imports
+- **When a test fails, get evidence before theorizing.** Insert a log and confirm which function actually runs. `validates age range` sat skipped for months because everyone assumed a JS validation path that HTML5 `min`/`max` preempts — submit never dispatches, so `handleSubmit` never runs
+- Reference example: `src/__tests__/integration/workflows/dashboard.test.tsx`
+
+📚 **Deletion rationale, backlog of uncovered flows, and known gaps**: [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
 
 ## ⚠️ Development Warnings
 
