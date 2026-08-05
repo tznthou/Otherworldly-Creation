@@ -1,0 +1,83 @@
+name: 🧪 CI
+
+# 每次推上 main 與每個 PR 都跑。
+#
+# 為什麼要有這個 workflow：在此之前四個 workflow 全部只 build 不 test，
+# 其中 windows job 尤其關鍵 —— v1.3.4 的「Windows 圖片壞了將近一個月」
+# 就是因為沒有任何自動化在 Windows 上驗證行為，只驗證得出「編得過」。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: 前端 (${{ matrix.os }})
+    strategy:
+      # 不要一個平台紅了就掐掉另一個 —— 跨平台差異正是這個矩陣要抓的東西
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # 版本從 .nvmrc 讀，不在這裡寫死 —— 一份版本號兩邊寫遲早分岔
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🔍 TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: 🧪 Jest
+        run: npm test
+
+      - name: 🧹 ESLint
+        # 只在單一平台跑，lint 結果與作業系統無關
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run lint
+
+  rust:
+    name: Rust (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows 是重點，macOS 是主要開發平台。
+        # Linux 沒有納入：開發與發布都不走這個平台，而 Tauri 的 Linux
+        # 系統依賴（webkit2gtk 等）要另外裝，成本高於這裡能得到的訊號。
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 📦 Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: 🧪 cargo test
+        # 不需要先建前端：cargo test 只跑 lib 與 doctest，
+        # frontendDist 的存在性是 `tauri build` 階段才檢查的（已實測，
+        # 移走 dist/ 並強制重編 generate_context! 仍然通過）
+        run: cargo test --manifest-path src-tauri/Cargo.toml

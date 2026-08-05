@@ -3,6 +3,9 @@
   "version": "2.0.1",
   "description": "創世紀元：異世界創作神器 - 基於 AI 的輕小說創作工具 (Tauri 版本)",
   "private": true,
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
     "dev": "cargo tauri dev",
     "dev:tauri": "cargo tauri dev",
