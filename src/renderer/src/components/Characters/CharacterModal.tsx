@@ -92,6 +92,9 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
     }
 
     // 年齡驗證
+    // 注意：透過 UI 走不到這裡 —— 年齡欄位是 <input type="number" min="0" max="1000">，
+    // 超範圍時 constraint validation 不通過，表單根本不會 dispatch submit。
+    // 留著是為了程式化呼叫或日後拿掉 min/max 的情況。見 CharacterModal.test.tsx 的 validates age range。
     if (formData.age !== undefined && formData.age !== null) {
       if (typeof formData.age === 'number' && (formData.age < 0 || formData.age > 1000)) {
         newErrors.age = '年齡必須在 0-1000 之間';
@@ -127,7 +130,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }

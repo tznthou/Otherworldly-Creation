@@ -148,7 +148,7 @@ describe('CharacterModal', () => {
     });
   });
 
-  it.skip('validates age range', async () => {
+  it('validates age range', async () => {
     render(<CharacterModal {...defaultProps} />);
     
     // Wait for modal to fully render with basic tab active
@@ -167,13 +167,23 @@ describe('CharacterModal', () => {
     
     fireEvent.change(nameInput, { target: { value: '測試角色' } });
     fireEvent.change(ageInput, { target: { value: '1001' } });
-    
-    const submitButton = screen.getByText('創建');
-    fireEvent.click(submitButton);
-    
+
+    // 攔下超範圍年齡的是 HTML5 的 min/max，不是 validateForm 裡那段 JS 檢查。
+    // 表單 constraint validation 不通過就不會 dispatch submit，
+    // handleSubmit 從頭到尾沒被呼叫，所以「年齡必須在 0-1000 之間」永遠不會出現在畫面上。
+    // 這個測試原本斷言那句訊息，因此被 skip 了很久 —— 它期待的是一條走不到的路徑。
+    expect(ageInput).toHaveAttribute('max', '1000');
+    expect(ageInput).toHaveAttribute('min', '0');
+    expect((ageInput as HTMLInputElement).validity.rangeOverflow).toBe(true);
+    expect((ageInput as HTMLInputElement).validity.valid).toBe(false);
+
+    fireEvent.click(screen.getByText('創建'));
+
+    // 提交被擋下，角色不會被儲存，modal 也不關閉。
     await waitFor(() => {
-      expect(screen.getByText('年齡必須在 0-1000 之間')).toBeInTheDocument();
+      expect(screen.getByText('新增角色')).toBeInTheDocument();
     });
+    expect(defaultProps.onSave).not.toHaveBeenCalled();
   });
 
   it('submits form with valid data', async () => {
