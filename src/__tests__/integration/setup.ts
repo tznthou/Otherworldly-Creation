@@ -1,156 +1,22 @@
-import '@testing-library/jest-dom';
-import { configure } from '@testing-library/react';
-import { TextEncoder, TextDecoder } from 'util';
+/**
+ * Integration 測試專用設定
+ *
+ * 只放應用層的替身：Tauri 命令的回應與測試資料工廠。
+ * 瀏覽器 API polyfill 與 Tauri 執行期介面屬於環境層，在 `../setup-env.ts`。
+ *
+ * 這裡曾經有一份 90 行的 window.electronAPI 替身。它已隨 2026-08-05 刪除的
+ * 五個 integration suite 一起移除 —— 專案主體早已遷到 Tauri，元件的資料
+ * 一律走 invoke，那份替身對畫面沒有任何作用，卻讓五個 suite 誤以為
+ * 設 mockResolvedValue 就能餵資料。殘留的兩處 window.electronAPI?.xxx
+ * （UpdateManager / GlobalErrorHandler）都是 optional chaining，
+ * 不 mock 它反而讓測試環境與真實的 Tauri 執行期一致。
+ */
 
-// 配置 Testing Library
-configure({
-  testIdAttribute: 'data-testid',
-});
+// === 測試資料工廠 ===
+//
+// 形狀是後端格式（snake_case、settings 為 JSON 字串），api 層會轉成前端格式。
 
-// 設置全域變數
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
-
-// 模擬 ResizeObserver
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
-
-// 模擬 IntersectionObserver
-global.IntersectionObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
-
-// 模擬 matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
-
-// 模擬 localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-global.localStorage = localStorageMock;
-
-// 模擬 sessionStorage
-const sessionStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-global.sessionStorage = sessionStorageMock;
-
-// 模擬 Electron API
-const mockElectronAPI = {
-  projects: {
-    getAll: jest.fn().mockResolvedValue([]),
-    create: jest.fn().mockResolvedValue('test-project-id'),
-    update: jest.fn().mockResolvedValue(undefined),
-    delete: jest.fn().mockResolvedValue(undefined),
-    getById: jest.fn().mockResolvedValue(null),
-  },
-  chapters: {
-    getByProjectId: jest.fn().mockResolvedValue([]),
-    create: jest.fn().mockResolvedValue('test-chapter-id'),
-    update: jest.fn().mockResolvedValue(undefined),
-    delete: jest.fn().mockResolvedValue(undefined),
-    getById: jest.fn().mockResolvedValue(null),
-  },
-  characters: {
-    getByProjectId: jest.fn().mockResolvedValue([]),
-    create: jest.fn().mockResolvedValue('test-character-id'),
-    update: jest.fn().mockResolvedValue(undefined),
-    delete: jest.fn().mockResolvedValue(undefined),
-    getById: jest.fn().mockResolvedValue(null),
-    updateRelationships: jest.fn().mockResolvedValue(undefined),
-    getRelationships: jest.fn().mockResolvedValue([]),
-    checkRelationshipConsistency: jest.fn().mockResolvedValue([]),
-    checkReferences: jest.fn().mockResolvedValue({ references: [], characterName: null }),
-  },
-  ai: {
-    checkOllamaService: jest.fn().mockResolvedValue(true),
-    getServiceStatus: jest.fn().mockResolvedValue({
-      service: { available: true, version: '0.1.0' },
-      models: { count: 2, list: ['llama3', 'codellama'] },
-      lastChecked: new Date(),
-    }),
-    listModels: jest.fn().mockResolvedValue(['llama3', 'codellama']),
-    getModelsInfo: jest.fn().mockResolvedValue([]),
-    checkModelAvailability: jest.fn().mockResolvedValue({ available: true }),
-    generateText: jest.fn().mockResolvedValue('Generated text'),
-    generateWithContext: jest.fn().mockResolvedValue('Generated text with context'),
-    updateOllamaConfig: jest.fn().mockResolvedValue({ success: true }),
-  },
-  system: {
-    getVersion: jest.fn().mockResolvedValue('1.0.0'),
-    showMessageBox: jest.fn().mockResolvedValue({ response: 0 }),
-  },
-  settings: {
-    loadSettings: jest.fn().mockResolvedValue({}),
-    saveSettings: jest.fn().mockResolvedValue(undefined),
-    resetSettings: jest.fn().mockResolvedValue(undefined),
-    updateSettings: jest.fn().mockResolvedValue(undefined),
-  },
-  database: {
-    healthCheck: jest.fn().mockResolvedValue({
-      isHealthy: true,
-      issues: [],
-      statistics: {
-        totalProjects: 0,
-        totalChapters: 0,
-        totalCharacters: 0,
-        totalTemplates: 4,
-        databaseSize: 1024,
-        lastVacuum: null,
-        fragmentationLevel: 0,
-      },
-      timestamp: new Date().toISOString(),
-    }),
-    autoRepair: jest.fn().mockResolvedValue({
-      success: true,
-      fixedIssues: [],
-      remainingIssues: [],
-      message: 'No issues found',
-    }),
-    generateReport: jest.fn().mockResolvedValue('Database health report'),
-    optimize: jest.fn().mockResolvedValue({ success: true, message: 'Database optimized' }),
-    export: jest.fn().mockResolvedValue({ success: true, filePath: '/path/to/backup.json' }),
-    import: jest.fn().mockResolvedValue({ success: true, message: 'Data imported successfully' }),
-    getStatistics: jest.fn().mockResolvedValue({
-      totalProjects: 0,
-      totalChapters: 0,
-      totalCharacters: 0,
-      totalTemplates: 4,
-      databaseSize: 1024,
-      lastVacuum: null,
-      fragmentationLevel: 0,
-    }),
-    checkIntegrity: jest.fn().mockResolvedValue({ isHealthy: true, issues: [] }),
-    vacuum: jest.fn().mockResolvedValue({ success: true, message: 'Database vacuumed' }),
-    analyze: jest.fn().mockResolvedValue({ success: true, message: 'Database analyzed' }),
-  },
-};
-
-// 創建 mock 測試資料
-const createMockTauriProject = () => ({
+export const createMockTauriProject = (overrides: Record<string, unknown> = {}) => ({
   id: 'test-project-1',
   name: '測試專案',
   description: '這是一個測試專案',
@@ -169,9 +35,23 @@ const createMockTauriProject = () => ({
     },
     templateSettings: {},
   }),
+  ...overrides,
 });
 
-const createMockTauriCharacter = () => ({
+export const createMockTauriChapter = (overrides: Record<string, unknown> = {}) => ({
+  id: 'test-chapter-1',
+  project_id: 'test-project-1',
+  title: '第一章',
+  content: JSON.stringify([{ type: 'paragraph', children: [{ text: '這是第一章的內容。' }] }]),
+  order_index: 1,
+  chapter_number: 1,
+  metadata: null,
+  created_at: '2025-08-15T15:20:00Z',
+  updated_at: '2025-08-15T15:20:00Z',
+  ...overrides,
+});
+
+export const createMockTauriCharacter = (overrides: Record<string, unknown> = {}) => ({
   id: 'test-character-1',
   project_id: 'test-project-1',
   name: '主角',
@@ -188,86 +68,93 @@ const createMockTauriCharacter = () => ({
   avatar_url: null,
   created_at: '2025-08-15T15:20:00Z',
   updated_at: '2025-08-15T15:20:00Z',
+  ...overrides,
 });
 
-// 模擬 Tauri API
-const mockTauriAPI = {
-  invoke: jest.fn((command, args) => {
-    switch (command) {
-      case 'get_project_by_id':
-        return Promise.resolve(createMockTauriProject());
-      case 'get_characters_by_project_id':
-        return Promise.resolve([createMockTauriCharacter()]);
-      case 'create_character':
-        return Promise.resolve('new-character-id');
-      case 'update_character':
-        return Promise.resolve(undefined);
-      case 'delete_character':
-        return Promise.resolve(undefined);
-      case 'get_character_by_id':
-        return Promise.resolve(createMockTauriCharacter());
-      case 'get_character_relationships':
-        return Promise.resolve([]);
-      case 'check_ollama_service':
-        return Promise.resolve({ available: true, version: '0.11.4' });
-      case 'get_ai_providers':
-        return Promise.resolve([]);
-      default:
-        return Promise.resolve(undefined);
-    }
-  }),
-};
+// === Tauri 命令的可覆寫回應 ===
+//
+// 元件的資料一律走 Tauri invoke（api 層 → enhancedSafeInvoke → invoke），
+// 所以測試要餵資料給畫面，唯一的入口就是這裡。
+//
+// 用 mockTauriCommand() 覆寫單一命令，afterEach 會自動還原成預設值。
+// 變數名必須以 mock 開頭，否則 jest 的 hoisting 檢查會擋下 factory 內的引用。
+//
+//   mockTauriCommand('get_all_projects', () => [createMockTauriProject({ name: '專案一' })]);
 
-// 設置全域 API
-global.window = Object.assign(global.window || {}, {
-  electronAPI: mockElectronAPI,
-  __TAURI__: mockTauriAPI,
+type CommandHandler = (args?: Record<string, unknown>) => unknown;
+
+const mockCommandOverrides: Record<string, CommandHandler> = {};
+
+export function mockTauriCommand(command: string, handler: CommandHandler): void {
+  mockCommandOverrides[command] = handler;
+}
+
+export function resetTauriCommands(): void {
+  Object.keys(mockCommandOverrides).forEach(key => delete mockCommandOverrides[key]);
+}
+
+afterEach(() => {
+  resetTauriCommands();
 });
 
-// 模擬 @tauri-apps/api/core
-jest.mock('@tauri-apps/api/core', () => ({
-  invoke: jest.fn().mockImplementation((command: string, args?: any) => {
-    console.log('Mock Tauri invoke called:', command, args);
-    
-    switch (command) {
-      case 'get_all_projects':
-        return Promise.resolve([]);
-      case 'get_chapters_by_project_id':
-        return Promise.resolve([]);
-      case 'get_characters_by_project_id':
-        return Promise.resolve([]);
-      case 'create_project':
-        return Promise.resolve('test-project-id');
-      case 'health_check':
-        return Promise.resolve({
-          isHealthy: true,
-          issues: [],
-          statistics: {
-            totalProjects: 0,
-            totalChapters: 0,
-            totalCharacters: 0,
-            totalTemplates: 4,
-            databaseSize: 1024,
-            lastVacuum: null,
-            fragmentationLevel: 0,
-          },
-          timestamp: new Date().toISOString(),
-        });
-      default:
-        console.warn('Unhandled Tauri command in mock:', command);
-        return Promise.resolve(null);
-    }
-  }),
-}));
+// 用 requireActual 保留模組其餘匯出，只換掉 invoke。
+// 整個模組換成物件字面值會連帶弄丟 Resource / transformCallback 等內部依賴，
+// 而 `@tauri-apps/plugin-store` 的 `class Store extends core.Resource` 正是靠它們，
+// 少一個就會在載入階段丟 "Class extends value undefined"。
 
-// 導出 mock 以供測試使用
-export { mockElectronAPI };
+jest.mock('@tauri-apps/api/core', () => {
+  const actual = jest.requireActual('@tauri-apps/api/core');
 
-// 簡單的測試來避免 Jest 錯誤
-describe('Test Setup', () => {
-  it('should setup test environment correctly', () => {
-    expect(global.window.electronAPI).toBeDefined();
-    expect(global.TextEncoder).toBeDefined();
-    expect(global.ResizeObserver).toBeDefined();
-  });
+  return {
+    ...actual,
+    invoke: jest.fn(async (command: string, args?: Record<string, unknown>) => {
+      const override = mockCommandOverrides[command];
+      if (override) {
+        return override(args);
+      }
+
+      switch (command) {
+        case 'get_all_projects':
+          return [];
+        case 'get_project_by_id':
+          return createMockTauriProject();
+        case 'get_chapters_by_project_id':
+          return [];
+        case 'get_characters_by_project_id':
+          return [createMockTauriCharacter()];
+        case 'get_character_by_id':
+          return createMockTauriCharacter();
+        case 'create_project':
+          return 'test-project-id';
+        case 'create_character':
+          return 'new-character-id';
+        case 'update_character':
+        case 'delete_character':
+          return undefined;
+        case 'get_character_relationships':
+          return [];
+        case 'check_ollama_service':
+          return { available: true, version: '0.11.4' };
+        case 'get_ai_providers':
+          return [];
+        case 'health_check':
+          return {
+            isHealthy: true,
+            issues: [],
+            statistics: {
+              totalProjects: 0,
+              totalChapters: 0,
+              totalCharacters: 0,
+              totalTemplates: 4,
+              databaseSize: 1024,
+              lastVacuum: null,
+              fragmentationLevel: 0,
+            },
+            timestamp: new Date().toISOString(),
+          };
+        default:
+          return null;
+      }
+    }),
+  };
 });

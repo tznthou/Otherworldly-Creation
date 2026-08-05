@@ -23,10 +23,17 @@ impl StyleResolver {
     /// * None 或空值 -> 預設動漫風格
     /// 
     /// # 範例
-    /// ```rust
+    ///
+    /// 標成 text 而不是可執行的 doctest：doctest 以外部 crate 的身分編譯，
+    /// `lib.rs` 的 `mod services` 是私有的，型別進不了 scope；
+    /// 且 `TranslationStyle` 沒有 derive `PartialEq`，`assert_eq!` 本來就編不過。
+    /// 實際行為由 `tests::test_resolve_realistic_style` 與
+    /// `tests::test_resolve_none_defaults_to_anime` 驗證。
+    ///
+    /// ```text
     /// let style = StyleResolver::resolve_translation_style(Some("realistic"));
     /// assert_eq!(style, TranslationStyle::Realistic);
-    /// 
+    ///
     /// let default_style = StyleResolver::resolve_translation_style(None);
     /// assert_eq!(default_style, TranslationStyle::Anime);
     /// ```
