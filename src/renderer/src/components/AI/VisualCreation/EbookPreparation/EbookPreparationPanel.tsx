@@ -8,6 +8,7 @@ import DragDropClassificationPanel, { ImageCategory } from './components/DragDro
 import ChapterConfigurationPanel from './components/ChapterConfigurationPanel';
 import SimplePreviewPanel from './components/SimplePreviewPanel';
 import { createLogger } from '../../../../utils/logger';
+import { formatFileSize } from '../../../../utils/format';
 
 // 創建模組專用 logger
 const log = createLogger('EbookPreparationPanel');
@@ -31,8 +32,6 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'organize' | 'configure' | 'preview'>('organize');
   const [organizeSubTab, setOrganizeSubTab] = useState<'rename' | 'metadata' | 'classify'>('rename');
-  const [isProcessing, _setIsProcessing] = useState(false);
-  const [_imageClassifications, setImageClassifications] = useState<Record<string, ImageCategory>>({});
 
   // 從 Redux 取得目前專案
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
@@ -42,7 +41,7 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
     return illustrations.filter(img => selectedImageIds.includes(img.id));
   }, [illustrations, selectedImageIds]);
 
-  // 統計信息
+  // 統計資訊
   const stats = useMemo(() => {
     return {
       totalImages: selectedImages.length,
@@ -61,7 +60,7 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
       id: 'organize' as const,
       name: '圖片整理',
       icon: '🏷️',
-      description: '批次重命名和元數據分析'
+      description: '批次重命名和元資料分析'
     },
     {
       id: 'configure' as const,
@@ -87,7 +86,7 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
     },
     {
       id: 'metadata' as const,
-      name: '元數據分析',
+      name: '元資料分析',
       icon: '📊',
       description: '圖片品質和適用性分析'
     },
@@ -103,22 +102,14 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
     log.debug('🚀 [EbookPreparationPanel] 初始化，選中圖片：', selectedImages.length);
   }, [selectedImages.length]);
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-
   const handleRename = (imageId: string, newName: string) => {
-    log.debug('🏷️ [批次重命名]', { imageId, newName });
-    // TODO: 實現重命名邏輯
+    // 尚未實作：目前只記錄，沒有任何實際的檔案或資料庫變更
+    log.debug('批次重新命名（尚未實作）', { imageId, newName });
   };
 
   const handleClassificationChange = (classifications: Record<string, ImageCategory>) => {
-    setImageClassifications(classifications);
-    log.debug('🗂️ [拖放分類]', classifications);
+    // 分類結果目前僅存在於子元件的本地狀態，切換分頁即遺失
+    log.debug('拖放分類（尚未持久化）', classifications);
   };
 
   const renderOrganizeContent = () => {
@@ -163,7 +154,7 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
           </p>
           <ul className="text-warm-gold/80 text-sm space-y-1">
             <li>• <strong>批次重命名：</strong>智能重命名和分類整理</li>
-            <li>• <strong>元數據分析：</strong>圖片品質和電子書適用性評估</li>
+            <li>• <strong>元資料分析：</strong>圖片品質和電子書適用性評估</li>
             <li>• <strong>拖放分類：</strong>直觀的拖拽式圖片分類管理</li>
           </ul>
         </div>
@@ -322,11 +313,14 @@ export const EbookPreparationPanel: React.FC<EbookPreparationPanelProps> = ({
             >
               關閉
             </button>
+            {/* 這個按鈕從未綁定 onClick，點了不會有任何事發生。
+                在真正的處理流程接上之前，明確停用並標示，避免誤導使用者。 */}
             <button
-              disabled={selectedImages.length === 0 || isProcessing}
-              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+              disabled
+              title="批次處理流程尚未實作"
+              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
-              {isProcessing ? '處理中...' : '開始處理'}
+              開始處理（尚未實作）
             </button>
           </div>
         </div>

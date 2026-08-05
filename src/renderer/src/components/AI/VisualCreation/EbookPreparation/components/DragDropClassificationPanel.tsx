@@ -14,7 +14,7 @@ import { IllustrationHistoryItem } from '../../../../../types/illustration';
 import { SafeImage } from '../../../../UI/SafeImage';
 import { createLogger } from '../../../../../utils/logger';
 
-// 創建模組專用 logger
+// 建立模組專用 logger
 const log = createLogger('DragDropClassificationPanel');
 
 export interface ImageCategory {
@@ -25,7 +25,7 @@ export interface ImageCategory {
   description: string;
 }
 
-// 默認分類
+// 預設分類
 const DEFAULT_CATEGORIES: ImageCategory[] = [
   {
     id: 'cover',
@@ -69,7 +69,7 @@ interface DragDropClassificationPanelProps {
   onClassificationChange: (classifications: Record<string, ImageCategory>) => void;
 }
 
-// 可拖曳圖片組件
+// 可拖曳圖片元件
 interface DraggableImageProps {
   image: IllustrationHistoryItem;
   index: number;
@@ -144,7 +144,7 @@ const DraggableImageItem: React.FC<DraggableImageProps> = ({ image, index, onIma
   );
 };
 
-// 可放置分類區域組件
+// 可放置分類區域元件
 interface DroppableCategoryProps {
   category: ImageCategory;
   images: IllustrationHistoryItem[];
@@ -248,11 +248,10 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
   selectedImages,
   onClassificationChange
 }) => {
-  const [categories] = useState<ImageCategory[]>(DEFAULT_CATEGORIES);
   const [imageClassifications, setImageClassifications] = useState<Record<string, string>>({});
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
-  // 配置傳感器
+  // 配置感測器
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -265,7 +264,7 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
   const categorizedImages = useMemo(() => {
     const result: Record<string, IllustrationHistoryItem[]> = {};
 
-    categories.forEach(category => {
+    DEFAULT_CATEGORIES.forEach(category => {
       result[category.id] = [];
     });
 
@@ -277,14 +276,14 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
     });
 
     return result;
-  }, [categories, selectedImages, imageClassifications]);
+  }, [selectedImages, imageClassifications]);
 
   // 獲取未分類圖片
   const unclassifiedImages = useMemo(() => {
     return selectedImages.filter(image => !imageClassifications[image.id]);
   }, [selectedImages, imageClassifications]);
 
-  // 統計數據
+  // 統計資料
   const stats = useMemo(() => {
     const total = selectedImages.length;
     const classified = Object.keys(imageClassifications).length;
@@ -300,7 +299,7 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
 
   // 處理拖曳開始
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    log.debug('🟢 [DragDropFixed] DragStart', {
+    log.debug('🟢 DragStart', {
       activeId: event.active.id,
       data: event.active.data.current
     });
@@ -310,7 +309,7 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
 
   // 處理拖曳結束
   const handleDragEnd = useCallback((event: DragEndEvent) => {
-    log.debug('✅ [DragDropFixed] DragEnd', {
+    log.debug('✅ DragEnd', {
       activeId: event.active.id,
       overId: event.over?.id,
       activeData: event.active.data.current,
@@ -321,7 +320,7 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
     setActiveDragId(null);
 
     if (!over) {
-      log.debug('🚫 [DragDropFixed] 沒有有效的放置目標');
+      log.debug('🚫 沒有有效的放置目標');
       return;
     }
 
@@ -329,13 +328,13 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
     const categoryId = String(over.id);
 
     // 檢查是否是有效的分類
-    const targetCategory = categories.find(cat => cat.id === categoryId);
+    const targetCategory = DEFAULT_CATEGORIES.find(cat => cat.id === categoryId);
     if (!targetCategory) {
-      log.debug('🚫 [DragDropFixed] 無效的分類目標:', categoryId);
+      log.debug('🚫 無效的分類目標:', categoryId);
       return;
     }
 
-    log.debug('✅ [DragDropFixed] 成功分類:', {
+    log.debug('✅ 成功分類:', {
       imageId,
       categoryId,
       categoryName: targetCategory.name
@@ -352,14 +351,14 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
     // 生成分類映射
     const categoryMap: Record<string, ImageCategory> = {};
     Object.entries(newClassifications).forEach(([imgId, catId]) => {
-      const category = categories.find(cat => cat.id === catId);
+      const category = DEFAULT_CATEGORIES.find(cat => cat.id === catId);
       if (category) {
         categoryMap[imgId] = category;
       }
     });
 
     onClassificationChange(categoryMap);
-  }, [categories, imageClassifications, onClassificationChange]);
+  }, [imageClassifications, onClassificationChange]);
 
   // 清除分類
   const handleClearCategory = useCallback((categoryId: string) => {
@@ -376,14 +375,14 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
     // 更新分類映射
     const categoryMap: Record<string, ImageCategory> = {};
     Object.entries(newClassifications).forEach(([imgId, catId]) => {
-      const category = categories.find(cat => cat.id === catId);
+      const category = DEFAULT_CATEGORIES.find(cat => cat.id === catId);
       if (category) {
         categoryMap[imgId] = category;
       }
     });
 
     onClassificationChange(categoryMap);
-  }, [imageClassifications, categories, onClassificationChange]);
+  }, [imageClassifications, onClassificationChange]);
 
   // 清除所有分類
   const handleClearAll = useCallback(() => {
@@ -397,7 +396,7 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
       <div className="bg-white p-4 rounded-lg shadow">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-800">
-            🚀 圖片分類 (DnD-Kit修復版)
+            圖片分類
           </h2>
           <button
             onClick={handleClearAll}
@@ -463,7 +462,7 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
 
         {/* 分類區域 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {categories.map(category => (
+          {DEFAULT_CATEGORIES.map(category => (
             <div key={category.id} className="bg-white p-4 rounded-lg shadow">
               <DroppableCategoryArea
                 category={category}
@@ -487,24 +486,6 @@ const DragDropClassificationPanel: React.FC<DragDropClassificationPanelProps> = 
         </DragOverlay>
       </DndContext>
 
-      {/* 調試信息 */}
-      <div className="bg-gray-100 p-4 rounded-lg text-sm">
-        <div className="font-semibold text-gray-700 mb-2">🔧 調試信息</div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-          <div>
-            <span className="font-medium">拖曳庫:</span> @dnd-kit
-          </div>
-          <div>
-            <span className="font-medium">傳感器:</span> PointerSensor
-          </div>
-          <div>
-            <span className="font-medium">激活距離:</span> 8px
-          </div>
-          <div>
-            <span className="font-medium">當前拖曳:</span> {activeDragId || '無'}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

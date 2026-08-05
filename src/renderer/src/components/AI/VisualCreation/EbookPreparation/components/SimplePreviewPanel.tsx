@@ -69,7 +69,9 @@ const SimplePreviewPanel: React.FC<SimplePreviewPanelProps> = ({
     const config = chapterConfigurations.find(c => c.chapterId === chapterId);
     if (!config) return [];
 
-    return config.images
+    // 必須先複製再排序：config.images 直接來自 Redux，RTK 的 Immer 預設會凍結
+    // state，對凍結陣列呼叫原地排序的 sort() 會丟 TypeError
+    return [...config.images]
       .sort((a, b) => a.order - b.order)
       .map(imgConfig => ({
         ...imgConfig,

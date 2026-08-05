@@ -33,14 +33,16 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
 
   // 使用持久化 hook
-  const { initializeForProject, saveToStorage, isInitialized } = useEbookPreparationPersistence(projectId, true);
+  const { initializeForProject, saveToStorage, isInitialized, isHydrated } = useEbookPreparationPersistence(projectId, true);
 
   // 初始化配置（如果需要）
+  // 必須等 localStorage 還原完成才建立空白配置，否則這裡讀到的 isInitialized
+  // 仍是還原前那一輪 render 的值，會立刻覆寫剛讀回來的設定
   useEffect(() => {
-    if (!isInitialized && currentProject) {
+    if (isHydrated && !isInitialized && currentProject) {
       initializeForProject(currentProject.name, 'Unknown');
     }
-  }, [isInitialized, currentProject, initializeForProject]);
+  }, [isHydrated, isInitialized, currentProject, initializeForProject]);
 
   // 確保所有章節都有配置條目
   useEffect(() => {
@@ -85,12 +87,6 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
   const unassignedImages = useMemo(() => {
     return selectedImages.filter(img => !assignedImageIds.has(img.id));
   }, [selectedImages, assignedImageIds]);
-
-  // 獲取選中章節的配置
-  const _selectedChapterConfig = useMemo(() => {
-    if (!selectedChapterId || !ebookConfig) return null;
-    return ebookConfig.chapterConfigurations.find(c => c.chapterId === selectedChapterId) || null;
-  }, [selectedChapterId, ebookConfig]);
 
   const handleDragStart = useCallback((imageId: string) => {
     setDraggedImageId(imageId);
@@ -174,10 +170,15 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
     return { totalImages, assignedCount, unassignedCount, configuredChapters };
   }, [selectedImages.length, assignedImageIds, ebookConfig]);
 
-  // 手動保存配置
+  // 手動儲存配置
   const handleSaveConfig = useCallback(() => {
-    saveToStorage();
-    log.info('✅ 配置已手動保存');
+    const result = saveToStorage();
+    if (result.ok) {
+      log.info('配置已手動儲存');
+    } else {
+      // 過去這裡無條件回報成功，配額用盡時使用者會以為存檔完成
+      log.error('配置儲存失敗:', result.error);
+    }
   }, [saveToStorage]);
 
   if (projectChapters.length === 0) {

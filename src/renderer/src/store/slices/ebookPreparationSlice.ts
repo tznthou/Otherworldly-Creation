@@ -59,6 +59,16 @@ const ebookPreparationSlice = createSlice({
       }
     },
 
+    /**
+     * 以完整配置直接取代目前狀態（供 localStorage 還原使用）
+     *
+     * 不能改用 updateConfig：那是 patch 語意且帶 `if (state.currentConfig)` 守衛，
+     * 冷啟動時 currentConfig 為 null，還原會靜默失效，接著被新建的空白配置覆寫。
+     */
+    hydrateConfig: (state, action: PayloadAction<EbookPreparationConfig>) => {
+      state.currentConfig = action.payload;
+    },
+
     resetConfig: (state) => {
       state.currentConfig = null;
       state.lastResult = null;
@@ -141,32 +151,42 @@ const ebookPreparationSlice = createSlice({
 
       const { imageId, position, chapterId, order = 0 } = action.payload;
 
-      // 如果是章節相關的圖片
-      if (chapterId) {
-        let chapterConfig = state.currentConfig.chapterConfigurations.find(c => c.chapterId === chapterId);
-        if (!chapterConfig) {
-          chapterConfig = {
-            chapterId,
-            chapterTitle: `章節 ${chapterId}`,
-            chapterNumber: parseInt(chapterId.replace(/\D/g, '')) || 1,
-            images: []
-          };
-          state.currentConfig.chapterConfigurations.push(chapterConfig);
+      // 全域位置（封面、封底、地圖等）目前沒有對應的儲存欄位。
+      // 過去這裡會靜默略過卻照常更新 updatedAt，讓失敗看起來像成功，
+      // 因此改為留下警告，日後擴充資料結構時能立刻發現。
+      if (!chapterId) {
+        const warning = `圖片 ${imageId} 的位置 ${position} 不屬於任何章節，目前尚未支援全域位置配置`;
+        if (!state.warnings.includes(warning)) {
+          state.warnings.push(warning);
         }
-
-        // 移除該圖片在其他位置的配置
-        chapterConfig.images = chapterConfig.images.filter(img => img.imageId !== imageId);
-
-        // 添加到新位置
-        chapterConfig.images.push({
-          position,
-          imageId,
-          order
-        });
-
-        // 按順序排序
-        chapterConfig.images.sort((a, b) => a.order - b.order);
+        return;
       }
+
+      // 先清掉該圖片在所有章節的既有配置，否則跨章節搬移時舊章節會留下重複項
+      state.currentConfig.chapterConfigurations.forEach(c => {
+        c.images = c.images.filter(img => img.imageId !== imageId);
+      });
+
+      let chapterConfig = state.currentConfig.chapterConfigurations.find(c => c.chapterId === chapterId);
+      if (!chapterConfig) {
+        chapterConfig = {
+          chapterId,
+          chapterTitle: `章節 ${chapterId}`,
+          chapterNumber: parseInt(chapterId.replace(/\D/g, '')) || 1,
+          images: []
+        };
+        state.currentConfig.chapterConfigurations.push(chapterConfig);
+      }
+
+      // 添加到新位置
+      chapterConfig.images.push({
+        position,
+        imageId,
+        order
+      });
+
+      // 按順序排序
+      chapterConfig.images.sort((a, b) => a.order - b.order);
 
       state.currentConfig.updatedAt = new Date().toISOString();
     },
@@ -266,6 +286,7 @@ export const {
   // 配置管理
   initializeConfig,
   updateConfig,
+  hydrateConfig,
   resetConfig,
 
   // 圖片選擇管理

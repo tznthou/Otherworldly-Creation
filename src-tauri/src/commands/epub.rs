@@ -72,55 +72,160 @@ pub struct IllustrationFile {
     pub generation_time: Option<String>,
 }
 
+/// 將字串跳脫為可安全插入 XML/XHTML 的文字
+///
+/// EPUB 的 OPF、NCX、XHTML 都是嚴格 XML，書名或章節標題只要含 `&` `<` `>` 就會
+/// 讓整份檔案無法解析。章節內文早已在 `slate_to_html_recursive` 做過跳脫，
+/// 標題類欄位過去卻是裸插值，這裡補上統一入口。
+fn xml_text(value: &str) -> String {
+    html_escape::encode_text(value).into_owned()
+}
+
+/// 決定插畫在 EPUB 內的檔名
+///
+/// 一律使用自產的 ASCII 檔名並保留原副檔名：原始檔名可能含 `&` `"` 等字元，
+/// 直接當成 ZIP entry 名稱與 OPF 的 href 屬性會破壞 manifest。
+/// 固定由索引產生也確保 manifest 宣告與實際寫入 ZIP 的名稱必然一致。
+fn epub_image_filename(illustration: &IllustrationFile, index: usize) -> String {
+    let ext = illustration
+        .file_path
+        .extension()
+        .map(|e| e.to_string_lossy().to_lowercase())
+        .filter(|e| matches!(e.as_str(), "jpg" | "jpeg" | "png" | "webp"))
+        .unwrap_or_else(|| "jpg".to_string());
+    format!("illustration_{:03}.{}", index + 1, ext)
+}
+
+/// 由副檔名決定 EPUB manifest 用的 media-type
+fn image_media_type(filename: &str) -> &'static str {
+    let lower = filename.to_lowercase();
+    if lower.ends_with(".png") {
+        "image/png"
+    } else if lower.ends_with(".webp") {
+        "image/webp"
+    } else {
+        "image/jpeg"
+    }
+}
+
+/// 取得指定專案的插畫檔名集合
+///
+/// 插畫分散在兩張表：Gemini / OpenAI 等寫入 `illustration_generations`，
+/// Pollinations 免費生成寫入 `pollinations_generations`。兩者的檔名欄位不同
+/// （`image_url` 與 `local_file_path`），但實體檔案共用同一個扁平目錄，
+/// 因此必須靠資料庫記錄做專案隔離，且兩張表都要查。
+///
+/// 篩選條件刻意與畫廊的查詢（`free_generation.rs` 的 `get_illustration_history`）
+/// 對齊，確保「畫廊看得到的圖，匯出就收得到」。軟刪除是寫入 `deleted_at`，
+/// 不是 `is_deleted`——後者在整個 codebase 中從未被設值。
+fn project_illustration_filenames(project_id: &str) -> Result<std::collections::HashSet<String>, String> {
+    let db = get_db().map_err(|e| format!("資料庫連接失敗: {}", e))?;
+    let conn = db
+        .lock()
+        .map_err(|_| "資料庫鎖定狀態異常，請重新啟動應用程式".to_string())?;
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT image_url AS filename FROM illustration_generations \
+             WHERE project_id = ?1 AND deleted_at IS NULL AND is_permanently_deleted = 0 \
+               AND image_url IS NOT NULL \
+             UNION \
+             SELECT local_file_path AS filename FROM pollinations_generations \
+             WHERE project_id = ?1 AND deleted_at IS NULL \
+               AND local_file_path IS NOT NULL",
+        )
+        .map_err(|e| format!("查詢專案插畫失敗: {}", e))?;
+
+    let rows = stmt
+        .query_map([project_id], |row| row.get::<_, String>(0))
+        .map_err(|e| format!("查詢專案插畫失敗: {}", e))?;
+
+    let mut filenames = std::collections::HashSet::new();
+    for row in rows {
+        let image_url = row.map_err(|e| format!("讀取插畫記錄失敗: {}", e))?;
+        // 只取最後一段，同時相容於歷史資料可能存成完整路徑的情況
+        let name = image_url
+            .rsplit(['/', '\\'])
+            .next()
+            .unwrap_or(&image_url)
+            .to_string();
+        if !name.is_empty() {
+            filenames.insert(name);
+        }
+    }
+
+    Ok(filenames)
+}
+
 /// 掃描專案相關的 AI 插畫檔案
-fn scan_project_illustrations(_project_id: &str) -> Result<Vec<IllustrationFile>, String> {
-    // === 舊邏輯（註解保留）===
-    // let data_dir = dirs::data_local_dir()
-    //     .unwrap_or_else(|| std::path::PathBuf::from("."));
-    // let illustrations_dir = data_dir.join("genesis-chronicle").join("generated-images");
-    
+fn scan_project_illustrations(project_id: &str) -> Result<Vec<IllustrationFile>, String> {
     // === 新邏輯：使用 path_utils 統一路徑管理 ===
     let illustrations_dir = crate::utils::path_utils::get_images_base_dir()
-        .map_err(|e| format!("無法獲取圖片目錄: {}", e))?;
-    
+        .map_err(|e| format!("無法取得圖片目錄: {}", e))?;
+
     log::info!("EPUB 掃描插畫目錄: {:?}", illustrations_dir);
-    
+
     if !illustrations_dir.exists() {
         log::warn!("插畫目錄不存在: {:?}", illustrations_dir);
         return Ok(Vec::new());
     }
-    
-    let mut illustrations = Vec::new();
-    
-    // 遍歷插畫目錄
-    if let Ok(entries) = std::fs::read_dir(&illustrations_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            
-            // 只處理圖片檔案
-            if let Some(extension) = path.extension() {
-                let ext_str = extension.to_string_lossy().to_lowercase();
-                if matches!(ext_str.as_str(), "jpg" | "jpeg" | "png" | "webp") {
-                    if let Some(filename) = path.file_name() {
-                        let filename_str = filename.to_string_lossy().to_string();
-                        
-                        // 簡單的檔名解析（可以後續改進）
-                        // 假設檔名包含角色資訊或專案 ID
-                        let illustration = IllustrationFile {
-                            file_path: path.clone(),
-                            filename: filename_str,
-                            character_names: Vec::new(), // 暫時為空，後續可以從檔名或元資料解析
-                            generation_time: None,
-                        };
-                        
-                        illustrations.push(illustration);
-                    }
-                }
-            }
-        }
+
+    // 所有專案的圖片共用一個扁平目錄，必須靠資料庫記錄篩出屬於本專案的檔案，
+    // 否則匯出任一本書都會夾帶其他作品尚未公開的插畫。
+    let allowed = project_illustration_filenames(project_id)?;
+    if allowed.is_empty() {
+        log::info!("專案 {} 沒有插畫記錄", project_id);
+        return Ok(Vec::new());
     }
-    
-    println!("掃描到 {} 張插畫檔案", illustrations.len());
+
+    let mut illustrations = Vec::new();
+
+    // 讀取失敗必須往上拋：靜默回傳空清單會讓使用者拿到缺插畫的成品卻毫無警示
+    let entries = std::fs::read_dir(&illustrations_dir)
+        .map_err(|e| format!("讀取插畫目錄失敗 {:?}: {}", illustrations_dir, e))?;
+
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("讀取插畫目錄項目失敗: {}", e))?;
+        let path = entry.path();
+
+        if !path.is_file() {
+            continue;
+        }
+
+        // 只處理圖片檔案
+        let Some(extension) = path.extension() else {
+            continue;
+        };
+        let ext_str = extension.to_string_lossy().to_lowercase();
+        if !matches!(ext_str.as_str(), "jpg" | "jpeg" | "png" | "webp") {
+            continue;
+        }
+
+        let Some(filename) = path.file_name() else {
+            continue;
+        };
+        let filename_str = filename.to_string_lossy().to_string();
+
+        if !allowed.contains(&filename_str) {
+            continue;
+        }
+
+        illustrations.push(IllustrationFile {
+            file_path: path.clone(),
+            filename: filename_str,
+            character_names: Vec::new(), // 暫時為空，後續可以從檔名或元資料解析
+            generation_time: None,
+        });
+    }
+
+    // 固定排序，讓同一份資料每次匯出的插畫順序一致
+    illustrations.sort_by(|a, b| a.filename.cmp(&b.filename));
+
+    log::info!(
+        "專案 {} 掃描到 {} 張插畫檔案",
+        project_id,
+        illustrations.len()
+    );
     Ok(illustrations)
 }
 
@@ -128,7 +233,6 @@ fn scan_project_illustrations(_project_id: &str) -> Result<Vec<IllustrationFile>
 fn add_illustrations_to_epub<W: Write + std::io::Seek>(
     zip: &mut ZipWriter<W>,
     illustrations: &[IllustrationFile],
-    options: &EPubGenerationOptions,
 ) -> Result<Vec<String>, String> {
     let zip_options = zip::write::FileOptions::default()
         .compression_method(CompressionMethod::Deflated);
@@ -139,38 +243,25 @@ fn add_illustrations_to_epub<W: Write + std::io::Seek>(
         // 讀取圖片檔案
         let image_data = std::fs::read(&illustration.file_path)
             .map_err(|e| format!("讀取插畫檔案失敗 {}: {}", illustration.filename, e))?;
-        
-        // 決定檔名（確保在 EPUB 中是唯一的）
-        let epub_filename = if illustration.filename.len() > 50 {
-            // 如果檔名太長，使用索引
-            format!("illustration_{:03}.jpg", index + 1)
-        } else {
-            illustration.filename.clone()
-        };
-        
+
+        // 檔名由索引產生，與 manifest 使用同一個函式以確保兩邊必然一致
+        let epub_filename = epub_image_filename(illustration, index);
+
         let epub_path = format!("OEBPS/images/{}", epub_filename);
-        
+
         // 將圖片加入到 ZIP
         zip.start_file(&epub_path, zip_options)
-            .map_err(|e| format!("創建插畫檔案失敗 {}: {}", epub_filename, e))?;
-        
-        // 根據品質設定決定是否壓縮
-        let final_data = if options.illustration_quality == "compressed" && image_data.len() > 500_000 {
-            // TODO: 實際的圖片壓縮邏輯
-            // 目前直接使用原圖
-            image_data
-        } else {
-            image_data
-        };
-        
-        zip.write_all(&final_data)
+            .map_err(|e| format!("建立插畫檔案失敗 {}: {}", epub_filename, e))?;
+
+        // 圖片壓縮尚未實作，illustration_quality 目前不影響輸出內容
+        zip.write_all(&image_data)
             .map_err(|e| format!("寫入插畫檔案失敗 {}: {}", epub_filename, e))?;
-        
+
         added_files.push(epub_filename.clone());
-        
-        println!("已加入插畫: {} ({} bytes)", epub_filename, final_data.len());
+
+        log::debug!("已加入插畫: {} ({} 位元組)", epub_filename, image_data.len());
     }
-    
+
     Ok(added_files)
 }
 
@@ -235,16 +326,16 @@ pub async fn generate_epub(
     projectId: String,
     options: Option<EPubGenerationOptions>,
 ) -> Result<EPubResult, String> {
-    println!("開始生成 EPUB，專案 ID: {}", projectId);
+    log::info!("開始生成 EPUB，專案 ID: {}", projectId);
     
     let options = options.unwrap_or_default();
     
-    // 1. 從資料庫獲取專案資料和章節
+    // 1. 從資料庫取得專案資料和章節
     let (project, chapters) = {
         let db = get_db().map_err(|e| format!("資料庫連接失敗: {}", e))?;
-        let conn = db.lock().unwrap();
+        let conn = db.lock().map_err(|_| "資料庫鎖定狀態異常，請重新啟動應用程式".to_string())?;
         
-        // 獲取專案資料
+        // 取得專案資料
         let project = {
             let mut stmt = conn
                 .prepare("SELECT id, name, description, type, settings, novel_length, created_at, updated_at FROM projects WHERE id = ?1")
@@ -269,12 +360,12 @@ pub async fn generate_epub(
                     return Err("專案不存在".to_string());
                 }
                 Err(e) => {
-                    return Err(format!("獲取專案失敗: {}", e));
+                    return Err(format!("取得專案失敗: {}", e));
                 }
             }
         };
         
-        // 2. 獲取專案的所有章節
+        // 2. 取得專案的所有章節
         let chapters = {
             let mut stmt = conn
                 .prepare("SELECT id, project_id, title, content, order_index, chapter_number, metadata, created_at, updated_at FROM chapters WHERE project_id = ?1 ORDER BY order_index")
@@ -308,7 +399,7 @@ pub async fn generate_epub(
         return Err("專案沒有章節內容".to_string());
     }
     
-    println!("找到 {} 個章節", chapters.len());
+    log::info!("找到 {} 個章節", chapters.len());
     
     // 3. 轉換章節內容為 HTML
     let html_chapters = convert_chapters_to_html(&chapters)?;
@@ -318,16 +409,20 @@ pub async fn generate_epub(
     let epub_author = options.author.clone()
         .unwrap_or_else(|| "創世紀元用戶".to_string());
     
-    // 5. 生成 EPUB 文件
+    // 5. 生成 EPUB 檔案
+    // 匯出識別碼需在產生檔案前決定：檔名會帶上它，避免重複匯出互相覆寫
+    let export_id = uuid::Uuid::new_v4().to_string();
+
     let epub_result = generate_epub_file(
+        &projectId,
+        &export_id,
         &epub_title,
         &epub_author,
         &html_chapters,
         &options,
     ).await?;
-    
-    // 6. 記錄導出歷史
-    let export_id = uuid::Uuid::new_v4().to_string();
+
+    // 6. 記錄匯出歷史
     let export_record = EPubExportRecord {
         id: export_id,
         project_id: projectId.clone(),
@@ -342,37 +437,37 @@ pub async fn generate_epub(
         downloaded_at: None,
     };
     
-    // 保存記錄 (重新連接資料庫)
+    // 儲存記錄 (重新連接資料庫)
     {
         let db = get_db().map_err(|e| format!("資料庫連接失敗: {}", e))?;
-        let conn = db.lock().unwrap();
+        let conn = db.lock().map_err(|_| "資料庫鎖定狀態異常，請重新啟動應用程式".to_string())?;
         save_epub_export_record(&*conn, &export_record)?;
     }
     
-    println!("EPUB 生成完成: {}", epub_result.file_path);
+    log::info!("EPUB 生成完成: {}", epub_result.file_path);
     
     Ok(epub_result)
 }
 
-/// 獲取專案的 EPUB 導出歷史
+/// 取得專案的 EPUB 匯出歷史
 #[tauri::command]
 pub async fn get_epub_exports(
     #[allow(non_snake_case)]
     projectId: String,
 ) -> Result<Vec<EPubExportRecord>, String> {
     let db = get_db().map_err(|e| format!("資料庫連接失敗: {}", e))?;
-    let conn = db.lock().unwrap();
+    let conn = db.lock().map_err(|_| "資料庫鎖定狀態異常，請重新啟動應用程式".to_string())?;
     get_epub_export_history(&*conn, &projectId)
 }
 
-/// 刪除 EPUB 導出記錄
+/// 刪除 EPUB 匯出記錄
 #[tauri::command]
 pub async fn delete_epub_export(
     #[allow(non_snake_case)]
     exportId: String,
 ) -> Result<(), String> {
     let db = get_db().map_err(|e| format!("資料庫連接失敗: {}", e))?;
-    let conn = db.lock().unwrap();
+    let conn = db.lock().map_err(|_| "資料庫鎖定狀態異常，請重新啟動應用程式".to_string())?;
     delete_epub_export_record(&*conn, &exportId)
 }
 
@@ -394,18 +489,18 @@ fn convert_chapters_to_html(chapters: &[Chapter]) -> Result<Vec<(String, String)
 
 /// 轉換 Slate.js JSON 內容為 HTML
 fn convert_slate_to_html(slate_json: &str) -> Result<String, String> {
-    // 調試日志
-    println!("🔍 轉換 Slate.js 內容: {}", slate_json);
+    // 偵錯日誌
+    log::debug!("轉換 Slate.js 內容，長度 {} 位元組", slate_json.len());
     
     // 解析 Slate.js JSON
     let slate_value: serde_json::Value = serde_json::from_str(slate_json)
         .map_err(|e| format!("解析 Slate.js 內容失敗: {}", e))?;
     
-    // Slate.js 通常是一個數組格式
+    // Slate.js 通常是一個陣列格式
     let html = if slate_value.is_array() {
         let array = slate_value.as_array().unwrap();
         if array.is_empty() {
-            println!("⚠️ Slate.js 內容為空數組");
+            log::debug!("Slate.js 內容為空陣列");
             return Ok(String::new());
         }
         
@@ -417,11 +512,11 @@ fn convert_slate_to_html(slate_json: &str) -> Result<String, String> {
         
         html_parts?.join("")
     } else {
-        // 單個節點處理（兼容性）
+        // 單個節點處理（相容性）
         slate_to_html_recursive(&slate_value)?
     };
     
-    println!("✅ 生成的 HTML 長度: {} 字符", html.len());
+    log::debug!("生成的 HTML 長度: {} 字元", html.len());
     Ok(html)
 }
 
@@ -473,29 +568,45 @@ fn slate_to_html_recursive(node: &serde_json::Value) -> Result<String, String> {
     Ok(html)
 }
 
-/// 生成真實的 EPUB 文件
+/// 生成真實的 EPUB 檔案
 async fn generate_epub_file(
+    project_id: &str,
+    export_id: &str,
     title: &str,
     author: &str,
     chapters: &[(String, String)],
     options: &EPubGenerationOptions,
 ) -> Result<EPubResult, String> {
-    println!("開始生成真實 EPUB 文件: {}", title);
-    
-    // === 舊邏輯（註解保留）===
-    // let downloads_dir = dirs::download_dir()
-    //     .ok_or("無法獲取下載資料夾")?;
-    
+    log::info!("開始生成 EPUB 檔案: {}", title);
+
     // === 新邏輯：使用 PathManager 統一路徑管理 ===
     let downloads_dir = crate::utils::PathManager::get_downloads_dir()
-        .map_err(|e| format!("無法獲取下載目錄: {}", e))?;
-    
+        .map_err(|e| format!("無法取得下載目錄: {}", e))?;
+
     let safe_title = title.replace(&['/', '\\', ':', '*', '?', '"', '<', '>', '|'][..], "_");
-    let final_path = downloads_dir.join(format!("{}.epub", safe_title));
+    // 檔名帶上匯出識別碼：路徑只由標題決定時，第二次匯出會無聲蓋掉前一份成品，
+    // 且匯出歷史的多筆記錄會全部指向同一個實體檔案。
+    let short_id: String = export_id.chars().take(8).collect();
+
+    // 單一路徑元件多數檔案系統上限為 255 bytes，扣掉 `-{8碼}.epub` 需保留 14 bytes。
+    // 依 UTF-8 字元邊界截斷，避免長書名把整個匯出打成 ENAMETOOLONG。
+    const MAX_TITLE_BYTES: usize = 255 - 14;
+    let mut truncated_title = String::new();
+    for ch in safe_title.chars() {
+        if truncated_title.len() + ch.len_utf8() > MAX_TITLE_BYTES {
+            break;
+        }
+        truncated_title.push(ch);
+    }
+    if truncated_title.trim().is_empty() {
+        truncated_title = "untitled".to_string();
+    }
+
+    let final_path = downloads_dir.join(format!("{}-{}.epub", truncated_title, short_id));
     
-    // 創建臨時文件
+    // 建立臨時檔案
     let temp_file = NamedTempFile::new()
-        .map_err(|e| format!("創建臨時文件失敗: {}", e))?;
+        .map_err(|e| format!("建立臨時檔案失敗: {}", e))?;
     
     let mut zip = ZipWriter::new(temp_file.as_file());
     
@@ -503,63 +614,69 @@ async fn generate_epub_file(
     let options_zip = zip::write::FileOptions::default()
         .compression_method(CompressionMethod::Deflated);
     
-    // 1. 添加 mimetype 文件（必須是第一個，且不壓縮）
+    // 1. 添加 mimetype 檔案（必須是第一個，且不壓縮）
     zip.start_file("mimetype", zip::write::FileOptions::default().compression_method(CompressionMethod::Stored))
-        .map_err(|e| format!("創建 mimetype 失敗: {}", e))?;
+        .map_err(|e| format!("建立 mimetype 失敗: {}", e))?;
     zip.write_all(b"application/epub+zip")
         .map_err(|e| format!("寫入 mimetype 失敗: {}", e))?;
     
     // 2. 添加 META-INF/container.xml
     zip.start_file("META-INF/container.xml", options_zip)
-        .map_err(|e| format!("創建 container.xml 失敗: {}", e))?;
+        .map_err(|e| format!("建立 container.xml 失敗: {}", e))?;
     let container_xml = generate_container_xml();
     zip.write_all(container_xml.as_bytes())
         .map_err(|e| format!("寫入 container.xml 失敗: {}", e))?;
     
     // 3. 預處理 AI 插畫（掃描檔案但先不加入 ZIP）
+    //
+    // 只掃描一次並保留結果：過去在這裡與實際寫入時各掃一次，兩次之間若有圖片
+    // 新增或刪除，manifest 宣告的檔名就會與 ZIP 內容對不上。
     let mut illustration_files = Vec::new();
+    let mut scanned_illustrations: Vec<IllustrationFile> = Vec::new();
     let mut has_illustrations_page = false;
     if options.include_illustrations {
-        println!("🎨 開始掃描 AI 插畫檔案...");
-        let illustrations = scan_project_illustrations("dummy_project_id")?; // TODO: 使用實際 project_id
+        log::info!("開始掃描 AI 插畫檔案...");
+        let illustrations = scan_project_illustrations(project_id)?;
         if !illustrations.is_empty() {
-            // 暫存插畫資訊，稍後處理
             for (index, illustration) in illustrations.iter().enumerate() {
-                let epub_filename = if illustration.filename.len() > 50 {
-                    format!("illustration_{:03}.jpg", index + 1)
-                } else {
-                    illustration.filename.clone()
-                };
-                illustration_files.push(epub_filename);
+                illustration_files.push(epub_image_filename(illustration, index));
             }
+            scanned_illustrations = illustrations;
             has_illustrations_page = true;
-            println!("📋 預計包含 {} 張插畫", illustration_files.len());
+            log::info!("預計包含 {} 張插畫", illustration_files.len());
         }
     }
-    
+
     // 4. 添加 OEBPS/content.opf（根據是否包含插畫選擇不同版本）
     zip.start_file("OEBPS/content.opf", options_zip)
-        .map_err(|e| format!("創建 content.opf 失敗: {}", e))?;
-    
+        .map_err(|e| format!("建立 content.opf 失敗: {}", e))?;
+
     let content_opf = if has_illustrations_page {
-        generate_content_opf_with_illustrations(title, author, chapters, &illustration_files, true)
+        generate_content_opf_with_illustrations(
+            title,
+            author,
+            chapters,
+            &illustration_files,
+            true,
+            options.include_cover,
+        )
     } else {
-        generate_content_opf(title, author, chapters)
+        generate_content_opf(title, author, chapters, options.include_cover)
     };
-    
+
     zip.write_all(content_opf.as_bytes())
         .map_err(|e| format!("寫入 content.opf 失敗: {}", e))?;
-    
+
     // 4. 添加 OEBPS/toc.ncx
     zip.start_file("OEBPS/toc.ncx", options_zip)
-        .map_err(|e| format!("創建 toc.ncx 失敗: {}", e))?;
-    let toc_ncx = generate_toc_ncx(title, chapters);
+        .map_err(|e| format!("建立 toc.ncx 失敗: {}", e))?;
+    let toc_ncx = generate_toc_ncx(title, chapters, options.include_cover);
     zip.write_all(toc_ncx.as_bytes())
         .map_err(|e| format!("寫入 toc.ncx 失敗: {}", e))?;
     
-    // 5. 添加樣式文件
+    // 5. 添加樣式檔案
     zip.start_file("OEBPS/styles.css", options_zip)
-        .map_err(|e| format!("創建 styles.css 失敗: {}", e))?;
+        .map_err(|e| format!("建立 styles.css 失敗: {}", e))?;
     let css_content = generate_epub_css(options);
     zip.write_all(css_content.as_bytes())
         .map_err(|e| format!("寫入 styles.css 失敗: {}", e))?;
@@ -567,7 +684,7 @@ async fn generate_epub_file(
     // 6. 添加封面頁（如果啟用）
     if options.include_cover {
         zip.start_file("OEBPS/cover.xhtml", options_zip)
-            .map_err(|e| format!("創建 cover.xhtml 失敗: {}", e))?;
+            .map_err(|e| format!("建立 cover.xhtml 失敗: {}", e))?;
         let cover_html = generate_cover_xhtml(title, author);
         zip.write_all(cover_html.as_bytes())
             .map_err(|e| format!("寫入 cover.xhtml 失敗: {}", e))?;
@@ -575,88 +692,53 @@ async fn generate_epub_file(
     
     // 7. 實際處理 AI 插畫檔案（加入到 EPUB）
     if has_illustrations_page {
-        println!("🎨 開始將插畫檔案加入到 EPUB...");
-        
-        // 重新掃描插畫檔案進行實際處理
-        let illustrations = scan_project_illustrations("dummy_project_id")?;
-        
-        if !illustrations.is_empty() {
-            // 將插畫檔案實際加入到 EPUB ZIP
-            let _added_files = add_illustrations_to_epub(&mut zip, &illustrations, options)?;
-            
-            // 根據佈局模式生成插畫頁面
-            match options.illustration_layout.as_str() {
-                "gallery" => {
-                    // 生成插畫集錦頁面
-                    zip.start_file("OEBPS/illustrations.xhtml", options_zip)
-                        .map_err(|e| format!("創建插畫集錦頁面失敗: {}", e))?;
-                    let gallery_html = generate_illustrations_gallery_xhtml(&illustration_files);
-                    zip.write_all(gallery_html.as_bytes())
-                        .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
-                    
-                    println!("✅ 已生成插畫集錦頁面，包含 {} 張插畫", illustration_files.len());
-                }
-                "inline" => {
-                    // TODO: 實現內嵌模式（將插畫嵌入到章節中）
-                    println!("📝 內嵌模式暫未實現，使用集錦模式");
-                    
-                    // 暫時生成集錦頁面
-                    zip.start_file("OEBPS/illustrations.xhtml", options_zip)
-                        .map_err(|e| format!("創建插畫集錦頁面失敗: {}", e))?;
-                    let gallery_html = generate_illustrations_gallery_xhtml(&illustration_files);
-                    zip.write_all(gallery_html.as_bytes())
-                        .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
-                }
-                "chapter_start" => {
-                    // TODO: 實現章節開頭模式
-                    println!("📝 章節開頭模式暫未實現，使用集錦模式");
-                    
-                    // 暫時生成集錦頁面
-                    zip.start_file("OEBPS/illustrations.xhtml", options_zip)
-                        .map_err(|e| format!("創建插畫集錦頁面失敗: {}", e))?;
-                    let gallery_html = generate_illustrations_gallery_xhtml(&illustration_files);
-                    zip.write_all(gallery_html.as_bytes())
-                        .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
-                }
-                _ => {
-                    println!("⚠️ 未知的插畫佈局模式: {}，使用集錦模式", options.illustration_layout);
-                    
-                    // 預設生成集錦頁面
-                    zip.start_file("OEBPS/illustrations.xhtml", options_zip)
-                        .map_err(|e| format!("創建插畫集錦頁面失敗: {}", e))?;
-                    let gallery_html = generate_illustrations_gallery_xhtml(&illustration_files);
-                    zip.write_all(gallery_html.as_bytes())
-                        .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
-                }
-            }
+        log::info!("開始將插畫檔案加入到 EPUB...");
+
+        // 沿用步驟 3 的掃描結果，確保與 manifest 宣告的檔名完全一致
+        let _added_files = add_illustrations_to_epub(&mut zip, &scanned_illustrations)?;
+
+        // 內嵌與章節開頭模式尚未實作，一律回退為集錦模式
+        if !matches!(options.illustration_layout.as_str(), "gallery") {
+            log::info!(
+                "插畫佈局模式 {} 尚未實作，改用集錦模式",
+                options.illustration_layout
+            );
         }
+
+        zip.start_file("OEBPS/illustrations.xhtml", options_zip)
+            .map_err(|e| format!("建立插畫集錦頁面失敗: {}", e))?;
+        let gallery_html = generate_illustrations_gallery_xhtml(&illustration_files);
+        zip.write_all(gallery_html.as_bytes())
+            .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
+
+        log::info!("已生成插畫集錦頁面，包含 {} 張插畫", illustration_files.len());
     }
     
     // 8. 添加章節內容
     for (index, (chapter_title, chapter_content)) in chapters.iter().enumerate() {
         let filename = format!("OEBPS/chapter{}.xhtml", index + 1);
         zip.start_file(&filename, options_zip)
-            .map_err(|e| format!("創建章節文件失敗: {}", e))?;
+            .map_err(|e| format!("建立章節檔案失敗: {}", e))?;
         
         let chapter_xhtml = generate_chapter_xhtml(chapter_title, chapter_content);
         zip.write_all(chapter_xhtml.as_bytes())
             .map_err(|e| format!("寫入章節內容失敗: {}", e))?;
     }
     
-    // 完成 ZIP 文件
+    // 完成 ZIP 檔案
     zip.finish()
-        .map_err(|e| format!("完成 EPUB 文件失敗: {}", e))?;
+        .map_err(|e| format!("完成 EPUB 檔案失敗: {}", e))?;
     
-    // 移動臨時文件到最終位置
+    // 移動臨時檔案到最終位置
     let temp_path = temp_file.path();
     std::fs::copy(temp_path, &final_path)
-        .map_err(|e| format!("複製文件到最終位置失敗: {}", e))?;
+        .map_err(|e| format!("複製檔案到最終位置失敗: {}", e))?;
     
     let file_size = std::fs::metadata(&final_path)
-        .map_err(|e| format!("獲取文件大小失敗: {}", e))?
+        .map_err(|e| format!("取得檔案大小失敗: {}", e))?
         .len();
     
-    println!("EPUB 文件生成成功: {} (大小: {} bytes)", final_path.display(), file_size);
+    log::info!("EPUB 檔案生成成功: {} (大小: {} 位元組)", final_path.display(), file_size);
     
     Ok(EPubResult {
         file_path: final_path.to_string_lossy().to_string(),
@@ -668,7 +750,7 @@ async fn generate_epub_file(
     })
 }
 
-/// 保存 EPUB 導出記錄到資料庫
+/// 儲存 EPUB 匯出記錄到資料庫
 fn save_epub_export_record(conn: &rusqlite::Connection, record: &EPubExportRecord) -> Result<(), String> {
     conn.execute(
         "INSERT INTO epub_exports (
@@ -688,12 +770,12 @@ fn save_epub_export_record(conn: &rusqlite::Connection, record: &EPubExportRecor
             record.downloaded_at
         ]
     )
-    .map_err(|e| format!("保存 EPUB 導出記錄失敗: {}", e))?;
+    .map_err(|e| format!("儲存 EPUB 匯出記錄失敗: {}", e))?;
     
     Ok(())
 }
 
-/// 獲取 EPUB 導出歷史
+/// 取得 EPUB 匯出歷史
 fn get_epub_export_history(conn: &rusqlite::Connection, project_id: &str) -> Result<Vec<EPubExportRecord>, String> {
     let mut stmt = conn
         .prepare(
@@ -720,19 +802,19 @@ fn get_epub_export_history(conn: &rusqlite::Connection, project_id: &str) -> Res
                 downloaded_at: row.get(9)?,
             })
         })
-        .map_err(|e| format!("查詢 EPUB 導出記錄失敗: {}", e))?;
+        .map_err(|e| format!("查詢 EPUB 匯出記錄失敗: {}", e))?;
     
     let mut exports = Vec::new();
     for export in export_iter {
-        exports.push(export.map_err(|e| format!("處理導出記錄失敗: {}", e))?);
+        exports.push(export.map_err(|e| format!("處理匯出記錄失敗: {}", e))?);
     }
     
     Ok(exports)
 }
 
-/// 刪除 EPUB 導出記錄
+/// 刪除 EPUB 匯出記錄
 fn delete_epub_export_record(conn: &rusqlite::Connection, export_id: &str) -> Result<(), String> {
-    // 先獲取文件路徑以便刪除實際文件
+    // 先取得檔案路徑以便刪除實際檔案
     let file_path: Result<String, _> = conn.query_row(
         "SELECT file_path FROM epub_exports WHERE id = ?1",
         [export_id],
@@ -742,20 +824,20 @@ fn delete_epub_export_record(conn: &rusqlite::Connection, export_id: &str) -> Re
     // 刪除資料庫記錄
     let rows_affected = conn
         .execute("DELETE FROM epub_exports WHERE id = ?1", [export_id])
-        .map_err(|e| format!("刪除 EPUB 導出記錄失敗: {}", e))?;
+        .map_err(|e| format!("刪除 EPUB 匯出記錄失敗: {}", e))?;
     
     if rows_affected == 0 {
-        return Err("EPUB 導出記錄不存在".to_string());
+        return Err("EPUB 匯出記錄不存在".to_string());
     }
     
-    // 嘗試刪除實際文件（如果獲取到路徑）
+    // 嘗試刪除實際檔案（如果取得到路徑）
     if let Ok(path) = file_path {
         if std::path::Path::new(&path).exists() {
             if let Err(e) = std::fs::remove_file(&path) {
-                log::warn!("刪除 EPUB 文件失敗: {} ({})", path, e);
+                log::warn!("刪除 EPUB 檔案失敗: {} ({})", path, e);
                 // 不拋出錯誤，因為資料庫記錄已經刪除
             } else {
-                log::info!("已刪除 EPUB 文件: {}", path);
+                log::info!("已刪除 EPUB 檔案: {}", path);
             }
         }
     }
@@ -776,7 +858,12 @@ fn generate_container_xml() -> String {
 }
 
 /// 生成 OEBPS/content.opf
-fn generate_content_opf(title: &str, author: &str, chapters: &[(String, String)]) -> String {
+fn generate_content_opf(
+    title: &str,
+    author: &str,
+    chapters: &[(String, String)],
+    include_cover: bool,
+) -> String {
     let mut content = format!(r#"<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
@@ -785,13 +872,17 @@ fn generate_content_opf(title: &str, author: &str, chapters: &[(String, String)]
     <dc:language>zh-TW</dc:language>
     <dc:identifier id="BookId" opf:scheme="UUID">{}</dc:identifier>
     <dc:publisher>創世紀元</dc:publisher>
-    <meta name="cover" content="cover"/>
-  </metadata>
+{}  </metadata>
   <manifest>
     <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
     <item id="css" href="styles.css" media-type="text/css"/>
-    <item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>
-"#, title, author, uuid::Uuid::new_v4());
+{}"#,
+        xml_text(title),
+        xml_text(author),
+        uuid::Uuid::new_v4(),
+        if include_cover { "    <meta name=\"cover\" content=\"cover\"/>\n" } else { "" },
+        if include_cover { "    <item id=\"cover\" href=\"cover.xhtml\" media-type=\"application/xhtml+xml\"/>\n" } else { "" },
+    );
 
     // 添加章節到 manifest
     for i in 0..chapters.len() {
@@ -801,7 +892,10 @@ fn generate_content_opf(title: &str, author: &str, chapters: &[(String, String)]
         ));
     }
 
-    content.push_str("  </manifest>\n  <spine toc=\"ncx\">\n    <itemref idref=\"cover\"/>\n");
+    content.push_str("  </manifest>\n  <spine toc=\"ncx\">\n");
+    if include_cover {
+        content.push_str("    <itemref idref=\"cover\"/>\n");
+    }
 
     // 添加章節到 spine
     for i in 0..chapters.len() {
@@ -814,11 +908,12 @@ fn generate_content_opf(title: &str, author: &str, chapters: &[(String, String)]
 
 /// 生成包含插畫的 content.opf
 fn generate_content_opf_with_illustrations(
-    title: &str, 
-    author: &str, 
+    title: &str,
+    author: &str,
     chapters: &[(String, String)],
     illustration_files: &[String],
-    include_illustrations_page: bool
+    include_illustrations_page: bool,
+    include_cover: bool,
 ) -> String {
     let mut content = format!(r#"<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
@@ -828,13 +923,17 @@ fn generate_content_opf_with_illustrations(
     <dc:language>zh-TW</dc:language>
     <dc:identifier id="BookId" opf:scheme="UUID">{}</dc:identifier>
     <dc:publisher>創世紀元 AI 智能創作</dc:publisher>
-    <meta name="cover" content="cover"/>
-  </metadata>
+{}  </metadata>
   <manifest>
     <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
     <item id="css" href="styles.css" media-type="text/css"/>
-    <item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>
-"#, title, author, uuid::Uuid::new_v4());
+{}"#,
+        xml_text(title),
+        xml_text(author),
+        uuid::Uuid::new_v4(),
+        if include_cover { "    <meta name=\"cover\" content=\"cover\"/>\n" } else { "" },
+        if include_cover { "    <item id=\"cover\" href=\"cover.xhtml\" media-type=\"application/xhtml+xml\"/>\n" } else { "" },
+    );
 
     // 如果包含插畫集錦頁面，加入到 manifest
     if include_illustrations_page && !illustration_files.is_empty() {
@@ -851,24 +950,18 @@ fn generate_content_opf_with_illustrations(
 
     // 添加插畫檔案到 manifest
     for (index, filename) in illustration_files.iter().enumerate() {
-        // 根據檔案副檔名決定 media-type
-        let media_type = if filename.to_lowercase().ends_with(".png") {
-            "image/png"
-        } else if filename.to_lowercase().ends_with(".jpg") || filename.to_lowercase().ends_with(".jpeg") {
-            "image/jpeg"
-        } else if filename.to_lowercase().ends_with(".webp") {
-            "image/webp"
-        } else {
-            "image/jpeg" // 預設
-        };
-
         content.push_str(&format!(
             "    <item id=\"illustration{}\" href=\"images/{}\" media-type=\"{}\"/>\n",
-            index + 1, filename, media_type
+            index + 1,
+            filename,
+            image_media_type(filename)
         ));
     }
 
-    content.push_str("  </manifest>\n  <spine toc=\"ncx\">\n    <itemref idref=\"cover\"/>\n");
+    content.push_str("  </manifest>\n  <spine toc=\"ncx\">\n");
+    if include_cover {
+        content.push_str("    <itemref idref=\"cover\"/>\n");
+    }
 
     // 如果包含插畫集錦，將其加入到 spine（在章節之前）
     if include_illustrations_page && !illustration_files.is_empty() {
@@ -885,7 +978,7 @@ fn generate_content_opf_with_illustrations(
 }
 
 /// 生成 OEBPS/toc.ncx
-fn generate_toc_ncx(title: &str, chapters: &[(String, String)]) -> String {
+fn generate_toc_ncx(title: &str, chapters: &[(String, String)], include_cover: bool) -> String {
     let mut content = format!(r#"<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE ncx PUBLIC "-//NISO//DTD ncx 2005-1//EN"
    "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd">
@@ -900,19 +993,25 @@ fn generate_toc_ncx(title: &str, chapters: &[(String, String)]) -> String {
     <text>{}</text>
   </docTitle>
   <navMap>
-    <navPoint id="cover" playOrder="1">
-      <navLabel>
-        <text>封面</text>
-      </navLabel>
-      <content src="cover.xhtml"/>
-    </navPoint>
-"#, uuid::Uuid::new_v4(), title);
+{}"#,
+        uuid::Uuid::new_v4(),
+        xml_text(title),
+        if include_cover {
+            "    <navPoint id=\"cover\" playOrder=\"1\">\n      <navLabel>\n        <text>封面</text>\n      </navLabel>\n      <content src=\"cover.xhtml\"/>\n    </navPoint>\n"
+        } else {
+            ""
+        },
+    );
 
-    // 添加章節導航
+    // 添加章節導航（playOrder 需連續，沒有封面時從 1 開始）
+    let play_order_offset = if include_cover { 2 } else { 1 };
     for (i, (chapter_title, _)) in chapters.iter().enumerate() {
         content.push_str(&format!(
             "    <navPoint id=\"chapter{}\" playOrder=\"{}\">\n      <navLabel>\n        <text>{}</text>\n      </navLabel>\n      <content src=\"chapter{}.xhtml\"/>\n    </navPoint>\n",
-            i + 1, i + 2, chapter_title, i + 1
+            i + 1,
+            i + play_order_offset,
+            xml_text(chapter_title),
+            i + 1
         ));
     }
 
@@ -1055,7 +1154,7 @@ fn generate_cover_xhtml(title: &str, author: &str) -> String {
         <div class="cover-generator">由創世紀元生成</div>
     </div>
 </body>
-</html>"#, title, author)
+</html>"#, xml_text(title), xml_text(author))
 }
 
 /// 生成章節 XHTML
@@ -1074,5 +1173,5 @@ fn generate_chapter_xhtml(chapter_title: &str, chapter_content: &str) -> String 
     </div>
     <div class="generated-by">由創世紀元生成</div>
 </body>
-</html>"#, chapter_title, chapter_title, chapter_content)
+</html>"#, xml_text(chapter_title), xml_text(chapter_title), chapter_content)
 }
