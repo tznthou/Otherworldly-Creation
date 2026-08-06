@@ -81,8 +81,8 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
     },
     {
       id: 'custom',
-      name: '自定義規則',
-      description: '使用自定義的重命名規則',
+      name: '自訂規則',
+      description: '使用自訂的重命名規則',
       rules: customRules
     }
   ], [customRules]);
@@ -161,14 +161,14 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
     });
   }, [selectedImages, activeTemplate, generatePreviewName]);
 
-  // 更新自定義規則
+  // 更新自訂規則
   const updateCustomRule = (ruleId: string, updates: Partial<RenamingRule>) => {
     setCustomRules(prev => prev.map(rule =>
       rule.id === ruleId ? { ...rule, ...updates } : rule
     ));
   };
 
-  // 添加自定義規則
+  // 添加自訂規則
   const addCustomRule = () => {
     const newRule: RenamingRule = {
       id: Date.now().toString(),
@@ -179,7 +179,7 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
     setCustomRules(prev => [...prev, newRule]);
   };
 
-  // 移除自定義規則
+  // 移除自訂規則
   const removeCustomRule = (ruleId: string) => {
     setCustomRules(prev => prev.filter(rule => rule.id !== ruleId));
   };
@@ -188,25 +188,17 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
   const handleApplyRename = () => {
     if (!onRename) return;
 
-    if (ebookVirtualNaming) {
-      // 虛擬檔名模式：儲存到資料庫，不修改原始檔案
-      previews.forEach(({ image, newName }) => {
-        // TODO: 實作虛擬檔名儲存到 ebook_mappings 表
-        log.debug('📚 [虛擬檔名]', {
+    // 兩種模式目前行為完全相同：虛擬檔名尚未寫入 ebook_mappings，
+    // 差別僅在多記一筆 log，因此合併為單一路徑避免誤以為有分歧邏輯
+    previews.forEach(({ image, newName }) => {
+      if (ebookVirtualNaming) {
+        log.debug('虛擬檔名（尚未寫入資料庫）', {
           imageId: image.id,
-          physicalId: image.id,
-          sourceTable: image.provider === 'pollinations' ? 'pollinations_generations' : 'illustration_generations',
-          virtualFilename: newName,
-          category: 'illustration'
+          virtualFilename: newName
         });
-        onRename(image.id, newName);
-      });
-    } else {
-      // 傳統重命名模式：直接修改檔案名稱（原有邏輯）
-      previews.forEach(({ image, newName }) => {
-        onRename(image.id, newName);
-      });
-    }
+      }
+      onRename(image.id, newName);
+    });
   };
 
   const ruleTypeOptions = [
@@ -296,13 +288,13 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
         </div>
       </div>
 
-      {/* 自定義規則編輯 */}
+      {/* 自訂規則編輯 */}
       {activeTemplate === 'custom' && (
         <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-base font-medium text-text-secondary/20 flex items-center">
               <span className="text-xl mr-2">⚙️</span>
-              自定義規則
+              自訂規則
             </h4>
             <button
               onClick={addCustomRule}
@@ -399,7 +391,7 @@ const BatchRenamePanel: React.FC<BatchRenamePanelProps> = ({
           ))}
         </div>
 
-        {/* 統計信息 */}
+        {/* 統計資訊 */}
         <div className="mt-4 p-3 bg-bg-dark/80 rounded flex justify-between text-sm">
           <div>
             <span className="text-text-secondary/80">總計：</span>

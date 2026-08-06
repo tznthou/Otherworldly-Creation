@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { IllustrationHistoryItem } from '../../../../../types/illustration';
+import { formatFileSize } from '../../../../../utils/format';
 
 interface MetadataAnalysisPanelProps {
   selectedImages: IllustrationHistoryItem[];
@@ -46,7 +47,7 @@ interface MetadataStats {
 const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
   selectedImages
 }) => {
-  // 分析每張圖片的元數據
+  // 分析每張圖片的元資料
   const imageAnalyses = useMemo((): ImageAnalysis[] => {
     return selectedImages.map(image => {
       const width = image.width || 0;
@@ -177,14 +178,6 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
     };
   }, [selectedImages, imageAnalyses]);
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-
   const formatPixels = (pixels: number): string => {
     if (pixels >= 1000000) {
       return (pixels / 1000000).toFixed(1) + 'MP';
@@ -198,7 +191,7 @@ const MetadataAnalysisPanel: React.FC<MetadataAnalysisPanelProps> = ({
     return (
       <div className="text-center py-8">
         <div className="text-4xl mb-3">📊</div>
-        <p className="text-text-secondary/80">請選擇圖片以查看元數據分析</p>
+        <p className="text-text-secondary/80">請選擇圖片以查看元資料分析</p>
       </div>
     );
   }

@@ -10,7 +10,8 @@ import { useEbookPreparationPersistence } from '../../../../../hooks/useEbookPre
 import {
   addImageToCategory,
   removeImageFromCategory,
-  addChapterConfiguration
+  addChapterConfiguration,
+  clearError
 } from '../../../../../store/slices/ebookPreparationSlice';
 
 const log = createLogger('ChapterConfigurationPanel');
@@ -28,19 +29,32 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
   const chapters = useSelector((state: RootState) => state.chapters.chapters);
   const currentProject = useSelector((state: RootState) => state.projects.currentProject);
   const ebookConfig = useSelector((state: RootState) => state.ebookPreparation.currentConfig);
+  // 持久化 hook 的三處 setError 全寫進這裡。在此之前沒有任何元件讀它，
+  // 於是「已隔離」「無法隔離」「儲存失敗」在程式碼裡不靜默，在畫面上照樣靜默。
+  const ebookError = useSelector((state: RootState) => state.ebookPreparation.error);
 
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
 
   // 使用持久化 hook
-  const { initializeForProject, saveToStorage, isInitialized } = useEbookPreparationPersistence(projectId, true);
+  const {
+    initializeForProject,
+    saveToStorage,
+    loadFromStorage,
+    isInitialized,
+    isHydrated,
+    loadBlocked
+  } = useEbookPreparationPersistence(projectId, true);
 
   // 初始化配置（如果需要）
+  // 必須等 localStorage 還原完成才建立空白配置，否則這裡讀到的 isInitialized
+  // 仍是還原前那一輪 render 的值，會立刻覆寫剛讀回來的設定
   useEffect(() => {
-    if (!isInitialized && currentProject) {
+    if (isHydrated && !isInitialized && currentProject) {
       initializeForProject(currentProject.name, 'Unknown');
     }
-  }, [isInitialized, currentProject, initializeForProject]);
+  }, [isHydrated, isInitialized, currentProject, initializeForProject]);
 
   // 確保所有章節都有配置條目
   useEffect(() => {
@@ -85,12 +99,6 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
   const unassignedImages = useMemo(() => {
     return selectedImages.filter(img => !assignedImageIds.has(img.id));
   }, [selectedImages, assignedImageIds]);
-
-  // 獲取選中章節的配置
-  const _selectedChapterConfig = useMemo(() => {
-    if (!selectedChapterId || !ebookConfig) return null;
-    return ebookConfig.chapterConfigurations.find(c => c.chapterId === selectedChapterId) || null;
-  }, [selectedChapterId, ebookConfig]);
 
   const handleDragStart = useCallback((imageId: string) => {
     setDraggedImageId(imageId);
@@ -174,24 +182,103 @@ const ChapterConfigurationPanel: React.FC<ChapterConfigurationPanelProps> = ({
     return { totalImages, assignedCount, unassignedCount, configuredChapters };
   }, [selectedImages.length, assignedImageIds, ebookConfig]);
 
-  // 手動保存配置
+  // 手動儲存配置
+  //
+  // 成功與失敗都必須讓使用者看得見：只記 log 的話，配額用盡時畫面毫無變化，
+  // 使用者會當成存好了而關掉專案。失敗訊息由 saveToStorage 寫進 slice 的
+  // error，統一在下方的提示區呈現，這裡只負責成功的那一半。
   const handleSaveConfig = useCallback(() => {
-    saveToStorage();
-    log.info('✅ 配置已手動保存');
+    const result = saveToStorage();
+    if (result.ok) {
+      log.info('配置已手動儲存');
+      setSaveNotice('排版配置已儲存');
+    } else {
+      log.error('配置儲存失敗:', result.error);
+      setSaveNotice(null);
+    }
   }, [saveToStorage]);
+
+  // 成功提示是暫時性的，過幾秒自動收掉，避免與後續的失敗訊息並存造成誤解
+  useEffect(() => {
+    if (!saveNotice) return;
+    const timeoutId = setTimeout(() => setSaveNotice(null), 4000);
+    return () => clearTimeout(timeoutId);
+  }, [saveNotice]);
+
+  // 新的錯誤出現時撤掉舊的成功提示，否則畫面會同時說「已儲存」與「儲存失敗」
+  useEffect(() => {
+    if (ebookError) setSaveNotice(null);
+  }, [ebookError]);
+
+  const errorBanner = ebookError ? (
+    <div
+      role="alert"
+      className="bg-red-900/30 border border-red-500/40 rounded-lg p-4 flex items-start justify-between gap-4"
+    >
+      <div className="flex items-start space-x-2">
+        <span className="text-xl leading-none">⚠️</span>
+        <p className="text-sm text-red-200">{ebookError}</p>
+      </div>
+      <button
+        onClick={() => dispatch(clearError())}
+        aria-label="關閉提示"
+        className="text-red-300 hover:text-red-100 text-sm px-2 py-1 rounded transition-colors"
+      >
+        ✕
+      </button>
+    </div>
+  ) : null;
+
+  // 載入被擋住時 currentConfig 永遠是 null，拖放與儲存全都是靜默 no-op。
+  // 照常渲染配置介面等於邀請使用者做白工，因此整組換成錯誤說明加重試入口。
+  if (loadBlocked) {
+    return (
+      <div className="space-y-4">
+        {errorBanner}
+        <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-6 text-center">
+          <div className="text-5xl mb-3">🛑</div>
+          <h4 className="text-lg font-semibold text-text-secondary/40 mb-2">排版配置暫時無法使用</h4>
+          <p className="text-sm text-text-secondary/80 mb-4">
+            為避免覆寫尚未備份的排版設定，已暫停載入。請清出瀏覽器儲存空間後重試。
+          </p>
+          <button
+            onClick={loadFromStorage}
+            className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-lg transition-colors"
+          >
+            重試載入
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (projectChapters.length === 0) {
     return (
-      <div className="text-center py-8">
-        <div className="text-4xl mb-3">📚</div>
-        <p className="text-text-secondary/80">此專案尚無章節</p>
-        <p className="text-sm text-text-secondary mt-2">請先在編輯器中建立章節</p>
+      <div className="space-y-4">
+        {errorBanner}
+        <div className="text-center py-8">
+          <div className="text-4xl mb-3">📚</div>
+          <p className="text-text-secondary/80">此專案尚無章節</p>
+          <p className="text-sm text-text-secondary mt-2">請先在編輯器中建立章節</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {errorBanner}
+
+      {saveNotice && (
+        <div
+          role="status"
+          className="bg-green-900/30 border border-green-500/40 rounded-lg p-3 flex items-center space-x-2"
+        >
+          <span className="text-lg leading-none">✅</span>
+          <p className="text-sm text-green-200">{saveNotice}</p>
+        </div>
+      )}
+
       {/* 統計資訊 */}
       <div className="bg-bg-light/50 backdrop-blur-sm rounded-lg p-4">
         <h4 className="text-base font-medium text-text-secondary/20 mb-3 flex items-center">

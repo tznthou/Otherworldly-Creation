@@ -52,6 +52,12 @@ mime_guess = "2.0"
 # PDF generation dependencies - 全部移除，現在使用Chrome Headless
 # printpdf, lopdf, image 等依賴已刪除 - Chrome Headless不需要這些庫
 
+[dev-dependencies]
+# EPUB 產出的 OPF 是嚴格 XML，驗證合法性必須真的解析而不是比對字串——
+# 自己寫的字串檢查看不出未跳脫的 & 會讓整份 manifest 無法解析。
+# 已存在於 Cargo.lock（間接依賴），不引入新的下載。
+quick-xml = "0.38"
+
 # 最佳化 release profile 配置
 [profile.release]
 # 完全優化：最高等級性能優化

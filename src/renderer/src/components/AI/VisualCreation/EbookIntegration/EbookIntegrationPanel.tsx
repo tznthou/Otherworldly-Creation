@@ -51,12 +51,11 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
     }
   });
 
-  const [_projectImages, setProjectImages] = useState<IllustrationHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'overview' | 'placement' | 'settings' | 'preview'>('overview');
   const [integrationData, setIntegrationData] = useState<EbookImageIntegration | null>(null);
 
-  // 生成整合數據 - 使用 useCallback 避免依賴警告
+  // 生成整合資料 - 使用 useCallback 避免依賴警告
   const generateIntegrationData = useCallback((images: IllustrationHistoryItem[]) => {
     const integration: EbookImageIntegration = {
       projectId,
@@ -112,7 +111,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
         // 這裡需要實際的 API 呼叫
         // const images = await api.illustration.getIllustrationHistory(projectId);
         
-        // 臨時模擬數據
+        // 臨時模擬資料
         const mockImages: IllustrationHistoryItem[] = [
           {
             id: 'img1',
@@ -150,9 +149,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
             enhance: false
           }
         ];
-        setProjectImages(mockImages);
-
-        // 生成整合數據
+        // 生成整合資料
         generateIntegrationData(mockImages);
       } catch (error) {
         log.error('載入專案圖片失敗:', error);
@@ -252,6 +249,13 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+      </div>
+
+      {/* 示範資料警示：本面板的章節、圖片與統計目前皆為寫死的展示內容，
+          尚未接上實際專案資料，必須明確告知使用者以免誤信下方數字 */}
+      <div className="mx-4 mt-3 px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-400/10 text-sm text-amber-200">
+        <span className="font-medium">示範資料</span>
+        ：本頁的章節、圖片與統計數字為展示用範例，尚未串接實際專案內容。
       </div>
 
       {/* 頁籤導航 */}
@@ -516,7 +520,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
                       onChange={(e) => updateConfig({ includeImageMetadata: e.target.checked })}
                       className="w-4 h-4 text-warm-gold bg-bg-dark/80 border-warm-gold/10 rounded focus:ring-gold-500"
                     />
-                    <span className="text-sm text-text-secondary">包含圖片元數據</span>
+                    <span className="text-sm text-text-secondary">包含圖片元資料</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input
@@ -572,7 +576,7 @@ export const EbookIntegrationPanel: React.FC<EbookIntegrationPanelProps> = ({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
-              <span>匯出到電子書</span>
+              <span>儲存整合設定</span>
             </button>
           </div>
         </div>

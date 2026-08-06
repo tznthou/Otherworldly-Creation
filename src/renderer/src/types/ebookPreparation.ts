@@ -131,7 +131,7 @@ export interface EbookPreparationResult {
     processingTime: number;
   };
 
-  // 供現有 EPUB/PDF 系統使用的數據結構（可選）
+  // 供現有 EPUB/PDF 系統使用的資料結構（可選）
   exportData?: {
     coverImage?: EbookImageMetadata;
     chapterImages: Record<string, EbookImageMetadata[]>;
