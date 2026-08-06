@@ -157,6 +157,27 @@ fn project_illustration_filenames(project_id: &str) -> Result<std::collections::
     Ok(filenames)
 }
 
+/// 判斷目錄中的一個檔案是否應該收進本專案的 EPUB，是的話回傳它的檔名
+///
+/// 所有專案的圖片共用一個扁平目錄，這裡是「不夾帶別人作品插畫」的唯一守門點，
+/// 因此與檔案系統掃描分離成純函式，讓過濾規則本身能被測試涵蓋。
+fn illustration_export_name(
+    path: &std::path::Path,
+    allowed: &std::collections::HashSet<String>,
+) -> Option<String> {
+    let extension = path.extension()?.to_string_lossy().to_lowercase();
+    if !matches!(extension.as_str(), "jpg" | "jpeg" | "png" | "webp") {
+        return None;
+    }
+
+    let filename = path.file_name()?.to_string_lossy().to_string();
+    if !allowed.contains(&filename) {
+        return None;
+    }
+
+    Some(filename)
+}
+
 /// 掃描專案相關的 AI 插畫檔案
 fn scan_project_illustrations(project_id: &str) -> Result<Vec<IllustrationFile>, String> {
     // === 新邏輯：使用 path_utils 統一路徑管理 ===
@@ -192,23 +213,9 @@ fn scan_project_illustrations(project_id: &str) -> Result<Vec<IllustrationFile>,
             continue;
         }
 
-        // 只處理圖片檔案
-        let Some(extension) = path.extension() else {
+        let Some(filename_str) = illustration_export_name(&path, &allowed) else {
             continue;
         };
-        let ext_str = extension.to_string_lossy().to_lowercase();
-        if !matches!(ext_str.as_str(), "jpg" | "jpeg" | "png" | "webp") {
-            continue;
-        }
-
-        let Some(filename) = path.file_name() else {
-            continue;
-        };
-        let filename_str = filename.to_string_lossy().to_string();
-
-        if !allowed.contains(&filename_str) {
-            continue;
-        }
 
         illustrations.push(IllustrationFile {
             file_path: path.clone(),
@@ -1174,4 +1181,229 @@ fn generate_chapter_xhtml(chapter_title: &str, chapter_content: &str) -> String 
     <div class="generated-by">由創世紀元生成</div>
 </body>
 </html>"#, xml_text(chapter_title), xml_text(chapter_title), chapter_content)
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use quick_xml::events::Event;
+    use quick_xml::Reader;
+    use std::collections::HashSet;
+    use std::path::PathBuf;
+
+    /// 解析 OPF，回傳 (manifest 宣告的 id, spine 引用的 idref)
+    ///
+    /// 用真的 XML parser 而非字串比對：未跳脫的 `&` 讓整份 manifest 無法解析，
+    /// 但字串檢查照樣通過——那正是這組測試要擋的失效模式。
+    fn parse_opf(xml: &str) -> (HashSet<String>, Vec<String>) {
+        let mut reader = Reader::from_str(xml);
+        let mut manifest_ids = HashSet::new();
+        let mut spine_idrefs = Vec::new();
+
+        loop {
+            match reader.read_event() {
+                Ok(Event::Start(e)) | Ok(Event::Empty(e)) => {
+                    let name = e.name().as_ref().to_vec();
+                    let attr_of = |key: &[u8]| -> Option<String> {
+                        e.attributes().flatten().find_map(|a| {
+                            (a.key.as_ref() == key)
+                                .then(|| String::from_utf8_lossy(a.value.as_ref()).into_owned())
+                        })
+                    };
+
+                    match name.as_slice() {
+                        b"item" => {
+                            if let Some(id) = attr_of(b"id") {
+                                manifest_ids.insert(id);
+                            }
+                        }
+                        b"itemref" => {
+                            if let Some(idref) = attr_of(b"idref") {
+                                spine_idrefs.push(idref);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(Event::Eof) => break,
+                Err(e) => panic!("OPF 不是合法 XML: {e}"),
+                _ => {}
+            }
+        }
+
+        (manifest_ids, spine_idrefs)
+    }
+
+    fn sample_chapters() -> Vec<(String, String)> {
+        vec![
+            ("第一章".to_string(), "<p>內文</p>".to_string()),
+            ("第二章".to_string(), "<p>內文</p>".to_string()),
+        ]
+    }
+
+    #[test]
+    fn opf_stays_valid_xml_when_metadata_contains_markup_characters() {
+        // 書名含 & 與角括號是實際會發生的事（「A & B <特別篇>」），
+        // 裸插值會讓整份 OPF 無法解析，連帶整本書打不開
+        let opf = generate_content_opf_with_illustrations(
+            "貓 & 狗 <特別篇>",
+            "作者 <匿名> & 友人",
+            &sample_chapters(),
+            &[],
+            false,
+            true,
+        );
+
+        // 解析失敗會直接 panic，這行本身就是斷言
+        let (manifest_ids, _) = parse_opf(&opf);
+        assert!(manifest_ids.contains("chapter1"));
+
+        // 跳脫過的內容不該留下裸 & 或裸角括號在文字節點
+        assert!(opf.contains("&amp;"), "& 應該被跳脫");
+        assert!(opf.contains("&lt;"), "< 應該被跳脫");
+    }
+
+    #[test]
+    fn every_spine_reference_is_declared_in_manifest() {
+        let opf = generate_content_opf_with_illustrations(
+            "書名",
+            "作者",
+            &sample_chapters(),
+            &["illustration_001.png".to_string()],
+            true,
+            true,
+        );
+
+        let (manifest_ids, spine_idrefs) = parse_opf(&opf);
+
+        assert!(!spine_idrefs.is_empty(), "spine 不應為空");
+        for idref in &spine_idrefs {
+            assert!(
+                manifest_ids.contains(idref),
+                "spine 引用了 manifest 未宣告的 {idref}"
+            );
+        }
+        assert!(spine_idrefs.contains(&"illustrations".to_string()));
+        assert!(spine_idrefs.contains(&"cover".to_string()));
+    }
+
+    #[test]
+    fn illustrations_page_is_omitted_from_both_manifest_and_spine_when_there_are_no_images() {
+        // 使用者勾了「附插畫集錦」但這本書一張插畫都沒有：
+        // manifest 與 spine 的省略條件只要有一邊漏掉，spine 就會指向不存在的檔案
+        let opf = generate_content_opf_with_illustrations(
+            "書名",
+            "作者",
+            &sample_chapters(),
+            &[],
+            true,
+            false,
+        );
+
+        let (manifest_ids, spine_idrefs) = parse_opf(&opf);
+
+        assert!(!manifest_ids.contains("illustrations"));
+        assert!(!spine_idrefs.contains(&"illustrations".to_string()));
+        for idref in &spine_idrefs {
+            assert!(
+                manifest_ids.contains(idref),
+                "spine 引用了 manifest 未宣告的 {idref}"
+            );
+        }
+    }
+
+    #[test]
+    fn cover_is_omitted_from_both_manifest_and_spine_when_disabled() {
+        let opf = generate_content_opf(&"書名", "作者", &sample_chapters(), false);
+        let (manifest_ids, spine_idrefs) = parse_opf(&opf);
+
+        assert!(!manifest_ids.contains("cover"));
+        assert!(!spine_idrefs.contains(&"cover".to_string()));
+    }
+
+    #[test]
+    fn manifest_href_matches_the_filename_written_into_the_zip() {
+        // manifest 的 href 與實際寫入 ZIP 的名稱由同一個函式產生，
+        // 這裡把兩邊都跑一次確認沒有分岔——分岔的 EPUB 會開起來缺圖
+        let files: Vec<IllustrationFile> = vec![
+            IllustrationFile {
+                file_path: PathBuf::from("/tmp/圖 & 片.PNG"),
+                filename: "圖 & 片.PNG".to_string(),
+                character_names: Vec::new(),
+                generation_time: None,
+            },
+            IllustrationFile {
+                file_path: PathBuf::from("/tmp/b.webp"),
+                filename: "b.webp".to_string(),
+                character_names: Vec::new(),
+                generation_time: None,
+            },
+        ];
+
+        let names: Vec<String> = files
+            .iter()
+            .enumerate()
+            .map(|(i, f)| epub_image_filename(f, i))
+            .collect();
+
+        assert_eq!(names, vec!["illustration_001.png", "illustration_002.webp"]);
+
+        let opf = generate_content_opf_with_illustrations(
+            "書名",
+            "作者",
+            &sample_chapters(),
+            &names,
+            true,
+            false,
+        );
+
+        for name in &names {
+            assert!(
+                opf.contains(&format!("href=\"images/{name}\"")),
+                "manifest 少了 {name}"
+            );
+        }
+        assert!(opf.contains("media-type=\"image/png\""));
+        assert!(opf.contains("media-type=\"image/webp\""));
+    }
+
+    #[test]
+    fn export_name_only_accepts_images_recorded_for_this_project() {
+        let allowed: HashSet<String> = ["mine.png".to_string(), "mine.jpg".to_string()]
+            .into_iter()
+            .collect();
+
+        // 屬於本專案且格式受支援
+        assert_eq!(
+            illustration_export_name(&PathBuf::from("/imgs/mine.png"), &allowed),
+            Some("mine.png".to_string())
+        );
+
+        // 同一個扁平目錄裡別的作品的插畫，絕不能夾帶進來
+        assert_eq!(
+            illustration_export_name(&PathBuf::from("/imgs/other-project.png"), &allowed),
+            None
+        );
+
+        // 有記錄但不是支援的圖片格式
+        let allowed_txt: HashSet<String> = ["notes.txt".to_string()].into_iter().collect();
+        assert_eq!(
+            illustration_export_name(&PathBuf::from("/imgs/notes.txt"), &allowed_txt),
+            None
+        );
+
+        // 沒有副檔名
+        assert_eq!(
+            illustration_export_name(&PathBuf::from("/imgs/noext"), &allowed),
+            None
+        );
+    }
+
+    #[test]
+    fn media_type_follows_the_extension() {
+        assert_eq!(image_media_type("a.png"), "image/png");
+        assert_eq!(image_media_type("a.PNG"), "image/png");
+        assert_eq!(image_media_type("a.webp"), "image/webp");
+        assert_eq!(image_media_type("a.jpg"), "image/jpeg");
+        assert_eq!(image_media_type("a.jpeg"), "image/jpeg");
+    }
 }
