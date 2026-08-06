@@ -55,7 +55,8 @@
     }
   },
   "include": [
-    "src/renderer"
+    "src/renderer",
+    "src/__tests__"
   ],
   "exclude": [
     "node_modules",
