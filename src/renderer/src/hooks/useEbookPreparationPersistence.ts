@@ -21,6 +21,8 @@ const log = createLogger('useEbookPreparationPersistence');
 const STORAGE_KEY = 'genesis-chronicle-ebook-preparation';
 /** 歸屬錯位的配置移放於此，避免直接捨棄使用者的排版工作 */
 const QUARANTINE_KEY = 'genesis-chronicle-ebook-preparation-quarantine';
+/** 隔離區保留筆數上限，避免無上限累積把 localStorage 配額吃光 */
+const QUARANTINE_MAX_ENTRIES = 10;
 
 export interface SaveResult {
   ok: boolean;
@@ -45,6 +47,12 @@ export const useEbookPreparationPersistence = (
   // 用專案 ID 而非布林值，切換專案時才會自動失效。
   const [hydratedProjectId, setHydratedProjectId] = useState<string | null>(null);
   const isHydrated = !!projectId && hydratedProjectId === projectId;
+
+  // 載入被中止的專案 ID。`isHydrated === false` 本身分不出「還在載入」與
+  // 「載入被擋住」，但兩者對畫面的意義完全相反：前者等一下就好，後者永遠不會好轉，
+  // 必須停用整個配置介面。同樣綁專案 ID，切換專案時自動失效。
+  const [blockedProjectId, setBlockedProjectId] = useState<string | null>(null);
+  const loadBlocked = !!projectId && blockedProjectId === projectId;
 
   // 目前配置是否確實屬於這個專案：切換專案的瞬間，store 裡仍是前一個專案的配置
   const belongsToProject = !!currentConfig && !!projectId && currentConfig.projectId === projectId;
@@ -85,13 +93,28 @@ export const useEbookPreparationPersistence = (
    * 是「搬移」不是「複製」：寫入隔離區成功後即從原 key 移除，避免兩份完整
    * 資料同時佔用配額。回傳是否成功——呼叫端必須據此決定要不要往下走，
    * 隔離失敗卻繼續重設與自動儲存，等於親手毀掉這個機制要保護的東西。
+   *
+   * 隔離項目的 key 帶上時間戳：只用槽位 ID 的話，同一個專案第二次錯位就會
+   * 蓋掉第一次隔離的內容，這個機制本身反而成為資料遺失的來源。
+   * 代價是隔離區會累積，因此保留上限筆數，超出的丟最舊的。
    */
   const quarantineConfig = useCallback((key: string, config: unknown): boolean => {
     try {
       const stored = localStorage.getItem(QUARANTINE_KEY);
       const parsed = stored ? JSON.parse(stored) : {};
       const bucket = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
-      bucket[key] = { quarantinedAt: new Date().toISOString(), config };
+
+      const quarantinedAt = new Date().toISOString();
+      bucket[`${key}::${quarantinedAt}`] = { quarantinedAt, slotKey: key, config };
+
+      const entries = Object.entries(bucket) as [string, { quarantinedAt?: string }][];
+      if (entries.length > QUARANTINE_MAX_ENTRIES) {
+        entries
+          .sort(([, a], [, b]) => (a?.quarantinedAt ?? '').localeCompare(b?.quarantinedAt ?? ''))
+          .slice(0, entries.length - QUARANTINE_MAX_ENTRIES)
+          .forEach(([oldest]) => delete bucket[oldest]);
+      }
+
       localStorage.setItem(QUARANTINE_KEY, JSON.stringify(bucket));
 
       // 隔離區寫入成功後才移除原 entry。這一步是縮減資料量，
@@ -178,6 +201,10 @@ export const useEbookPreparationPersistence = (
     } finally {
       if (safeToProceed) {
         setHydratedProjectId(projectId);
+        // 重試成功時要解除封鎖，否則使用者清完儲存空間也回不到正常流程
+        setBlockedProjectId(null);
+      } else {
+        setBlockedProjectId(projectId);
       }
     }
   }, [projectId, dispatch, isStructurallyValid, quarantineConfig]);
@@ -288,6 +315,12 @@ export const useEbookPreparationPersistence = (
     initializeForProject,
     /** localStorage 還原是否已完成，完成前不應建立空白配置 */
     isHydrated,
+    /**
+     * 載入是否因無法隔離錯位配置而中止。
+     * 為 true 時 currentConfig 必為 null，任何配置操作都只會靜默失效，
+     * 呼叫端應停用整個配置介面並提供重試入口。
+     */
+    loadBlocked,
     /** 目前是否已有屬於本專案的配置 */
     isInitialized: belongsToProject,
     currentConfig
