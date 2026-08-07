@@ -27,7 +27,7 @@ use commands::ai_providers::{
 };
 use commands::context::{build_context, compress_context, get_context_stats, build_separated_context, estimate_separated_context_tokens, analyze_text_purity, enhance_generation_parameters};
 use commands::settings::{get_setting, set_setting, get_all_settings, reset_settings};
-use commands::database::{backup_database, restore_database, run_database_maintenance, get_database_stats, health_check, reindex_database, incremental_vacuum, get_wal_mode_status, set_wal_mode};
+use commands::database::{backup_database, restore_database, create_auto_backup, get_default_backup_dir, run_database_maintenance, get_database_stats, health_check, reindex_database, incremental_vacuum, get_wal_mode_status, set_wal_mode};
 use commands::ai_history::{create_ai_history, query_ai_history, mark_ai_history_selected, delete_ai_history, cleanup_ai_history};
 use commands::epub::{generate_epub, get_epub_exports, delete_epub_export};
 // 所有舊PDF命令已刪除 - 現在只使用Chrome Headless實現
@@ -205,6 +205,8 @@ pub fn run() {
       // Database commands
       backup_database,
       restore_database,
+      create_auto_backup,
+      get_default_backup_dir,
       run_database_maintenance,
       get_database_stats,
       health_check,

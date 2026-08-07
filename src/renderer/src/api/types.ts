@@ -128,6 +128,9 @@ export interface API {
   database: {
     backup: (path: string) => Promise<void>;
     restore: (path: string) => Promise<void>;
+    /** 執行一次自動備份，回傳備份檔完整路徑；location 留空時落到預設目錄 */
+    createAutoBackup: (location?: string, maxFiles?: number) => Promise<string>;
+    getDefaultBackupDir: () => Promise<string>;
     runMaintenance: () => Promise<string>;
     getStats: () => Promise<DatabaseStats>;
     healthCheck: () => Promise<DatabaseHealth>;

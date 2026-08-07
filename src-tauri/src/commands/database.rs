@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use crate::database::connection::get_db_path;
 
 /// 計算資料庫碎片化程度
@@ -56,16 +56,19 @@ fn calculate_fragmentation(conn: &rusqlite::Connection) -> Result<f64, rusqlite:
     }
 }
 
-#[tauri::command]
-pub async fn backup_database(path: String) -> Result<(), String> {
-    let source_path = get_db_path().map_err(|e| e.to_string())?;
-    let dest_path = Path::new(&path);
-    
+/// 將資料庫檔案備份到指定路徑
+///
+/// 走 SQLite Online Backup API 而不是 fs::copy——資料庫是 WAL 模式，
+/// 單純複製主檔會漏掉 -wal 裡尚未 checkpoint 的內容，而且備份檔照樣通過
+/// integrity_check，看起來健康卻少了最近寫入的章節。
+///
+/// 抽成獨立函式讓測試能用暫存目錄的資料庫驗證，不碰真實資料。
+pub fn backup_db_file(source_path: &Path, dest_path: &Path) -> Result<(), String> {
     // 檢查來源檔案是否存在
     if !source_path.exists() {
         return Err("資料庫檔案不存在".to_string());
     }
-    
+
     // 確保目標目錄存在
     if let Some(parent) = dest_path.parent() {
         if !parent.exists() {
@@ -73,25 +76,54 @@ pub async fn backup_database(path: String) -> Result<(), String> {
                 .map_err(|e| format!("無法建立目標目錄: {}", e))?;
         }
     }
-    
-    // 複製檔案
-    fs::copy(&source_path, dest_path)
+
+    let result = run_online_backup(source_path, dest_path);
+
+    // 失敗時清掉半成品，否則會留下一個看似有效的殘缺備份檔
+    if result.is_err() {
+        let _ = fs::remove_file(dest_path);
+    }
+
+    result
+}
+
+fn run_online_backup(source_path: &Path, dest_path: &Path) -> Result<(), String> {
+    let source = rusqlite::Connection::open(source_path)
+        .map_err(|e| format!("無法開啟來源資料庫: {}", e))?;
+    let mut dest = rusqlite::Connection::open(dest_path)
+        .map_err(|e| format!("無法建立備份檔: {}", e))?;
+
+    let backup = rusqlite::backup::Backup::new(&source, &mut dest)
+        .map_err(|e| format!("備份初始化失敗: {}", e))?;
+
+    // 分批複製並在批次間讓出鎖，避免長時間卡住正在寫入的 app
+    backup
+        .run_to_completion(100, std::time::Duration::from_millis(50), None)
         .map_err(|e| format!("備份失敗: {}", e))?;
-    
-    log::info!("資料庫已備份至: {}", path);
+
     Ok(())
 }
 
 #[tauri::command]
-pub async fn restore_database(path: String) -> Result<(), String> {
-    let source_path = Path::new(&path);
-    let dest_path = get_db_path().map_err(|e| e.to_string())?;
-    
+pub async fn backup_database(path: String) -> Result<(), String> {
+    let source_path = get_db_path().map_err(|e| e.to_string())?;
+    let dest_path = Path::new(&path);
+
+    backup_db_file(&source_path, dest_path)?;
+
+    log::info!("資料庫已備份至: {}", path);
+    Ok(())
+}
+
+/// 從備份檔還原資料庫
+///
+/// 抽成獨立函式讓測試能用暫存目錄驗證完整的備份→還原循環。
+pub fn restore_db_file(source_path: &Path, dest_path: &Path) -> Result<(), String> {
     // 檢查來源檔案是否存在
     if !source_path.exists() {
         return Err("備份檔案不存在".to_string());
     }
-    
+
     // 確保目標目錄存在
     if let Some(parent) = dest_path.parent() {
         if !parent.exists() {
@@ -99,11 +131,154 @@ pub async fn restore_database(path: String) -> Result<(), String> {
                 .map_err(|e| format!("無法建立資料庫目錄: {}", e))?;
         }
     }
-    
+
     // 複製檔案
-    fs::copy(source_path, &dest_path)
+    fs::copy(source_path, dest_path)
         .map_err(|e| format!("還原失敗: {}", e))?;
-    
+
+    // 清掉舊資料庫留下的 -wal / -shm。留著的話下次開啟時是新主檔配舊 WAL，
+    // 還原等於只做了一半。
+    remove_wal_sidecars(dest_path)?;
+
+    Ok(())
+}
+
+/// SQLite 的 WAL 附屬檔命名是主檔完整檔名後綴 -wal / -shm，
+/// 不是替換副檔名——`with_extension` 會把 `foo.db` 變成 `foo-wal` 而不是 `foo.db-wal`。
+fn sidecar_path(db_path: &Path, suffix: &str) -> PathBuf {
+    let mut name = db_path.as_os_str().to_os_string();
+    name.push(suffix);
+    PathBuf::from(name)
+}
+
+fn remove_wal_sidecars(db_path: &Path) -> Result<(), String> {
+    for suffix in ["-wal", "-shm"] {
+        let sidecar = sidecar_path(db_path, suffix);
+        if sidecar.exists() {
+            fs::remove_file(&sidecar)
+                .map_err(|e| format!("無法清除 {}: {}", sidecar.display(), e))?;
+        }
+    }
+    Ok(())
+}
+
+/// 自動備份檔名前綴。rotation 靠它辨認哪些檔案歸自己管，
+/// 使用者放在同一個資料夾的其他檔案不會被掃到。
+const AUTO_BACKUP_PREFIX: &str = "genesis-chronicle-backup-";
+
+/// 預設備份目錄：資料庫檔案旁邊的 backups/
+///
+/// 跟著資料庫走，dev 落在 src-tauri/backups/，
+/// 正式版落在 app data 目錄下，不需要另一套環境判斷。
+fn backup_dir_for_db(db_path: &Path) -> PathBuf {
+    db_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .join("backups")
+}
+
+fn auto_backup_filename(timestamp: &str) -> String {
+    format!("{}{}.db", AUTO_BACKUP_PREFIX, timestamp)
+}
+
+/// 在指定目錄產生一份備份，並依保留上限刪掉最舊的幾份
+///
+/// timestamp 由呼叫端傳入而不是在函式內取當前時間，測試才能穩定地
+/// 排出多份備份驗證 rotation。
+pub fn create_backup_in_dir(
+    source_db: &Path,
+    dir: &Path,
+    timestamp: &str,
+    max_files: Option<usize>,
+) -> Result<PathBuf, String> {
+    let dest = dir.join(auto_backup_filename(timestamp));
+    backup_db_file(source_db, &dest)?;
+
+    if let Some(max) = max_files {
+        prune_old_backups(dir, max)?;
+    }
+
+    Ok(dest)
+}
+
+/// 只保留最新的 max_files 份自動備份
+///
+/// 檔名時間戳是零填補的固定格式，字典序即時間序，不必讀 mtime——
+/// 同一秒內建立的檔案 mtime 會相同，排不出先後。
+fn prune_old_backups(dir: &Path, max_files: usize) -> Result<(), String> {
+    // 0 視為不限制。若照字面刪到只剩 0 份，會把剛建好的那份也刪掉。
+    if max_files == 0 {
+        return Ok(());
+    }
+
+    let entries = fs::read_dir(dir).map_err(|e| format!("無法讀取備份目錄: {}", e))?;
+
+    let mut backups: Vec<PathBuf> = entries
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.is_file()
+                && path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| {
+                        name.starts_with(AUTO_BACKUP_PREFIX) && name.ends_with(".db")
+                    })
+        })
+        .collect();
+
+    backups.sort();
+
+    let excess = backups.len().saturating_sub(max_files);
+    for path in backups.into_iter().take(excess) {
+        fs::remove_file(&path)
+            .map_err(|e| format!("無法刪除舊備份 {}: {}", path.display(), e))?;
+    }
+
+    Ok(())
+}
+
+/// 回傳預設備份目錄，給設定畫面顯示「沒有自訂位置時會存到哪」
+#[tauri::command]
+pub async fn get_default_backup_dir() -> Result<String, String> {
+    let db_path = get_db_path().map_err(|e| e.to_string())?;
+    Ok(backup_dir_for_db(&db_path).to_string_lossy().to_string())
+}
+
+/// 執行一次自動備份，回傳備份檔完整路徑
+///
+/// location 留空時落到預設目錄；max_files 決定保留幾份。
+#[tauri::command]
+pub async fn create_auto_backup(
+    location: Option<String>,
+    max_files: Option<usize>,
+) -> Result<String, String> {
+    log::info!(
+        "開始自動備份 (location={:?}, max_files={:?})",
+        location,
+        max_files
+    );
+    let db_path = get_db_path().map_err(|e| e.to_string())?;
+
+    let dir = match location.as_deref().map(str::trim) {
+        Some(custom) if !custom.is_empty() => PathBuf::from(custom),
+        _ => backup_dir_for_db(&db_path),
+    };
+
+    let timestamp = chrono::Local::now().format("%Y%m%d-%H%M%S").to_string();
+    let backup_path = create_backup_in_dir(&db_path, &dir, &timestamp, max_files)?;
+
+    log::info!("自動備份完成: {}", backup_path.display());
+    Ok(backup_path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub async fn restore_database(path: String) -> Result<(), String> {
+    let source_path = Path::new(&path);
+    let dest_path = get_db_path().map_err(|e| e.to_string())?;
+
+    restore_db_file(source_path, &dest_path)?;
+
     log::info!("資料庫已從備份還原: {}", path);
     Ok(())
 }
@@ -523,4 +698,277 @@ pub async fn health_check() -> Result<serde_json::Value, String> {
         },
         "timestamp": chrono::Utc::now().to_rfc3339()
     }))
+}
+
+#[cfg(test)]
+mod backup_tests {
+    use super::*;
+    use rusqlite::Connection;
+
+    /// 建一顆 WAL 模式的測試資料庫：先寫一筆並 checkpoint 進主檔，
+    /// 之後關掉 autocheckpoint 再寫，讓新資料留在 -wal 裡。
+    ///
+    /// 回傳的連線必須保持開啟——一旦關閉，SQLite 會自動把 WAL 併回主檔，
+    /// 就再也重現不出「app 執行中備份」的真實狀態。
+    fn open_db_with_uncheckpointed_rows(db_path: &Path, wal_rows: usize) -> Connection {
+        let conn = Connection::open(db_path).expect("開啟測試資料庫失敗");
+        conn.pragma_update(None, "journal_mode", &"WAL")
+            .expect("啟用 WAL 模式失敗");
+        conn.execute(
+            "CREATE TABLE chapters (id INTEGER PRIMARY KEY, content TEXT NOT NULL)",
+            [],
+        )
+        .expect("建立測試表失敗");
+        conn.execute("INSERT INTO chapters (content) VALUES ('已存檔的第一章')", [])
+            .expect("寫入已存檔資料失敗");
+
+        // 把上面那筆推進主檔，模擬 app 已經跑過一段時間
+        conn.query_row("PRAGMA wal_checkpoint(TRUNCATE)", [], |_| Ok(()))
+            .expect("checkpoint 失敗");
+
+        // 之後的寫入全部留在 WAL，不進主檔
+        conn.pragma_update(None, "wal_autocheckpoint", &0i64)
+            .expect("關閉 autocheckpoint 失敗");
+        for i in 0..wal_rows {
+            conn.execute(
+                "INSERT INTO chapters (content) VALUES (?1)",
+                [format!("尚未 checkpoint 的第 {} 章", i + 1)],
+            )
+            .expect("寫入 WAL 資料失敗");
+        }
+
+        conn
+    }
+
+    fn count_chapters(db_path: &Path) -> i64 {
+        let conn = Connection::open(db_path).expect("開啟資料庫失敗");
+        conn.query_row("SELECT COUNT(*) FROM chapters", [], |row| row.get(0))
+            .expect("查詢章節數失敗")
+    }
+
+    /// 這是整個備份功能的核心保證：app 執行中未 checkpoint 的內容也要進備份。
+    /// 單純複製主檔會漏掉 -wal 裡的資料，備份看起來成功卻少了最近的章節。
+    #[test]
+    fn backup_includes_uncheckpointed_wal_data() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let source = dir.path().join("source.db");
+        let dest = dir.path().join("backup.db");
+
+        let conn = open_db_with_uncheckpointed_rows(&source, 3);
+        assert_eq!(count_chapters(&source), 4, "來源資料庫應該有 4 筆（連線仍開著）");
+
+        backup_db_file(&source, &dest).expect("備份失敗");
+
+        assert_eq!(
+            count_chapters(&dest),
+            4,
+            "備份漏掉了 WAL 裡尚未 checkpoint 的章節"
+        );
+
+        drop(conn);
+    }
+
+    /// 備份檔要能獨立開啟並通過完整性檢查，不能依賴來源的 -wal / -shm 陪在旁邊
+    #[test]
+    fn backup_file_passes_integrity_check() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let source = dir.path().join("source.db");
+        let dest = dir.path().join("backup.db");
+
+        let conn = open_db_with_uncheckpointed_rows(&source, 2);
+        backup_db_file(&source, &dest).expect("備份失敗");
+        drop(conn);
+
+        let backup_conn = Connection::open(&dest).expect("開啟備份檔失敗");
+        let result: String = backup_conn
+            .query_row("PRAGMA integrity_check", [], |row| row.get(0))
+            .expect("完整性檢查失敗");
+        assert_eq!(result, "ok", "備份檔未通過完整性檢查");
+    }
+
+    #[test]
+    fn backup_creates_missing_destination_directory() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let source = dir.path().join("source.db");
+        let dest = dir.path().join("nested").join("deeper").join("backup.db");
+
+        let conn = open_db_with_uncheckpointed_rows(&source, 1);
+        backup_db_file(&source, &dest).expect("備份失敗");
+        drop(conn);
+
+        assert!(dest.exists(), "備份未建立缺少的目標目錄");
+    }
+
+    /// 備份的價值全在還原那一刻。這條走完整循環：
+    /// 備份 → 來源繼續被改壞 → 還原 → 內容必須回到備份當下的狀態。
+    #[test]
+    fn restore_brings_data_back_to_backup_point() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let source = dir.path().join("source.db");
+        let backup = dir.path().join("backup.db");
+
+        let conn = open_db_with_uncheckpointed_rows(&source, 3);
+        backup_db_file(&source, &backup).expect("備份失敗");
+
+        // 模擬備份之後使用者又寫了東西、然後資料毀損（這裡直接刪光）
+        conn.execute("DELETE FROM chapters", []).expect("清空失敗");
+        drop(conn);
+        assert_eq!(count_chapters(&source), 0, "前置條件：來源應已被清空");
+
+        restore_db_file(&backup, &source).expect("還原失敗");
+
+        assert_eq!(
+            count_chapters(&source),
+            4,
+            "還原後的內容不等於備份當下的狀態"
+        );
+    }
+
+    /// 還原是覆蓋主檔，但目標的 -wal / -shm 是舊資料庫留下的。
+    /// 沒清掉的話，下次開啟時 SQLite 面對的是新主檔配舊 WAL。
+    #[test]
+    fn restore_clears_stale_wal_files() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let source = dir.path().join("source.db");
+        let backup = dir.path().join("backup.db");
+
+        let conn = open_db_with_uncheckpointed_rows(&source, 3);
+        backup_db_file(&source, &backup).expect("備份失敗");
+        drop(conn);
+
+        // 模擬還原前殘留的舊 WAL / SHM（SQLite 的命名就是主檔名後綴 -wal / -shm）
+        let stale_wal = dir.path().join("source.db-wal");
+        let stale_shm = dir.path().join("source.db-shm");
+        fs::write(&stale_wal, b"stale").expect("寫入假 WAL 失敗");
+        fs::write(&stale_shm, b"stale").expect("寫入假 SHM 失敗");
+
+        restore_db_file(&backup, &source).expect("還原失敗");
+
+        assert!(
+            !stale_wal.exists(),
+            "還原後仍留著舊的 -wal，下次開啟會拿新主檔配舊 WAL"
+        );
+        assert!(!stale_shm.exists(), "還原後仍留著舊的 -shm");
+        assert_eq!(count_chapters(&source), 4, "還原後資料筆數不對");
+    }
+
+    #[test]
+    fn creates_backup_under_given_directory_with_timestamped_name() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let source = dir.path().join("source.db");
+        let backup_dir = dir.path().join("backups");
+
+        let conn = open_db_with_uncheckpointed_rows(&source, 2);
+        let path = create_backup_in_dir(&source, &backup_dir, "20260807-143022", None)
+            .expect("備份失敗");
+        drop(conn);
+
+        assert_eq!(
+            path.file_name().unwrap().to_str().unwrap(),
+            "genesis-chronicle-backup-20260807-143022.db"
+        );
+        assert_eq!(count_chapters(&path), 3, "備份內容不完整");
+    }
+
+    #[test]
+    fn prunes_oldest_backups_beyond_limit() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let source = dir.path().join("source.db");
+        let backup_dir = dir.path().join("backups");
+
+        let conn = open_db_with_uncheckpointed_rows(&source, 1);
+        // 時間戳字典序即時間序，最舊的是 01
+        for stamp in ["20260807-000001", "20260807-000002", "20260807-000003"] {
+            create_backup_in_dir(&source, &backup_dir, stamp, Some(2)).expect("備份失敗");
+        }
+        drop(conn);
+
+        let mut remaining: Vec<String> = fs::read_dir(&backup_dir)
+            .expect("讀取備份目錄失敗")
+            .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+            .collect();
+        remaining.sort();
+
+        assert_eq!(
+            remaining,
+            vec![
+                "genesis-chronicle-backup-20260807-000002.db",
+                "genesis-chronicle-backup-20260807-000003.db",
+            ],
+            "應該只留下最新的兩份"
+        );
+    }
+
+    #[test]
+    fn keeps_all_backups_when_under_limit() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let source = dir.path().join("source.db");
+        let backup_dir = dir.path().join("backups");
+
+        let conn = open_db_with_uncheckpointed_rows(&source, 1);
+        for stamp in ["20260807-000001", "20260807-000002"] {
+            create_backup_in_dir(&source, &backup_dir, stamp, Some(5)).expect("備份失敗");
+        }
+        drop(conn);
+
+        let count = fs::read_dir(&backup_dir).expect("讀取備份目錄失敗").count();
+        assert_eq!(count, 2, "未達上限不應該刪任何一份");
+    }
+
+    /// 使用者可能把備份目錄指到自己的資料夾，rotation 只能碰自己產生的檔案
+    #[test]
+    fn prune_leaves_unrelated_files_alone() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let source = dir.path().join("source.db");
+        let backup_dir = dir.path().join("backups");
+        fs::create_dir_all(&backup_dir).expect("建立備份目錄失敗");
+
+        let bystander = backup_dir.join("我的手稿.db");
+        fs::write(&bystander, b"not a backup").expect("寫入無關檔案失敗");
+
+        let conn = open_db_with_uncheckpointed_rows(&source, 1);
+        for stamp in ["20260807-000001", "20260807-000002"] {
+            create_backup_in_dir(&source, &backup_dir, stamp, Some(1)).expect("備份失敗");
+        }
+        drop(conn);
+
+        assert!(bystander.exists(), "rotation 刪掉了不屬於自己的檔案");
+        assert!(
+            backup_dir
+                .join("genesis-chronicle-backup-20260807-000002.db")
+                .exists(),
+            "最新的備份應該保留"
+        );
+    }
+
+    #[test]
+    fn default_backup_dir_sits_next_to_the_database() {
+        let db = Path::new("/tmp/genesis/genesis-chronicle-dev.db");
+        assert_eq!(
+            backup_dir_for_db(db),
+            PathBuf::from("/tmp/genesis/backups"),
+            "備份目錄應該跟著資料庫走"
+        );
+    }
+
+    #[test]
+    fn restore_rejects_missing_backup() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let backup = dir.path().join("不存在.db");
+        let dest = dir.path().join("target.db");
+
+        let err = restore_db_file(&backup, &dest).expect_err("備份檔不存在時應該回錯誤");
+        assert!(err.contains("不存在"), "錯誤訊息未指出備份缺失: {}", err);
+    }
+
+    #[test]
+    fn backup_rejects_missing_source() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄失敗");
+        let source = dir.path().join("不存在.db");
+        let dest = dir.path().join("backup.db");
+
+        let err = backup_db_file(&source, &dest).expect_err("來源不存在時應該回錯誤");
+        assert!(err.contains("不存在"), "錯誤訊息未指出來源缺失: {}", err);
+        assert!(!dest.exists(), "來源不存在時不應產生備份檔");
+    }
 }

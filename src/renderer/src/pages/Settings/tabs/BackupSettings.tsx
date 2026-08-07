@@ -1,11 +1,55 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { updateBackupSettings } from '../../../store/slices/settingsSlice';
 import { SettingsComponentProps } from '../types';
 import BackupManager from '../../../components/Backup/BackupManager';
 import AutoBackupIndicator from '../../../components/UI/AutoBackupIndicator';
+import { AutoBackupService } from '../../../services/autoBackupService';
+import api from '../../../api';
+import { createLogger } from '../../../utils/logger';
+
+const log = createLogger('BackupSettings');
+
+type ManualBackupState =
+  | { kind: 'idle' }
+  | { kind: 'running' }
+  | { kind: 'done'; path: string }
+  | { kind: 'failed'; message: string };
 
 const BackupSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }) => {
   const [showBackupManager, setShowBackupManager] = useState(false);
+  const [defaultBackupDir, setDefaultBackupDir] = useState('');
+  const [manualBackup, setManualBackup] = useState<ManualBackupState>({ kind: 'idle' });
+
+  // 沒有自訂位置時，讓使用者看得到備份實際會落在哪
+  useEffect(() => {
+    api.database
+      .getDefaultBackupDir()
+      .then(setDefaultBackupDir)
+      .catch(error => log.error('無法取得預設備份目錄:', error));
+  }, []);
+
+  const handleBrowseBackupLocation = useCallback(async () => {
+    try {
+      const selected = await api.system.selectDirectory('選擇備份資料夾');
+      if (selected) {
+        dispatch(updateBackupSettings({ backupLocation: selected }));
+      }
+    } catch (error) {
+      log.error('選擇備份資料夾失敗:', error);
+    }
+  }, [dispatch]);
+
+  const handleBackupNow = useCallback(async () => {
+    setManualBackup({ kind: 'running' });
+    try {
+      const path = await AutoBackupService.triggerManualBackup();
+      setManualBackup({ kind: 'done', path });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '備份失敗';
+      log.error('立即備份失敗:', error);
+      setManualBackup({ kind: 'failed', message });
+    }
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -65,12 +109,21 @@ const BackupSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }
                   <input
                     type="text"
                     value={settings.backup.backupLocation}
-                    onChange={(e) => dispatch(updateBackupSettings({ backupLocation: e.target.value }))}
-                    placeholder="選擇備份資料夾..."
+                    placeholder={defaultBackupDir ? `預設：${defaultBackupDir}` : '使用預設資料夾'}
                     className="flex-1 bg-bg-dark/80 border border-warm-gold/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
                     readOnly
                   />
-                  <button className="btn-secondary">瀏覽</button>
+                  <button className="btn-secondary" onClick={handleBrowseBackupLocation}>
+                    瀏覽
+                  </button>
+                  {settings.backup.backupLocation && (
+                    <button
+                      className="btn-secondary"
+                      onClick={() => dispatch(updateBackupSettings({ backupLocation: '' }))}
+                    >
+                      改回預設
+                    </button>
+                  )}
                 </div>
               </div>
             </>
@@ -79,8 +132,25 @@ const BackupSettings: React.FC<SettingsComponentProps> = ({ settings, dispatch }
       </div>
       
       <div className="bg-bg-light/50 backdrop-blur-sm border border-warm-gold/10 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-warm-gold mb-4">備份狀態</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-warm-gold">備份狀態</h3>
+          <button
+            onClick={handleBackupNow}
+            disabled={manualBackup.kind === 'running'}
+            className="btn-secondary text-sm disabled:opacity-50"
+          >
+            {manualBackup.kind === 'running' ? '備份中…' : '立即備份'}
+          </button>
+        </div>
         <AutoBackupIndicator size="medium" />
+        {manualBackup.kind === 'done' && (
+          <p className="mt-3 text-sm text-green-400 break-all">
+            已備份至 {manualBackup.path}
+          </p>
+        )}
+        {manualBackup.kind === 'failed' && (
+          <p className="mt-3 text-sm text-red-400">備份失敗：{manualBackup.message}</p>
+        )}
       </div>
       
       <BackupManager 

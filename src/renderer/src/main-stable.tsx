@@ -226,6 +226,22 @@ const SimpleApp: React.FC = () => {
           }
         }, 1000);
 
+        // 背景啟動自動備份排程
+        //
+        // 這段在 2026-08-07 之前不存在：設定預設「自動備份已開啟」、設定頁有
+        // 倒數指示器，而 initialize() 全 codebase 零呼叫，setInterval 從未註冊，
+        // 備份一次都沒發生過。顯示已開啟卻不備份，比沒有這個功能更危險。
+        setTimeout(async () => {
+          try {
+            log.debug('💾 啟動自動備份排程...');
+            const { AutoBackupService } = await import('./services/autoBackupService');
+            await AutoBackupService.initialize();
+            log.debug('✅ 自動備份排程已啟動');
+          } catch (error) {
+            log.warn('⚠️  自動備份排程啟動失敗:', error);
+          }
+        }, 1500);
+
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         log.error('❌ 應用程式初始化失敗:', error);

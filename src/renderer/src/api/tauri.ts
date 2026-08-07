@@ -4,7 +4,8 @@ import type {
   Character,
   Relationship,
   CharacterAttributes,
-  CreateRelationshipRequest
+  CreateRelationshipRequest,
+  DialogResult
 } from './models';
 import type { BatchRequest } from '../types/illustration';
 import type { Descendant } from 'slate';
@@ -771,6 +772,8 @@ export const tauriAPI: API = {
   database: {
     backup: (path) => safeInvoke('backup_database', { path }),
     restore: (path) => safeInvoke('restore_database', { path }),
+    createAutoBackup: (location, maxFiles) => safeInvoke('create_auto_backup', { location, maxFiles }),
+    getDefaultBackupDir: () => safeInvoke('get_default_backup_dir'),
     runMaintenance: () => safeInvoke('run_database_maintenance'),
     getStats: () => safeInvoke('get_database_stats'),
     healthCheck: () => safeInvoke('health_check'),
@@ -795,8 +798,15 @@ export const tauriAPI: API = {
       return await safeInvoke('show_open_dialog', { options });
     },
     selectDirectory: async (title?: string) => {
-      // 選擇目錄對話框
-      return await safeInvoke('select_directory', { title: title || '選擇導出目錄' });
+      // 走 show_open_dialog 的 openDirectory 分支。曾經呼叫的 select_directory
+      // 後端從未實作，這個方法一按就失敗。取消時回空字串。
+      const result = await safeInvoke<DialogResult>('show_open_dialog', {
+        options: {
+          title: title || '選擇資料夾',
+          properties: ['openDirectory'],
+        },
+      });
+      return result?.canceled ? '' : (result?.filePaths?.[0] ?? '');
     },
     quitApp: () => safeInvoke('quit_app'),
     reloadApp: () => safeInvoke('reload_app'),

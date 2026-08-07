@@ -5,6 +5,7 @@ import { useSettingsActions } from './hooks/useSettingsActions';
 import SettingsSidebar from './components/SettingsSidebar';
 import SettingsLoadingView from './components/SettingsLoadingView';
 import UpdateSettings from '../../components/Update/UpdateSettings';
+import { AutoBackupService } from '../../services/autoBackupService';
 import { createLogger } from '../../utils/logger';
 import {
 GeneralSettings,
@@ -38,7 +39,15 @@ const SettingsMain: React.FC = () => {
       const result = await saveSettings(settings);
       if (!result) {
         log.error('❌ 設定儲存失敗');
+        return;
       }
+
+      // 備份排程是啟動時用舊設定註冊的 setInterval，儲存後要重新套用，
+      // 否則改完間隔仍照舊值執行，而畫面上的倒數已經顯示新的間隔。
+      await AutoBackupService.updateSettings(
+        settings.backup.autoBackup,
+        settings.backup.backupInterval,
+      );
     } catch (error) {
       log.error('❌ 儲存設定時發生錯誤:', error);
     } finally {

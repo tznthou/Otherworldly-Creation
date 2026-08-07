@@ -1,4 +1,4 @@
-import BackupService from './backupService';
+import api from '../api';
 import { SettingsService } from './settingsService';
 import { createLogger } from '../utils/logger';
 
@@ -30,17 +30,37 @@ class AutoBackupServiceClass {
   async initialize(): Promise<void> {
     try {
       const settings = await SettingsService.loadSettings();
-      
-      if (settings.backup.autoBackup) {
-        this.startAutoBackup(settings.backup.backupInterval);
+
+      // 先載入上次備份資訊，下面判斷要不要補備份時要用
+      this.loadBackupHistory();
+
+      if (!settings.backup.autoBackup) {
+        return;
       }
 
-      // 載入上次備份資訊
-      this.loadBackupHistory();
+      const { backupInterval } = settings.backup;
+      this.startAutoBackup(backupInterval);
+
+      // 桌面 app 不是長駐服務。使用者每天開兩三個小時就關掉，24 小時的
+      // setInterval 永遠撐不到觸發——只註冊排程的話，接了線照樣一次都不會備份。
+      if (this.isBackupOverdue(backupInterval)) {
+        await this.performAutoBackup();
+      }
     } catch (error) {
       log.error('自動備份服務初始化失敗:', error);
       this.updateStatus({ error: '初始化失敗' });
     }
+  }
+
+  /**
+   * 距上次備份是否已超過一個間隔（從未備份過也算）
+   */
+  private isBackupOverdue(intervalHours: number): boolean {
+    if (!this.status.lastBackup) {
+      return true;
+    }
+
+    return Date.now() - this.status.lastBackup.getTime() >= intervalHours * 60 * 60 * 1000;
   }
 
   /**
@@ -84,21 +104,36 @@ class AutoBackupServiceClass {
   }
 
   /**
+   * 寫出一份資料庫備份
+   *
+   * 走後端的 SQLite Online Backup（含 -wal 內容），舊路徑是前端組 JSON 再觸發
+   * 瀏覽器下載——無人值守時根本落不了地，而且只涵蓋專案 / 章節 / 角色 / 設定，
+   * 漏掉語彙、插畫、電子書對應等資料表。保留份數由後端依 maxBackupFiles 輪替。
+   */
+  private async writeBackup(): Promise<{ path: string; intervalHours: number }> {
+    const settings = await SettingsService.loadSettings();
+    const { backupLocation, maxBackupFiles, backupInterval } = settings.backup;
+
+    const path = await api.database.createAutoBackup(
+      backupLocation || undefined,
+      maxBackupFiles,
+    );
+
+    return { path, intervalHours: backupInterval };
+  }
+
+  /**
    * 執行自動備份
    */
   private async performAutoBackup(): Promise<void> {
     try {
       log.debug('開始執行自動備份...');
-      
-      const settings = await SettingsService.loadSettings();
-      
-      // 創建備份
-      const filename = await BackupService.createFullBackup();
-      
-      // 更新狀態
+
+      const { path, intervalHours } = await this.writeBackup();
+
       const now = new Date();
-      const nextBackup = new Date(now.getTime() + settings.backup.backupInterval * 60 * 60 * 1000);
-      
+      const nextBackup = new Date(now.getTime() + intervalHours * 60 * 60 * 1000);
+
       this.updateStatus({
         lastBackup: now,
         nextBackup,
@@ -106,21 +141,12 @@ class AutoBackupServiceClass {
         error: null,
       });
 
-      // 儲存備份歷史
       this.saveBackupHistory();
 
-      // 清理舊備份（如果啟用）
-      await this.cleanupOldBackups(settings.backup.maxBackupFiles);
-
-      log.debug(`自動備份完成: ${filename}`);
-      
-      // 通知用戶（可選）
-      // TODO: 實現跨平台通知系統
-      log.debug('自動備份完成:', filename);
-
+      log.debug(`自動備份完成: ${path}`);
     } catch (error) {
       log.error('自動備份失敗:', error);
-      
+
       this.updateStatus({
         error: error instanceof Error ? error.message : '自動備份失敗',
       });
@@ -132,26 +158,12 @@ class AutoBackupServiceClass {
   }
 
   /**
-   * 清理舊備份
-   */
-  private async cleanupOldBackups(maxFiles: number): Promise<void> {
-    try {
-      // 這裡需要實現清理邏輯
-      // 由於我們使用下載方式，無法直接管理檔案
-      // 可以考慮在未來版本中實現本地備份資料夾管理
-      log.debug(`備份清理: 保留最近 ${maxFiles} 個備份檔案`);
-    } catch (error) {
-      log.error('清理舊備份失敗:', error);
-    }
-  }
-
-  /**
    * 手動觸發備份
    */
   async triggerManualBackup(): Promise<string> {
     try {
-      const filename = await BackupService.createFullBackup();
-      
+      const { path } = await this.writeBackup();
+
       this.updateStatus({
         lastBackup: new Date(),
         backupCount: this.status.backupCount + 1,
@@ -159,8 +171,8 @@ class AutoBackupServiceClass {
       });
 
       this.saveBackupHistory();
-      
-      return filename;
+
+      return path;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '手動備份失敗';
       this.updateStatus({ error: errorMessage });
@@ -286,8 +298,7 @@ class AutoBackupServiceClass {
     message: string;
   } {
     const now = Date.now();
-    const _settings = SettingsService.loadSettings();
-    
+
     // 如果自動備份已停用
     if (!this.status.enabled) {
       return {
@@ -331,10 +342,21 @@ class AutoBackupServiceClass {
 
   /**
    * 銷毀服務
+   *
+   * 狀態一併歸零。留著上次備份時間與錯誤訊息的話，重新 initialize()
+   * 會先閃出一段屬於上一輪的狀態；真實的備份歷史存在 localStorage，
+   * initialize() 會重新載入，這裡清掉不會弄丟東西。
    */
   destroy(): void {
     this.stopAutoBackup();
     this.listeners = [];
+    this.status = {
+      enabled: false,
+      lastBackup: null,
+      nextBackup: null,
+      backupCount: 0,
+      error: null,
+    };
   }
 }
 

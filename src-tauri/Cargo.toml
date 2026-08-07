@@ -30,7 +30,9 @@ tauri-plugin-shell = "=2.3.0"
 tauri-plugin-opener = "=2.2.3"
 tauri-plugin-store = "=2.3.0"
 keyring = { version = "3.6", features = ["apple-native", "windows-native"] }
-rusqlite = { version = "0.32", features = ["bundled", "chrono"] }
+# backup feature 提供 SQLite Online Backup API：備份時會一併帶走 -wal 裡尚未
+# checkpoint 的內容。純 fs::copy 只拿得到主檔快照，實測會漏掉最近寫入的資料。
+rusqlite = { version = "0.32", features = ["bundled", "chrono", "backup"] }
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }
 anyhow = "1.0"
