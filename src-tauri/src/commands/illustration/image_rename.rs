@@ -165,6 +165,45 @@ fn update_file_path(conn: &rusqlite::Connection, id: &str, new_path: &str) -> Re
     Ok(()) // 即使沒有更新也不報錯，因為檔案路徑可能為空
 }
 
+const WINDOWS_RESERVED_NAMES: &[&str] = &[
+    "CON", "PRN", "AUX", "NUL",
+    "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+    "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+];
+
+fn validate_rename_name(new_name: &str) -> Result<(), String> {
+    if new_name.trim().is_empty() {
+        return Err("新名稱不能為空".to_string());
+    }
+
+    if new_name.len() > 200 {
+        return Err("名稱過長，請限制在200字符內".to_string());
+    }
+
+    if new_name.contains(['/', '\\']) || new_name.contains("..") {
+        return Err("名稱不能包含路徑分隔符或 ..".to_string());
+    }
+
+    if new_name.contains(['"', '\'', '<', '>', ':', '|', '?', '*']) {
+        return Err("名稱不能包含 \" ' < > : | ? * 等特殊字元".to_string());
+    }
+
+    if new_name.chars().any(|c| c.is_control()) {
+        return Err("名稱不能包含控制字元".to_string());
+    }
+
+    if new_name.ends_with('.') || new_name.ends_with(' ') {
+        return Err("名稱不能以句點或空白結尾".to_string());
+    }
+
+    let stem = new_name.split_once('.').map_or(new_name, |(stem, _)| stem);
+    if WINDOWS_RESERVED_NAMES.iter().any(|r| stem.eq_ignore_ascii_case(r)) {
+        return Err(format!("「{}」是系統保留名稱，請換一個", stem));
+    }
+
+    Ok(())
+}
+
 // ========================= 公開API函數 =========================
 
 /// 重命名單個插畫
@@ -174,20 +213,13 @@ pub async fn rename_illustration(
     id: String,
     new_name: String,
 ) -> Result<Value, String> {
-    log::info!("開始重命名插畫: ID={}, 新名稱={}", id, new_name);
+    log::info!("開始重命名插畫: ID={:?}, 新名稱={:?}", id, new_name);
 
     // 驗證輸入
     if id.trim().is_empty() {
         return Err("插畫ID不能為空".to_string());
     }
-    if new_name.trim().is_empty() {
-        return Err("新名稱不能為空".to_string());
-    }
-
-    // 檢查名稱長度
-    if new_name.len() > 200 {
-        return Err("名稱過長，請限制在200字符內".to_string());
-    }
+    validate_rename_name(&new_name)?;
 
     let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
     
@@ -230,7 +262,7 @@ pub async fn rename_illustration(
         update_file_path(&conn, &id, &new_file_path)?;
     }
 
-    log::info!("插畫重命名完成: {} -> {}", old_name, new_name);
+    log::info!("插畫重命名完成: {:?} -> {:?}", old_name, new_name);
 
     Ok(serde_json::json!({
         "success": true,
@@ -303,4 +335,52 @@ pub async fn batch_rename_illustrations(
             "failure_count": failure_count
         }
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_path_traversal() {
+        for name in ["../../../tmp/evil", "..\\..\\evil", "/tmp/evil", "a/b"] {
+            assert!(validate_rename_name(name).is_err(), "應拒絕: {}", name);
+        }
+    }
+
+    #[test]
+    fn rejects_html_breaking_characters() {
+        for name in [r#"a" onerror="alert(1)"#, "a'b", "a<b>c"] {
+            assert!(validate_rename_name(name).is_err(), "應拒絕: {}", name);
+        }
+    }
+
+    #[test]
+    fn rejects_windows_invalid_filenames() {
+        for name in ["a*b", "a?b", "a|b", "a\u{1}b", "trailing.", "trailing "] {
+            assert!(validate_rename_name(name).is_err(), "Windows 無效檔名應拒絕: {}", name);
+        }
+    }
+
+    #[test]
+    fn rejects_windows_reserved_names() {
+        for name in ["CON", "con", "NUL", "COM1", "LPT9", "aux.png"] {
+            assert!(validate_rename_name(name).is_err(), "系統保留名應拒絕: {}", name);
+        }
+    }
+
+    #[test]
+    fn accepts_normal_names() {
+        for name in ["第一章插圖", "chapter_01", "圖 3 - 主角", "img-2026", "scene #1"] {
+            assert!(validate_rename_name(name).is_ok(), "正常名稱不應被拒絕: {}", name);
+        }
+    }
+
+    #[test]
+    fn keeps_existing_empty_and_length_rules() {
+        assert!(validate_rename_name("").is_err());
+        assert!(validate_rename_name("   ").is_err());
+        assert!(validate_rename_name(&"a".repeat(201)).is_err());
+        assert!(validate_rename_name(&"a".repeat(200)).is_ok());
+    }
 }

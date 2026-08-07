@@ -1,6 +1,6 @@
 use tauri::command;
 use std::process::Command;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::fs;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -171,6 +171,42 @@ fn scan_project_illustrations(_project_id: &str) -> Result<Vec<AIIllustration>, 
     Ok(illustrations)
 }
 
+fn file_url(path: &Path) -> String {
+    url::Url::from_file_path(path)
+        .map(|u| u.to_string())
+        .unwrap_or_else(|_| format!("file://{}", path.display()))
+}
+
+const CHROME_HEADLESS_FLAGS: &[&str] = &[
+    "--headless",
+    "--disable-gpu",
+    "--disable-software-rasterizer",
+    "--disable-background-timer-throttling",
+    "--disable-renderer-backgrounding",
+    "--disable-backgrounding-occluded-windows",
+    "--hide-scrollbars",
+    "--disable-extensions",
+    "--no-pdf-header-footer",
+    "--virtual-time-budget=10000",
+    "--run-all-compositor-stages-before-draw",
+];
+
+fn chrome_headless_args(pdf_path: &Path, html_path: &Path) -> Vec<String> {
+    let mut args: Vec<String> = CHROME_HEADLESS_FLAGS.iter().map(|f| f.to_string()).collect();
+    args.push(format!("--print-to-pdf={}", pdf_path.display()));
+    args.push(file_url(html_path));
+    args
+}
+
+fn build_illustration_html(file_path: &str) -> String {
+    let src = file_url(Path::new(file_path));
+    format!(r#"
+            <div class="chapter-illustration">
+                <img src="{}" alt="章節插畫" style="max-width: 80%; height: auto; margin: 20px auto; display: block; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            </div>
+            "#, html_escape::encode_double_quoted_attribute(&src))
+}
+
 /// 創建HTML模板
 fn create_html_content(title: &str, chapters: &[Chapter], options: &PdfOptionsChrome, project_id: &str) -> Result<String, String> {
     let font_size = options.font_size.unwrap_or(12.0);
@@ -187,11 +223,7 @@ fn create_html_content(title: &str, chapters: &[Chapter], options: &PdfOptionsCh
         
         // 為每章添加一張AI插畫 (如果有的話)
         let chapter_illustration = if !illustrations.is_empty() && index < illustrations.len() {
-            format!(r#"
-            <div class="chapter-illustration">
-                <img src="file://{}" alt="章節插畫" style="max-width: 80%; height: auto; margin: 20px auto; display: block; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            </div>
-            "#, illustrations[index].file_path)
+            build_illustration_html(&illustrations[index].file_path)
         } else {
             String::new()
         };
@@ -537,22 +569,7 @@ pub async fn generate_pdf_chrome(
     
     // 調用Chrome Headless生成PDF
     let output = Command::new(&chrome_path)
-        .args(&[
-            "--headless",
-            "--disable-gpu",
-            "--disable-software-rasterizer",
-            "--disable-background-timer-throttling",
-            "--disable-renderer-backgrounding",
-            "--disable-backgrounding-occluded-windows",
-            "--disable-web-security",
-            "--hide-scrollbars",
-            "--disable-extensions",
-            "--no-pdf-header-footer",
-            "--virtual-time-budget=10000",
-            "--run-all-compositor-stages-before-draw",
-            &format!("--print-to-pdf={}", pdf_path.display()),
-            &format!("file://{}", html_path.display()),
-        ])
+        .args(chrome_headless_args(&pdf_path, &html_path))
         .output()
         .map_err(|e| format!("Chrome命令執行失敗: {}", e))?;
     
@@ -616,4 +633,82 @@ pub async fn generate_pdf_chrome(
         page_count: Some(1), // TODO: 實現頁數計算
         error_message: None,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn abs(rel: &str) -> String {
+        std::env::temp_dir().join(rel).to_string_lossy().into_owned()
+    }
+
+    fn src_attr(html: &str) -> &str {
+        html.split(r#"src=""#).nth(1).and_then(|s| s.split('"').next()).unwrap()
+    }
+
+    #[test]
+    fn illustration_html_neutralizes_quotes_in_path() {
+        let html = build_illustration_html(&abs(r#"a" onerror="alert(1)"#));
+        assert!(!html.contains(r#"" onerror"#), "屬性被跳脫: {}", html);
+        assert!(html.contains("%22"), "雙引號應被編碼: {}", html);
+        assert!(!src_attr(&html).contains('"'), "src 屬性值內不得有裸引號: {}", html);
+    }
+
+    #[test]
+    fn illustration_url_encodes_fragment_and_query_chars() {
+        let html = build_illustration_html(&abs("scene #1?x.png"));
+        assert!(html.contains("%23"), "# 未編碼會被當成 fragment: {}", html);
+        assert!(html.contains("%3F"), "? 未編碼會被當成 query: {}", html);
+    }
+
+    #[test]
+    fn illustration_html_escapes_ampersand_left_literal_by_url() {
+        let html = build_illustration_html(&abs("a&b.png"));
+        assert!(html.contains("a&amp;b.png"), "& 會被當成實體參照起始: {}", html);
+    }
+
+    #[test]
+    fn illustration_html_keeps_normal_path_usable() {
+        let html = build_illustration_html(&abs("genesis/img_01.png"));
+        let src = src_attr(&html);
+        assert!(src.starts_with("file:///"), "{}", src);
+        assert!(src.ends_with("/genesis/img_01.png"), "{}", src);
+        assert!(html.contains("chapter-illustration"));
+    }
+
+    #[test]
+    fn illustration_html_falls_back_on_relative_path() {
+        let html = build_illustration_html("relative/img.png");
+        assert!(html.contains("chapter-illustration"), "{}", html);
+        assert!(!html.contains(r#"" onerror"#), "{}", html);
+    }
+
+    #[test]
+    fn relative_path_fallback_still_blocks_attribute_injection() {
+        let html = build_illustration_html(r#"relative/a" onerror="alert(1)"#);
+        assert!(!html.contains(r#"" onerror"#), "fallback 仍須擋住屬性跳脫: {}", html);
+        assert!(!src_attr(&html).contains('"'), "{}", html);
+    }
+
+    #[test]
+    fn chrome_args_do_not_disable_web_security() {
+        let args = chrome_headless_args(Path::new(&abs("o.pdf")), Path::new(&abs("i.html")));
+        assert!(
+            !args.iter().any(|a| a == "--disable-web-security"),
+            "--disable-web-security 移除 file:// 頁面的同源限制: {:?}",
+            args
+        );
+    }
+
+    #[test]
+    fn chrome_args_keep_pdf_generation_flags() {
+        let pdf = abs("o.pdf");
+        let args = chrome_headless_args(Path::new(&pdf), Path::new(&abs("i.html")));
+        assert!(args.iter().any(|a| a == "--headless"));
+        assert!(args.iter().any(|a| a == &format!("--print-to-pdf={}", pdf)));
+        let page = args.last().unwrap();
+        assert!(page.starts_with("file:///"), "{:?}", args);
+        assert!(page.ends_with("/i.html"), "{:?}", args);
+    }
 }
