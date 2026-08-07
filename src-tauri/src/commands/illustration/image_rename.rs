@@ -165,6 +165,32 @@ fn update_file_path(conn: &rusqlite::Connection, id: &str, new_path: &str) -> Re
     Ok(()) // 即使沒有更新也不報錯，因為檔案路徑可能為空
 }
 
+/// 驗證使用者輸入的插畫名稱
+///
+/// 名稱會直接組成磁碟檔名，並被 PDF 匯出掃描後嵌入 HTML，
+/// 因此屬於必須嚴格驗證的不可信輸入。
+fn validate_rename_name(new_name: &str) -> Result<(), String> {
+    if new_name.trim().is_empty() {
+        return Err("新名稱不能為空".to_string());
+    }
+
+    if new_name.len() > 200 {
+        return Err("名稱過長，請限制在200字符內".to_string());
+    }
+
+    // 路徑分隔符與 .. 會讓 PathBuf::join 跳出插畫目錄
+    if new_name.contains(['/', '\\']) || new_name.contains("..") {
+        return Err("名稱不能包含路徑分隔符或 ..".to_string());
+    }
+
+    // 引號與角括號會跳脫 PDF 匯出時的 HTML 屬性
+    if new_name.contains(['"', '\'', '<', '>', ':', '\0']) {
+        return Err("名稱不能包含 \" ' < > : 等特殊字元".to_string());
+    }
+
+    Ok(())
+}
+
 // ========================= 公開API函數 =========================
 
 /// 重命名單個插畫
@@ -180,14 +206,7 @@ pub async fn rename_illustration(
     if id.trim().is_empty() {
         return Err("插畫ID不能為空".to_string());
     }
-    if new_name.trim().is_empty() {
-        return Err("新名稱不能為空".to_string());
-    }
-
-    // 檢查名稱長度
-    if new_name.len() > 200 {
-        return Err("名稱過長，請限制在200字符內".to_string());
-    }
+    validate_rename_name(&new_name)?;
 
     let conn = create_connection().map_err(|e| format!("資料庫連接失敗: {}", e))?;
     
@@ -303,4 +322,52 @@ pub async fn batch_rename_illustrations(
             "failure_count": failure_count
         }
     }))
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 名稱會經 format!("{}.{}", new_name, ext) 組成檔名再交給 PathBuf::join，
+    /// join 遇到 ../ 會往上跳、遇到絕對路徑會整個取代，因此可寫出插畫目錄外。
+    #[test]
+    fn rejects_path_traversal() {
+        for name in ["../../../tmp/evil", "..\\..\\evil", "/tmp/evil", "a/b"] {
+            assert!(
+                validate_rename_name(name).is_err(),
+                "含路徑分隔符的名稱應被拒絕: {}",
+                name
+            );
+        }
+    }
+
+    /// 檔名最終會被 PDF 匯出嵌入 <img src="file://{}">，引號可跳脫屬性。
+    #[test]
+    fn rejects_html_breaking_characters() {
+        for name in [r#"a" onerror="alert(1)"#, "a'b", "a<b>c"] {
+            assert!(
+                validate_rename_name(name).is_err(),
+                "含 HTML 特殊字元的名稱應被拒絕: {}",
+                name
+            );
+        }
+    }
+
+    #[test]
+    fn accepts_normal_names() {
+        for name in ["第一章插圖", "chapter_01", "圖 3 - 主角", "img-2026"] {
+            assert!(
+                validate_rename_name(name).is_ok(),
+                "正常名稱不應被拒絕: {}",
+                name
+            );
+        }
+    }
+
+    #[test]
+    fn keeps_existing_empty_and_length_rules() {
+        assert!(validate_rename_name("").is_err());
+        assert!(validate_rename_name("   ").is_err());
+        assert!(validate_rename_name(&"a".repeat(201)).is_err());
+        assert!(validate_rename_name(&"a".repeat(200)).is_ok());
+    }
 }
