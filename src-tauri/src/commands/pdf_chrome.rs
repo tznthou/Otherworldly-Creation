@@ -171,7 +171,12 @@ fn scan_project_illustrations(_project_id: &str) -> Result<Vec<AIIllustration>, 
     Ok(illustrations)
 }
 
-/// 組出呼叫 Chrome Headless 產生 PDF 的參數
+fn file_url(path: &std::path::Path) -> String {
+    url::Url::from_file_path(path)
+        .map(|u| u.to_string())
+        .unwrap_or_else(|_| format!("file://{}", path.display()))
+}
+
 fn chrome_headless_args(pdf_path: &std::path::Path, html_path: &std::path::Path) -> Vec<String> {
     vec![
         "--headless".to_string(),
@@ -186,20 +191,17 @@ fn chrome_headless_args(pdf_path: &std::path::Path, html_path: &std::path::Path)
         "--virtual-time-budget=10000".to_string(),
         "--run-all-compositor-stages-before-draw".to_string(),
         format!("--print-to-pdf={}", pdf_path.display()),
-        format!("file://{}", html_path.display()),
+        file_url(html_path),
     ]
 }
 
-/// 組出單張章節插畫的 HTML
-///
-/// `file_path` 來自 `scan_project_illustrations` 掃描磁碟的實際檔名，
-/// 而檔名可經 `rename_illustration` 由使用者決定，因此屬於不可信輸入。
 fn build_illustration_html(file_path: &str) -> String {
+    let src = file_url(std::path::Path::new(file_path));
     format!(r#"
             <div class="chapter-illustration">
-                <img src="file://{}" alt="章節插畫" style="max-width: 80%; height: auto; margin: 20px auto; display: block; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <img src="{}" alt="章節插畫" style="max-width: 80%; height: auto; margin: 20px auto; display: block; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
             </div>
-            "#, html_escape::encode_double_quoted_attribute(file_path))
+            "#, html_escape::encode_double_quoted_attribute(&src))
 }
 
 /// 創建HTML模板
@@ -634,36 +636,42 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
-    /// 插畫檔名由使用者透過 rename_illustration 決定，掃描後直接嵌入 img 標籤。
-    /// 名稱含雙引號時若不轉義，可跳出 src 屬性注入 onerror 執行 JS。
     #[test]
-    fn illustration_html_escapes_quotes_in_path() {
-        let malicious = r#"/tmp/a" onerror="alert(1)"#;
-        let html = build_illustration_html(malicious);
+    fn illustration_html_neutralizes_quotes_in_path() {
+        let html = build_illustration_html(r#"/tmp/a" onerror="alert(1)"#);
+        assert!(!html.contains(r#"" onerror"#), "屬性被跳脫: {}", html);
+        assert!(html.contains("%22"), "雙引號應被編碼: {}", html);
+        let src = html.split(r#"src=""#).nth(1).and_then(|s| s.split('"').next()).unwrap();
+        assert!(!src.contains('"'), "src 屬性值內不得有裸引號: {}", src);
+    }
 
-        assert!(
-            !html.contains(r#"" onerror=""#),
-            "未轉義的雙引號讓屬性被跳脫，可注入事件處理器: {}",
-            html
-        );
-        assert!(html.contains("&quot;"), "雙引號應被轉義為 &quot;: {}", html);
+    #[test]
+    fn illustration_url_encodes_fragment_and_query_chars() {
+        let html = build_illustration_html("/tmp/scene #1?x.png");
+        assert!(html.contains("%23"), "# 未編碼會被當成 fragment: {}", html);
+        assert!(html.contains("%3F"), "? 未編碼會被當成 query: {}", html);
     }
 
     #[test]
     fn illustration_html_keeps_normal_path_usable() {
         let html = build_illustration_html("/tmp/genesis/img_01.png");
-        assert!(html.contains("file:///tmp/genesis/img_01.png"));
+        assert!(html.contains("file:///tmp/genesis/img_01.png"), "{}", html);
         assert!(html.contains("chapter-illustration"));
     }
 
-    /// Chrome 載入的是 file:// 頁面，關閉同源政策會讓頁內 JS 能讀取本機任意檔案。
-    /// 產生本地 PDF 不需要跨域能力。
+    #[test]
+    fn illustration_html_falls_back_on_relative_path() {
+        let html = build_illustration_html("relative/img.png");
+        assert!(html.contains("chapter-illustration"), "{}", html);
+        assert!(!html.contains(r#"" onerror"#), "{}", html);
+    }
+
     #[test]
     fn chrome_args_do_not_disable_web_security() {
         let args = chrome_headless_args(&PathBuf::from("/tmp/o.pdf"), &PathBuf::from("/tmp/i.html"));
         assert!(
             !args.iter().any(|a| a == "--disable-web-security"),
-            "--disable-web-security 會移除 file:// 頁面的同源限制: {:?}",
+            "--disable-web-security 移除 file:// 頁面的同源限制: {:?}",
             args
         );
     }
@@ -673,6 +681,6 @@ mod tests {
         let args = chrome_headless_args(&PathBuf::from("/tmp/o.pdf"), &PathBuf::from("/tmp/i.html"));
         assert!(args.iter().any(|a| a == "--headless"));
         assert!(args.iter().any(|a| a == "--print-to-pdf=/tmp/o.pdf"));
-        assert!(args.iter().any(|a| a == "file:///tmp/i.html"));
+        assert!(args.iter().any(|a| a == "file:///tmp/i.html"), "{:?}", args);
     }
 }

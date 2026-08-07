@@ -165,10 +165,12 @@ fn update_file_path(conn: &rusqlite::Connection, id: &str, new_path: &str) -> Re
     Ok(()) // 即使沒有更新也不報錯，因為檔案路徑可能為空
 }
 
-/// 驗證使用者輸入的插畫名稱
-///
-/// 名稱會直接組成磁碟檔名，並被 PDF 匯出掃描後嵌入 HTML，
-/// 因此屬於必須嚴格驗證的不可信輸入。
+const WINDOWS_RESERVED_NAMES: [&str; 22] = [
+    "CON", "PRN", "AUX", "NUL",
+    "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+    "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+];
+
 fn validate_rename_name(new_name: &str) -> Result<(), String> {
     if new_name.trim().is_empty() {
         return Err("新名稱不能為空".to_string());
@@ -178,14 +180,25 @@ fn validate_rename_name(new_name: &str) -> Result<(), String> {
         return Err("名稱過長，請限制在200字符內".to_string());
     }
 
-    // 路徑分隔符與 .. 會讓 PathBuf::join 跳出插畫目錄
     if new_name.contains(['/', '\\']) || new_name.contains("..") {
         return Err("名稱不能包含路徑分隔符或 ..".to_string());
     }
 
-    // 引號與角括號會跳脫 PDF 匯出時的 HTML 屬性
-    if new_name.contains(['"', '\'', '<', '>', ':', '\0']) {
-        return Err("名稱不能包含 \" ' < > : 等特殊字元".to_string());
+    if new_name.contains(['"', '\'', '<', '>', ':', '|', '?', '*']) {
+        return Err("名稱不能包含 \" ' < > : | ? * 等特殊字元".to_string());
+    }
+
+    if new_name.chars().any(|c| c.is_control()) {
+        return Err("名稱不能包含控制字元".to_string());
+    }
+
+    if new_name.ends_with('.') || new_name.ends_with(' ') {
+        return Err("名稱不能以句點或空白結尾".to_string());
+    }
+
+    let stem = new_name.split('.').next().unwrap_or(new_name);
+    if WINDOWS_RESERVED_NAMES.iter().any(|r| stem.eq_ignore_ascii_case(r)) {
+        return Err(format!("「{}」是系統保留名稱，請換一個", stem));
     }
 
     Ok(())
@@ -327,39 +340,38 @@ pub async fn batch_rename_illustrations(
 mod tests {
     use super::*;
 
-    /// 名稱會經 format!("{}.{}", new_name, ext) 組成檔名再交給 PathBuf::join，
-    /// join 遇到 ../ 會往上跳、遇到絕對路徑會整個取代，因此可寫出插畫目錄外。
     #[test]
     fn rejects_path_traversal() {
         for name in ["../../../tmp/evil", "..\\..\\evil", "/tmp/evil", "a/b"] {
-            assert!(
-                validate_rename_name(name).is_err(),
-                "含路徑分隔符的名稱應被拒絕: {}",
-                name
-            );
+            assert!(validate_rename_name(name).is_err(), "應拒絕: {}", name);
         }
     }
 
-    /// 檔名最終會被 PDF 匯出嵌入 <img src="file://{}">，引號可跳脫屬性。
     #[test]
     fn rejects_html_breaking_characters() {
         for name in [r#"a" onerror="alert(1)"#, "a'b", "a<b>c"] {
-            assert!(
-                validate_rename_name(name).is_err(),
-                "含 HTML 特殊字元的名稱應被拒絕: {}",
-                name
-            );
+            assert!(validate_rename_name(name).is_err(), "應拒絕: {}", name);
+        }
+    }
+
+    #[test]
+    fn rejects_windows_invalid_filenames() {
+        for name in ["a*b", "a?b", "a|b", "a\u{1}b", "trailing.", "trailing "] {
+            assert!(validate_rename_name(name).is_err(), "Windows 無效檔名應拒絕: {}", name);
+        }
+    }
+
+    #[test]
+    fn rejects_windows_reserved_names() {
+        for name in ["CON", "con", "NUL", "COM1", "LPT9", "aux.png"] {
+            assert!(validate_rename_name(name).is_err(), "系統保留名應拒絕: {}", name);
         }
     }
 
     #[test]
     fn accepts_normal_names() {
-        for name in ["第一章插圖", "chapter_01", "圖 3 - 主角", "img-2026"] {
-            assert!(
-                validate_rename_name(name).is_ok(),
-                "正常名稱不應被拒絕: {}",
-                name
-            );
+        for name in ["第一章插圖", "chapter_01", "圖 3 - 主角", "img-2026", "scene #1"] {
+            assert!(validate_rename_name(name).is_ok(), "正常名稱不應被拒絕: {}", name);
         }
     }
 

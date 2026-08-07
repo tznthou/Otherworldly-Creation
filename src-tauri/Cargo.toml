@@ -47,6 +47,7 @@ base64 = "0.21"
 lazy_static = "1.4"
 aes-gcm = "0.10"
 html-escape = "0.2"
+url = "2"
 # EPUB generation dependencies
 zip = "0.6"
 tempfile = "3.8"
