@@ -1,6 +1,6 @@
 use tauri::command;
 use std::process::Command;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::fs;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -171,32 +171,35 @@ fn scan_project_illustrations(_project_id: &str) -> Result<Vec<AIIllustration>, 
     Ok(illustrations)
 }
 
-fn file_url(path: &std::path::Path) -> String {
+fn file_url(path: &Path) -> String {
     url::Url::from_file_path(path)
         .map(|u| u.to_string())
         .unwrap_or_else(|_| format!("file://{}", path.display()))
 }
 
-fn chrome_headless_args(pdf_path: &std::path::Path, html_path: &std::path::Path) -> Vec<String> {
-    vec![
-        "--headless".to_string(),
-        "--disable-gpu".to_string(),
-        "--disable-software-rasterizer".to_string(),
-        "--disable-background-timer-throttling".to_string(),
-        "--disable-renderer-backgrounding".to_string(),
-        "--disable-backgrounding-occluded-windows".to_string(),
-        "--hide-scrollbars".to_string(),
-        "--disable-extensions".to_string(),
-        "--no-pdf-header-footer".to_string(),
-        "--virtual-time-budget=10000".to_string(),
-        "--run-all-compositor-stages-before-draw".to_string(),
-        format!("--print-to-pdf={}", pdf_path.display()),
-        file_url(html_path),
-    ]
+const CHROME_HEADLESS_FLAGS: &[&str] = &[
+    "--headless",
+    "--disable-gpu",
+    "--disable-software-rasterizer",
+    "--disable-background-timer-throttling",
+    "--disable-renderer-backgrounding",
+    "--disable-backgrounding-occluded-windows",
+    "--hide-scrollbars",
+    "--disable-extensions",
+    "--no-pdf-header-footer",
+    "--virtual-time-budget=10000",
+    "--run-all-compositor-stages-before-draw",
+];
+
+fn chrome_headless_args(pdf_path: &Path, html_path: &Path) -> Vec<String> {
+    let mut args: Vec<String> = CHROME_HEADLESS_FLAGS.iter().map(|f| f.to_string()).collect();
+    args.push(format!("--print-to-pdf={}", pdf_path.display()));
+    args.push(file_url(html_path));
+    args
 }
 
 fn build_illustration_html(file_path: &str) -> String {
-    let src = file_url(std::path::Path::new(file_path));
+    let src = file_url(Path::new(file_path));
     format!(r#"
             <div class="chapter-illustration">
                 <img src="{}" alt="章節插畫" style="max-width: 80%; height: auto; margin: 20px auto; display: block; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
@@ -631,10 +634,10 @@ pub async fn generate_pdf_chrome(
         error_message: None,
     })
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn illustration_html_neutralizes_quotes_in_path() {
@@ -650,6 +653,12 @@ mod tests {
         let html = build_illustration_html("/tmp/scene #1?x.png");
         assert!(html.contains("%23"), "# 未編碼會被當成 fragment: {}", html);
         assert!(html.contains("%3F"), "? 未編碼會被當成 query: {}", html);
+    }
+
+    #[test]
+    fn illustration_html_escapes_ampersand_left_literal_by_url() {
+        let html = build_illustration_html("/tmp/a&b.png");
+        assert!(html.contains("a&amp;b.png"), "& 會被當成實體參照起始: {}", html);
     }
 
     #[test]

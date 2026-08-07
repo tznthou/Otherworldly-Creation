@@ -165,7 +165,7 @@ fn update_file_path(conn: &rusqlite::Connection, id: &str, new_path: &str) -> Re
     Ok(()) // 即使沒有更新也不報錯，因為檔案路徑可能為空
 }
 
-const WINDOWS_RESERVED_NAMES: [&str; 22] = [
+const WINDOWS_RESERVED_NAMES: &[&str] = &[
     "CON", "PRN", "AUX", "NUL",
     "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
     "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
@@ -196,7 +196,7 @@ fn validate_rename_name(new_name: &str) -> Result<(), String> {
         return Err("名稱不能以句點或空白結尾".to_string());
     }
 
-    let stem = new_name.split('.').next().unwrap_or(new_name);
+    let stem = new_name.split_once('.').map_or(new_name, |(stem, _)| stem);
     if WINDOWS_RESERVED_NAMES.iter().any(|r| stem.eq_ignore_ascii_case(r)) {
         return Err(format!("「{}」是系統保留名稱，請換一個", stem));
     }
@@ -336,6 +336,7 @@ pub async fn batch_rename_illustrations(
         }
     }))
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
