@@ -213,7 +213,7 @@ pub async fn rename_illustration(
     id: String,
     new_name: String,
 ) -> Result<Value, String> {
-    log::info!("開始重命名插畫: ID={}, 新名稱={}", id, new_name);
+    log::info!("開始重命名插畫: ID={:?}, 新名稱={:?}", id, new_name);
 
     // 驗證輸入
     if id.trim().is_empty() {
@@ -262,7 +262,7 @@ pub async fn rename_illustration(
         update_file_path(&conn, &id, &new_file_path)?;
     }
 
-    log::info!("插畫重命名完成: {} -> {}", old_name, new_name);
+    log::info!("插畫重命名完成: {:?} -> {:?}", old_name, new_name);
 
     Ok(serde_json::json!({
         "success": true,
