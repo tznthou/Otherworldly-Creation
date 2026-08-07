@@ -11,12 +11,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Initialization Workflow (MUST DO):
 1. mcp__serena__check_onboarding_performed()  # Always first
-2. mcp__serena__list_memories()                # View 120+ memories
+2. mcp__serena__list_memories()                # View 180+ memories
 3. Read relevant memories for current task      # Context-aware development
 ```
 
 **Core Capabilities**:
-- **Memory System**: 120+ categorized project memories
+- **Memory System**: 180+ categorized project memories
 - **Semantic Search**: `find_symbol()`, `search_for_pattern()`, `get_symbols_overview()`
 - **Smart Editing**: `replace_symbol_body()`, `insert_before/after_symbol()`
 - **Knowledge Base**: Read/write persistent project knowledge
@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Genesis Chronicle v2.0.1** - AI-powered Chinese light novel writing application
 - **Stack**: Tauri v2 + Rust + React/TypeScript + SQLite
-- **Scale**: 112,687+ lines of code across 468 files (3 languages)
+- **Scale**: 109,509 lines of code across 457 files (3 languages)
 - **AI**: 5 providers (Ollama, OpenAI, Gemini, Claude, OpenRouter)
 - **Security**: OS-native Keyring encryption for API keys (v1.2.8+)
 - **Design**: Human-centered warm design system (v2.0.0+)
@@ -40,7 +40,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. **Slate.js**: Use `key={editor-${id}}` for remounting
 4. **TypeScript**: Use `APIResponse<T>` wrapper for type safety
 5. **Modals**: Use `dispatch(openModal('name'))` system via Redux uiSlice
-6. **Path Management**: Use PathManager for all file operations (v1.2.0+)
+6. **Path Management**: Use `utils::path_utils` for file paths (the de-facto standard, 23 call sites); `PathManager` is legacy (2 methods in real use) — don't route new code through it
 7. **Security**: Use `SettingsService.getSecureApiKey()` / `setSecureApiKey()` for API keys (v1.2.8+)
 8. **UI Feature Removal**: NEVER remove UI functionality without verifying target location has COMPLETE feature parity - check control settings, not just documentation
 9. **State Management**: All component state should flow through Redux - avoid local state for shared data
@@ -99,7 +99,7 @@ npm run setup              # Quick project setup
 - **Command Flow**: Frontend (`src/renderer/src/api/tauri.ts`) → Tauri IPC → Rust handlers (`src-tauri/src/commands/`)
 - **AI Providers**: 5 providers with custom trait system (`src-tauri/src/services/ai_providers/trait.rs`)
 - **State Management**: Redux Toolkit with 16 slices (projects, chapters, characters, ai, ui, etc.)
-- **Database**: SQLite v20 with migration system, dual environment setup
+- **Database**: SQLite v21 with migration system, dual environment setup
 - **Path Management**: Unified PathManager system (v1.2.0 breakthrough)
 - **Security**: System Keyring encryption with automatic fallback (v1.2.8)
 - **Editor**: Slate.js with 2-second auto-save, force remount with unique keys
@@ -140,18 +140,18 @@ npm run setup              # Quick project setup
 ## 🎭 Key Features & Systems
 
 ### AI Provider Integration
-- **Ollama**: Local, privacy-first (llama3.2, qwen2.5)
-- **OpenAI**: Industry standard (gpt-4o, gpt-4o-mini, gpt-image-1)
-- **Gemini**: Multimodal, long context (gemini-2.0-flash, gemini-1.5-pro)
-- **Claude**: Deep understanding (claude-3.5-sonnet, claude-3.5-haiku)
-- **OpenRouter**: 100+ models unified API
+- **Ollama**: Local, privacy-first (dynamic model list)
+- **OpenAI**: Industry standard (dynamic model list)
+- **Gemini**: Multimodal, long context (hardcoded list, Gemini 2.5 series)
+- **Claude**: Deep understanding (hardcoded list: claude-opus-5 / claude-sonnet-5 / claude-haiku-4-5)
+- **OpenRouter**: 100+ models unified API (dynamic model list)
 
 ### Modern Features (v1.2.0+)
 - **Character Analysis Modal**: Full-screen modal with z-index 10002 for character analysis
 - **Plot Analysis Modal**: Full-screen modal for story plot analysis
 - **Visual Creation Center**: AI illustration with batch processing
 - **Smart API Detection**: Intelligent provider recommendation based on available API keys
-- **Dynamic Model Discovery**: Auto-discovery of available models per provider
+- **Dynamic Model Discovery**: Auto-discovery of available models (Ollama / OpenAI / OpenRouter only; Claude & Gemini use hardcoded lists)
 
 ### Security & API Key Management (v1.2.8+)
 - **Keyring Integration**: Use `SettingsService.getSecureApiKey()` / `setSecureApiKey()` for API keys
