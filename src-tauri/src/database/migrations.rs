@@ -2435,3 +2435,49 @@ pub fn apply_migration_v21(conn: &Connection) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod migration_smoke_tests {
+    use super::*;
+
+    /// 從全新的空資料庫跑到最新版，驗證災難復原路徑沒有斷掉。
+    #[test]
+    fn migrates_from_empty_to_latest() {
+        let conn = Connection::open_in_memory().expect("建立記憶體資料庫失敗");
+
+        run_migrations(&conn).expect("從零跑 migration 失敗");
+
+        let version = get_current_version(&conn).expect("讀取版本失敗");
+        assert_eq!(version, DB_VERSION, "migration 跑完後版本不等於 DB_VERSION");
+    }
+
+    /// 跑完後核心資料表必須存在——版本號對不代表 schema 真的建好了。
+    #[test]
+    fn creates_core_tables() {
+        let conn = Connection::open_in_memory().expect("建立記憶體資料庫失敗");
+        run_migrations(&conn).expect("從零跑 migration 失敗");
+
+        for table in ["projects", "chapters", "characters", "settings", "ebook_mappings"] {
+            let count: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?1",
+                    params![table],
+                    |row| row.get(0),
+                )
+                .expect("查詢 sqlite_master 失敗");
+            assert_eq!(count, 1, "migration 跑完後找不到資料表 {}", table);
+        }
+    }
+
+    /// 重複執行必須是無操作，不能報錯——升級路徑會反覆呼叫。
+    #[test]
+    fn is_idempotent() {
+        let conn = Connection::open_in_memory().expect("建立記憶體資料庫失敗");
+
+        run_migrations(&conn).expect("第一次 migration 失敗");
+        run_migrations(&conn).expect("第二次 migration 失敗（不具冪等性）");
+
+        let version = get_current_version(&conn).expect("讀取版本失敗");
+        assert_eq!(version, DB_VERSION);
+    }
+}
