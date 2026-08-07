@@ -639,32 +639,41 @@ pub async fn generate_pdf_chrome(
 mod tests {
     use super::*;
 
+    fn abs(rel: &str) -> String {
+        std::env::temp_dir().join(rel).to_string_lossy().into_owned()
+    }
+
+    fn src_attr(html: &str) -> &str {
+        html.split(r#"src=""#).nth(1).and_then(|s| s.split('"').next()).unwrap()
+    }
+
     #[test]
     fn illustration_html_neutralizes_quotes_in_path() {
-        let html = build_illustration_html(r#"/tmp/a" onerror="alert(1)"#);
+        let html = build_illustration_html(&abs(r#"a" onerror="alert(1)"#));
         assert!(!html.contains(r#"" onerror"#), "屬性被跳脫: {}", html);
         assert!(html.contains("%22"), "雙引號應被編碼: {}", html);
-        let src = html.split(r#"src=""#).nth(1).and_then(|s| s.split('"').next()).unwrap();
-        assert!(!src.contains('"'), "src 屬性值內不得有裸引號: {}", src);
+        assert!(!src_attr(&html).contains('"'), "src 屬性值內不得有裸引號: {}", html);
     }
 
     #[test]
     fn illustration_url_encodes_fragment_and_query_chars() {
-        let html = build_illustration_html("/tmp/scene #1?x.png");
+        let html = build_illustration_html(&abs("scene #1?x.png"));
         assert!(html.contains("%23"), "# 未編碼會被當成 fragment: {}", html);
         assert!(html.contains("%3F"), "? 未編碼會被當成 query: {}", html);
     }
 
     #[test]
     fn illustration_html_escapes_ampersand_left_literal_by_url() {
-        let html = build_illustration_html("/tmp/a&b.png");
+        let html = build_illustration_html(&abs("a&b.png"));
         assert!(html.contains("a&amp;b.png"), "& 會被當成實體參照起始: {}", html);
     }
 
     #[test]
     fn illustration_html_keeps_normal_path_usable() {
-        let html = build_illustration_html("/tmp/genesis/img_01.png");
-        assert!(html.contains("file:///tmp/genesis/img_01.png"), "{}", html);
+        let html = build_illustration_html(&abs("genesis/img_01.png"));
+        let src = src_attr(&html);
+        assert!(src.starts_with("file:///"), "{}", src);
+        assert!(src.ends_with("/genesis/img_01.png"), "{}", src);
         assert!(html.contains("chapter-illustration"));
     }
 
@@ -676,8 +685,15 @@ mod tests {
     }
 
     #[test]
+    fn relative_path_fallback_still_blocks_attribute_injection() {
+        let html = build_illustration_html(r#"relative/a" onerror="alert(1)"#);
+        assert!(!html.contains(r#"" onerror"#), "fallback 仍須擋住屬性跳脫: {}", html);
+        assert!(!src_attr(&html).contains('"'), "{}", html);
+    }
+
+    #[test]
     fn chrome_args_do_not_disable_web_security() {
-        let args = chrome_headless_args(&PathBuf::from("/tmp/o.pdf"), &PathBuf::from("/tmp/i.html"));
+        let args = chrome_headless_args(Path::new(&abs("o.pdf")), Path::new(&abs("i.html")));
         assert!(
             !args.iter().any(|a| a == "--disable-web-security"),
             "--disable-web-security 移除 file:// 頁面的同源限制: {:?}",
@@ -687,9 +703,12 @@ mod tests {
 
     #[test]
     fn chrome_args_keep_pdf_generation_flags() {
-        let args = chrome_headless_args(&PathBuf::from("/tmp/o.pdf"), &PathBuf::from("/tmp/i.html"));
+        let pdf = abs("o.pdf");
+        let args = chrome_headless_args(Path::new(&pdf), Path::new(&abs("i.html")));
         assert!(args.iter().any(|a| a == "--headless"));
-        assert!(args.iter().any(|a| a == "--print-to-pdf=/tmp/o.pdf"));
-        assert!(args.iter().any(|a| a == "file:///tmp/i.html"), "{:?}", args);
+        assert!(args.iter().any(|a| a == &format!("--print-to-pdf={}", pdf)));
+        let page = args.last().unwrap();
+        assert!(page.starts_with("file:///"), "{:?}", args);
+        assert!(page.ends_with("/i.html"), "{:?}", args);
     }
 }
