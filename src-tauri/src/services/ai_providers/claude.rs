@@ -18,7 +18,8 @@ struct ClaudeRequest {
     messages: Vec<ClaudeMessage>,
     #[serde(skip_serializing_if = "Option::is_none")]
     system: Option<String>,
-    temperature: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    temperature: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     top_p: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -29,6 +30,17 @@ struct ClaudeRequest {
 struct ClaudeMessage {
     role: String,
     content: String,
+}
+
+/// Opus 4.7 之後的世代（opus-5 / sonnet-5 / opus-4-7 / opus-4-8 / fable / mythos）
+/// 已移除 sampling 參數，請求帶 temperature/top_p 會直接回 400
+fn model_supports_sampling_params(model: &str) -> bool {
+    !(model.starts_with("claude-opus-5")
+        || model.starts_with("claude-opus-4-7")
+        || model.starts_with("claude-opus-4-8")
+        || model.starts_with("claude-sonnet-5")
+        || model.starts_with("claude-fable")
+        || model.starts_with("claude-mythos"))
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -126,47 +138,32 @@ impl ClaudeProvider {
     }
 
     /// 獲取可用的 Claude 模型列表
+    /// 模型 ID 不加日期後綴（claude-opus-5，不是 claude-opus-5-2026xxxx）
     fn get_available_models() -> Vec<ModelInfo> {
         vec![
             ModelInfo {
-                id: "claude-3-5-sonnet-20241022".to_string(),
-                name: "Claude 3.5 Sonnet".to_string(),
-                description: Some("最新的Claude 3.5 Sonnet，表現最佳".to_string()),
-                max_tokens: Some(200000),
+                id: "claude-opus-5".to_string(),
+                name: "Claude Opus 5".to_string(),
+                description: Some("最強大的Claude模型，適合複雜創作與長篇推理".to_string()),
+                max_tokens: Some(1_000_000),
                 supports_streaming: true,
-                cost_per_token: Some(0.000003), // 輸入token成本
+                cost_per_token: Some(0.000005), // 輸入token成本
             },
             ModelInfo {
-                id: "claude-3-5-haiku-20241022".to_string(),
-                name: "Claude 3.5 Haiku".to_string(),
-                description: Some("快速且經濟的Claude模型".to_string()),
-                max_tokens: Some(200000),
-                supports_streaming: true,
-                cost_per_token: Some(0.00000025),
-            },
-            ModelInfo {
-                id: "claude-3-opus-20240229".to_string(),
-                name: "Claude 3 Opus".to_string(),
-                description: Some("最強大的Claude模型，適合複雜任務".to_string()),
-                max_tokens: Some(200000),
-                supports_streaming: true,
-                cost_per_token: Some(0.000015),
-            },
-            ModelInfo {
-                id: "claude-3-sonnet-20240229".to_string(),
-                name: "Claude 3 Sonnet".to_string(),
-                description: Some("平衡性能與成本的Claude模型".to_string()),
-                max_tokens: Some(200000),
+                id: "claude-sonnet-5".to_string(),
+                name: "Claude Sonnet 5".to_string(),
+                description: Some("速度與智慧的最佳平衡，適合日常寫作".to_string()),
+                max_tokens: Some(1_000_000),
                 supports_streaming: true,
                 cost_per_token: Some(0.000003),
             },
             ModelInfo {
-                id: "claude-3-haiku-20240307".to_string(),
-                name: "Claude 3 Haiku".to_string(),
-                description: Some("快速回應的輕量級Claude模型".to_string()),
-                max_tokens: Some(200000),
+                id: "claude-haiku-4-5".to_string(),
+                name: "Claude Haiku 4.5".to_string(),
+                description: Some("最快速且經濟的Claude模型".to_string()),
+                max_tokens: Some(200_000),
                 supports_streaming: true,
-                cost_per_token: Some(0.00000025),
+                cost_per_token: Some(0.000001),
             },
         ]
     }
@@ -185,7 +182,7 @@ impl AIProvider for ClaudeProvider {
     async fn check_availability(&self) -> Result<bool> {
         log::info!("[ClaudeProvider] 檢查 Claude API 可用性，API金鑰: {}...", SecurityUtils::mask_api_key(&self.api_key));
         
-        // 發送簡單的測試請求
+        // 發送簡單的測試請求（不帶 sampling 參數，新舊世代模型都接受）
         let test_request = ClaudeRequest {
             model: self.model.clone(),
             max_tokens: 10,
@@ -196,7 +193,7 @@ impl AIProvider for ClaudeProvider {
                 }
             ],
             system: None,
-            temperature: 0.1,
+            temperature: None,
             top_p: None,
             stop_sequences: None,
         };
@@ -235,13 +232,14 @@ impl AIProvider for ClaudeProvider {
             }
         ];
 
+        let supports_sampling = model_supports_sampling_params(&request.model);
         let claude_request = ClaudeRequest {
             model: request.model.clone(),
             max_tokens: request.params.max_tokens,
             messages,
             system: request.system_prompt,
-            temperature: request.params.temperature,
-            top_p: request.params.top_p,
+            temperature: supports_sampling.then_some(request.params.temperature),
+            top_p: if supports_sampling { request.params.top_p } else { None },
             stop_sequences: request.params.stop,
         };
 
@@ -305,7 +303,7 @@ impl AIProvider for ClaudeProvider {
         let url = format!("{}/messages", self.endpoint);
         
         let test_request = ClaudeRequest {
-            model: "claude-3-haiku-20240307".to_string(), // 使用最便宜的模型測試
+            model: "claude-haiku-4-5".to_string(), // 使用最便宜的現役模型測試
             max_tokens: 5,
             messages: vec![
                 ClaudeMessage {
@@ -314,7 +312,7 @@ impl AIProvider for ClaudeProvider {
                 }
             ],
             system: None,
-            temperature: 0.1,
+            temperature: None,
             top_p: None,
             stop_sequences: None,
         };
@@ -342,16 +340,16 @@ impl AIProvider for ClaudeProvider {
 
     async fn estimate_cost(&self, request: &AIGenerationRequest) -> Result<Option<f64>> {
         // Claude 的計費方式（每百萬tokens的價格）
-        let (input_cost_per_million, output_cost_per_million) = if request.model.contains("claude-3-5-sonnet") {
+        let (input_cost_per_million, output_cost_per_million) = if request.model.starts_with("claude-opus-5") {
+            (5.0, 25.0)
+        } else if request.model.starts_with("claude-sonnet-5") {
             (3.0, 15.0)
-        } else if request.model.contains("claude-3-5-haiku") {
-            (0.25, 1.25)
-        } else if request.model.contains("claude-3-opus") {
-            (15.0, 75.0)
-        } else if request.model.contains("claude-3-sonnet") {
-            (3.0, 15.0)
-        } else if request.model.contains("claude-3-haiku") {
-            (0.25, 1.25)
+        } else if request.model.starts_with("claude-haiku-4-5") {
+            (1.0, 5.0)
+        } else if request.model.contains("opus") {
+            (5.0, 25.0)
+        } else if request.model.contains("haiku") {
+            (1.0, 5.0)
         } else {
             (3.0, 15.0) // 預設值
         };
@@ -387,5 +385,67 @@ impl AIProvider for ClaudeProvider {
 
     fn supports_custom_endpoint(&self) -> bool {
         false // Claude 通常使用標準端點
+    }
+}
+
+#[cfg(test)]
+mod claude_provider_tests {
+    use super::*;
+
+    fn request_for(model: &str, temperature: Option<f64>) -> ClaudeRequest {
+        ClaudeRequest {
+            model: model.to_string(),
+            max_tokens: 10,
+            messages: vec![ClaudeMessage {
+                role: "user".to_string(),
+                content: "hi".to_string(),
+            }],
+            system: None,
+            temperature,
+            top_p: None,
+            stop_sequences: None,
+        }
+    }
+
+    /// 新世代模型收到 temperature/top_p 會回 400，None 時欄位必須從 JSON 整個消失。
+    #[test]
+    fn omits_sampling_params_when_none() {
+        let json = serde_json::to_string(&request_for("claude-opus-5", None)).expect("序列化失敗");
+        assert!(!json.contains("temperature"), "temperature 為 None 仍出現在請求 JSON: {}", json);
+        assert!(!json.contains("top_p"), "top_p 為 None 仍出現在請求 JSON: {}", json);
+    }
+
+    /// 舊世代模型仍要能帶 temperature。
+    #[test]
+    fn keeps_sampling_params_when_set() {
+        let json = serde_json::to_string(&request_for("claude-haiku-4-5", Some(0.7))).expect("序列化失敗");
+        assert!(json.contains("\"temperature\":0.7"), "temperature 有值卻沒進請求 JSON: {}", json);
+    }
+
+    /// sampling 支援判斷必須對齊 Anthropic 的世代分界（Opus 4.7+ / Sonnet 5+ 移除）。
+    #[test]
+    fn sampling_support_matches_model_generation() {
+        for model in ["claude-opus-5", "claude-sonnet-5", "claude-opus-4-7", "claude-opus-4-8"] {
+            assert!(!model_supports_sampling_params(model), "{} 不該帶 sampling 參數", model);
+        }
+        for model in ["claude-haiku-4-5", "claude-sonnet-4-6", "claude-opus-4-6"] {
+            assert!(model_supports_sampling_params(model), "{} 應允許 sampling 參數", model);
+        }
+    }
+
+    /// 清單再出現 claude-3 世代就是又放了退役模型（該系列已全數退役）。
+    #[test]
+    fn available_models_exclude_retired_generations() {
+        let ids: Vec<String> = ClaudeProvider::get_available_models()
+            .into_iter()
+            .map(|m| m.id)
+            .collect();
+        assert!(ids.contains(&"claude-opus-5".to_string()), "缺少 claude-opus-5: {:?}", ids);
+        assert!(ids.contains(&"claude-haiku-4-5".to_string()), "缺少 claude-haiku-4-5: {:?}", ids);
+        assert!(
+            ids.iter().all(|id| !id.starts_with("claude-3")),
+            "清單含已退役的 claude-3 世代: {:?}",
+            ids
+        );
     }
 }
