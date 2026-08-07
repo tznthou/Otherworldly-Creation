@@ -711,16 +711,17 @@ pub async fn get_context_stats(project_id: String) -> Result<ContextStats, Strin
 }
 
 /// 構建分離的上下文（系統提示 + 用戶上下文）- 簡化版
-#[command]
+///
+/// 前端不直接呼叫，僅供 `commands::ai::generate_with_separated_context` 內部使用。
 pub async fn build_separated_context(
     project_id: String,
     chapter_id: String,
     position: usize,
 ) -> Result<(String, String), String> {
     log::info!("構建分離上下文 - 專案: {}, 章節: {}, 位置: {}", project_id, chapter_id, position);
-    
+
     let db = get_db().map_err(|e| e.to_string())?;
-    
+
     // 處理 poisoned lock 錯誤
     let conn = match db.lock() {
         Ok(conn) => conn,
@@ -729,7 +730,7 @@ pub async fn build_separated_context(
             poisoned.into_inner()
         }
     };
-    
+
     // 1. 獲取專案資訊
     let project: Project = conn
         .query_row(
@@ -747,7 +748,7 @@ pub async fn build_separated_context(
             })
         )
         .map_err(|e| format!("獲取專案失敗: {}", e))?;
-    
+
     // 2. 獲取當前章節內容
     let chapter: Chapter = conn
         .query_row(
@@ -766,12 +767,12 @@ pub async fn build_separated_context(
             })
         )
         .map_err(|e| format!("獲取章節失敗: {}", e))?;
-    
+
     // 3. 獲取專案的所有角色
     let mut stmt = conn
         .prepare("SELECT id, project_id, name, description, attributes, avatar_url, created_at, updated_at FROM characters WHERE project_id = ?")
         .map_err(|e| e.to_string())?;
-    
+
     let characters: Vec<Character> = stmt
         .query_map([&project_id], |row| {
             Ok(Character {
@@ -788,145 +789,19 @@ pub async fn build_separated_context(
         .map_err(|e| e.to_string())?
         .collect::<SqliteResult<Vec<_>>>()
         .map_err(|e| e.to_string())?;
-    
+
     // 4. 構建系統提示
     let system_prompt_builder = SystemPromptBuilder::new(project.r#type.clone());
     let system_prompt = system_prompt_builder.build_system_prompt();
-    
+
     // 5. 構建用戶上下文
     let user_context_builder = UserContextBuilder::new(project, chapter, characters, position);
     let user_context = user_context_builder.build_user_context();
-    
-    log::info!("上下文構建完成 - 系統提示: {} 字符, 用戶上下文: {} 字符", 
-              system_prompt.chars().count(), 
+
+    log::info!("上下文構建完成 - 系統提示: {} 字符, 用戶上下文: {} 字符",
+              system_prompt.chars().count(),
               user_context.chars().count());
-    
+
     Ok((system_prompt, user_context))
 }
 
-/// 估算分離上下文的 token 使用情況
-#[command]
-pub async fn estimate_separated_context_tokens(project_id: String) -> Result<SeparatedContextStats, String> {
-    let db = get_db().map_err(|e| e.to_string())?;
-    
-    let conn = match db.lock() {
-        Ok(conn) => conn,
-        Err(poisoned) => {
-            log::error!("資料庫鎖被 poisoned，嘗試恢復: {}", poisoned);
-            poisoned.into_inner()
-        }
-    };
-    
-    // 獲取專案類型用於系統提示估算
-    let project_type: Option<String> = conn
-        .query_row(
-            "SELECT type FROM projects WHERE id = ?",
-            [&project_id],
-            |row| Ok(row.get(0)?)
-        )
-        .map_err(|e| format!("獲取專案類型失敗: {}", e))?;
-    
-    // 統計用戶內容（用於日誌記錄）
-    let _total_chars: usize = conn
-        .query_row(
-            "SELECT COALESCE(SUM(LENGTH(content)), 0) FROM chapters WHERE project_id = ?",
-            [&project_id],
-            |row| row.get(0)
-        )
-        .map_err(|e| e.to_string())?;
-    
-    let character_count: usize = conn
-        .query_row(
-            "SELECT COUNT(*) FROM characters WHERE project_id = ?",
-            [&project_id],
-            |row| row.get(0)
-        )
-        .map_err(|e| e.to_string())?;
-    
-    // 估算系統提示 token（相對固定）
-    let system_prompt_builder = SystemPromptBuilder::new(project_type);
-    let system_prompt = system_prompt_builder.build_system_prompt();
-    let system_prompt_tokens = system_prompt.chars().count() / 2; // 中文約 2 字符 = 1 token
-    
-    // 估算用戶上下文 token（動態）
-    let estimated_user_context_chars = 200 + // 項目信息
-        (character_count * 100) + // 角色信息（簡化）
-        1000; // 章節內容（截斷後）
-    let user_context_tokens = estimated_user_context_chars / 2;
-    
-    let total_tokens = system_prompt_tokens + user_context_tokens;
-    let efficiency = (user_context_tokens as f32 / total_tokens as f32) * 100.0;
-    
-    Ok(SeparatedContextStats {
-        system_prompt_tokens,
-        user_context_tokens,
-        total_tokens,
-        efficiency_percentage: efficiency,
-        character_count,
-        estimated_savings_vs_legacy: 40.0, // 預估節省 40%
-    })
-}
-
-/// 檢測文本的語言純度
-#[command]
-pub async fn analyze_text_purity(text: String) -> Result<PurityAnalysisResult, String> {
-    let enforcer = LanguagePurityEnforcer::new();
-    let analysis = enforcer.analyze_purity(&text);
-    
-    Ok(PurityAnalysisResult {
-        is_pure: analysis.is_pure,
-        purity_score: analysis.purity_score,
-        issues: analysis.issues.into_iter().map(|issue| PurityIssueResult {
-            issue_type: match issue.issue_type {
-                crate::utils::language_purity::IssueType::EnglishWords => "english_words".to_string(),
-                crate::utils::language_purity::IssueType::SimplifiedChinese => "simplified_chinese".to_string(),
-                crate::utils::language_purity::IssueType::ForbiddenPattern => "forbidden_pattern".to_string(),
-            },
-            content: issue.content,
-            severity: match issue.severity {
-                crate::utils::language_purity::Severity::High => "high".to_string(),
-                crate::utils::language_purity::Severity::Medium => "medium".to_string(),
-                crate::utils::language_purity::Severity::Low => "low".to_string(),
-            },
-        }).collect(),
-    })
-}
-
-/// 生成增強的 AI 生成參數
-#[command]
-pub async fn enhance_generation_parameters(
-    base_parameters: serde_json::Value
-) -> Result<serde_json::Value, String> {
-    let enforcer = LanguagePurityEnforcer::new();
-    
-    if let Some(params_obj) = base_parameters.as_object() {
-        let enhanced = enforcer.enhance_generation_options(params_obj.clone());
-        Ok(serde_json::Value::Object(enhanced))
-    } else {
-        Err("參數必須是 JSON 物件".to_string())
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PurityAnalysisResult {
-    pub is_pure: bool,
-    pub purity_score: f64,
-    pub issues: Vec<PurityIssueResult>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PurityIssueResult {
-    pub issue_type: String,
-    pub content: String,
-    pub severity: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SeparatedContextStats {
-    pub system_prompt_tokens: usize,
-    pub user_context_tokens: usize,
-    pub total_tokens: usize,
-    pub efficiency_percentage: f32,
-    pub character_count: usize,
-    pub estimated_savings_vs_legacy: f32,
-}

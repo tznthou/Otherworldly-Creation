@@ -6,7 +6,7 @@ mod utils;
 use commands::system::{
     get_app_version, quit_app, reload_app, show_save_dialog, show_open_dialog, open_external,
     check_for_updates, download_update, install_update, set_auto_update, read_image_as_base64,
-    save_export_file, get_image_path, get_environment_info, test_store_plugin,
+    save_export_file, get_image_path, get_environment_info,
     get_secure_key, set_secure_key, delete_secure_key,
     // 日誌管理 commands (v1.3.3)
     get_log_directory, open_log_directory, get_recent_logs, delete_old_logs
@@ -25,7 +25,7 @@ use commands::ai_providers::{
     get_ai_providers, create_ai_provider, update_ai_provider, delete_ai_provider,
     test_ai_provider, generate_ai_text, get_supported_ai_provider_types, get_available_models
 };
-use commands::context::{build_context, compress_context, get_context_stats, build_separated_context, estimate_separated_context_tokens, analyze_text_purity, enhance_generation_parameters};
+use commands::context::{build_context, compress_context, get_context_stats};
 use commands::settings::{get_setting, set_setting, get_all_settings, reset_settings};
 use commands::database::{backup_database, restore_database, create_auto_backup, get_default_backup_dir, run_database_maintenance, get_database_stats, health_check, reindex_database, incremental_vacuum, get_wal_mode_status, set_wal_mode};
 use commands::ai_history::{create_ai_history, query_ai_history, mark_ai_history_selected, delete_ai_history, cleanup_ai_history};
@@ -48,21 +48,8 @@ use commands::illustration::{
     delete_illustrations, delete_illustrations_safe, restore_illustrations, get_deleted_illustrations, permanent_delete_illustrations,
     // 圖片重命名管理 API
     rename_illustration, batch_rename_illustrations,
-    // 延遲刪除管理 API
-    schedule_delayed_deletion, cancel_delayed_deletion, get_delayed_deletion_status,
-    // 資料修復工具 API
-    repair_image_paths, scan_orphaned_files,
     // Gemini 插畫生成 API
     generate_gemini_illustration, test_gemini_connection
-};
-use commands::translation::{
-    translate_character_description, optimize_prompt, search_vocabulary, 
-    get_vocabulary_stats, batch_translate_descriptions
-};
-use commands::prompt_templates::{
-    apply_prompt_template, search_prompt_templates, get_template_categories,
-    get_templates_by_category, get_template_stats, batch_apply_templates,
-    get_popular_templates, get_recommended_templates
 };
 use commands::batch_illustration::{
     initialize_batch_manager, submit_batch_illustration_request, get_batch_status,
@@ -139,7 +126,6 @@ pub fn run() {
       save_export_file,
       get_image_path,
       get_environment_info,
-      test_store_plugin,
       get_secure_key,
       set_secure_key,
       delete_secure_key,
@@ -193,10 +179,6 @@ pub fn run() {
       build_context,
       compress_context,
       get_context_stats,
-      build_separated_context,
-      estimate_separated_context_tokens,
-      analyze_text_purity,
-      enhance_generation_parameters,
       // Settings commands
       get_setting,
       set_setting,
@@ -265,31 +247,9 @@ pub fn run() {
       // 圖片重命名管理 commands
       rename_illustration,
       batch_rename_illustrations,
-      // 延遲刪除管理 commands
-      schedule_delayed_deletion,
-      cancel_delayed_deletion,
-      get_delayed_deletion_status,
-      // 資料修復工具 commands
-      repair_image_paths,
-      scan_orphaned_files,
       // Gemini 插畫生成 commands
       generate_gemini_illustration,
       test_gemini_connection,
-      // Translation commands
-      translate_character_description,
-      optimize_prompt,
-      search_vocabulary,
-      get_vocabulary_stats,
-      batch_translate_descriptions,
-      // Prompt Template commands
-      apply_prompt_template,
-      search_prompt_templates,
-      get_template_categories,
-      get_templates_by_category,
-      get_template_stats,
-      batch_apply_templates,
-      get_popular_templates,
-      get_recommended_templates,
       // Batch Illustration commands
       initialize_batch_manager,
       submit_batch_illustration_request,
@@ -310,8 +270,6 @@ pub fn run() {
       test_pollinations_token,
       // Context Optimization commands
       optimize_ultra_long_context_command,
-      // PathManager testing commands
-      commands::test_path_manager,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

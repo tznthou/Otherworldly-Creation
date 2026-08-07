@@ -12,14 +12,5 @@ pub mod epub;
 // 所有舊PDF模組已刪除 - 現在只使用Chrome Headless實現
 pub mod pdf_chrome; // Chrome Headless PDF模組 - 最新解決方案
 pub mod illustration;
-pub mod translation;
-pub mod prompt_templates;
 pub mod batch_illustration;
 pub mod pollinations_auth;
-
-/// PathManager 測試命令
-#[tauri::command]
-pub async fn test_path_manager() -> Result<serde_json::Value, String> {
-    log::info!("執行 PathManager 測試命令");
-    Ok(crate::utils::path_manager::get_all_paths_info())
-}

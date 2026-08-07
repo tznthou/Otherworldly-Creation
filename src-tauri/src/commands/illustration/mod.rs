@@ -16,7 +16,6 @@ pub mod image_deletion;
 pub mod enhanced_generation;
 pub mod image_rename;
 pub mod delayed_deletion;
-pub mod data_repair;
 pub mod gemini_generation;
 pub mod utils;
 
@@ -79,19 +78,6 @@ pub use enhanced_generation::{
 pub use image_rename::{
     rename_illustration,
     batch_rename_illustrations,
-};
-
-// ========================= 延遲刪除管理 =========================
-pub use delayed_deletion::{
-    schedule_delayed_deletion,
-    cancel_delayed_deletion,
-    get_delayed_deletion_status,
-};
-
-// ========================= 資料修復工具 =========================
-pub use data_repair::{
-    repair_image_paths,
-    scan_orphaned_files,
 };
 
 // ========================= Gemini 插畫生成 =========================

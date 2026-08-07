@@ -18,8 +18,7 @@ pub use prompt_optimizer::{
     OptimizationRequest, QualityFocus
 };
 pub use prompt_templates::{
-    PromptTemplateManager, TemplateCategory,
-    TemplateApplicationRequest, TemplateSearchRequest
+    PromptTemplateManager, TemplateApplicationRequest
 };
 
 use thiserror::Error;
