@@ -65,14 +65,7 @@ const EmotionTrendChart: React.FC<EmotionTrendChartProps> = ({
     }
   ];
 
-  // 模擬章節情感數據（如果沒有提供）
-  const mockChapterData = chapterEmotions.length > 0 ? chapterEmotions : [
-    { chapter: '第1章', positive: 60, negative: 20, neutral: 20, intensity: 0.6 },
-    { chapter: '第2章', positive: 40, negative: 35, neutral: 25, intensity: 0.7 },
-    { chapter: '第3章', positive: 70, negative: 10, neutral: 20, intensity: 0.5 },
-    { chapter: '第4章', positive: 30, negative: 50, neutral: 20, intensity: 0.8 },
-    { chapter: '第5章', positive: 80, negative: 5, neutral: 15, intensity: 0.4 }
-  ];
+  const hasChapterData = chapterEmotions.length > 0;
 
   // 自定義提示框
   const CustomTooltip = ({ active, payload, label }: { 
@@ -215,46 +208,56 @@ const EmotionTrendChart: React.FC<EmotionTrendChartProps> = ({
             <span className="mr-2">📈</span>
             章節情感趨勢
           </h5>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={mockChapterData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" strokeOpacity={0.5} />
-              <XAxis 
-                dataKey="chapter"
-                tick={{ fontSize: 10, fill: '#9CA3AF' }}
-                axisLine={{ stroke: '#6B7280' }}
-              />
-              <YAxis 
-                tick={{ fontSize: 10, fill: '#9CA3AF' }}
-                axisLine={{ stroke: '#6B7280' }}
-                domain={[0, 100]}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Line 
-                type="monotone" 
-                dataKey="positive" 
-                stroke={EMOTION_COLORS.positive}
-                strokeWidth={2}
-                dot={{ fill: EMOTION_COLORS.positive, strokeWidth: 2, r: 3 }}
-                name="積極情感"
-              />
-              <Line 
-                type="monotone" 
-                dataKey="negative" 
-                stroke={EMOTION_COLORS.negative}
-                strokeWidth={2}
-                dot={{ fill: EMOTION_COLORS.negative, strokeWidth: 2, r: 3 }}
-                name="消極情感"
-              />
-              <Line 
-                type="monotone" 
-                dataKey="neutral" 
-                stroke={EMOTION_COLORS.neutral}
-                strokeWidth={2}
-                dot={{ fill: EMOTION_COLORS.neutral, strokeWidth: 2, r: 3 }}
-                name="中性情感"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {hasChapterData ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={chapterEmotions}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" strokeOpacity={0.5} />
+                <XAxis
+                  dataKey="chapter"
+                  tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                  axisLine={{ stroke: '#6B7280' }}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                  axisLine={{ stroke: '#6B7280' }}
+                  domain={[0, 100]}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey="positive"
+                  stroke={EMOTION_COLORS.positive}
+                  strokeWidth={2}
+                  dot={{ fill: EMOTION_COLORS.positive, strokeWidth: 2, r: 3 }}
+                  name="積極情感"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="negative"
+                  stroke={EMOTION_COLORS.negative}
+                  strokeWidth={2}
+                  dot={{ fill: EMOTION_COLORS.negative, strokeWidth: 2, r: 3 }}
+                  name="消極情感"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="neutral"
+                  stroke={EMOTION_COLORS.neutral}
+                  strokeWidth={2}
+                  dot={{ fill: EMOTION_COLORS.neutral, strokeWidth: 2, r: 3 }}
+                  name="中性情感"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[200px] flex flex-col items-center justify-center text-center">
+              <span className="text-2xl mb-2">📭</span>
+              <p className="text-gray-300 text-sm">尚無章節情感資料</p>
+              <p className="text-gray-500 text-xs mt-1 px-4 leading-relaxed">
+                目前的 AI 分析僅提供整體情感色調與強度，尚未產生逐章趨勢資料
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

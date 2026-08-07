@@ -7,12 +7,13 @@ import { createLogger } from '../utils/logger';
 // 創建模組專用 logger
 const log = createLogger('settingsService');
 
-// 🔐 使用加密的 Tauri Store 取代 localStorage
+// ⚠️ Tauri Store 是「明文 JSON 檔」，沒有加密層——.settings.dat 可直接 JSON.parse。
+// 它取代 localStorage 只是為了脫離網頁儲存層；API 金鑰的加密儲存走 OS Keyring（見下方 Keyring 區段）。
 const SETTINGS_STORE_FILE = '.settings.dat';
 const SETTINGS_KEY = 'app-settings';
 const SETTINGS_HISTORY_KEY = 'settings-history';
 
-// 初始化加密的 settings store
+// 初始化 settings store（明文 JSON）
 let settingsStore: Store | null = null;
 
 async function getStore(): Promise<Store> {
@@ -24,7 +25,7 @@ async function getStore(): Promise<Store> {
 
 export class SettingsService {
   /**
-   * 🔄 一次性遷移：從 localStorage 遷移到加密儲存
+   * 🔄 一次性遷移：從 localStorage 遷移到 Tauri Store
    */
   private static async migrateFromLocalStorage(): Promise<AppSettings | null> {
     try {
@@ -36,7 +37,7 @@ export class SettingsService {
         const parsed = JSON.parse(oldSettings);
         const store = await getStore();
 
-        // 儲存到加密 store
+        // 儲存到 Tauri Store
         await store.set(SETTINGS_KEY, parsed);
         await store.save();
 
@@ -44,7 +45,7 @@ export class SettingsService {
         localStorage.removeItem(OLD_SETTINGS_KEY);
         localStorage.removeItem(`${OLD_SETTINGS_KEY}-history`);
 
-        log.debug('✅ 設定遷移完成！已從 localStorage 移至加密儲存');
+        log.debug('✅ 設定遷移完成！已從 localStorage 移至 Tauri Store');
         return parsed;
       }
 
@@ -72,11 +73,11 @@ export class SettingsService {
         return mergedSettings;
       }
 
-      // 從加密 store 載入
+      // 從 Tauri Store 載入
       const stored = await store.get<AppSettings>(SETTINGS_KEY);
       if (stored) {
         const mergedSettings = this.mergeWithDefaults(stored);
-        log.debug('✅ 從加密儲存載入設定成功');
+        log.debug('✅ 從 Tauri Store 載入設定成功');
         return mergedSettings;
       }
 
@@ -100,10 +101,10 @@ export class SettingsService {
     try {
       const store = await getStore();
 
-      // 🔐 儲存到加密 store
+      // 儲存到 Tauri Store（明文 JSON，勿存機密資料）
       await store.set(SETTINGS_KEY, settings);
       await store.save();
-      log.debug('✅ 設定已儲存到加密儲存（AES-256）');
+      log.debug('✅ 設定已儲存到 Tauri Store');
 
       // 儲存設定變更歷史
       await this.saveSettingsHistory(settings);
@@ -145,7 +146,7 @@ export class SettingsService {
     try {
       const store = await getStore();
 
-      // 清除加密儲存
+      // 清除 Tauri Store
       await store.delete(SETTINGS_KEY);
       await store.delete(SETTINGS_HISTORY_KEY);
       await store.save();

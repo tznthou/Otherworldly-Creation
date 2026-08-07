@@ -1042,48 +1042,17 @@ export const tauriAPI: API = {
         throw new Error('無效的專案 ID：專案 ID 不能為空');
       }
 
-      log.debug('🌐 API 調用 generate_pdf_chrome (Chrome Headless 新方案)，專案 ID:', projectId);
-      
-      try {
-        // 首先嘗試Chrome Headless方案
-        return await safeInvoke('generate_pdf_chrome', {
-          projectId: projectId.trim(),
-          options: options || {
-            page_size: 'A4',
-            font_size: 12.0,
-            margins: '20mm',
-            include_cover: true
-          }
-        });
-      } catch (chromeError) {
-        log.warn('⚠️ Chrome Headless PDF生成失敗，嘗試lopdf fallback:', chromeError);
-        
-        // Fallback到lopdf方案
-        log.debug('📄 API Fallback調用 generate_pdf_v2 (lopdf 版本)，專案 ID:', projectId);
-        return safeInvoke('generate_pdf_v2', {
-          projectId: projectId.trim(),
-          options: options || {
-            page_size: 'A4',
-            font_family: 'Noto Sans TC',
-            font_size: 12.0,
-            line_height: 1.6,
-            margin_top: 25.0,
-            margin_bottom: 25.0,
-            margin_left: 20.0,
-            margin_right: 20.0,
-            include_cover: true,
-            chapter_break_style: 'new_page',
-            include_illustrations: true,
-            illustration_layout: 'chapter_start',
-            illustration_quality: 'original',
-            enable_bookmarks: true,
-            enable_toc: true,
-            text_alignment: 'left',
-            paragraph_spacing: 6.0,
-            chapter_title_size: 1.8
-          }
-        });
-      }
+      log.debug('🌐 API 調用 generate_pdf_chrome (Chrome Headless)，專案 ID:', projectId);
+
+      return safeInvoke('generate_pdf_chrome', {
+        projectId: projectId.trim(),
+        options: options || {
+          page_size: 'A4',
+          font_size: 12.0,
+          margins: '20mm',
+          include_cover: true
+        }
+      });
     },
 
 
