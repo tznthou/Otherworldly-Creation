@@ -50,10 +50,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development Commands (v1.2.0)
 
-**Version Management**:
+**Version Management** (`scripts/sync-version.js`, one script, two modes):
 ```bash
-npm run version:sync 1.2.0     # Sync all config files to version
-RELEASE_VERSION=1.2.0 node scripts/sync-version.js  # Environment variable approach
+npm run version:check          # No version given → check only, exits 1 if the 3 config files disagree
+npm run version:sync 2.0.1     # Version given → sync package.json / Cargo.toml / tauri.conf.json / Cargo.lock
+RELEASE_VERSION=2.0.1 node scripts/sync-version.js   # Same, via env var (CI uses GITHUB_REF)
 npm run release-ready          # Complete release preparation
 ```
 

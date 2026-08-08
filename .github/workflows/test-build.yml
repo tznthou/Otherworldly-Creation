@@ -30,7 +30,7 @@ jobs:
     
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -46,7 +46,7 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -68,7 +68,7 @@ jobs:
             '' }}
 
       - name: 📤 Upload macOS artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: genesis-chronicle-test-macos-${{ inputs.macos_arch }}-${{ github.run_number }}
           path: |
@@ -82,7 +82,7 @@ jobs:
     
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -95,7 +95,7 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -114,7 +114,7 @@ jobs:
           args: '--target x86_64-pc-windows-msvc'
 
       - name: 📤 Upload Windows artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: genesis-chronicle-test-windows-${{ github.run_number }}
           path: |
