@@ -205,7 +205,9 @@ jobs:
           echo "🚀 Building Tauri app with DMG support..."
           cd src-tauri
           echo "Running cargo tauri build with verbose output..."
-          cargo tauri build --target universal-apple-darwin --verbose 2>&1 | tee build.log
+          # -- 之後的參數傳給 cargo。--locked 要求 Cargo.lock 不需要被更新，
+          # 也就是發布產物用的依賴版本，必定等於 repo 裡記錄的那一組
+          cargo tauri build --target universal-apple-darwin --verbose -- --locked 2>&1 | tee build.log
           BUILD_EXIT_CODE=${PIPESTATUS[0]}
 
           if [ $BUILD_EXIT_CODE -ne 0 ]; then
@@ -361,7 +363,7 @@ jobs:
           Write-Output "🚀 Building Tauri app for Windows..."
           cd src-tauri
           Write-Output "Running cargo tauri build with verbose output..."
-          cargo tauri build --target x86_64-pc-windows-msvc --verbose 2>&1 | Tee-Object -FilePath build.log
+          cargo tauri build --target x86_64-pc-windows-msvc --verbose -- --locked 2>&1 | Tee-Object -FilePath build.log
           $BUILD_EXIT_CODE = $LASTEXITCODE
 
           if ($BUILD_EXIT_CODE -ne 0) {

@@ -24,6 +24,9 @@ const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[\w\d\-.]+)?$/;
 // 錨定行首：無錨定的 /version\s*=\s*"[^"]+"/ 也會匹配 rust-version = "1.77.2"，
 // 目前僥倖沒出事只因為 version 剛好排在 rust-version 前面
 const CARGO_VERSION_RE = /^version = "([^"]+)"$/m;
+const CARGO_NAME_RE = /^name = "([^"]+)"$/m;
+
+const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const CONFIG_FILES = [
     { name: 'package.json', rel: 'package.json', type: 'json' },
@@ -90,6 +93,47 @@ function checkConsistency(rootDir) {
     };
 }
 
+/**
+ * Cargo.lock 裡自己那個 package 的版本條目。
+ *
+ * Cargo.toml 改了而 lock 檔沒改，`cargo build --locked` 就會拒絕建置。
+ * 從前靠一條「記得另外跑 cargo check」的人工規則補償，CI 上沒有那一步。
+ *
+ * 只動 `name = "<自己>"` 緊接著的那一行，一個字元都不碰依賴 —— 全量
+ * cargo update 會把 tauri-runtime-wry 升到與 wry 不相容的組合。
+ */
+function syncCargoLock(rootDir, version) {
+    const lockPath = path.join(rootDir, 'src-tauri', 'Cargo.lock');
+
+    if (!fs.existsSync(lockPath)) {
+        return false;
+    }
+
+    const cargoToml = fs.readFileSync(path.join(rootDir, 'src-tauri', 'Cargo.toml'), 'utf8');
+    const nameMatch = cargoToml.match(CARGO_NAME_RE);
+
+    if (!nameMatch) {
+        throw new Error('Cargo.toml 讀不到 package name，無法定位 Cargo.lock 的條目');
+    }
+
+    const packageName = nameMatch[1];
+    const content = fs.readFileSync(lockPath, 'utf8');
+    const entryRe = new RegExp(`(name = "${escapeRegExp(packageName)}"\\r?\\nversion = ")[^"]+(")`);
+    const current = content.match(entryRe);
+
+    if (!current) {
+        // 靜默跳過的話，--locked 會在 CI 建置時才爆，而且錯誤訊息跟版本無關
+        throw new Error(`Cargo.lock 找不到 ${packageName} 的版本條目（格式可能變了）`);
+    }
+
+    if (current[0].includes(`"${version}"`)) {
+        return false;
+    }
+
+    fs.writeFileSync(lockPath, content.replace(entryRe, `$1${version}$2`));
+    return true;
+}
+
 function syncVersion(rootDir, version) {
     if (!VERSION_PATTERN.test(version)) {
         throw new Error(`版本號格式不正確: ${version}（支援 1.0.0 或 1.0.0-beta）`);
@@ -113,6 +157,10 @@ function syncVersion(rootDir, version) {
         }
 
         updated.push(config.name);
+    }
+
+    if (syncCargoLock(rootDir, version)) {
+        updated.push('Cargo.lock');
     }
 
     return { updated };
@@ -172,4 +220,4 @@ if (require.main === module) {
     main();
 }
 
-module.exports = { resolveVersion, readVersions, checkConsistency, syncVersion, VERSION_PATTERN };
+module.exports = { resolveVersion, readVersions, checkConsistency, syncVersion, syncCargoLock, VERSION_PATTERN };
