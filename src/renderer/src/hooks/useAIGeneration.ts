@@ -270,7 +270,13 @@ export function useAIGeneration(): AIGenerationHook {
       setIsGenerating(false);
       abortControllerRef.current = null;
     }
-  }, [dispatch]);
+    // settings 必須列進依賴：函式體讀了 features.intelligentContextOptimization
+    // 與 ai.intelligentContext 的七個欄位。少了它，閉包會停在 mount 當下那份，
+    // 使用者改完智慧上下文設定得重開 app 才生效。
+    //
+    // 重建成本為零 —— 本 hook 回傳的是物件字面量，呼叫端的依賴每次 render
+    // 本來就是新引用；且 generate 沒有被任何 useEffect 依賴，不會觸發迴圈。
+  }, [dispatch, settings]);
 
   /**
    * 清除生成選項
