@@ -11,7 +11,20 @@ on:
         type: string
 
 jobs:
+  # tag 可以推在任何 commit 上 —— 包括 CI 沒跑過的、跑紅的、或分支上的。
+  # 在此之前 release.yml 與 ci.yml 的觸發條件沒有任何交集保證，
+  # 「CI 是綠的」和「這個 commit 能發版」是兩件不相干的事。
+  #
+  # 這個 job 必須擋在 create-release 前面而不只是 build 前面：
+  # create-release 一跑就會先 `gh release delete` 舊的、再建一個新的，
+  # 之後 build 才上傳 assets。放在 build 前面的話，測試紅掉時
+  # GitHub 上已經留下一個沒有任何檔案的 release，而舊的那個已經被刪了。
+  test:
+    name: 🧪 發布前測試
+    uses: ./.github/workflows/ci.yml
+
   create-release:
+    needs: test
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
