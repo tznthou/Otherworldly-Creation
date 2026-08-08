@@ -27,8 +27,11 @@ module.exports = {
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-undef': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
-    // 🧹 Tech Debt Prevention: Warn about TODO comments (2025-10-11)
-    'no-warning-comments': ['warn', { terms: ['TODO', 'FIXME', 'XXX', 'HACK'], location: 'start' }],
+    // 🧹 Tech Debt Prevention (2025-10-11)，2026-08-08 拿掉 TODO：
+    // 60 個 TODO 佔了全部 warning 的 69%，讓 lint 輸出永遠有噪音而沒人看，
+    // 實際代價是 useAIGeneration 的 exhaustive-deps 真 bug 被淹了一年。
+    // TODO 是工作項目（歸 RESUME.md），FIXME/XXX/HACK 才是「這裡壞的」，留著擋。
+    'no-warning-comments': ['warn', { terms: ['FIXME', 'XXX', 'HACK'], location: 'start' }],
     'react/react-in-jsx-scope': 'off',
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
