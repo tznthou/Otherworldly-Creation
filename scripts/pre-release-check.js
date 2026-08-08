@@ -354,9 +354,9 @@ class PreReleaseChecker {
         }
     }
 
-    // 執行測試（可選模式）
+    // 執行測試
     runTests() {
-        logStep(7, '執行測試（可選）');
+        logStep(7, '執行測試');
 
         // 檢查是否有測試配置
         const jestConfigExists = fs.existsSync(path.join(this.rootDir, 'jest.config.js'));
@@ -364,36 +364,52 @@ class PreReleaseChecker {
         if (!jestConfigExists) {
             logWarning('未找到 Jest 配置，跳過測試');
             this.results.warnings.push('無測試配置');
-            return;
-        }
-
-        // 執行測試
-        logInfo('執行單元測試...');
-        const testResult = this.executeCommand('npm test -- --passWithNoTests', '單元測試', { silent: true });
-
-        if (testResult.success) {
-            logSuccess('測試通過');
-            this.results.passed.push('單元測試');
         } else {
-            // 測試失敗改為警告，不阻止發布（務實策略）
-            logWarning('測試失敗（部分測試需要額外的環境配置，不影響發布）');
-            this.results.warnings.push('測試失敗（可選）');
-            // 不加入 criticalErrors，不阻止發布
+            logInfo('執行前端測試...');
+            const testResult = this.executeCommand('npm test -- --passWithNoTests', '前端測試', { silent: true });
 
-            if (testResult.output || testResult.stderr) {
-                log('測試輸出（僅供參考）:', 'yellow');
-                const output = testResult.output || testResult.stderr;
-                // 只顯示摘要，不顯示詳細錯誤
-                const lines = output.split('\n');
-                const summaryLines = lines.filter(line =>
-                    line.includes('Test Suites:') ||
-                    line.includes('Tests:') ||
-                    line.includes('PASS') ||
-                    line.includes('FAIL')
-                );
-                log(summaryLines.slice(0, 10).join('\n'), 'reset');
+            if (testResult.success) {
+                logSuccess('前端測試通過');
+                this.results.passed.push('前端測試');
+            } else {
+                logError('前端測試失敗');
+                this.results.failed.push('前端測試失敗');
+                this.criticalErrors.push('前端測試失敗');
+                this.printTestSummary(testResult);
             }
         }
+
+        // Rust 測試：上面的步驟只驗了「編得過」與「建得出來」，沒有驗行為
+        logInfo('執行 Rust 測試...');
+        const rustTestResult = this.executeCommand('cargo test --manifest-path src-tauri/Cargo.toml', 'Rust 測試', { silent: true });
+
+        if (rustTestResult.success) {
+            logSuccess('Rust 測試通過');
+            this.results.passed.push('Rust 測試');
+        } else {
+            logError('Rust 測試失敗');
+            this.results.failed.push('Rust 測試失敗');
+            this.criticalErrors.push('Rust 測試失敗');
+            this.printTestSummary(rustTestResult);
+        }
+    }
+
+    // 測試失敗時印出摘要行，讓人知道是哪裡紅的。
+    // stdout 與 stderr 要一起看：npm 會往 stdout 寫幾十個字元的前言，
+    // 而 jest 的摘要走 stderr —— 只取其一（output || stderr）會永遠取到沒有摘要的那半。
+    printTestSummary(result) {
+        const output = [result.output, result.stderr].filter(Boolean).join('\n');
+        if (!output) return;
+
+        log('測試輸出:', 'red');
+        const summaryLines = output.split('\n').filter(line =>
+            line.includes('Test Suites:') ||
+            line.includes('Tests:') ||
+            line.includes('FAIL') ||
+            line.includes('test result:') ||
+            line.includes('panicked at')
+        );
+        log(summaryLines.slice(0, 20).join('\n'), 'reset');
     }
 
     // 生成發布前報告
