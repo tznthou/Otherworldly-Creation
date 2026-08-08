@@ -32,10 +32,10 @@ jobs:
 
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           # 版本從 .nvmrc 讀，不在這裡寫死 —— 一份版本號兩邊寫遲早分岔
           node-version-file: '.nvmrc'
@@ -69,7 +69,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable

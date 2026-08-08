@@ -36,7 +36,7 @@ jobs:
       tag: ${{ steps.get_version.outputs.VERSION }}
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🏷️ Get version from tag or input
         id: get_version
@@ -133,7 +133,7 @@ jobs:
     
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🏷️ Setup version environment
         run: |
@@ -175,7 +175,7 @@ jobs:
           echo "========================"
 
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -276,7 +276,7 @@ jobs:
           echo "✅ Build verification passed: $DMG_COUNT DMG(s) + $PKG_COUNT PKG(s)"
 
       - name: 📤 Upload Release Assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.create-release.outputs.tag }}
           files: |
@@ -292,7 +292,7 @@ jobs:
     
     steps:
       - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🏷️ Setup version environment
         run: |
@@ -335,7 +335,7 @@ jobs:
           Write-Output "========================"
 
       - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -410,7 +410,7 @@ jobs:
           }
 
       - name: 📤 Upload Windows Release Assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.create-release.outputs.tag }}
           files: |
