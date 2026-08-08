@@ -219,18 +219,36 @@ describe('CLI', () => {
     const REAL_PKG = path.join(__dirname, '..', '..', 'package.json');
     const realVersionBefore = JSON.parse(fs.readFileSync(REAL_PKG, 'utf8')).version;
 
-    // 這道守衛救過一次：SYNC_VERSION_ROOT 還沒實作時，CLI 落回腳本寫死的
-    // __dirname/..，把 repo 真實的三個版本檔改成了測試用的版本號。
-    // 注入點哪天失效，要在這裡就紅，而不是靜默改壞工作區。
+    // CI 上 GITHUB_ENV 一定存在且指向該 job 的真實環境檔
+    const REAL_GITHUB_ENV = process.env.GITHUB_ENV;
+    const realEnvSizeBefore =
+        REAL_GITHUB_ENV && fs.existsSync(REAL_GITHUB_ENV) ? fs.statSync(REAL_GITHUB_ENV).size : null;
+
+    // 這兩道守衛各救過一次：
+    // 1. SYNC_VERSION_ROOT 還沒實作時，CLI 落回腳本寫死的 __dirname/..，
+    //    把 repo 真實的三個版本檔改成了測試用的版本號
+    // 2. GITHUB_ENV 沒導開時，同步模式會把 fixture 的版本號寫進跑 npm test
+    //    那個 job 的真實環境檔，污染後續 step
+    // 注入點哪天失效，要在這裡就紅，而不是靜默改壞外面的東西。
     afterEach(() => {
-        const now = JSON.parse(fs.readFileSync(REAL_PKG, 'utf8')).version;
-        expect(now).toBe(realVersionBefore);
+        expect(JSON.parse(fs.readFileSync(REAL_PKG, 'utf8')).version).toBe(realVersionBefore);
+
+        if (realEnvSizeBefore !== null) {
+            expect(fs.statSync(REAL_GITHUB_ENV).size).toBe(realEnvSizeBefore);
+        }
     });
 
-    const run = (args, env = {}) =>
+    const run = (args, { root, ...extraEnv } = {}) =>
         execFileSync('node', [SCRIPT, ...args], {
             encoding: 'utf8',
-            env: { ...process.env, RELEASE_VERSION: '', GITHUB_REF: '', SYNC_VERSION_ROOT: env.root || '', ...env },
+            env: {
+                ...process.env,
+                RELEASE_VERSION: '',
+                GITHUB_REF: '',
+                GITHUB_ENV: root ? path.join(root, 'github-env') : '',
+                SYNC_VERSION_ROOT: root || '',
+                ...extraEnv,
+            },
         });
 
     it('無參數且版本一致時以 0 結束', () => {
@@ -262,5 +280,15 @@ describe('CLI', () => {
         run([], { root, GITHUB_REF: 'refs/tags/v4.5.6' });
 
         expect(readVersions(root)['package.json']).toBe('4.5.6');
+    });
+
+    it('同步模式把版本寫進 GITHUB_ENV 供後續 step 組安裝檔名', () => {
+        const root = makeFixture();
+
+        run(['3.2.1'], { root });
+
+        const written = fs.readFileSync(path.join(root, 'github-env'), 'utf8');
+        expect(written).toContain('PKG_VERSION=3.2.1');
+        expect(written).toContain('RELEASE_VERSION=3.2.1');
     });
 });
