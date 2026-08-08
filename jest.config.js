@@ -66,5 +66,12 @@ module.exports = {
         '<rootDir>/src/__tests__/integration/setup.ts',
       ],
     },
+    {
+      // 發布腳本是純 CommonJS，跑在 node 上。不繼承 baseConfig：
+      // ts-jest / jsdom / import.meta shim 對它們一項都用不到。
+      displayName: 'scripts',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/scripts/__tests__/**/*.test.js'],
+    },
   ],
 };
