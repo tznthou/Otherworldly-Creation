@@ -29,6 +29,11 @@ jobs:
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
+      # 版本號只在這裡解析一次，build job 一律往下游拿。
+      # 從前每個 job 各自解析 GITHUB_REF，workflow_dispatch 時那個值是
+      # refs/heads/main，前綴剝不掉就原樣往下傳，整條手動觸發路徑從來不能用。
+      version: ${{ steps.get_version.outputs.VERSION_NO_V }}
+      tag: ${{ steps.get_version.outputs.VERSION }}
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
@@ -37,10 +42,15 @@ jobs:
         id: get_version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            RAW="${{ inputs.version }}"
           else
-            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            RAW="${GITHUB_REF#refs/tags/}"
           fi
+          # 一律先剝 v 再組回去，手動輸入 2.0.1 或 v2.0.1 都能用
+          NO_V="${RAW#v}"
+          echo "VERSION=v${NO_V}" >> "$GITHUB_OUTPUT"
+          echo "VERSION_NO_V=${NO_V}" >> "$GITHUB_OUTPUT"
+          echo "📦 Release version: ${NO_V}"
 
       - name: 🎉 Create Release
         id: create_release
@@ -145,9 +155,9 @@ jobs:
 
       - name: 🏷️ Setup version environment
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-          echo "PKG_VERSION=$VERSION" >> $GITHUB_ENV
+          VERSION="${{ needs.create-release.outputs.version }}"
+          echo "RELEASE_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "PKG_VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "📦 Release version: $VERSION"
 
       - name: 🔄 Sync versions across all configs
@@ -284,7 +294,7 @@ jobs:
       - name: 📤 Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.RELEASE_VERSION }}
+          tag_name: ${{ needs.create-release.outputs.tag }}
           files: |
             src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
             dist/*.pkg
@@ -302,8 +312,9 @@ jobs:
 
       - name: 🏷️ Setup version environment
         run: |
-          $VERSION = "${{ github.ref }}".Replace("refs/tags/v", "")
+          $VERSION = "${{ needs.create-release.outputs.version }}"
           echo "RELEASE_VERSION=$VERSION" >> $env:GITHUB_ENV
+          echo "PKG_VERSION=$VERSION" >> $env:GITHUB_ENV
           echo "📦 Release version: $VERSION"
 
       - name: 🔄 Sync versions across all configs
@@ -417,7 +428,7 @@ jobs:
       - name: 📤 Upload Windows Release Assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.RELEASE_VERSION }}
+          tag_name: ${{ needs.create-release.outputs.tag }}
           files: |
             src-tauri/target/**/*.msi
         env:
