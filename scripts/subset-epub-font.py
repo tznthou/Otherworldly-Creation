@@ -104,8 +104,12 @@ def rename_font(font, family):
         name.setName(value, nid, record.platformID, record.platEncID, record.langID)
 
 
-def verify(path, expected_chars, family):
-    """驗收斷言。任一條不成立即視為子集化失敗。"""
+def verify(path, expected_chars, family, weight):
+    """驗收斷言。任一條不成立即視為子集化失敗。
+
+    weight 收的是這次實際要求的字重，不是 DEFAULT_WEIGHT：拿常數來比對的話，
+    `--weight 700` 會在最後一步以「預期 400」的誤導訊息失敗。
+    """
     font = TTFont(path, lazy=True)
     problems = []
 
@@ -125,9 +129,9 @@ def verify(path, expected_chars, family):
     if actual_family != family:
         problems.append(f"name table 家族名為 {actual_family!r}，預期 {family!r}")
 
-    weight = font["OS/2"].usWeightClass
-    if weight != DEFAULT_WEIGHT:
-        problems.append(f"usWeightClass 為 {weight}，預期 {DEFAULT_WEIGHT}")
+    actual_weight = font["OS/2"].usWeightClass
+    if actual_weight != weight:
+        problems.append(f"usWeightClass 為 {actual_weight}，預期 {weight}")
 
     for nid, label in ((0, "版權"), (13, "授權說明")):
         if not font["name"].getDebugName(nid):
@@ -152,7 +156,7 @@ def main():
         sys.exit(f"找不到輸入字型：{args.input}")
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"[1/5] 枚舉 Big5 字集")
+    print("[1/5] 枚舉 Big5 字集")
     big5 = enumerate_big5()
     print(f"      Big5 唯一字元：{len(big5)}")
 
@@ -182,7 +186,7 @@ def main():
         )
         print(f"      已 instancing 至 wght={args.weight}")
     else:
-        print(f"[3/5] 來源非可變字型，跳過 instancing")
+        print("[3/5] 來源非可變字型，跳過 instancing")
 
     print(f"[4/5] 子集化並改名為 {args.family!r}")
     options = subset.Options()
@@ -199,8 +203,10 @@ def main():
     rename_font(font, args.family)
     font.save(args.output)
 
-    print(f"[5/5] 驗收")
-    problems, cmap_count, glyph_count = verify(args.output, expected, args.family)
+    print("[5/5] 驗收")
+    problems, cmap_count, glyph_count = verify(
+        args.output, expected, args.family, args.weight
+    )
     size = args.output.stat().st_size
     print(f"      cmap 碼點：{cmap_count}    glyph：{glyph_count}")
     print(f"      檔案大小：{size:,} bytes（{size / 1024 / 1024:.2f} MB）")

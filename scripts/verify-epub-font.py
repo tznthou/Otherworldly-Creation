@@ -275,6 +275,18 @@ def main():
             print()
             continue
 
+        # 探測腳本自己出錯的話，結果一律不可信，不能拿來判定。
+        #
+        # 缺了 rendersWithEmbedded 會讓 actual 變成 False，而對照組的預期本來
+        # 就是 False —— 兩者一致就會判成「通過」，但這一輪其實什麼都沒量到。
+        # 對照組存在的意義正是證明這支腳本有在測東西，這個洞會讓那個保證失效。
+        if data.get("error") or "rendersWithEmbedded" not in data:
+            reason = data.get("error") or "探測結果缺少 rendersWithEmbedded"
+            print(f"  ❌ 探測未完成，結果不可信：{reason}")
+            failures.append(f"{epub_path.name}: 探測未完成（{reason}）")
+            print()
+            continue
+
         actual = bool(data.get("rendersWithEmbedded"))
         verdict = "✅" if actual == expects_embedded else "❌"
         state = "生效" if actual else "未生效"

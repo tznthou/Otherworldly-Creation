@@ -33,22 +33,22 @@ const EMBEDDED_FONT_LICENSE_HREF: &str = "fonts/OFL.txt";
 /// 所以不用 EPUB 3 才定義的 `font/ttf`。
 const FONT_MEDIA_TYPE: &str = "application/vnd.ms-opentype";
 
-fn default_embed_font() -> bool {
-    true
-}
-
+/// EPUB 產生選項。
+///
+/// 整個 struct 標 `#[serde(default)]`：前端送來的形狀不只一種，缺欄位就整個
+/// 反序列化失敗、連帶匯出功能全壞。`api/tauri.ts` 的 fallback 只送
+/// `include_cover` / `font_family` / `chapter_break_style` 三個欄位，
+/// `epubService.ts` 送七個，兩邊都少於這裡的欄位數。缺的部分一律取
+/// `Default` 的值，與下方 `impl Default` 是同一份定義。
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct EPubGenerationOptions {
     pub include_cover: bool,
     pub custom_css: Option<String>,
     pub font_family: String,
     pub chapter_break_style: String,
     pub author: Option<String>,
-    /// 是否把內文字型嵌進 EPUB。
-    ///
-    /// 標為 serde default：前端既有呼叫不會傳這個欄位，少了它整個
-    /// 反序列化就會失敗，連帶所有匯出功能一起壞掉。
-    #[serde(default = "default_embed_font")]
+    /// 是否把內文字型嵌進 EPUB
     pub embed_font: bool,
     // === AI 插畫整合選項 ===
     pub include_illustrations: bool,
@@ -65,7 +65,7 @@ impl Default for EPubGenerationOptions {
             font_family: "Noto Sans TC".to_string(),
             chapter_break_style: "page-break".to_string(),
             author: None,
-            embed_font: default_embed_font(),
+            embed_font: true,
             // AI 插畫預設選項
             include_illustrations: true,
             illustration_layout: "gallery".to_string(),
@@ -1560,10 +1560,13 @@ mod tests {
     // === 內嵌字型 ===
 
     #[test]
-    fn options_from_the_frontend_still_deserialize_without_the_embed_font_field() {
-        // 前端目前不傳 embed_font（開關 UI 留待後續），欄位少了就整個反序列化
-        // 失敗，連帶所有 EPUB 匯出一起壞掉。這裡照抄 epubService.ts 實際送出的形狀。
-        let json = r#"{
+    fn every_options_shape_the_frontend_sends_deserializes() {
+        // 前端有兩個呼叫點，送出的形狀不同，兩邊的欄位數都少於 struct。
+        // 任何一種反序列化失敗，該路徑的 EPUB 匯出就整個壞掉而且無從察覺——
+        // 只驗其中一種形狀會漏掉另一條路徑。
+
+        // 形狀一：epubService.ts 組出的七個欄位，沒有 embed_font
+        let from_service = r#"{
             "include_cover": true,
             "font_family": "Noto Sans TC",
             "chapter_break_style": "page-break",
@@ -1574,8 +1577,7 @@ mod tests {
         }"#;
 
         let options: EPubGenerationOptions =
-            serde_json::from_str(json).expect("前端既有呼叫必須仍能反序列化");
-
+            serde_json::from_str(from_service).expect("epubService.ts 的形狀必須能反序列化");
         assert!(
             options.embed_font,
             "欄位缺席時應預設開啟內嵌，否則新功能對現有前端形同不存在"
@@ -1583,6 +1585,26 @@ mod tests {
         // 確認不是整個 struct 都走了預設值——那樣上面那條斷言就沒有意義
         assert_eq!(options.font_family, "Noto Sans TC");
         assert!(options.include_illustrations);
+
+        // 形狀二：api/tauri.ts 在呼叫端沒給 options 時使用的 fallback，只有三個欄位。
+        // 三個插畫欄位都不在裡面，少了 struct 層級的 serde default 這條路徑會直接失敗。
+        let fallback = r#"{
+            "include_cover": true,
+            "font_family": "Noto Sans TC",
+            "chapter_break_style": "page-break"
+        }"#;
+
+        let options: EPubGenerationOptions =
+            serde_json::from_str(fallback).expect("tauri.ts 的 fallback 形狀必須能反序列化");
+        assert!(options.embed_font);
+        assert_eq!(
+            options.illustration_layout, "gallery",
+            "缺席欄位要取 Default 的值"
+        );
+        assert_eq!(
+            options.chapter_break_style, "page-break",
+            "有給的欄位不能被預設值蓋掉"
+        );
     }
 
     /// 解析 manifest 宣告的所有 href
