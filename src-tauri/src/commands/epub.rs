@@ -1149,7 +1149,33 @@ fn generate_toc_ncx(title: &str, chapters: &[(String, String)], include_cover: b
 }
 
 /// 生成 EPUB CSS 樣式
+/// 把使用者設定的字型名整理成可以安全插進 CSS 字串的形式
+///
+/// 這個值一路從前端設定傳進來，最後落在 `font-family: "..."` 裡面。只要含有
+/// `"` 或 `;`，就能提前終止宣告並讓後面整份 styles.css 失效——匯出的書會
+/// 完全失去樣式，而 EPUB 結構檢查一切正常，不會有人發現。
+///
+/// 採白名單而非黑名單：字型名的合法組成本來就只有文字、數字、空白與少數連接
+/// 符號。`is_alphanumeric` 對漢字回 true，中文字型名不受影響。
+fn sanitize_font_family(name: &str) -> String {
+    let cleaned: String = name
+        .chars()
+        .filter(|c| c.is_alphanumeric() || matches!(c, ' ' | '-' | '_'))
+        .collect();
+
+    // 整個名字都被濾掉時不能回空字串：`font-family: "", ...` 是無效宣告，
+    // 部分閱讀器會連同整條規則一起丟棄。
+    let trimmed = cleaned.trim();
+    if trimmed.is_empty() {
+        "serif".to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
 fn generate_epub_css(options: &EPubGenerationOptions) -> String {
+    let font_family = sanitize_font_family(&options.font_family);
+
     // 內嵌字型排在堆疊最前面，其後保留原本的 fallback 鏈：閱讀器不支援
     // 內嵌字型（或使用者關掉發布者字型）時仍走既有設定，不會直接掉到泛型 serif。
     // 子集只涵蓋 Big5，落在字集外的字元也是由後面這幾層接住。
@@ -1165,10 +1191,10 @@ fn generate_epub_css(options: &EPubGenerationOptions) -> String {
                 family = EMBEDDED_FONT_FAMILY,
                 href = EMBEDDED_FONT_HREF,
             ),
-            format!(r#""{}", "{}""#, EMBEDDED_FONT_FAMILY, options.font_family),
+            format!(r#""{}", "{}""#, EMBEDDED_FONT_FAMILY, font_family),
         )
     } else {
-        (String::new(), format!(r#""{}""#, options.font_family))
+        (String::new(), format!(r#""{}""#, font_family))
     };
 
     format!(r#"/* 創世紀元 EPUB 樣式 */
@@ -1847,6 +1873,54 @@ mod tests {
             "打包的應是 OFL 全文"
         );
         assert!(license.contains("Copyright"), "授權檔應含版權聲明");
+    }
+
+    #[test]
+    fn font_family_sanitizer_keeps_legitimate_names() {
+        assert_eq!(sanitize_font_family("Noto Sans TC"), "Noto Sans TC");
+        assert_eq!(sanitize_font_family("思源宋體"), "思源宋體");
+        assert_eq!(sanitize_font_family("PT_Serif-Web"), "PT_Serif-Web");
+
+        // 全部字元都不合法時要給得出可用的回退：空字串會產生 `font-family: ""`，
+        // 那是無效宣告，部分閱讀器會連整條規則一起丟掉
+        assert_eq!(sanitize_font_family(r#"";{}"#), "serif");
+        assert_eq!(sanitize_font_family("   "), "serif");
+    }
+
+    #[test]
+    fn malicious_font_family_cannot_break_out_of_the_css_declaration() {
+        // font_family 來自前端設定。帶引號或分號就能提前終止宣告，讓後面整份
+        // styles.css 失效——而 EPUB 的結構檢查一切正常，不會有任何人發現。
+        let options = EPubGenerationOptions {
+            font_family: r#"Evil"; } body { display: none; } .x { font-family: ""#.to_string(),
+            embed_font: true,
+            include_illustrations: false,
+            ..Default::default()
+        };
+        let css = generate_epub_css(&options);
+
+        assert!(
+            !css.contains("display: none"),
+            "注入的宣告不該出現在 CSS 裡：{css}"
+        );
+        assert!(
+            !css.contains(r#"Evil""#),
+            "引號必須被清掉，否則字串會提前收尾：{css}"
+        );
+
+        // 注入成功會讓大括號多出成對的一組
+        assert_eq!(
+            css.matches('{').count(),
+            css.matches('}').count(),
+            "大括號必須配對"
+        );
+
+        // 負面斷言要配正面斷言：確認只是清掉危險字元，不是整段 CSS 被清空
+        assert!(
+            css.contains(r#""Genesis Serif TC", "Evil"#),
+            "清理後仍應保留字型堆疊的可用部分：{css}"
+        );
+        assert!(css.contains("line-height: 1.8;"), "其餘樣式不受影響");
     }
 
     /// 產生兩份真的 EPUB，供人眼在實際閱讀器上比對
