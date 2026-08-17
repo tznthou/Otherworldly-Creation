@@ -187,6 +187,16 @@ def main():
         print(f"      已 instancing 至 wght={args.weight}")
     else:
         print("[3/5] 來源非可變字型，跳過 instancing")
+        # 跳過 instancing 等於 usWeightClass 原封不動，而 verify() 收的是
+        # args.weight。放行的話會一路子集化、存檔，最後才由驗收以「usWeightClass
+        # 不符」失敗——訊息指向產出物，真正的原因卻是來源字型沒有 wght 軸可調。
+        # 這裡就攔下來，省掉白做的一輪，也讓錯誤訊息說得出解法。
+        source_weight = font["OS/2"].usWeightClass
+        if source_weight != args.weight:
+            sys.exit(
+                f"來源非可變字型，字重固定在 {source_weight}，做不出 wght={args.weight}。"
+                f"改用 --weight {source_weight}，或換一支含 wght 軸的可變字型。"
+            )
 
     print(f"[4/5] 子集化並改名為 {args.family!r}")
     options = subset.Options()
