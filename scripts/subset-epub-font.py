@@ -175,8 +175,16 @@ def main():
     if is_variable:
         axes = {a.axisTag: (a.minValue, a.defaultValue, a.maxValue) for a in font["fvar"].axes}
         print(f"[3/5] 來源是可變字型，軸：{axes}")
-        default_wght = axes.get("wght", (None, None, None))[1]
-        if default_wght is not None and default_wght != args.weight:
+        # 沒有 wght 軸就 instancing 不了：instantiateVariableFont 會拋 ValueError，
+        # 而那個訊息是 fontTools 內部的用語, 看不出問題出在來源字型不合用。跟下面
+        # static 字型那條是同一件事——使用者要的字重做不到, 就在動手前講清楚。
+        if "wght" not in axes:
+            sys.exit(
+                f"來源是可變字型但沒有 wght 軸（現有：{'、'.join(sorted(axes)) or '無'}），"
+                f"做不出 wght={args.weight}。換一支含 wght 軸的可變字型。"
+            )
+        default_wght = axes["wght"][1]
+        if default_wght != args.weight:
             print(
                 f"      注意：wght 軸預設值是 {default_wght:g}，"
                 f"不 instancing 會得到該權重而非 Regular"
