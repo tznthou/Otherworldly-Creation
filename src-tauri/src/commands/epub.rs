@@ -5,13 +5,51 @@ use zip::{ZipWriter, CompressionMethod};
 use tempfile::NamedTempFile;
 use std::path::PathBuf;
 
+/// 內嵌字型：Noto Serif TC 的 Big5 全集子集，已 instancing 至 wght=400。
+///
+/// 由 `scripts/subset-epub-font.py` 產生，換字型或改字集範圍時重跑該腳本。
+/// 來源為可變字型且 wght 軸預設值是 200（ExtraLight），不 instancing 會得到
+/// 極細字重；腳本的驗收斷言擋著這件事。
+const EMBEDDED_FONT: &[u8] = include_bytes!("../../assets/fonts/GenesisSerifTC-Regular.ttf");
+
+/// SIL Open Font License 1.1 全文。
+///
+/// OFL 條款 2) 要求每份散布副本都附上授權，故 EPUB 內另外打包一份。
+const EMBEDDED_FONT_LICENSE: &[u8] = include_bytes!("../../assets/fonts/OFL.txt");
+
+/// 內嵌字型的家族名，必須與 `generate_epub_css` 的 `@font-face` 及子集化腳本
+/// 的 `--family` 三處一致。子集版只含 Big5，改名是為了不與使用者系統上的
+/// 同名完整版字型互搶。
+const EMBEDDED_FONT_FAMILY: &str = "Genesis Serif TC";
+
+/// EPUB 內的字型路徑，相對於 OEBPS/。同時用於 ZIP entry 與 manifest href，
+/// 兩邊共用同一個常數，避免出現宣告與實體對不上的情形。
+const EMBEDDED_FONT_HREF: &str = "fonts/GenesisSerifTC-Regular.ttf";
+const EMBEDDED_FONT_LICENSE_HREF: &str = "fonts/OFL.txt";
+
+/// EPUB 2 的 OPF 對字型沿用 `application/vnd.ms-opentype`。
+///
+/// 本專案產出的是 `<package version="2.0">` 搭 toc.ncx，不是 EPUB 3，
+/// 所以不用 EPUB 3 才定義的 `font/ttf`。
+const FONT_MEDIA_TYPE: &str = "application/vnd.ms-opentype";
+
+/// EPUB 產生選項。
+///
+/// 整個 struct 標 `#[serde(default)]`：前端送來的形狀不只一種，缺欄位就整個
+/// 反序列化失敗、連帶匯出功能全壞。`api/tauri.ts` 的 fallback 只送
+/// `include_cover` / `font_family` / `chapter_break_style` 三個欄位，
+/// `epubService.ts` 送七個，兩邊都少於這裡的欄位數。缺的部分一律取
+/// `Default` 的值，與下方 `impl Default` 是同一份定義。
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct EPubGenerationOptions {
     pub include_cover: bool,
     pub custom_css: Option<String>,
     pub font_family: String,
     pub chapter_break_style: String,
     pub author: Option<String>,
+    /// 是否把內文字型嵌進 EPUB
+    pub embed_font: bool,
     // === AI 插畫整合選項 ===
     pub include_illustrations: bool,
     pub illustration_layout: String, // "gallery", "inline", "chapter_start"
@@ -27,6 +65,7 @@ impl Default for EPubGenerationOptions {
             font_family: "Noto Sans TC".to_string(),
             chapter_break_style: "page-break".to_string(),
             author: None,
+            embed_font: true,
             // AI 插畫預設選項
             include_illustrations: true,
             illustration_layout: "gallery".to_string(),
@@ -575,6 +614,155 @@ fn slate_to_html_recursive(node: &serde_json::Value) -> Result<String, String> {
     Ok(html)
 }
 
+/// 把 EPUB 的完整內容寫進任意 ZIP 目標。
+///
+/// 與 `generate_epub_file` 分開的理由是可測性：後者要決定下載目錄並把成品
+/// 落到磁碟，測試一呼叫就會寫進使用者真正的下載資料夾。組裝邏輯獨立出來後，
+/// 測試能寫進記憶體緩衝區，manifest 宣告與 ZIP 實際內容之間的落差才驗得到——
+/// 這裡有兩份幾乎重複的 content.opf，正是最容易漏改一處的地方。
+///
+/// 插畫掃描留在呼叫端：它要讀資料庫與磁碟，留在這裡會讓整個組裝流程無法測試。
+fn write_epub_archive<W: Write + std::io::Seek>(
+    zip: &mut ZipWriter<W>,
+    title: &str,
+    author: &str,
+    chapters: &[(String, String)],
+    options: &EPubGenerationOptions,
+    scanned_illustrations: &[IllustrationFile],
+    illustration_files: &[String],
+) -> Result<(), String> {
+    let has_illustrations_page = !illustration_files.is_empty();
+
+    
+    // 設置壓縮方法
+    let options_zip = zip::write::FileOptions::default()
+        .compression_method(CompressionMethod::Deflated);
+    
+    // 1. 添加 mimetype 檔案（必須是第一個，且不壓縮）
+    zip.start_file("mimetype", zip::write::FileOptions::default().compression_method(CompressionMethod::Stored))
+        .map_err(|e| format!("建立 mimetype 失敗: {}", e))?;
+    zip.write_all(b"application/epub+zip")
+        .map_err(|e| format!("寫入 mimetype 失敗: {}", e))?;
+    
+    // 2. 添加 META-INF/container.xml
+    zip.start_file("META-INF/container.xml", options_zip)
+        .map_err(|e| format!("建立 container.xml 失敗: {}", e))?;
+    let container_xml = generate_container_xml();
+    zip.write_all(container_xml.as_bytes())
+        .map_err(|e| format!("寫入 container.xml 失敗: {}", e))?;
+    
+    // 4. 添加 OEBPS/content.opf（根據是否包含插畫選擇不同版本）
+    zip.start_file("OEBPS/content.opf", options_zip)
+        .map_err(|e| format!("建立 content.opf 失敗: {}", e))?;
+
+    let content_opf = if has_illustrations_page {
+        generate_content_opf_with_illustrations(
+            title,
+            author,
+            chapters,
+            illustration_files,
+            true,
+            options.include_cover,
+            options.embed_font,
+        )
+    } else {
+        generate_content_opf(
+            title,
+            author,
+            chapters,
+            options.include_cover,
+            options.embed_font,
+        )
+    };
+
+    zip.write_all(content_opf.as_bytes())
+        .map_err(|e| format!("寫入 content.opf 失敗: {}", e))?;
+
+    // 4. 添加 OEBPS/toc.ncx
+    zip.start_file("OEBPS/toc.ncx", options_zip)
+        .map_err(|e| format!("建立 toc.ncx 失敗: {}", e))?;
+    let toc_ncx = generate_toc_ncx(title, chapters, options.include_cover);
+    zip.write_all(toc_ncx.as_bytes())
+        .map_err(|e| format!("寫入 toc.ncx 失敗: {}", e))?;
+    
+    // 5. 添加樣式檔案
+    zip.start_file("OEBPS/styles.css", options_zip)
+        .map_err(|e| format!("建立 styles.css 失敗: {}", e))?;
+    let css_content = generate_epub_css(options);
+    zip.write_all(css_content.as_bytes())
+        .map_err(|e| format!("寫入 styles.css 失敗: {}", e))?;
+
+    // 5.1 內嵌字型與其授權條款
+    //
+    // 路徑與 manifest 共用 EMBEDDED_FONT_HREF，兩邊不會各寫各的。
+    // OFL 條款 2) 要求每份散布副本都附授權，故 OFL.txt 一起打包。
+    if options.embed_font {
+        let font_path = format!("OEBPS/{}", EMBEDDED_FONT_HREF);
+        zip.start_file(&font_path, options_zip)
+            .map_err(|e| format!("建立內嵌字型失敗: {}", e))?;
+        zip.write_all(EMBEDDED_FONT)
+            .map_err(|e| format!("寫入內嵌字型失敗: {}", e))?;
+
+        let license_path = format!("OEBPS/{}", EMBEDDED_FONT_LICENSE_HREF);
+        zip.start_file(&license_path, options_zip)
+            .map_err(|e| format!("建立字型授權檔失敗: {}", e))?;
+        zip.write_all(EMBEDDED_FONT_LICENSE)
+            .map_err(|e| format!("寫入字型授權檔失敗: {}", e))?;
+
+        log::info!(
+            "已內嵌字型 {} ({} 位元組)",
+            EMBEDDED_FONT_FAMILY,
+            EMBEDDED_FONT.len()
+        );
+    }
+
+    // 6. 添加封面頁（如果啟用）
+    if options.include_cover {
+        zip.start_file("OEBPS/cover.xhtml", options_zip)
+            .map_err(|e| format!("建立 cover.xhtml 失敗: {}", e))?;
+        let cover_html = generate_cover_xhtml(title, author);
+        zip.write_all(cover_html.as_bytes())
+            .map_err(|e| format!("寫入 cover.xhtml 失敗: {}", e))?;
+    }
+    
+    // 7. 實際處理 AI 插畫檔案（加入到 EPUB）
+    if has_illustrations_page {
+        log::info!("開始將插畫檔案加入到 EPUB...");
+
+        // 沿用步驟 3 的掃描結果，確保與 manifest 宣告的檔名完全一致
+        let _added_files = add_illustrations_to_epub(zip, scanned_illustrations)?;
+
+        // 內嵌與章節開頭模式尚未實作，一律回退為集錦模式
+        if !matches!(options.illustration_layout.as_str(), "gallery") {
+            log::info!(
+                "插畫佈局模式 {} 尚未實作，改用集錦模式",
+                options.illustration_layout
+            );
+        }
+
+        zip.start_file("OEBPS/illustrations.xhtml", options_zip)
+            .map_err(|e| format!("建立插畫集錦頁面失敗: {}", e))?;
+        let gallery_html = generate_illustrations_gallery_xhtml(illustration_files);
+        zip.write_all(gallery_html.as_bytes())
+            .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
+
+        log::info!("已生成插畫集錦頁面，包含 {} 張插畫", illustration_files.len());
+    }
+    
+    // 8. 添加章節內容
+    for (index, (chapter_title, chapter_content)) in chapters.iter().enumerate() {
+        let filename = format!("OEBPS/chapter{}.xhtml", index + 1);
+        zip.start_file(&filename, options_zip)
+            .map_err(|e| format!("建立章節檔案失敗: {}", e))?;
+        
+        let chapter_xhtml = generate_chapter_xhtml(chapter_title, chapter_content);
+        zip.write_all(chapter_xhtml.as_bytes())
+            .map_err(|e| format!("寫入章節內容失敗: {}", e))?;
+    }
+
+    Ok(())
+}
+
 /// 生成真實的 EPUB 檔案
 async fn generate_epub_file(
     project_id: &str,
@@ -614,33 +802,13 @@ async fn generate_epub_file(
     // 建立臨時檔案
     let temp_file = NamedTempFile::new()
         .map_err(|e| format!("建立臨時檔案失敗: {}", e))?;
-    
-    let mut zip = ZipWriter::new(temp_file.as_file());
-    
-    // 設置壓縮方法
-    let options_zip = zip::write::FileOptions::default()
-        .compression_method(CompressionMethod::Deflated);
-    
-    // 1. 添加 mimetype 檔案（必須是第一個，且不壓縮）
-    zip.start_file("mimetype", zip::write::FileOptions::default().compression_method(CompressionMethod::Stored))
-        .map_err(|e| format!("建立 mimetype 失敗: {}", e))?;
-    zip.write_all(b"application/epub+zip")
-        .map_err(|e| format!("寫入 mimetype 失敗: {}", e))?;
-    
-    // 2. 添加 META-INF/container.xml
-    zip.start_file("META-INF/container.xml", options_zip)
-        .map_err(|e| format!("建立 container.xml 失敗: {}", e))?;
-    let container_xml = generate_container_xml();
-    zip.write_all(container_xml.as_bytes())
-        .map_err(|e| format!("寫入 container.xml 失敗: {}", e))?;
-    
-    // 3. 預處理 AI 插畫（掃描檔案但先不加入 ZIP）
+
+    // 預處理 AI 插畫（掃描檔案但先不加入 ZIP）
     //
     // 只掃描一次並保留結果：過去在這裡與實際寫入時各掃一次，兩次之間若有圖片
     // 新增或刪除，manifest 宣告的檔名就會與 ZIP 內容對不上。
     let mut illustration_files = Vec::new();
     let mut scanned_illustrations: Vec<IllustrationFile> = Vec::new();
-    let mut has_illustrations_page = false;
     if options.include_illustrations {
         log::info!("開始掃描 AI 插畫檔案...");
         let illustrations = scan_project_illustrations(project_id)?;
@@ -649,89 +817,21 @@ async fn generate_epub_file(
                 illustration_files.push(epub_image_filename(illustration, index));
             }
             scanned_illustrations = illustrations;
-            has_illustrations_page = true;
             log::info!("預計包含 {} 張插畫", illustration_files.len());
         }
     }
 
-    // 4. 添加 OEBPS/content.opf（根據是否包含插畫選擇不同版本）
-    zip.start_file("OEBPS/content.opf", options_zip)
-        .map_err(|e| format!("建立 content.opf 失敗: {}", e))?;
+    let mut zip = ZipWriter::new(temp_file.as_file());
+    write_epub_archive(
+        &mut zip,
+        title,
+        author,
+        chapters,
+        options,
+        &scanned_illustrations,
+        &illustration_files,
+    )?;
 
-    let content_opf = if has_illustrations_page {
-        generate_content_opf_with_illustrations(
-            title,
-            author,
-            chapters,
-            &illustration_files,
-            true,
-            options.include_cover,
-        )
-    } else {
-        generate_content_opf(title, author, chapters, options.include_cover)
-    };
-
-    zip.write_all(content_opf.as_bytes())
-        .map_err(|e| format!("寫入 content.opf 失敗: {}", e))?;
-
-    // 4. 添加 OEBPS/toc.ncx
-    zip.start_file("OEBPS/toc.ncx", options_zip)
-        .map_err(|e| format!("建立 toc.ncx 失敗: {}", e))?;
-    let toc_ncx = generate_toc_ncx(title, chapters, options.include_cover);
-    zip.write_all(toc_ncx.as_bytes())
-        .map_err(|e| format!("寫入 toc.ncx 失敗: {}", e))?;
-    
-    // 5. 添加樣式檔案
-    zip.start_file("OEBPS/styles.css", options_zip)
-        .map_err(|e| format!("建立 styles.css 失敗: {}", e))?;
-    let css_content = generate_epub_css(options);
-    zip.write_all(css_content.as_bytes())
-        .map_err(|e| format!("寫入 styles.css 失敗: {}", e))?;
-    
-    // 6. 添加封面頁（如果啟用）
-    if options.include_cover {
-        zip.start_file("OEBPS/cover.xhtml", options_zip)
-            .map_err(|e| format!("建立 cover.xhtml 失敗: {}", e))?;
-        let cover_html = generate_cover_xhtml(title, author);
-        zip.write_all(cover_html.as_bytes())
-            .map_err(|e| format!("寫入 cover.xhtml 失敗: {}", e))?;
-    }
-    
-    // 7. 實際處理 AI 插畫檔案（加入到 EPUB）
-    if has_illustrations_page {
-        log::info!("開始將插畫檔案加入到 EPUB...");
-
-        // 沿用步驟 3 的掃描結果，確保與 manifest 宣告的檔名完全一致
-        let _added_files = add_illustrations_to_epub(&mut zip, &scanned_illustrations)?;
-
-        // 內嵌與章節開頭模式尚未實作，一律回退為集錦模式
-        if !matches!(options.illustration_layout.as_str(), "gallery") {
-            log::info!(
-                "插畫佈局模式 {} 尚未實作，改用集錦模式",
-                options.illustration_layout
-            );
-        }
-
-        zip.start_file("OEBPS/illustrations.xhtml", options_zip)
-            .map_err(|e| format!("建立插畫集錦頁面失敗: {}", e))?;
-        let gallery_html = generate_illustrations_gallery_xhtml(&illustration_files);
-        zip.write_all(gallery_html.as_bytes())
-            .map_err(|e| format!("寫入插畫集錦頁面失敗: {}", e))?;
-
-        log::info!("已生成插畫集錦頁面，包含 {} 張插畫", illustration_files.len());
-    }
-    
-    // 8. 添加章節內容
-    for (index, (chapter_title, chapter_content)) in chapters.iter().enumerate() {
-        let filename = format!("OEBPS/chapter{}.xhtml", index + 1);
-        zip.start_file(&filename, options_zip)
-            .map_err(|e| format!("建立章節檔案失敗: {}", e))?;
-        
-        let chapter_xhtml = generate_chapter_xhtml(chapter_title, chapter_content);
-        zip.write_all(chapter_xhtml.as_bytes())
-            .map_err(|e| format!("寫入章節內容失敗: {}", e))?;
-    }
-    
     // 完成 ZIP 檔案
     zip.finish()
         .map_err(|e| format!("完成 EPUB 檔案失敗: {}", e))?;
@@ -865,11 +965,28 @@ fn generate_container_xml() -> String {
 }
 
 /// 生成 OEBPS/content.opf
+/// 產生內嵌字型的 manifest item。
+///
+/// 底下兩份 content.opf 是幾乎重複的實作，加資源就得記得改兩處，漏一處
+/// EPUB 打不開。這裡把字型宣告收成單一來源，兩邊各自呼叫，讓「宣告內容」
+/// 至少只有一份定義；「兩邊都確實呼叫到」則由 manifest ↔ ZIP 的雙向斷言守著。
+fn font_manifest_items(embed_font: bool) -> String {
+    if !embed_font {
+        return String::new();
+    }
+
+    format!(
+        "    <item id=\"embedded-font\" href=\"{}\" media-type=\"{}\"/>\n    <item id=\"embedded-font-license\" href=\"{}\" media-type=\"text/plain\"/>\n",
+        EMBEDDED_FONT_HREF, FONT_MEDIA_TYPE, EMBEDDED_FONT_LICENSE_HREF,
+    )
+}
+
 fn generate_content_opf(
     title: &str,
     author: &str,
     chapters: &[(String, String)],
     include_cover: bool,
+    embed_font: bool,
 ) -> String {
     let mut content = format!(r#"<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
@@ -890,6 +1007,8 @@ fn generate_content_opf(
         if include_cover { "    <meta name=\"cover\" content=\"cover\"/>\n" } else { "" },
         if include_cover { "    <item id=\"cover\" href=\"cover.xhtml\" media-type=\"application/xhtml+xml\"/>\n" } else { "" },
     );
+
+    content.push_str(&font_manifest_items(embed_font));
 
     // 添加章節到 manifest
     for i in 0..chapters.len() {
@@ -921,6 +1040,7 @@ fn generate_content_opf_with_illustrations(
     illustration_files: &[String],
     include_illustrations_page: bool,
     include_cover: bool,
+    embed_font: bool,
 ) -> String {
     let mut content = format!(r#"<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
@@ -941,6 +1061,8 @@ fn generate_content_opf_with_illustrations(
         if include_cover { "    <meta name=\"cover\" content=\"cover\"/>\n" } else { "" },
         if include_cover { "    <item id=\"cover\" href=\"cover.xhtml\" media-type=\"application/xhtml+xml\"/>\n" } else { "" },
     );
+
+    content.push_str(&font_manifest_items(embed_font));
 
     // 如果包含插畫集錦頁面，加入到 manifest
     if include_illustrations_page && !illustration_files.is_empty() {
@@ -1027,11 +1149,58 @@ fn generate_toc_ncx(title: &str, chapters: &[(String, String)], include_cover: b
 }
 
 /// 生成 EPUB CSS 樣式
+/// 把使用者設定的字型名整理成可以安全插進 CSS 字串的形式
+///
+/// 這個值一路從前端設定傳進來，最後落在 `font-family: "..."` 裡面。只要含有
+/// `"` 或 `;`，就能提前終止宣告並讓後面整份 styles.css 失效——匯出的書會
+/// 完全失去樣式，而 EPUB 結構檢查一切正常，不會有人發現。
+///
+/// 採白名單而非黑名單：字型名的合法組成本來就只有文字、數字、空白與少數連接
+/// 符號。`is_alphanumeric` 對漢字回 true，中文字型名不受影響。
+fn sanitize_font_family(name: &str) -> String {
+    let cleaned: String = name
+        .chars()
+        .filter(|c| c.is_alphanumeric() || matches!(c, ' ' | '-' | '_'))
+        .collect();
+
+    // 整個名字都被濾掉時不能回空字串：`font-family: "", ...` 是無效宣告，
+    // 部分閱讀器會連同整條規則一起丟棄。
+    let trimmed = cleaned.trim();
+    if trimmed.is_empty() {
+        "serif".to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
 fn generate_epub_css(options: &EPubGenerationOptions) -> String {
+    let font_family = sanitize_font_family(&options.font_family);
+
+    // 內嵌字型排在堆疊最前面，其後保留原本的 fallback 鏈：閱讀器不支援
+    // 內嵌字型（或使用者關掉發布者字型）時仍走既有設定，不會直接掉到泛型 serif。
+    // 子集只涵蓋 Big5，落在字集外的字元也是由後面這幾層接住。
+    let (font_face, font_stack) = if options.embed_font {
+        (
+            format!(
+                "@font-face {{\n    \
+                 font-family: \"{family}\";\n    \
+                 src: url(\"{href}\");\n    \
+                 font-weight: normal;\n    \
+                 font-style: normal;\n\
+                 }}\n\n",
+                family = EMBEDDED_FONT_FAMILY,
+                href = EMBEDDED_FONT_HREF,
+            ),
+            format!(r#""{}", "{}""#, EMBEDDED_FONT_FAMILY, font_family),
+        )
+    } else {
+        (String::new(), format!(r#""{}""#, font_family))
+    };
+
     format!(r#"/* 創世紀元 EPUB 樣式 */
 
-body {{
-    font-family: "{}", "Microsoft JhengHei", "PingFang TC", serif;
+{}body {{
+    font-family: {}, "Microsoft JhengHei", "PingFang TC", serif;
     line-height: 1.8;
     margin: 1em;
     color: #333;
@@ -1135,9 +1304,10 @@ li {{
     margin-top: 2em;
     font-style: italic;
 }}
-"#, 
-    options.font_family,
-    if options.chapter_break_style == "page-break" { 
+"#,
+    font_face,
+    font_stack,
+    if options.chapter_break_style == "page-break" {
         "page-break-before: always;" 
     } else { 
         "" 
@@ -1188,7 +1358,9 @@ mod tests {
     use quick_xml::events::Event;
     use quick_xml::Reader;
     use std::collections::HashSet;
+    use std::io::{Cursor, Read};
     use std::path::PathBuf;
+    use zip::ZipArchive;
 
     /// 解析 OPF，回傳 (manifest 宣告的 id, spine 引用的 idref)
     ///
@@ -1251,6 +1423,7 @@ mod tests {
             &[],
             false,
             true,
+            false,
         );
 
         // 解析失敗會直接 panic，這行本身就是斷言
@@ -1271,6 +1444,7 @@ mod tests {
             &["illustration_001.png".to_string()],
             true,
             true,
+            false,
         );
 
         let (manifest_ids, spine_idrefs) = parse_opf(&opf);
@@ -1297,6 +1471,7 @@ mod tests {
             &[],
             true,
             false,
+            false,
         );
 
         let (manifest_ids, spine_idrefs) = parse_opf(&opf);
@@ -1313,7 +1488,7 @@ mod tests {
 
     #[test]
     fn cover_is_omitted_from_both_manifest_and_spine_when_disabled() {
-        let opf = generate_content_opf(&"書名", "作者", &sample_chapters(), false);
+        let opf = generate_content_opf(&"書名", "作者", &sample_chapters(), false, false);
         let (manifest_ids, spine_idrefs) = parse_opf(&opf);
 
         assert!(!manifest_ids.contains("cover"));
@@ -1353,6 +1528,7 @@ mod tests {
             &sample_chapters(),
             &names,
             true,
+            false,
             false,
         );
 
@@ -1405,5 +1581,403 @@ mod tests {
         assert_eq!(image_media_type("a.webp"), "image/webp");
         assert_eq!(image_media_type("a.jpg"), "image/jpeg");
         assert_eq!(image_media_type("a.jpeg"), "image/jpeg");
+    }
+
+    // === 內嵌字型 ===
+
+    #[test]
+    fn every_options_shape_the_frontend_sends_deserializes() {
+        // 前端有兩個呼叫點，送出的形狀不同，兩邊的欄位數都少於 struct。
+        // 任何一種反序列化失敗，該路徑的 EPUB 匯出就整個壞掉而且無從察覺——
+        // 只驗其中一種形狀會漏掉另一條路徑。
+
+        // 形狀一：epubService.ts 組出的七個欄位，沒有 embed_font
+        let from_service = r#"{
+            "include_cover": true,
+            "font_family": "Noto Sans TC",
+            "chapter_break_style": "page-break",
+            "custom_css": "body { margin: 0; }",
+            "include_illustrations": true,
+            "illustration_layout": "gallery",
+            "illustration_quality": "original"
+        }"#;
+
+        let options: EPubGenerationOptions =
+            serde_json::from_str(from_service).expect("epubService.ts 的形狀必須能反序列化");
+        assert!(
+            options.embed_font,
+            "欄位缺席時應預設開啟內嵌，否則新功能對現有前端形同不存在"
+        );
+        // 確認不是整個 struct 都走了預設值——那樣上面那條斷言就沒有意義
+        assert_eq!(options.font_family, "Noto Sans TC");
+        assert!(options.include_illustrations);
+
+        // 形狀二：api/tauri.ts 在呼叫端沒給 options 時使用的 fallback，只有三個欄位。
+        // 三個插畫欄位都不在裡面，少了 struct 層級的 serde default 這條路徑會直接失敗。
+        let fallback = r#"{
+            "include_cover": true,
+            "font_family": "Noto Sans TC",
+            "chapter_break_style": "page-break"
+        }"#;
+
+        let options: EPubGenerationOptions =
+            serde_json::from_str(fallback).expect("tauri.ts 的 fallback 形狀必須能反序列化");
+        assert!(options.embed_font);
+        assert_eq!(
+            options.illustration_layout, "gallery",
+            "缺席欄位要取 Default 的值"
+        );
+        assert_eq!(
+            options.chapter_break_style, "page-break",
+            "有給的欄位不能被預設值蓋掉"
+        );
+    }
+
+    /// 解析 manifest 宣告的所有 href
+    ///
+    /// 與 `parse_opf` 分工不同：那個看 id 與 spine 的對應關係，這個取出資源
+    /// 路徑，用來跟 ZIP 的實際內容對帳。
+    fn parse_manifest_hrefs(xml: &str) -> HashSet<String> {
+        let mut reader = Reader::from_str(xml);
+        let mut hrefs = HashSet::new();
+
+        loop {
+            match reader.read_event() {
+                Ok(Event::Start(e)) | Ok(Event::Empty(e)) => {
+                    if e.name().as_ref() == b"item" {
+                        let href = e.attributes().flatten().find_map(|a| {
+                            (a.key.as_ref() == b"href")
+                                .then(|| String::from_utf8_lossy(a.value.as_ref()).into_owned())
+                        });
+                        if let Some(href) = href {
+                            hrefs.insert(href);
+                        }
+                    }
+                }
+                Ok(Event::Eof) => break,
+                Err(e) => panic!("OPF 不是合法 XML: {e}"),
+                _ => {}
+            }
+        }
+
+        hrefs
+    }
+
+    fn read_zip_entry<R: std::io::Read + std::io::Seek>(
+        archive: &mut ZipArchive<R>,
+        name: &str,
+    ) -> String {
+        let mut entry = archive
+            .by_name(name)
+            .unwrap_or_else(|_| panic!("ZIP 內找不到 {name}"));
+        let mut contents = String::new();
+        entry
+            .read_to_string(&mut contents)
+            .unwrap_or_else(|e| panic!("讀取 {name} 失敗: {e}"));
+        contents
+    }
+
+    struct BuiltEpub {
+        file_names: Vec<String>,
+        content_opf: String,
+        styles_css: String,
+    }
+
+    /// 在記憶體裡組一份 EPUB
+    ///
+    /// 走的是正式匯出用的同一個組裝函式，但不碰下載目錄：直接呼叫
+    /// `generate_epub_file` 會把測試產物寫進使用者真正的下載資料夾。
+    fn build_epub_in_memory(options: &EPubGenerationOptions) -> BuiltEpub {
+        let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
+        write_epub_archive(
+            &mut zip,
+            "書名",
+            "作者",
+            &sample_chapters(),
+            options,
+            &[],
+            &[],
+        )
+        .expect("EPUB 組裝失敗");
+        let cursor = zip.finish().expect("ZIP 收尾失敗");
+
+        let mut archive = ZipArchive::new(cursor).expect("產出的不是合法 ZIP");
+        let file_names: Vec<String> = archive.file_names().map(str::to_string).collect();
+        let content_opf = read_zip_entry(&mut archive, "OEBPS/content.opf");
+        let styles_css = read_zip_entry(&mut archive, "OEBPS/styles.css");
+
+        BuiltEpub {
+            file_names,
+            content_opf,
+            styles_css,
+        }
+    }
+
+    fn embedded_font_options() -> EPubGenerationOptions {
+        EPubGenerationOptions {
+            embed_font: true,
+            include_illustrations: false,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn manifest_and_zip_agree_in_both_directions() {
+        let epub = build_epub_in_memory(&embedded_font_options());
+        let hrefs = parse_manifest_hrefs(&epub.content_opf);
+
+        // 方向一：ZIP 裡的資源都要有人宣告。沒宣告的資源部分閱讀器直接忽略，
+        // 字型就這麼靜靜地不生效，而檔案本身明明在。
+        for name in &epub.file_names {
+            let relative = match name.strip_prefix("OEBPS/") {
+                Some(rest) => rest,
+                None => continue,
+            };
+            if relative == "content.opf" {
+                continue; // OPF 不列進自己的 manifest
+            }
+            assert!(
+                hrefs.contains(relative),
+                "ZIP 內的 {name} 沒有在 manifest 宣告"
+            );
+        }
+
+        // 方向二：宣告了卻沒打包進去，嚴格的閱讀器會拒開整本書
+        for href in &hrefs {
+            assert!(
+                epub.file_names.contains(&format!("OEBPS/{href}")),
+                "manifest 宣告了 {href}，ZIP 內卻找不到"
+            );
+        }
+
+        // 上面兩個迴圈在集合為空時同樣會通過，補一組正面斷言確認真的驗到字型
+        assert!(
+            hrefs.contains(EMBEDDED_FONT_HREF),
+            "manifest 應宣告內嵌字型"
+        );
+        assert!(epub
+            .file_names
+            .contains(&format!("OEBPS/{EMBEDDED_FONT_HREF}")));
+    }
+
+    #[test]
+    fn both_content_opf_variants_declare_the_embedded_font() {
+        // 兩份 content.opf 是幾乎重複的實作，只改一處另一處就會宣告不足。
+        // 這是本次改動最容易出錯的地方，兩份都要驗。
+        let without_illustrations =
+            generate_content_opf("書名", "作者", &sample_chapters(), true, true);
+        let with_illustrations = generate_content_opf_with_illustrations(
+            "書名",
+            "作者",
+            &sample_chapters(),
+            &["illustration_001.png".to_string()],
+            true,
+            true,
+            true,
+        );
+
+        for (label, opf) in [
+            ("無插畫版", without_illustrations),
+            ("插畫版", with_illustrations),
+        ] {
+            let hrefs = parse_manifest_hrefs(&opf);
+            assert!(
+                hrefs.contains(EMBEDDED_FONT_HREF),
+                "{label}的 manifest 沒宣告字型"
+            );
+            assert!(
+                hrefs.contains(EMBEDDED_FONT_LICENSE_HREF),
+                "{label}的 manifest 沒宣告字型授權"
+            );
+        }
+    }
+
+    #[test]
+    fn embedded_font_leaves_no_trace_when_disabled() {
+        let options = EPubGenerationOptions {
+            embed_font: false,
+            include_illustrations: false,
+            ..Default::default()
+        };
+        let epub = build_epub_in_memory(&options);
+
+        assert!(
+            !epub
+                .file_names
+                .iter()
+                .any(|name| name.starts_with("OEBPS/fonts/")),
+            "關閉內嵌時不該有 fonts/ 目錄，實際內容：{:?}",
+            epub.file_names
+        );
+        assert!(
+            !epub.content_opf.contains(EMBEDDED_FONT_HREF),
+            "關閉內嵌時 manifest 不該宣告字型"
+        );
+        assert!(
+            !epub.styles_css.contains("@font-face"),
+            "關閉內嵌時 CSS 不該有 @font-face"
+        );
+
+        // 純負面斷言在「整個功能根本沒實作」時也會通過，故確認正常內容仍在
+        assert!(
+            epub.styles_css.contains("font-family:"),
+            "關閉內嵌只是不嵌字型，字型堆疊本身仍該存在"
+        );
+        assert!(epub.file_names.contains(&"OEBPS/styles.css".to_string()));
+    }
+
+    #[test]
+    fn css_font_face_points_at_the_path_actually_written_into_the_zip() {
+        // url() 相對於 styles.css 所在的 OEBPS/。指錯路徑時閱讀器會靜默回退到
+        // 系統字型，而 manifest 與 ZIP 的結構檢查全部照樣通過。
+        let epub = build_epub_in_memory(&embedded_font_options());
+
+        assert!(
+            epub.styles_css
+                .contains(&format!("src: url(\"{EMBEDDED_FONT_HREF}\")")),
+            "@font-face 應指向 {EMBEDDED_FONT_HREF}，實際 CSS：{}",
+            epub.styles_css
+        );
+        assert!(
+            epub.styles_css
+                .contains(&format!("font-family: \"{EMBEDDED_FONT_FAMILY}\"")),
+            "@font-face 與內文堆疊必須用同一個家族名，否則宣告了也不會被選用"
+        );
+        assert!(
+            epub.file_names
+                .contains(&format!("OEBPS/{EMBEDDED_FONT_HREF}")),
+            "CSS 指到的檔案必須真的在 ZIP 內"
+        );
+    }
+
+    #[test]
+    fn epub_ships_the_font_license_next_to_the_font() {
+        // OFL 條款 2)：每份散布副本都要附上授權，缺了授權即失效
+        let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
+        write_epub_archive(
+            &mut zip,
+            "書名",
+            "作者",
+            &sample_chapters(),
+            &embedded_font_options(),
+            &[],
+            &[],
+        )
+        .expect("EPUB 組裝失敗");
+        let cursor = zip.finish().expect("ZIP 收尾失敗");
+        let mut archive = ZipArchive::new(cursor).expect("產出的不是合法 ZIP");
+
+        let license = read_zip_entry(&mut archive, &format!("OEBPS/{EMBEDDED_FONT_LICENSE_HREF}"));
+        assert!(
+            license.contains("SIL OPEN FONT LICENSE"),
+            "打包的應是 OFL 全文"
+        );
+        assert!(license.contains("Copyright"), "授權檔應含版權聲明");
+    }
+
+    #[test]
+    fn font_family_sanitizer_keeps_legitimate_names() {
+        assert_eq!(sanitize_font_family("Noto Sans TC"), "Noto Sans TC");
+        assert_eq!(sanitize_font_family("思源宋體"), "思源宋體");
+        assert_eq!(sanitize_font_family("PT_Serif-Web"), "PT_Serif-Web");
+
+        // 全部字元都不合法時要給得出可用的回退：空字串會產生 `font-family: ""`，
+        // 那是無效宣告，部分閱讀器會連整條規則一起丟掉
+        assert_eq!(sanitize_font_family(r#"";{}"#), "serif");
+        assert_eq!(sanitize_font_family("   "), "serif");
+    }
+
+    #[test]
+    fn malicious_font_family_cannot_break_out_of_the_css_declaration() {
+        // font_family 來自前端設定。帶引號或分號就能提前終止宣告，讓後面整份
+        // styles.css 失效——而 EPUB 的結構檢查一切正常，不會有任何人發現。
+        let options = EPubGenerationOptions {
+            font_family: r#"Evil"; } body { display: none; } .x { font-family: ""#.to_string(),
+            embed_font: true,
+            include_illustrations: false,
+            ..Default::default()
+        };
+        let css = generate_epub_css(&options);
+
+        assert!(
+            !css.contains("display: none"),
+            "注入的宣告不該出現在 CSS 裡：{css}"
+        );
+        assert!(
+            !css.contains(r#"Evil""#),
+            "引號必須被清掉，否則字串會提前收尾：{css}"
+        );
+
+        // 注入成功會讓大括號多出成對的一組
+        assert_eq!(
+            css.matches('{').count(),
+            css.matches('}').count(),
+            "大括號必須配對"
+        );
+
+        // 負面斷言要配正面斷言：確認只是清掉危險字元，不是整段 CSS 被清空
+        assert!(
+            css.contains(r#""Genesis Serif TC", "Evil"#),
+            "清理後仍應保留字型堆疊的可用部分：{css}"
+        );
+        assert!(css.contains("line-height: 1.8;"), "其餘樣式不受影響");
+    }
+
+    /// 產生兩份真的 EPUB，供人眼在實際閱讀器上比對
+    ///
+    /// 上面幾個測試驗的都是結構：manifest 宣告齊全、檔案確實在 ZIP 內、CSS 指對
+    /// 路徑。但結構全對，閱讀器依然可能不採用內嵌字型——Kindle 的「發布者字型」
+    /// 開關、轉檔時替換字型都會造成這種結果。那件事只有打開來看才知道。
+    ///
+    /// 預設不執行（產物是給人看的，不是斷言）：
+    ///     cargo test --manifest-path src-tauri/Cargo.toml -- --ignored --nocapture font_sample
+    ///
+    /// 判讀：內嵌生效時內文是明體（襯線、橫細豎粗）；沒生效會落到 fallback 鏈
+    /// 尾端的系統字型，macOS 上是 PingFang TC 黑體，兩者一眼可辨。plain 那份
+    /// 就是「沒生效」長什麼樣的對照組。
+    #[test]
+    #[ignore]
+    fn font_sample_epubs_for_manual_reader_check() {
+        let chapters = vec![(
+            "第一章　內嵌字型驗證".to_string(),
+            concat!(
+                "<p>這一段用來確認閱讀器有沒有採用內嵌字型。明體的橫畫細、豎畫粗，",
+                "筆畫收尾帶三角形襯線；黑體粗細一致而且沒有襯線，兩者一眼可辨。</p>",
+                "<p>標點的形狀也會跟著變，這裡放常見的：，。！？「」《》（）——。</p>",
+                "<p>Big5 字集內的罕用字：魑魅魍魎、饕餮、鬱、黌、纛、龘。",
+                "這些字應該與前面的內文是同一套字型。</p>",
+                "<p>Big5 字集外的字：鱻、靐、飝。這三個不在子集裡，會落到系統字型，",
+                "跟上一行看起來不一樣才是正常的。</p>",
+            )
+            .to_string(),
+        )];
+
+        let out_dir = std::env::temp_dir().join("genesis-font-check");
+        std::fs::create_dir_all(&out_dir).expect("建立輸出目錄失敗");
+
+        for (label, embed_font) in [("embedded", true), ("plain", false)] {
+            let options = EPubGenerationOptions {
+                embed_font,
+                include_illustrations: false,
+                ..Default::default()
+            };
+
+            let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
+            write_epub_archive(
+                &mut zip,
+                "內嵌字型驗證",
+                "創世紀元",
+                &chapters,
+                &options,
+                &[],
+                &[],
+            )
+            .expect("EPUB 組裝失敗");
+            let cursor = zip.finish().expect("ZIP 收尾失敗");
+
+            let path = out_dir.join(format!("font-check-{label}.epub"));
+            std::fs::write(&path, cursor.into_inner()).expect("寫入 EPUB 失敗");
+            println!("{label}: {}", path.display());
+        }
     }
 }
